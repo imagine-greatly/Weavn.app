@@ -194,9 +194,6 @@ function AiAdvisorMock() {
             AI RESOLUTION ADVISOR
           </span>
         </div>
-        <span className="font-mono text-[9px]" style={{ color: "#8899AA" }}>
-          POWERED BY CLAUDE
-        </span>
       </div>
       <div className="mt-3.5 rounded-br-lg rounded-tr-lg rounded-bl-lg p-3.5" style={{ background: "var(--bg-elevated)" }}>
         {phase === "dots" ? (

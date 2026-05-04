@@ -72,9 +72,6 @@ export default function SiteFooter() {
           <p className="mt-3 max-w-[260px] font-sans text-[14px] font-normal" style={{ color: "#8899AA" }}>
             Conversion intelligence platform. Surfaces suppression patterns and ranks resolutions by revenue impact.
           </p>
-          <p className="mt-4 font-mono text-[11px]" style={{ color: "#8899AA" }}>
-            Powered by Claude AI
-          </p>
         </div>
 
         <div>
@@ -98,6 +95,7 @@ export default function SiteFooter() {
           <nav className="mt-3" aria-label="Legal">
             <FooterLink href="/terms">Terms of Service</FooterLink>
             <FooterLink href="#">Blog (coming soon)</FooterLink>
+            <FooterLink href="mailto:devon@webdocai.com">Support</FooterLink>
           </nav>
         </div>
 
@@ -159,9 +157,6 @@ export default function SiteFooter() {
       >
         <p className="font-mono text-[11px]" style={{ color: "#8899AA" }}>
           © 2026 WebDoc AI. All rights reserved.
-        </p>
-        <p className="font-mono text-[11px]" style={{ color: "#8899AA" }}>
-          Built with Claude AI by Anthropic
         </p>
       </div>
     </footer>

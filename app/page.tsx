@@ -240,18 +240,18 @@ function LandingScanGuardHost() {
     const first = document.querySelector<HTMLInputElement>(
       "form.landing-hero-scan-form input[type=\"text\"], form.landing-hero-scan-form input:not([type])",
     );
-    first?.focus();
-    first?.select?.();
+    if (first) {
+      const nativeSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value")?.set;
+      nativeSetter?.call(first, "");
+      first.dispatchEvent(new Event("input", { bubbles: true }));
+      first.focus();
+    }
   };
 
   const handleSecondary = () => {
     setBlockedOpen(false);
     clearInputHighlights();
-    window.open(
-      "mailto:?subject=WebDoc%20Agency-tier%20diagnostic%20waitlist",
-      "_blank",
-      "noopener,noreferrer",
-    );
+    window.open("mailto:devon@webdocai.com", "_blank", "noopener,noreferrer");
   };
 
   return (

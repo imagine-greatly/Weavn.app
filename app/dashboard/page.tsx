@@ -2003,11 +2003,7 @@ export default function DashboardPage() {
         onSecondary={() => {
           setEnterpriseBlockOpen(false);
           setEnterpriseBlockHighlight(null);
-          window.open(
-            "mailto:?subject=WebDoc%20Agency-tier%20diagnostic%20waitlist",
-            "_blank",
-            "noopener,noreferrer",
-          );
+          window.open("mailto:devon@webdocai.com", "_blank", "noopener,noreferrer");
         }}
       />
 

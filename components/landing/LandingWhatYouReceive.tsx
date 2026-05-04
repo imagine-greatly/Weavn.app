@@ -246,7 +246,7 @@ const CARDS = [
     visual: () => <AdvisorMiniVisual />,
     title: "AI Resolution Advisor",
     body: "Conversational diagnostic access per finding. Ask about implementation, your specific platform, or how findings interact. Full scan context retained.",
-    tag: "POWERED BY CLAUDE",
+    tag: "AI-POWERED",
     hoverShadow: "var(--cyan-glow-soft), 0 20px 40px rgba(0,0,0,0.4), 0 0 60px rgba(0,200,255,0.15)",
   },
   {

@@ -601,9 +601,9 @@ const TECH_CARDS = [
       "Benchmarks derive from high-converting page archetypes by vertical. Ecommerce, SaaS, and service layouts are scored against distinct reference patterns rather than a single generic template.",
   },
   {
-    title: "CLAUDE AI",
+    title: "SEMANTIC AI",
     body:
-      "Inference runs on Anthropic Claude for natural-language reading of headlines, CTAs, and supporting copy. The stack prioritizes semantic classification over keyword matching alone.",
+      "Inference runs on large language models for natural-language reading of headlines, CTAs, and supporting copy. The stack prioritizes semantic classification over keyword matching alone.",
   },
 ];
 

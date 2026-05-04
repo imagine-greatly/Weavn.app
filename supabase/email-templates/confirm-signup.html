@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="x-ua-compatible" content="ie=edge" />
+  <!-- Supabase Dashboard → Authentication → Email Templates → Confirm signup
+       Paste this entire document as the email body (or body fragment if your project expects inner HTML only).
+       Suggested subject: Verify your webdoc.ai email -->
+  <title>Verify your email</title>
+</head>
+<body style="margin:0;padding:0;background-color:#050810;-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;">
+  <div style="display:none;max-height:0;overflow:hidden;mso-hide:all;">
+    Confirm your email to activate your webdoc.ai account.
+  </div>
+  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#050810;">
+    <tr>
+      <td align="center" style="padding:40px 16px 48px 16px;">
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="max-width:560px;border-collapse:collapse;">
+
+          <!-- Top corner brackets -->
+          <tr>
+            <td width="24" height="24" style="border-top:1px solid rgba(0,200,255,0.35);border-left:1px solid rgba(0,200,255,0.35);vertical-align:top;">&nbsp;</td>
+            <td style="border-top:1px solid rgba(0,200,255,0.12);vertical-align:top;">&nbsp;</td>
+            <td width="24" height="24" style="border-top:1px solid rgba(0,200,255,0.35);border-right:1px solid rgba(0,200,255,0.35);vertical-align:top;">&nbsp;</td>
+          </tr>
+
+          <!-- Card shell -->
+          <tr>
+            <td style="border-left:1px solid rgba(0,200,255,0.35);width:24px;background-color:rgba(10,13,26,0.95);">&nbsp;</td>
+            <td style="background-color:rgba(10,13,26,0.95);border-left:1px solid #1C1C2E;border-right:1px solid #1C1C2E;padding:36px 28px 32px 28px;">
+
+              <!-- Badge -->
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:24px;">
+                <tr>
+                  <td style="font-family:'Courier New',Courier,monospace;font-size:10px;letter-spacing:0.28em;text-transform:uppercase;color:rgba(240,244,255,0.45);border:1px solid rgba(0,200,255,0.22);border-radius:4px;padding:8px 14px;background-color:rgba(0,200,255,0.05);">
+                    EMAIL VERIFICATION
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Logo wordmark -->
+              <p style="margin:0 0 28px 0;font-family:Arial,Helvetica,sans-serif;font-size:18px;font-weight:700;line-height:1;color:#F0F4FF;">
+                webdoc<span style="color:#00C8FF;">.ai</span>
+              </p>
+
+              <!-- Heading -->
+              <h1 style="margin:0 0 20px 0;font-family:Arial,Helvetica,sans-serif;font-size:26px;font-weight:800;line-height:1.15;letter-spacing:-0.5px;color:#F0F4FF;">
+                VERIFY YOUR<br />
+                <span style="color:#00C8FF;">ACCESS CREDENTIALS</span>
+              </h1>
+
+              <!-- Body -->
+              <p style="margin:0 0 28px 0;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.65;color:#8E8EA0;">
+                Welcome to webdoc.ai. Confirm your email address to activate your account and begin your first diagnostic scan.
+              </p>
+
+              <!-- CTA -->
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 28px 0;">
+                <tr>
+                  <td align="left">
+                    <a href="{{ .ConfirmationURL }}" target="_blank" rel="noopener noreferrer" style="display:inline-block;font-family:'Courier New',Courier,monospace;font-size:12px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;text-decoration:none;color:#050810;background-color:#00C8FF;border-radius:6px;padding:14px 28px;box-shadow:0 0 24px rgba(0,200,255,0.25);">
+                      ▶ &nbsp; VERIFY EMAIL ADDRESS
+                    </a>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- System log -->
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:0 0 24px 0;border-collapse:collapse;border:1px solid #1C1C2E;border-radius:6px;background-color:rgba(5,8,16,0.9);">
+                <tr>
+                  <td style="padding:14px 16px;font-family:'Courier New',Courier,monospace;font-size:11px;line-height:1.6;color:#3A3A52;">
+                    <span style="color:rgba(0,200,255,0.55);">■</span> SYSTEM LOG<br />
+                    <span style="color:#8E8EA0;">request_type:</span> <span style="color:#F0F4FF;">EMAIL_VERIFICATION</span><br />
+                    <span style="color:#8E8EA0;">status:</span> <span style="color:#00C8FF;">AWAITING_CONFIRMATION</span>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Security note -->
+              <p style="margin:0 0 32px 0;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:1.55;color:#5a5a72;">
+                If you did not create a webdoc.ai account, you can safely ignore this email.
+              </p>
+
+              <!-- Divider -->
+              <div style="height:1px;background:linear-gradient(90deg,transparent,rgba(0,200,255,0.25),transparent);margin:0 0 20px 0;"></div>
+
+              <!-- Footer -->
+              <p style="margin:0 0 8px 0;font-family:'Courier New',Courier,monospace;font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:#3A3A52;">
+                WEBDOC.AI · CLINICAL INTELLIGENCE
+              </p>
+              <p style="margin:0;font-family:'Courier New',Courier,monospace;font-size:10px;line-height:1.5;color:#3A3A52;">
+                This message was sent to {{ .Email }}<br />
+                © webdoc.ai · All rights reserved
+              </p>
+
+            </td>
+            <td style="border-right:1px solid rgba(0,200,255,0.35);width:24px;background-color:rgba(10,13,26,0.95);">&nbsp;</td>
+          </tr>
+
+          <!-- Bottom corner brackets -->
+          <tr>
+            <td width="24" height="24" style="border-bottom:1px solid rgba(0,200,255,0.35);border-left:1px solid rgba(0,200,255,0.35);vertical-align:bottom;">&nbsp;</td>
+            <td style="border-bottom:1px solid rgba(0,200,255,0.12);vertical-align:bottom;">&nbsp;</td>
+            <td width="24" height="24" style="border-bottom:1px solid rgba(0,200,255,0.35);border-right:1px solid rgba(0,200,255,0.35);vertical-align:bottom;">&nbsp;</td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

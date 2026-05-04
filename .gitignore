@@ -1,0 +1,25 @@
+# Dependencies
+node_modules/
+
+# Next.js
+.next/
+out/
+
+# Env (keep .env.example)
+.env
+.env*.local
+
+# Debug / local
+*.tsbuildinfo
+.vercel
+
+# Local tooling
+.claude/
+
+# OS
+.DS_Store
+Thumbs.db
+node_modules
+
+.vercel
+.env*.local

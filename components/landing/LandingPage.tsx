@@ -1,0 +1,51 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import BeforeAfterSection from "@/components/BeforeAfterSection";
+import SiteFooter from "@/components/SiteFooter";
+import SocialProofSection from "@/components/SocialProofSection";
+import LandingFinalCTA from "@/components/landing/LandingFinalCTA";
+import LandingHero from "@/components/landing/LandingHero";
+import LandingHowItWorks from "@/components/landing/LandingHowItWorks";
+import LandingThreeNumbers from "@/components/landing/LandingThreeNumbers";
+import LandingDashboardDemo from "@/components/landing/LandingDashboardDemo";
+import LandingWhatYouReceive from "@/components/landing/LandingWhatYouReceive";
+import LandingScanPreview from "@/components/landing/LandingScanPreview";
+import LandingFullFinding from "@/components/landing/LandingFullFinding";
+import LandingGrowthBlueprint from "@/components/landing/LandingGrowthBlueprint";
+
+const LANDING_BG_BASE = "#050810";
+
+export default function LandingPage() {
+  const [url, setUrl] = useState("");
+  const searchParams = useSearchParams();
+  const scanFocus = searchParams.get("scan") === "1" || searchParams.get("scan") === "true";
+
+  useEffect(() => {
+    if (!scanFocus) return;
+    const t = window.setTimeout(() => {
+      document.getElementById("final-cta")?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 150);
+    return () => window.clearTimeout(t);
+  }, [scanFocus]);
+
+  return (
+    <div className="relative min-h-screen" style={{ background: LANDING_BG_BASE }}>
+      <div className="relative z-10">
+        <LandingHero url={url} onUrlChange={setUrl} autoFocus={!scanFocus} />
+        <LandingScanPreview />
+        <LandingFullFinding />
+        <LandingThreeNumbers />
+        <LandingHowItWorks />
+        <LandingWhatYouReceive />
+        <LandingDashboardDemo />
+        <LandingGrowthBlueprint />
+        <SocialProofSection />
+        <BeforeAfterSection />
+        <LandingFinalCTA url={url} onUrlChange={setUrl} autoFocus={scanFocus} />
+        <SiteFooter />
+      </div>
+    </div>
+  );
+}

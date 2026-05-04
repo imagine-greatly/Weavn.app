@@ -18,8 +18,6 @@ import { getBlockedMessage, isBlockedDomain } from "@/lib/scanGuard";
 import { convertLeaksToFindingData } from "@/lib/convertLeakToFindingData";
 import {
   ReportFindingPreview,
-  LockedFindingCard,
-  FindingsPaywallBanner,
   GrowthBlueprintFreeTier,
   type GrowthBlueprintLockedFinding,
 } from "@/components/ReportRightPanel";
@@ -416,6 +414,7 @@ export default function DashboardPage() {
   );
   const [priorityHoverKey, setPriorityHoverKey] = useState<string | null>(null);
   const [priorityFindingsExpanded, setPriorityFindingsExpanded] = useState(false);
+  const [deletingDomain, setDeletingDomain] = useState<string | null>(null);
 
   useEffect(() => {
     const timeout = setTimeout(() => {
@@ -805,63 +804,27 @@ export default function DashboardPage() {
 
   async function handleDeleteSite(domain: string) {
     if (!authUserId) return;
+    setDeletingDomain(domain);
     try {
       const supabase = getSupabaseBrowserClient();
-
-      const matchingReports = reports.filter((r) => domainKeysMatch(r.domain, domain));
-      const domainReportIds = matchingReports.map((r) => r.id);
-      const normDomain = (s: string) => s.trim().toLowerCase().replace(/^www\./i, "");
-
-      const { error: repErr } =
-        domainReportIds.length > 0
-          ? await supabase
-              .from("reports")
-              .delete()
-              .eq("user_id", authUserId)
-              .in("id", domainReportIds)
-          : await supabase
-              .from("reports")
-              .delete()
-              .eq("user_id", authUserId)
-              .eq("domain", normDomain(domain));
-
-      if (repErr) {
+      const { error } = await supabase
+        .from("reports")
+        .delete()
+        .eq("user_id", authUserId)
+        .eq("domain", domain);
+      if (error) {
         // eslint-disable-next-line no-console
-        console.error("[DASHBOARD] Failed to delete site:", repErr);
+        console.error("[DASHBOARD] Delete failed:", error);
         return;
       }
-
-      // Best-effort: remove resolution rows for this site's reports (non-blocking).
-      try {
-        if (domainReportIds.length > 0) {
-          const orClause = domainReportIds
-            .map((reportId) => `resolution_key.like.${reportId}:%`)
-            .join(",");
-          const { error: rfErr } = await supabase
-            .from("resolved_findings")
-            .delete()
-            .eq("user_id", authUserId)
-            .or(orClause);
-          if (rfErr) {
-            // eslint-disable-next-line no-console
-            console.error("[DASHBOARD] Failed to delete resolved findings:", rfErr);
-          }
-        }
-      } catch {
-        // Table missing, network, or client throw — site delete already succeeded
-      }
-
       const updatedReports = reports.filter((r) => !domainKeysMatch(r.domain, domain));
       setReports(updatedReports);
-
-      const remainingDomains = distinctDomains(updatedReports);
-      setActiveDomain(remainingDomains[0] ?? "");
-
-      // eslint-disable-next-line no-console
-      console.log("[DASHBOARD] Deleted site:", domain);
+      setActiveDomain(distinctDomains(updatedReports)[0] ?? "");
     } catch (err) {
       // eslint-disable-next-line no-console
       console.error("[DASHBOARD] Delete failed:", err);
+    } finally {
+      setDeletingDomain(null);
     }
   }
 
@@ -1080,6 +1043,7 @@ export default function DashboardPage() {
           onScanNew={() => setShowScanInput(true)}
           addSiteDisabled={proSiteLimitReached}
           addSiteDisabledReason={proSiteLimitTooltip}
+          deletingDomain={deletingDomain}
         />
 
         <DashboardCommandPanel
@@ -1438,17 +1402,84 @@ export default function DashboardPage() {
                     />
                   ))}
                   {dashboardFindingRows.length > 2 ? (
-                    <>
-                      <FindingsPaywallBanner
-                        lockedCount={Math.max(
-                          0,
-                          (totalFindingsDetected ?? dashboardFindingRows.length) - 2
-                        )}
-                      />
-                      {dashboardFindingRows.slice(2).map((row, i) => (
-                        <LockedFindingCard key={row.id} finding={row} index={i + 3} />
-                      ))}
-                    </>
+                    <div
+                      style={{
+                        background: "#0A0F1E",
+                        border: "1px solid #1A2035",
+                        borderLeft: "3px solid #00C8FF",
+                        padding: "24px 28px",
+                        borderRadius: 4,
+                        marginTop: 12,
+                      }}
+                    >
+                      <div
+                        style={{
+                          fontFamily: "var(--font-jetbrains-mono), var(--font-space-mono), monospace",
+                          fontSize: 10,
+                          color: "#00C8FF",
+                          letterSpacing: "0.15em",
+                          textTransform: "uppercase",
+                        }}
+                      >
+                        DIAGNOSTIC ACCESS REQUIRED
+                      </div>
+                      <h3
+                        style={{
+                          margin: "8px 0 0 0",
+                          fontFamily: "var(--font-space-grotesk), sans-serif",
+                          fontWeight: 700,
+                          fontSize: 22,
+                          color: "#FFFFFF",
+                          lineHeight: 1.2,
+                        }}
+                      >
+                        {(totalFindingsDetected ?? activeMoneyLeaksTotal)} findings are suppressing your conversions.
+                      </h3>
+                      <p
+                        style={{
+                          margin: "8px 0 0 0",
+                          fontFamily: "var(--font-jetbrains-mono), var(--font-space-mono), monospace",
+                          fontSize: 13,
+                          color: "#8899AA",
+                          lineHeight: 1.7,
+                        }}
+                      >
+                        Upgrade to Pro to access all diagnostic findings, revenue impact analysis, exact resolutions, and AI advisor access — ranked by revenue impact.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => router.push("/pricing")}
+                        style={{
+                          display: "block",
+                          width: "100%",
+                          marginTop: 16,
+                          height: 44,
+                          background: "transparent",
+                          border: "1px solid #00C8FF",
+                          color: "#00C8FF",
+                          fontFamily: "var(--font-jetbrains-mono), var(--font-space-mono), monospace",
+                          fontSize: 13,
+                          fontWeight: 700,
+                          letterSpacing: "0.08em",
+                          textTransform: "uppercase",
+                          cursor: "pointer",
+                          borderRadius: 2,
+                        }}
+                      >
+                        UPGRADE TO PRO DIAGNOSTIC
+                      </button>
+                      <p
+                        style={{
+                          margin: "8px 0 0 0",
+                          textAlign: "center",
+                          fontFamily: "var(--font-jetbrains-mono), var(--font-space-mono), monospace",
+                          fontSize: 11,
+                          color: "#8899AA",
+                        }}
+                      >
+                        Free plan includes 2 diagnostic findings per scan.
+                      </p>
+                    </div>
                   ) : null}
                 </>
               ) : activeLatest && visiblePriorityLeaks.length > 0 ? (
@@ -1622,7 +1653,7 @@ export default function DashboardPage() {
 
             <DashboardRevenueHealth dimensionScores={activeDimensionScores} />
 
-            {restrictionsActive && activeLatest ? (
+            {activeLatest ? (
               <div style={{ marginBottom: 28 }}>
                 <span
                   style={{
@@ -1637,7 +1668,75 @@ export default function DashboardPage() {
                 >
                   ● GROWTH BLUEPRINT
                 </span>
-                <GrowthBlueprintFreeTier lockedFindings={growthBlueprintLockedFindings} />
+                {restrictionsActive ? (
+                  <GrowthBlueprintFreeTier lockedFindings={growthBlueprintLockedFindings} showUpgradeNudge />
+                ) : (() => {
+                    const _sm = "var(--font-jetbrains-mono), var(--font-space-mono), monospace";
+                    const _sg = "var(--font-space-grotesk), sans-serif";
+                    const week1 = dashboardFindingRows.filter(
+                      (f) => f.severity === "critical" || f.rubricSeverity === "Critical"
+                    );
+                    const week24 = dashboardFindingRows.filter(
+                      (f) =>
+                        (f.severity === "warning" || f.rubricSeverity === "High") &&
+                        f.severity !== "critical" &&
+                        f.rubricSeverity !== "Critical"
+                    );
+                    const month2 = dashboardFindingRows.filter(
+                      (f) =>
+                        f.severity !== "critical" &&
+                        f.rubricSeverity !== "Critical" &&
+                        f.severity !== "warning" &&
+                        f.rubricSeverity !== "High"
+                    );
+                    const bpBorderColor = (f: (typeof dashboardFindingRows)[0]) =>
+                      f.severity === "critical" || f.rubricSeverity === "Critical"
+                        ? "#FF2D2D"
+                        : f.severity === "warning" || f.rubricSeverity === "High"
+                          ? "#FF6B00"
+                          : "#FFB800";
+                    const bpBadgeLabel = (f: (typeof dashboardFindingRows)[0]) =>
+                      f.severity === "critical" || f.rubricSeverity === "Critical"
+                        ? "CRITICAL"
+                        : f.severity === "warning" || f.rubricSeverity === "High"
+                          ? "HIGH"
+                          : "MEDIUM";
+                    const renderBpCard = (f: (typeof dashboardFindingRows)[0]) => {
+                      const col = bpBorderColor(f);
+                      const badge = bpBadgeLabel(f);
+                      const title = (f.revenueTitle?.trim() || f.title || "").trim() || "Finding";
+                      const resolution = String(f.howToFixIt ?? "").trim();
+                      return (
+                        <div key={f.id} style={{ background: "#0A0F1E", borderLeft: `3px solid ${col}`, padding: 16, marginBottom: 8 }}>
+                          <span style={{ fontFamily: _sm, fontSize: 9, fontWeight: 600, letterSpacing: "0.1em", padding: "3px 8px", textTransform: "uppercase" as const, borderRadius: 2, border: `1px solid ${col}`, color: col, display: "inline-block", marginBottom: 8 }}>
+                            {badge}
+                          </span>
+                          <div style={{ fontFamily: _sg, fontWeight: 700, fontSize: 15, color: "#FFFFFF", lineHeight: 1.35, marginBottom: resolution ? 8 : 0 }}>
+                            {title}
+                          </div>
+                          {resolution ? <p style={{ fontFamily: _sg, fontSize: 13, color: "rgba(240,244,255,0.65)", lineHeight: 1.55, margin: 0 }}>{resolution}</p> : null}
+                        </div>
+                      );
+                    };
+                    const renderBpCol = (label: string, items: typeof week1) => (
+                      <div style={{ flex: "1 1 200px", minWidth: 0 }}>
+                        <div style={{ fontFamily: _sm, fontSize: 11, color: "#00C8FF", letterSpacing: "0.15em", textTransform: "uppercase" as const, marginBottom: 8 }}>
+                          {label}
+                        </div>
+                        <div style={{ width: 40, height: 1, background: "#00C8FF", marginBottom: 14 }} />
+                        {items.length === 0
+                          ? <p style={{ fontFamily: _sg, fontSize: 13, color: "rgba(240,244,255,0.35)", margin: 0 }}>—</p>
+                          : items.map(renderBpCard)}
+                      </div>
+                    );
+                    return (
+                      <div style={{ display: "flex", flexDirection: "row" as const, flexWrap: "wrap" as const, gap: 16, alignItems: "flex-start" as const }}>
+                        {renderBpCol("WEEK 1", week1)}
+                        {renderBpCol("WEEKS 2–4", week24)}
+                        {renderBpCol("MONTH 2+", month2)}
+                      </div>
+                    );
+                  })()}
               </div>
             ) : null}
 
@@ -1670,63 +1769,30 @@ export default function DashboardPage() {
                   currentScore={activeScore}
                   axisCaption={`Fix the top 3 above to reach ${Math.min(100, activeScore + 15)}+`}
                 />
-                {restrictionsActive && activeDomainReports.length > 1 ? (
-                  <div
+              </div>
+              {restrictionsActive ? (
+                <p
+                  style={{
+                    margin: "10px 0 0 0",
+                    fontFamily: "var(--font-jetbrains-mono), var(--font-space-mono), monospace",
+                    fontSize: 11,
+                    color: "#8899AA",
+                  }}
+                >
+                  Rescan to track score improvement —{" "}
+                  <a
+                    href="/pricing"
                     style={{
-                      position: "absolute",
-                      inset: 0,
-                      display: "flex",
-                      flexDirection: "column",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      padding: "20px 24px",
-                      background: "rgba(5,8,16,0.85)",
-                      borderRadius: 4,
-                      textAlign: "center",
+                      color: "#00C8FF",
+                      textDecoration: "none",
+                      fontFamily: "var(--font-jetbrains-mono), var(--font-space-mono), monospace",
+                      fontSize: 11,
                     }}
                   >
-                    <p
-                      style={{
-                        margin: 0,
-                        fontFamily: "var(--font-jetbrains-mono), var(--font-space-mono), monospace",
-                        fontSize: 13,
-                        color: "#8899AA",
-                        lineHeight: 1.55,
-                      }}
-                    >
-                      Score trajectory tracking requires Pro diagnostic access.
-                    </p>
-                    <p
-                      style={{
-                        margin: "8px 0 0 0",
-                        fontFamily: "var(--font-jetbrains-mono), var(--font-space-mono), monospace",
-                        fontSize: 12,
-                        color: "#8899AA",
-                        lineHeight: 1.55,
-                      }}
-                    >
-                      Rescan history is recorded. Upgrade to Pro to view score movement over time.
-                    </p>
-                    <button
-                      type="button"
-                      onClick={() => void handleUpgrade()}
-                      style={{
-                        marginTop: 12,
-                        padding: 0,
-                        border: "none",
-                        background: "none",
-                        cursor: "pointer",
-                        fontFamily: "var(--font-jetbrains-mono), var(--font-space-mono), monospace",
-                        fontSize: 11,
-                        color: "#00C8FF",
-                        letterSpacing: "0.04em",
-                      }}
-                    >
-                      Upgrade to Pro →
-                    </button>
-                  </div>
-                ) : null}
-              </div>
+                    requires Pro diagnostic access →
+                  </a>
+                </p>
+              ) : null}
             </div>
 
             <AdvisorChat

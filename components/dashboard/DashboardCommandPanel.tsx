@@ -460,24 +460,26 @@ export default function DashboardCommandPanel({
           gap: 12,
         }}
       >
-        <button
-          type="button"
-          onClick={runRescan}
-          style={{
-            background: "transparent",
-            border: "1px solid rgba(0,200,255,0.35)",
-            borderRadius: 8,
-            padding: "10px 16px",
-            color: "var(--cyan)",
-            fontFamily: spaceMono,
-            fontSize: 10,
-            letterSpacing: "0.12em",
-            textTransform: "uppercase",
-            cursor: "pointer",
-          }}
-        >
-          ↺ RESCAN
-        </button>
+        {isProUser ? (
+          <button
+            type="button"
+            onClick={runRescan}
+            style={{
+              background: "transparent",
+              border: "1px solid rgba(0,200,255,0.35)",
+              borderRadius: 8,
+              padding: "10px 16px",
+              color: "var(--cyan)",
+              fontFamily: spaceMono,
+              fontSize: 10,
+              letterSpacing: "0.12em",
+              textTransform: "uppercase",
+              cursor: "pointer",
+            }}
+          >
+            ↺ RESCAN
+          </button>
+        ) : null}
         <a
           href={reportHref}
           style={{

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import Logo from "@/components/Logo";
 
 function normalizeUrl(input: string): string {
   const t = input.trim();
@@ -56,17 +57,19 @@ export default function SiteFooter() {
     >
       <div className="mx-auto grid max-w-[1100px] gap-12 md:grid-cols-2 lg:grid-cols-4">
         <div>
-          <Link href="/" className="group inline-flex items-center" aria-label="WebDoc home">
+          <Link href="/" className="inline-flex items-center gap-2" aria-label="WebDoc home" style={{ textDecoration: "none" }}>
+            <Logo size="sm" />
             <span
-              className="live-pulse mr-2.5 h-1.5 w-1.5 shrink-0 rounded-full"
-              style={{ background: "#00C8FF" }}
-              aria-hidden
-            />
-            <span className="font-logo text-[19px] leading-none" style={{ color: "var(--text-primary)" }}>
-              webdoc
-            </span>
-            <span className="font-logo text-[19px] leading-none" style={{ color: "var(--cyan)" }}>
-              ai
+              style={{
+                fontFamily: "var(--font-jetbrains-mono), var(--font-space-mono), monospace",
+                fontSize: 15,
+                lineHeight: 1,
+                letterSpacing: "0.02em",
+                display: "flex",
+              }}
+            >
+              <span style={{ color: "var(--text-primary)" }}>webdoc</span>
+              <span style={{ color: "var(--cyan)" }}>ai</span>
             </span>
           </Link>
           <p className="mt-3 max-w-[260px] font-sans text-[14px] font-normal" style={{ color: "#8899AA" }}>

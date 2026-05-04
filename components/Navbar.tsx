@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ChevronDown, Menu } from "lucide-react";
 import { getSupabaseBrowserClient } from "@/lib/supabaseBrowser";
+import Logo from "@/components/Logo";
 
 /**
  * Global navbar for webdoc.ai.
@@ -143,16 +144,19 @@ export default function Navbar() {
         aria-label="WebDoc home"
         style={{ textDecoration: "none", color: "inherit" }}
       >
+        <Logo size="sm" />
         <span
-          className="live-pulse mr-2.5 h-1.5 w-1.5 shrink-0 rounded-full transition-[box-shadow] duration-150 group-hover:shadow-[0_0_0_1px_rgba(0,200,255,0.4),0_0_20px_rgba(0,200,255,0.2),0_0_60px_rgba(0,200,255,0.08)]"
-          style={{ background: "#00C8FF" }}
-          aria-hidden
-        />
-        <span className="font-logo text-[19px] leading-none" style={{ color: "var(--text-primary)" }}>
-          webdoc
-        </span>
-        <span className="font-logo text-[19px] leading-none" style={{ color: "var(--cyan)" }}>
-          ai
+          style={{
+            fontFamily: "var(--font-jetbrains-mono), var(--font-space-mono), monospace",
+            fontSize: 15,
+            lineHeight: 1,
+            letterSpacing: "0.02em",
+            marginLeft: 8,
+            display: "flex",
+          }}
+        >
+          <span style={{ color: "var(--text-primary)" }}>webdoc</span>
+          <span style={{ color: "var(--cyan)" }}>ai</span>
         </span>
       </Link>
 

@@ -26,6 +26,7 @@ export default function SiteTabs({
   onScanNew,
   addSiteDisabled = false,
   addSiteDisabledReason = "",
+  deletingDomain = null,
 }: {
   domains: string[];
   reports: StoredReportRow[];
@@ -36,6 +37,7 @@ export default function SiteTabs({
   /** When true, + is muted and inert; use wrapper title for tooltip (native disabled title is unreliable). */
   addSiteDisabled?: boolean;
   addSiteDisabledReason?: string;
+  deletingDomain?: string | null;
 }) {
   return (
     <>
@@ -198,10 +200,12 @@ export default function SiteTabs({
               {active && (
                 <div
                   role="button"
-                  tabIndex={0}
-                  title="Delete site"
+                  tabIndex={deletingDomain === d ? -1 : 0}
+                  title={deletingDomain === d ? "Deleting..." : "Delete site"}
+                  aria-disabled={deletingDomain === d}
                   onClick={(e) => {
                     e.stopPropagation();
+                    if (deletingDomain === d) return;
                     if (
                       window.confirm(
                         `Delete all scans for ${d}?\n\nThis cannot be undone.`
@@ -214,6 +218,7 @@ export default function SiteTabs({
                     if (e.key !== "Enter" && e.key !== " ") return;
                     e.preventDefault();
                     e.stopPropagation();
+                    if (deletingDomain === d) return;
                     if (
                       window.confirm(
                         `Delete all scans for ${d}?\n\nThis cannot be undone.`
@@ -225,22 +230,25 @@ export default function SiteTabs({
                   style={{
                     background: "transparent",
                     border: "none",
-                    cursor: "pointer",
-                    color: "rgba(255,255,255,0.2)",
+                    cursor: deletingDomain === d ? "not-allowed" : "pointer",
+                    color: deletingDomain === d ? "rgba(255,255,255,0.1)" : "rgba(255,255,255,0.2)",
                     fontSize: 10,
                     padding: "0 2px",
                     lineHeight: 1,
                     transition: "color 150ms ease",
                     flexShrink: 0,
+                    opacity: deletingDomain === d ? 0.4 : 1,
                   }}
                   onMouseEnter={(e) => {
+                    if (deletingDomain === d) return;
                     e.currentTarget.style.color = "var(--red)";
                   }}
                   onMouseLeave={(e) => {
+                    if (deletingDomain === d) return;
                     e.currentTarget.style.color = "rgba(255,255,255,0.2)";
                   }}
                 >
-                  ✕
+                  {deletingDomain === d ? "…" : "✕"}
                 </div>
               )}
             </span>

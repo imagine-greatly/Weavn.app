@@ -1907,9 +1907,9 @@ function GrowthBlueprintLockedFindingRow({ item }: { item: GrowthBlueprintLocked
           marginTop: 10,
         }}
       >
-        <LockIconSmall />
-        <span style={{ fontFamily: REPORT_MONO, fontSize: 10, color: "#8899AA" }}>
-          Resolution requires Pro diagnostic access
+        <LockIconSmall size={16} />
+        <span style={{ fontFamily: REPORT_MONO, fontSize: 11, color: "#8899AA" }}>
+          Pro access required
         </span>
       </div>
     </div>
@@ -1931,8 +1931,10 @@ function padGrowthBlueprintItems(
 
 export function GrowthBlueprintFreeTier({
   lockedFindings,
+  showUpgradeNudge = false,
 }: {
   lockedFindings?: GrowthBlueprintLockedFinding[];
+  showUpgradeNudge?: boolean;
 }) {
   const sm = "var(--font-jetbrains-mono), var(--font-space-mono), monospace";
   const headerWeek1 = (
@@ -2080,6 +2082,12 @@ export function GrowthBlueprintFreeTier({
           </p>
         </div>
       </div>
+      {showUpgradeNudge ? (
+        <p style={{ margin: "16px 0 0 0", fontFamily: REPORT_MONO, fontSize: 11, color: "#8899AA" }}>
+          Full resolution roadmap unlocks with Pro diagnostic access.{" "}
+          <a href="/pricing" style={{ color: "#00C8FF", textDecoration: "none" }}>→ Upgrade</a>
+        </p>
+      ) : null}
     </div>
   );
 }

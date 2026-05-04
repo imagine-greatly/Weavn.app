@@ -9,6 +9,7 @@ import type { ReportPayload } from "@/lib/reportSchema";
 import AnimatedBackground from "@/components/AnimatedBackground";
 import BackgroundField from "@/components/BackgroundField";
 import GrainOverlay from "@/components/GrainOverlay";
+import Logo from "@/components/Logo";
 
 type AuthTab = "signin" | "create";
 
@@ -408,6 +409,11 @@ function AuthPageContent() {
             padding: "48px 40px",
           }}
         >
+
+          {/* Logo mark */}
+          <div style={{ display: "flex", justifyContent: "center", marginBottom: 20 }}>
+            <Logo size="md" />
+          </div>
 
           {/* Platform label */}
           <p

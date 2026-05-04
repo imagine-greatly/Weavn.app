@@ -100,24 +100,17 @@ function pickScanLineTargetY(
   const zh = viewportH / SCAN_LINE_ZONE_COUNT;
   const currZ = scanLineZoneIndex(currentY, viewportH);
 
-  if (Math.random() < 0.15) {
-    const step = 1 + Math.floor(Math.random() * 2);
-    const dir = Math.random() < 0.5 ? 1 : -1;
-    let tz = currZ + dir * step;
-    tz = Math.max(0, Math.min(SCAN_LINE_ZONE_COUNT - 1, tz));
-    return { targetY: clampY((tz + 0.5) * zh) };
-  }
-
   const inUpperHalf = currentY < viewportH / 2;
   const candidates: number[] = [];
   const weights: number[] = [];
   for (let z = 0; z < SCAN_LINE_ZONE_COUNT; z++) {
     if (last4Zones.includes(z)) continue;
-    if (Math.abs(z - currZ) < 3) continue;
+    if (Math.abs(z - currZ) < 4) continue;
     const opposite =
       inUpperHalf ? z >= SCAN_LINE_ZONE_COUNT / 2 : z < SCAN_LINE_ZONE_COUNT / 2;
+    const dist = Math.abs(z - currZ);
     candidates.push(z);
-    weights.push(opposite ? 3 : 1);
+    weights.push(opposite ? dist * 2 : dist);
   }
 
   if (candidates.length === 0) {
@@ -551,7 +544,7 @@ function ScanLoadingInner() {
       if (!scanLineReadyRef.current) {
         const y0 = vh * (0.08 + Math.random() * 0.14);
         scanLineYRef.current = y0;
-        scanLineLerpRef.current = 0.025;
+        scanLineLerpRef.current = 0.018;
         const first = pickScanLineTargetY(vh, y0, scanLineLast4ZonesRef.current);
         scanLineTargetYRef.current = first.targetY;
         scanLineReadyRef.current = true;
@@ -566,7 +559,7 @@ function ScanLoadingInner() {
           scanLineDwellingRef.current = false;
           const next = pickScanLineTargetY(vh, scanLineYRef.current, scanLineLast4ZonesRef.current);
           scanLineTargetYRef.current = next.targetY;
-          scanLineLerpRef.current = 0.025;
+          scanLineLerpRef.current = 0.018;
         }
       } else {
         scanLineYRef.current = y + (tgt - y) * k;
@@ -577,7 +570,7 @@ function ScanLoadingInner() {
           scanLineLast4ZonesRef.current = hist.slice(-4);
           scanLineDwellingRef.current = true;
           scanLineDwellStartRef.current = now;
-          scanLineDwellDurationRef.current = 2000 + Math.random() * 2000;
+          scanLineDwellDurationRef.current = 2500 + Math.random() * 2500;
         }
       }
 
@@ -670,13 +663,11 @@ function ScanLoadingInner() {
           to { opacity: 1; transform: translateY(0); }
         }
         @keyframes scanSweep {
-          0% { transform: translateX(-120px); opacity: 0; }
-          10% { opacity: 1; }
-          90% { opacity: 1; }
-          100% { transform: translateX(calc(100vw + 120px)); opacity: 0; }
+          0% { transform: translateX(-160px); }
+          100% { transform: translateX(calc(100vw + 160px)); }
         }
         .scan-line-strip .scan-line-indicator {
-          animation: scanSweep 3.5s ease-in-out infinite;
+          animation: scanSweep 3s linear infinite;
         }
         @keyframes atmosphereA {
           from { transform: translate(0,0); }
@@ -846,23 +837,52 @@ function ScanLoadingInner() {
             pointerEvents: "none",
             opacity: 0,
             willChange: "top",
-            overflow: "hidden",
-            background: "rgba(0,200,255,0.08)",
+            overflow: "visible",
+            background: "rgba(0,200,255,0.06)",
           }}
         >
           <div
             className="scan-line-indicator"
             style={{
               position: "absolute",
-              top: 0,
+              top: -9,
               left: 0,
-              width: 120,
-              height: "100%",
-              background: "linear-gradient(90deg, transparent 0%, rgba(0,200,255,0.15) 20%, rgba(0,200,255,0.7) 45%, rgba(0,200,255,1) 50%, rgba(0,200,255,0.7) 55%, rgba(0,200,255,0.15) 80%, transparent 100%)",
+              width: 160,
+              height: 20,
+              background: "none",
               pointerEvents: "none",
               willChange: "transform",
             }}
-          />
+          >
+            <svg
+              width="160"
+              height="20"
+              viewBox="0 -14 160 28"
+              fill="none"
+              aria-hidden
+            >
+              <defs>
+                <filter id="ekg-glow" x="-10%" y="-100%" width="120%" height="300%">
+                  <feGaussianBlur stdDeviation="3" result="blur1" />
+                  <feGaussianBlur stdDeviation="6" result="blur2" />
+                  <feMerge>
+                    <feMergeNode in="blur2" />
+                    <feMergeNode in="blur1" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+              </defs>
+              <g filter="url(#ekg-glow)" opacity="0.65">
+                <polyline
+                  points="0,0 50,0 65,-14 80,14 95,-6 115,0 160,0"
+                  stroke="#00C8FF"
+                  strokeWidth="1.5"
+                  strokeLinejoin="round"
+                  strokeLinecap="round"
+                />
+              </g>
+            </svg>
+          </div>
         </div>
 
         <div style={{ position: "fixed", inset: 0, zIndex: 4, pointerEvents: "none" }}>

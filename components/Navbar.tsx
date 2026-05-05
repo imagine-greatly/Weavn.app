@@ -151,7 +151,6 @@ export default function Navbar() {
             fontSize: 18,
             fontWeight: 700,
             lineHeight: 1,
-            letterSpacing: "0.02em",
             display: "flex",
           }}
         >

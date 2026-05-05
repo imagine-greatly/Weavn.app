@@ -66,6 +66,7 @@ function CornerBracket({ position }: { position: "tl" | "tr" | "bl" | "br" }) {
 export default function LandingHero({ url, onUrlChange, autoFocus }: Props) {
   const router = useRouter();
   const [urlError, setUrlError] = useState<string | null>(null);
+  const [urlErrorTitle, setUrlErrorTitle] = useState<string>("");
   const [loadingState, setLoadingState] = useState<false | "checking" | "scanning">(false);
 
   useEffect(() => {
@@ -87,13 +88,15 @@ export default function LandingHero({ url, onUrlChange, autoFocus }: Props) {
       parsed = new URL(withProtocol);
     } catch {
       onUrlChange("");
-      setUrlError("That doesn't look like a valid URL. Please enter a real website address.");
+      setUrlErrorTitle("INVALID URL  DETECTED");
+      setUrlError("The input does not resolve to a live domain. Enter a valid website URL to proceed.");
       return;
     }
     const { hostname } = parsed;
     if (!hostname.includes(".") || /^\d+\.\d+\.\d+\.\d+$/.test(hostname)) {
       onUrlChange("");
-      setUrlError("We couldn't detect a real website. Please enter a valid domain like yoursite.com.");
+      setUrlErrorTitle("INVALID URL  DETECTED");
+      setUrlError("The input does not resolve to a live domain. Enter a valid website URL to proceed.");
       return;
     }
     setLoadingState("checking");
@@ -105,7 +108,8 @@ export default function LandingHero({ url, onUrlChange, autoFocus }: Props) {
         const data = await res.json() as { reachable: boolean };
         if (!data.reachable) {
           onUrlChange("");
-          setUrlError("We couldn't reach that website. Please check the URL and try again.");
+          setUrlErrorTitle("DIAGNOSTIC INITIALISATION FAILED");
+          setUrlError("Target URL could not be resolved. Verify the domain is active and accessible before running a diagnostic.");
           setLoadingState(false);
           return;
         }
@@ -379,7 +383,7 @@ export default function LandingHero({ url, onUrlChange, autoFocus }: Props) {
                     textTransform: "uppercase",
                   }}
                 >
-                  INVALID URL DETECTED
+                  {urlErrorTitle}
                 </div>
                 <div
                   style={{

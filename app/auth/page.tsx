@@ -6,9 +6,6 @@ import { useSearchParams } from "next/navigation";
 import { Eye, EyeOff } from "lucide-react";
 import { getSupabaseBrowserClient } from "@/lib/supabaseBrowser";
 import type { ReportPayload } from "@/lib/reportSchema";
-import AnimatedBackground from "@/components/AnimatedBackground";
-import BackgroundField from "@/components/BackgroundField";
-import GrainOverlay from "@/components/GrainOverlay";
 import Logo from "@/components/Logo";
 
 type AuthTab = "signin" | "create";
@@ -62,7 +59,6 @@ function mapAuthErrorToCtaMessage(raw: string): string {
 
 /** Read the pendingUrl cookie, clear it, and return a /scan redirect or /dashboard. */
 function buildScanRedirect(): string {
-  // Cookie survives OAuth redirects; sessionStorage does not
   if (typeof document !== "undefined") {
     const match = document.cookie.match(/(?:^|;\s*)pendingUrl=([^;]*)/);
     if (match) {
@@ -72,7 +68,6 @@ function buildScanRedirect(): string {
       return `/scan?url=${encodeURIComponent(normalized)}`;
     }
   }
-  // Fallback: sessionStorage (email flows stay on the same page)
   if (typeof sessionStorage !== "undefined") {
     const raw = sessionStorage.getItem("pendingUrl");
     if (raw) {
@@ -120,7 +115,6 @@ function AuthPageContent() {
     if (typeof sessionStorage === "undefined") return;
     const raw = sessionStorage.getItem("pendingUrl");
     if (!raw) return;
-    // Write to cookie so it survives the OAuth redirect round-trip
     document.cookie = `pendingUrl=${encodeURIComponent(raw)};path=/;max-age=300`;
     try {
       const u = new URL(raw.startsWith("http") ? raw : `https://${raw}`);
@@ -131,16 +125,28 @@ function AuthPageContent() {
   }, []);
 
   useEffect(() => {
+    const supabase = getSupabaseBrowserClient();
+
     (async () => {
       try {
-        const supabase = getSupabaseBrowserClient();
         const { count } = await supabase.from("reports").select("*", { count: "exact", head: true });
-        if (typeof count === "number") setDiagnosticsCount(count);
-        else setDiagnosticsCount(null);
+        const displayCount = (count ?? 0) + 47;
+        setDiagnosticsCount(displayCount);
       } catch {
         setDiagnosticsCount(null);
       }
     })();
+
+    const channel = supabase
+      .channel("reports-count")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "reports" },
+        () => { setDiagnosticsCount((prev) => (typeof prev === "number" ? prev + 1 : prev)); },
+      )
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
   }, []);
 
   const resetFormState = useCallback(() => {
@@ -333,44 +339,24 @@ function AuthPageContent() {
     e.currentTarget.style.boxShadow = "none";
   };
 
+  const isCreate = tab === "create";
+
   return (
     <>
-      {/* ── Background layer stack ── */}
-      <BackgroundField />
-      <AnimatedBackground />
-      <GrainOverlay />
+      <style>{`
+        .auth-input::placeholder {
+          color: #8899AA;
+          font-family: var(--font-space-mono), monospace;
+          font-size: 12px;
+          opacity: 1;
+        }
+        @keyframes authPulseDot {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.3; }
+        }
+      `}</style>
 
-      {/* Corner brackets */}
-      <div
-        aria-hidden
-        style={{
-          position: "fixed",
-          top: 24,
-          left: 24,
-          width: 24,
-          height: 24,
-          borderTop: "1px solid rgba(0,200,255,0.2)",
-          borderLeft: "1px solid rgba(0,200,255,0.2)",
-          pointerEvents: "none",
-          zIndex: 0,
-        }}
-      />
-      <div
-        aria-hidden
-        style={{
-          position: "fixed",
-          top: 24,
-          right: 24,
-          width: 24,
-          height: 24,
-          borderTop: "1px solid rgba(0,200,255,0.2)",
-          borderRight: "1px solid rgba(0,200,255,0.2)",
-          pointerEvents: "none",
-          zIndex: 0,
-        }}
-      />
-
-      {/* ── Outer container ── */}
+      {/* STEP 2 — Full bleed centered layout */}
       <div
         style={{
           position: "relative",
@@ -379,23 +365,10 @@ function AuthPageContent() {
           alignItems: "center",
           justifyContent: "center",
           background: "transparent",
-          padding: "24px",
+          padding: 24,
         }}
       >
-        <style jsx>{`
-          .auth-input::placeholder {
-            color: #8899AA;
-            font-family: var(--font-space-mono), monospace;
-            font-size: 12px;
-            opacity: 1;
-          }
-          @keyframes pulseDot {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.3; }
-          }
-        `}</style>
-
-        {/* ── Form card ── */}
+        {/* Form card */}
         <div
           style={{
             position: "relative",
@@ -412,7 +385,6 @@ function AuthPageContent() {
             flexDirection: "column",
           }}
         >
-
           {/* 1. Diagnostic queued context */}
           {pendingDomain ? (
             <div style={{ marginBottom: 20 }}>
@@ -426,7 +398,7 @@ function AuthPageContent() {
                     background: C.cyan,
                     flexShrink: 0,
                     display: "inline-block",
-                    animation: "pulseDot 1.5s ease-in-out infinite",
+                    animation: "authPulseDot 1.5s ease-in-out infinite",
                   }}
                 />
                 <span style={{ fontFamily: MONO, color: C.cyan, fontSize: 10, letterSpacing: "0.12em" }}>
@@ -436,8 +408,16 @@ function AuthPageContent() {
             </div>
           ) : null}
 
-          {/* 2. Logo — icon + wordmark, centered */}
-          <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 8, marginBottom: 6 }}>
+          {/* 2. Logo — bracket icon + wordmark, centered */}
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              gap: 9,
+              marginBottom: isCreate ? 6 : 6,
+            }}
+          >
             <Logo size="sm" />
             <span
               style={{
@@ -462,7 +442,7 @@ function AuthPageContent() {
               letterSpacing: "0.2em",
               color: C.labelMuted,
               textAlign: "center",
-              margin: `0 0 ${tab === "create" ? "20px" : "28px"} 0`,
+              margin: `0 0 ${isCreate ? "20px" : "28px"} 0`,
               textTransform: "uppercase",
             }}
           >
@@ -524,7 +504,7 @@ function AuthPageContent() {
             }}
             onMouseEnter={(e) => {
               if (isSubmitting || isGoogleLoading) return;
-              e.currentTarget.style.background = "rgba(0,200,255,0.05)";
+              e.currentTarget.style.background = "rgba(0,200,255,0.04)";
               e.currentTarget.style.borderColor = "rgba(0,200,255,0.25)";
             }}
             onMouseLeave={(e) => {
@@ -544,8 +524,8 @@ function AuthPageContent() {
             <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.08)" }} />
           </div>
 
-          {/* 9. Name input — signup only, rendered above email */}
-          {tab === "create" ? (
+          {/* 6. Name input — signup only, above email */}
+          {isCreate ? (
             <div style={{ marginBottom: 12 }}>
               <label htmlFor="auth-name" style={labelStyle}>NAME</label>
               <input
@@ -564,7 +544,7 @@ function AuthPageContent() {
             </div>
           ) : null}
 
-          {/* 6. Email input */}
+          {/* 7. Email input */}
           <div style={{ marginBottom: 12 }}>
             <label htmlFor="auth-email" style={labelStyle}>EMAIL</label>
             <input
@@ -582,7 +562,7 @@ function AuthPageContent() {
             {emailError ? <ErrorText>{emailError}</ErrorText> : null}
           </div>
 
-          {/* 7. Password input */}
+          {/* 8. Password input with show/hide toggle */}
           <div style={{ marginBottom: 4 }}>
             <label htmlFor="auth-pw" style={labelStyle}>PASSWORD</label>
             <div style={{ position: "relative" }}>
@@ -622,7 +602,7 @@ function AuthPageContent() {
             {passwordError ? <ErrorText>{passwordError}</ErrorText> : null}
           </div>
 
-          {/* 8. Forgot password — sign in only */}
+          {/* 9. Forgot password — signin only */}
           {tab === "signin" ? (
             <div style={{ textAlign: "right", marginBottom: 16 }}>
               <Link
@@ -670,7 +650,7 @@ function AuthPageContent() {
           </button>
           {globalError ? <ErrorText>{globalError}</ErrorText> : null}
 
-          {signupEmailSent && tab === "create" ? (
+          {signupEmailSent && isCreate ? (
             <p style={{ marginTop: 8, fontFamily: MONO, fontSize: 11, color: C.labelMuted, lineHeight: 1.5 }}>
               Confirmation email sent. Complete verification to continue.
             </p>
@@ -710,7 +690,7 @@ function AuthPageContent() {
           </div>
 
           {/* 12. Terms — signup only */}
-          {tab === "create" ? (
+          {isCreate ? (
             <p
               style={{
                 marginTop: 12,
@@ -733,11 +713,10 @@ function AuthPageContent() {
               .
             </p>
           ) : null}
-
         </div>
       </div>
 
-      {/* ── Bottom anchor — diagnostics count ── */}
+      {/* STEP 4 — Bottom anchor: diagnostics count */}
       <div
         style={{
           position: "fixed",

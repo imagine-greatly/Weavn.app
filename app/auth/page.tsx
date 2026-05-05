@@ -14,7 +14,6 @@ import Logo from "@/components/Logo";
 type AuthTab = "signin" | "create";
 
 const MONO = "var(--font-space-mono), monospace";
-const SANS = "Inter, ui-sans-serif, system-ui, sans-serif";
 
 const C = {
   cyan: "#00C8FF",
@@ -41,7 +40,7 @@ function GoogleIcon() {
 
 function ErrorText({ children }: { children: ReactNode }) {
   return (
-    <p style={{ marginTop: 6, fontFamily: MONO, fontWeight: 400, fontSize: 11, color: C.red, lineHeight: 1.4 }}>
+    <p style={{ marginTop: 8, fontFamily: MONO, fontWeight: 400, fontSize: 11, color: C.red, lineHeight: 1.4 }}>
       {children}
     </p>
   );
@@ -115,6 +114,7 @@ function AuthPageContent() {
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [signupEmailSent, setSignupEmailSent] = useState(false);
   const [pendingDomain, setPendingDomain] = useState<string | null>(null);
+  const [diagnosticsCount, setDiagnosticsCount] = useState<number | null | "loading">("loading");
 
   useEffect(() => {
     if (typeof sessionStorage === "undefined") return;
@@ -128,6 +128,19 @@ function AuthPageContent() {
     } catch {
       setPendingDomain(raw);
     }
+  }, []);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const supabase = getSupabaseBrowserClient();
+        const { count } = await supabase.from("reports").select("*", { count: "exact", head: true });
+        if (typeof count === "number") setDiagnosticsCount(count);
+        else setDiagnosticsCount(null);
+      } catch {
+        setDiagnosticsCount(null);
+      }
+    })();
   }, []);
 
   const resetFormState = useCallback(() => {
@@ -154,11 +167,11 @@ function AuthPageContent() {
     width: "100%",
     boxSizing: "border-box",
     background: "rgba(255,255,255,0.04)",
-    border: "1px solid rgba(0,200,255,0.15)",
+    border: "1px solid rgba(255,255,255,0.1)",
     boxShadow: "none",
     borderRadius: 6,
-    padding: "0 16px",
-    height: 48,
+    padding: "0 14px",
+    height: 42,
     color: "#FFFFFF",
     fontFamily: MONO,
     fontWeight: 400,
@@ -170,10 +183,12 @@ function AuthPageContent() {
   const labelStyle: CSSProperties = {
     display: "block",
     fontFamily: MONO,
-    fontSize: 11,
+    fontSize: 9,
     fontWeight: 400,
     color: C.labelMuted,
     marginBottom: 6,
+    letterSpacing: "0.15em",
+    textTransform: "uppercase" as const,
   };
 
   async function handleSignIn() {
@@ -309,13 +324,12 @@ function AuthPageContent() {
   }
 
   const inputFocus = (e: React.FocusEvent<HTMLInputElement>) => {
-    e.currentTarget.style.border = "1px solid rgba(0,200,255,0.8)";
-    e.currentTarget.style.boxShadow =
-      "0 0 0 1px rgba(0,200,255,0.3), 0 0 20px rgba(0,200,255,0.15), 0 0 40px rgba(0,200,255,0.08)";
+    e.currentTarget.style.border = "1px solid rgba(0,200,255,0.4)";
+    e.currentTarget.style.boxShadow = "0 0 0 3px rgba(0,200,255,0.08)";
     e.currentTarget.style.outline = "none";
   };
   const inputBlur = (e: React.FocusEvent<HTMLInputElement>) => {
-    e.currentTarget.style.border = "1px solid rgba(0,200,255,0.15)";
+    e.currentTarget.style.border = "1px solid rgba(255,255,255,0.1)";
     e.currentTarget.style.boxShadow = "none";
   };
 
@@ -326,25 +340,7 @@ function AuthPageContent() {
       <AnimatedBackground />
       <GrainOverlay />
 
-      {/* ── Atmospheric fixed layer (pointer-events none) ── */}
-
-      {/* Cyan atmospheric bloom */}
-      <div
-        aria-hidden
-        style={{
-          position: "fixed",
-          top: "40%",
-          left: "50%",
-          transform: "translate(-50%, -50%)",
-          width: 800,
-          height: 600,
-          background: "radial-gradient(ellipse, rgba(0,200,255,0.08) 0%, transparent 70%)",
-          pointerEvents: "none",
-          zIndex: 0,
-        }}
-      />
-
-      {/* Top-left corner bracket */}
+      {/* Corner brackets */}
       <div
         aria-hidden
         style={{
@@ -359,8 +355,6 @@ function AuthPageContent() {
           zIndex: 0,
         }}
       />
-
-      {/* Top-right corner bracket */}
       <div
         aria-hidden
         style={{
@@ -376,16 +370,16 @@ function AuthPageContent() {
         }}
       />
 
-      {/* ── Page content ── */}
+      {/* ── Outer container ── */}
       <div
         style={{
+          position: "relative",
           minHeight: "100vh",
-          background: "#050810",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          padding: "80px 24px",
-          position: "relative",
+          background: "transparent",
+          padding: "24px",
         }}
       >
         <style jsx>{`
@@ -395,63 +389,87 @@ function AuthPageContent() {
             font-size: 12px;
             opacity: 1;
           }
+          @keyframes pulseDot {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+          }
         `}</style>
 
-        {/* Form container — transparent, floats on ambient background */}
+        {/* ── Form card ── */}
         <div
           style={{
-            maxWidth: 480,
-            width: "100%",
             position: "relative",
-            zIndex: 1,
-            background: "transparent",
-            borderRadius: 12,
-            padding: "48px 40px",
+            zIndex: 10,
+            width: "100%",
+            maxWidth: 400,
+            background: "rgba(5,8,16,0.75)",
+            backdropFilter: "blur(12px)",
+            WebkitBackdropFilter: "blur(12px)",
+            border: "1px solid rgba(0,200,255,0.12)",
+            borderRadius: 8,
+            padding: "28px 32px",
+            display: "flex",
+            flexDirection: "column",
           }}
         >
 
-          {/* Logo mark */}
-          <div style={{ display: "flex", justifyContent: "center", marginBottom: 20 }}>
-            <Logo size="md" />
+          {/* 1. Diagnostic queued context */}
+          {pendingDomain ? (
+            <div style={{ marginBottom: 20 }}>
+              <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <span
+                  aria-hidden
+                  style={{
+                    width: 6,
+                    height: 6,
+                    borderRadius: "50%",
+                    background: C.cyan,
+                    flexShrink: 0,
+                    display: "inline-block",
+                    animation: "pulseDot 1.5s ease-in-out infinite",
+                  }}
+                />
+                <span style={{ fontFamily: MONO, color: C.cyan, fontSize: 10, letterSpacing: "0.12em" }}>
+                  DIAGNOSTIC QUEUED — {pendingDomain}
+                </span>
+              </span>
+            </div>
+          ) : null}
+
+          {/* 2. Logo — icon + wordmark, centered */}
+          <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 8, marginBottom: 6 }}>
+            <Logo size="sm" />
+            <span
+              style={{
+                fontFamily: "var(--font-orbitron), sans-serif",
+                fontSize: 16,
+                fontWeight: 700,
+                lineHeight: 1,
+                letterSpacing: "0.02em",
+                display: "flex",
+              }}
+            >
+              <span style={{ color: "#FFFFFF" }}>webdoc</span>
+              <span style={{ color: C.cyan }}>ai</span>
+            </span>
           </div>
 
-          {/* Platform label */}
+          {/* 3. Platform label */}
           <p
             style={{
               fontFamily: MONO,
               fontSize: 9,
-              letterSpacing: "0.15em",
-              color: "rgba(0,200,255,0.5)",
+              letterSpacing: "0.2em",
+              color: C.labelMuted,
               textAlign: "center",
-              margin: "0 0 16px 0",
+              margin: `0 0 ${tab === "create" ? "20px" : "28px"} 0`,
               textTransform: "uppercase",
             }}
           >
-            Conversion Intelligence Platform
+            CONVERSION INTELLIGENCE PLATFORM
           </p>
 
-          {/* Headline */}
-          {pendingDomain ? (
-            <div style={{ textAlign: "center", marginBottom: 40 }}>
-              <p
-                style={{
-                  fontFamily: SANS,
-                  fontSize: 28,
-                  fontWeight: 600,
-                  color: "#FFFFFF",
-                  margin: "0 0 8px 0",
-                  lineHeight: 1.3,
-                }}
-              >
-                Your diagnostic for {pendingDomain} is queued.
-              </p>
-              <p style={{ fontFamily: MONO, fontSize: 12, color: C.labelMuted, margin: 0 }}>
-                Create your free account to run it.
-              </p>
-            </div>
-          ) : null}
-
-          {/* Google button */}
+          {/* 4. Google button */}
           <button
             type="button"
             disabled={isSubmitting || isGoogleLoading}
@@ -459,7 +477,6 @@ function AuthPageContent() {
               setGoogleError(null);
               setIsGoogleLoading(true);
               try {
-                // Persist pendingUrl to both storage mechanisms before the OAuth redirect
                 const pending =
                   typeof sessionStorage !== "undefined"
                     ? sessionStorage.getItem("pendingUrl")
@@ -486,186 +503,218 @@ function AuthPageContent() {
               }
             }}
             style={{
-              position: "relative",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
+              gap: 10,
               width: "100%",
-              height: 52,
+              height: 46,
               borderRadius: 6,
-              background: "rgba(255,255,255,0.06)",
-              border: "1px solid rgba(0,200,255,0.2)",
+              background: "rgba(255,255,255,0.05)",
+              border: "1px solid rgba(255,255,255,0.12)",
               boxShadow: "none",
               color: "#FFFFFF",
               fontFamily: MONO,
               fontSize: 12,
+              letterSpacing: "0.05em",
               cursor: isSubmitting || isGoogleLoading ? "not-allowed" : "pointer",
               opacity: isGoogleLoading ? 0.72 : 1,
-              marginBottom: 24,
-              transition: "background 150ms ease, border-color 150ms ease, box-shadow 150ms ease",
+              marginBottom: 16,
+              transition: "background 150ms ease, border-color 150ms ease",
             }}
             onMouseEnter={(e) => {
               if (isSubmitting || isGoogleLoading) return;
-              e.currentTarget.style.background = "rgba(255,255,255,0.1)";
-              e.currentTarget.style.borderColor = "rgba(0,200,255,0.5)";
-              e.currentTarget.style.boxShadow = "0 0 20px rgba(0,200,255,0.1)";
+              e.currentTarget.style.background = "rgba(0,200,255,0.05)";
+              e.currentTarget.style.borderColor = "rgba(0,200,255,0.25)";
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.background = "rgba(255,255,255,0.06)";
-              e.currentTarget.style.borderColor = "rgba(0,200,255,0.2)";
-              e.currentTarget.style.boxShadow = "none";
+              e.currentTarget.style.background = "rgba(255,255,255,0.05)";
+              e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)";
             }}
           >
-            <span style={{ position: "absolute", left: 16, display: "flex", alignItems: "center" }}>
-              <GoogleIcon />
-            </span>
+            <GoogleIcon />
             <span style={{ opacity: isGoogleLoading ? 0.7 : 1 }}>Continue with Google</span>
           </button>
           {googleError ? <ErrorText>{googleError}</ErrorText> : null}
 
-          {/* Or divider */}
-          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 24 }}>
+          {/* 5. OR divider */}
+          <div style={{ display: "flex", alignItems: "center", marginBottom: 16 }}>
             <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.08)" }} />
-            <span style={{ fontFamily: MONO, fontSize: 11, color: C.labelMuted }}>or</span>
+            <span style={{ fontFamily: MONO, fontSize: 10, color: C.labelMuted, padding: "0 12px" }}>or</span>
             <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.08)" }} />
           </div>
 
-          {/* Form fields */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-            {/* Name — signup only */}
-            {tab === "create" ? (
-              <div>
-                <label htmlFor="auth-name" style={labelStyle}>Name</label>
-                <input
-                  id="auth-name"
-                  type="text"
-                  autoComplete="name"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  placeholder="Your name"
-                  className="auth-input"
-                  style={inputStyle}
-                  onFocus={inputFocus}
-                  onBlur={inputBlur}
-                />
-                {fullNameError ? <ErrorText>{fullNameError}</ErrorText> : null}
-              </div>
-            ) : null}
-
-            {/* Email */}
-            <div>
-              <label htmlFor="auth-email" style={labelStyle}>Email</label>
+          {/* 9. Name input — signup only, rendered above email */}
+          {tab === "create" ? (
+            <div style={{ marginBottom: 12 }}>
+              <label htmlFor="auth-name" style={labelStyle}>NAME</label>
               <input
-                id="auth-email"
-                type="email"
-                autoComplete="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@company.com"
+                id="auth-name"
+                type="text"
+                autoComplete="name"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                placeholder="Your name"
                 className="auth-input"
                 style={inputStyle}
                 onFocus={inputFocus}
                 onBlur={inputBlur}
               />
-              {emailError ? <ErrorText>{emailError}</ErrorText> : null}
+              {fullNameError ? <ErrorText>{fullNameError}</ErrorText> : null}
             </div>
+          ) : null}
 
-            {/* Password */}
-            <div>
-              <label htmlFor="auth-pw" style={labelStyle}>Password</label>
-              <div style={{ position: "relative" }}>
-                <input
-                  id="auth-pw"
-                  type={showPw ? "text" : "password"}
-                  autoComplete={tab === "signin" ? "current-password" : "new-password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="auth-input"
-                  style={{ ...inputStyle, paddingRight: 48 }}
-                  onFocus={inputFocus}
-                  onBlur={inputBlur}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPw((v) => !v)}
-                  style={{
-                    position: "absolute",
-                    right: 12,
-                    top: "50%",
-                    transform: "translateY(-50%)",
-                    border: "none",
-                    background: "transparent",
-                    padding: 0,
-                    cursor: "pointer",
-                    color: C.labelMuted,
-                    display: "flex",
-                    alignItems: "center",
-                  }}
-                  aria-label={showPw ? "Hide password" : "Show password"}
-                >
-                  {showPw ? <EyeOff size={18} strokeWidth={1.75} /> : <Eye size={18} strokeWidth={1.75} />}
-                </button>
-              </div>
-              {passwordError ? <ErrorText>{passwordError}</ErrorText> : null}
-              {/* Forgot password — sign in only */}
-              {tab === "signin" ? (
-                <div style={{ textAlign: "right", marginTop: 8 }}>
-                  <Link
-                    href="/auth/forgot-password"
-                    style={{ fontFamily: MONO, fontSize: 11, color: C.labelMuted, textDecoration: "none" }}
-                    onMouseEnter={(e) => { e.currentTarget.style.color = C.cyan; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.color = C.labelMuted; }}
-                  >
-                    Forgot password?
-                  </Link>
-                </div>
-              ) : null}
-            </div>
+          {/* 6. Email input */}
+          <div style={{ marginBottom: 12 }}>
+            <label htmlFor="auth-email" style={labelStyle}>EMAIL</label>
+            <input
+              id="auth-email"
+              type="email"
+              autoComplete="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="you@company.com"
+              className="auth-input"
+              style={inputStyle}
+              onFocus={inputFocus}
+              onBlur={inputBlur}
+            />
+            {emailError ? <ErrorText>{emailError}</ErrorText> : null}
           </div>
 
-          {/* Submit button */}
+          {/* 7. Password input */}
+          <div style={{ marginBottom: 4 }}>
+            <label htmlFor="auth-pw" style={labelStyle}>PASSWORD</label>
+            <div style={{ position: "relative" }}>
+              <input
+                id="auth-pw"
+                type={showPw ? "text" : "password"}
+                autoComplete={tab === "signin" ? "current-password" : "new-password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="········"
+                className="auth-input"
+                style={{ ...inputStyle, paddingRight: 44 }}
+                onFocus={inputFocus}
+                onBlur={inputBlur}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPw((v) => !v)}
+                style={{
+                  position: "absolute",
+                  right: 12,
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  border: "none",
+                  background: "transparent",
+                  padding: 0,
+                  cursor: "pointer",
+                  color: C.labelMuted,
+                  display: "flex",
+                  alignItems: "center",
+                }}
+                aria-label={showPw ? "Hide password" : "Show password"}
+              >
+                {showPw ? <EyeOff size={18} strokeWidth={1.75} /> : <Eye size={18} strokeWidth={1.75} />}
+              </button>
+            </div>
+            {passwordError ? <ErrorText>{passwordError}</ErrorText> : null}
+          </div>
+
+          {/* 8. Forgot password — sign in only */}
+          {tab === "signin" ? (
+            <div style={{ textAlign: "right", marginBottom: 16 }}>
+              <Link
+                href="/auth/forgot-password"
+                style={{ fontFamily: MONO, fontSize: 10, color: C.labelMuted, textDecoration: "none" }}
+                onMouseEnter={(e) => { e.currentTarget.style.color = C.cyan; }}
+                onMouseLeave={(e) => { e.currentTarget.style.color = C.labelMuted; }}
+              >
+                Forgot password?
+              </Link>
+            </div>
+          ) : null}
+
+          {/* 10. Submit button */}
           <button
             type="button"
             disabled={isSubmitting}
             onClick={() => void (tab === "signin" ? handleSignIn() : handleCreateAccount())}
             style={{
               width: "100%",
-              height: 52,
+              height: 46,
               borderRadius: 6,
-              background: "#0AACCC",
+              background: C.cyan,
               border: "none",
               boxShadow: "none",
               color: C.base,
               fontFamily: MONO,
               fontSize: 13,
               fontWeight: 700,
-              letterSpacing: "0.06em",
+              letterSpacing: "0.08em",
+              textTransform: "uppercase",
               cursor: isSubmitting ? "not-allowed" : "pointer",
               opacity: isSubmitting ? 0.75 : 1,
-              marginTop: 16,
-              transition: "background 150ms ease, box-shadow 150ms ease",
+              marginBottom: 16,
+              transition: "background 150ms ease",
             }}
             onMouseEnter={(e) => {
-              if (!isSubmitting) {
-                e.currentTarget.style.background = "#00C8FF";
-                e.currentTarget.style.boxShadow = "0 0 30px rgba(0,200,255,0.25)";
-              }
+              if (!isSubmitting) e.currentTarget.style.background = "#33D6FF";
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.background = "#0AACCC";
-              e.currentTarget.style.boxShadow = "none";
+              e.currentTarget.style.background = C.cyan;
             }}
           >
-            {tab === "signin" ? "Sign In" : "Create Account"}
+            {tab === "signin" ? "SIGN IN →" : "CREATE ACCOUNT →"}
           </button>
           {globalError ? <ErrorText>{globalError}</ErrorText> : null}
 
-          {/* Terms — signup only */}
+          {signupEmailSent && tab === "create" ? (
+            <p style={{ marginTop: 8, fontFamily: MONO, fontSize: 11, color: C.labelMuted, lineHeight: 1.5 }}>
+              Confirmation email sent. Complete verification to continue.
+            </p>
+          ) : null}
+
+          {/* 11. Mode toggle */}
+          <div style={{ textAlign: "center" }}>
+            <p style={{ fontFamily: MONO, fontSize: 11, color: C.labelMuted, margin: 0 }}>
+              {tab === "signin" ? (
+                <>
+                  {"Don't have an account? "}
+                  <span
+                    role="button"
+                    tabIndex={0}
+                    style={{ color: C.cyan, cursor: "pointer" }}
+                    onClick={() => switchTab("create")}
+                    onKeyDown={(e) => { if (e.key === "Enter") switchTab("create"); }}
+                  >
+                    Create one →
+                  </span>
+                </>
+              ) : (
+                <>
+                  {"Already have an account? "}
+                  <span
+                    role="button"
+                    tabIndex={0}
+                    style={{ color: C.cyan, cursor: "pointer" }}
+                    onClick={() => switchTab("signin")}
+                    onKeyDown={(e) => { if (e.key === "Enter") switchTab("signin"); }}
+                  >
+                    Sign in →
+                  </span>
+                </>
+              )}
+            </p>
+          </div>
+
+          {/* 12. Terms — signup only */}
           {tab === "create" ? (
             <p
               style={{
                 marginTop: 12,
+                marginBottom: 0,
                 fontFamily: MONO,
                 fontSize: 10,
                 color: C.labelMuted,
@@ -685,36 +734,27 @@ function AuthPageContent() {
             </p>
           ) : null}
 
-          {signupEmailSent && tab === "create" ? (
-            <p style={{ marginTop: 10, fontFamily: MONO, fontSize: 11, color: C.labelMuted, lineHeight: 1.5 }}>
-              Confirmation email sent. Complete verification to continue.
-            </p>
-          ) : null}
-
-          {/* Toggle line */}
-          <div style={{ marginTop: 20, textAlign: "center" }}>
-            <button
-              type="button"
-              onClick={() => switchTab(tab === "signin" ? "create" : "signin")}
-              style={{
-                background: "none",
-                border: "none",
-                cursor: "pointer",
-                fontFamily: MONO,
-                fontSize: 12,
-                color: C.labelMuted,
-                padding: 0,
-              }}
-              onMouseEnter={(e) => { e.currentTarget.style.color = "#FFFFFF"; }}
-              onMouseLeave={(e) => { e.currentTarget.style.color = C.labelMuted; }}
-            >
-              {tab === "signin"
-                ? "Don't have an account? Create one →"
-                : "Already have an account? Sign in →"}
-            </button>
-          </div>
-
         </div>
+      </div>
+
+      {/* ── Bottom anchor — diagnostics count ── */}
+      <div
+        style={{
+          position: "fixed",
+          bottom: 24,
+          left: "50%",
+          transform: "translateX(-50%)",
+          zIndex: 10,
+          whiteSpace: "nowrap",
+        }}
+      >
+        {diagnosticsCount === "loading" ? (
+          <span style={{ fontFamily: MONO, color: C.labelMuted, fontSize: 11, letterSpacing: "0.1em" }}>· · ·</span>
+        ) : typeof diagnosticsCount === "number" ? (
+          <span style={{ fontFamily: MONO, color: C.labelMuted, fontSize: 11, letterSpacing: "0.1em" }}>
+            {diagnosticsCount.toLocaleString()} diagnostics run.
+          </span>
+        ) : null}
       </div>
     </>
   );

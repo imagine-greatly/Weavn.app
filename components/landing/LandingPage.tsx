@@ -10,7 +10,7 @@ import LandingHero from "@/components/landing/LandingHero";
 import LandingHowItWorks from "@/components/landing/LandingHowItWorks";
 import LandingThreeNumbers from "@/components/landing/LandingThreeNumbers";
 import LandingDashboardDemo from "@/components/landing/LandingDashboardDemo";
-import LandingWhatYouReceive from "@/components/landing/LandingWhatYouReceive";
+import LandingDiagnosticOutput from "@/components/landing/LandingDiagnosticOutput";
 import LandingScanPreview from "@/components/landing/LandingScanPreview";
 import LandingFullFinding from "@/components/landing/LandingFullFinding";
 import LandingGrowthBlueprint from "@/components/landing/LandingGrowthBlueprint";
@@ -38,7 +38,7 @@ export default function LandingPage() {
         <LandingFullFinding />
         <LandingThreeNumbers />
         <LandingHowItWorks />
-        <LandingWhatYouReceive />
+        <LandingDiagnosticOutput />
         <LandingDashboardDemo />
         <LandingGrowthBlueprint />
         <SocialProofSection />

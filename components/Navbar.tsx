@@ -142,21 +142,21 @@ export default function Navbar() {
         href="/"
         className="group flex min-w-0 flex-1 items-center"
         aria-label="WebDoc home"
-        style={{ textDecoration: "none", color: "inherit" }}
+        style={{ textDecoration: "none", color: "inherit", gap: "10px", cursor: "pointer" }}
       >
         <Logo size="sm" />
         <span
           style={{
-            fontFamily: "var(--font-jetbrains-mono), var(--font-space-mono), monospace",
-            fontSize: 15,
+            fontFamily: "var(--font-orbitron), sans-serif",
+            fontSize: 18,
+            fontWeight: 700,
             lineHeight: 1,
             letterSpacing: "0.02em",
-            marginLeft: 8,
             display: "flex",
           }}
         >
-          <span style={{ color: "var(--text-primary)" }}>webdoc</span>
-          <span style={{ color: "var(--cyan)" }}>ai</span>
+          <span style={{ color: "#FFFFFF" }}>webdoc</span>
+          <span style={{ color: "#00C8FF" }}>ai</span>
         </span>
       </Link>
 

@@ -1,7 +1,7 @@
 type LogoSize = "sm" | "md" | "lg";
 
 const SIZES: Record<LogoSize, { px: number; bsw: number; psw: number }> = {
-  sm: { px: 24, bsw: 67, psw: 30 },
+  sm: { px: 28, bsw: 67, psw: 30 },
   md: { px: 44, bsw: 36, psw: 22 },
   lg: { px: 80, bsw: 25, psw: 15 },
 };

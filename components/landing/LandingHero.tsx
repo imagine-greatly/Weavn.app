@@ -6,13 +6,7 @@ import Link from "next/link";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import LandingScanBar from "@/components/landing/LandingScanBar";
 import { getSupabaseBrowserClient } from "@/lib/supabaseBrowser";
-
-function normalizeUrl(input: string): string {
-  const t = input.trim();
-  if (!t) return "";
-  if (t.startsWith("http://") || t.startsWith("https://")) return t;
-  return `https://${t}`;
-}
+import { validateUrl } from "@/lib/validateUrl";
 
 type Props = {
   url: string;
@@ -77,54 +71,25 @@ export default function LandingHero({ url, onUrlChange, autoFocus }: Props) {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const trimmed = url.trim();
-    if (!trimmed) return;
-    const withProtocol =
-      trimmed.startsWith("http://") || trimmed.startsWith("https://")
-        ? trimmed
-        : `https://${trimmed}`;
-    let parsed: URL;
-    try {
-      parsed = new URL(withProtocol);
-    } catch {
-      onUrlChange("");
-      setUrlErrorTitle("INVALID URL  DETECTED");
-      setUrlError("The input does not resolve to a live domain. Enter a valid website URL to proceed.");
-      return;
-    }
-    const { hostname } = parsed;
-    if (!hostname.includes(".") || /^\d+\.\d+\.\d+\.\d+$/.test(hostname)) {
-      onUrlChange("");
-      setUrlErrorTitle("INVALID URL  DETECTED");
-      setUrlError("The input does not resolve to a live domain. Enter a valid website URL to proceed.");
-      return;
-    }
+    if (!url.trim()) return;
     setLoadingState("checking");
-    try {
-      const res = await fetch(`/api/check-url?url=${encodeURIComponent(withProtocol)}`, {
-        signal: AbortSignal.timeout(6000),
-      });
-      if (res.ok) {
-        const data = await res.json() as { reachable: boolean };
-        if (!data.reachable) {
-          onUrlChange("");
-          setUrlErrorTitle("DIAGNOSTIC INITIALISATION FAILED");
-          setUrlError("Target URL could not be resolved. Verify the domain is active and accessible before running a diagnostic.");
-          setLoadingState(false);
-          return;
-        }
-      }
-    } catch {
-      // network failure or timeout — proceed
+    const result = await validateUrl(url);
+    if (!result.valid) {
+      setLoadingState(false);
+      if (!result.error) return;
+      onUrlChange("");
+      setUrlErrorTitle(result.type === 'format' ? 'INVALID TARGET DETECTED' : 'DIAGNOSTIC INITIALISATION FAILED');
+      setUrlError(result.error);
+      return;
     }
     setLoadingState("scanning");
-    sessionStorage.setItem("pendingUrl", withProtocol);
+    sessionStorage.setItem("pendingUrl", result.url);
     const supabase = getSupabaseBrowserClient();
     const { data: { session } } = await supabase.auth.getSession();
     if (session) {
-      router.push(`/scan?url=${encodeURIComponent(withProtocol)}`);
+      router.push(`/scan?url=${encodeURIComponent(result.url)}`);
     } else {
-      document.cookie = `pendingUrl=${encodeURIComponent(withProtocol)};path=/;max-age=300;SameSite=Lax`;
+      document.cookie = `pendingUrl=${encodeURIComponent(result.url)};path=/;max-age=300;SameSite=Lax`;
       router.push("/auth?tab=signup&next=/scan");
     }
   }

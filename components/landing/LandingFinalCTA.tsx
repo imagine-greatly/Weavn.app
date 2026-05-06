@@ -1,16 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { getSupabaseBrowserClient } from "@/lib/supabaseBrowser";
 import { ScrollReveal } from "@/components/ScrollReveal";
-function normalizeUrl(input: string): string {
-  const t = input.trim();
-  if (!t) return "";
-  if (t.startsWith("http://") || t.startsWith("https://")) return t;
-  return `https://${t}`;
-}
+import { validateUrl } from "@/lib/validateUrl";
 
 type Props = {
   url: string;
@@ -21,31 +16,36 @@ type Props = {
 
 export default function LandingFinalCTA({ url, onUrlChange, autoFocus }: Props) {
   const router = useRouter();
-  const [error, setError] = useState("");
+  const [urlError, setUrlError] = useState<string | null>(null);
+  const [urlErrorTitle, setUrlErrorTitle] = useState<string>("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!urlError) return;
+    const t = setTimeout(() => setUrlError(null), 5000);
+    return () => clearTimeout(t);
+  }, [urlError]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const normalized = normalizeUrl(url);
-    if (!normalized) {
-      setError("URL required.");
-      return;
-    }
-    try {
-      new URL(normalized);
-    } catch {
-      setError("Invalid URL format.");
-      return;
-    }
-    setError("");
+    if (!url.trim()) return;
     setLoading(true);
-    sessionStorage.setItem("pendingUrl", normalized);
+    const result = await validateUrl(url);
+    if (!result.valid) {
+      setLoading(false);
+      if (!result.error) return;
+      onUrlChange("");
+      setUrlErrorTitle(result.type === 'format' ? 'INVALID TARGET DETECTED' : 'DIAGNOSTIC INITIALISATION FAILED');
+      setUrlError(result.error);
+      return;
+    }
+    sessionStorage.setItem("pendingUrl", result.url);
     const supabase = getSupabaseBrowserClient();
     const { data: { session } } = await supabase.auth.getSession();
     if (session) {
-      router.push(`/scan?url=${encodeURIComponent(normalized)}`);
+      router.push(`/scan?url=${encodeURIComponent(result.url)}`);
     } else {
-      document.cookie = `pendingUrl=${encodeURIComponent(normalized)};path=/;max-age=300;SameSite=Lax`;
+      document.cookie = `pendingUrl=${encodeURIComponent(result.url)};path=/;max-age=300;SameSite=Lax`;
       router.push("/auth?tab=signup");
     }
   }
@@ -56,6 +56,7 @@ export default function LandingFinalCTA({ url, onUrlChange, autoFocus }: Props) 
       className="relative overflow-hidden pb-[120px] pt-[160px]"
       style={{ background: "#050810" }}
     >
+      <style>{`@keyframes urlErrorFadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }`}</style>
       <div
         className="pointer-events-none absolute inset-0 z-0"
         aria-hidden
@@ -151,7 +152,7 @@ export default function LandingFinalCTA({ url, onUrlChange, autoFocus }: Props) 
               value={url}
               onChange={(e) => {
                 onUrlChange(e.target.value);
-                setError("");
+                if (urlError) setUrlError(null);
               }}
               placeholder="https://yourwebsite.com"
               autoFocus={autoFocus}
@@ -208,10 +209,77 @@ export default function LandingFinalCTA({ url, onUrlChange, autoFocus }: Props) 
               )}
             </button>
           </form>
-          {error && (
-            <p className="mt-2 font-mono text-[11px]" style={{ color: "var(--red)" }}>
-              {error}
-            </p>
+          {urlError && (
+            <div
+              onClick={() => setUrlError(null)}
+              style={{
+                position: "absolute",
+                top: "calc(100% + 8px)",
+                left: 0,
+                right: 0,
+                zIndex: 50,
+                background: "#0A0F1E",
+                border: "1px solid rgba(255,68,68,0.4)",
+                borderLeft: "3px solid #FF4444",
+                borderRadius: 4,
+                padding: "12px 16px",
+                display: "flex",
+                alignItems: "flex-start",
+                gap: 10,
+                cursor: "pointer",
+                animation: "urlErrorFadeIn 150ms ease",
+              }}
+            >
+              <div
+                style={{
+                  width: 16,
+                  height: 16,
+                  borderRadius: "50%",
+                  border: "1.5px solid #FF4444",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flexShrink: 0,
+                  marginTop: 1,
+                }}
+              >
+                <span
+                  style={{
+                    fontFamily: "var(--font-jetbrains-mono), var(--font-space-mono), monospace",
+                    fontSize: 10,
+                    color: "#FF4444",
+                    lineHeight: 1,
+                    fontWeight: 700,
+                  }}
+                >
+                  !
+                </span>
+              </div>
+              <div>
+                <div
+                  style={{
+                    fontFamily: "var(--font-jetbrains-mono), var(--font-space-mono), monospace",
+                    fontSize: 9,
+                    color: "#FF4444",
+                    letterSpacing: "0.15em",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  {urlErrorTitle}
+                </div>
+                <div
+                  style={{
+                    fontFamily: "var(--font-jetbrains-mono), var(--font-space-mono), monospace",
+                    fontSize: 11,
+                    color: "#8899AA",
+                    lineHeight: 1.5,
+                    marginTop: 4,
+                  }}
+                >
+                  {urlError}
+                </div>
+              </div>
+            </div>
           )}
 
           <p

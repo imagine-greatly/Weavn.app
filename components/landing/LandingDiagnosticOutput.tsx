@@ -294,7 +294,7 @@ export default function LandingDiagnosticOutput() {
             badgeLabel="HIGH IMPACT"
             badgeColor="#FF8C00"
             tagLabel="conversion"
-            title="No Primary Call-to-Action in Hero Section"
+            title="No Primary Call-to-Action in Hero"
             evidence="The hero section contains no button, no link, and no directional cue. Visitors who are ready to act have no path forward from the first screen."
             impact="Revenue Suppression: High — 30-40% conversion rate loss from visitors ready to engage"
             impactColor="#FF8C00"
@@ -332,7 +332,7 @@ export default function LandingDiagnosticOutput() {
               </span>
               <button
                 type="button"
-                onClick={() => router.push("/?scan=1")}
+                onClick={() => router.push("/")}
                 style={{
                   marginTop: 16,
                   background: "transparent",

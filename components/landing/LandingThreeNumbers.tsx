@@ -90,7 +90,7 @@ export default function LandingThreeNumbers() {
   const { ref, inView } = useScrollReveal<HTMLElement>({ threshold: 0.15 });
 
   return (
-    <section ref={ref} className="relative overflow-hidden px-6 py-[120px]" style={{ background: "#050810" }}>
+    <section ref={ref} className="relative overflow-hidden px-6 pt-[120px] pb-[60px]" style={{ background: "#050810" }}>
       <ScrollReveal variant="headline">
         <div className="mx-auto grid max-w-[800px] gap-10 md:grid-cols-3 md:gap-0">
           {COLS.map((c) => (

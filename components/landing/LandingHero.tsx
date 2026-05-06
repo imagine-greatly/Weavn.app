@@ -234,7 +234,7 @@ export default function LandingHero({ url, onUrlChange, autoFocus }: Props) {
             className="hero-sub mx-auto mt-[22px] max-w-[440px] text-center font-sans text-[17px] font-light"
             style={{ color: "var(--text-secondary)", lineHeight: 1.8 }}
           >
-            WebDoc performs surgical diagnostic analysis on your website — identifying every structural and behavioral flaw suppressing conversions, ranked by revenue impact with exact resolutions.
+            webdoc.ai runs 166 diagnostic checks on your site — identifying every conversion killer, ranked by revenue impact, with exact resolutions.
           </p>
         </ScrollReveal>
 

@@ -53,6 +53,7 @@ export default function RootLayout({
       <head>
         <link rel="icon" href="/webdocai_logo_definitive.svg" type="image/svg+xml" />
         <link rel="apple-touch-icon" href="/webdocai_logo_definitive.svg" />
+        <meta name="theme-color" content="#050810" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       </head>

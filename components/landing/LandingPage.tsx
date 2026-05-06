@@ -11,8 +11,6 @@ import LandingHowItWorks from "@/components/landing/LandingHowItWorks";
 import LandingThreeNumbers from "@/components/landing/LandingThreeNumbers";
 import LandingDashboardDemo from "@/components/landing/LandingDashboardDemo";
 import LandingDiagnosticOutput from "@/components/landing/LandingDiagnosticOutput";
-import LandingScanPreview from "@/components/landing/LandingScanPreview";
-import LandingFullFinding from "@/components/landing/LandingFullFinding";
 import LandingGrowthBlueprint from "@/components/landing/LandingGrowthBlueprint";
 
 const LANDING_BG_BASE = "#050810";
@@ -34,15 +32,13 @@ export default function LandingPage() {
     <div className="relative min-h-screen" style={{ background: LANDING_BG_BASE }}>
       <div className="relative z-10">
         <LandingHero url={url} onUrlChange={setUrl} autoFocus={!scanFocus} />
-        <LandingScanPreview />
-        <LandingFullFinding />
+        <LandingDiagnosticOutput />
         <LandingThreeNumbers />
         <LandingHowItWorks />
-        <LandingDiagnosticOutput />
         <LandingDashboardDemo />
         <LandingGrowthBlueprint />
-        <SocialProofSection />
         <BeforeAfterSection />
+        <SocialProofSection />
         <LandingFinalCTA url={url} onUrlChange={setUrl} autoFocus={scanFocus} />
         <SiteFooter />
       </div>

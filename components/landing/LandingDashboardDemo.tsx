@@ -107,7 +107,7 @@ function ScoreTimelineMock() {
         }}
       >
         <p className="font-mono text-left text-[14px]" style={{ color: "#FFFFFF" }}>
-          bdsmarinecontractors.com
+          client-store.com
         </p>
         <div className="mt-2 flex items-baseline gap-1">
           <span className="font-logo text-[32px] leading-none tabular-nums" style={{ color: scoreColor, transition: "color 0.35s ease" }}>
@@ -118,7 +118,7 @@ function ScoreTimelineMock() {
           </span>
         </div>
         <p className="mt-2 font-mono text-[12px]" style={{ color: "#00E676" }}>
-          ↑ +23 points this month
+          ↑ +18 points this month
         </p>
 
         <div className="mt-5 w-full overflow-hidden">

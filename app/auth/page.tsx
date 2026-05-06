@@ -418,7 +418,7 @@ function AuthPageContent() {
               marginBottom: isCreate ? 6 : 6,
             }}
           >
-            <Logo size="sm" />
+            <Logo />
             <span
               style={{
                 fontFamily: "var(--font-orbitron), sans-serif",

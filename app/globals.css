@@ -325,6 +325,15 @@ body {
   }
 }
 
+/* Logo SVG — CSS fill: none !important beats any inherited fill: currentColor */
+.logo-svg * {
+  fill: none !important;
+}
+.logo-svg line,
+.logo-svg polyline {
+  fill: none !important;
+}
+
 /* ---------------------------------------------------------------------------
    Keyframe animations (global)
    --------------------------------------------------------------------------- */
@@ -1098,3 +1107,7 @@ body {
     align-items: center !important;
   }
 }
+
+svg line { fill: none !important; }
+svg polyline { fill: none !important; }
+svg path { fill: none !important; }

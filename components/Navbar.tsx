@@ -5,7 +5,6 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ChevronDown, Menu } from "lucide-react";
 import { getSupabaseBrowserClient } from "@/lib/supabaseBrowser";
-import Logo from "@/components/Logo";
 
 /**
  * Global navbar for webdoc.ai.
@@ -144,7 +143,13 @@ export default function Navbar() {
         aria-label="WebDoc home"
         style={{ textDecoration: "none", color: "inherit", gap: "10px", cursor: "pointer" }}
       >
-        <Logo size="sm" />
+        <img
+          src="/webdocai_logo_definitive.svg"
+          alt="webdocai icon"
+          width={48}
+          height={48}
+          style={{ display: 'block', flexShrink: 0 }}
+        />
         <span
           style={{
             fontFamily: "var(--font-orbitron), sans-serif",

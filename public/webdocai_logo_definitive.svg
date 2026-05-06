@@ -1,38 +1,33 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" fill="none">
-
-<defs>
-  <filter id="glow" x="-20%" y="-100%" width="140%" height="300%">
-    <feGaussianBlur stdDeviation="5" result="blur1"/>
-    <feGaussianBlur stdDeviation="10" result="blur2"/>
-    <feMerge>
-      <feMergeNode in="blur2"/>
-      <feMergeNode in="blur1"/>
-      <feMergeNode in="SourceGraphic"/>
-    </feMerge>
-  </filter>
-  <filter id="softglow" x="-20%" y="-100%" width="140%" height="300%">
-    <feGaussianBlur stdDeviation="4" result="blur"/>
-    <feMerge>
-      <feMergeNode in="blur"/>
-      <feMergeNode in="SourceGraphic"/>
-    </feMerge>
-  </filter>
-</defs>
-
-<g transform="translate(400, 400)" style="fill:rgb(0, 0, 0);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto">
-  <!-- Corner brackets — full strength, primary element -->
-  <g filter="url(#softglow)" style="fill:rgb(0, 0, 0);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto">
-    <line x1="30" y1="-200" x2="200" y2="-200" stroke="#00C8FF" stroke-width="14" stroke-linecap="square" style="fill:rgb(0, 0, 0);stroke:rgb(0, 200, 255);color:rgb(255, 255, 255);stroke-width:14px;stroke-linecap:square;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
-    <line x1="200" y1="-200" x2="200" y2="-30" stroke="#00C8FF" stroke-width="14" stroke-linecap="square" style="fill:rgb(0, 0, 0);stroke:rgb(0, 200, 255);color:rgb(255, 255, 255);stroke-width:14px;stroke-linecap:square;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
-    <line x1="-200" y1="30" x2="-200" y2="200" stroke="#00C8FF" stroke-width="14" stroke-linecap="square" style="fill:rgb(0, 0, 0);stroke:rgb(0, 200, 255);color:rgb(255, 255, 255);stroke-width:14px;stroke-linecap:square;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
-    <line x1="-200" y1="200" x2="-30" y2="200" stroke="#00C8FF" stroke-width="14" stroke-linecap="square" style="fill:rgb(0, 0, 0);stroke:rgb(0, 200, 255);color:rgb(255, 255, 255);stroke-width:14px;stroke-linecap:square;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+  <defs>
+    <filter id="glow" x="-20%" y="-100%" width="140%" height="300%">
+      <feGaussianBlur stdDeviation="5" result="blur1"/>
+      <feGaussianBlur stdDeviation="12" result="blur2"/>
+      <feMerge>
+        <feMergeNode in="blur2"/>
+        <feMergeNode in="blur1"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="softglow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="4" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  <g transform="translate(400,400)">
+    <g filter="url(#softglow)">
+      <line x1="80" y1="-200" x2="200" y2="-200" stroke="#00C8FF" stroke-width="22" stroke-linecap="square"/>
+      <line x1="200" y1="-200" x2="200" y2="-80" stroke="#00C8FF" stroke-width="22" stroke-linecap="square"/>
+      <line x1="-200" y1="80" x2="-200" y2="200" stroke="#00C8FF" stroke-width="22" stroke-linecap="square"/>
+      <line x1="-200" y1="200" x2="-80" y2="200" stroke="#00C8FF" stroke-width="22" stroke-linecap="square"/>
+    </g>
+    <g filter="url(#glow)" opacity="0.85">
+      <line x1="-150" y1="0" x2="-60" y2="0" stroke="#00C8FF" stroke-width="8" stroke-linecap="round"/>
+      <polyline points="-60,0 -30,0 -15,-70 0,70 15,-30 35,0 60,0" fill="none" stroke="#00C8FF" stroke-width="8" stroke-linejoin="round" stroke-linecap="round"/>
+      <line x1="60" y1="0" x2="150" y2="0" stroke="#00C8FF" stroke-width="8" stroke-linecap="round"/>
+    </g>
   </g>
-
-  <!-- Pulse — clearly visible, secondary, precise and clinical -->
-  <g filter="url(#glow)" opacity="0.7" style="fill:rgb(0, 0, 0);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:0.7;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto">
-    <line x1="-260" y1="0" x2="-60" y2="0" stroke="#00C8FF" stroke-width="3.5" stroke-linecap="round" style="fill:rgb(0, 0, 0);stroke:rgb(0, 200, 255);color:rgb(255, 255, 255);stroke-width:3.5px;stroke-linecap:round;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
-    <polyline points="-60,0 -30,0 -15,-70 0,70 15,-30 35,0 260,0" fill="none" stroke="#00C8FF" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round" style="fill:none;stroke:rgb(0, 200, 255);color:rgb(255, 255, 255);stroke-width:3.5px;stroke-linecap:round;stroke-linejoin:round;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
-  </g>
-</g>
-
 </svg>

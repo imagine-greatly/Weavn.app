@@ -2,9 +2,9 @@ export default function Logo() {
   return (
     <img
       src="/webdocai_logo_definitive.svg"
-      alt="webdocai icon"
-      width={48}
-      height={48}
+      alt=""
+      width={56}
+      height={56}
       style={{ display: 'block', flexShrink: 0 }}
     />
   );

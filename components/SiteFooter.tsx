@@ -3,7 +3,6 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import Logo from "@/components/Logo";
 
 function normalizeUrl(input: string): string {
   const t = input.trim();
@@ -58,7 +57,13 @@ export default function SiteFooter() {
       <div className="mx-auto grid max-w-[1100px] gap-12 md:grid-cols-2 lg:grid-cols-4">
         <div>
           <Link href="/" className="inline-flex items-center gap-2" aria-label="WebDoc home" style={{ textDecoration: "none" }}>
-            <Logo size="sm" />
+            <img
+              src="/webdocai_logo_definitive.svg"
+              alt="webdocai"
+              width={32}
+              height={32}
+              style={{ display: 'block', flexShrink: 0 }}
+            />
             <span
               style={{
                 fontFamily: "var(--font-jetbrains-mono), var(--font-space-mono), monospace",

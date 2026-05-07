@@ -488,6 +488,70 @@ export default function DashboardPage() {
 
   const prefetchedFindings = useRef<Map<string, unknown>>(new Map());
 
+  // Background prefetch: warm DB cache for top 10 findings so issue pages load instantly
+  useEffect(() => {
+    const reportId = activeLatest?.id;
+    if (!reportId || !sortedPriorityLeaks.length) return;
+    const ac = new AbortController();
+    const timers: ReturnType<typeof setTimeout>[] = [];
+
+    // Route bundle prefetch for top 5 (JS chunk)
+    sortedPriorityLeaks.slice(0, 5).forEach((finding) => {
+      const fid = String(finding.id ?? "").trim() || String(finding.title ?? "").trim();
+      if (fid) router.prefetch(`/issue/${encodeURIComponent(reportId)}/${encodeURIComponent(fid)}`);
+    });
+
+    // Critical-first ordering for data prefetch
+    const ordered = [...sortedPriorityLeaks.slice(0, 10)].sort((a, b) => {
+      const aC = (a.severity === "critical" || a.rubricSeverity === "Critical") ? 0 : 1;
+      const bC = (b.severity === "critical" || b.rubricSeverity === "Critical") ? 0 : 1;
+      return aC - bC;
+    });
+
+    ordered.forEach((finding, i) => {
+      const fid = String(finding.id ?? "").trim() || String(finding.title ?? "").trim();
+      if (!fid) return;
+      const t = setTimeout(() => {
+        if (ac.signal.aborted || prefetchedFindings.current.has(fid)) return;
+        void fetch("/api/expand-finding", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          signal: ac.signal,
+          body: JSON.stringify({
+            report_id: reportId,
+            finding_id: fid,
+            domain: activeLatest?.domain ?? "",
+            overallScore: activeScore,
+            finding: {
+              title: finding.title,
+              severity: String(finding.rubricSeverity ?? finding.severity ?? ""),
+              category: finding.category ?? "",
+              whatWeFound: finding.whatWeFound ?? "",
+              whyItMatters: finding.whyItMatters ?? "",
+              howToFixIt: finding.howToFixIt ?? "",
+              exampleFix: finding.exampleFix ?? "",
+              psychologyPrinciple: finding.psychologyPrinciple ?? "",
+              revenueImpact: finding.revenueImpact,
+              page_location: finding.page_location,
+            },
+          }),
+        })
+          .then((res) => (res.ok ? res.json() : null))
+          .then((data: unknown) => {
+            if (!ac.signal.aborted && data) prefetchedFindings.current.set(fid, data);
+          })
+          .catch(() => { /* ignore prefetch failures */ });
+      }, 800 + i * 300);
+      timers.push(t);
+    });
+
+    return () => {
+      ac.abort();
+      timers.forEach(clearTimeout);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeLatest?.id]);
+
   const effectiveDomain = activeDomain || domains[0] || "";
 
   const activeDomainReports = effectiveDomain
@@ -544,72 +608,6 @@ export default function DashboardPage() {
     () => [...activeMoneyLeaks].sort((a, b) => (b.revenueImpact ?? 0) - (a.revenueImpact ?? 0)),
     [activeMoneyLeaks]
   );
-
-  // Background prefetch: warm DB cache for top 10 findings so issue pages load instantly
-  useEffect(() => {
-    const reportId = activeLatest?.id;
-    if (!reportId || !sortedPriorityLeaks.length) return;
-    const ac = new AbortController();
-    const timers: ReturnType<typeof setTimeout>[] = [];
-
-    // Route bundle prefetch for top 5 (JS chunk)
-    sortedPriorityLeaks.slice(0, 5).forEach((finding) => {
-      const fid = String(finding.id ?? "").trim() || String(finding.title ?? "").trim();
-      if (fid) router.prefetch(`/issue/${encodeURIComponent(reportId)}/${encodeURIComponent(fid)}`);
-    });
-
-    // Critical-first ordering for data prefetch
-    const ordered = [...sortedPriorityLeaks.slice(0, 10)].sort((a, b) => {
-      const aC = (a.severity === "critical" || a.rubricSeverity === "Critical") ? 0 : 1;
-      const bC = (b.severity === "critical" || b.rubricSeverity === "Critical") ? 0 : 1;
-      return aC - bC;
-    });
-
-    const overallScore = activeScore;
-    const reportDomain = activeLatest?.domain ?? "";
-    ordered.forEach((finding, i) => {
-      const fid = String(finding.id ?? "").trim() || String(finding.title ?? "").trim();
-      if (!fid) return;
-      const t = setTimeout(() => {
-        if (ac.signal.aborted || prefetchedFindings.current.has(fid)) return;
-        void fetch("/api/expand-finding", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          signal: ac.signal,
-          body: JSON.stringify({
-            report_id: reportId,
-            finding_id: fid,
-            domain: reportDomain,
-            overallScore,
-            finding: {
-              title: finding.title,
-              severity: String(finding.rubricSeverity ?? finding.severity ?? ""),
-              category: finding.category ?? "",
-              whatWeFound: finding.whatWeFound ?? "",
-              whyItMatters: finding.whyItMatters ?? "",
-              howToFixIt: finding.howToFixIt ?? "",
-              exampleFix: finding.exampleFix ?? "",
-              psychologyPrinciple: finding.psychologyPrinciple ?? "",
-              revenueImpact: finding.revenueImpact,
-              page_location: finding.page_location,
-            },
-          }),
-        })
-          .then((res) => (res.ok ? res.json() : null))
-          .then((data: unknown) => {
-            if (!ac.signal.aborted && data) prefetchedFindings.current.set(fid, data);
-          })
-          .catch(() => { /* ignore prefetch failures */ });
-      }, 800 + i * 300);
-      timers.push(t);
-    });
-
-    return () => {
-      ac.abort();
-      timers.forEach(clearTimeout);
-    };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeLatest?.id]);
 
   const dashboardFindingRows = useMemo(
     () => convertLeaksToFindingData(activeMoneyLeaks),

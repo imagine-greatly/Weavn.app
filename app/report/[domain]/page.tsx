@@ -2,6 +2,7 @@
 
 import {
   useEffect,
+  useRef,
   useState,
   type ComponentProps,
   type ComponentType,
@@ -14,6 +15,7 @@ import { mapAnalyzeToReport } from "@/lib/mapAnalyzeToReport";
 import { mergeStoredReportBody } from "@/lib/mergeStoredReport";
 import { getSupabaseBrowserClient } from "@/lib/supabaseBrowser";
 import { useRouter } from "next/navigation";
+import { getDashboardMoneyLeaks } from "@/lib/dashboardMoneyLeaks";
 
 /** Until ReportLayout declares `isPro`, widen props here only. */
 const ReportLayoutWithPro = ReportLayout as ComponentType<
@@ -266,6 +268,73 @@ export default function ReportDomainPage() {
 
     return () => { cancelled = true; };
   }, [domain]);
+
+  // Background prefetch: warm DB cache for top 10 findings so issue pages load instantly
+  const prefetchedFindings = useRef<Map<string, unknown>>(new Map());
+  useEffect(() => {
+    if (!storedReportId || !report) return;
+    const leaks = getDashboardMoneyLeaks(report);
+    if (!leaks.length) return;
+
+    const sorted = [...leaks].sort((a, b) => (b.revenueImpact ?? 0) - (a.revenueImpact ?? 0));
+    const top = sorted.slice(0, 10);
+    const ac = new AbortController();
+    const timers: ReturnType<typeof setTimeout>[] = [];
+
+    top.slice(0, 5).forEach((finding) => {
+      const fid = String(finding.id ?? "").trim() || String(finding.title ?? "").trim();
+      if (fid) router.prefetch(`/issue/${encodeURIComponent(storedReportId)}/${encodeURIComponent(fid)}`);
+    });
+
+    const ordered = [...top].sort((a, b) => {
+      const aC = (a.severity === "critical" || a.rubricSeverity === "Critical") ? 0 : 1;
+      const bC = (b.severity === "critical" || b.rubricSeverity === "Critical") ? 0 : 1;
+      return aC - bC;
+    });
+
+    const overallScore = report.healthScore ?? 0;
+    ordered.forEach((finding, i) => {
+      const fid = String(finding.id ?? "").trim() || String(finding.title ?? "").trim();
+      if (!fid) return;
+      const t = setTimeout(() => {
+        if (ac.signal.aborted || prefetchedFindings.current.has(fid)) return;
+        void fetch("/api/expand-finding", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          signal: ac.signal,
+          body: JSON.stringify({
+            report_id: storedReportId,
+            finding_id: fid,
+            domain,
+            overallScore,
+            finding: {
+              title: finding.title,
+              severity: String(finding.rubricSeverity ?? finding.severity ?? ""),
+              category: finding.category ?? "",
+              whatWeFound: finding.whatWeFound ?? "",
+              whyItMatters: finding.whyItMatters ?? "",
+              howToFixIt: finding.howToFixIt ?? "",
+              exampleFix: finding.exampleFix ?? "",
+              psychologyPrinciple: finding.psychologyPrinciple ?? "",
+              revenueImpact: finding.revenueImpact,
+              page_location: finding.page_location,
+            },
+          }),
+        })
+          .then((res) => (res.ok ? res.json() : null))
+          .then((data: unknown) => {
+            if (!ac.signal.aborted && data) prefetchedFindings.current.set(fid, data);
+          })
+          .catch(() => { /* ignore prefetch failures */ });
+      }, 800 + i * 300);
+      timers.push(t);
+    });
+
+    return () => {
+      ac.abort();
+      timers.forEach(clearTimeout);
+    };
+  }, [storedReportId, report, domain, router]);
 
   if (loading) {
     return (

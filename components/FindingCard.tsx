@@ -260,6 +260,7 @@ function QuickWinFindingCard({ finding }: { finding: FindingData }) {
   return (
     <article
       className="border"
+      data-prefetch-id={finding.id}
       style={{
         borderRadius: 0,
         background: "rgba(240,244,255,0.02)",
@@ -354,6 +355,7 @@ function RevenueFindingCard({
   return (
     <article
       className="finding-card-mobile relative"
+      data-prefetch-id={finding.id}
       style={{
         borderRadius: 2,
         background: "rgba(240,244,255,0.02)",
@@ -567,6 +569,7 @@ export function ConversionKillerCard({
   return (
     <article
       className="relative"
+      data-prefetch-id={finding.id}
       style={{
         background: "rgba(255,255,255,0.02)",
         border: "1px solid rgba(255,255,255,0.06)",
@@ -889,6 +892,7 @@ export default function FindingCard({
   return (
     <article
       className="finding-card-mobile relative overflow-hidden border transition-[border-color] duration-150"
+      data-prefetch-id={finding.id}
       style={{
         borderRadius: 10,
         background: "var(--bg-card)",

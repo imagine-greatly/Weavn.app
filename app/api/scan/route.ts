@@ -154,16 +154,11 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const validation = await validateUrl(normalized);
-  if (!validation.valid) {
+  if (!domain.includes(".")) {
     return withCookies(
       NextResponse.json(
-        {
-          error: "invalid_url",
-          message: validation.reason ?? "This URL does not appear to be a live website.",
-          code: "SITE_UNREACHABLE",
-        },
-        { status: 422 }
+        { error: "Invalid URL.", code: "SCAN_INVALID_URL" },
+        { status: 400 }
       )
     );
   }

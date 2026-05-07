@@ -51,7 +51,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning style={{ backgroundColor: "#050810" }}>
       <head>
-        <link rel="icon" href="/webdocai_logo_definitive.svg" type="image/svg+xml" />
+        <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
         <link rel="apple-touch-icon" href="/webdocai_logo_definitive.svg" />
         <meta name="theme-color" content="#050810" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />

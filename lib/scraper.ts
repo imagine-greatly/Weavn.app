@@ -89,7 +89,7 @@ export function extractHeadlineFromMarkdown(markdown: string): string | null {
 
 // -- SCRAPING FISH (PRIMARY JS RENDERER) -------------------------------
 const SCRAPING_FISH_BASE = 'https://scraping.narf.ai/api/v1/'
-const SCRAPING_FISH_TIMEOUT_MS = 120_000
+const SCRAPING_FISH_TIMEOUT_MS = 45_000
 
 async function fetchWithScrapingFish(url: string): Promise<string | null> {
   if (!SCRAPING_FISH_KEY) {

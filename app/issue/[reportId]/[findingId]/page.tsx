@@ -454,107 +454,6 @@ function SectionSkeleton({ widthPct }: { widthPct: string }) {
   );
 }
 
-function ExpandToggle({
-  children,
-  summaryText,
-  expandSignal = 0,
-  collapseSignal = 0,
-  onUserToggle,
-  verdictSummary = false,
-}: {
-  children: ReactNode;
-  summaryText: string;
-  expandSignal?: number;
-  collapseSignal?: number;
-  onUserToggle?: () => void;
-  /** Space Grotesk bold verdict line + READ MORE / READ LESS (issue clinical sections). */
-  verdictSummary?: boolean;
-}) {
-  const [expanded, setExpanded] = useState(false);
-  const lastExpandSig = useRef(-1);
-  const lastCollapseSig = useRef(-1);
-
-  useEffect(() => {
-    if (expandSignal !== lastExpandSig.current) {
-      lastExpandSig.current = expandSignal;
-      if (expandSignal > 0) setExpanded(true);
-    }
-  }, [expandSignal]);
-
-  useEffect(() => {
-    if (collapseSignal !== lastCollapseSig.current) {
-      lastCollapseSig.current = collapseSignal;
-      if (collapseSignal > 0) setExpanded(false);
-    }
-  }, [collapseSignal]);
-
-  const summary = summaryText.trim();
-
-  const summaryStyle = verdictSummary
-    ? {
-        margin: expanded ? ("0 0 12px 0" as const) : ("0 0 8px 0" as const),
-        fontFamily: "var(--font-space-grotesk), ui-sans-serif, sans-serif",
-        fontSize: 16,
-        fontWeight: 700 as const,
-        color: "#FFFFFF",
-        lineHeight: 1.45,
-      }
-    : {
-        margin: "0 0 8px 0" as const,
-        fontFamily: "Inter, ui-sans-serif, system-ui, sans-serif",
-        fontSize: 16,
-        fontWeight: 500 as const,
-        color: "#FFFFFF",
-        lineHeight: 1.6,
-      };
-
-  return (
-    <div>
-      {summary ? (
-        <p style={summaryStyle}>{summary}</p>
-      ) : null}
-
-      {expanded ? <div>{children}</div> : null}
-
-      <button
-        type="button"
-        onClick={() => {
-          setExpanded((prev) => {
-            const next = !prev;
-            if (prev && !next) onUserToggle?.();
-            return next;
-          });
-        }}
-        style={{
-          marginTop: expanded ? (verdictSummary ? 16 : 8) : summary ? 8 : 0,
-          background: "none",
-          border: "none",
-          padding: 0,
-          cursor: "pointer",
-          fontFamily: "var(--font-space-mono), ui-monospace, monospace",
-          fontSize: 11,
-          color: "#8899AA",
-          letterSpacing: "0.08em",
-          textTransform: "uppercase",
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.color = "#00C8FF";
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.color = "#8899AA";
-        }}
-      >
-        {verdictSummary
-          ? expanded
-            ? "READ LESS / COLLAPSE"
-            : "READ MORE"
-          : expanded
-            ? "Collapse ↑"
-            : "Read full analysis →"}
-      </button>
-    </div>
-  );
-}
 
 export default function IssuePage() {
   const router = useRouter();
@@ -1147,7 +1046,6 @@ export default function IssuePage() {
   const benchmarkStatementRaw = String(
     briefExpanded?.benchmark?.statement ?? "",
   ).trim();
-  const benchmarkExpandSummaryText = firstSentence(benchmarkStatementRaw);
 
   const revenueModelingRaw = String(
     briefExpanded?.revenueImpact?.modeling ?? "",
@@ -1172,32 +1070,10 @@ export default function IssuePage() {
     briefExpanded?.diagnosisAnalysis?.interactionEffect ?? "",
   ).trim();
 
-  const diagnosticSummaryVerdictLine =
-    briefExpanded?.diagnosticSummaryVerdict ??
-    firstSentence(diagnosticSummaryBody);
-  const behavioralMechanismVerdictLine =
-    briefExpanded?.diagnosisAnalysis?.behavioralMechanismVerdict ??
-    firstSentence(behavioralMechanismRaw);
-  const conversionConsequenceVerdictLine =
-    briefExpanded?.diagnosisAnalysis?.conversionConsequenceVerdict ??
-    firstSentence(conversionConsequenceRaw);
-  const scopeOfImpactVerdictLine =
-    briefExpanded?.diagnosisAnalysis?.scopeOfImpactVerdict ??
-    firstSentence(scopeOfImpactRaw);
-  const interactionEffectVerdictLine =
-    briefExpanded?.diagnosisAnalysis?.interactionEffectVerdict ??
-    firstSentence(interactionEffectRaw);
-  const revenueModelingVerdictLine =
-    briefExpanded?.revenueImpact?.revenueImpactVerdict ??
-    firstSentence(revenueModelingRaw);
   const originAnalysisFull =
     originFullText ||
     (isPlaceholderContent(originAnalysisDisplay) ? "—" : originAnalysisDisplay);
-  const originAnalysisVerdictLine =
-    briefExpanded?.originAnalysisVerdict ?? firstSentence(originAnalysisFull);
   const compoundingRiskRaw = String(briefExpanded?.compoundingRisk ?? "").trim();
-  const compoundingRiskVerdictLine =
-    briefExpanded?.compoundingRiskVerdict ?? firstSentence(compoundingRiskRaw);
 
   const resolutionProjectedImpact = (tier: "immediate" | "proper" | "advanced") => {
     const raw = (
@@ -1253,36 +1129,54 @@ export default function IssuePage() {
     fontFamily: "var(--font-space-grotesk), sans-serif",
     fontSize: 15,
     fontWeight: 400,
-    color: "#E8E8E8",
+    color: "#E0E6FF",
     lineHeight: 1.75,
   };
 
   const monoSectionLabel: CSSProperties = {
     fontFamily: "var(--font-space-mono), ui-monospace, monospace",
-    fontSize: 11,
-    color: "#8899AA",
-    letterSpacing: "0.12em",
-    marginBottom: 20,
+    fontSize: 10,
+    color: "#00C8FF",
+    letterSpacing: "0.15em",
+    marginBottom: 12,
     textTransform: "uppercase",
     fontWeight: 400,
   };
 
-  const analysisMicroLabel: CSSProperties = {
-    fontFamily: "var(--font-space-mono), ui-monospace, monospace",
-    fontSize: 10,
-    color: "#00C8FF",
-    letterSpacing: "0.1em",
-    textTransform: "uppercase",
-    marginBottom: 20,
-    fontWeight: 400,
-  };
+  const siteScore = report?.analysis?.healthScore ?? 0;
+  const gaugeSize = 140;
+  const gaugeStroke = 8;
+  const gaugeR = (gaugeSize - gaugeStroke) / 2;
+  const gaugeCirc = 2 * Math.PI * gaugeR;
+  const gaugeOffset = gaugeCirc * (1 - siteScore / 100);
+  const gColor =
+    siteScore >= 75 ? "#00E676" : siteScore >= 50 ? "#FFB800" : siteScore >= 30 ? "#FF6B00" : "#FF2D2D";
+  const gBandLabel =
+    siteScore >= 75 ? "STRONG" : siteScore >= 50 ? "FAIR" : siteScore >= 30 ? "WEAK" : "CRITICAL";
+  const dimBarColor = (s: number) =>
+    s >= 75 ? "#00E676" : s >= 50 ? "#FFB800" : s >= 30 ? "#FF6B00" : "#FF2D2D";
+  const dimensionBars = (() => {
+    const scores = report?.analysis?.dimensionScores;
+    if (!Array.isArray(scores) || scores.length === 0) return [];
+    return scores.map((d) => ({
+      label: String(d.label ?? ""),
+      score: Math.max(0, Math.min(100, Math.round(Number(d.score) || 0))),
+    }));
+  })();
+
+  const prevFinding = priorityIndex > 0 ? sortedByPriority[priorityIndex - 1] ?? null : null;
+  const nextFinding =
+    priorityIndex >= 0 && priorityIndex < sortedByPriority.length - 1
+      ? sortedByPriority[priorityIndex + 1] ?? null
+      : null;
 
   return (
     <div
       style={{
-        background: "var(--bg-base)",
-        minHeight: "100svh",
-        paddingTop: 80,
+        display: "flex",
+        height: "calc(100vh - 4rem)",
+        overflow: "hidden",
+        background: "#050810",
         position: "relative",
       }}
     >
@@ -1292,6 +1186,7 @@ export default function IssuePage() {
           50% { opacity: 1; }
         }
       `}</style>
+
       <div
         style={{
           position: "fixed",
@@ -1316,9 +1211,7 @@ export default function IssuePage() {
           left: 0,
           right: 0,
           height: 1,
-          background:
-            "linear-gradient(90deg, " +
-            "transparent, rgba(0,200,255,0.3), transparent)",
+          background: "linear-gradient(90deg, transparent, rgba(0,200,255,0.3), transparent)",
           pointerEvents: "none",
           zIndex: 1,
         }}
@@ -1326,130 +1219,347 @@ export default function IssuePage() {
       />
 
       {[
-        {
-          top: "4rem",
-          left: 0,
-          borderTop: "1px solid rgba(0,200,255,0.2)",
-          borderLeft: "1px solid rgba(0,200,255,0.2)",
-        },
-        {
-          top: "4rem",
-          right: 0,
-          borderTop: "1px solid rgba(0,200,255,0.2)",
-          borderRight: "1px solid rgba(0,200,255,0.2)",
-        },
-        {
-          bottom: 0,
-          left: 0,
-          borderBottom: "1px solid rgba(0,200,255,0.2)",
-          borderLeft: "1px solid rgba(0,200,255,0.2)",
-        },
-        {
-          bottom: 0,
-          right: 0,
-          borderBottom: "1px solid rgba(0,200,255,0.2)",
-          borderRight: "1px solid rgba(0,200,255,0.2)",
-        },
+        { top: "4rem", left: 0, borderTop: "1px solid rgba(0,200,255,0.2)", borderLeft: "1px solid rgba(0,200,255,0.2)" },
+        { top: "4rem", right: 0, borderTop: "1px solid rgba(0,200,255,0.2)", borderRight: "1px solid rgba(0,200,255,0.2)" },
+        { bottom: 0, left: 0, borderBottom: "1px solid rgba(0,200,255,0.2)", borderLeft: "1px solid rgba(0,200,255,0.2)" },
+        { bottom: 0, right: 0, borderBottom: "1px solid rgba(0,200,255,0.2)", borderRight: "1px solid rgba(0,200,255,0.2)" },
       ].map((s, i) => (
         <div
           key={i}
-          style={{
-            position: "fixed",
-            width: 24,
-            height: 24,
-            pointerEvents: "none",
-            zIndex: 100,
-            ...s,
-          }}
+          style={{ position: "fixed", width: 24, height: 24, pointerEvents: "none", zIndex: 100, ...s }}
           aria-hidden
         />
       ))}
 
+      {/* LEFT SIDEBAR */}
       <div
         style={{
-          maxWidth: 860,
-          margin: "0 auto",
-          padding: "32px 24px 0 24px",
+          width: 280,
+          flexShrink: 0,
+          height: "100%",
+          overflowY: "auto",
+          background: "#080D18",
+          borderRight: "1px solid #0D1626",
+          padding: "24px 20px",
+          display: "flex",
+          flexDirection: "column",
+          gap: 24,
           position: "relative",
-          zIndex: 1,
+          zIndex: 2,
         }}
       >
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: 28,
-            flexWrap: "wrap",
-            gap: 12,
-          }}
-        >
-          <button
-            type="button"
-            onClick={() => router.back()}
+        {/* Back */}
+        {report ? (
+          <Link
+            href={`/report/${encodeURIComponent(report.domain)}`}
             style={{
               display: "inline-flex",
               alignItems: "center",
-              gap: 8,
-              background: "transparent",
-              border: "1px solid var(--border-default)",
-              borderRadius: 8,
-              padding: "10px 16px",
-              cursor: "pointer",
-              fontFamily: "var(--font-jetbrains-mono), var(--font-space-mono), monospace",
+              gap: 6,
+              fontFamily: "var(--font-space-mono), monospace",
               fontSize: 11,
-              letterSpacing: "2px",
-              color: "var(--text-muted)",
-              transition: "all 150ms ease",
+              letterSpacing: "0.12em",
+              color: "#8899AA",
+              textTransform: "uppercase",
+              textDecoration: "none",
+              marginBottom: 20,
             }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.borderColor = "rgba(0,200,255,0.3)";
-              e.currentTarget.style.color = "var(--cyan)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.borderColor = "var(--border-default)";
-              e.currentTarget.style.color = "var(--text-muted)";
-            }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.color = "#00C8FF"; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.color = "#8899AA"; }}
           >
-            ← BACK TO DASHBOARD
-          </button>
+            ← BACK TO REPORT
+          </Link>
+        ) : null}
 
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 12,
-            }}
-          >
-            {report && (
-              <span
+        {/* Score gauge */}
+        {report ? (
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
+            <div style={{ position: "relative", width: gaugeSize, height: gaugeSize }}>
+              <svg
+                width={gaugeSize}
+                height={gaugeSize}
+                style={{ transform: "rotate(-90deg)", display: "block" }}
+              >
+                <circle
+                  cx={gaugeSize / 2}
+                  cy={gaugeSize / 2}
+                  r={gaugeR}
+                  fill="none"
+                  stroke="#0D1626"
+                  strokeWidth={gaugeStroke}
+                />
+                <circle
+                  cx={gaugeSize / 2}
+                  cy={gaugeSize / 2}
+                  r={gaugeR}
+                  fill="none"
+                  stroke={gColor}
+                  strokeWidth={gaugeStroke}
+                  strokeLinecap="round"
+                  strokeDasharray={gaugeCirc}
+                  strokeDashoffset={gaugeOffset}
+                  style={{ filter: `drop-shadow(0 0 6px ${gColor}88)` }}
+                />
+              </svg>
+              <div
                 style={{
-                  fontFamily: "var(--font-jetbrains-mono), var(--font-space-mono), monospace",
-                  fontSize: 10,
-                  fontWeight: 700,
-                  color: scoreColor(report.analysis.healthScore),
-                  letterSpacing: "1px",
+                  position: "absolute",
+                  inset: 0,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
                 }}
               >
-                {report.analysis.healthScore}/100
-              </span>
-            )}
+                <span
+                  style={{
+                    fontFamily: "var(--font-orbitron), sans-serif",
+                    fontWeight: 700,
+                    fontSize: 26,
+                    color: gColor,
+                    lineHeight: 1,
+                  }}
+                >
+                  {siteScore}
+                </span>
+              </div>
+            </div>
             <div
               style={{
-                fontFamily: "var(--font-jetbrains-mono), var(--font-space-mono), monospace",
-                fontSize: 10,
-                color: "var(--text-muted)",
-                border: "1px solid var(--border-default)",
-                borderRadius: 6,
-                padding: "6px 12px",
-                letterSpacing: "1px",
+                fontFamily: "var(--font-space-mono), monospace",
+                fontSize: 9,
+                color: gColor,
+                letterSpacing: "0.12em",
+                textTransform: "uppercase",
               }}
             >
-              {report?.domain}
+              {gBandLabel}
+            </div>
+            <div
+              style={{
+                fontFamily: "var(--font-space-mono), monospace",
+                fontSize: 9,
+                color: "#8899AA",
+                letterSpacing: "0.15em",
+                textTransform: "uppercase",
+              }}
+            >
+              CONVERSION SCORE
+            </div>
+            <div
+              style={{
+                fontFamily: "var(--font-space-mono), monospace",
+                fontSize: 9,
+                color: "#8899AA",
+                letterSpacing: "0.08em",
+              }}
+            >
+              {report.domain}
             </div>
           </div>
+        ) : null}
+
+        {/* Conversion health bars */}
+        {dimensionBars.length > 0 ? (
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            <div
+              style={{
+                fontFamily: "var(--font-space-mono), monospace",
+                fontSize: 9,
+                color: "#8899AA",
+                letterSpacing: "0.15em",
+                textTransform: "uppercase",
+                marginBottom: 4,
+              }}
+            >
+              CONVERSION HEALTH
+            </div>
+            {dimensionBars.map((dim) => (
+              <div key={dim.label} style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span
+                    style={{
+                      fontFamily: "var(--font-space-mono), monospace",
+                      fontSize: 8,
+                      color: "#8899AA",
+                      letterSpacing: "0.08em",
+                      textTransform: "uppercase",
+                    }}
+                  >
+                    {dim.label}
+                  </span>
+                  <span
+                    style={{
+                      fontFamily: "var(--font-space-mono), monospace",
+                      fontSize: 8,
+                      color: dimBarColor(dim.score),
+                    }}
+                  >
+                    {dim.score}
+                  </span>
+                </div>
+                <div
+                  style={{
+                    height: 3,
+                    background: "#0D1626",
+                    borderRadius: 2,
+                    overflow: "hidden",
+                  }}
+                >
+                  <div
+                    style={{
+                      height: "100%",
+                      width: `${dim.score}%`,
+                      background: dimBarColor(dim.score),
+                      borderRadius: 2,
+                    }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : null}
+
+        {/* Finding position */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          <div
+            style={{
+              fontFamily: "var(--font-space-mono), monospace",
+              fontSize: 9,
+              color: "#8899AA",
+              letterSpacing: "0.15em",
+              textTransform: "uppercase",
+            }}
+          >
+            FINDING {priorityN} OF {priorityY}
+          </div>
+          <div
+            style={{
+              fontFamily: "var(--font-space-grotesk), sans-serif",
+              fontSize: 13,
+              fontWeight: 700,
+              color: "#FFFFFF",
+              lineHeight: 1.3,
+              display: "-webkit-box",
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: "vertical",
+              overflow: "hidden",
+            }}
+          >
+            {finding.title}
+          </div>
+          <span
+            style={{
+              display: "inline-block",
+              fontFamily: "var(--font-space-mono), monospace",
+              fontWeight: 700,
+              fontSize: 9,
+              letterSpacing: "1.5px",
+              color: "#FFFFFF",
+              background: sevColor,
+              borderRadius: 2,
+              padding: "2px 8px",
+              alignSelf: "flex-start",
+            }}
+          >
+            {sevLabel}
+          </span>
         </div>
 
+        {/* Prev / Next navigation */}
+        {(prevFinding || nextFinding) ? (
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {prevFinding ? (
+              <button
+                type="button"
+                onClick={() => {
+                  if (report) router.push(`/issue/${encodeURIComponent(report.id)}/${encodeURIComponent(leakKey(prevFinding))}`);
+                }}
+                style={{
+                  display: "flex",
+                  alignItems: "flex-start",
+                  gap: 8,
+                  background: "rgba(255,255,255,0.03)",
+                  border: "1px solid #1A2035",
+                  borderRadius: 6,
+                  padding: "8px 12px",
+                  cursor: "pointer",
+                  textAlign: "left",
+                  width: "100%",
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.borderColor = "rgba(0,200,255,0.25)"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.borderColor = "#1A2035"; }}
+              >
+                <span style={{ fontFamily: "var(--font-space-mono), monospace", fontSize: 10, color: "#8899AA", lineHeight: 1.3 }}>
+                  ← PREVIOUS FINDING
+                </span>
+              </button>
+            ) : null}
+            {nextFinding ? (
+              <button
+                type="button"
+                onClick={() => {
+                  if (report) router.push(`/issue/${encodeURIComponent(report.id)}/${encodeURIComponent(leakKey(nextFinding))}`);
+                }}
+                style={{
+                  display: "flex",
+                  alignItems: "flex-start",
+                  gap: 8,
+                  background: "rgba(255,255,255,0.03)",
+                  border: "1px solid #1A2035",
+                  borderRadius: 6,
+                  padding: "8px 12px",
+                  cursor: "pointer",
+                  textAlign: "left",
+                  width: "100%",
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.borderColor = "rgba(0,200,255,0.25)"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.borderColor = "#1A2035"; }}
+              >
+                <span style={{ fontFamily: "var(--font-space-mono), monospace", fontSize: 10, color: "#8899AA", lineHeight: 1.3 }}>
+                  NEXT FINDING →
+                </span>
+              </button>
+            ) : null}
+          </div>
+        ) : null}
+
+        {/* View full report — pinned to bottom */}
+        <div style={{ marginTop: "auto" }}>
+          {report ? (
+            <Link
+              href={`/report/${encodeURIComponent(report.domain)}`}
+              style={{
+                display: "block",
+                fontFamily: "var(--font-space-mono), monospace",
+                fontSize: 10,
+                color: "#00C8FF",
+                letterSpacing: "0.12em",
+                textTransform: "uppercase",
+                textDecoration: "none",
+                padding: "8px 0",
+              }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.color = "#FFFFFF"; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.color = "#00C8FF"; }}
+            >
+              VIEW FULL REPORT →
+            </Link>
+          ) : null}
+        </div>
+      </div>
+
+      {/* RIGHT PANEL */}
+      <div
+        style={{
+          flex: 1,
+          height: "100%",
+          overflowY: "auto",
+          padding: "32px 40px 80px",
+          position: "relative",
+          zIndex: 2,
+        }}
+      >
+
+        {/* FINDING HEADER */}
         <div
           style={{
             background: "rgba(7,12,20,0.97)",
@@ -1464,15 +1574,9 @@ export default function IssuePage() {
                   ? "inset 4px 0 20px rgba(255,149,0,0.08)"
                   : "inset 4px 0 20px rgba(0,255,135,0.06)",
             marginBottom: 40,
-            paddingBottom: 48,
           }}
         >
-          <div
-            style={{
-              padding: "28px 32px 32px",
-              background: "rgba(13,16,32,0.9)",
-            }}
-          >
+          <div style={{ padding: "28px 32px 32px", background: "rgba(13,16,32,0.9)" }}>
             <h1
               style={{
                 fontFamily: "var(--font-space-grotesk), sans-serif",
@@ -1487,15 +1591,7 @@ export default function IssuePage() {
               {finding.title}
             </h1>
 
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 10,
-                marginBottom: 16,
-                flexWrap: "wrap",
-              }}
-            >
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>
               <span
                 style={{
                   fontFamily: "var(--font-jetbrains-mono), var(--font-space-mono), monospace",
@@ -1587,604 +1683,18 @@ export default function IssuePage() {
                   textTransform: "uppercase",
                   textDecoration: "none",
                   cursor: "pointer",
-                  background: "none",
-                  border: "none",
-                  padding: 0,
                 }}
               >
                 SKIP TO RESOLUTION
               </a>
             </div>
           </div>
-
-          {/* DIAGNOSTIC SUMMARY */}
-          <div
-            style={{
-              padding: "72px 32px 0 32px",
-            }}
-          >
-            <div style={monoSectionLabel}>DIAGNOSTIC SUMMARY</div>
-            {isPlaceholderContent(diagnosticSummaryBody) ? (
-              <SectionSkeleton widthPct="74%" />
-            ) : (
-              <ExpandToggle
-                summaryText={String(diagnosticSummaryVerdictLine).trim()}
-              >
-                <p style={{ margin: 0, maxWidth: 820, ...bodyCopy }}>
-                  {diagnosticSummaryBody}
-                </p>
-              </ExpandToggle>
-            )}
-          </div>
-
-          <SectionDivider />
-
-          {/* EVIDENCE */}
-          <div
-            style={{
-              padding: "0 32px 0 32px",
-            }}
-          >
-                <div style={monoSectionLabel}>EVIDENCE</div>
-                <blockquote
-                  style={{
-                    margin: 0,
-                    padding: "18px 22px 18px 24px",
-                    borderLeft: "3px solid #00C8FF",
-                    background: "rgba(0,200,255,0.06)",
-                    borderRadius: "0 10px 10px 0",
-                    boxShadow: "0 0 40px rgba(0,180,255,0.04)",
-                    fontStyle: "italic",
-                  }}
-                >
-                  <FindingExpandedText
-                    text={evidenceQuote || "—"}
-                    expandLoading={expandLoading}
-                    hasExpanded={hasBrief}
-                    style={{
-                      fontFamily: "var(--font-space-mono), ui-monospace, monospace",
-                      fontSize: 13,
-                      color: "#8899AA",
-                      lineHeight: 1.6,
-                    }}
-                  />
-                </blockquote>
-                <div
-                  style={{
-                    marginTop: 12,
-                    fontFamily:
-                      "var(--font-jetbrains-mono), var(--font-space-mono), monospace",
-                    fontSize: 10,
-                    color: "#8899AA",
-                    letterSpacing: "0.04em",
-                  }}
-                >
-                  Observed at:{" "}
-                  {briefExpanded?.observedAt?.trim() ||
-                    (finding.page_location?.trim() ?? "—")}
-                </div>
-          </div>
-
-          <SectionDivider />
-
-          {/* DIAGNOSTIC ANALYSIS */}
-          <div style={{ padding: "0 32px 0 32px" }}>
-            <div style={monoSectionLabel}>DIAGNOSTIC ANALYSIS</div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 32 }}>
-              <div>
-                <div style={analysisMicroLabel}>BEHAVIORAL MECHANISM</div>
-                {expandLoading && !hasBrief ? (
-                  <SectionSkeleton widthPct={skeletonWidthForKey("behavioral")} />
-                ) : (
-                  <ExpandToggle
-                    verdictSummary
-                    summaryText={String(behavioralMechanismVerdictLine).trim()}
-                  >
-                    <p style={{ margin: 0, maxWidth: 820, ...bodyCopy }}>
-                      {isPlaceholderContent(behavioralMechanismRaw)
-                        ? "—"
-                        : behavioralMechanismRaw}
-                    </p>
-                  </ExpandToggle>
-                )}
-              </div>
-              <div>
-                <div style={analysisMicroLabel}>CONVERSION CONSEQUENCE</div>
-                {expandLoading && !hasBrief ? (
-                  <SectionSkeleton widthPct={skeletonWidthForKey("conversion")} />
-                ) : (
-                  <ExpandToggle
-                    verdictSummary
-                    summaryText={String(conversionConsequenceVerdictLine).trim()}
-                  >
-                    <p style={{ margin: 0, maxWidth: 820, ...bodyCopy }}>
-                      {isPlaceholderContent(conversionConsequenceRaw)
-                        ? "—"
-                        : conversionConsequenceRaw}
-                    </p>
-                  </ExpandToggle>
-                )}
-              </div>
-              <div>
-                <div style={analysisMicroLabel}>SCOPE OF IMPACT</div>
-                {expandLoading && !hasBrief ? (
-                  <SectionSkeleton widthPct={skeletonWidthForKey("scope")} />
-                ) : (
-                  <ExpandToggle
-                    verdictSummary
-                    summaryText={String(scopeOfImpactVerdictLine).trim()}
-                  >
-                    <p style={{ margin: 0, maxWidth: 820, ...bodyCopy }}>
-                      {isPlaceholderContent(scopeOfImpactRaw) ? "—" : scopeOfImpactRaw}
-                    </p>
-                  </ExpandToggle>
-                )}
-              </div>
-              <div>
-                <div style={analysisMicroLabel}>INTERACTION EFFECT</div>
-                {expandLoading && !hasBrief ? (
-                  <SectionSkeleton widthPct={skeletonWidthForKey("interaction")} />
-                ) : (
-                  <ExpandToggle
-                    verdictSummary
-                    summaryText={String(interactionEffectVerdictLine).trim()}
-                  >
-                    <p style={{ margin: 0, maxWidth: 820, ...bodyCopy }}>
-                      {isPlaceholderContent(interactionEffectRaw)
-                        ? "—"
-                        : interactionEffectRaw}
-                    </p>
-                  </ExpandToggle>
-                )}
-              </div>
-            </div>
-          </div>
-
-          <SectionDivider />
-
-          {/* REVENUE IMPACT ANALYSIS */}
-          <div style={{ padding: "0 32px 0 32px" }}>
-            <div style={monoSectionLabel}>REVENUE IMPACT ANALYSIS</div>
-            <div
-              style={{
-                fontFamily: "var(--font-orbitron), ui-sans-serif, sans-serif",
-                fontSize: 28,
-                fontWeight: 700,
-                letterSpacing: "0.06em",
-                color: sevColor,
-                marginBottom: 12,
-              }}
-            >
-              {impactSuppressionHeadline(briefExpanded, finding)}
-            </div>
-            <div style={analysisMicroLabel}>MODELING</div>
-            {expandLoading && !hasBrief ? (
-              <SectionSkeleton widthPct="68%" />
-            ) : (
-              <ExpandToggle
-                verdictSummary
-                summaryText={String(revenueModelingVerdictLine).trim()}
-              >
-                <p style={{ margin: 0, maxWidth: 820, ...bodyCopy }}>
-                  {isPlaceholderContent(revenueModelingRaw) ? "—" : revenueModelingRaw}
-                </p>
-              </ExpandToggle>
-            )}
-            {revenueNarrativeRaw ? (
-              <p style={{ margin: "16px 0 0 0", ...bodyCopy }}>{revenueNarrativeRaw}</p>
-            ) : null}
-            <p
-              style={{
-                margin: "20px 0 0 0",
-                fontFamily: "var(--font-jetbrains-mono), var(--font-space-mono), monospace",
-                fontSize: 12,
-                color: "rgba(136, 153, 170, 0.72)",
-                lineHeight: 1.5,
-                maxWidth: 820,
-              }}
-            >
-              {costOfInactionLine}
-            </p>
-          </div>
-
-          <SectionDivider />
-
-          {/* ORIGIN ANALYSIS */}
-          <div style={{ padding: "0 32px 0 32px" }}>
-            <div style={monoSectionLabel}>ORIGIN ANALYSIS</div>
-            {expandLoading && !hasBrief ? (
-              <SectionSkeleton widthPct="71%" />
-            ) : (
-              <ExpandToggle
-                verdictSummary
-                summaryText={String(originAnalysisVerdictLine).trim()}
-              >
-                <p
-                  style={{
-                    margin: 0,
-                    maxWidth: 820,
-                    ...bodyCopy,
-                    whiteSpace: "pre-wrap",
-                  }}
-                >
-                  {originAnalysisFull}
-                </p>
-              </ExpandToggle>
-            )}
-          </div>
-
-          <SectionDivider />
-
-          {/* CONVERSION BENCHMARK */}
-          <div style={{ padding: "0 32px 0 32px" }}>
-            <div style={monoSectionLabel}>CONVERSION BENCHMARK</div>
-            {isPlaceholderContent(benchmarkStatementRaw) ? (
-              expandLoading && !hasBrief ? (
-                <div style={{ margin: "0 0 28px 0" }}>
-                  <SectionSkeleton widthPct="77%" />
-                </div>
-              ) : (
-                <div style={{ margin: "0 0 28px 0" }}>
-                  <ExpandToggle summaryText="">
-                    <p style={{ margin: 0, ...bodyCopy }}>—</p>
-                  </ExpandToggle>
-                </div>
-              )
-            ) : (
-              <div style={{ margin: "0 0 28px 0" }}>
-                <ExpandToggle summaryText={benchmarkExpandSummaryText}>
-                  <p style={{ margin: 0, ...bodyCopy }}>{benchmarkStatementRaw}</p>
-                </ExpandToggle>
-              </div>
-            )}
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: 14,
-                maxWidth: 640,
-              }}
-            >
-              {[
-                {
-                  label: "This site:",
-                  desc:
-                    briefExpanded?.benchmark?.thisSiteLabel ||
-                    "Current experience vs. category norm",
-                  w: "32%",
-                  c: sevColor,
-                },
-                {
-                  label: "High-converting benchmark:",
-                  desc:
-                    briefExpanded?.benchmark?.benchmarkLabel ||
-                    "Category-leading clarity pattern",
-                  w: "82%",
-                  c: "#00E676",
-                },
-              ].map((row) => (
-                <div key={row.label}>
-                  <div
-                    style={{
-                      fontFamily:
-                        "var(--font-jetbrains-mono), var(--font-space-mono), monospace",
-                      fontSize: 10,
-                      color: "#8899AA",
-                      marginBottom: 6,
-                    }}
-                  >
-                    {row.label}{" "}
-                    <span style={{ color: "var(--text-muted)", fontWeight: 400 }}>
-                      {row.desc}
-                    </span>
-                  </div>
-                  <div
-                    style={{
-                      height: 8,
-                      borderRadius: 4,
-                      background: "rgba(255,255,255,0.06)",
-                      overflow: "hidden",
-                    }}
-                  >
-                    <div
-                      style={{
-                        width: row.w,
-                        height: "100%",
-                        borderRadius: 4,
-                        background: row.c,
-                        boxShadow: `0 0 12px ${row.c}55`,
-                      }}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <SectionDivider />
-
-          {/* RESOLUTION PROTOCOL */}
-          <div id="issue-resolution-protocol" style={{ padding: "0 32px 0 32px" }}>
-            <div style={monoSectionLabel}>RESOLUTION PROTOCOL</div>
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: 20,
-                marginBottom: 24,
-              }}
-            >
-              {resolutionTiers.map((tier) => (
-                <div
-                  key={tier.key}
-                  style={{
-                    position: "relative",
-                    background: "#0A0F1E",
-                    border: `1px solid ${tier.cardBorder}`,
-                    borderRadius: 8,
-                    padding: "20px 22px 20px 26px",
-                    overflow: "hidden",
-                  }}
-                >
-                  <div
-                    style={{
-                      position: "absolute",
-                      left: 0,
-                      top: 0,
-                      bottom: 0,
-                      width: 4,
-                      background: tier.accent,
-                      opacity: tier.key === "advanced" ? 1 : 0.9,
-                    }}
-                    aria-hidden
-                  />
-                  <div
-                    style={{
-                      fontFamily: "var(--font-space-grotesk), sans-serif",
-                      fontSize: 18,
-                      fontWeight: 700,
-                      color: tier.titleColor,
-                      marginBottom: 4,
-                    }}
-                  >
-                    {tier.title}
-                  </div>
-                  <div
-                    style={{
-                      fontFamily:
-                        "var(--font-jetbrains-mono), var(--font-space-mono), monospace",
-                      fontSize: 10,
-                      color: "#8899AA",
-                      marginBottom: 12,
-                    }}
-                  >
-                    {tier.sub}
-                  </div>
-                  <p
-                    style={{
-                      margin: "0 0 12px 0",
-                      ...bodyCopy,
-                      lineHeight: 1.7,
-                      whiteSpace: "pre-wrap",
-                    }}
-                  >
-                    {tier.body || "—"}
-                  </p>
-                  <div
-                    style={{
-                      fontFamily:
-                        "var(--font-jetbrains-mono), var(--font-space-mono), monospace",
-                      fontSize: 10,
-                      color: "var(--text-muted)",
-                    }}
-                  >
-                    {tier.time}
-                  </div>
-                  {tier.projectedImpact ? (
-                    <div
-                      style={{
-                        marginTop: 8,
-                        fontFamily:
-                          "var(--font-jetbrains-mono), var(--font-space-mono), monospace",
-                        fontSize: 10,
-                        color: "#00C8FF",
-                        letterSpacing: "0.04em",
-                        opacity: 0.8,
-                      }}
-                    >
-                      ↑ {tier.projectedImpact}
-                    </div>
-                  ) : null}
-                </div>
-              ))}
-            </div>
-            <button
-              type="button"
-              disabled={resolveBusy || resolvedLocal}
-              onClick={() => void markResolved()}
-              onMouseEnter={(e) => {
-                if (resolveBusy || resolvedLocal) return;
-                e.currentTarget.style.background = "rgba(0, 230, 118, 0.062)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = "transparent";
-              }}
-              style={{
-                width: "100%",
-                maxWidth: 820,
-                height: 48,
-                borderRadius: 6,
-                border: "1px solid #00E676",
-                background: "transparent",
-                color: "#00E676",
-                fontFamily: "var(--font-space-mono), ui-monospace, monospace",
-                fontSize: 11,
-                letterSpacing: "0.08em",
-                textTransform: resolvedLocal ? "none" : "uppercase",
-                fontWeight: 400,
-                cursor: resolveBusy || resolvedLocal ? "default" : "pointer",
-              }}
-            >
-              {resolvedLocal
-                ? "Finding marked as resolved"
-                : "Mark finding as resolved"}
-            </button>
-          </div>
-
-          <SectionDivider />
-
-          {/* COMPOUNDING RISK */}
-          <div style={{ padding: "0 32px 0 32px" }}>
-            <div
-              style={{
-                background: "#0D0810",
-                border: "1px solid rgba(255, 45, 45, 0.12)",
-                borderLeft: "3px solid #FF2D2D",
-                borderRadius: 4,
-                padding: 24,
-              }}
-            >
-              <div
-                style={{
-                  fontFamily:
-                    "var(--font-jetbrains-mono), var(--font-space-mono), monospace",
-                  fontSize: 9,
-                  color: sevColor,
-                  letterSpacing: "2px",
-                  marginBottom: 12,
-                  textTransform: "uppercase",
-                }}
-              >
-                COMPOUNDING RISK
-              </div>
-              {expandLoading && !hasBrief ? (
-                <SectionSkeleton widthPct="69%" />
-              ) : (
-                <ExpandToggle
-                  verdictSummary
-                  summaryText={String(compoundingRiskVerdictLine).trim()}
-                >
-                  <p
-                    style={{
-                      margin: 0,
-                      maxWidth: 820,
-                      ...bodyCopy,
-                      lineHeight: 1.8,
-                      whiteSpace: "pre-wrap",
-                    }}
-                  >
-                    {isPlaceholderContent(compoundingRiskRaw)
-                      ? "—"
-                      : compoundingRiskRaw}
-                  </p>
-                </ExpandToggle>
-              )}
-            </div>
-          </div>
-
-          {relatedFindings.length > 0 ? <SectionDivider /> : null}
-
-          {/* RELATED DIAGNOSTIC FINDINGS */}
-          {relatedFindings.length > 0 ? (
-            <div style={{ padding: "0 32px 48px 32px" }}>
-              <div style={monoSectionLabel}>RELATED DIAGNOSTIC FINDINGS</div>
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: 16,
-                }}
-              >
-                {relatedFindings.map((l) => {
-                  const kid = leakKey(l);
-                  const inter =
-                    briefExpanded?.relatedFindingInteractions?.find(
-                      (x) => x.findingId === kid,
-                    )?.interaction ?? "";
-                  return (
-                    <Link
-                      key={kid}
-                      href={`/issue/${encodeURIComponent(reportId)}/${encodeURIComponent(kid)}`}
-                      style={{
-                        display: "block",
-                        padding: "12px 16px",
-                        borderRadius: 8,
-                        border: "1px solid var(--border-default)",
-                        background: "rgba(7,12,20,0.6)",
-                        textDecoration: "none",
-                        transition: "border-color 150ms ease, box-shadow 150ms ease",
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.borderColor = "rgba(0,200,255,0.35)";
-                        e.currentTarget.style.boxShadow = "0 0 0 1px rgba(0,200,255,0.08)";
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.borderColor = "var(--border-default)";
-                        e.currentTarget.style.boxShadow = "none";
-                      }}
-                    >
-                      <div
-                        style={{
-                          fontFamily: "var(--font-jetbrains-mono), var(--font-space-mono), monospace",
-                          fontSize: 8,
-                          color: "var(--text-muted)",
-                          letterSpacing: "1px",
-                          marginBottom: 4,
-                        }}
-                      >
-                        {l.category}
-                      </div>
-                      <div
-                        style={{
-                          fontFamily: "var(--font-space-grotesk), sans-serif",
-                          fontSize: 14,
-                          fontWeight: 500,
-                          color: "var(--cyan)",
-                          lineHeight: 1.35,
-                        }}
-                      >
-                        {l.title}
-                      </div>
-                      {inter ? (
-                        <div
-                          style={{
-                            marginTop: 10,
-                            fontFamily: "var(--font-jetbrains-mono), var(--font-space-mono), monospace",
-                            fontSize: 13,
-                            color: "rgba(136, 153, 170, 0.85)",
-                            lineHeight: 1.5,
-                          }}
-                        >
-                          Interaction: {inter}
-                        </div>
-                      ) : null}
-                    </Link>
-                  );
-                })}
-              </div>
-            </div>
-          ) : null}
         </div>
-      </div>
 
-      {/* AI Advisor — full width */}
-      <section
-        style={{
-          width: "100%",
-          marginTop: 80,
-          padding: "40px 24px 80px",
-          borderTop: "1px solid rgba(0,200,255,0.12)",
-          background: "rgba(5,8,16,0.92)",
-          position: "relative",
-          zIndex: 1,
-          boxShadow: "0 -20px 60px rgba(0,0,0,0.35)",
-        }}
-      >
+        {/* AI ADVISOR */}
         <div
           style={{
             position: "relative",
-            maxWidth: 860,
-            margin: "0 auto",
             background: "rgba(5,8,16,0.98)",
             border: "1px solid rgba(0,200,255,0.2)",
             borderRadius: 12,
@@ -2193,6 +1703,7 @@ export default function IssuePage() {
             minHeight: 520,
             overflow: "hidden",
             boxShadow: "var(--cyan-glow-active)",
+            marginBottom: 48,
           }}
         >
           <div
@@ -2202,8 +1713,7 @@ export default function IssuePage() {
               left: 0,
               right: 0,
               height: 1,
-              background:
-                "linear-gradient(90deg, transparent, rgba(0,200,255,0.6), transparent)",
+              background: "linear-gradient(90deg, transparent, rgba(0,200,255,0.6), transparent)",
               pointerEvents: "none",
               zIndex: 1,
             }}
@@ -2218,15 +1728,7 @@ export default function IssuePage() {
               flexShrink: 0,
             }}
           >
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 8,
-                marginBottom: 10,
-                flexWrap: "wrap",
-              }}
-            >
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10, flexWrap: "wrap" }}>
               <span
                 style={{
                   width: 7,
@@ -2295,8 +1797,7 @@ export default function IssuePage() {
                 style={{
                   display: "flex",
                   flexDirection: "column",
-                  alignItems:
-                    m.role === "user" ? "flex-end" : "flex-start",
+                  alignItems: m.role === "user" ? "flex-end" : "flex-start",
                   marginBottom: 14,
                 }}
               >
@@ -2305,10 +1806,7 @@ export default function IssuePage() {
                     fontFamily: "var(--font-jetbrains-mono), var(--font-space-mono), monospace",
                     fontSize: 8,
                     letterSpacing: "1.5px",
-                    color:
-                      m.role === "user"
-                        ? "rgba(0,200,255,0.5)"
-                        : "rgba(255,255,255,0.2)",
+                    color: m.role === "user" ? "rgba(0,200,255,0.5)" : "rgba(255,255,255,0.2)",
                     marginBottom: 4,
                     textTransform: "uppercase",
                   }}
@@ -2320,59 +1818,29 @@ export default function IssuePage() {
                     maxWidth: "min(920px, 100%)",
                     width: m.role === "assistant" ? "100%" : undefined,
                     padding: "12px 16px",
-                    borderRadius:
-                      m.role === "user"
-                        ? "12px 12px 2px 12px"
-                        : "2px 12px 12px 12px",
-                    background:
-                      m.role === "user"
-                        ? "rgba(0,200,255,0.1)"
-                        : "rgba(17,20,40,0.8)",
-                    border:
-                      m.role === "user"
-                        ? "1px solid rgba(0,200,255,0.2)"
-                        : "1px solid var(--border-default)",
+                    borderRadius: m.role === "user" ? "12px 12px 2px 12px" : "2px 12px 12px 12px",
+                    background: m.role === "user" ? "rgba(0,200,255,0.1)" : "rgba(17,20,40,0.8)",
+                    border: m.role === "user" ? "1px solid rgba(0,200,255,0.2)" : "1px solid var(--border-default)",
                     fontFamily: "Inter, ui-sans-serif, system-ui, sans-serif",
                     fontSize: 15,
                     fontWeight: 400,
-                    color:
-                      m.role === "user"
-                        ? "var(--cyan)"
-                        : "#FFFFFF",
+                    color: m.role === "user" ? "var(--cyan)" : "#FFFFFF",
                     lineHeight: 1.7,
                     whiteSpace: "pre-wrap",
                     wordBreak: "break-word",
                   }}
                 >
                   {m.content}
-                  {streaming &&
-                    i === messages.length - 1 &&
-                    m.role === "assistant" && (
-                      <span
-                        style={{
-                          animation: "blink 1s step-start infinite",
-                          marginLeft: 2,
-                        }}
-                      >
-                        ▍
-                      </span>
-                    )}
+                  {streaming && i === messages.length - 1 && m.role === "assistant" && (
+                    <span style={{ animation: "blink 1s step-start infinite", marginLeft: 2 }}>▍</span>
+                  )}
                 </div>
               </div>
             ))}
           </div>
 
-          {messages.length === 1 &&
-            messages[0]?.role === "assistant" &&
-            !streaming && (
-            <div
-              style={{
-                padding: "0 24px 12px",
-                display: "flex",
-                gap: 8,
-                flexWrap: "wrap",
-              }}
-            >
+          {messages.length === 1 && messages[0]?.role === "assistant" && !streaming && (
+            <div style={{ padding: "0 24px 12px", display: "flex", gap: 8, flexWrap: "wrap" }}>
               {advisorChips.map((c, chipIdx) => (
                 <button
                   key={`${chipIdx}-${c}`}
@@ -2390,13 +1858,11 @@ export default function IssuePage() {
                     transition: "all 150ms ease",
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.borderColor =
-                      "rgba(0,200,255,0.3)";
+                    e.currentTarget.style.borderColor = "rgba(0,200,255,0.3)";
                     e.currentTarget.style.color = "var(--cyan)";
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.borderColor =
-                      "var(--border-default)";
+                    e.currentTarget.style.borderColor = "var(--border-default)";
                     e.currentTarget.style.color = "var(--text-muted)";
                   }}
                 >
@@ -2444,14 +1910,11 @@ export default function IssuePage() {
                 marginBottom: 12,
               }}
               onFocus={(e) => {
-                e.currentTarget.style.borderColor =
-                  "rgba(0,200,255,0.35)";
-                e.currentTarget.style.boxShadow =
-                  "0 0 40px rgba(0,180,255,0.06)";
+                e.currentTarget.style.borderColor = "rgba(0,200,255,0.35)";
+                e.currentTarget.style.boxShadow = "0 0 40px rgba(0,180,255,0.06)";
               }}
               onBlur={(e) => {
-                e.currentTarget.style.borderColor =
-                  "var(--border-default)";
+                e.currentTarget.style.borderColor = "var(--border-default)";
                 e.currentTarget.style.boxShadow = "none";
               }}
             />
@@ -2463,17 +1926,10 @@ export default function IssuePage() {
                 width: "100%",
                 height: 44,
                 borderRadius: 8,
-                background:
-                  input.trim() && !streaming
-                    ? "var(--cyan)"
-                    : "var(--bg-elevated)",
+                background: input.trim() && !streaming ? "var(--cyan)" : "var(--bg-elevated)",
                 border: "none",
-                cursor:
-                  input.trim() && !streaming ? "pointer" : "not-allowed",
-                color:
-                  input.trim() && !streaming
-                    ? "#050810"
-                    : "var(--text-muted)",
+                cursor: input.trim() && !streaming ? "pointer" : "not-allowed",
+                color: input.trim() && !streaming ? "#050810" : "var(--text-muted)",
                 fontFamily: "var(--font-jetbrains-mono), var(--font-space-mono), monospace",
                 fontSize: 11,
                 letterSpacing: "2px",
@@ -2485,7 +1941,369 @@ export default function IssuePage() {
             </button>
           </div>
         </div>
-      </section>
+
+        {/* EVIDENCE */}
+        <SectionDivider />
+        <div>
+          <div style={monoSectionLabel}>EVIDENCE</div>
+          <blockquote
+            style={{
+              margin: 0,
+              padding: "18px 22px 18px 24px",
+              borderLeft: "3px solid #00C8FF",
+              background: "rgba(0,200,255,0.06)",
+              borderRadius: "0 10px 10px 0",
+              boxShadow: "0 0 40px rgba(0,180,255,0.04)",
+              fontStyle: "italic",
+            }}
+          >
+            <FindingExpandedText
+              text={evidenceQuote || "—"}
+              expandLoading={expandLoading}
+              hasExpanded={hasBrief}
+              style={{
+                fontFamily: "var(--font-space-mono), ui-monospace, monospace",
+                fontSize: 13,
+                color: "#8899AA",
+                lineHeight: 1.6,
+              }}
+            />
+          </blockquote>
+          <div
+            style={{
+              marginTop: 12,
+              fontFamily: "var(--font-jetbrains-mono), var(--font-space-mono), monospace",
+              fontSize: 10,
+              color: "#8899AA",
+              letterSpacing: "0.04em",
+            }}
+          >
+            Observed at:{" "}
+            {briefExpanded?.observedAt?.trim() || (finding.page_location?.trim() ?? "—")}
+          </div>
+        </div>
+
+        {/* DIAGNOSTIC ANALYSIS — combined prose */}
+        <SectionDivider />
+        <div>
+          <div style={monoSectionLabel}>DIAGNOSTIC ANALYSIS</div>
+          {expandLoading && !hasBrief ? (
+            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              <SectionSkeleton widthPct="74%" />
+              <SectionSkeleton widthPct="68%" />
+              <SectionSkeleton widthPct="71%" />
+            </div>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+              {!isPlaceholderContent(diagnosticSummaryBody) && (
+                <p style={{ margin: 0, maxWidth: 820, ...bodyCopy }}>{diagnosticSummaryBody}</p>
+              )}
+              {!isPlaceholderContent(behavioralMechanismRaw) && (
+                <p style={{ margin: 0, maxWidth: 820, ...bodyCopy }}>{behavioralMechanismRaw}</p>
+              )}
+              {!isPlaceholderContent(conversionConsequenceRaw) && (
+                <p style={{ margin: 0, maxWidth: 820, ...bodyCopy }}>{conversionConsequenceRaw}</p>
+              )}
+              {!isPlaceholderContent(scopeOfImpactRaw) && (
+                <p style={{ margin: 0, maxWidth: 820, ...bodyCopy }}>{scopeOfImpactRaw}</p>
+              )}
+              {!isPlaceholderContent(interactionEffectRaw) && (
+                <p style={{ margin: 0, maxWidth: 820, ...bodyCopy }}>{interactionEffectRaw}</p>
+              )}
+              {!isPlaceholderContent(originAnalysisFull) && (
+                <p style={{ margin: 0, maxWidth: 820, ...bodyCopy, whiteSpace: "pre-wrap" }}>
+                  {originAnalysisFull}
+                </p>
+              )}
+              {!isPlaceholderContent(compoundingRiskRaw) && (
+                <p style={{ margin: 0, maxWidth: 820, ...bodyCopy, whiteSpace: "pre-wrap" }}>
+                  {compoundingRiskRaw}
+                </p>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* REVENUE IMPACT */}
+        <SectionDivider />
+        <div>
+          <div style={monoSectionLabel}>REVENUE IMPACT</div>
+          <div
+            style={{
+              fontFamily: "var(--font-orbitron), ui-sans-serif, sans-serif",
+              fontSize: 28,
+              fontWeight: 700,
+              letterSpacing: "0.06em",
+              color: sevColor,
+              marginBottom: 16,
+            }}
+          >
+            {impactSuppressionHeadline(briefExpanded, finding)}
+          </div>
+
+          {expandLoading && !hasBrief ? (
+            <SectionSkeleton widthPct="68%" />
+          ) : (
+            <>
+              {!isPlaceholderContent(revenueModelingRaw) && (
+                <p style={{ margin: "0 0 16px 0", maxWidth: 820, ...bodyCopy }}>{revenueModelingRaw}</p>
+              )}
+              {revenueNarrativeRaw ? (
+                <p style={{ margin: "0 0 16px 0", ...bodyCopy }}>{revenueNarrativeRaw}</p>
+              ) : null}
+            </>
+          )}
+
+          <p
+            style={{
+              margin: "0 0 24px 0",
+              fontFamily: "var(--font-jetbrains-mono), var(--font-space-mono), monospace",
+              fontSize: 12,
+              color: "rgba(136,153,170,0.72)",
+              lineHeight: 1.5,
+              maxWidth: 820,
+            }}
+          >
+            {costOfInactionLine}
+          </p>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 14, maxWidth: 640 }}>
+            {[
+              {
+                label: "This site:",
+                desc: briefExpanded?.benchmark?.thisSiteLabel || "Current experience vs. category norm",
+                w: "32%",
+                c: sevColor,
+              },
+              {
+                label: "High-converting benchmark:",
+                desc: briefExpanded?.benchmark?.benchmarkLabel || "Category-leading clarity pattern",
+                w: "82%",
+                c: "#00E676",
+              },
+            ].map((row) => (
+              <div key={row.label}>
+                <div
+                  style={{
+                    fontFamily: "var(--font-jetbrains-mono), var(--font-space-mono), monospace",
+                    fontSize: 10,
+                    color: "#8899AA",
+                    marginBottom: 6,
+                  }}
+                >
+                  {row.label}{" "}
+                  <span style={{ color: "var(--text-muted)", fontWeight: 400 }}>{row.desc}</span>
+                </div>
+                <div
+                  style={{
+                    height: 8,
+                    borderRadius: 4,
+                    background: "rgba(255,255,255,0.06)",
+                    overflow: "hidden",
+                  }}
+                >
+                  <div
+                    style={{
+                      width: row.w,
+                      height: "100%",
+                      borderRadius: 4,
+                      background: row.c,
+                      boxShadow: `0 0 12px ${row.c}55`,
+                    }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* RESOLUTION PROTOCOL */}
+        <SectionDivider />
+        <div id="issue-resolution-protocol">
+          <div style={monoSectionLabel}>RESOLUTION PROTOCOL</div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 20, marginBottom: 24 }}>
+            {resolutionTiers.map((tier) => (
+              <div
+                key={tier.key}
+                style={{
+                  position: "relative",
+                  background: "#0A0F1E",
+                  border: `1px solid ${tier.cardBorder}`,
+                  borderRadius: 8,
+                  padding: "20px 22px 20px 26px",
+                  overflow: "hidden",
+                }}
+              >
+                <div
+                  style={{
+                    position: "absolute",
+                    left: 0,
+                    top: 0,
+                    bottom: 0,
+                    width: 4,
+                    background: tier.accent,
+                    opacity: tier.key === "advanced" ? 1 : 0.9,
+                  }}
+                  aria-hidden
+                />
+                <div
+                  style={{
+                    fontFamily: "var(--font-space-grotesk), sans-serif",
+                    fontSize: 18,
+                    fontWeight: 700,
+                    color: tier.titleColor,
+                    marginBottom: 4,
+                  }}
+                >
+                  {tier.title}
+                </div>
+                <div
+                  style={{
+                    fontFamily: "var(--font-jetbrains-mono), var(--font-space-mono), monospace",
+                    fontSize: 10,
+                    color: "#8899AA",
+                    marginBottom: 12,
+                  }}
+                >
+                  {tier.sub}
+                </div>
+                <p style={{ margin: "0 0 12px 0", ...bodyCopy, lineHeight: 1.7, whiteSpace: "pre-wrap" }}>
+                  {tier.body || "—"}
+                </p>
+                <div
+                  style={{
+                    fontFamily: "var(--font-jetbrains-mono), var(--font-space-mono), monospace",
+                    fontSize: 10,
+                    color: "var(--text-muted)",
+                  }}
+                >
+                  {tier.time}
+                </div>
+                {tier.projectedImpact ? (
+                  <div
+                    style={{
+                      marginTop: 8,
+                      fontFamily: "var(--font-jetbrains-mono), var(--font-space-mono), monospace",
+                      fontSize: 10,
+                      color: "#00C8FF",
+                      letterSpacing: "0.04em",
+                      opacity: 0.8,
+                    }}
+                  >
+                    ↑ {tier.projectedImpact}
+                  </div>
+                ) : null}
+              </div>
+            ))}
+          </div>
+
+          <button
+            type="button"
+            disabled={resolveBusy || resolvedLocal}
+            onClick={() => void markResolved()}
+            onMouseEnter={(e) => {
+              if (resolveBusy || resolvedLocal) return;
+              e.currentTarget.style.background = "rgba(0,230,118,0.062)";
+            }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+            style={{
+              width: "100%",
+              maxWidth: 820,
+              height: 48,
+              borderRadius: 6,
+              border: "1px solid #00E676",
+              background: "transparent",
+              color: "#00E676",
+              fontFamily: "var(--font-space-mono), ui-monospace, monospace",
+              fontSize: 11,
+              letterSpacing: "0.08em",
+              textTransform: resolvedLocal ? "none" : "uppercase",
+              fontWeight: 400,
+              cursor: resolveBusy || resolvedLocal ? "default" : "pointer",
+            }}
+          >
+            {resolvedLocal ? "Finding marked as resolved" : "Mark finding as resolved"}
+          </button>
+        </div>
+
+        {/* RELATED FINDINGS */}
+        {relatedFindings.length > 0 ? (
+          <>
+            <SectionDivider />
+            <div style={{ paddingBottom: 48 }}>
+              <div style={monoSectionLabel}>RELATED DIAGNOSTIC FINDINGS</div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                {relatedFindings.map((l) => {
+                  const kid = leakKey(l);
+                  const inter =
+                    briefExpanded?.relatedFindingInteractions?.find(
+                      (x) => x.findingId === kid,
+                    )?.interaction ?? "";
+                  return (
+                    <Link
+                      key={kid}
+                      href={`/issue/${encodeURIComponent(reportId)}/${encodeURIComponent(kid)}`}
+                      style={{
+                        display: "block",
+                        padding: "12px 16px",
+                        borderRadius: 8,
+                        border: "1px solid var(--border-default)",
+                        background: "rgba(7,12,20,0.6)",
+                        textDecoration: "none",
+                        transition: "border-color 150ms ease, box-shadow 150ms ease",
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.borderColor = "rgba(0,200,255,0.35)";
+                        e.currentTarget.style.boxShadow = "0 0 0 1px rgba(0,200,255,0.08)";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.borderColor = "var(--border-default)";
+                        e.currentTarget.style.boxShadow = "none";
+                      }}
+                    >
+                      <div
+                        style={{
+                          fontFamily: "var(--font-jetbrains-mono), var(--font-space-mono), monospace",
+                          fontSize: 8,
+                          color: "var(--text-muted)",
+                          letterSpacing: "1px",
+                          marginBottom: 4,
+                        }}
+                      >
+                        {l.category}
+                      </div>
+                      <div
+                        style={{
+                          fontFamily: "var(--font-space-grotesk), sans-serif",
+                          fontSize: 14,
+                          fontWeight: 500,
+                          color: "var(--cyan)",
+                          lineHeight: 1.35,
+                        }}
+                      >
+                        {l.title}
+                      </div>
+                      {inter ? (
+                        <div
+                          style={{
+                            marginTop: 10,
+                            fontFamily: "var(--font-jetbrains-mono), var(--font-space-mono), monospace",
+                            fontSize: 13,
+                            color: "rgba(136,153,170,0.85)",
+                            lineHeight: 1.5,
+                          }}
+                        >
+                          Interaction: {inter}
+                        </div>
+                      ) : null}
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+          </>
+        ) : null}
+      </div>
     </div>
   );
 }

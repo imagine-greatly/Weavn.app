@@ -118,7 +118,7 @@ export default function LandingFinalCTA({ url, onUrlChange, autoFocus }: Props) 
             className="mx-auto mt-5 max-w-[400px] text-center font-sans text-[18px] font-light"
             style={{ color: "var(--text-secondary)", lineHeight: 1.8 }}
           >
-            The scan completes in approximately 30 seconds. You receive ranked diagnostic findings with evidence and resolutions mapped to revenue impact.
+            The scan completes in approximately 60 seconds. You receive ranked diagnostic findings with evidence and resolutions mapped to revenue impact.
           </p>
         </ScrollReveal>
 

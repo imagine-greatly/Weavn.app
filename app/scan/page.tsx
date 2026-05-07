@@ -66,68 +66,6 @@ function getDomain(urlStr: string): string {
   }
 }
 
-const SCAN_LINE_ZONE_COUNT = 16;
-const SCAN_LINE_ARRIVE_EPS = 0.65;
-
-function scanLineZoneIndex(y: number, viewportH: number): number {
-  if (viewportH <= 0) return 0;
-  const zh = viewportH / SCAN_LINE_ZONE_COUNT;
-  return Math.max(
-    0,
-    Math.min(SCAN_LINE_ZONE_COUNT - 1, Math.floor(y / zh)),
-  );
-}
-
-function weightedPickIndex(weights: number[]): number {
-  let sum = 0;
-  for (const w of weights) sum += w;
-  let r = Math.random() * sum;
-  for (let i = 0; i < weights.length; i++) {
-    r -= weights[i];
-    if (r <= 0) return i;
-  }
-  return Math.max(0, weights.length - 1);
-}
-
-function pickScanLineTargetY(
-  viewportH: number,
-  currentY: number,
-  last4Zones: readonly number[],
-): { targetY: number } {
-  const pad = 2;
-  const clampY = (yy: number) =>
-    Math.max(pad, Math.min(viewportH - pad, yy));
-  const zh = viewportH / SCAN_LINE_ZONE_COUNT;
-  const currZ = scanLineZoneIndex(currentY, viewportH);
-
-  const inUpperHalf = currentY < viewportH / 2;
-  const candidates: number[] = [];
-  const weights: number[] = [];
-  for (let z = 0; z < SCAN_LINE_ZONE_COUNT; z++) {
-    if (last4Zones.includes(z)) continue;
-    if (Math.abs(z - currZ) < 4) continue;
-    const opposite =
-      inUpperHalf ? z >= SCAN_LINE_ZONE_COUNT / 2 : z < SCAN_LINE_ZONE_COUNT / 2;
-    const dist = Math.abs(z - currZ);
-    candidates.push(z);
-    weights.push(opposite ? dist * 2 : dist);
-  }
-
-  if (candidates.length === 0) {
-    for (let z = 0; z < SCAN_LINE_ZONE_COUNT; z++) {
-      if (last4Zones.includes(z)) continue;
-      candidates.push(z);
-      weights.push(1);
-    }
-  }
-  if (candidates.length === 0) {
-    const tz = Math.floor(Math.random() * SCAN_LINE_ZONE_COUNT);
-    return { targetY: clampY((tz + 0.5) * zh) };
-  }
-
-  const pickedZ = candidates[weightedPickIndex(weights)];
-  return { targetY: clampY((pickedZ + 0.5) * zh) };
-}
 
 function ScanLoadingInner() {
   const router = useRouter();
@@ -142,7 +80,8 @@ function ScanLoadingInner() {
     return () => clearTimeout(t);
   }, [urlParam]);
 
-  const scanLineRef = useRef<HTMLDivElement>(null);
+  const beamDivRef = useRef<HTMLDivElement>(null);
+  const beamRafRef = useRef<number>(0);
   const schematicRef = useRef<HTMLDivElement>(null);
   const progressFillRef = useRef<HTMLDivElement>(null);
   const scoreOverlayRef = useRef<HTMLDivElement>(null);
@@ -177,8 +116,6 @@ function ScanLoadingInner() {
   const cancelRequestedRef = useRef(false);
 
   const beamActiveRef = useRef(false);
-  /** Scan-line Y lerp runs independently of section progress until halt or navigation. */
-  const scanLineMotionActiveRef = useRef(false);
   const sectionIdxRef = useRef(0);
   const sectionElapsedRef = useRef(0);
   const sectionTopRef = useRef(0);
@@ -187,16 +124,6 @@ function ScanLoadingInner() {
   const rafScanRef = useRef<number>(0);
   const scanStartedRef = useRef(false);
   const apiDoneRef = useRef(false);
-
-  /** Full-viewport scan line — Y-only lerp + dwell (requestAnimationFrame). */
-  const scanLineYRef = useRef(0);
-  const scanLineTargetYRef = useRef(0);
-  const scanLineLerpRef = useRef(0.025);
-  const scanLineLast4ZonesRef = useRef<number[]>([]);
-  const scanLineReadyRef = useRef(false);
-  const scanLineDwellingRef = useRef(false);
-  const scanLineDwellStartRef = useRef(0);
-  const scanLineDwellDurationRef = useRef(0);
 
   useLayoutEffect(() => {
     document.body.style.overflow = "hidden";
@@ -287,8 +214,8 @@ function ScanLoadingInner() {
         window.setTimeout(() => setSubLabelVis(true), 2000);
         window.setTimeout(() => {
           if (domainRef.current) {
-            console.log("[scan] complete → /dashboard");
-            router.replace("/dashboard");
+            console.log("[scan] complete → /report/" + domainRef.current);
+            router.replace("/report/" + domainRef.current);
           }
         }, 4200);
       };
@@ -311,7 +238,6 @@ function ScanLoadingInner() {
     sectionElapsedRef.current = 0;
     lastScanTickRef.current = performance.now();
     beamActiveRef.current = true;
-    if (scanLineRef.current) scanLineRef.current.style.opacity = "1";
 
     document.querySelectorAll("[data-section]").forEach((el, i) => {
       if (i < idx) el.classList.add("done");
@@ -387,10 +313,8 @@ function ScanLoadingInner() {
                 : "This URL does not appear to be a live website.";
             setInvalidUrlMessage(ivMsg);
             beamActiveRef.current = false;
-            scanLineMotionActiveRef.current = false;
             beamRafHaltedRef.current = true;
             cancelAnimationFrame(rafScanRef.current);
-            if (scanLineRef.current) scanLineRef.current.style.opacity = "0";
             return;
           }
           const msg =
@@ -431,7 +355,6 @@ function ScanLoadingInner() {
   useEffect(() => {
     if (errorMsg) {
       beamActiveRef.current = false;
-      scanLineMotionActiveRef.current = false;
       beamRafHaltedRef.current = true;
       cancelAnimationFrame(rafScanRef.current);
     }
@@ -440,10 +363,8 @@ function ScanLoadingInner() {
   useEffect(() => {
     if (!invalidUrlMessage) return;
     beamActiveRef.current = false;
-    scanLineMotionActiveRef.current = false;
     beamRafHaltedRef.current = true;
     cancelAnimationFrame(rafScanRef.current);
-    if (scanLineRef.current) scanLineRef.current.style.opacity = "0";
   }, [invalidUrlMessage]);
 
   const handleCancelScan = useCallback(() => {
@@ -453,10 +374,8 @@ function ScanLoadingInner() {
     apiDoneRef.current = true;
     setScanUserAborted(true);
     beamActiveRef.current = false;
-    scanLineMotionActiveRef.current = false;
     beamRafHaltedRef.current = true;
     cancelAnimationFrame(rafScanRef.current);
-    if (scanLineRef.current) scanLineRef.current.style.opacity = "0";
     setStatusBarOverride("DIAGNOSTIC ABORTED");
     window.setTimeout(() => setStatusBarOverride(null), 1000);
     window.setTimeout(() => router.push("/"), 1500);
@@ -464,40 +383,10 @@ function ScanLoadingInner() {
 
   const tickScan = useCallback(() => {
     if (beamRafHaltedRef.current) return;
-    const lineEl = scanLineRef.current;
-    if (!lineEl) return;
 
-    const vh = window.innerHeight;
     const now = performance.now();
     const dt = Math.min(50, now - lastScanTickRef.current);
     lastScanTickRef.current = now;
-
-    const clearBarGlow = () => {
-      schematicRef.current
-        ?.querySelectorAll("[data-section].sec-bar-hit")
-        .forEach((el) => el.classList.remove("sec-bar-hit"));
-    };
-
-    const syncSectionBarGlow = (viewportY: number) => {
-      const sc = schematicRef.current;
-      if (!sc) return;
-      const yHit = viewportY + 0.5;
-      let hitId: string | null = null;
-      for (const s of SECTIONS) {
-        const el = sc.querySelector(`[data-section="${s.id}"]`);
-        if (!el || !(el instanceof HTMLElement)) continue;
-        const r = el.getBoundingClientRect();
-        if (yHit >= r.top && yHit <= r.bottom) {
-          hitId = s.id;
-          break;
-        }
-      }
-      for (const s of SECTIONS) {
-        const el = sc.querySelector(`[data-section="${s.id}"]`);
-        if (!el || !(el instanceof HTMLElement)) continue;
-        el.classList.toggle("sec-bar-hit", s.id === hitId);
-      }
-    };
 
     const beam = beamActiveRef.current;
     const idx = sectionIdxRef.current;
@@ -540,47 +429,6 @@ function ScanLoadingInner() {
       }
     }
 
-    if (scanLineMotionActiveRef.current) {
-      if (!scanLineReadyRef.current) {
-        const y0 = vh * (0.08 + Math.random() * 0.14);
-        scanLineYRef.current = y0;
-        scanLineLerpRef.current = 0.018;
-        const first = pickScanLineTargetY(vh, y0, scanLineLast4ZonesRef.current);
-        scanLineTargetYRef.current = first.targetY;
-        scanLineReadyRef.current = true;
-      }
-
-      const k = scanLineLerpRef.current;
-      const y = scanLineYRef.current;
-      const tgt = scanLineTargetYRef.current;
-
-      if (scanLineDwellingRef.current) {
-        if (now - scanLineDwellStartRef.current >= scanLineDwellDurationRef.current) {
-          scanLineDwellingRef.current = false;
-          const next = pickScanLineTargetY(vh, scanLineYRef.current, scanLineLast4ZonesRef.current);
-          scanLineTargetYRef.current = next.targetY;
-          scanLineLerpRef.current = 0.018;
-        }
-      } else {
-        scanLineYRef.current = y + (tgt - y) * k;
-        if (Math.abs(scanLineYRef.current - tgt) < SCAN_LINE_ARRIVE_EPS) {
-          scanLineYRef.current = tgt;
-          const z = scanLineZoneIndex(tgt, vh);
-          const hist = [...scanLineLast4ZonesRef.current, z];
-          scanLineLast4ZonesRef.current = hist.slice(-4);
-          scanLineDwellingRef.current = true;
-          scanLineDwellStartRef.current = now;
-          scanLineDwellDurationRef.current = 2500 + Math.random() * 2500;
-        }
-      }
-
-      lineEl.style.top = `${scanLineYRef.current}px`;
-      syncSectionBarGlow(scanLineYRef.current);
-
-    } else {
-      clearBarGlow();
-    }
-
     rafScanRef.current = requestAnimationFrame(tickScan);
   }, [scanNext]);
 
@@ -588,11 +436,135 @@ function ScanLoadingInner() {
     if (!materialized) return;
     if (scanStartedRef.current) return;
     beamRafHaltedRef.current = false;
-    scanLineMotionActiveRef.current = true;
     scanStartedRef.current = true;
     rafScanRef.current = requestAnimationFrame(tickScan);
     return () => cancelAnimationFrame(rafScanRef.current);
   }, [materialized, tickScan]);
+
+  useEffect(() => {
+    if (!materialized) return;
+    const el = beamDivRef.current;
+    if (!el) return;
+
+    const BEAM_W = 140;
+    const LERP = 0.045;
+    const ARRIVE_EPS = 8;
+    const READING_DURATION = 1800;
+
+    let posX = Math.random() * Math.max(0, window.innerWidth - BEAM_W);
+    let posY = 60 + Math.random() * Math.max(0, window.innerHeight - 140);
+    let targetX = posX;
+    let targetY = posY;
+
+    let driftPhase = 0;
+    let driftFreq = 0.8 + Math.random() * 0.8;
+
+    let readingMode = false;
+    let readingStartX = 0;
+    let readingEndX = 0;
+    let readingY = 0;
+    let readingStartTime = 0;
+
+    let nextPickTime = 0;
+    const lastYPositions: number[] = [];
+    let lastFrameTime = performance.now();
+
+    const pickNewTarget = (now: number) => {
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      nextPickTime = now + 800 + Math.random() * 1400;
+
+      if (Math.random() < 0.2) {
+        readingMode = true;
+        readingY = 60 + Math.random() * Math.max(0, vh - 140);
+        readingStartX = Math.random() < 0.5 ? 0 : Math.max(0, vw - BEAM_W);
+        readingEndX = readingStartX === 0 ? Math.max(0, vw - BEAM_W) : 0;
+        readingStartTime = now;
+        return;
+      }
+
+      readingMode = false;
+
+      const SEGS = 20;
+      const yMin = 60;
+      const yMax = Math.max(yMin + 1, vh - 80);
+      const segH = (yMax - yMin) / SEGS;
+      const weights = new Array<number>(SEGS).fill(1);
+
+      for (const py of lastYPositions) {
+        const si = Math.floor((py - yMin) / segH);
+        for (let s = 0; s < SEGS; s++) {
+          const d = Math.abs(s - si);
+          if (d < 4) weights[s] = Math.max(0.05, weights[s] * (0.1 + d * 0.25));
+        }
+      }
+
+      let totalW = 0;
+      for (const w of weights) totalW += w;
+      let r = Math.random() * totalW;
+      let chosen = SEGS - 1;
+      for (let s = 0; s < SEGS; s++) {
+        r -= weights[s];
+        if (r <= 0) { chosen = s; break; }
+      }
+
+      targetY = yMin + (chosen + Math.random()) * segH;
+      targetY = Math.max(yMin, Math.min(yMax, targetY));
+      targetX = Math.random() * Math.max(0, vw - BEAM_W);
+
+      driftFreq = 0.8 + Math.random() * 0.8;
+      driftPhase = 0;
+
+      lastYPositions.push(targetY);
+      if (lastYPositions.length > 6) lastYPositions.shift();
+    };
+
+    pickNewTarget(performance.now());
+
+    const tick = (now: number) => {
+      if (beamRafHaltedRef.current) {
+        el.style.opacity = "0";
+        return;
+      }
+
+      const dt = Math.min(50, now - lastFrameTime);
+      lastFrameTime = now;
+
+      let displayX: number;
+      let displayY: number;
+
+      if (readingMode) {
+        const t = Math.min(1, (now - readingStartTime) / READING_DURATION);
+        displayX = readingStartX + (readingEndX - readingStartX) * t;
+        displayY = readingY;
+        posX = displayX;
+        posY = displayY;
+        if (t >= 1) {
+          readingMode = false;
+          nextPickTime = now;
+        }
+      } else {
+        posX += (targetX - posX) * LERP;
+        posY += (targetY - posY) * LERP;
+        driftPhase += (dt / 1000) * driftFreq * Math.PI * 2;
+        displayX = posX;
+        displayY = posY + Math.sin(driftPhase) * 6;
+        if (now >= nextPickTime || (Math.abs(posX - targetX) < ARRIVE_EPS && Math.abs(posY - targetY) < ARRIVE_EPS)) {
+          pickNewTarget(now);
+        }
+      }
+
+      el.style.transform = `translate(${displayX}px, ${displayY}px)`;
+      beamRafRef.current = requestAnimationFrame(tick);
+    };
+
+    el.style.opacity = "1";
+    beamRafRef.current = requestAnimationFrame(tick);
+
+    return () => {
+      cancelAnimationFrame(beamRafRef.current);
+    };
+  }, [materialized]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const formatElapsed = () => `${(elapsedMs / 1000).toFixed(1)}s`;
 
@@ -662,12 +634,9 @@ function ScanLoadingInner() {
           from { opacity: 0; transform: translateY(12px); }
           to { opacity: 1; transform: translateY(0); }
         }
-        @keyframes scanSweep {
-          0% { transform: translateX(-160px); }
-          100% { transform: translateX(calc(100vw + 160px)); }
-        }
-        .scan-line-strip .scan-line-indicator {
-          animation: scanSweep 3s linear infinite;
+        @keyframes ellipsePulse {
+          0%, 100% { transform: scaleY(0.35) scaleX(1); opacity: 0.55; }
+          50% { transform: scaleY(1.3) scaleX(1); opacity: 1; }
         }
         @keyframes atmosphereA {
           from { transform: translate(0,0); }
@@ -765,10 +734,6 @@ function ScanLoadingInner() {
         .scan-sec .sec-label { color: rgba(0,200,255,0.4) !important; }
         .scan-sec.active .sec-label { color: rgba(0,200,255,0.72) !important; text-shadow: none !important; }
         .scan-sec.done .sec-label { color: rgba(0,200,255,0.35) !important; }
-        .scan-sec.sec-bar-hit .sec-label {
-          color: rgba(0,200,255,0.8) !important;
-          transition: color 0s ease, text-shadow 0s ease !important;
-        }
         .scan-sec .sec-badge { color: rgba(0,200,255,0.07) !important; }
         .scan-sec.active .sec-badge { color: rgba(0,200,255,0.65) !important; }
         .scan-sec.done .sec-badge { color: rgba(0,200,255,0.2) !important; }
@@ -823,66 +788,41 @@ function ScanLoadingInner() {
         }}
       >
         <div
-          ref={scanLineRef}
+          ref={beamDivRef}
           aria-hidden
-          className="scan-line-strip"
           style={{
             position: "fixed",
             left: 0,
-            right: 0,
-            width: "100vw",
-            height: 2,
             top: 0,
-            zIndex: 100,
+            width: 140,
+            height: 2,
+            zIndex: 99,
             pointerEvents: "none",
             opacity: 0,
-            willChange: "top",
-            overflow: "visible",
-            background: "rgba(0,200,255,0.06)",
+            willChange: "transform",
+            background: "linear-gradient(90deg, transparent 0%, rgba(0,200,255,0.2) 15%, rgba(0,200,255,1) 50%, rgba(0,200,255,0.2) 85%, transparent 100%)",
+          }}
+        />
+        <div
+          aria-hidden
+          style={{
+            position: "fixed",
+            left: "50%",
+            top: "50%",
+            transform: "translateX(-50%) translateY(-50%)",
+            zIndex: 99,
+            pointerEvents: "none",
           }}
         >
           <div
-            className="scan-line-indicator"
             style={{
-              position: "absolute",
-              top: -9,
-              left: 0,
-              width: 160,
-              height: 20,
-              background: "none",
-              pointerEvents: "none",
-              willChange: "transform",
+              width: 180,
+              height: 16,
+              background: "radial-gradient(ellipse, rgba(0,200,255,0.9) 0%, rgba(0,200,255,0.3) 50%, transparent 100%)",
+              boxShadow: "0 0 20px rgba(0,200,255,0.25), 0 0 6px rgba(0,200,255,0.5)",
+              animation: "ellipsePulse 1.5s ease-in-out infinite",
             }}
-          >
-            <svg
-              width="160"
-              height="20"
-              viewBox="0 -14 160 28"
-              fill="none"
-              aria-hidden
-            >
-              <defs>
-                <filter id="ekg-glow" x="-10%" y="-100%" width="120%" height="300%">
-                  <feGaussianBlur stdDeviation="3" result="blur1" />
-                  <feGaussianBlur stdDeviation="6" result="blur2" />
-                  <feMerge>
-                    <feMergeNode in="blur2" />
-                    <feMergeNode in="blur1" />
-                    <feMergeNode in="SourceGraphic" />
-                  </feMerge>
-                </filter>
-              </defs>
-              <g filter="url(#ekg-glow)" opacity="0.65">
-                <polyline
-                  points="0,0 50,0 65,-14 80,14 95,-6 115,0 160,0"
-                  stroke="#00C8FF"
-                  strokeWidth="1.5"
-                  strokeLinejoin="round"
-                  strokeLinecap="round"
-                />
-              </g>
-            </svg>
-          </div>
+          />
         </div>
 
         <div style={{ position: "fixed", inset: 0, zIndex: 4, pointerEvents: "none" }}>

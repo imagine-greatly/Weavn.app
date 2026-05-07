@@ -21,6 +21,9 @@ const ReportLayoutWithPro = ReportLayout as ComponentType<
 >;
 
 const STORAGE_KEY_PREFIX = "webdoc_report_";
+const PLAN_CACHE_KEY = "webdoc_plan";
+const PLAN_CACHE_TS_KEY = "webdoc_plan_ts";
+const PLAN_CACHE_TTL = 300_000; // 5 minutes
 
 function loadReportFromStorage(domain: string): ReportPayload | null {
   if (typeof window === "undefined") return null;
@@ -39,6 +42,81 @@ function loadReportFromStorage(domain: string): ReportPayload | null {
   }
 }
 
+function getCachedPlan(): string | null {
+  try {
+    const plan = localStorage.getItem(PLAN_CACHE_KEY);
+    const ts = localStorage.getItem(PLAN_CACHE_TS_KEY);
+    if (plan && ts && Date.now() - parseInt(ts, 10) < PLAN_CACHE_TTL) return plan;
+  } catch { /* ignore */ }
+  return null;
+}
+
+function cachePlan(plan: string): void {
+  try {
+    localStorage.setItem(PLAN_CACHE_KEY, plan);
+    localStorage.setItem(PLAN_CACHE_TS_KEY, Date.now().toString());
+  } catch { /* ignore */ }
+}
+
+function computeIsPro(plan: string | null, is_pro?: boolean): boolean {
+  if (is_pro === true) return true;
+  const p = String(plan ?? "").trim();
+  return p === "pro" || p === "Pro";
+}
+
+function ReportSkeleton() {
+  return (
+    <div style={{ maxWidth: 900, margin: "0 auto", padding: "48px 24px" }}>
+      <style>{`
+        @keyframes skelPulse { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
+        .skel-bar { background: #1A2035; border-radius: 2px; animation: skelPulse 1.6s ease-in-out infinite; }
+      `}</style>
+
+      {/* Score gauge placeholder */}
+      <div style={{ display: "flex", gap: 24, marginBottom: 40, alignItems: "flex-start" }}>
+        <div className="skel-bar" style={{ width: 100, height: 100, borderRadius: 50 }} />
+        <div style={{ flex: 1 }}>
+          <div className="skel-bar" style={{ height: 14, width: "40%", marginBottom: 12 }} />
+          <div className="skel-bar" style={{ height: 14, width: "60%", marginBottom: 12 }} />
+          <div className="skel-bar" style={{ height: 14, width: "35%" }} />
+        </div>
+      </div>
+
+      {/* Intelligence brief placeholder */}
+      <div style={{ background: "#0A0F1E", border: "1px solid #1A2035", borderRadius: 4, padding: "20px 24px", marginBottom: 28 }}>
+        <div className="skel-bar" style={{ height: 14, width: "25%", marginBottom: 16 }} />
+        <div className="skel-bar" style={{ height: 14, width: "100%", marginBottom: 10 }} />
+        <div className="skel-bar" style={{ height: 14, width: "90%", marginBottom: 10 }} />
+        <div className="skel-bar" style={{ height: 14, width: "75%" }} />
+      </div>
+
+      {/* Finding card placeholders */}
+      {[0, 1, 2].map((i) => (
+        <div
+          key={i}
+          style={{
+            background: "#0A0F1E",
+            border: "1px solid #1A2035",
+            borderLeft: "3px solid #1A2035",
+            borderRadius: 4,
+            padding: "20px 24px",
+            marginBottom: 12,
+          }}
+        >
+          <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
+            <div className="skel-bar" style={{ height: 12, width: 24 }} />
+            <div className="skel-bar" style={{ height: 12, width: 64 }} />
+            <div className="skel-bar" style={{ height: 12, width: 56 }} />
+          </div>
+          <div className="skel-bar" style={{ height: 14, width: "55%", marginBottom: 12 }} />
+          <div className="skel-bar" style={{ height: 14, width: "80%", marginBottom: 8 }} />
+          <div className="skel-bar" style={{ height: 14, width: "65%" }} />
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default function ReportDomainPage() {
   const params = useParams();
   const domain = typeof params.domain === "string" ? decodeURIComponent(params.domain) : "";
@@ -48,9 +126,9 @@ export default function ReportDomainPage() {
   const [error, setError] = useState<string | null>(null);
   const [user, setUser] = useState<{ id: string } | null>(null);
   const [isPro, setIsPro] = useState(false);
-  const [authChecked, setAuthChecked] = useState(false);
   const router = useRouter();
 
+  // Upgrade param — sync, no network
   useEffect(() => {
     if (window.location.search.includes("upgraded=true")) {
       setIsPro(true);
@@ -64,26 +142,85 @@ export default function ReportDomainPage() {
       return;
     }
 
+    let cancelled = false;
+
+    // Sync localStorage check — resolves instantly, no network needed
     const fromStorage = loadReportFromStorage(domain);
     if (fromStorage) {
       setReport(fromStorage);
       setStoredReportId(null);
       setLoading(false);
-      return;
+      // Auth + profile run in background to hydrate banners after report renders
+      void (async () => {
+        const supabase = getSupabaseBrowserClient();
+        const cachedPlan = getCachedPlan();
+        if (cachedPlan !== null) setIsPro(computeIsPro(cachedPlan));
+
+        // Both start immediately, run in parallel
+        const authPromise = supabase.auth.getUser();
+        const profilePromise = cachedPlan !== null
+          ? Promise.resolve(null)
+          : fetch("/api/profile", { method: "GET", credentials: "include" })
+              .then(r => r.ok ? r.json() : null)
+              .catch(() => null);
+
+        profilePromise.then(profileJson => {
+          if (cancelled || !profileJson) return;
+          const p = String(profileJson.plan ?? "").trim();
+          setIsPro(computeIsPro(p, profileJson.is_pro));
+          cachePlan(p || (profileJson.is_pro ? "pro" : "free"));
+        }).catch(() => {});
+
+        const { data: authData } = await authPromise;
+        if (cancelled) return;
+        if (authData.user) setUser({ id: authData.user.id });
+      })();
+      return () => { cancelled = true; };
     }
 
-    if (!authChecked) return;
-
-    let cancelled = false;
+    // No localStorage — fetch report and auth in parallel
     (async () => {
       try {
-        if (user) {
-          const supabase = getSupabaseBrowserClient();
+        const supabase = getSupabaseBrowserClient();
+        const cachedPlan = getCachedPlan();
+
+        // Apply cached plan immediately — zero network cost
+        if (cachedPlan !== null) setIsPro(computeIsPro(cachedPlan));
+
+        // /api/profile fires here and runs in background.
+        // It NEVER blocks the report fetch — it resolves independently.
+        const profilePromise = cachedPlan !== null
+          ? Promise.resolve(null)
+          : fetch("/api/profile", { method: "GET", credentials: "include" })
+              .then(r => r.ok ? r.json() : null)
+              .catch(() => null);
+
+        profilePromise.then(profileJson => {
+          if (cancelled || !profileJson) return;
+          const p = String(profileJson.plan ?? "").trim();
+          setIsPro(computeIsPro(p, profileJson.is_pro));
+          cachePlan(p || (profileJson.is_pro ? "pro" : "free"));
+          console.log("[report] user isPro:", computeIsPro(p, profileJson.is_pro));
+        }).catch(() => {});
+
+        // getUser runs in parallel with profile — only its result is awaited
+        // before starting the report fetch (we need the user_id for scoping).
+        const { data: authData } = await supabase.auth.getUser();
+        if (cancelled) return;
+
+        const userData = authData.user;
+        if (userData) {
+          setUser({ id: userData.id });
+        } else {
+          setUser(null);
+        }
+
+        if (userData) {
           const { data } = await supabase
             .from("reports")
             .select("id, analysis, overview_copy")
             .eq("domain", domain.toLowerCase().trim())
-            .eq("user_id", user.id)
+            .eq("user_id", userData.id)
             .order("created_at", { ascending: false })
             .limit(1)
             .single();
@@ -127,60 +264,13 @@ export default function ReportDomainPage() {
       }
     })();
 
-    return () => {
-      cancelled = true;
-    };
-  }, [domain, authChecked, user]);
-
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      const supabase = getSupabaseBrowserClient();
-      const { data } = await supabase.auth.getUser();
-      if (cancelled) return;
-
-      if (data.user) {
-        setUser({ id: data.user.id });
-
-        let isProUser = false;
-        try {
-          const res = await fetch("/api/profile", { method: "GET", credentials: "include" });
-          if (res.ok) {
-            const profileJson = (await res.json()) as {
-              plan?: string;
-              is_pro?: boolean;
-            };
-            const p = String(profileJson.plan ?? "").trim();
-            isProUser =
-              profileJson.is_pro === true || p === "pro" || p === "Pro";
-          }
-        } catch {
-          isProUser = false;
-        }
-        if (cancelled) return;
-        setIsPro(isProUser);
-
-        console.log("[report] user isPro:", isProUser);
-      } else {
-        setUser(null);
-        setIsPro(false);
-      }
-      setAuthChecked(true);
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+    return () => { cancelled = true; };
+  }, [domain]);
 
   if (loading) {
     return (
-      <div
-        className="flex min-h-[calc(100svh-4rem)] flex-col items-center justify-center px-6"
-        style={{ background: "var(--bg-base)" }}
-      >
-        <span className="font-mono text-sm" style={{ color: "var(--text-muted)" }}>
-          Loading report...
-        </span>
+      <div style={{ background: "var(--bg-base)", minHeight: "calc(100svh - 4rem)" }}>
+        <ReportSkeleton />
       </div>
     );
   }

@@ -308,7 +308,7 @@ export default function LandingScanPreview() {
             className="mt-3 font-sans font-bold"
             style={{ fontSize: 48, lineHeight: 1.1, color: "var(--text-primary)", letterSpacing: "-1.5px" }}
           >
-            30 seconds. 166 checks.
+            60 seconds. 166 checks.
             <br />
             Surgical precision.
           </h2>
@@ -336,7 +336,7 @@ export default function LandingScanPreview() {
         >
           {[
             { num: "166", label: "DIAGNOSTIC CHECKS" },
-            { num: "30s", label: "AVERAGE SCAN TIME" },
+            { num: "60s", label: "AVERAGE SCAN TIME" },
             { num: "14", label: "AVG FINDINGS PER SCAN" },
           ].map((s) => (
             <div key={s.label} className="text-center">

@@ -379,7 +379,7 @@ export default function LandingHero({ url, onUrlChange, autoFocus }: Props) {
             className="text-center font-mono text-[11px]"
             style={{ color: "#8899AA", marginTop: 12 }}
           >
-            Create your free account to run your diagnostic — takes 30 seconds.
+            Create your free account to run your diagnostic — takes 60 seconds.
           </p>
         </ScrollReveal>
       </div>

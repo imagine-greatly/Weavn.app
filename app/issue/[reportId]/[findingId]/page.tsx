@@ -802,6 +802,32 @@ export default function IssuePage() {
         return;
       }
 
+      try {
+        const cachedBriefRaw = localStorage.getItem(`webdoc_brief_${findingId}`);
+        if (cachedBriefRaw) {
+          const cachedBrief = JSON.parse(cachedBriefRaw) as FindingBriefExpansion;
+          setBriefExpanded(cachedBrief);
+          setAdvisorChips(advisorChipsFromExpansion(cachedBrief));
+          const open =
+            typeof cachedBrief.advisorOpening === "string"
+              ? cachedBrief.advisorOpening.trim()
+              : "";
+          setMessages([
+            {
+              role: "assistant",
+              content:
+                open ||
+                "Review the diagnostic brief above, then ask where you want to start implementation.",
+            },
+          ]);
+          setExpandLoading(false);
+          setLoading(false);
+          return;
+        }
+      } catch {
+        // ignore local brief cache failures
+      }
+
       setBriefExpanded(null);
       setExpandLoading(true);
       setMessages([]);
@@ -1145,18 +1171,6 @@ export default function IssuePage() {
           ← BACK TO DASHBOARD
         </button>
       </div>
-    );
-  }
-
-  if (report && finding && expandLoading && !briefExpanded) {
-    return (
-      <BriefClinicalGenerationOverlay
-        finding={finding}
-        report={report}
-        router={router}
-        priorityN={priorityN}
-        priorityY={priorityY}
-      />
     );
   }
 
@@ -1887,11 +1901,37 @@ export default function IssuePage() {
         <SectionDivider />
         <div>
           <div style={monoSectionLabel}>DIAGNOSTIC ANALYSIS</div>
-          {expandLoading && !hasBrief ? (
-            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-              <SectionSkeleton widthPct="74%" />
-              <SectionSkeleton widthPct="68%" />
-              <SectionSkeleton widthPct="71%" />
+          {!hasBrief && expandLoading ? (
+            <div
+              style={{
+                background: "#0A0F1E",
+                border: "1px solid #1A2035",
+                borderLeft: "3px solid rgba(0,200,255,0.3)",
+                borderRadius: 4,
+                padding: "20px 24px",
+                marginBottom: 12,
+              }}
+            >
+              <div
+                style={{
+                  fontFamily: "var(--font-space-mono), ui-monospace, monospace",
+                  color: "#00C8FF",
+                  fontSize: 10,
+                  letterSpacing: "0.15em",
+                  marginBottom: 8,
+                }}
+              >
+                ● GENERATING DEEP ANALYSIS
+              </div>
+              <div
+                style={{
+                  fontFamily: "var(--font-space-mono), ui-monospace, monospace",
+                  color: "#8899AA",
+                  fontSize: 11,
+                }}
+              >
+                Expanding diagnostic intelligence...
+              </div>
             </div>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>

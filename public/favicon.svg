@@ -1,12 +1,33 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="150 150 500 500" fill="none">
-  <rect width="800" height="800" fill="#050810"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" fill="none">
+  <defs>
+    <filter id="glow" x="-20%" y="-100%" width="140%" height="300%">
+      <feGaussianBlur stdDeviation="5" result="blur1"/>
+      <feGaussianBlur stdDeviation="12" result="blur2"/>
+      <feMerge>
+        <feMergeNode in="blur2"/>
+        <feMergeNode in="blur1"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="softglow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="4" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
   <g transform="translate(400,400)">
-    <line x1="80" y1="-200" x2="200" y2="-200" stroke="#00C8FF" stroke-width="22" stroke-linecap="square"/>
-    <line x1="200" y1="-200" x2="200" y2="-80" stroke="#00C8FF" stroke-width="22" stroke-linecap="square"/>
-    <line x1="-200" y1="80" x2="-200" y2="200" stroke="#00C8FF" stroke-width="22" stroke-linecap="square"/>
-    <line x1="-200" y1="200" x2="-80" y2="200" stroke="#00C8FF" stroke-width="22" stroke-linecap="square"/>
-    <line x1="-150" y1="0" x2="-60" y2="0" stroke="#00C8FF" stroke-width="8" stroke-linecap="round"/>
-    <polyline points="-60,0 -30,0 -15,-70 0,70 15,-30 35,0 60,0" fill="none" stroke="#00C8FF" stroke-width="8" stroke-linejoin="round" stroke-linecap="round"/>
-    <line x1="60" y1="0" x2="150" y2="0" stroke="#00C8FF" stroke-width="8" stroke-linecap="round"/>
+    <g filter="url(#softglow)">
+      <line x1="80" y1="-200" x2="200" y2="-200" stroke="#00C8FF" stroke-width="22" stroke-linecap="square"/>
+      <line x1="200" y1="-200" x2="200" y2="-80" stroke="#00C8FF" stroke-width="22" stroke-linecap="square"/>
+      <line x1="-200" y1="80" x2="-200" y2="200" stroke="#00C8FF" stroke-width="22" stroke-linecap="square"/>
+      <line x1="-200" y1="200" x2="-80" y2="200" stroke="#00C8FF" stroke-width="22" stroke-linecap="square"/>
+    </g>
+    <g filter="url(#glow)" opacity="0.85">
+      <line x1="-150" y1="0" x2="-60" y2="0" stroke="#00C8FF" stroke-width="8" stroke-linecap="round"/>
+      <polyline points="-60,0 -30,0 -15,-70 0,70 15,-30 35,0 60,0" fill="none" stroke="#00C8FF" stroke-width="8" stroke-linejoin="round" stroke-linecap="round"/>
+      <line x1="60" y1="0" x2="150" y2="0" stroke="#00C8FF" stroke-width="8" stroke-linecap="round"/>
+    </g>
   </g>
 </svg>

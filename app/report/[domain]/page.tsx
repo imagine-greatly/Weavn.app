@@ -205,12 +205,26 @@ export default function ReportDomainPage() {
           console.log("[report] user isPro:", computeIsPro(p, profileJson.is_pro));
         }).catch(() => {});
 
-        // getUser runs in parallel with profile — only its result is awaited
-        // before starting the report fetch (we need the user_id for scoping).
-        const { data: authData } = await supabase.auth.getUser();
+        const { data: sessionData } = await supabase.auth.getSession();
+        if (cancelled) return;
+        const sessionUserId = sessionData.session?.user?.id ?? null;
+
+        const [authResult, reportResult] = await Promise.all([
+          supabase.auth.getUser(),
+          sessionUserId
+            ? supabase
+                .from("reports")
+                .select("id, analysis, overview_copy")
+                .eq("domain", domain.toLowerCase().trim())
+                .eq("user_id", sessionUserId)
+                .order("created_at", { ascending: false })
+                .limit(1)
+                .single()
+            : Promise.resolve(null),
+        ]);
         if (cancelled) return;
 
-        const userData = authData.user;
+        const userData = authResult.data.user;
         if (userData) {
           setUser({ id: userData.id });
         } else {
@@ -218,17 +232,9 @@ export default function ReportDomainPage() {
         }
 
         if (userData) {
-          const { data } = await supabase
-            .from("reports")
-            .select("id, analysis, overview_copy")
-            .eq("domain", domain.toLowerCase().trim())
-            .eq("user_id", userData.id)
-            .order("created_at", { ascending: false })
-            .limit(1)
-            .single();
-
-          if (cancelled) return;
-          const reportRow = data as {
+          const reportRow = (reportResult && "data" in reportResult
+            ? reportResult.data
+            : null) as {
             id?: string;
             analysis?: unknown;
             payload?: unknown;
@@ -323,7 +329,14 @@ export default function ReportDomainPage() {
         })
           .then((res) => (res.ok ? res.json() : null))
           .then((data: unknown) => {
-            if (!ac.signal.aborted && data) prefetchedFindings.current.set(fid, data);
+            if (!ac.signal.aborted && data) {
+              prefetchedFindings.current.set(fid, data);
+              try {
+                localStorage.setItem(`webdoc_brief_${fid}`, JSON.stringify(data));
+              } catch {
+                // ignore local brief cache failures
+              }
+            }
           })
           .catch(() => { /* ignore prefetch failures */ });
       }, 800 + i * 300);

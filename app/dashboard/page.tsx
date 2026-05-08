@@ -19,6 +19,9 @@ import ConversionScoreGauge from "@/components/ConversionScoreGauge";
 const SM = "var(--font-space-mono), var(--font-jetbrains-mono), monospace";
 const SG = "var(--font-space-grotesk), sans-serif";
 const ORB = "var(--font-orbitron), sans-serif";
+const DASHBOARD_REPORTS_CACHE_PREFIX = "webdoc_dashboard_reports_";
+const DASHBOARD_REPORTS_CACHE_TS_PREFIX = "webdoc_dashboard_reports_ts_";
+const DASHBOARD_REPORTS_CACHE_TTL_MS = 300_000;
 
 type StoredReportRow = {
   id: string;
@@ -345,6 +348,30 @@ export default function DashboardPage() {
       }
       setAuthUserId(user.id);
       setEmail(user.email ?? null);
+      setLoading(false);
+
+      const cacheKey = `${DASHBOARD_REPORTS_CACHE_PREFIX}${user.id}`;
+      const cacheTsKey = `${DASHBOARD_REPORTS_CACHE_TS_PREFIX}${user.id}`;
+      try {
+        const rawTs = localStorage.getItem(cacheTsKey);
+        const valid =
+          rawTs != null &&
+          Number.isFinite(Number(rawTs)) &&
+          Date.now() - Number(rawTs) < DASHBOARD_REPORTS_CACHE_TTL_MS;
+        if (valid) {
+          const rawCached = localStorage.getItem(cacheKey);
+          if (rawCached) {
+            const parsed = JSON.parse(rawCached) as unknown[] | null | undefined;
+            const normalizedCached = normalizeStoredReportRows(parsed);
+            if (normalizedCached.length > 0) {
+              setReports(normalizedCached);
+              setReportsReady(true);
+            }
+          }
+        }
+      } catch {
+        // ignore cache read failures
+      }
 
       const [profileRes, reportsResult, profileFlagsResult] = await Promise.all([
         fetch("/api/profile", { method: "GET", credentials: "include" }),
@@ -382,6 +409,12 @@ export default function DashboardPage() {
 
       const fetchedReports = normalizeStoredReportRows(reportsResult.data ?? []);
       setReports(fetchedReports);
+      try {
+        localStorage.setItem(cacheKey, JSON.stringify(fetchedReports));
+        localStorage.setItem(cacheTsKey, Date.now().toString());
+      } catch {
+        // ignore cache write failures
+      }
 
       const hasRunFirstScan = Boolean((profileFlagsResult.data as { has_run_first_scan?: boolean } | null)?.has_run_first_scan);
       if (fetchedReports.length === 0 && !hasRunFirstScan) {
@@ -407,7 +440,6 @@ export default function DashboardPage() {
       }
 
       setReportsReady(true);
-      setLoading(false);
     })();
     return () => { cancelled = true; };
   }, []);
@@ -708,46 +740,8 @@ export default function DashboardPage() {
     }
   };
 
-  if (loading || plan === "loading") {
-    return (
-      <div style={{ minHeight: "100vh", background: "#050810", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <div style={{ fontFamily: SM, fontSize: "10px", color: "rgba(0,200,255,0.5)", letterSpacing: "0.2em" }}>
-          LOADING CONVERSION INTELLIGENCE...
-        </div>
-      </div>
-    );
-  }
-
   if (loading) {
     return <PageLoadSkeleton bars={5} maxWidth={480} />;
-  }
-
-  const reportsLoading = Boolean(authUserId) && !reportsReady;
-
-  if (reportsLoading) {
-    return (
-      <div style={{ minHeight: "100svh", background: "var(--bg-base)", paddingTop: 80, position: "relative", overflow: "hidden" }}>
-        <div
-          aria-hidden
-          style={{
-            position: "absolute", inset: 0, pointerEvents: "none", opacity: 0.55,
-            backgroundImage: `linear-gradient(rgba(0,180,255,0.035) 1px, transparent 1px), linear-gradient(90deg, rgba(0,180,255,0.035) 1px, transparent 1px)`,
-            backgroundSize: "60px 60px",
-            maskImage: "radial-gradient(ellipse 70% 60% at 50% 40%, black 0%, transparent 75%)",
-            WebkitMaskImage: "radial-gradient(ellipse 70% 60% at 50% 40%, black 0%, transparent 75%)",
-          }}
-        />
-        <ScrollReveal variant="headline">
-          <div style={{ position: "relative", zIndex: 1, maxWidth: 1000, margin: "0 auto", padding: "72px 24px 96px 24px", textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
-            <div style={{ width: "100%", maxWidth: 420, display: "flex", flexDirection: "column", gap: 16 }}>
-              <div className="dashboard-reports-skeleton-bar" style={{ width: "100%", animationDelay: "0s" }} />
-              <div className="dashboard-reports-skeleton-bar" style={{ width: "88%", animationDelay: "0.15s" }} />
-              <div className="dashboard-reports-skeleton-bar" style={{ width: "72%", animationDelay: "0.3s" }} />
-            </div>
-          </div>
-        </ScrollReveal>
-      </div>
-    );
   }
 
   const pagesAnalyzed =
@@ -837,11 +831,13 @@ export default function DashboardPage() {
         {/* Center cluster — score gauge */}
         {activeLatest ? (
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, flexShrink: 0 }}>
-            <ConversionScoreGauge
-              score={activeScore}
-              scoreDelta={dashboardScoreDelta}
-              previousScanAt={formatRelativeScanTime(activeLatest.created_at)}
-            />
+            <div style={{ width: 120, height: 120, flexShrink: 0 }}>
+              <ConversionScoreGauge
+                score={activeScore}
+                scoreDelta={dashboardScoreDelta}
+                previousScanAt={formatRelativeScanTime(activeLatest.created_at)}
+              />
+            </div>
           </div>
         ) : null}
 
@@ -904,7 +900,7 @@ export default function DashboardPage() {
         }}
       >
         {/* Empty state */}
-        {reports.length === 0 ? (
+        {reportsReady && reports.length === 0 ? (
           <div
             style={{
               marginBottom: 32,
@@ -1009,81 +1005,104 @@ export default function DashboardPage() {
               Ranked by impact — fix these first
             </p>
 
-            {activeLatest && sortedPriorityLeaks.length > 0 ? (
-              restrictionsActive ? (
-                <>
-                  {dashboardFindingRows.slice(0, 2).map((row, i) => (
-                    <ReportFindingPreview
-                      key={row.id}
-                      finding={row}
-                      index={i + 1}
-                      issueReportId={activeLatest.id}
-                    />
-                  ))}
-                  {dashboardFindingRows.length > 2 ? (
-                    <div
-                      style={{
-                        background: "#0A0F1E",
-                        border: "1px solid #1A2035",
-                        borderLeft: "3px solid #00C8FF",
-                        padding: "24px 28px",
-                        borderRadius: 4,
-                        marginTop: 12,
-                      }}
-                    >
-                      <div style={{ fontFamily: SM, fontSize: 10, color: "#00C8FF", letterSpacing: "0.15em", textTransform: "uppercase" }}>
-                        DIAGNOSTIC ACCESS REQUIRED
+            {reportsReady ? (
+              activeLatest && sortedPriorityLeaks.length > 0 ? (
+                restrictionsActive ? (
+                  <>
+                    {dashboardFindingRows.slice(0, 2).map((row, i) => (
+                      <ReportFindingPreview
+                        key={row.id}
+                        finding={row}
+                        index={i + 1}
+                        issueReportId={activeLatest.id}
+                      />
+                    ))}
+                    {dashboardFindingRows.length > 2 ? (
+                      <div
+                        style={{
+                          background: "#0A0F1E",
+                          border: "1px solid #1A2035",
+                          borderLeft: "3px solid #00C8FF",
+                          padding: "24px 28px",
+                          borderRadius: 4,
+                          marginTop: 12,
+                        }}
+                      >
+                        <div style={{ fontFamily: SM, fontSize: 10, color: "#00C8FF", letterSpacing: "0.15em", textTransform: "uppercase" }}>
+                          DIAGNOSTIC ACCESS REQUIRED
+                        </div>
+                        <h3 style={{ margin: "8px 0 0 0", fontFamily: SG, fontWeight: 700, fontSize: 22, color: "#FFFFFF", lineHeight: 1.2 }}>
+                          {(totalFindingsDetected ?? activeMoneyLeaksTotal)} findings are suppressing your conversions.
+                        </h3>
+                        <p style={{ margin: "8px 0 0 0", fontFamily: SM, fontSize: 13, color: "#8899AA", lineHeight: 1.7 }}>
+                          Upgrade to Pro to access all diagnostic findings, revenue impact analysis, exact resolutions, and AI advisor access — ranked by revenue impact.
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => router.push("/pricing")}
+                          style={{ display: "block", width: "100%", marginTop: 16, height: 44, background: "transparent", border: "1px solid #00C8FF", color: "#00C8FF", fontFamily: SM, fontSize: 13, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", cursor: "pointer", borderRadius: 2 }}
+                        >
+                          UPGRADE TO PRO DIAGNOSTIC
+                        </button>
+                        <p style={{ margin: "8px 0 0 0", textAlign: "center", fontFamily: SM, fontSize: 11, color: "#8899AA" }}>
+                          Free plan includes 2 diagnostic findings per scan.
+                        </p>
                       </div>
-                      <h3 style={{ margin: "8px 0 0 0", fontFamily: SG, fontWeight: 700, fontSize: 22, color: "#FFFFFF", lineHeight: 1.2 }}>
-                        {(totalFindingsDetected ?? activeMoneyLeaksTotal)} findings are suppressing your conversions.
-                      </h3>
-                      <p style={{ margin: "8px 0 0 0", fontFamily: SM, fontSize: 13, color: "#8899AA", lineHeight: 1.7 }}>
-                        Upgrade to Pro to access all diagnostic findings, revenue impact analysis, exact resolutions, and AI advisor access — ranked by revenue impact.
-                      </p>
-                      <button
-                        type="button"
-                        onClick={() => router.push("/pricing")}
-                        style={{ display: "block", width: "100%", marginTop: 16, height: 44, background: "transparent", border: "1px solid #00C8FF", color: "#00C8FF", fontFamily: SM, fontSize: 13, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", cursor: "pointer", borderRadius: 2 }}
-                      >
-                        UPGRADE TO PRO DIAGNOSTIC
-                      </button>
-                      <p style={{ margin: "8px 0 0 0", textAlign: "center", fontFamily: SM, fontSize: 11, color: "#8899AA" }}>
-                        Free plan includes 2 diagnostic findings per scan.
-                      </p>
+                    ) : null}
+                  </>
+                ) : (
+                  <>
+                    {dashboardFindingRows.slice(0, 3).map((row, i) => (
+                      <ReportFindingPreview
+                        key={row.id}
+                        finding={row}
+                        index={i + 1}
+                        issueReportId={activeLatest.id}
+                      />
+                    ))}
+                    {activeMoneyLeaksTotal > 0 ? (
+                      <div style={{ marginTop: 12 }}>
+                        <a
+                          href={effectiveDomain ? `/report/${encodeURIComponent(effectiveDomain)}` : "#"}
+                          style={{ fontFamily: SM, fontSize: 11, color: "#00C8FF", textDecoration: "none" }}
+                        >
+                          → View all {totalFindingsDetected ?? activeMoneyLeaksTotal} findings in full report
+                        </a>
+                      </div>
+                    ) : null}
+                  </>
+                )
+              ) : activeLatest && sortedPriorityLeaks.length === 0 ? (
+                <p style={{ fontFamily: SG, fontSize: 14, color: "rgba(255,255,255,0.3)", margin: 0, lineHeight: 1.5 }}>
+                  Your top exit triggers appear after your first scan.
+                </p>
+              ) : !activeLatest && reports.length === 0 ? (
+                <p style={{ fontFamily: SG, fontSize: 14, color: "rgba(255,255,255,0.3)", margin: 0 }}>
+                  Priority findings from your scans will list here.
+                </p>
+              ) : null
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                {[0, 1, 2].map((i) => (
+                  <div
+                    key={i}
+                    style={{
+                      background: "#0A0F1E",
+                      border: "1px solid #1A2035",
+                      borderLeft: "3px solid rgba(0,200,255,0.2)",
+                      borderRadius: 4,
+                      padding: "20px 24px",
+                    }}
+                  >
+                    <div style={{ width: "100%", maxWidth: 520, display: "flex", flexDirection: "column", gap: 12 }}>
+                      <div className="dashboard-reports-skeleton-bar" style={{ width: "72%", animationDelay: `${i * 0.15}s` }} />
+                      <div className="dashboard-reports-skeleton-bar" style={{ width: "92%", animationDelay: `${i * 0.15 + 0.05}s` }} />
+                      <div className="dashboard-reports-skeleton-bar" style={{ width: "64%", animationDelay: `${i * 0.15 + 0.1}s` }} />
                     </div>
-                  ) : null}
-                </>
-              ) : (
-                <>
-                  {dashboardFindingRows.slice(0, 3).map((row, i) => (
-                    <ReportFindingPreview
-                      key={row.id}
-                      finding={row}
-                      index={i + 1}
-                      issueReportId={activeLatest.id}
-                    />
-                  ))}
-                  {activeMoneyLeaksTotal > 0 ? (
-                    <div style={{ marginTop: 12 }}>
-                      <a
-                        href={effectiveDomain ? `/report/${encodeURIComponent(effectiveDomain)}` : "#"}
-                        style={{ fontFamily: SM, fontSize: 11, color: "#00C8FF", textDecoration: "none" }}
-                      >
-                        → View all {totalFindingsDetected ?? activeMoneyLeaksTotal} findings in full report
-                      </a>
-                    </div>
-                  ) : null}
-                </>
-              )
-            ) : activeLatest && sortedPriorityLeaks.length === 0 ? (
-              <p style={{ fontFamily: SG, fontSize: 14, color: "rgba(255,255,255,0.3)", margin: 0, lineHeight: 1.5 }}>
-                Your top exit triggers appear after your first scan.
-              </p>
-            ) : !activeLatest && reports.length === 0 ? (
-              <p style={{ fontFamily: SG, fontSize: 14, color: "rgba(255,255,255,0.3)", margin: 0 }}>
-                Priority findings from your scans will list here.
-              </p>
-            ) : null}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* 3. CONVERSION HEALTH */}

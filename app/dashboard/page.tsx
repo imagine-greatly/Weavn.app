@@ -14,6 +14,7 @@ import { getBlockedMessage, isBlockedDomain } from "@/lib/scanGuard";
 import { convertLeaksToFindingData } from "@/lib/convertLeakToFindingData";
 import { ReportFindingPreview } from "@/components/ReportRightPanel";
 import { displayScoreColor } from "@/lib/displayScoreColor";
+import ConversionScoreGauge from "@/components/ConversionScoreGauge";
 
 const SM = "var(--font-space-mono), var(--font-jetbrains-mono), monospace";
 const SG = "var(--font-space-grotesk), sans-serif";
@@ -171,13 +172,6 @@ function normalizeScanUrlForGuard(raw: string): string {
 
 function scoreColor(score: number): string {
   return displayScoreColor(score);
-}
-
-function scoreBandLabel(score: number): string {
-  if (score >= 75) return "STRONG";
-  if (score >= 50) return "MODERATE";
-  if (score >= 30) return "WEAK";
-  return "CRITICAL RISK";
 }
 
 const DASH_STRIPE_CTA: CSSProperties = {
@@ -634,13 +628,10 @@ export default function DashboardPage() {
     return m;
   }, [domains, reports]);
 
-  const scoreDeltaLabel = useMemo(() => {
-    if (activePrevious === null) return "BASELINE";
-    if (activePrevScore === null) return null;
-    const diff = activeScore - activePrevScore;
-    if (diff === 0) return "NO CHANGE";
-    return diff > 0 ? `↑ +${diff} PTS` : `↓ ${Math.abs(diff)} PTS`;
-  }, [activePrevious, activePrevScore, activeScore]);
+  const dashboardScoreDelta =
+    activePrevious !== null && activePrevScore !== null
+      ? activeScore - activePrevScore
+      : undefined;
 
   async function handleNewUserScanSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -759,14 +750,6 @@ export default function DashboardPage() {
     );
   }
 
-  // ─── Header gauge ────────────────────────────────────────────────────────────
-  const gaugeSize = 120;
-  const gaugeStroke = 3;
-  const gaugeR = 48;
-  const gaugeCirc = 2 * Math.PI * gaugeR;
-  const gaugeOffset = gaugeCirc * (1 - activeScore / 100);
-  const gaugeColor = scoreColor(activeScore);
-
   const pagesAnalyzed =
     typeof activeLatest?.total_passed === "number" && typeof activeLatest?.total_failed === "number"
       ? activeLatest.total_passed + activeLatest.total_failed
@@ -854,44 +837,11 @@ export default function DashboardPage() {
         {/* Center cluster — score gauge */}
         {activeLatest ? (
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, flexShrink: 0 }}>
-            <div style={{ position: "relative", width: gaugeSize, height: gaugeSize }}>
-              <svg
-                width={gaugeSize}
-                height={gaugeSize}
-                viewBox={`0 0 ${gaugeSize} ${gaugeSize}`}
-                style={{ transform: "rotate(-90deg)" }}
-              >
-                <circle
-                  cx={gaugeSize / 2} cy={gaugeSize / 2} r={gaugeR}
-                  fill="none"
-                  stroke="rgba(255,255,255,0.06)"
-                  strokeWidth={gaugeStroke}
-                />
-                <circle
-                  cx={gaugeSize / 2} cy={gaugeSize / 2} r={gaugeR}
-                  fill="none"
-                  stroke={gaugeColor}
-                  strokeWidth={gaugeStroke}
-                  strokeDasharray={gaugeCirc}
-                  strokeDashoffset={gaugeOffset}
-                  strokeLinecap="round"
-                />
-              </svg>
-              <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <span style={{ fontFamily: ORB, fontWeight: 700, fontSize: 42, color: gaugeColor, lineHeight: 1 }}>{activeScore}</span>
-              </div>
-            </div>
-            <span style={{ fontFamily: SM, fontSize: 8, color: "rgba(0,200,255,0.5)", letterSpacing: "0.14em", textTransform: "uppercase" }}>
-              CONVERSION SCORE
-            </span>
-            <span style={{ fontFamily: SM, color: gaugeColor, fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase" }}>
-              {scoreBandLabel(activeScore)}
-            </span>
-            {scoreDeltaLabel ? (
-              <span style={{ fontFamily: SM, color: scoreDeltaLabel === "BASELINE" || scoreDeltaLabel === "NO CHANGE" ? "rgba(255,255,255,0.3)" : scoreDeltaLabel.startsWith("↑") ? gaugeColor : "#FF2D2D", fontSize: 9 }}>
-                {scoreDeltaLabel}
-              </span>
-            ) : null}
+            <ConversionScoreGauge
+              score={activeScore}
+              scoreDelta={dashboardScoreDelta}
+              previousScanAt={formatRelativeScanTime(activeLatest.created_at)}
+            />
           </div>
         ) : null}
 

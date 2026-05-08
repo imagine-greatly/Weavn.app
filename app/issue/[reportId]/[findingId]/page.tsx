@@ -14,7 +14,6 @@ import type { ReportPayload, Leak } from "@/lib/reportSchema";
 import { getDashboardMoneyLeaks } from "@/lib/dashboardMoneyLeaks";
 import type { FindingBriefExpansion } from "@/lib/prompts";
 import { parseFindingBriefFromStoredValue } from "@/lib/expandFindingBrief";
-import PageLoadSkeleton from "@/components/PageLoadSkeleton";
 
 type ReportRow = {
   id: string;
@@ -26,6 +25,7 @@ type ReportRow = {
 };
 
 type ChatMessage = { role: "user" | "assistant"; content: string };
+const STORAGE_KEY_PREFIX = "webdoc_report_";
 
 const FALLBACK_ADVISOR_CHIPS = [
   "What is the fastest resolution?",
@@ -454,6 +454,78 @@ function SectionSkeleton({ widthPct }: { widthPct: string }) {
   );
 }
 
+function IssueInitialSkeleton() {
+  return (
+    <div style={{ minHeight: "100vh", background: "#050810", padding: "32px 40px" }}>
+      <style>{`
+        @keyframes issueInitialSkelPulse {
+          0%, 100% { opacity: 0.5; }
+          50% { opacity: 1; }
+        }
+      `}</style>
+      <div style={{ maxWidth: 860, margin: "0 auto", display: "flex", flexDirection: "column", gap: 20 }}>
+        <div
+          aria-hidden
+          style={{
+            background: "#1A2035",
+            height: 32,
+            width: "60%",
+            borderRadius: 4,
+            animation: "issueInitialSkelPulse 1.5s ease-in-out infinite",
+          }}
+        />
+        {[0, 1, 2].map((i) => (
+          <div
+            key={i}
+            aria-hidden
+            style={{
+              background: "#0A0F1E",
+              height: 120,
+              borderRadius: 4,
+              border: "1px solid #1A2035",
+              animation: "issueInitialSkelPulse 1.5s ease-in-out infinite",
+            }}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function reportFromLocalStorageForFinding(findingId: string): {
+  report: ReportRow;
+  finding: Leak | null;
+  leaks: Leak[];
+} | null {
+  if (typeof window === "undefined" || !findingId) return null;
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (!key || !key.startsWith(STORAGE_KEY_PREFIX)) continue;
+      const domain = key.slice(STORAGE_KEY_PREFIX.length).trim();
+      if (!domain) continue;
+      const stored = localStorage.getItem(`${STORAGE_KEY_PREFIX}${domain}`);
+      if (!stored) continue;
+      const parsed = JSON.parse(stored) as Record<string, unknown>;
+      const analysis = (parsed.analysis ?? parsed) as ReportPayload;
+      const row: ReportRow = {
+        id: String(parsed.id ?? ""),
+        domain,
+        created_at: String(parsed.created_at ?? ""),
+        analysis,
+        extended_analysis: parsed.extended_analysis ?? null,
+        finding_briefs: parsed.finding_briefs ?? null,
+      };
+      const leaks = leaksForIssueLookup(row.analysis);
+      const found = findLeakForUrlSegment(leaks, findingId);
+      if (found) return { report: row, finding: found, leaks };
+    }
+  } catch {
+    return null;
+  }
+  return null;
+}
+
 
 export default function IssuePage() {
   const router = useRouter();
@@ -505,36 +577,95 @@ export default function IssuePage() {
       setAdvisorChips([...FALLBACK_ADVISOR_CHIPS]);
       setResolvedLocal(false);
 
-      const supabase = getSupabaseBrowserClient();
+      const cached = reportFromLocalStorageForFinding(findingId);
+      if (cached) {
+        const row = cached.report;
+        const found = cached.finding;
+        const leaks = cached.leaks;
+        setReport(row);
+        setScanLeaks(leaks);
+        setFinding(found);
 
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-
-      if (!session) {
+        const ext = row.extended_analysis;
+        const extKey = found ? leakKey(found) : "";
+        const keyVariants = [
+          extKey,
+          findingId,
+          decodeURIComponent(findingId),
+          found?.id,
+          found?.title,
+          String(found?.id ?? ""),
+          String(found?.title ?? ""),
+        ].filter((k): k is string => typeof k === "string" && k.trim().length > 0);
+        const storedEntry =
+          ext && typeof ext === "object" && !Array.isArray(ext)
+            ? keyVariants.reduce<unknown>(
+                (acc, k) => acc ?? (ext as Record<string, unknown>)[k],
+                undefined,
+              )
+            : undefined;
+        const fromCachedExtended = parseFindingBriefFromStoredValue(storedEntry);
+        if (fromCachedExtended) {
+          setBriefExpanded(fromCachedExtended);
+          setAdvisorChips(advisorChipsFromExpansion(fromCachedExtended));
+          const open =
+            typeof fromCachedExtended.advisorOpening === "string"
+              ? fromCachedExtended.advisorOpening.trim()
+              : "";
+          setMessages([
+            {
+              role: "assistant",
+              content:
+                open ||
+                "Review the diagnostic brief above, then ask where you want to start implementation.",
+            },
+          ]);
+        }
+        setExpandLoading(false);
         setLoading(false);
-        router.push("/auth");
-        return;
+        if (fromCachedExtended) return;
       }
 
-      let data: ReportRow | null = null;
-      let reportError: { message?: string; code?: string } | null = null;
+      const supabase = getSupabaseBrowserClient();
 
-      try {
-        const result = await supabase
-          .from("reports")
-          .select("id, domain, created_at, analysis, extended_analysis, finding_briefs")
-          .eq("id", reportId)
-          .maybeSingle();
-        const err = result.error as { message?: string; code?: string } | null;
-        const errMsg = String(err?.message ?? "");
-        const extendedColumnMissing =
-          err &&
-          (/extended_analysis/i.test(errMsg) ||
-            /finding_briefs/i.test(errMsg) ||
-            /column.*does not exist/i.test(errMsg) ||
-            err.code === "PGRST204");
-        if (extendedColumnMissing) {
+      const sessionPromise = supabase.auth.getSession();
+      const reportPromise = (async () => {
+        let data: ReportRow | null = null;
+        let reportError: { message?: string; code?: string } | null = null;
+
+        try {
+          const result = await supabase
+            .from("reports")
+            .select("id, domain, created_at, analysis, extended_analysis, finding_briefs")
+            .eq("id", reportId)
+            .maybeSingle();
+          const err = result.error as { message?: string; code?: string } | null;
+          const errMsg = String(err?.message ?? "");
+          const extendedColumnMissing =
+            err &&
+            (/extended_analysis/i.test(errMsg) ||
+              /finding_briefs/i.test(errMsg) ||
+              /column.*does not exist/i.test(errMsg) ||
+              err.code === "PGRST204");
+          if (extendedColumnMissing) {
+            const fb = await supabase
+              .from("reports")
+              .select("id, domain, created_at, analysis")
+              .eq("id", reportId)
+              .maybeSingle();
+            data = fb.data
+              ? ({
+                  ...fb.data,
+                  extended_analysis: null,
+                  finding_briefs: null,
+                } as ReportRow)
+              : null;
+            reportError = fb.error as { message?: string; code?: string } | null;
+          } else {
+            data = result.data as ReportRow | null;
+            reportError = err;
+          }
+        } catch {
           const fb = await supabase
             .from("reports")
             .select("id, domain, created_at, analysis")
@@ -548,24 +679,20 @@ export default function IssuePage() {
               } as ReportRow)
             : null;
           reportError = fb.error as { message?: string; code?: string } | null;
-        } else {
-          data = result.data as ReportRow | null;
-          reportError = err;
         }
-      } catch {
-        const fb = await supabase
-          .from("reports")
-          .select("id, domain, created_at, analysis")
-          .eq("id", reportId)
-          .maybeSingle();
-        data = fb.data
-          ? ({
-              ...fb.data,
-              extended_analysis: null,
-              finding_briefs: null,
-            } as ReportRow)
-          : null;
-        reportError = fb.error as { message?: string; code?: string } | null;
+        return { data, reportError };
+      })();
+
+      const [{ data: sessionData }, { data, reportError }] = await Promise.all([
+        sessionPromise,
+        reportPromise,
+      ]);
+      const session = sessionData.session;
+
+      if (!session) {
+        setLoading(false);
+        router.push("/auth");
+        return;
       }
 
       if (cancelled) return;
@@ -975,7 +1102,7 @@ export default function IssuePage() {
   })();
 
   if (loading) {
-    return <PageLoadSkeleton bars={5} maxWidth={440} />;
+    return <IssueInitialSkeleton />;
   }
 
   if (!finding) {
@@ -1143,27 +1270,6 @@ export default function IssuePage() {
     fontWeight: 400,
   };
 
-  const siteScore = report?.analysis?.healthScore ?? 0;
-  const gaugeSize = 140;
-  const gaugeStroke = 8;
-  const gaugeR = (gaugeSize - gaugeStroke) / 2;
-  const gaugeCirc = 2 * Math.PI * gaugeR;
-  const gaugeOffset = gaugeCirc * (1 - siteScore / 100);
-  const gColor =
-    siteScore >= 75 ? "#00E676" : siteScore >= 50 ? "#FFB800" : siteScore >= 30 ? "#FF6B00" : "#FF2D2D";
-  const gBandLabel =
-    siteScore >= 75 ? "STRONG" : siteScore >= 50 ? "FAIR" : siteScore >= 30 ? "WEAK" : "CRITICAL";
-  const dimBarColor = (s: number) =>
-    s >= 75 ? "#00E676" : s >= 50 ? "#FFB800" : s >= 30 ? "#FF6B00" : "#FF2D2D";
-  const dimensionBars = (() => {
-    const scores = report?.analysis?.dimensionScores;
-    if (!Array.isArray(scores) || scores.length === 0) return [];
-    return scores.map((d) => ({
-      label: String(d.label ?? ""),
-      score: Math.max(0, Math.min(100, Math.round(Number(d.score) || 0))),
-    }));
-  })();
-
   const prevFinding = priorityIndex > 0 ? sortedByPriority[priorityIndex - 1] ?? null : null;
   const nextFinding =
     priorityIndex >= 0 && priorityIndex < sortedByPriority.length - 1
@@ -1173,9 +1279,7 @@ export default function IssuePage() {
   return (
     <div
       style={{
-        display: "flex",
-        height: "calc(100vh - 4rem)",
-        overflow: "hidden",
+        minHeight: "100vh",
         background: "#050810",
         position: "relative",
       }}
@@ -1231,243 +1335,80 @@ export default function IssuePage() {
         />
       ))}
 
-      {/* LEFT SIDEBAR */}
       <div
         style={{
-          width: 280,
-          flexShrink: 0,
-          height: "100%",
-          overflowY: "auto",
-          background: "#080D18",
-          borderRight: "1px solid #0D1626",
-          padding: "24px 20px",
-          display: "flex",
-          flexDirection: "column",
-          gap: 24,
           position: "relative",
           zIndex: 2,
         }}
       >
-        {/* Back */}
-        {report ? (
-          <Link
-            href={`/report/${encodeURIComponent(report.domain)}`}
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 6,
-              fontFamily: "var(--font-space-mono), monospace",
-              fontSize: 11,
-              letterSpacing: "0.12em",
-              color: "#8899AA",
-              textTransform: "uppercase",
-              textDecoration: "none",
-              marginBottom: 20,
-            }}
-            onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.color = "#00C8FF"; }}
-            onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.color = "#8899AA"; }}
-          >
-            ← BACK TO REPORT
-          </Link>
-        ) : null}
-
-        {/* Score gauge */}
-        {report ? (
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
-            <div style={{ position: "relative", width: gaugeSize, height: gaugeSize }}>
-              <svg
-                width={gaugeSize}
-                height={gaugeSize}
-                style={{ transform: "rotate(-90deg)", display: "block" }}
-              >
-                <circle
-                  cx={gaugeSize / 2}
-                  cy={gaugeSize / 2}
-                  r={gaugeR}
-                  fill="none"
-                  stroke="#0D1626"
-                  strokeWidth={gaugeStroke}
-                />
-                <circle
-                  cx={gaugeSize / 2}
-                  cy={gaugeSize / 2}
-                  r={gaugeR}
-                  fill="none"
-                  stroke={gColor}
-                  strokeWidth={gaugeStroke}
-                  strokeLinecap="round"
-                  strokeDasharray={gaugeCirc}
-                  strokeDashoffset={gaugeOffset}
-                  style={{ filter: `drop-shadow(0 0 6px ${gColor}88)` }}
-                />
-              </svg>
-              <div
+        <div
+          style={{
+            background: "#080D18",
+            borderBottom: "1px solid #0D1626",
+            padding: "16px 40px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 16,
+            flexWrap: "wrap",
+          }}
+        >
+          <div style={{ flex: "1 1 0", minWidth: 200 }}>
+            {report ? (
+              <Link
+                href={`/report/${encodeURIComponent(report.domain)}`}
                 style={{
-                  position: "absolute",
-                  inset: 0,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
+                  fontFamily: "var(--font-space-mono), monospace",
+                  fontSize: 11,
+                  color: "#8899AA",
+                  textDecoration: "none",
+                  letterSpacing: "0.02em",
                 }}
               >
-                <span
-                  style={{
-                    fontFamily: "var(--font-orbitron), sans-serif",
-                    fontWeight: 700,
-                    fontSize: 26,
-                    color: gColor,
-                    lineHeight: 1,
-                  }}
-                >
-                  {siteScore}
-                </span>
-              </div>
-            </div>
-            <div
-              style={{
-                fontFamily: "var(--font-space-mono), monospace",
-                fontSize: 9,
-                color: gColor,
-                letterSpacing: "0.12em",
-                textTransform: "uppercase",
-              }}
-            >
-              {gBandLabel}
-            </div>
-            <div
-              style={{
-                fontFamily: "var(--font-space-mono), monospace",
-                fontSize: 9,
-                color: "#8899AA",
-                letterSpacing: "0.15em",
-                textTransform: "uppercase",
-              }}
-            >
-              CONVERSION SCORE
-            </div>
-            <div
-              style={{
-                fontFamily: "var(--font-space-mono), monospace",
-                fontSize: 9,
-                color: "#8899AA",
-                letterSpacing: "0.08em",
-              }}
-            >
-              {report.domain}
-            </div>
+                ← BACK TO REPORT
+              </Link>
+            ) : null}
           </div>
-        ) : null}
-
-        {/* Conversion health bars */}
-        {dimensionBars.length > 0 ? (
-          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            <div
-              style={{
-                fontFamily: "var(--font-space-mono), monospace",
-                fontSize: 9,
-                color: "#8899AA",
-                letterSpacing: "0.15em",
-                textTransform: "uppercase",
-                marginBottom: 4,
-              }}
-            >
-              CONVERSION HEALTH
-            </div>
-            {dimensionBars.map((dim) => (
-              <div key={dim.label} style={{ display: "flex", flexDirection: "column", gap: 3 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <span
-                    style={{
-                      fontFamily: "var(--font-space-mono), monospace",
-                      fontSize: 8,
-                      color: "#8899AA",
-                      letterSpacing: "0.08em",
-                      textTransform: "uppercase",
-                    }}
-                  >
-                    {dim.label}
-                  </span>
-                  <span
-                    style={{
-                      fontFamily: "var(--font-space-mono), monospace",
-                      fontSize: 8,
-                      color: dimBarColor(dim.score),
-                    }}
-                  >
-                    {dim.score}
-                  </span>
-                </div>
-                <div
-                  style={{
-                    height: 3,
-                    background: "#0D1626",
-                    borderRadius: 2,
-                    overflow: "hidden",
-                  }}
-                >
-                  <div
-                    style={{
-                      height: "100%",
-                      width: `${dim.score}%`,
-                      background: dimBarColor(dim.score),
-                      borderRadius: 2,
-                    }}
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : null}
-
-        {/* Finding position */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           <div
             style={{
+              flex: "1 1 auto",
+              textAlign: "center",
               fontFamily: "var(--font-space-mono), monospace",
-              fontSize: 9,
+              fontSize: 10,
               color: "#8899AA",
-              letterSpacing: "0.15em",
-              textTransform: "uppercase",
+              letterSpacing: "0.02em",
             }}
           >
-            FINDING {priorityN} OF {priorityY}
+            {report ? `${report.domain} · Finding ${priorityN} of ${priorityY}` : `Finding ${priorityN} of ${priorityY}`}
           </div>
           <div
             style={{
-              fontFamily: "var(--font-space-grotesk), sans-serif",
-              fontSize: 13,
-              fontWeight: 700,
-              color: "#FFFFFF",
-              lineHeight: 1.3,
-              display: "-webkit-box",
-              WebkitLineClamp: 2,
-              WebkitBoxOrient: "vertical",
-              overflow: "hidden",
-            }}
-          >
-            {finding.title}
-          </div>
-          <span
-            style={{
-              display: "inline-block",
+              flex: "1 1 0",
+              minWidth: 200,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "flex-end",
+              gap: 10,
+              flexWrap: "wrap",
               fontFamily: "var(--font-space-mono), monospace",
-              fontWeight: 700,
-              fontSize: 9,
-              letterSpacing: "1.5px",
-              color: "#FFFFFF",
-              background: sevColor,
-              borderRadius: 2,
-              padding: "2px 8px",
-              alignSelf: "flex-start",
+              fontSize: 10,
+              color: "#8899AA",
             }}
           >
-            {sevLabel}
-          </span>
-        </div>
-
-        {/* Prev / Next navigation */}
-        {(prevFinding || nextFinding) ? (
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <span
+              style={{
+                display: "inline-block",
+                fontWeight: 700,
+                letterSpacing: "0.08em",
+                color: "#FFFFFF",
+                background: sevColor,
+                borderRadius: 2,
+                padding: "2px 8px",
+                textTransform: "uppercase",
+              }}
+            >
+              {sevLabel}
+            </span>
             {prevFinding ? (
               <button
                 type="button"
@@ -1475,23 +1416,16 @@ export default function IssuePage() {
                   if (report) router.push(`/issue/${encodeURIComponent(report.id)}/${encodeURIComponent(leakKey(prevFinding))}`);
                 }}
                 style={{
-                  display: "flex",
-                  alignItems: "flex-start",
-                  gap: 8,
-                  background: "rgba(255,255,255,0.03)",
-                  border: "1px solid #1A2035",
-                  borderRadius: 6,
-                  padding: "8px 12px",
+                  background: "transparent",
+                  border: "none",
+                  color: "#8899AA",
+                  fontFamily: "var(--font-space-mono), monospace",
+                  fontSize: 10,
                   cursor: "pointer",
-                  textAlign: "left",
-                  width: "100%",
+                  padding: 0,
                 }}
-                onMouseEnter={(e) => { e.currentTarget.style.borderColor = "rgba(0,200,255,0.25)"; }}
-                onMouseLeave={(e) => { e.currentTarget.style.borderColor = "#1A2035"; }}
               >
-                <span style={{ fontFamily: "var(--font-space-mono), monospace", fontSize: 10, color: "#8899AA", lineHeight: 1.3 }}>
-                  ← PREVIOUS FINDING
-                </span>
+                ← PREV
               </button>
             ) : null}
             {nextFinding ? (
@@ -1501,63 +1435,29 @@ export default function IssuePage() {
                   if (report) router.push(`/issue/${encodeURIComponent(report.id)}/${encodeURIComponent(leakKey(nextFinding))}`);
                 }}
                 style={{
-                  display: "flex",
-                  alignItems: "flex-start",
-                  gap: 8,
-                  background: "rgba(255,255,255,0.03)",
-                  border: "1px solid #1A2035",
-                  borderRadius: 6,
-                  padding: "8px 12px",
+                  background: "transparent",
+                  border: "none",
+                  color: "#8899AA",
+                  fontFamily: "var(--font-space-mono), monospace",
+                  fontSize: 10,
                   cursor: "pointer",
-                  textAlign: "left",
-                  width: "100%",
+                  padding: 0,
                 }}
-                onMouseEnter={(e) => { e.currentTarget.style.borderColor = "rgba(0,200,255,0.25)"; }}
-                onMouseLeave={(e) => { e.currentTarget.style.borderColor = "#1A2035"; }}
               >
-                <span style={{ fontFamily: "var(--font-space-mono), monospace", fontSize: 10, color: "#8899AA", lineHeight: 1.3 }}>
-                  NEXT FINDING →
-                </span>
+                NEXT →
               </button>
             ) : null}
           </div>
-        ) : null}
-
-        {/* View full report — pinned to bottom */}
-        <div style={{ marginTop: "auto" }}>
-          {report ? (
-            <Link
-              href={`/report/${encodeURIComponent(report.domain)}`}
-              style={{
-                display: "block",
-                fontFamily: "var(--font-space-mono), monospace",
-                fontSize: 10,
-                color: "#00C8FF",
-                letterSpacing: "0.12em",
-                textTransform: "uppercase",
-                textDecoration: "none",
-                padding: "8px 0",
-              }}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.color = "#FFFFFF"; }}
-              onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.color = "#00C8FF"; }}
-            >
-              VIEW FULL REPORT →
-            </Link>
-          ) : null}
         </div>
-      </div>
 
-      {/* RIGHT PANEL */}
-      <div
-        style={{
-          flex: 1,
-          height: "100%",
-          overflowY: "auto",
-          padding: "32px 40px 80px",
-          position: "relative",
-          zIndex: 2,
-        }}
-      >
+        <main
+          style={{
+            maxWidth: 860,
+            margin: "0 auto",
+            padding: "32px 40px 80px",
+            boxSizing: "border-box",
+          }}
+        >
 
         {/* FINDING HEADER */}
         <div
@@ -2303,6 +2203,7 @@ export default function IssuePage() {
             </div>
           </>
         ) : null}
+        </main>
       </div>
     </div>
   );

@@ -124,10 +124,37 @@ export default function ReportLeftPanel({
       <style>{`
         .category-scroll::-webkit-scrollbar { display: none; }
         .category-scroll { scrollbar-width: none; }
+        @media (max-width: 768px) {
+          .report-left-aside {
+            width: 100% !important;
+            height: auto !important;
+          }
+          .report-left-top {
+            padding: 20px 16px 0 16px !important;
+          }
+          .report-left-dimensions {
+            padding: 0 16px !important;
+          }
+          .report-left-score-wrap {
+            display: flex;
+            justify-content: center;
+            width: 100%;
+          }
+          .report-left-score-wrap > div {
+            transform: scale(0.67);
+            transform-origin: top center;
+          }
+          .report-left-bottom {
+            padding: 14px 16px 18px !important;
+          }
+          .report-left-bottom .report-left-rescan-btn {
+            min-height: 44px !important;
+          }
+        }
       `}</style>
 
       {/* Section 1 — site identity + score ring (fixed) */}
-      <div className="shrink-0" style={{ padding: "16px 24px 0 24px" }}>
+      <div className="report-left-top shrink-0" style={{ padding: "16px 24px 0 24px" }}>
         <div
           className="flex items-center gap-2.5"
           style={{ marginBottom: 20 }}
@@ -192,18 +219,20 @@ export default function ReportLeftPanel({
           }}
         />
 
-        <ConversionScoreGauge
-          score={score}
-          scoreDelta={scoreDelta}
-          previousScanAt={
-            previousScanAt ? formatRelativeScanDate(previousScanAt) : undefined
-          }
-        />
+        <div className="report-left-score-wrap">
+          <ConversionScoreGauge
+            score={score}
+            scoreDelta={scoreDelta}
+            previousScanAt={
+              previousScanAt ? formatRelativeScanDate(previousScanAt) : undefined
+            }
+          />
+        </div>
       </div>
 
       {dimensionBars.length > 0 ? (
         <div
-          className="shrink-0"
+          className="report-left-dimensions shrink-0"
           style={{
             padding: "0 24px",
             marginBottom: 20,
@@ -286,7 +315,7 @@ export default function ReportLeftPanel({
       />
 
       <div
-        className="shrink-0 border-t"
+        className="report-left-bottom shrink-0 border-t"
         style={{
           background: "#050810",
           borderColor: "rgba(255,255,255,0.08)",
@@ -355,7 +384,7 @@ export default function ReportLeftPanel({
           <button
             type="button"
             onClick={onRescan}
-            className="font-mono flex w-full items-center justify-center gap-2 border transition-all duration-150"
+            className="report-left-rescan-btn font-mono flex w-full items-center justify-center gap-2 border transition-all duration-150"
             style={{
               height: 36,
               fontSize: 10,

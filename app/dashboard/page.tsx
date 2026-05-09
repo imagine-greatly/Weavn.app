@@ -763,6 +763,71 @@ export default function DashboardPage() {
         background: "#050810",
       }}
     >
+      <style>{`
+        @media (max-width: 768px) {
+          .dashboard-score-header {
+            padding: 16px 20px !important;
+            gap: 12px !important;
+            flex-direction: column !important;
+            align-items: stretch !important;
+          }
+          .dashboard-header-site {
+            width: 100% !important;
+            order: 1;
+          }
+          .dashboard-header-divider {
+            display: none !important;
+          }
+          .dashboard-header-gauge {
+            width: 100% !important;
+            order: 2;
+            align-items: center !important;
+          }
+          .dashboard-header-right {
+            width: 100% !important;
+            order: 3;
+            gap: 12px !important;
+          }
+          .dashboard-header-stats {
+            width: 100% !important;
+            gap: 8px !important;
+          }
+          .dashboard-stat-pill {
+            flex: 1 1 0 !important;
+            min-width: 0 !important;
+            padding: 8px 10px !important;
+          }
+          .dashboard-stat-value {
+            font-size: 15px !important;
+          }
+          .dashboard-stat-label {
+            font-size: 8px !important;
+          }
+          .dashboard-header-actions {
+            width: 100% !important;
+            margin-left: 0 !important;
+            display: flex !important;
+            flex-direction: column-reverse !important;
+            gap: 8px !important;
+          }
+          .dashboard-header-actions a,
+          .dashboard-header-actions button {
+            width: 100% !important;
+            min-height: 44px !important;
+            justify-content: center !important;
+          }
+          .dashboard-site-select {
+            max-width: 100% !important;
+            width: 100% !important;
+          }
+          .dashboard-main-content {
+            padding: 20px 16px !important;
+          }
+          .dashboard-finding-skeleton {
+            padding: 16px !important;
+          }
+        }
+      `}</style>
       {/* Ambient blobs */}
       <div aria-hidden style={{ position: "fixed", width: 500, height: 400, left: "4%", top: "20%", borderRadius: "50%", background: "rgba(0,150,255,0.04)", filter: "blur(80px)", animation: "heroNeuralDrift 16s ease-in-out infinite", pointerEvents: "none", zIndex: 0 }} />
       <div aria-hidden style={{ position: "fixed", width: 400, height: 500, right: "6%", bottom: "10%", borderRadius: "50%", background: "rgba(0,100,200,0.018)", filter: "blur(100px)", animation: "heroNeuralDrift 22s ease-in-out infinite reverse", pointerEvents: "none", zIndex: 0 }} />
@@ -770,6 +835,7 @@ export default function DashboardPage() {
 
       {/* ── SCORE HEADER BAR ─────────────────────────────────────────────────── */}
       <div
+        className="dashboard-score-header"
         style={{
           background: "rgba(5,8,16,0.95)",
           borderBottom: "1px solid rgba(0,200,255,0.08)",
@@ -783,7 +849,7 @@ export default function DashboardPage() {
         }}
       >
         {/* Left cluster — site selector */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 4, minWidth: 0, flexShrink: 0 }}>
+        <div className="dashboard-header-site" style={{ display: "flex", flexDirection: "column", gap: 4, minWidth: 0, flexShrink: 0 }}>
           <div style={{ fontFamily: SM, fontSize: 9, color: "rgba(0,200,255,0.5)", letterSpacing: "0.15em", textTransform: "uppercase" }}>
             ACTIVE DIAGNOSTIC
           </div>
@@ -797,6 +863,7 @@ export default function DashboardPage() {
           >
             {domains.length > 1 ? (
               <select
+                className="dashboard-site-select"
                 value={effectiveDomain}
                 onChange={(e) => setActiveDomain(e.target.value)}
                 style={{
@@ -826,12 +893,12 @@ export default function DashboardPage() {
         </div>
 
         {/* Divider */}
-        <div style={{ width: 1, height: 60, background: "rgba(0,200,255,0.08)", flexShrink: 0 }} />
+        <div className="dashboard-header-divider" style={{ width: 1, height: 60, background: "rgba(0,200,255,0.08)", flexShrink: 0 }} />
 
         {/* Center cluster — score gauge */}
         {activeLatest ? (
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, flexShrink: 0 }}>
-            <div style={{ width: 120, height: 120, flexShrink: 0 }}>
+          <div className="dashboard-header-gauge" style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, flexShrink: 0 }}>
+            <div className="dashboard-gauge-frame" style={{ width: 110, height: 110, flexShrink: 0, overflow: "hidden" }}>
               <ConversionScoreGauge
                 score={activeScore}
                 scoreDelta={dashboardScoreDelta}
@@ -842,27 +909,27 @@ export default function DashboardPage() {
         ) : null}
 
         {/* Divider */}
-        <div style={{ width: 1, height: 60, background: "rgba(0,200,255,0.08)", flexShrink: 0 }} />
+        <div className="dashboard-header-divider" style={{ width: 1, height: 60, background: "rgba(0,200,255,0.08)", flexShrink: 0 }} />
 
         {/* Right cluster — stats + actions */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 10, flex: 1, minWidth: 0 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+        <div className="dashboard-header-right" style={{ display: "flex", flexDirection: "column", gap: 10, flex: 1, minWidth: 0 }}>
+          <div className="dashboard-header-stats" style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
             {/* Stat pills */}
-            <div style={{ border: "1px solid rgba(255,45,45,0.3)", background: "rgba(255,45,45,0.08)", borderRadius: 4, padding: "8px 16px", display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
-              <span style={{ fontFamily: ORB, fontWeight: 700, fontSize: 18, color: "#FF2D2D", lineHeight: 1 }}>{headerCriticalCount}</span>
-              <span style={{ fontFamily: SM, fontSize: 9, color: "#FF2D2D", letterSpacing: "0.08em", textTransform: "uppercase" }}>CRITICAL</span>
+            <div className="dashboard-stat-pill" style={{ border: "1px solid rgba(255,45,45,0.3)", background: "rgba(255,45,45,0.08)", borderRadius: 4, padding: "8px 16px", display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
+              <span className="dashboard-stat-value" style={{ fontFamily: ORB, fontWeight: 700, fontSize: 18, color: "#FF2D2D", lineHeight: 1 }}>{headerCriticalCount}</span>
+              <span className="dashboard-stat-label" style={{ fontFamily: SM, fontSize: 9, color: "#FF2D2D", letterSpacing: "0.08em", textTransform: "uppercase" }}>CRITICAL</span>
             </div>
-            <div style={{ border: "1px solid rgba(255,107,0,0.3)", background: "rgba(255,107,0,0.08)", borderRadius: 4, padding: "8px 16px", display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
-              <span style={{ fontFamily: ORB, fontWeight: 700, fontSize: 18, color: "#FF6B00", lineHeight: 1 }}>{headerHighCount}</span>
-              <span style={{ fontFamily: SM, fontSize: 9, color: "#FF6B00", letterSpacing: "0.08em", textTransform: "uppercase" }}>HIGH IMPACT</span>
+            <div className="dashboard-stat-pill" style={{ border: "1px solid rgba(255,107,0,0.3)", background: "rgba(255,107,0,0.08)", borderRadius: 4, padding: "8px 16px", display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
+              <span className="dashboard-stat-value" style={{ fontFamily: ORB, fontWeight: 700, fontSize: 18, color: "#FF6B00", lineHeight: 1 }}>{headerHighCount}</span>
+              <span className="dashboard-stat-label" style={{ fontFamily: SM, fontSize: 9, color: "#FF6B00", letterSpacing: "0.08em", textTransform: "uppercase" }}>HIGH IMPACT</span>
             </div>
-            <div style={{ border: "1px solid rgba(0,200,255,0.3)", background: "rgba(0,200,255,0.08)", borderRadius: 4, padding: "8px 16px", display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
-              <span style={{ fontFamily: ORB, fontWeight: 700, fontSize: 18, color: "rgba(0,200,255,0.6)", lineHeight: 1 }}>{headerTotalFindings}</span>
-              <span style={{ fontFamily: SM, fontSize: 9, color: "rgba(0,200,255,0.6)", letterSpacing: "0.08em", textTransform: "uppercase" }}>MORE FINDINGS</span>
+            <div className="dashboard-stat-pill" style={{ border: "1px solid rgba(0,200,255,0.3)", background: "rgba(0,200,255,0.08)", borderRadius: 4, padding: "8px 16px", display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
+              <span className="dashboard-stat-value" style={{ fontFamily: ORB, fontWeight: 700, fontSize: 18, color: "rgba(0,200,255,0.6)", lineHeight: 1 }}>{headerTotalFindings}</span>
+              <span className="dashboard-stat-label" style={{ fontFamily: SM, fontSize: 9, color: "rgba(0,200,255,0.6)", letterSpacing: "0.08em", textTransform: "uppercase" }}>MORE FINDINGS</span>
             </div>
 
             {/* Action buttons */}
-            <div style={{ display: "flex", gap: 8, marginLeft: "auto" }}>
+            <div className="dashboard-header-actions" style={{ display: "flex", gap: 8, marginLeft: "auto" }}>
               {isProPlan && effectiveDomain ? (
                 <button
                   type="button"
@@ -890,6 +957,7 @@ export default function DashboardPage() {
 
       {/* ── MAIN CONTENT ─────────────────────────────────────────────────────── */}
       <main
+        className="dashboard-main-content"
         style={{
           padding: "32px 40px",
           maxWidth: 860,
@@ -1085,6 +1153,7 @@ export default function DashboardPage() {
               <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                 {[0, 1, 2].map((i) => (
                   <div
+                    className="dashboard-finding-skeleton"
                     key={i}
                     style={{
                       background: "#0A0F1E",

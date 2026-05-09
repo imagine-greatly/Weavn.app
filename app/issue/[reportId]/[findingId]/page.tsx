@@ -1303,6 +1303,44 @@ export default function IssuePage() {
           0%, 100% { opacity: 0.45; }
           50% { opacity: 1; }
         }
+        @media (max-width: 768px) {
+          .issue-top-header {
+            padding: 12px 16px !important;
+            flex-direction: column !important;
+            align-items: stretch !important;
+            gap: 8px !important;
+          }
+          .issue-top-back {
+            order: 1;
+            width: 100%;
+            text-align: left !important;
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+          }
+          .issue-top-nav {
+            order: 2;
+            width: 100% !important;
+            min-width: 0 !important;
+            justify-content: space-between !important;
+            display: flex !important;
+            align-items: center !important;
+          }
+          .issue-top-nav .issue-top-severity {
+            display: none !important;
+          }
+          .issue-top-nav button {
+            min-height: 44px;
+          }
+          .issue-top-domain {
+            order: 3;
+            width: 100%;
+            text-align: center !important;
+          }
+          .issue-main-content {
+            padding: 20px 16px 40px !important;
+          }
+        }
       `}</style>
 
       <div
@@ -1356,6 +1394,7 @@ export default function IssuePage() {
         }}
       >
         <div
+          className="issue-top-header"
           style={{
             background: "#080D18",
             borderBottom: "1px solid #0D1626",
@@ -1367,7 +1406,7 @@ export default function IssuePage() {
             flexWrap: "wrap",
           }}
         >
-          <div style={{ flex: "1 1 0", minWidth: 200 }}>
+          <div className="issue-top-back" style={{ flex: "1 1 0", minWidth: 200 }}>
             {report ? (
               <Link
                 href={`/report/${encodeURIComponent(report.domain)}`}
@@ -1384,6 +1423,7 @@ export default function IssuePage() {
             ) : null}
           </div>
           <div
+            className="issue-top-domain"
             style={{
               flex: "1 1 auto",
               textAlign: "center",
@@ -1396,6 +1436,7 @@ export default function IssuePage() {
             {report ? `${report.domain} · Finding ${priorityN} of ${priorityY}` : `Finding ${priorityN} of ${priorityY}`}
           </div>
           <div
+            className="issue-top-nav"
             style={{
               flex: "1 1 0",
               minWidth: 200,
@@ -1410,6 +1451,7 @@ export default function IssuePage() {
             }}
           >
             <span
+              className="issue-top-severity"
               style={{
                 display: "inline-block",
                 fontWeight: 700,
@@ -1465,6 +1507,7 @@ export default function IssuePage() {
         </div>
 
         <main
+          className="issue-main-content"
           style={{
             maxWidth: 860,
             margin: "0 auto",

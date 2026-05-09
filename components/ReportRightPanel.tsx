@@ -140,6 +140,7 @@ export function LockedFindingCard({ finding, index: _index }: { finding: Finding
 
   return (
     <div
+      className="report-finding-card"
       style={{
         background: "#0A0F1E",
         border: "1px solid #1A2035",
@@ -180,6 +181,7 @@ export function LockedFindingCard({ finding, index: _index }: { finding: Finding
         </span>
       </div>
       <h3
+        className="report-finding-card-title"
         style={{
           margin: "10px 0 0 0",
           fontFamily: "var(--font-space-grotesk), sans-serif",
@@ -222,6 +224,7 @@ export function LockedFindingCard({ finding, index: _index }: { finding: Finding
 export function FindingsPaywallBanner({ lockedCount }: { lockedCount: number }) {
   return (
     <div
+      className="report-finding-card"
       id="findings-paywall-banner"
       role="region"
       aria-label="Pro diagnostic access for additional findings"
@@ -246,6 +249,7 @@ export function FindingsPaywallBanner({ lockedCount }: { lockedCount: number }) 
         DIAGNOSTIC ACCESS REQUIRED
       </div>
       <h3
+        className="report-finding-card-title"
         style={{
           margin: "8px 0 0 0",
           fontFamily: "var(--font-space-grotesk), sans-serif",
@@ -396,6 +400,7 @@ export function ReportFindingPreview({
 
   return (
     <div
+      className="report-finding-card"
       style={{
         position: "relative",
         background: "#0D1321",
@@ -454,6 +459,7 @@ export function ReportFindingPreview({
         </span>
       </div>
       <h3
+        className="report-finding-card-title"
         style={{
           margin: "0 0 6px 0",
           fontFamily: "var(--font-space-grotesk), sans-serif",
@@ -1172,6 +1178,26 @@ export default function ReportRightPanel({
         minWidth: 0,
       }}
     >
+      <style>{`
+        @media (max-width: 768px) {
+          .report-diagnostic-header {
+            padding: 0 16px !important;
+            min-height: 52px;
+          }
+          .report-content-shell {
+            padding: 20px 16px 32px 16px !important;
+          }
+          .report-finding-card {
+            padding: 16px !important;
+          }
+          .report-finding-card-title {
+            font-size: 15px !important;
+          }
+          .report-header-action-btn {
+            min-height: 44px !important;
+          }
+        }
+      `}</style>
       {/* Sticky header */}
       <header
         className="report-diagnostic-header sticky top-0 z-10 flex flex-row items-center justify-between"

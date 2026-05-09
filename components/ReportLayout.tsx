@@ -587,6 +587,28 @@ export default function ReportLayout({
           backdrop-filter: blur(20px);
           -webkit-backdrop-filter: blur(20px);
         }
+        @media (max-width: 768px) {
+          .report-page-layout {
+            flex-direction: column !important;
+            overflow: auto !important;
+            height: auto !important;
+            min-height: calc(100svh - 4rem);
+          }
+          .report-layout-left-wrap {
+            width: 100% !important;
+          }
+          .report-layout-left-wrap > aside {
+            width: 100% !important;
+            height: auto !important;
+            border-right: none !important;
+            border-bottom: 1px solid #0D1626 !important;
+            box-shadow: none !important;
+          }
+          .report-right-shell {
+            width: 100% !important;
+            overflow: visible !important;
+          }
+        }
       `}</style>
 
       {/* Ambient cyan spotlight — top left */}

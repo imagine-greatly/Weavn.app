@@ -26,6 +26,7 @@ type ReportRow = {
 
 type ChatMessage = { role: "user" | "assistant"; content: string };
 const STORAGE_KEY_PREFIX = "webdoc_report_";
+const STORAGE_META_KEY_PREFIX = "webdoc_report_meta_";
 
 const FALLBACK_ADVISOR_CHIPS = [
   "What is the fastest resolution?",
@@ -508,13 +509,25 @@ function reportFromLocalStorageForFinding(findingId: string): {
       if (!stored) continue;
       const parsed = JSON.parse(stored) as Record<string, unknown>;
       const analysis = (parsed.analysis ?? parsed) as ReportPayload;
+      let extendedAnalysis: unknown = parsed.extended_analysis ?? null;
+      let findingBriefs: unknown = parsed.finding_briefs ?? null;
+      if (!extendedAnalysis || !findingBriefs) {
+        try {
+          const metaRaw = localStorage.getItem(`${STORAGE_META_KEY_PREFIX}${domain}`);
+          if (metaRaw) {
+            const meta = JSON.parse(metaRaw) as Record<string, unknown>;
+            if (!extendedAnalysis && meta.extended_analysis) extendedAnalysis = meta.extended_analysis;
+            if (!findingBriefs && meta.finding_briefs) findingBriefs = meta.finding_briefs;
+          }
+        } catch { /* ignore */ }
+      }
       const row: ReportRow = {
         id: String(parsed.id ?? ""),
         domain,
         created_at: String(parsed.created_at ?? ""),
         analysis,
-        extended_analysis: parsed.extended_analysis ?? null,
-        finding_briefs: parsed.finding_briefs ?? null,
+        extended_analysis: extendedAnalysis,
+        finding_briefs: findingBriefs,
       };
       const leaks = leaksForIssueLookup(row.analysis);
       const found = findLeakForUrlSegment(leaks, findingId);
@@ -624,6 +637,31 @@ export default function IssuePage() {
         setExpandLoading(false);
         setLoading(false);
         if (fromCachedExtended) return;
+
+        if (found) {
+          const briefKeyVariants = [...new Set([
+            `webdoc_brief_${findingId}`,
+            extKey ? `webdoc_brief_${extKey}` : "",
+          ].filter(Boolean))];
+          for (const bk of briefKeyVariants) {
+            try {
+              const cachedRaw = localStorage.getItem(bk);
+              if (cachedRaw) {
+                const cachedBrief = JSON.parse(cachedRaw) as FindingBriefExpansion;
+                if (typeof cachedBrief?.diagnosticSummary === "string") {
+                  setBriefExpanded(cachedBrief);
+                  setAdvisorChips(advisorChipsFromExpansion(cachedBrief));
+                  const open = typeof cachedBrief.advisorOpening === "string" ? cachedBrief.advisorOpening.trim() : "";
+                  setMessages([{
+                    role: "assistant",
+                    content: open || "Review the diagnostic brief above, then ask where you want to start implementation.",
+                  }]);
+                  return;
+                }
+              }
+            } catch { /* continue */ }
+          }
+        }
       }
 
       const supabase = getSupabaseBrowserClient();

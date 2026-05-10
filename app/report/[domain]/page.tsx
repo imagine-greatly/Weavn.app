@@ -23,9 +23,27 @@ const ReportLayoutWithPro = ReportLayout as ComponentType<
 >;
 
 const STORAGE_KEY_PREFIX = "webdoc_report_";
+const STORAGE_META_KEY_PREFIX = "webdoc_report_meta_";
 const PLAN_CACHE_KEY = "webdoc_plan";
 const PLAN_CACHE_TS_KEY = "webdoc_plan_ts";
 const PLAN_CACHE_TTL = 300_000; // 5 minutes
+
+function loadReportIdFromStorage(domain: string): string | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const metaRaw = localStorage.getItem(`${STORAGE_META_KEY_PREFIX}${domain}`);
+    if (metaRaw) {
+      const meta = JSON.parse(metaRaw) as Record<string, unknown>;
+      if (typeof meta.id === "string" && meta.id) return meta.id;
+    }
+    const raw = localStorage.getItem(`${STORAGE_KEY_PREFIX}${domain}`);
+    if (!raw) return null;
+    const data = JSON.parse(raw) as Record<string, unknown>;
+    return typeof data.id === "string" && data.id ? data.id : null;
+  } catch {
+    return null;
+  }
+}
 
 function loadReportFromStorage(domain: string): ReportPayload | null {
   if (typeof window === "undefined") return null;
@@ -150,7 +168,7 @@ export default function ReportDomainPage() {
     const fromStorage = loadReportFromStorage(domain);
     if (fromStorage) {
       setReport(fromStorage);
-      setStoredReportId(null);
+      setStoredReportId(loadReportIdFromStorage(domain));
       setLoading(false);
       // Auth + profile run in background to hydrate banners after report renders
       void (async () => {
@@ -214,7 +232,7 @@ export default function ReportDomainPage() {
           sessionUserId
             ? supabase
                 .from("reports")
-                .select("id, analysis, overview_copy")
+                .select("id, analysis, overview_copy, extended_analysis, finding_briefs")
                 .eq("domain", domain.toLowerCase().trim())
                 .eq("user_id", sessionUserId)
                 .order("created_at", { ascending: false })
@@ -239,6 +257,8 @@ export default function ReportDomainPage() {
             analysis?: unknown;
             payload?: unknown;
             overview_copy?: unknown;
+            extended_analysis?: unknown;
+            finding_briefs?: unknown;
           } | null;
           setStoredReportId(
             typeof reportRow?.id === "string" && reportRow.id ? reportRow.id : null
@@ -250,6 +270,14 @@ export default function ReportDomainPage() {
           );
           if (!merged) throw new Error("No report found.");
           setReport(mapAnalyzeToReport(merged));
+          try {
+            localStorage.setItem(`${STORAGE_META_KEY_PREFIX}${domain}`, JSON.stringify({
+              id: reportRow?.id ?? "",
+              extended_analysis: reportRow?.extended_analysis ?? null,
+              finding_briefs: reportRow?.finding_briefs ?? null,
+              cachedAt: Date.now(),
+            }));
+          } catch { /* ignore */ }
         } else {
           const res = await fetch(`/api/report/${encodeURIComponent(domain)}`);
           if (!res.ok) {
@@ -283,16 +311,15 @@ export default function ReportDomainPage() {
     if (!leaks.length) return;
 
     const sorted = [...leaks].sort((a, b) => (b.revenueImpact ?? 0) - (a.revenueImpact ?? 0));
-    const top = sorted.slice(0, 10);
     const ac = new AbortController();
     const timers: ReturnType<typeof setTimeout>[] = [];
 
-    top.slice(0, 5).forEach((finding) => {
+    sorted.slice(0, 5).forEach((finding) => {
       const fid = String(finding.id ?? "").trim() || String(finding.title ?? "").trim();
       if (fid) router.prefetch(`/issue/${encodeURIComponent(storedReportId)}/${encodeURIComponent(fid)}`);
     });
 
-    const ordered = [...top].sort((a, b) => {
+    const ordered = [...sorted].sort((a, b) => {
       const aC = (a.severity === "critical" || a.rubricSeverity === "Critical") ? 0 : 1;
       const bC = (b.severity === "critical" || b.rubricSeverity === "Critical") ? 0 : 1;
       return aC - bC;
@@ -304,6 +331,12 @@ export default function ReportDomainPage() {
       if (!fid) return;
       const t = setTimeout(() => {
         if (ac.signal.aborted || prefetchedFindings.current.has(fid)) return;
+        try {
+          if (localStorage.getItem(`webdoc_brief_${fid}`)) {
+            prefetchedFindings.current.set(fid, true);
+            return;
+          }
+        } catch { /* ignore */ }
         void fetch("/api/expand-finding", {
           method: "POST",
           headers: { "Content-Type": "application/json" },

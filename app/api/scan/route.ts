@@ -69,49 +69,64 @@ async function validateUrl(url: string): Promise<{ valid: boolean; reason?: stri
 }
 
 export async function POST(req: NextRequest) {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!supabaseUrl || !supabaseAnonKey) {
-    return NextResponse.json(
-      { error: "Server configuration error.", code: "SCAN_SERVER_CONFIG" },
-      { status: 500 }
-    );
-  }
+  // Internal API key bypass — checked before any auth/session logic
+  const internalKey = req.headers.get("x-internal-key");
+  const internalBypass =
+    internalKey !== null &&
+    Boolean(process.env.INTERNAL_SCAN_KEY) &&
+    internalKey === process.env.INTERNAL_SCAN_KEY;
 
-  let supabaseCookieResponse = NextResponse.next({ request: req });
-  const supabaseAuth = createServerClient(supabaseUrl, supabaseAnonKey, {
-    cookies: {
-      getAll() {
-        return req.cookies.getAll();
+  let userId: string;
+  let withCookies: (res: NextResponse) => NextResponse;
+
+  if (internalBypass) {
+    console.log("[scan] internal key auth - bypass active");
+    userId = "internal";
+    withCookies = (res) => res;
+  } else {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    if (!supabaseUrl || !supabaseAnonKey) {
+      return NextResponse.json(
+        { error: "Server configuration error.", code: "SCAN_SERVER_CONFIG" },
+        { status: 500 }
+      );
+    }
+
+    let supabaseCookieResponse = NextResponse.next({ request: req });
+    const supabaseAuth = createServerClient(supabaseUrl, supabaseAnonKey, {
+      cookies: {
+        getAll() {
+          return req.cookies.getAll();
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value }) => req.cookies.set(name, value));
+          supabaseCookieResponse = NextResponse.next({ request: req });
+          cookiesToSet.forEach(({ name, value, options }) =>
+            supabaseCookieResponse.cookies.set(name, value, options)
+          );
+        },
       },
-      setAll(cookiesToSet) {
-        cookiesToSet.forEach(({ name, value }) => req.cookies.set(name, value));
-        supabaseCookieResponse = NextResponse.next({ request: req });
-        cookiesToSet.forEach(({ name, value, options }) =>
-          supabaseCookieResponse.cookies.set(name, value, options)
-        );
-      },
-    },
-  });
+    });
 
-  const {
-    data: { user },
-    error: authError,
-  } = await supabaseAuth.auth.getUser();
-  if (authError || !user?.id) {
-    const res = NextResponse.json(
-      { error: "Unauthorized", code: "SCAN_UNAUTHORIZED" },
-      { status: 401 }
-    );
-    mergeCookies(supabaseCookieResponse, res);
-    return res;
+    const {
+      data: { user },
+      error: authError,
+    } = await supabaseAuth.auth.getUser();
+    if (authError || !user?.id) {
+      const res = NextResponse.json(
+        { error: "Unauthorized", code: "SCAN_UNAUTHORIZED" },
+        { status: 401 }
+      );
+      mergeCookies(supabaseCookieResponse, res);
+      return res;
+    }
+    userId = user.id;
+    withCookies = (res: NextResponse) => {
+      mergeCookies(supabaseCookieResponse, res);
+      return res;
+    };
   }
-  const userId = user.id;
-
-  const withCookies = (res: NextResponse) => {
-    mergeCookies(supabaseCookieResponse, res);
-    return res;
-  };
 
   let url: string;
   try {

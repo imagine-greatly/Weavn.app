@@ -582,6 +582,7 @@ export default function IssuePage() {
     let cancelled = false;
 
     (async () => {
+      console.log('[FINDING] Starting load, checking localStorage...');
       setLoading(true);
       setBriefExpanded(null);
       setExpandLoading(false);
@@ -592,6 +593,7 @@ export default function IssuePage() {
 
       const cached = reportFromLocalStorageForFinding(findingId);
       if (cached) {
+        console.log('[FINDING] Cache hit:', Object.keys(cached));
         const row = cached.report;
         const found = cached.finding;
         const leaks = cached.leaks;
@@ -636,7 +638,10 @@ export default function IssuePage() {
         }
         setExpandLoading(false);
         setLoading(false);
-        if (fromCachedExtended) return;
+        if (fromCachedExtended) {
+          console.log('[FINDING] Brief found in cache, skipping API call');
+          return;
+        }
 
         if (found) {
           const briefKeyVariants = [...new Set([
@@ -664,6 +669,7 @@ export default function IssuePage() {
         }
       }
 
+      console.log('[FINDING] Cache miss, fetching from Supabase...');
       const supabase = getSupabaseBrowserClient();
 
       const sessionPromise = supabase.auth.getSession();
@@ -866,6 +872,7 @@ export default function IssuePage() {
         // ignore local brief cache failures
       }
 
+      console.log('[FINDING] Brief not cached, calling expand-finding API...');
       setBriefExpanded(null);
       setExpandLoading(true);
       setMessages([]);

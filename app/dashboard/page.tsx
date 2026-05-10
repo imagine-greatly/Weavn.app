@@ -898,7 +898,7 @@ export default function DashboardPage() {
         {/* Center cluster — score gauge */}
         {activeLatest ? (
           <div className="dashboard-header-gauge" style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, flexShrink: 0 }}>
-            <div className="dashboard-gauge-frame" style={{ flexShrink: 0, overflow: "visible" }}>
+            <div style={{ transform: "scale(0.5)", transformOrigin: "center" }}>
               <ConversionScoreGauge
                 score={activeScore}
                 scoreDelta={dashboardScoreDelta}

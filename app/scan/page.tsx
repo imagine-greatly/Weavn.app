@@ -51,6 +51,50 @@ const STATUS_MESSAGES = [
   "Rendering findings — ranked by revenue impact...",
 ] as const;
 
+const SECTION_MESSAGES: Record<string, string[]> = {
+  nav: [
+    "Auditing navigation conversion architecture...",
+    "Analyzing primary CTA placement and visibility...",
+    "Evaluating menu hierarchy and friction points...",
+  ],
+  hero: [
+    "Scoring headline persuasion architecture...",
+    "Analyzing value proposition clarity...",
+    "Detecting above-the-fold conversion triggers...",
+    "Evaluating hero CTA strength and specificity...",
+  ],
+  social: [
+    "Scanning trust signal density...",
+    "Analyzing social proof placement and credibility...",
+    "Evaluating testimonial conversion weight...",
+  ],
+  features: [
+    "Auditing feature-to-benefit translation...",
+    "Analyzing information hierarchy...",
+    "Detecting objection handling gaps...",
+  ],
+  testimonials: [
+    "Scoring testimonial specificity and trust...",
+    "Analyzing proof element placement...",
+    "Evaluating social validation architecture...",
+  ],
+  cta: [
+    "Analyzing call-to-action conversion strength...",
+    "Detecting friction in conversion flow...",
+    "Scoring CTA copy and visual hierarchy...",
+  ],
+  footer: [
+    "Auditing footer trust signals...",
+    "Analyzing secondary conversion opportunities...",
+    "Scanning SEO and meta conversion readiness...",
+  ],
+  default: [
+    "Cross-referencing diagnostic findings...",
+    "Ranking issues by conversion impact...",
+    "Compiling intelligence brief...",
+  ],
+};
+
 const STATUS_COMPLETE_TEXT = "Scan complete. Diagnostic report ready.";
 
 function cubicEaseInOut(t: number): number {
@@ -65,7 +109,6 @@ function getDomain(urlStr: string): string {
     return urlStr || "target";
   }
 }
-
 
 function ScanLoadingInner() {
   const router = useRouter();
@@ -91,7 +134,6 @@ function ScanLoadingInner() {
   const checksCounterRef = useRef<HTMLSpanElement>(null);
 
   const [elapsedMs, setElapsedMs] = useState(0);
-  const [statusIdx, setStatusIdx] = useState(0);
   const [sectionVisualComplete, setSectionVisualComplete] = useState(false);
   const [materialized, setMaterialized] = useState(false);
   const [scoreReveal, setScoreReveal] = useState(false);
@@ -99,13 +141,20 @@ function ScanLoadingInner() {
   const [subLabelVis, setSubLabelVis] = useState(false);
   const [diagLabelVis, setDiagLabelVis] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  /** API failure: blocks navigation and score reveal; severe = 500 / timeout / network. */
   const [scanFailure, setScanFailure] = useState<
     null | { kind: "severe" | "client"; message?: string }
   >(null);
   const [invalidUrlMessage, setInvalidUrlMessage] = useState<string | null>(null);
   const [statusBarOverride, setStatusBarOverride] = useState<string | null>(null);
   const [scanUserAborted, setScanUserAborted] = useState(false);
+
+  // beam-Y section activation state
+  const [activeSection, setActiveSection] = useState<string | null>(null);
+  const [completedSections, setCompletedSections] = useState<string[]>([]);
+
+  // status crossfade state
+  const [statusText, setStatusText] = useState<string>(STATUS_MESSAGES[0]);
+  const [statusFading, setStatusFading] = useState(false);
 
   const healthScoreRef = useRef(74);
   const domainRef = useRef("");
@@ -124,6 +173,39 @@ function ScanLoadingInner() {
   const rafScanRef = useRef<number>(0);
   const scanStartedRef = useRef(false);
   const apiDoneRef = useRef(false);
+
+  // beam spring physics (all in one ref, no re-renders)
+  const beamStateRef = useRef<{
+    pos: { x: number; y: number };
+    target: { x: number; y: number };
+    velocity: { x: number; y: number };
+    dwellTimer: number;
+    behaviorMode: "free" | "drag" | "hesitate";
+    dragTargetX: number;
+    visitedY: number[];
+    lastFrameTime: number;
+    nudgeScheduled: boolean;
+    nudgePendingAt: number;
+    nudgeDelta: { x: number; y: number };
+  }>({
+    pos: { x: 0, y: 120 },
+    target: { x: 0, y: 120 },
+    velocity: { x: 0, y: 0 },
+    dwellTimer: 0,
+    behaviorMode: "free",
+    dragTargetX: 0,
+    visitedY: [],
+    lastFrameTime: 0,
+    nudgeScheduled: false,
+    nudgePendingAt: 0,
+    nudgeDelta: { x: 0, y: 0 },
+  });
+
+  const sectionBoundsRef = useRef<Array<{ id: string; top: number; bottom: number }>>([]);
+  const activeSectionIdRef = useRef<string | null>(null);
+  const completedSectionIdsRef = useRef<Set<string>>(new Set());
+  const statusCrossfadeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const sectionMsgIdxRef = useRef<Record<string, number>>({});
 
   useLayoutEffect(() => {
     document.body.style.overflow = "hidden";
@@ -153,17 +235,43 @@ function ScanLoadingInner() {
     return () => clearInterval(id);
   }, []);
 
-  useEffect(() => {
-    const id = window.setInterval(() => {
-      if (sectionVisualComplete || scoreReveal) return;
-      setStatusIdx((prev) => (prev + 1) % STATUS_MESSAGES.length);
-    }, 2500);
-    return () => clearInterval(id);
-  }, [sectionVisualComplete, scoreReveal]);
+  // crossfade helper
+  const triggerStatusCrossfade = useCallback((nextText: string) => {
+    if (statusCrossfadeTimerRef.current) clearTimeout(statusCrossfadeTimerRef.current);
+    setStatusFading(true);
+    statusCrossfadeTimerRef.current = setTimeout(() => {
+      setStatusText(nextText);
+      setStatusFading(false);
+    }, 180);
+  }, []);
 
+  // cycle status messages per section, every 2.8s
   useEffect(() => {
-    if (sectionVisualComplete) setStatusIdx(19);
-  }, [sectionVisualComplete]);
+    if (sectionVisualComplete || scoreReveal) return;
+    const id = window.setInterval(() => {
+      const section = activeSectionIdRef.current ?? "default";
+      const pool = SECTION_MESSAGES[section] ?? SECTION_MESSAGES.default;
+      const idx = ((sectionMsgIdxRef.current[section] ?? 0) + 1) % pool.length;
+      sectionMsgIdxRef.current[section] = idx;
+      triggerStatusCrossfade(pool[idx]);
+    }, 2800);
+    return () => clearInterval(id);
+  }, [sectionVisualComplete, scoreReveal, triggerStatusCrossfade]);
+
+  // when active section changes, immediately show its first message
+  useEffect(() => {
+    if (!activeSection || sectionVisualComplete || scoreReveal) return;
+    const pool = SECTION_MESSAGES[activeSection] ?? SECTION_MESSAGES.default;
+    triggerStatusCrossfade(pool[0]);
+    sectionMsgIdxRef.current[activeSection] = 0;
+  }, [activeSection, sectionVisualComplete, scoreReveal, triggerStatusCrossfade]);
+
+  // when scan completes, switch to default transition messages
+  useEffect(() => {
+    if (!sectionVisualComplete) return;
+    triggerStatusCrossfade(SECTION_MESSAGES.default[0]);
+    sectionMsgIdxRef.current["default"] = 0;
+  }, [sectionVisualComplete, triggerStatusCrossfade]);
 
   const updateSectionBounds = useCallback(() => {
     const sc = schematicRef.current;
@@ -441,85 +549,70 @@ function ScanLoadingInner() {
     return () => cancelAnimationFrame(rafScanRef.current);
   }, [materialized, tickScan]);
 
+  // calculate section viewport bounds once after materialization
+  useEffect(() => {
+    if (!materialized) return;
+    const timer = window.setTimeout(() => {
+      const bounds: Array<{ id: string; top: number; bottom: number }> = [];
+      SECTIONS.forEach(({ id }) => {
+        const el = document.querySelector(`[data-section="${id}"]`) as HTMLElement | null;
+        if (!el) return;
+        const r = el.getBoundingClientRect();
+        bounds.push({ id, top: r.top, bottom: r.bottom });
+      });
+      sectionBoundsRef.current = bounds;
+    }, 200);
+    return () => clearTimeout(timer);
+  }, [materialized]);
+
+  // beam spring physics RAF
   useEffect(() => {
     if (!materialized) return;
     const el = beamDivRef.current;
     if (!el) return;
 
-    const BEAM_W = 140;
-    const LERP = 0.045;
-    const ARRIVE_EPS = 8;
-    const READING_DURATION = 1800;
+    const BEAM_W = 160;
+    const s = beamStateRef.current;
+    s.lastFrameTime = performance.now();
+    s.pos = { x: Math.random() * Math.max(0, window.innerWidth - BEAM_W), y: 120 };
+    s.target = { x: s.pos.x, y: s.pos.y };
+    s.velocity = { x: 0, y: 0 };
+    s.visitedY = [];
 
-    let posX = Math.random() * Math.max(0, window.innerWidth - BEAM_W);
-    let posY = 60 + Math.random() * Math.max(0, window.innerHeight - 140);
-    let targetX = posX;
-    let targetY = posY;
-
-    let driftPhase = 0;
-    let driftFreq = 0.8 + Math.random() * 0.8;
-
-    let readingMode = false;
-    let readingStartX = 0;
-    let readingEndX = 0;
-    let readingY = 0;
-    let readingStartTime = 0;
-
-    let nextPickTime = 0;
-    const lastYPositions: number[] = [];
-    let lastFrameTime = performance.now();
-
-    const pickNewTarget = (now: number) => {
+    const pickTarget = (now: number) => {
       const vw = window.innerWidth;
       const vh = window.innerHeight;
-      nextPickTime = now + 800 + Math.random() * 1400;
+      const yMin = 80;
+      const yMax = Math.max(yMin + 1, vh - 90);
 
+      let ty = 0;
+      for (let attempt = 0; attempt < 6; attempt++) {
+        ty = yMin + Math.random() * (yMax - yMin);
+        const tooClose = s.visitedY.some((vy) => Math.abs(ty - vy) < 80);
+        if (!tooClose) break;
+      }
+
+      const tx = Math.random() * Math.max(0, vw - BEAM_W);
+      s.target = { x: tx, y: ty };
+
+      // 20% chance: schedule mid-course nudge at ~45% of travel time
+      s.nudgeScheduled = false;
       if (Math.random() < 0.2) {
-        readingMode = true;
-        readingY = 60 + Math.random() * Math.max(0, vh - 140);
-        readingStartX = Math.random() < 0.5 ? 0 : Math.max(0, vw - BEAM_W);
-        readingEndX = readingStartX === 0 ? Math.max(0, vw - BEAM_W) : 0;
-        readingStartTime = now;
-        return;
+        const dx = tx - s.pos.x;
+        const dy = ty - s.pos.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        const approxMs = (dist / 3) * (1000 / 60);
+        s.nudgeScheduled = true;
+        s.nudgePendingAt = now + approxMs * 0.45;
+        s.nudgeDelta = {
+          x: (Math.random() - 0.5) * 100,
+          y: (Math.random() - 0.5) * 70,
+        };
       }
-
-      readingMode = false;
-
-      const SEGS = 20;
-      const yMin = 60;
-      const yMax = Math.max(yMin + 1, vh - 80);
-      const segH = (yMax - yMin) / SEGS;
-      const weights = new Array<number>(SEGS).fill(1);
-
-      for (const py of lastYPositions) {
-        const si = Math.floor((py - yMin) / segH);
-        for (let s = 0; s < SEGS; s++) {
-          const d = Math.abs(s - si);
-          if (d < 4) weights[s] = Math.max(0.05, weights[s] * (0.1 + d * 0.25));
-        }
-      }
-
-      let totalW = 0;
-      for (const w of weights) totalW += w;
-      let r = Math.random() * totalW;
-      let chosen = SEGS - 1;
-      for (let s = 0; s < SEGS; s++) {
-        r -= weights[s];
-        if (r <= 0) { chosen = s; break; }
-      }
-
-      targetY = yMin + (chosen + Math.random()) * segH;
-      targetY = Math.max(yMin, Math.min(yMax, targetY));
-      targetX = Math.random() * Math.max(0, vw - BEAM_W);
-
-      driftFreq = 0.8 + Math.random() * 0.8;
-      driftPhase = 0;
-
-      lastYPositions.push(targetY);
-      if (lastYPositions.length > 6) lastYPositions.shift();
     };
 
-    pickNewTarget(performance.now());
+    pickTarget(performance.now());
+    el.style.opacity = "1";
 
     const tick = (now: number) => {
       if (beamRafHaltedRef.current) {
@@ -527,44 +620,101 @@ function ScanLoadingInner() {
         return;
       }
 
-      const dt = Math.min(50, now - lastFrameTime);
-      lastFrameTime = now;
+      const dt = Math.min(50, now - s.lastFrameTime);
+      s.lastFrameTime = now;
 
-      let displayX: number;
-      let displayY: number;
-
-      if (readingMode) {
-        const t = Math.min(1, (now - readingStartTime) / READING_DURATION);
-        displayX = readingStartX + (readingEndX - readingStartX) * t;
-        displayY = readingY;
-        posX = displayX;
-        posY = displayY;
-        if (t >= 1) {
-          readingMode = false;
-          nextPickTime = now;
+      if (s.behaviorMode === "hesitate") {
+        s.dwellTimer -= dt;
+        if (s.dwellTimer <= 0) {
+          s.behaviorMode = "free";
+          pickTarget(now);
         }
+      } else if (s.behaviorMode === "drag") {
+        const speed = 380 * (dt / 1000);
+        const dx = s.dragTargetX - s.pos.x;
+        if (Math.abs(dx) <= speed) {
+          s.pos.x = s.dragTargetX;
+          s.behaviorMode = "free";
+          pickTarget(now);
+        } else {
+          s.pos.x += Math.sign(dx) * speed;
+        }
+        el.style.transform = `translate(${s.pos.x}px, ${s.pos.y}px)`;
       } else {
-        posX += (targetX - posX) * LERP;
-        posY += (targetY - posY) * LERP;
-        driftPhase += (dt / 1000) * driftFreq * Math.PI * 2;
-        displayX = posX;
-        displayY = posY + Math.sin(driftPhase) * 6;
-        if (now >= nextPickTime || (Math.abs(posX - targetX) < ARRIVE_EPS && Math.abs(posY - targetY) < ARRIVE_EPS)) {
-          pickNewTarget(now);
+        // free: spring physics
+        if (s.nudgeScheduled && now >= s.nudgePendingAt) {
+          s.target.x = Math.max(0, Math.min(window.innerWidth - BEAM_W, s.target.x + s.nudgeDelta.x));
+          s.target.y = Math.max(80, Math.min(window.innerHeight - 90, s.target.y + s.nudgeDelta.y));
+          s.nudgeScheduled = false;
         }
+
+        s.velocity.x += (s.target.x - s.pos.x) * 0.055;
+        s.velocity.y += (s.target.y - s.pos.y) * 0.055;
+        s.velocity.x *= 0.72;
+        s.velocity.y *= 0.72;
+        s.pos.x += s.velocity.x;
+        s.pos.y += s.velocity.y;
+
+        if (Math.abs(s.target.x - s.pos.x) < 6 && Math.abs(s.target.y - s.pos.y) < 6) {
+          s.visitedY.push(s.pos.y);
+          if (s.visitedY.length > 8) s.visitedY.shift();
+
+          const roll = Math.random();
+          if (roll < 0.15) {
+            s.behaviorMode = "drag";
+            s.dragTargetX = s.pos.x < window.innerWidth / 2
+              ? Math.max(0, window.innerWidth - BEAM_W)
+              : 0;
+          } else if (roll < 0.35) {
+            s.behaviorMode = "hesitate";
+            s.dwellTimer = 200 + Math.random() * 200;
+          } else {
+            pickTarget(now);
+          }
+        }
+
+        el.style.transform = `translate(${s.pos.x}px, ${s.pos.y}px)`;
       }
 
-      el.style.transform = `translate(${displayX}px, ${displayY}px)`;
+      // section label activation by beam Y (viewport coords)
+      const beamY = s.pos.y;
+      const bounds = sectionBoundsRef.current;
+      let newSec: string | null = null;
+      for (const b of bounds) {
+        if (beamY >= b.top && beamY <= b.bottom) {
+          newSec = b.id;
+          break;
+        }
+      }
+      if (newSec !== activeSectionIdRef.current) {
+        const prev = activeSectionIdRef.current;
+        activeSectionIdRef.current = newSec;
+        if (prev && !completedSectionIdsRef.current.has(prev)) {
+          completedSectionIdsRef.current.add(prev);
+          // update beam-active class on section elements
+          const prevEl = document.querySelector(`[data-section="${prev}"]`);
+          prevEl?.classList.remove("beam-active");
+        }
+        if (newSec) {
+          const newEl = document.querySelector(`[data-section="${newSec}"]`);
+          newEl?.classList.add("beam-active");
+        }
+        setActiveSection(newSec);
+        if (prev) setCompletedSections(Array.from(completedSectionIdsRef.current));
+      }
+
       beamRafRef.current = requestAnimationFrame(tick);
     };
 
-    el.style.opacity = "1";
     beamRafRef.current = requestAnimationFrame(tick);
-
-    return () => {
-      cancelAnimationFrame(beamRafRef.current);
-    };
+    return () => cancelAnimationFrame(beamRafRef.current);
   }, [materialized]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const getSectionLabelClass = (sectionId: string): string => {
+    if (sectionId === activeSection) return "section-active";
+    if (completedSections.includes(sectionId)) return "section-completed";
+    return "section-unvisited";
+  };
 
   const formatElapsed = () => `${(elapsedMs / 1000).toFixed(1)}s`;
 
@@ -580,18 +730,14 @@ function ScanLoadingInner() {
     fontSize: 8,
     letterSpacing: "3px",
     textTransform: "uppercase",
-    color: "rgba(0,200,255,0.4)",
     pointerEvents: "none",
     zIndex: 4,
   };
 
   const bottomStatusText =
     statusBarOverride ??
-    (scoreReveal
-      ? STATUS_COMPLETE_TEXT
-      : sectionVisualComplete
-        ? STATUS_MESSAGES[19]
-        : STATUS_MESSAGES[statusIdx]);
+    (scoreReveal ? STATUS_COMPLETE_TEXT : statusText);
+
   const secBadgeStyle: CSSProperties = {
     position: "absolute",
     right: 12,
@@ -633,10 +779,6 @@ function ScanLoadingInner() {
         @keyframes sectionReveal {
           from { opacity: 0; transform: translateY(12px); }
           to { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes ellipsePulse {
-          0%, 100% { transform: scaleY(0.35) scaleX(1); opacity: 0.55; }
-          50% { transform: scaleY(1.3) scaleX(1); opacity: 1; }
         }
         @keyframes atmosphereA {
           from { transform: translate(0,0); }
@@ -745,6 +887,27 @@ function ScanLoadingInner() {
         .scan-sec.done .sec-sticker {
           background: linear-gradient(180deg, rgba(0,200,255,0.4) 0%, rgba(0,200,255,0.08) 100%) !important;
         }
+        /* beam-Y section label activation — overrides scan-pipeline label colors */
+        .scan-sec .sec-label.section-unvisited,
+        .scan-sec .sec-badge.section-unvisited {
+          color: rgba(0,200,255,0.2) !important;
+        }
+        .scan-sec .sec-label.section-active,
+        .scan-sec .sec-badge.section-active {
+          color: rgba(0,200,255,1) !important;
+          text-shadow: 0 0 10px rgba(0,200,255,0.5) !important;
+          transition: all 0.25s ease !important;
+        }
+        .scan-sec .sec-label.section-completed,
+        .scan-sec .sec-badge.section-completed {
+          color: rgba(0,200,255,0.45) !important;
+          transition: all 0.4s ease !important;
+        }
+        /* beam-Y section background */
+        .scan-sec.beam-active {
+          background: rgba(0,200,255,0.018) !important;
+          transition: background 0.4s ease !important;
+        }
         .score-overlay {
           opacity: 0;
           pointer-events: none;
@@ -773,6 +936,7 @@ function ScanLoadingInner() {
         .diag-fade.show { opacity: 1; transform: translateY(0); }
         .scan-sub-fade { opacity: 0; transition: opacity 0.5s ease 2s; }
         .scan-sub-fade.show { opacity: 1; }
+        .status-text { transition: opacity 0.18s ease; }
       `}</style>
 
       <div
@@ -787,6 +951,7 @@ function ScanLoadingInner() {
           fontFamily: MONO,
         }}
       >
+        {/* Beam — the only moving element */}
         <div
           ref={beamDivRef}
           aria-hidden
@@ -794,36 +959,16 @@ function ScanLoadingInner() {
             position: "fixed",
             left: 0,
             top: 0,
-            width: 140,
+            width: 160,
             height: 2,
-            zIndex: 99,
+            borderRadius: 2,
+            zIndex: 50,
             pointerEvents: "none",
             opacity: 0,
             willChange: "transform",
-            background: "linear-gradient(90deg, transparent 0%, rgba(0,200,255,0.2) 15%, rgba(0,200,255,1) 50%, rgba(0,200,255,0.2) 85%, transparent 100%)",
+            background: "linear-gradient(90deg, transparent 0%, rgba(0,200,255,0.15) 10%, rgba(0,200,255,0.9) 40%, rgba(0,200,255,1) 50%, rgba(0,200,255,0.9) 60%, rgba(0,200,255,0.15) 90%, transparent 100%)",
           }}
         />
-        <div
-          aria-hidden
-          style={{
-            position: "fixed",
-            left: "50%",
-            top: "50%",
-            transform: "translateX(-50%) translateY(-50%)",
-            zIndex: 99,
-            pointerEvents: "none",
-          }}
-        >
-          <div
-            style={{
-              width: 180,
-              height: 16,
-              background: "radial-gradient(ellipse, rgba(0,200,255,0.9) 0%, rgba(0,200,255,0.3) 50%, transparent 100%)",
-              boxShadow: "0 0 20px rgba(0,200,255,0.25), 0 0 6px rgba(0,200,255,0.5)",
-              animation: "ellipsePulse 1.5s ease-in-out infinite",
-            }}
-          />
-        </div>
 
         <div style={{ position: "fixed", inset: 0, zIndex: 4, pointerEvents: "none" }}>
           <div
@@ -1076,10 +1221,10 @@ function ScanLoadingInner() {
                   ...secStagger(0),
                 }}
               >
-                <span className="sec-label" style={secLabelStyle}>
+                <span className={`sec-label ${getSectionLabelClass("nav")}`} style={secLabelStyle}>
                   NAV
                 </span>
-                <span className="sec-badge" style={secBadgeStyle}>
+                <span className={`sec-badge ${getSectionLabelClass("nav")}`} style={secBadgeStyle}>
                   STRUCTURE
                 </span>
                 <div
@@ -1155,10 +1300,10 @@ function ScanLoadingInner() {
                   ...secStagger(1),
                 }}
               >
-                <span className="sec-label" style={secLabelStyle}>
+                <span className={`sec-label ${getSectionLabelClass("hero")}`} style={secLabelStyle}>
                   HERO
                 </span>
-                <span className="sec-badge" style={secBadgeStyle}>
+                <span className={`sec-badge ${getSectionLabelClass("hero")}`} style={secBadgeStyle}>
                   MESSAGING
                 </span>
                 <div className="sec-sticker" style={{ position: "absolute", right: 0, top: 0, bottom: 0, width: 3 }} />
@@ -1283,10 +1428,10 @@ function ScanLoadingInner() {
                   ...secStagger(2),
                 }}
               >
-                <span className="sec-label" style={secLabelStyle}>
+                <span className={`sec-label ${getSectionLabelClass("social")}`} style={secLabelStyle}>
                   SOCIAL PROOF
                 </span>
-                <span className="sec-badge" style={secBadgeStyle}>
+                <span className={`sec-badge ${getSectionLabelClass("social")}`} style={secBadgeStyle}>
                   TRUST
                 </span>
                 <div className="sec-sticker" style={{ position: "absolute", right: 0, top: 0, bottom: 0, width: 3 }} />
@@ -1365,10 +1510,10 @@ function ScanLoadingInner() {
                   ...secStagger(3),
                 }}
               >
-                <span className="sec-label" style={secLabelStyle}>
+                <span className={`sec-label ${getSectionLabelClass("features")}`} style={secLabelStyle}>
                   FEATURES
                 </span>
-                <span className="sec-badge" style={secBadgeStyle}>
+                <span className={`sec-badge ${getSectionLabelClass("features")}`} style={secBadgeStyle}>
                   VALUE
                 </span>
                 <div className="sec-sticker" style={{ position: "absolute", right: 0, top: 0, bottom: 0, width: 3 }} />
@@ -1437,10 +1582,10 @@ function ScanLoadingInner() {
                   ...secStagger(4),
                 }}
               >
-                <span className="sec-label" style={secLabelStyle}>
+                <span className={`sec-label ${getSectionLabelClass("testimonials")}`} style={secLabelStyle}>
                   TESTIMONIALS
                 </span>
-                <span className="sec-badge" style={secBadgeStyle}>
+                <span className={`sec-badge ${getSectionLabelClass("testimonials")}`} style={secBadgeStyle}>
                   PROOF
                 </span>
                 <div className="sec-sticker" style={{ position: "absolute", right: 0, top: 0, bottom: 0, width: 3 }} />
@@ -1514,10 +1659,10 @@ function ScanLoadingInner() {
                   ...secStagger(5),
                 }}
               >
-                <span className="sec-label" style={secLabelStyle}>
+                <span className={`sec-label ${getSectionLabelClass("cta")}`} style={secLabelStyle}>
                   CTA
                 </span>
-                <span className="sec-badge" style={secBadgeStyle}>
+                <span className={`sec-badge ${getSectionLabelClass("cta")}`} style={secBadgeStyle}>
                   CONVERSION
                 </span>
                 <div className="sec-sticker" style={{ position: "absolute", right: 0, top: 0, bottom: 0, width: 3 }} />
@@ -1573,11 +1718,11 @@ function ScanLoadingInner() {
                   ...secStagger(6),
                 }}
               >
-                <span className="sec-label" style={secLabelStyle}>
+                <span className={`sec-label ${getSectionLabelClass("footer")}`} style={secLabelStyle}>
                   FOOTER
                 </span>
-                <span className="sec-badge" style={secBadgeStyle}>
-                  SEO & META
+                <span className={`sec-badge ${getSectionLabelClass("footer")}`} style={secBadgeStyle}>
+                  SEO &amp; META
                 </span>
                 <div className="sec-sticker" style={{ position: "absolute", right: 0, top: 0, bottom: 0, width: 3 }} />
                 <div
@@ -1770,7 +1915,12 @@ function ScanLoadingInner() {
                 <span style={{ color: "rgba(0,200,255,0.3)" }} aria-hidden>
                   ›
                 </span>
-                <span>{bottomStatusText}</span>
+                <span
+                  className="status-text"
+                  style={{ opacity: statusFading ? 0 : 1 }}
+                >
+                  {bottomStatusText}
+                </span>
               </span>
             </div>
             <div

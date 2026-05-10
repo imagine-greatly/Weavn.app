@@ -124,11 +124,11 @@ export default function ConversionScoreGauge({
   }, [score, targetOffset]);
 
   return (
-    <div style={{ textAlign: "center", paddingBottom: 24 }}>
+    <div style={{ textAlign: "center", paddingBottom: 4 }}>
       <div
         style={{
           position: "relative",
-          padding: "16px 20px 12px 20px",
+          padding: "4px 16px 4px 16px",
         }}
       >
         <div
@@ -149,7 +149,7 @@ export default function ConversionScoreGauge({
         <div style={{ position: "relative", zIndex: 1 }}>
           <div
             className="flex items-center justify-center gap-2"
-            style={{ marginBottom: 8 }}
+            style={{ marginBottom: 4 }}
           >
             <div
               style={{

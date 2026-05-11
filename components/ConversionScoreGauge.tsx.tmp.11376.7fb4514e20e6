@@ -345,7 +345,7 @@ export default function ConversionScoreGauge({
               className="font-mono"
               style={{
                 marginTop:
-                  showDelta && typeof scoreDelta === "number" && scoreDelta !== 0 ? 2 : 4,
+                  showDelta && typeof scoreDelta === "number" && scoreDelta !== 0 ? 6 : 10,
                 fontFamily: "var(--font-jetbrains-mono), var(--font-space-mono), monospace",
                 fontSize: 9,
                 letterSpacing: "0.1em",

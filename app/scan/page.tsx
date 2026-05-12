@@ -125,6 +125,7 @@ function ScanLoadingInner() {
 
   const beamDivRef = useRef<HTMLDivElement>(null);
   const beamRafRef = useRef<number>(0);
+  const scanLineRef = useRef<HTMLDivElement>(null);
   const schematicRef = useRef<HTMLDivElement>(null);
   const progressFillRef = useRef<HTMLDivElement>(null);
   const scoreOverlayRef = useRef<HTMLDivElement>(null);
@@ -565,118 +566,59 @@ function ScanLoadingInner() {
     return () => clearTimeout(timer);
   }, [materialized]);
 
-  // beam spring physics RAF
+  // beam RAF — deterministic sine sweep, no randomness
   useEffect(() => {
     if (!materialized) return;
     const el = beamDivRef.current;
     if (!el) return;
 
     const BEAM_W = 160;
+    const CYCLE_MS = 2500;
     const s = beamStateRef.current;
     s.lastFrameTime = performance.now();
-    s.pos = { x: Math.random() * Math.max(0, window.innerWidth - BEAM_W), y: 120 };
-    s.target = { x: s.pos.x, y: s.pos.y };
+    s.pos = { x: 0, y: window.innerHeight / 2 };
     s.velocity = { x: 0, y: 0 };
-    s.visitedY = [];
-
-    const pickTarget = (now: number) => {
-      const vw = window.innerWidth;
-      const vh = window.innerHeight;
-      const yMin = 80;
-      const yMax = Math.max(yMin + 1, vh - 90);
-
-      let ty = 0;
-      for (let attempt = 0; attempt < 6; attempt++) {
-        ty = yMin + Math.random() * (yMax - yMin);
-        const tooClose = s.visitedY.some((vy) => Math.abs(ty - vy) < 80);
-        if (!tooClose) break;
-      }
-
-      const tx = Math.random() * Math.max(0, vw - BEAM_W);
-      s.target = { x: tx, y: ty };
-
-      // 20% chance: schedule mid-course nudge at ~45% of travel time
-      s.nudgeScheduled = false;
-      if (Math.random() < 0.2) {
-        const dx = tx - s.pos.x;
-        const dy = ty - s.pos.y;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-        const approxMs = (dist / 3) * (1000 / 60);
-        s.nudgeScheduled = true;
-        s.nudgePendingAt = now + approxMs * 0.45;
-        s.nudgeDelta = {
-          x: (Math.random() - 0.5) * 100,
-          y: (Math.random() - 0.5) * 70,
-        };
-      }
-    };
-
-    pickTarget(performance.now());
     el.style.opacity = "1";
 
     const tick = (now: number) => {
       if (beamRafHaltedRef.current) {
         el.style.opacity = "0";
+        if (scanLineRef.current) scanLineRef.current.style.display = "none";
         return;
       }
 
-      const dt = Math.min(50, now - s.lastFrameTime);
       s.lastFrameTime = now;
 
-      if (s.behaviorMode === "hesitate") {
-        s.dwellTimer -= dt;
-        if (s.dwellTimer <= 0) {
-          s.behaviorMode = "free";
-          pickTarget(now);
-        }
-      } else if (s.behaviorMode === "drag") {
-        const speed = 380 * (dt / 1000);
-        const dx = s.dragTargetX - s.pos.x;
-        if (Math.abs(dx) <= speed) {
-          s.pos.x = s.dragTargetX;
-          s.behaviorMode = "free";
-          pickTarget(now);
-        } else {
-          s.pos.x += Math.sign(dx) * speed;
-        }
-        el.style.transform = `translate(${s.pos.x}px, ${s.pos.y}px)`;
-      } else {
-        // free: spring physics
-        if (s.nudgeScheduled && now >= s.nudgePendingAt) {
-          s.target.x = Math.max(0, Math.min(window.innerWidth - BEAM_W, s.target.x + s.nudgeDelta.x));
-          s.target.y = Math.max(80, Math.min(window.innerHeight - 90, s.target.y + s.nudgeDelta.y));
-          s.nudgeScheduled = false;
-        }
+      // X: deterministic sine oscillation — one full sweep per CYCLE_MS
+      const phase = (now % CYCLE_MS) / CYCLE_MS;
+      const tx = (Math.sin(phase * Math.PI * 2) * 0.5 + 0.5) * Math.max(0, window.innerWidth - BEAM_W);
 
-        s.velocity.x += (s.target.x - s.pos.x) * 0.055;
-        s.velocity.y += (s.target.y - s.pos.y) * 0.055;
-        s.velocity.x *= 0.72;
-        s.velocity.y *= 0.72;
-        s.pos.x += s.velocity.x;
-        s.pos.y += s.velocity.y;
+      // Y: center of the current active section in viewport coords
+      const schRect = schematicRef.current?.getBoundingClientRect();
+      const sTop = sectionTopRef.current;
+      const sBot = sectionBotRef.current;
+      const ty =
+        schRect && sBot > sTop
+          ? schRect.top + (sTop + sBot) / 2
+          : window.innerHeight / 2;
 
-        if (Math.abs(s.target.x - s.pos.x) < 6 && Math.abs(s.target.y - s.pos.y) < 6) {
-          s.visitedY.push(s.pos.y);
-          if (s.visitedY.length > 8) s.visitedY.shift();
+      // Slow, deliberate spring — force 0.022, damping 0.88
+      s.velocity.x += (tx - s.pos.x) * 0.022;
+      s.velocity.y += (ty - s.pos.y) * 0.022;
+      s.velocity.x *= 0.88;
+      s.velocity.y *= 0.88;
+      s.pos.x += s.velocity.x;
+      s.pos.y += s.velocity.y;
 
-          const roll = Math.random();
-          if (roll < 0.15) {
-            s.behaviorMode = "drag";
-            s.dragTargetX = s.pos.x < window.innerWidth / 2
-              ? Math.max(0, window.innerWidth - BEAM_W)
-              : 0;
-          } else if (roll < 0.35) {
-            s.behaviorMode = "hesitate";
-            s.dwellTimer = 200 + Math.random() * 200;
-          } else {
-            pickTarget(now);
-          }
-        }
+      el.style.transform = `translate(${s.pos.x}px, ${s.pos.y}px)`;
 
-        el.style.transform = `translate(${s.pos.x}px, ${s.pos.y}px)`;
+      // Keep scanning line Y in sync with beam (schematic-relative)
+      if (scanLineRef.current && schRect) {
+        const relY = Math.max(0, Math.min(schRect.height - 1, s.pos.y - schRect.top));
+        scanLineRef.current.style.top = `${relY}px`;
       }
 
-      // section label activation by beam Y (viewport coords)
+      // Section label activation by beam Y (viewport coords)
       const beamY = s.pos.y;
       const bounds = sectionBoundsRef.current;
       let newSec: string | null = null;
@@ -691,7 +633,6 @@ function ScanLoadingInner() {
         activeSectionIdRef.current = newSec;
         if (prev && !completedSectionIdsRef.current.has(prev)) {
           completedSectionIdsRef.current.add(prev);
-          // update beam-active class on section elements
           const prevEl = document.querySelector(`[data-section="${prev}"]`);
           prevEl?.classList.remove("beam-active");
         }
@@ -937,6 +878,10 @@ function ScanLoadingInner() {
         .scan-sub-fade { opacity: 0; transition: opacity 0.5s ease 2s; }
         .scan-sub-fade.show { opacity: 1; }
         .status-text { transition: opacity 0.18s ease; }
+        @keyframes scanCursorMove {
+          from { left: -80px; }
+          to { left: calc(100% + 80px); }
+        }
       `}</style>
 
       <div
@@ -1204,6 +1149,36 @@ function ScanLoadingInner() {
                 zIndex: 6,
               }}
             >
+              {/* Scanning sweep line — tracks beam Y, sweeps left to right in sync with pulse cycle */}
+              {!sectionVisualComplete && (
+                <div
+                  ref={scanLineRef}
+                  aria-hidden
+                  style={{
+                    position: "absolute",
+                    left: 0,
+                    right: 0,
+                    top: 0,
+                    height: 1,
+                    zIndex: 5,
+                    pointerEvents: "none",
+                    overflow: "hidden",
+                    background: "rgba(0,200,255,0.1)",
+                  }}
+                >
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: -1,
+                      left: -80,
+                      width: 80,
+                      height: 3,
+                      background: "radial-gradient(ellipse 80px 3px at 50% 50%, rgba(255,255,255,0.5) 0%, rgba(0,200,255,0.8) 20%, rgba(0,200,255,0.35) 60%, transparent 100%)",
+                      animation: "scanCursorMove 2.5s linear infinite",
+                    }}
+                  />
+                </div>
+              )}
               {/* NAV */}
               <section
                 data-section="nav"

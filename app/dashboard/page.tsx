@@ -318,6 +318,7 @@ export default function DashboardPage() {
   const [enterpriseBlockOpen, setEnterpriseBlockOpen] = useState(false);
   const [enterpriseBlockHighlight, setEnterpriseBlockHighlight] = useState<"empty" | "modal" | null>(null);
   const [deletingDomain, setDeletingDomain] = useState<string | null>(null);
+  const [deleteErrorDomain, setDeleteErrorDomain] = useState<string | null>(null);
 
   useEffect(() => {
     const timeout = setTimeout(() => {
@@ -697,23 +698,31 @@ export default function DashboardPage() {
 
   async function handleDeleteSite(domain: string) {
     if (!authUserId) return;
+    const normalizedDomain = domain.toLowerCase().trim();
     setDeletingDomain(domain);
+    setDeleteErrorDomain(null);
     try {
       const supabase = getSupabaseBrowserClient();
       const { error } = await supabase
         .from("reports")
         .delete()
         .eq("user_id", authUserId)
-        .eq("domain", domain);
+        .eq("domain", normalizedDomain);
       if (error) {
         console.error("[DASHBOARD] Delete failed:", error);
+        setDeleteErrorDomain(domain);
         return;
       }
+      try {
+        localStorage.removeItem(`${DASHBOARD_REPORTS_CACHE_PREFIX}${authUserId}`);
+        localStorage.removeItem(`${DASHBOARD_REPORTS_CACHE_TS_PREFIX}${authUserId}`);
+      } catch { /* ignore */ }
       const updatedReports = reports.filter((r) => !domainKeysMatch(r.domain, domain));
       setReports(updatedReports);
       setActiveDomain(distinctDomains(updatedReports)[0] ?? "");
     } catch (err) {
       console.error("[DASHBOARD] Delete failed:", err);
+      setDeleteErrorDomain(domain);
     } finally {
       setDeletingDomain(null);
     }
@@ -859,6 +868,9 @@ export default function DashboardPage() {
               border: "1px solid rgba(0,200,255,0.15)",
               borderRadius: 2,
               padding: "5px 10px",
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
             }}
           >
             {domains.length > 1 ? (
@@ -886,9 +898,45 @@ export default function DashboardPage() {
                 {effectiveDomain || "—"}
               </div>
             )}
+            {effectiveDomain ? (
+              <button
+                type="button"
+                title="Delete all scans for this site"
+                disabled={deletingDomain === effectiveDomain}
+                onClick={() => void handleDeleteSite(effectiveDomain)}
+                style={{
+                  background: "transparent",
+                  border: "1px solid rgba(255,45,45,0.25)",
+                  color: "rgba(255,80,80,0.55)",
+                  fontFamily: SM,
+                  fontSize: 9,
+                  letterSpacing: "0.08em",
+                  padding: "2px 7px",
+                  borderRadius: 2,
+                  cursor: deletingDomain === effectiveDomain ? "not-allowed" : "pointer",
+                  flexShrink: 0,
+                  opacity: deletingDomain === effectiveDomain ? 0.5 : 1,
+                  transition: "border-color 150ms, color 150ms",
+                }}
+                onMouseEnter={(e) => {
+                  if (deletingDomain !== effectiveDomain) {
+                    e.currentTarget.style.borderColor = "rgba(255,45,45,0.6)";
+                    e.currentTarget.style.color = "#FF4444";
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = "rgba(255,45,45,0.25)";
+                  e.currentTarget.style.color = "rgba(255,80,80,0.55)";
+                }}
+              >
+                {deletingDomain === effectiveDomain ? "..." : "× REMOVE"}
+              </button>
+            ) : null}
           </div>
-          <div style={{ fontFamily: SM, fontSize: 9, color: "rgba(255,255,255,0.3)" }}>
-            LAST SCANNED · {activeLatest ? formatRelativeScanTime(activeLatest.created_at) : "—"}
+          <div style={{ fontFamily: SM, fontSize: 9, color: deleteErrorDomain === effectiveDomain ? "#FF4444" : "rgba(255,255,255,0.3)" }}>
+            {deleteErrorDomain === effectiveDomain
+              ? "DELETE FAILED · TRY AGAIN"
+              : `LAST SCANNED · ${activeLatest ? formatRelativeScanTime(activeLatest.created_at) : "—"}`}
           </div>
         </div>
 
@@ -941,6 +989,15 @@ export default function DashboardPage() {
                   ↻ RESCAN
                 </button>
               ) : null}
+              <button
+                type="button"
+                onClick={() => setShowScanInput(true)}
+                style={{ background: "#00C8FF", border: "1px solid #00C8FF", color: "#050810", fontFamily: SM, fontSize: 11, fontWeight: 700, padding: "8px 16px", borderRadius: 4, cursor: "pointer", letterSpacing: "0.06em", textTransform: "uppercase" }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = "#33D6FF"; e.currentTarget.style.borderColor = "#33D6FF"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = "#00C8FF"; e.currentTarget.style.borderColor = "#00C8FF"; }}
+              >
+                + SCAN NEW SITE
+              </button>
               <a
                 href={effectiveDomain ? `/report/${encodeURIComponent(effectiveDomain)}` : "#"}
                 style={{ display: "inline-flex", alignItems: "center", background: "transparent", border: "1px solid #00C8FF", color: "#00C8FF", fontFamily: SM, fontSize: 11, padding: "8px 16px", borderRadius: 4, cursor: "pointer", letterSpacing: "0.06em", textDecoration: "none" }}

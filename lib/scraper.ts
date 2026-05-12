@@ -91,21 +91,14 @@ export function extractHeadlineFromMarkdown(markdown: string): string | null {
 const SCRAPING_FISH_BASE = 'https://scraping.narf.ai/api/v1/'
 const SCRAPING_FISH_TIMEOUT_MS = 45_000
 
-async function fetchWithScrapingFish(url: string): Promise<string | null> {
+async function fetchWithScrapingFish(url: string, waitTimeout: number = 3000): Promise<string | null> {
   if (!SCRAPING_FISH_KEY) {
     console.log('[SCRAPER] ScrapingFish key not configured')
     return null
   }
-  const params = {
-    api_key: '(redacted)',
-    url,
-    render_js: 'true',
-    wait_for: 'h1,h2,h3',
-  }
-  const endpoint = `${SCRAPING_FISH_BASE}?api_key=${encodeURIComponent(SCRAPING_FISH_KEY)}&url=${encodeURIComponent(url)}&render_js=true&wait_for=h1,h2,h3`
+  const endpoint = `${SCRAPING_FISH_BASE}?api_key=${encodeURIComponent(SCRAPING_FISH_KEY)}&url=${encodeURIComponent(url)}&render_js=true&wait_for_timeout=${waitTimeout}`
   console.log('[SCRAPER] ScrapingFish request:', {
-    requestUrl: `${SCRAPING_FISH_BASE}?api_key=(redacted)&url=${encodeURIComponent(url)}&render_js=true&wait_for=h1,h2,h3`,
-    params,
+    requestUrl: `${SCRAPING_FISH_BASE}?api_key=(redacted)&url=${encodeURIComponent(url)}&render_js=true&wait_for_timeout=${waitTimeout}`,
   })
   try {
     const controller = new AbortController()
@@ -123,7 +116,7 @@ async function fetchWithScrapingFish(url: string): Promise<string | null> {
       return null
     }
     const html = await res.text()
-    if (html.length < 500) { console.log('[SCRAPER] ScrapingFish returned too little'); return null }
+    if (html.length < 200) { console.log('[SCRAPER] ScrapingFish returned too little'); return null }
     console.log('[SCRAPER] ScrapingFish success:', html.length, 'chars')
     return html
   } catch (err) {
@@ -270,8 +263,15 @@ export async function scrapeUrl(inputUrl: string): Promise<ScrapeResult> {
   let method: ScrapeResult['method'] = 'raw'
   let htmlExtracted: ReturnType<typeof extractFromHtml> | null = null
 
-  // -- ATTEMPT 1: ScrapingFish (JS rendered) --
-  const fishHtml = await fetchWithScrapingFish(url)
+  // -- ATTEMPT 1: ScrapingFish (JS rendered, 3s wait) --
+  let fishHtml = await fetchWithScrapingFish(url, 3000)
+
+  // -- ATTEMPT 1b: ScrapingFish retry (5s wait for slower JS apps) --
+  if (!fishHtml) {
+    fishHtml = await fetchWithScrapingFish(url, 5000)
+    if (fishHtml) console.log('[SCRAPER] ScrapingFish retry (5s) succeeded')
+  }
+
   if (fishHtml) {
     rawHtml = fishHtml
     method = 'scrapingfish'

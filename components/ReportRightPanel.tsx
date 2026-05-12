@@ -1331,58 +1331,108 @@ export default function ReportRightPanel({
             <div style={{ position: "relative" }}>
               <div
                 style={{
-                  display: "flex",
-                  flexDirection: "row",
-                  alignItems: "stretch",
+                  display: "grid",
+                  gridTemplateColumns: "1fr 1px 1fr",
+                  alignItems: "start",
                 }}
               >
-                <div style={{ flex: 1, minWidth: 0 }}>
+                {/* Left column — CURRENT */}
+                <div style={{ paddingRight: 24 }}>
                   <div
                     style={{
                       fontFamily: REPORT_MONO,
                       fontSize: 9,
                       letterSpacing: "0.1em",
                       color: "#8899AA",
-                      marginBottom: 14,
+                      marginBottom: 20,
                       textTransform: "uppercase",
                     }}
                   >
                     CURRENT
+                  </div>
+                  <div
+                    style={{
+                      fontFamily: REPORT_MONO,
+                      fontSize: 9,
+                      letterSpacing: "0.08em",
+                      color: "#8899AA",
+                      marginBottom: 6,
+                      textTransform: "uppercase",
+                    }}
+                  >
+                    HEADLINE
                   </div>
                   {renderTransformationCurrentBlock(
                     "Headline",
                     transformationCopy.currentHeadline,
                     18
                   )}
+                  <div
+                    style={{
+                      fontFamily: REPORT_MONO,
+                      fontSize: 9,
+                      letterSpacing: "0.08em",
+                      color: "#8899AA",
+                      marginBottom: 6,
+                      textTransform: "uppercase",
+                    }}
+                  >
+                    SUBHEADLINE
+                  </div>
                   {renderTransformationCurrentBlock(
                     "Subheadline",
                     transformationCopy.currentSubheadline,
                     14
                   )}
+                  <div
+                    style={{
+                      fontFamily: REPORT_MONO,
+                      fontSize: 9,
+                      letterSpacing: "0.08em",
+                      color: "#8899AA",
+                      marginBottom: 6,
+                      textTransform: "uppercase",
+                    }}
+                  >
+                    CTA
+                  </div>
                   {renderTransformationCurrentCta(transformationCopy.currentCta)}
                 </div>
+
+                {/* Divider */}
                 <div
                   style={{
-                    width: 1,
-                    flexShrink: 0,
                     background: "rgba(255,255,255,0.1)",
                     alignSelf: "stretch",
-                    margin: "0 24px",
                   }}
                   aria-hidden
                 />
-                <div style={{ flex: 1, minWidth: 0 }}>
+
+                {/* Right column — OPTIMIZED */}
+                <div style={{ paddingLeft: 24 }}>
                   <div
                     style={{
                       fontFamily: REPORT_MONO,
                       fontSize: 9,
                       letterSpacing: "0.1em",
                       color: "#00E676",
-                      marginBottom: 14,
+                      marginBottom: 20,
                       textTransform: "uppercase",
                     }}
                   >
                     OPTIMIZED
+                  </div>
+                  <div
+                    style={{
+                      fontFamily: REPORT_MONO,
+                      fontSize: 9,
+                      letterSpacing: "0.08em",
+                      color: "#8899AA",
+                      marginBottom: 6,
+                      textTransform: "uppercase",
+                    }}
+                  >
+                    HEADLINE
                   </div>
                   <OptimizedCopyLines
                     lines={transformationCopy.optHeadlineLines}
@@ -1390,12 +1440,36 @@ export default function ReportRightPanel({
                     fontWeight={400}
                     isCta={false}
                   />
+                  <div
+                    style={{
+                      fontFamily: REPORT_MONO,
+                      fontSize: 9,
+                      letterSpacing: "0.08em",
+                      color: "#8899AA",
+                      marginBottom: 6,
+                      textTransform: "uppercase",
+                    }}
+                  >
+                    SUBHEADLINE
+                  </div>
                   <OptimizedCopyLines
                     lines={transformationCopy.optSubLines}
                     fontSize={15}
                     fontWeight={400}
                     isCta={false}
                   />
+                  <div
+                    style={{
+                      fontFamily: REPORT_MONO,
+                      fontSize: 9,
+                      letterSpacing: "0.08em",
+                      color: "#8899AA",
+                      marginBottom: 6,
+                      textTransform: "uppercase",
+                    }}
+                  >
+                    CTA
+                  </div>
                   <OptimizedCopyLines
                     lines={transformationCopy.optCtaLines}
                     fontSize={15}

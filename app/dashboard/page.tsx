@@ -717,7 +717,15 @@ export default function DashboardPage() {
         localStorage.removeItem(`${DASHBOARD_REPORTS_CACHE_PREFIX}${authUserId}`);
         localStorage.removeItem(`${DASHBOARD_REPORTS_CACHE_TS_PREFIX}${authUserId}`);
       } catch { /* ignore */ }
-      const updatedReports = reports.filter((r) => !domainKeysMatch(r.domain, domain));
+      // Force fresh fetch from Supabase so deleted items don't reappear from cache
+      const { data: freshData } = await supabase
+        .from("reports")
+        .select(
+          "id, domain, created_at, analysis, dimension_scores, money_leaks, quick_wins, growth_roadmap, verdict, biggest_opportunity, estimated_impact, health_score, critical_count, high_count, total_failed, total_passed, share_token, score_delta, previous_score"
+        )
+        .eq("user_id", authUserId)
+        .order("created_at", { ascending: false });
+      const updatedReports = normalizeStoredReportRows(freshData ?? []);
       setReports(updatedReports);
       setActiveDomain(distinctDomains(updatedReports)[0] ?? "");
     } catch (err) {
@@ -954,8 +962,8 @@ export default function DashboardPage() {
 
         {/* Center cluster — score gauge */}
         {activeLatest ? (
-          <div className="dashboard-header-gauge" style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, flexShrink: 0 }}>
-            <div style={{ transform: "scale(0.5)", transformOrigin: "center" }}>
+          <div className="dashboard-header-gauge" style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, flexShrink: 0, height: 90 }}>
+            <div style={{ width: 90, height: 90, overflow: "visible", transform: "scale(0.5)", transformOrigin: "top center" }}>
               <ConversionScoreGauge
                 score={activeScore}
                 scoreDelta={dashboardScoreDelta}
@@ -1260,16 +1268,14 @@ export default function DashboardPage() {
           ) : null}
 
           {/* 4. AI ADVISOR */}
-          {!restrictionsActive ? (
-            <AdvisorChat
-              reports={reportsForEffectiveDomain}
-              userId={authUserId}
-              resetSignal={advisorResetSignal}
-              activeDomain={activeLatest?.domain ?? effectiveDomain}
-              planLocked={false}
-              onUpgrade={() => void handleUpgrade()}
-            />
-          ) : null}
+          <AdvisorChat
+            reports={reportsForEffectiveDomain}
+            userId={authUserId}
+            resetSignal={advisorResetSignal}
+            activeDomain={activeLatest?.domain ?? effectiveDomain}
+            planLocked={restrictionsActive}
+            onUpgrade={() => void handleUpgrade()}
+          />
 
           {/* 5. SCORE HISTORY */}
           <div>

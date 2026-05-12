@@ -625,10 +625,10 @@ function AuthPageContent() {
               width: "100%",
               height: 46,
               borderRadius: 6,
-              background: C.cyan,
-              border: "none",
+              background: "transparent",
+              border: "1px solid #00C8FF",
               boxShadow: "none",
-              color: C.base,
+              color: C.cyan,
               fontFamily: MONO,
               fontSize: 13,
               fontWeight: 700,
@@ -640,10 +640,10 @@ function AuthPageContent() {
               transition: "background 150ms ease",
             }}
             onMouseEnter={(e) => {
-              if (!isSubmitting) e.currentTarget.style.background = "#33D6FF";
+              if (!isSubmitting) e.currentTarget.style.background = "rgba(0,200,255,0.08)";
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.background = C.cyan;
+              e.currentTarget.style.background = "transparent";
             }}
           >
             {tab === "signin" ? "SIGN IN →" : "CREATE ACCOUNT →"}

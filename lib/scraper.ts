@@ -1,7 +1,6 @@
 import axios from 'axios'
 import * as cheerio from 'cheerio'
 
-const SCRAPING_FISH_KEY = process.env.SCRAPING_FISH_API_KEY
 const ZENROWS_KEY = process.env.ZENROWS_API_KEY
 
 // -- URL NORMALIZATION --------------------------------------------------
@@ -87,40 +86,49 @@ export function extractHeadlineFromMarkdown(markdown: string): string | null {
   return null
 }
 
-// -- SCRAPING FISH (PRIMARY JS RENDERER) -------------------------------
-const SCRAPING_FISH_BASE = 'https://scraping.narf.ai/api/v1/'
-const SCRAPING_FISH_TIMEOUT_MS = 45_000
+// -- BROWSERLESS (PRIMARY JS RENDERER) --------------------------------
+const BROWSERLESS_TIMEOUT_MS = 35_000
 
-async function fetchWithScrapingFish(url: string, waitTimeout: number = 3000, attempt: number = 1): Promise<string | null> {
-  if (!SCRAPING_FISH_KEY) {
-    console.log('[SCRAPER] ScrapingFish key not configured')
+async function fetchWithBrowserless(url: string): Promise<string | null> {
+  if (!process.env.BROWSERLESS_API_KEY) {
+    console.log('[SCRAPER] Browserless key not configured')
     return null
   }
-  const endpoint = `${SCRAPING_FISH_BASE}?api_key=${encodeURIComponent(SCRAPING_FISH_KEY)}&url=${encodeURIComponent(url)}&render_js=true&wait_for_timeout=${waitTimeout}`
-  console.log('[SCRAPER] ScrapingFish request:', {
-    requestUrl: `${SCRAPING_FISH_BASE}?api_key=(redacted)&url=${encodeURIComponent(url)}&render_js=true&wait_for_timeout=${waitTimeout}`,
-  })
+  console.log('[SCRAPER] Browserless request:', { url })
   try {
     const controller = new AbortController()
-    const timeout = setTimeout(() => controller.abort(), SCRAPING_FISH_TIMEOUT_MS)
-    const res = await fetch(endpoint, { signal: controller.signal })
+    const timeout = setTimeout(() => controller.abort(), BROWSERLESS_TIMEOUT_MS)
+    const res = await fetch(`https://production-sfo.browserless.io/content?token=${process.env.BROWSERLESS_API_KEY}`, {
+      method: 'POST',
+      signal: controller.signal,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        url,
+        waitForTimeout: 5000,
+        rejectResourceTypes: ['image', 'media', 'font'],
+        gotoOptions: {
+          waitUntil: 'networkidle2',
+          timeout: 30000,
+        },
+      }),
+    })
     clearTimeout(timeout)
     if (!res.ok) {
       const errBody = await res.text()
-      console.log(`[scraper] ScrapingFish attempt ${attempt}/2 for ${url}: status=${res.status}, length=${errBody.length}, result=null`)
-      console.log('[SCRAPER] ScrapingFish failed body:', errBody.slice(0, 800))
+      console.log(`[scraper] Browserless for ${url}: status=${res.status}, length=${errBody.length}, result=null`)
+      console.log('[SCRAPER] Browserless failed body:', errBody.slice(0, 800))
       return null
     }
     const html = await res.text()
     if (!html) {
-      console.log(`[scraper] ScrapingFish attempt ${attempt}/2 for ${url}: status=${res.status}, length=0, result=null`)
+      console.log(`[scraper] Browserless for ${url}: status=${res.status}, length=0, result=null`)
       return null
     }
-    console.log(`[scraper] ScrapingFish attempt ${attempt}/2 for ${url}: status=${res.status}, length=${html.length}, result=success`)
+    console.log(`[scraper] Browserless for ${url}: status=${res.status}, length=${html.length}, result=success`)
     return html
   } catch (err) {
-    console.log(`[scraper] ScrapingFish attempt ${attempt}/2 for ${url}: status=error, length=0, result=null`)
-    console.log('[SCRAPER] ScrapingFish error:', err instanceof Error ? err.message : err)
+    console.log(`[scraper] Browserless for ${url}: status=error, length=0, result=null`)
+    console.log('[SCRAPER] Browserless error:', err instanceof Error ? err.message : err)
     return null
   }
 }
@@ -246,7 +254,7 @@ export interface ScrapeResult {
   allText: string
   rawHtml: string
   jinaMarkdown: string | null
-  method: 'scrapingfish' | 'jina' | 'raw'
+  method: 'browserless' | 'jina' | 'raw'
   domain: string
 }
 
@@ -276,21 +284,15 @@ export async function scrapeUrl(inputUrl: string): Promise<ScrapeResult> {
   let method: ScrapeResult['method'] = 'raw'
   let htmlExtracted: ReturnType<typeof extractFromHtml> | null = null
 
-  // -- ATTEMPT 1: ScrapingFish (JS rendered, 3s wait) --
-  let fishHtml = await fetchWithScrapingFish(url, 3000, 1)
+  // -- ATTEMPT 1: Browserless (JS rendered) --
+  const browserlessHtml = await fetchWithBrowserless(url)
 
-  // -- ATTEMPT 1b: ScrapingFish retry (5s wait for slower JS apps) --
-  if (!fishHtml) {
-    fishHtml = await fetchWithScrapingFish(url, 5000, 2)
-    if (fishHtml) console.log('[SCRAPER] ScrapingFish retry (5s) succeeded')
-  }
-
-  if (fishHtml) {
-    rawHtml = fishHtml
-    method = 'scrapingfish'
-    htmlExtracted = extractFromHtml(fishHtml)
+  if (browserlessHtml) {
+    rawHtml = browserlessHtml
+    method = 'browserless'
+    htmlExtracted = extractFromHtml(browserlessHtml)
     heroHeadline = selectHeadlineFromHtml(htmlExtracted, domain)
-    console.log('[SCRAPER] ScrapingFish headline:', heroHeadline)
+    console.log('[SCRAPER] Browserless headline:', heroHeadline)
   }
 
   // -- ATTEMPT 2: Jina (markdown, good for text extraction) --

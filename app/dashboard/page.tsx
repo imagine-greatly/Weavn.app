@@ -929,7 +929,7 @@ export default function DashboardPage() {
                   e.currentTarget.style.color = "rgba(255,80,80,0.55)";
                 }}
               >
-                {deletingDomain === effectiveDomain ? "..." : "× REMOVE"}
+                {deletingDomain === effectiveDomain ? "..." : "×"}
               </button>
             ) : null}
           </div>
@@ -938,6 +938,15 @@ export default function DashboardPage() {
               ? "DELETE FAILED · TRY AGAIN"
               : `LAST SCANNED · ${activeLatest ? formatRelativeScanTime(activeLatest.created_at) : "—"}`}
           </div>
+          <button
+            type="button"
+            onClick={() => setShowScanInput(true)}
+            style={{ alignSelf: "flex-start", background: "transparent", border: "1px solid #00C8FF", color: "#00C8FF", fontFamily: SM, fontSize: 9, fontWeight: 700, padding: "4px 10px", borderRadius: 2, cursor: "pointer", letterSpacing: "0.08em", textTransform: "uppercase" }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(0,200,255,0.1)"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+          >
+            + SCAN NEW SITE
+          </button>
         </div>
 
         {/* Divider */}
@@ -989,15 +998,6 @@ export default function DashboardPage() {
                   ↻ RESCAN
                 </button>
               ) : null}
-              <button
-                type="button"
-                onClick={() => setShowScanInput(true)}
-                style={{ background: "#00C8FF", border: "1px solid #00C8FF", color: "#050810", fontFamily: SM, fontSize: 11, fontWeight: 700, padding: "8px 16px", borderRadius: 4, cursor: "pointer", letterSpacing: "0.06em", textTransform: "uppercase" }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = "#33D6FF"; e.currentTarget.style.borderColor = "#33D6FF"; }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = "#00C8FF"; e.currentTarget.style.borderColor = "#00C8FF"; }}
-              >
-                + SCAN NEW SITE
-              </button>
               <a
                 href={effectiveDomain ? `/report/${encodeURIComponent(effectiveDomain)}` : "#"}
                 style={{ display: "inline-flex", alignItems: "center", background: "transparent", border: "1px solid #00C8FF", color: "#00C8FF", fontFamily: SM, fontSize: 11, padding: "8px 16px", borderRadius: 4, cursor: "pointer", letterSpacing: "0.06em", textDecoration: "none" }}
@@ -1409,7 +1409,9 @@ export default function DashboardPage() {
               />
               <button
                 type="submit"
-                style={{ background: "#00C8FF", color: "#050810", border: "none", fontFamily: SM, fontSize: 10, fontWeight: 700, letterSpacing: "0.15em", padding: "10px 20px", cursor: "pointer", textTransform: "uppercase", whiteSpace: "nowrap" }}
+                style={{ background: "transparent", color: "#00C8FF", border: "1px solid #00C8FF", fontFamily: SM, fontSize: 10, fontWeight: 700, letterSpacing: "0.15em", padding: "10px 20px", cursor: "pointer", textTransform: "uppercase", whiteSpace: "nowrap" }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(0,200,255,0.1)"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
               >
                 RUN CONVERSION INTELLIGENCE →
               </button>

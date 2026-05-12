@@ -124,11 +124,12 @@ export default function ConversionScoreGauge({
   }, [score, targetOffset]);
 
   return (
-    <div style={{ textAlign: "center", paddingTop: 0, paddingBottom: 0, marginTop: 0 }}>
+    <div style={{ textAlign: "center", padding: 0, margin: 0 }}>
       <div
         style={{
           position: "relative",
-          padding: "0px 16px 0px 16px",
+          padding: 0,
+          margin: 0,
         }}
       >
         <div

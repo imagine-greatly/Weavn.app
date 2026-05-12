@@ -91,7 +91,7 @@ export function extractHeadlineFromMarkdown(markdown: string): string | null {
 const SCRAPING_FISH_BASE = 'https://scraping.narf.ai/api/v1/'
 const SCRAPING_FISH_TIMEOUT_MS = 45_000
 
-async function fetchWithScrapingFish(url: string, waitTimeout: number = 3000): Promise<string | null> {
+async function fetchWithScrapingFish(url: string, waitTimeout: number = 3000, attempt: number = 1): Promise<string | null> {
   if (!SCRAPING_FISH_KEY) {
     console.log('[SCRAPER] ScrapingFish key not configured')
     return null
@@ -107,19 +107,19 @@ async function fetchWithScrapingFish(url: string, waitTimeout: number = 3000): P
     clearTimeout(timeout)
     if (!res.ok) {
       const errBody = await res.text()
-      console.log(
-        '[SCRAPER] ScrapingFish failed:',
-        res.status,
-        'body:',
-        errBody.slice(0, 800)
-      )
+      console.log(`[scraper] ScrapingFish attempt ${attempt}/2 for ${url}: status=${res.status}, length=${errBody.length}, result=null`)
+      console.log('[SCRAPER] ScrapingFish failed body:', errBody.slice(0, 800))
       return null
     }
     const html = await res.text()
-    if (html.length < 200) { console.log('[SCRAPER] ScrapingFish returned too little'); return null }
-    console.log('[SCRAPER] ScrapingFish success:', html.length, 'chars')
+    if (!html) {
+      console.log(`[scraper] ScrapingFish attempt ${attempt}/2 for ${url}: status=${res.status}, length=0, result=null`)
+      return null
+    }
+    console.log(`[scraper] ScrapingFish attempt ${attempt}/2 for ${url}: status=${res.status}, length=${html.length}, result=success`)
     return html
   } catch (err) {
+    console.log(`[scraper] ScrapingFish attempt ${attempt}/2 for ${url}: status=error, length=0, result=null`)
     console.log('[SCRAPER] ScrapingFish error:', err instanceof Error ? err.message : err)
     return null
   }
@@ -139,13 +139,19 @@ async function fetchWithJina(url: string): Promise<string | null> {
       }
     })
     clearTimeout(timeout)
-    if (!res.ok || res.status !== 200) return null
+    if (!res.ok || res.status !== 200) {
+      console.log(`[scraper] Jina attempt for ${url}: status=${res.status}, length=0, result=null`)
+      return null
+    }
     const text = await res.text()
-    if (text.length < 500) return null
-    console.log('[SCRAPER] Jina success:', text.length, 'chars')
+    if (text.length < 500) {
+      console.log(`[scraper] Jina attempt for ${url}: status=${res.status}, length=${text.length}, result=null`)
+      return null
+    }
+    console.log(`[scraper] Jina attempt for ${url}: status=${res.status}, length=${text.length}, result=success`)
     return text
   } catch {
-    console.log('[SCRAPER] Jina failed')
+    console.log(`[scraper] Jina attempt for ${url}: status=error, length=0, result=null`)
     return null
   }
 }
@@ -157,9 +163,16 @@ async function fetchRawHtml(url: string): Promise<string | null> {
       timeout: 10000,
       headers: { 'User-Agent': 'Mozilla/5.0 (compatible; WebDocBot/1.0)' }
     })
-    return typeof res.data === 'string' ? res.data : null
-  } catch {
-    console.log('[SCRAPER] Raw HTML fetch failed')
+    const html = typeof res.data === 'string' ? res.data : null
+    if (!html) {
+      console.log(`[scraper] Raw HTML attempt for ${url}: status=${res.status}, length=0, result=null`)
+      return null
+    }
+    console.log(`[scraper] Raw HTML attempt for ${url}: status=${res.status}, length=${html.length}, result=success`)
+    return html
+  } catch (err) {
+    const status = (err as { response?: { status?: number } })?.response?.status ?? 'error'
+    console.log(`[scraper] Raw HTML attempt for ${url}: status=${status}, length=0, result=null`)
     return null
   }
 }
@@ -264,11 +277,11 @@ export async function scrapeUrl(inputUrl: string): Promise<ScrapeResult> {
   let htmlExtracted: ReturnType<typeof extractFromHtml> | null = null
 
   // -- ATTEMPT 1: ScrapingFish (JS rendered, 3s wait) --
-  let fishHtml = await fetchWithScrapingFish(url, 3000)
+  let fishHtml = await fetchWithScrapingFish(url, 3000, 1)
 
   // -- ATTEMPT 1b: ScrapingFish retry (5s wait for slower JS apps) --
   if (!fishHtml) {
-    fishHtml = await fetchWithScrapingFish(url, 5000)
+    fishHtml = await fetchWithScrapingFish(url, 5000, 2)
     if (fishHtml) console.log('[SCRAPER] ScrapingFish retry (5s) succeeded')
   }
 
@@ -301,6 +314,11 @@ export async function scrapeUrl(inputUrl: string): Promise<ScrapeResult> {
         heroHeadline = selectHeadlineFromHtml(htmlExtracted, domain)
       }
     }
+  }
+
+  // -- ALL FAILED CHECK --
+  if (!rawHtml && !jinaMarkdown) {
+    console.log(`[scraper] ALL scrapers failed for ${url}`)
   }
 
   // -- FINAL VALIDATION --

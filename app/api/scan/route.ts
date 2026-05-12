@@ -18,6 +18,7 @@ import {
   leakKey,
   resolveLeaksForReportPayload,
 } from "@/lib/findingExtendedAnalysis";
+import { checkContentQuality, SCRAPE_FAILED_ERROR } from "@/lib/analyzePipeline";
 
 function mergeCookies(from: NextResponse, to: NextResponse) {
   from.cookies.getAll().forEach(({ name, value }) => {
@@ -209,6 +210,14 @@ export async function POST(req: NextRequest) {
         { status: 422 }
       )
     );
+  }
+
+  // 1b. Content quality gate — reject JS shells before passing to Claude
+  const scrapedText = extraction.pages.map((p) => p.paragraphs.join(" ")).join(" ");
+  const quality = checkContentQuality(scrapedText);
+  if (!quality.passed) {
+    console.log("[scan] content quality check failed:", quality.reason);
+    return withCookies(NextResponse.json(SCRAPE_FAILED_ERROR, { status: 422 }));
   }
 
   // 2. Detect site type from homepage (gates everything that follows)

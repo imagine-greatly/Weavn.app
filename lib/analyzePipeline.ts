@@ -788,3 +788,50 @@ export function truncatePageParagraphs(page: ExtractedPage): ExtractedPage {
     paragraphs: page.paragraphs.slice(0, MAX_PARAGRAPH_CHARS) + "...",
   };
 }
+
+// Patterns that indicate raw JS framework code being returned instead of rendered HTML
+const JS_CONTENT_PATTERNS: RegExp[] = [
+  /\(\([a-z],[a-z](,[a-z])*\)\s*=>/,   // minified: ((e,t,r,n)=>
+  /document\.documentElement/,
+  /window\.__[A-Z_]+/,                  // window.__NEXT_DATA__, __NUXT__, etc.
+  /Object\.defineProperty\s*\(/,        // minified module boilerplate
+  /\bmodule\.exports\s*=/,              // CommonJS exports in inline script
+  /;\s*var\s+[a-z]\s*=\s*function/,    // minified: ;var e=function
+  /\bwebpackChunk\b/,                   // webpack runtime
+  /self\.__next_f\s*=/,                 // Next.js flight data
+];
+
+export interface ContentQualityResult {
+  passed: boolean;
+  reason?: string;
+}
+
+export interface ScrapeFailed {
+  error: "SCRAPE_FAILED";
+  reason: string;
+}
+
+export const SCRAPE_FAILED_ERROR: ScrapeFailed = {
+  error: "SCRAPE_FAILED",
+  reason: "Could not extract readable content from this site",
+};
+
+/**
+ * Returns passed:false when the scraped HTML is a JS shell rather than rendered content.
+ * Callers should retry with the next scraper and return SCRAPE_FAILED_ERROR if all fail.
+ */
+export function checkContentQuality(html: string): ContentQualityResult {
+  const text = html.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+
+  if (text.length < 300) {
+    return { passed: false, reason: "Readable text length under 300 characters" };
+  }
+
+  for (const pattern of JS_CONTENT_PATTERNS) {
+    if (pattern.test(text)) {
+      return { passed: false, reason: "Content contains JavaScript framework code" };
+    }
+  }
+
+  return { passed: true };
+}

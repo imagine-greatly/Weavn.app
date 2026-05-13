@@ -132,6 +132,7 @@ function ScanLoadingInner() {
   const ringOuterRef = useRef<HTMLDivElement>(null);
   const scoreNumRef = useRef<HTMLDivElement>(null);
   const checksCounterRef = useRef<HTMLSpanElement>(null);
+  const pulseCanvasRef = useRef<HTMLCanvasElement>(null);
 
   const [elapsedMs, setElapsedMs] = useState(0);
   const [sectionVisualComplete, setSectionVisualComplete] = useState(false);
@@ -642,6 +643,73 @@ function ScanLoadingInner() {
     beamRafRef.current = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(beamRafRef.current);
   }, [materialized]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Pulse waveform canvas animation
+  useEffect(() => {
+    const canvas = pulseCanvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const CYCLE_MS = 2500;
+    const EVOLVE_MS = 4500;
+
+    let raf: number;
+    const t0 = performance.now();
+    let lastEvolve = t0;
+
+    // Wave params — start values, smoothly lerped toward targets
+    let amplitude = 9;
+    let targetAmplitude = 9;
+    let freq = 1.7;       // sine cycles visible across canvas width
+    let targetFreq = 1.7;
+
+    const draw = (now: number) => {
+      const elapsed = now - t0;
+
+      // Pick new targets every EVOLVE_MS using deterministic trig (no Math.random)
+      if (now - lastEvolve > EVOLVE_MS) {
+        lastEvolve = now;
+        const seed = elapsed * 0.00007;
+        targetAmplitude = 7 + Math.sin(seed * 3.1) * 3.5;       // 3.5–10.5
+        targetFreq      = 1.55 + Math.sin(seed * 2.3) * 0.35;   // 1.2–1.9
+      }
+      // Smooth lerp — no sudden jumps
+      amplitude += (targetAmplitude - amplitude) * 0.012;
+      freq      += (targetFreq      - freq)      * 0.012;
+
+      const w  = canvas.width;
+      const h  = canvas.height;
+      const cy = h / 2;
+
+      ctx.clearRect(0, 0, w, h);
+
+      // Phase advances one full 2π per CYCLE_MS → seamless loop
+      const phase = ((elapsed % CYCLE_MS) / CYCLE_MS) * Math.PI * 2;
+
+      // Wave: primary sine + subtle 2nd harmonic for slight EKG texture
+      ctx.beginPath();
+      ctx.strokeStyle = 'rgba(0,200,255,0.72)';
+      ctx.lineWidth   = 1;
+      ctx.lineJoin    = 'round';
+      for (let x = 0; x <= w; x++) {
+        const angle = (x / w) * Math.PI * 2 * freq - phase;
+        const y = cy - (Math.sin(angle) + Math.sin(angle * 2.1) * 0.18) / 1.18 * amplitude;
+        x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+
+      // Scanning line: 1px vertical cursor sweeping left→right over CYCLE_MS, then instant reset
+      const scanX = ((elapsed % CYCLE_MS) / CYCLE_MS) * w;
+      ctx.fillStyle = 'rgba(0,200,255,0.4)';
+      ctx.fillRect(Math.floor(scanX), 0, 1, h);
+
+      raf = requestAnimationFrame(draw);
+    };
+
+    raf = requestAnimationFrame(draw);
+    return () => cancelAnimationFrame(raf);
+  }, []); // independent of render state — pure visual loop
 
   const getSectionLabelClass = (sectionId: string): string => {
     if (sectionId === activeSection) return "section-active";
@@ -1903,25 +1971,12 @@ function ScanLoadingInner() {
                   <span style={{ color: "rgba(0,200,255,0.3)" }}> / </span>
                   <span style={{ color: "rgba(0,200,255,0.4)" }}>166</span>
                 </span>
-                <div style={{ display: "flex", alignItems: "flex-end", gap: 3, paddingBottom: 2 }}>
-                  {[
-                    { h: 8 },
-                    { h: 12 },
-                    { h: 16 },
-                    { h: 12 },
-                    { h: 8 },
-                  ].map((bar, bi) => (
-                    <div
-                      key={bi}
-                      style={{
-                        width: 3,
-                        height: bar.h,
-                        borderRadius: 1,
-                        background: "rgba(0,200,255,0.35)",
-                      }}
-                    />
-                  ))}
-                </div>
+                <canvas
+                  ref={pulseCanvasRef}
+                  width={128}
+                  height={26}
+                  style={{ display: "block", imageRendering: "pixelated" }}
+                />
               </div>
             </div>
             <div style={{ flex: 1, textAlign: "right" }}>

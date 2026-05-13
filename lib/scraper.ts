@@ -54,7 +54,7 @@ export function stripMarkdown(text: string): string {
 }
 
 // -- BROWSERLESS (PRIMARY JS RENDERER) --------------------------------
-const BROWSERLESS_TIMEOUT_MS = 45_000
+const BROWSERLESS_TIMEOUT_MS = 25_000
 
 // Strips script tags and HTML tags, returns remaining readable text length
 function readableTextLength(html: string): number {
@@ -74,9 +74,15 @@ async function fetchWithBrowserless(url: string): Promise<string | null> {
   const BASE_BODY = {
     url,
     bestAttempt: true,
+    userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
     rejectRequestPattern: ['.*\\.(png|jpg|jpeg|gif|webp|svg|mp4|woff|woff2|ttf|eot).*'],
-    setExtraHTTPHeaders: { 'Accept-Language': 'en-US,en;q=0.9' },
-    gotoOptions: { waitUntil: 'networkidle0', timeout: 30000 },
+    setExtraHTTPHeaders: {
+      'Accept-Language': 'en-US,en;q=0.9',
+      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+      'Accept-Encoding': 'gzip, deflate, br',
+      'Cache-Control': 'no-cache',
+    },
+    gotoOptions: { waitUntil: 'load', timeout: 20000 },
   }
 
   try {
@@ -87,7 +93,7 @@ async function fetchWithBrowserless(url: string): Promise<string | null> {
       method: 'POST',
       signal: controller.signal,
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...BASE_BODY, waitFor: { timeout: 8000 } }),
+      body: JSON.stringify({ ...BASE_BODY, waitFor: { timeout: 5000 } }),
     })
     clearTimeout(timeout)
 
@@ -109,12 +115,12 @@ async function fetchWithBrowserless(url: string): Promise<string | null> {
       console.log(`[scraper] Browserless for ${url}: JS shell detected (readable<500), retrying with 12s wait`)
       try {
         const retryController = new AbortController()
-        const retryTimeout = setTimeout(() => retryController.abort(), 50_000)
+        const retryTimeout = setTimeout(() => retryController.abort(), 20_000)
         const retryRes = await fetch(ENDPOINT, {
           method: 'POST',
           signal: retryController.signal,
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ...BASE_BODY, waitFor: { timeout: 12000 } }),
+          body: JSON.stringify({ ...BASE_BODY, waitFor: { timeout: 8000 } }),
         })
         clearTimeout(retryTimeout)
 
@@ -150,7 +156,7 @@ async function fetchScreenshotWithBrowserless(url: string): Promise<string | nul
   const ENDPOINT = `https://production-sfo.browserless.io/screenshot?token=${process.env.BROWSERLESS_API_KEY}`
   try {
     const controller = new AbortController()
-    const timeout = setTimeout(() => controller.abort(), 40_000)
+    const timeout = setTimeout(() => controller.abort(), 15_000)
     const res = await fetch(ENDPOINT, {
       method: 'POST',
       signal: controller.signal,
@@ -158,7 +164,7 @@ async function fetchScreenshotWithBrowserless(url: string): Promise<string | nul
       body: JSON.stringify({
         url,
         options: { fullPage: false, type: 'jpeg', quality: 80 },
-        gotoOptions: { waitUntil: 'domcontentloaded', timeout: 30000 },
+        gotoOptions: { waitUntil: 'domcontentloaded', timeout: 20000 },
         waitFor: { timeout: 5000 },
       }),
     })

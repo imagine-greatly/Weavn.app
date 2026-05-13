@@ -101,22 +101,15 @@ const CONTENT = {
 };
 
 function collectHomepageText(extraction: CombinedExtraction): { text: string; hrefs: string } {
-  const first = extraction.pages[0];
-  if (!first) return { text: "", hrefs: "" };
-
-  const parts: string[] = [
-    first.title,
-    first.metaDescription,
-    ...first.headings.map((h) => h.text),
-    ...first.buttons,
-    ...first.navLabels,
-    ...first.sectionParagraphs,
-    ...first.paragraphs,
-    ...first.links.map((l) => l.text),
-  ];
-  const hrefs = first.links.map((l) => l.href).join(" ");
-  const text = parts.filter(Boolean).join(" ").toLowerCase();
-  return { text: text.toLowerCase(), hrefs: hrefs.toLowerCase() };
+  if (!extraction.rawHtml) return { text: "", hrefs: "" };
+  const hrefMatches = [...extraction.rawHtml.matchAll(/href=["']([^"']+)["']/gi)];
+  const hrefs = hrefMatches.map((m) => m[1]).join(" ").toLowerCase();
+  const text = extraction.rawHtml
+    .replace(/<[^>]*>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
+  return { text, hrefs };
 }
 
 function scoreType(

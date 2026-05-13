@@ -3190,26 +3190,6 @@ export async function POST(req: NextRequest) {
           )
       );
     }
-    if (!pages[0]?.hero?.headline && scrapeResult.heroHeadline) {
-      pages[0] = {
-        ...pages[0],
-        hero: {
-          ...pages[0].hero,
-          headline: scrapeResult.heroHeadline,
-        },
-      };
-    }
-    if (
-      pages[0] &&
-      (!pages[0].paragraphs || pages[0].paragraphs.trim().length < 20) &&
-      scrapeResult.allText
-    ) {
-      pages[0] = {
-        ...pages[0],
-        paragraphs: scrapeResult.allText.slice(0, 4000),
-      };
-    }
-
     const combinedData = { siteType, pages, scrape_failed };
     const jina_used =
       homepageFetch.source === "jina" ||

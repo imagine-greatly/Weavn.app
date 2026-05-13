@@ -200,7 +200,7 @@ export async function POST(req: NextRequest) {
   }
 
   // If we have no meaningful content, still try AI (it may return a minimal report)
-  if (extraction.pages.length === 0) {
+  if (!extraction.rawHtml) {
     return withCookies(
       NextResponse.json(
         {

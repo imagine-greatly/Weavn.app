@@ -69,7 +69,7 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  if (extraction.pages.length === 0) {
+  if (!extraction.rawHtml) {
     return NextResponse.json(
       { error: "No HTML content could be extracted from the URL." },
       { status: 422 }

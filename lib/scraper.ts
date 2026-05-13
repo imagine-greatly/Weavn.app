@@ -1,4 +1,3 @@
-import * as cheerio from 'cheerio'
 
 // -- URL NORMALIZATION --------------------------------------------------
 export function normalizeToHomepage(input: string): string {
@@ -145,92 +144,51 @@ async function fetchWithBrowserless(url: string): Promise<string | null> {
   }
 }
 
-// -- EXTRACT FROM HTML WITH CHEERIO ------------------------------------
-function extractFromHtml(html: string): {
-  h1Tags: string[]
-  h2Tags: string[]
-  h3Tags: string[]
-  metaTitle: string
-  metaDescription: string
-  ogTitle: string
-  ogDescription: string
-  allText: string
-} {
-  const $ = cheerio.load(html)
-
-  const h1Tags = $('h1').map((_, el) => $(el).text().trim()).get().filter(Boolean)
-  const h2Tags = $('h2').map((_, el) => $(el).text().trim()).get().filter(Boolean)
-  const h3Tags = $('h3').map((_, el) => $(el).text().trim()).get().filter(Boolean)
-  const metaTitle = $('title').text().trim()
-  const metaDescription = $('meta[name="description"]').attr('content')?.trim() ?? ''
-  const ogTitle = $('meta[property="og:title"]').attr('content')?.trim() ?? ''
-  const ogDescription = $('meta[property="og:description"]').attr('content')?.trim() ?? ''
-  const allText = $('body').text().replace(/\s+/g, ' ').trim().slice(0, 8000)
-
-  return { h1Tags, h2Tags, h3Tags, metaTitle, metaDescription, ogTitle, ogDescription, allText }
-}
-
-// -- SELECT BEST HEADLINE FROM HTML ------------------------------------
-function selectHeadlineFromHtml(extracted: ReturnType<typeof extractFromHtml>, domain: string): string | null {
-  const { h1Tags, h2Tags, h3Tags, ogTitle, ogDescription, metaTitle } = extracted
-
-  // Try H1, H2, H3 in order
-  for (const tags of [h1Tags, h2Tags, h3Tags]) {
-    for (const tag of tags) {
-      const clean = stripMarkdown(tag)
-      if (!isInvalidHeadline(clean)) return clean
+// -- SCREENSHOT CAPTURE -------------------------------------------------
+async function fetchScreenshotWithBrowserless(url: string): Promise<string | null> {
+  if (!process.env.BROWSERLESS_API_KEY) return null
+  const ENDPOINT = `https://production-sfo.browserless.io/screenshot?token=${process.env.BROWSERLESS_API_KEY}`
+  try {
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), 40_000)
+    const res = await fetch(ENDPOINT, {
+      method: 'POST',
+      signal: controller.signal,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        url,
+        options: { fullPage: false, type: 'jpeg', quality: 80 },
+        gotoOptions: { waitUntil: 'domcontentloaded', timeout: 30000 },
+        waitFor: { timeout: 5000 },
+      }),
+    })
+    clearTimeout(timeout)
+    if (!res.ok) {
+      console.log(`[scraper] Screenshot for ${url}: status=${res.status}, result=null`)
+      return null
     }
+    const buffer = await res.arrayBuffer()
+    if (!buffer.byteLength) return null
+    console.log(`[scraper] Screenshot for ${url}: size=${buffer.byteLength}, result=success`)
+    return Buffer.from(buffer).toString('base64')
+  } catch (err) {
+    console.log('[SCRAPER] Screenshot error:', err instanceof Error ? err.message : err)
+    return null
   }
-
-  // OG title ? only if meaningfully different from bare domain name
-  if (ogTitle) {
-    const domainBase = domain.replace(/\.(com|store|co|io|net|org).*/i, '').replace(/-/g, ' ').toLowerCase()
-    if (ogTitle.toLowerCase().trim() !== domainBase) {
-      const clean = stripMarkdown(ogTitle)
-      if (!isInvalidHeadline(clean) && clean.split(' ').length > 2) return clean
-    }
-  }
-
-  // First sentence of OG description or meta description
-  for (const desc of [ogDescription, metaTitle]) {
-    if (!desc) continue
-    const first = desc.split(/[.!?]/)[0].trim()
-    if (first.length > 15 && first.length < 120) return first
-  }
-
-  return null
 }
 
 // -- MAIN SCRAPE FUNCTION -----------------------------------------------
 export interface ScrapeResult {
-  heroHeadline: string | null
-  metaTitle: string
-  metaDescription: string
-  ogTitle: string
-  ogDescription: string
-  h1Tags: string[]
-  h2Tags: string[]
-  h3Tags: string[]
-  allText: string
   rawHtml: string
   method: 'browserless'
   domain: string
+  screenshot: string | null
 }
 
 export interface CombinedExtraction {
-  pages: Array<{
-    url: string
-    title: string
-    metaDescription: string
-    headings: { level: string; text: string }[]
-    buttons: string[]
-    navLabels: string[]
-    sectionParagraphs: string[]
-    paragraphs: string[]
-    links: { text: string; href: string }[]
-    wordCount: number
-  }>
+  rawHtml: string
   pagesAnalyzed: string[]
+  screenshot?: string | null
 }
 
 export async function scrapeUrl(inputUrl: string): Promise<ScrapeResult> {
@@ -241,124 +199,48 @@ export async function scrapeUrl(inputUrl: string): Promise<ScrapeResult> {
 
   if (!rawHtml) {
     console.log(`[scraper] Browserless failed for ${url}`)
-    return {
-      heroHeadline: null,
-      metaTitle: '',
-      metaDescription: '',
-      ogTitle: '',
-      ogDescription: '',
-      h1Tags: [],
-      h2Tags: [],
-      h3Tags: [],
-      allText: '',
-      rawHtml: '',
-      method: 'browserless',
-      domain,
-    }
+  } else {
+    console.log(`[SCRAPER] ${domain} | method:browserless | html_len:${rawHtml.length}`)
   }
 
-  const extracted = extractFromHtml(rawHtml)
-  let heroHeadline = selectHeadlineFromHtml(extracted, domain)
-  console.log('[SCRAPER] Browserless headline:', heroHeadline)
-
-  if (heroHeadline && isInvalidHeadline(heroHeadline)) {
-    console.log('[SCRAPER] Final validation rejected:', heroHeadline)
-    heroHeadline = null
-  }
-
-  console.log(`[SCRAPER] ${domain} | method:browserless | headline:"${heroHeadline ?? 'NONE'}" | h1:${extracted.h1Tags.length} | h3:${extracted.h3Tags.length}`)
+  const screenshot = rawHtml ? await fetchScreenshotWithBrowserless(url) : null
 
   return {
-    heroHeadline,
-    metaTitle: extracted.metaTitle,
-    metaDescription: extracted.metaDescription,
-    ogTitle: extracted.ogTitle,
-    ogDescription: extracted.ogDescription,
-    h1Tags: extracted.h1Tags,
-    h2Tags: extracted.h2Tags,
-    h3Tags: extracted.h3Tags,
-    allText: extracted.allText,
-    rawHtml,
+    rawHtml: rawHtml ?? '',
     method: 'browserless',
     domain,
+    screenshot,
   }
 }
 
-export async function scrapeSite(inputUrl: string): Promise<CombinedExtraction> {
-  const scraped = await scrapeUrl(inputUrl)
-  const pageUrl = normalizeToHomepage(inputUrl)
+// -- HTML CLEANING -------------------------------------------------------
+export function cleanHtml(html: string): string {
+  return html
+    .replace(/<script[\s\S]*?<\/script>/gi, '')
+    .replace(/<style[\s\S]*?<\/style>/gi, '')
+    .replace(/\s+class=(?:"[^"]*"|'[^']*'|[^\s/>]*)/gi, '')
+    .replace(/\s+data-[a-z][a-z0-9-]*=(?:"[^"]*"|'[^']*'|[^\s/>]*)/gi, '')
+}
 
-  if (!scraped.rawHtml) {
-    return {
-      pages: [
-        {
-          url: pageUrl,
-          title: scraped.metaTitle,
-          metaDescription: scraped.metaDescription,
-          headings: [],
-          buttons: [],
-          navLabels: [],
-          sectionParagraphs: scraped.allText ? [scraped.allText.slice(0, 1200)] : [],
-          paragraphs: scraped.allText ? [scraped.allText] : [],
-          links: [],
-          wordCount: scraped.allText ? scraped.allText.split(/\s+/).filter(Boolean).length : 0,
-        },
-      ],
-      pagesAnalyzed: [pageUrl],
-    }
+// -- SMART TRUNCATION ----------------------------------------------------
+const TRUNCATION_SEPARATOR = '\n<!-- ... content truncated ... -->\n'
+
+export function applySmartTruncation(html: string): string {
+  if (html.length <= 30_000) return html
+  if (html.length <= 80_000) {
+    return html.slice(0, 25_000) + TRUNCATION_SEPARATOR + html.slice(-8_000)
   }
+  return html.slice(0, 20_000) + TRUNCATION_SEPARATOR + html.slice(-8_000)
+}
 
-  const $ = cheerio.load(scraped.rawHtml)
-  const headings = $('h1, h2, h3')
-    .map((_, el) => ({
-      level: (el.tagName ?? 'h2').toUpperCase(),
-      text: stripMarkdown($(el).text().trim()),
-    }))
-    .get()
-    .filter((h) => h.text.length > 0)
-    .slice(0, 40)
-  const buttons = $('button, a')
-    .map((_, el) => stripMarkdown($(el).text().trim()))
-    .get()
-    .filter(Boolean)
-    .slice(0, 30)
-  const navLabels = $('nav a, header a')
-    .map((_, el) => stripMarkdown($(el).text().trim()))
-    .get()
-    .filter(Boolean)
-    .slice(0, 20)
-  const links = $('a[href]')
-    .map((_, el) => ({
-      text: stripMarkdown($(el).text().trim()),
-      href: $(el).attr('href') ?? '',
-    }))
-    .get()
-    .filter((x) => Boolean(x.text && x.href))
-    .slice(0, 30)
-
-  const paragraphs = scraped.allText ? [scraped.allText] : []
-  const sectionParagraphs = scraped.allText
-    ? scraped.allText
-        .split(/(?<=[.!?])\s+/)
-        .filter((s) => s.trim().length > 20)
-        .slice(0, 15)
-    : []
-
+export async function scrapeSite(inputUrl: string): Promise<CombinedExtraction> {
+  const pageUrl = normalizeToHomepage(inputUrl)
+  const scraped = await scrapeUrl(inputUrl)
+  const cleaned = cleanHtml(scraped.rawHtml)
+  console.log(`[SCRAPER] clean html_len:${cleaned.length} (raw:${scraped.rawHtml.length})`)
   return {
-    pages: [
-      {
-        url: pageUrl,
-        title: scraped.metaTitle,
-        metaDescription: scraped.metaDescription,
-        headings,
-        buttons,
-        navLabels,
-        sectionParagraphs,
-        paragraphs,
-        links,
-        wordCount: scraped.allText ? scraped.allText.split(/\s+/).filter(Boolean).length : 0,
-      },
-    ],
+    rawHtml: applySmartTruncation(cleaned),
     pagesAnalyzed: [pageUrl],
+    screenshot: scraped.screenshot,
   }
 }

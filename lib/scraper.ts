@@ -73,8 +73,8 @@ async function fetchWithBrowserless(url: string): Promise<string | null> {
   const ENDPOINT = `https://production-sfo.browserless.io/content?token=${process.env.BROWSERLESS_API_KEY}`
   const BASE_BODY = {
     url,
+    stealth: true,
     bestAttempt: true,
-    userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
     rejectRequestPattern: ['.*\\.(png|jpg|jpeg|gif|webp|svg|mp4|woff|woff2|ttf|eot).*'],
     setExtraHTTPHeaders: {
       'Accept-Language': 'en-US,en;q=0.9',

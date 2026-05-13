@@ -125,7 +125,6 @@ function ScanLoadingInner() {
 
   const beamDivRef = useRef<HTMLDivElement>(null);
   const beamRafRef = useRef<number>(0);
-  const scanLineRef = useRef<HTMLDivElement>(null);
   const schematicRef = useRef<HTMLDivElement>(null);
   const progressFillRef = useRef<HTMLDivElement>(null);
   const scoreOverlayRef = useRef<HTMLDivElement>(null);
@@ -583,7 +582,6 @@ function ScanLoadingInner() {
     const tick = (now: number) => {
       if (beamRafHaltedRef.current) {
         el.style.opacity = "0";
-        if (scanLineRef.current) scanLineRef.current.style.display = "none";
         return;
       }
 
@@ -611,12 +609,6 @@ function ScanLoadingInner() {
       s.pos.y += s.velocity.y;
 
       el.style.transform = `translate(${s.pos.x}px, ${s.pos.y}px)`;
-
-      // Keep scanning line Y in sync with beam (schematic-relative)
-      if (scanLineRef.current && schRect) {
-        const relY = Math.max(0, Math.min(schRect.height - 1, s.pos.y - schRect.top));
-        scanLineRef.current.style.top = `${relY}px`;
-      }
 
       // Section label activation by beam Y (viewport coords)
       const beamY = s.pos.y;
@@ -1149,36 +1141,6 @@ function ScanLoadingInner() {
                 zIndex: 6,
               }}
             >
-              {/* Scanning sweep line — tracks beam Y, sweeps left to right in sync with pulse cycle */}
-              {!sectionVisualComplete && (
-                <div
-                  ref={scanLineRef}
-                  aria-hidden
-                  style={{
-                    position: "absolute",
-                    left: 0,
-                    right: 0,
-                    top: 0,
-                    height: 1,
-                    zIndex: 5,
-                    pointerEvents: "none",
-                    overflow: "hidden",
-                    background: "rgba(0,200,255,0.1)",
-                  }}
-                >
-                  <div
-                    style={{
-                      position: "absolute",
-                      top: -1,
-                      left: -80,
-                      width: 80,
-                      height: 3,
-                      background: "radial-gradient(ellipse 80px 3px at 50% 50%, rgba(255,255,255,0.5) 0%, rgba(0,200,255,0.8) 20%, rgba(0,200,255,0.35) 60%, transparent 100%)",
-                      animation: "scanCursorMove 2.5s linear infinite",
-                    }}
-                  />
-                </div>
-              )}
               {/* NAV */}
               <section
                 data-section="nav"

@@ -104,10 +104,11 @@ async function fetchWithBrowserless(url: string): Promise<string | null> {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         url,
-        waitForTimeout: 5000,
-        rejectResourceTypes: ['image', 'media', 'font'],
+        bestAttempt: true,
+        waitFor: { timeout: 5000 },
+        rejectRequestPattern: ['.*\\.(png|jpg|jpeg|gif|webp|svg|mp4|woff|woff2|ttf|eot).*'],
         gotoOptions: {
-          waitUntil: 'networkidle2',
+          waitUntil: 'domcontentloaded',
           timeout: 30000,
         },
       }),

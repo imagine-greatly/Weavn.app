@@ -94,6 +94,7 @@ async function fetchWithBrowserless(url: string): Promise<string | null> {
     console.log('[SCRAPER] Browserless key not configured')
     return null
   }
+  console.log('[BROWSERLESS] API key present:', !!process.env.BROWSERLESS_API_KEY, 'Key prefix:', process.env.BROWSERLESS_API_KEY?.slice(0, 8))
   console.log('[SCRAPER] Browserless request:', { url })
   try {
     const controller = new AbortController()
@@ -117,7 +118,7 @@ async function fetchWithBrowserless(url: string): Promise<string | null> {
     if (!res.ok) {
       const errBody = await res.text()
       console.log(`[scraper] Browserless for ${url}: status=${res.status}, length=${errBody.length}, result=null`)
-      console.log('[SCRAPER] Browserless failed body:', errBody.slice(0, 800))
+      console.log('[SCRAPER] Browserless failed body:', errBody.slice(0, 500))
       return null
     }
     const html = await res.text()

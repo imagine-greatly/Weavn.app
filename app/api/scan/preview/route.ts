@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { scrapeSite } from "@/lib/scraper";
 import { detectSiteType } from "@/lib/siteType";
 import { runAnalysis } from "@/lib/analyze";
-import { checkContentQuality, SCRAPE_FAILED_ERROR } from "@/lib/analyzePipeline";
+
 
 export const maxDuration = 120;
 
@@ -74,14 +74,6 @@ export async function POST(req: NextRequest) {
       { error: "No HTML content could be extracted from the URL." },
       { status: 422 }
     );
-  }
-
-  // Content quality gate — reject JS shells before passing to Claude
-  const scrapedText = extraction.pages.map((p) => p.paragraphs.join(" ")).join(" ");
-  const quality = checkContentQuality(scrapedText);
-  if (!quality.passed) {
-    console.log("[scan/preview] content quality check failed:", quality.reason);
-    return NextResponse.json(SCRAPE_FAILED_ERROR, { status: 422 });
   }
 
   const site_type = detectSiteType(extraction);

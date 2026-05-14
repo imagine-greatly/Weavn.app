@@ -68,8 +68,6 @@ async function fetchWithBrowserless(url: string): Promise<string | null> {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           url: url,
-          bestAttempt: true,
-          rejectRequestPattern: ['.*\\.(png|jpg|jpeg|gif|webp|svg|mp4|woff|woff2|ttf|eot).*'],
           gotoOptions: {
             waitUntil: 'networkidle2',
             timeout: 30000
@@ -98,29 +96,34 @@ async function fetchWithBrowserless(url: string): Promise<string | null> {
 // -- SCREENSHOT CAPTURE -------------------------------------------------
 async function fetchScreenshotWithBrowserless(url: string): Promise<string | null> {
   if (!process.env.BROWSERLESS_API_KEY) return null
-  const ENDPOINT = `https://production-sfo.browserless.io/screenshot?token=${process.env.BROWSERLESS_API_KEY}`
   try {
-    const controller = new AbortController()
-    const timeout = setTimeout(() => controller.abort(), 15_000)
-    const res = await fetch(ENDPOINT, {
-      method: 'POST',
-      signal: controller.signal,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        url,
-        options: { fullPage: false, type: 'jpeg', quality: 80 },
-        gotoOptions: { waitUntil: 'domcontentloaded', timeout: 20000 },
-        waitFor: { timeout: 5000 },
-      }),
-    })
-    clearTimeout(timeout)
-    if (!res.ok) {
-      console.log(`[scraper] Screenshot for ${url}: status=${res.status}, result=null`)
+    const response = await fetch(
+      `https://production-sfo.browserless.io/screenshot?token=${process.env.BROWSERLESS_API_KEY}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          url: url,
+          options: {
+            fullPage: false,
+            type: 'jpeg',
+            quality: 80
+          },
+          gotoOptions: {
+            waitUntil: 'networkidle2',
+            timeout: 30000
+          }
+        }),
+        signal: AbortSignal.timeout(35000)
+      }
+    )
+    if (!response.ok) {
+      console.log(`[SCRAPER] Screenshot failed: ${response.status}`)
       return null
     }
-    const buffer = await res.arrayBuffer()
+    const buffer = await response.arrayBuffer()
     if (!buffer.byteLength) return null
-    console.log(`[scraper] Screenshot for ${url}: size=${buffer.byteLength}, result=success`)
+    console.log(`[SCRAPER] Screenshot success: ${buffer.byteLength} bytes`)
     return Buffer.from(buffer).toString('base64')
   } catch (err) {
     console.log('[SCRAPER] Screenshot error:', err instanceof Error ? err.message : err)

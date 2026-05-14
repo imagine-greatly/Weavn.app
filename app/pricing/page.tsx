@@ -226,21 +226,35 @@ function PricingCards() {
               ))}
             </ul>
             <div className="mt-8 w-full min-w-0 overflow-visible">
-              <UpgradeButton
-                variant="primary"
-                label="UPGRADE TO PRO DIAGNOSTIC — $50/MO →"
-                style={{
-                  width: "100%",
-                  maxWidth: "100%",
-                  boxSizing: "border-box",
-                  paddingTop: 14,
-                  paddingBottom: 14,
-                  paddingLeft: 28,
-                  paddingRight: 28,
-                  fontSize: 13,
-                  overflow: "visible",
+              <a
+                href="/api/stripe/checkout"
+                onClick={(e) => {
+                  e.preventDefault();
+                  fetch("/api/stripe/checkout", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ plan: "pro" }),
+                  })
+                    .then((r) => r.json())
+                    .then((d: { url?: string }) => { if (d.url) window.location.href = d.url; })
+                    .catch(() => { window.location.href = "/auth?tab=signin"; });
                 }}
-              />
+                className="flex w-full items-center justify-center rounded py-4 font-mono text-[13px] uppercase transition-[border-color,box-shadow,background-color] duration-150"
+                style={{
+                  background: "#00C8FF",
+                  color: "#050810",
+                  fontWeight: 700,
+                  minHeight: 44,
+                  borderRadius: 3,
+                  letterSpacing: "0.06em",
+                  textDecoration: "none",
+                  boxSizing: "border-box",
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.opacity = "0.88"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.opacity = "1"; }}
+              >
+                UPGRADE TO PRO — $50/MO →
+              </a>
             </div>
             <p className="mt-3 text-center font-mono text-[11px]" style={{ color: "var(--text-muted)" }}>
               Cancel anytime. Access continues through the paid period end.

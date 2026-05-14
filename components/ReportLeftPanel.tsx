@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { displayScoreColor } from "@/lib/displayScoreColor";
 import ConversionScoreGauge from "@/components/ConversionScoreGauge";
 
@@ -103,6 +104,7 @@ export default function ReportLeftPanel({
   activeNavSection,
   onNavSectionChange,
 }: ReportLeftPanelProps) {
+  const router = useRouter();
   return (
     <aside
       className="report-left-aside flex h-full w-[300px] shrink-0 flex-col overflow-hidden border-r"
@@ -146,9 +148,6 @@ export default function ReportLeftPanel({
           }
           .report-left-bottom {
             padding: 14px 16px 18px !important;
-          }
-          .report-left-bottom .report-left-rescan-btn {
-            min-height: 44px !important;
           }
         }
       `}</style>
@@ -228,6 +227,34 @@ export default function ReportLeftPanel({
             }
           />
         </div>
+
+        {!readOnlyLeftPanel ? (
+          <button
+            type="button"
+            onClick={() => router.push(`/scan?url=${encodeURIComponent(domain)}`)}
+            style={{
+              display: "block",
+              width: "100%",
+              marginTop: 14,
+              marginBottom: 14,
+              padding: "8px",
+              background: "transparent",
+              border: "1px solid #00C8FF",
+              borderRadius: 4,
+              color: "#00C8FF",
+              fontFamily: "var(--font-jetbrains-mono), var(--font-space-mono), monospace",
+              fontSize: 10,
+              letterSpacing: "2px",
+              textTransform: "uppercase",
+              cursor: "pointer",
+              transition: "background 150ms ease",
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(0,200,255,0.08)"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+          >
+            RESCAN
+          </button>
+        ) : null}
       </div>
 
       {dimensionBars.length > 0 ? (
@@ -380,70 +407,6 @@ export default function ReportLeftPanel({
             margin: "14px 0 12px",
           }}
         />
-        {!readOnlyLeftPanel && onRescan ? (
-          <button
-            type="button"
-            onClick={onRescan}
-            className="report-left-rescan-btn font-mono flex w-full items-center justify-center gap-2 border transition-all duration-150"
-            style={{
-              height: 36,
-              fontSize: 10,
-              letterSpacing: "0.1em",
-              color: "#00C8FF",
-              borderColor: "rgba(0,200,255,0.35)",
-              background: "rgba(0,200,255,0.06)",
-              borderRadius: 4,
-            }}
-            aria-label="Rescan domain"
-          >
-            <svg
-              width="12"
-              height="12"
-              viewBox="0 0 24 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-              aria-hidden
-            >
-              <path
-                d="M20 11a8 8 0 0 0-14.9-3M4 4v4h4M4 13a8 8 0 0 0 14.9 3M20 20v-4h-4"
-                stroke="currentColor"
-                strokeWidth="1.8"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-            RESCAN
-          </button>
-        ) : null}
-        <button
-          type="button"
-          onClick={() => {
-            if (typeof window !== "undefined") window.print();
-          }}
-          className="font-mono"
-          style={{
-            marginTop: 8,
-            display: "block",
-            width: "100%",
-            textAlign: "center",
-            fontFamily: "var(--font-jetbrains-mono), var(--font-space-mono), monospace",
-            fontSize: 9,
-            color: "rgba(255,255,255,0.3)",
-            background: "transparent",
-            border: "none",
-            padding: 0,
-            cursor: "pointer",
-            textDecoration: "none",
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.textDecoration = "underline";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.textDecoration = "none";
-          }}
-        >
-          PRINT
-        </button>
       </div>
     </aside>
   );

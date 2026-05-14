@@ -494,16 +494,18 @@ function ScanLoadingInner() {
             // Step 2: glitch/decode at 1200ms
             window.setTimeout(() => {
               setReturningPhase(2);
-              const glitchChars = "░▒▓█ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789#@!%";
+              const glitchChars = "0134_";
               const domainStr = domain;
               let glitchCount = 0;
               const glitchIv = window.setInterval(() => {
-                const scrambled = Array.from({ length: domainStr.length }, () =>
-                  glitchChars[Math.floor(Math.random() * glitchChars.length)]
-                ).join("");
+                let dollarCount = 0;
+                const scrambled = Array.from({ length: domainStr.length }, () => {
+                  if (dollarCount < 2 && Math.random() < 0.15) { dollarCount++; return "$"; }
+                  return glitchChars[Math.floor(Math.random() * glitchChars.length)];
+                }).join("");
                 setRdGlitchText(scrambled);
                 glitchCount++;
-                if (glitchCount >= 7) {
+                if (glitchCount >= 8) {
                   clearInterval(glitchIv);
                   let revealed = 0;
                   const decodeIv = window.setInterval(() => {
@@ -512,7 +514,7 @@ function ScanLoadingInner() {
                     if (revealed >= domainStr.length) clearInterval(decodeIv);
                   }, 55);
                 }
-              }, 60);
+              }, 75);
             }, 1200);
 
             // Step 3: status lines typewriter at 2200ms
@@ -888,7 +890,9 @@ function ScanLoadingInner() {
     const domainStr = displayDomain === "—" ? "" : displayDomain;
     const glitchDisplay = rdRealCount >= domainStr.length
       ? domainStr
-      : domainStr.slice(0, rdRealCount) + (rdGlitchText ? rdGlitchText.slice(rdRealCount, domainStr.length) : "");
+      : rdRealCount === 0
+        ? (rdGlitchText || "")
+        : domainStr.slice(0, rdRealCount) + (rdGlitchText ? rdGlitchText.slice(rdRealCount, rdRealCount + 4) : "") + domainStr.slice(rdRealCount + 4);
 
     return (
       <>
@@ -975,16 +979,14 @@ function ScanLoadingInner() {
                 <div
                   style={{
                     fontFamily: "var(--font-jetbrains-mono), var(--font-space-mono), ui-monospace, monospace",
-                    fontSize: "clamp(28px, 5vw, 52px)",
-                    fontWeight: 700,
-                    color: "#FFFFFF",
-                    letterSpacing: "0.04em",
-                    lineHeight: 1.1,
-                    textShadow: "0 0 20px rgba(0,200,255,0.5), 0 0 60px rgba(0,200,255,0.2)",
-                    minHeight: "1.1em",
+                    fontSize: "13px",
+                    fontWeight: 400,
+                    color: "#00C8FF",
+                    letterSpacing: "2px",
+                    lineHeight: 1.4,
                   }}
                 >
-                  {glitchDisplay}
+                  <span style={{ opacity: 0.4 }}>RETRIEVING: </span>{glitchDisplay}
                 </div>
               )}
 

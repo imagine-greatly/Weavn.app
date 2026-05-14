@@ -9,7 +9,6 @@ import {
   type ReactNode,
 } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { motion, useInView } from "framer-motion";
 import type { FindingSeverity } from "@/components/FindingCard";
 import type { FindingData } from "@/components/FindingCard";
@@ -1043,10 +1042,9 @@ export default function ReportRightPanel({
   }, [linkCopied]);
 
   async function handleShareReport() {
-    if (!shareToken || typeof window === "undefined") return;
-    const url = `${window.location.origin}/share/${shareToken}`;
+    if (typeof window === "undefined") return;
     try {
-      await navigator.clipboard.writeText(url);
+      await navigator.clipboard.writeText(window.location.href);
       setLinkCopiedFade(false);
       setLinkCopied(true);
     } catch {
@@ -1198,6 +1196,27 @@ export default function ReportRightPanel({
             min-height: 44px !important;
           }
         }
+        @media print {
+          .report-layout-left-wrap,
+          .report-diagnostic-header,
+          .report-header-action-btn {
+            display: none !important;
+          }
+          .report-right-scroll,
+          .report-right-shell,
+          .report-content-shell {
+            overflow: visible !important;
+            height: auto !important;
+            background: #fff !important;
+            color: #000 !important;
+          }
+          * {
+            animation: none !important;
+            transition: none !important;
+            text-shadow: none !important;
+            box-shadow: none !important;
+          }
+        }
       `}</style>
       {/* Sticky header */}
       <header
@@ -1238,19 +1257,62 @@ export default function ReportRightPanel({
         </div>
         <div className="relative flex flex-row items-center gap-2">
           {!sharedView && isPro ? (
-            <HeaderButton
-              variant="share"
-              label="SHARE REPORT"
-              disabled={!shareToken}
-              title={
-                shareToken
-                  ? "Copy public link to this report"
-                  : "Share link is available after your report is saved to your account"
-              }
-              onClick={() => void handleShareReport()}
-            />
+            <div
+              style={{
+                display: "flex",
+                border: "1px solid rgba(0,200,255,0.3)",
+                borderRadius: 4,
+                overflow: "hidden",
+              }}
+            >
+              <button
+                type="button"
+                className="report-header-action-btn"
+                onClick={() => void handleShareReport()}
+                style={{
+                  fontFamily: "var(--font-jetbrains-mono), var(--font-space-mono), monospace",
+                  fontWeight: 600,
+                  fontSize: 10,
+                  letterSpacing: "0.08em",
+                  padding: "6px 16px",
+                  background: "rgba(0,200,255,0.08)",
+                  border: "none",
+                  borderRight: "1px solid rgba(0,200,255,0.3)",
+                  color: "var(--cyan)",
+                  cursor: "pointer",
+                  transition: "background 150ms ease",
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(0,200,255,0.15)"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(0,200,255,0.08)"; }}
+              >
+                {linkCopied ? "LINK COPIED" : "SHARE REPORT"}
+              </button>
+              <button
+                type="button"
+                className="report-header-action-btn"
+                onClick={() => {
+                  console.log(`[report] export PDF triggered for domain: ${domain}`);
+                  window.print();
+                }}
+                style={{
+                  fontFamily: "var(--font-jetbrains-mono), var(--font-space-mono), monospace",
+                  fontWeight: 600,
+                  fontSize: 10,
+                  letterSpacing: "0.08em",
+                  padding: "6px 16px",
+                  background: "transparent",
+                  border: "none",
+                  color: "rgba(255,255,255,0.5)",
+                  cursor: "pointer",
+                  transition: "color 150ms ease",
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.65)"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.5)"; }}
+              >
+                EXPORT PDF
+              </button>
+            </div>
           ) : null}
-          {!sharedView && isPro ? <HeaderButton variant="export" label="EXPORT PDF" /> : null}
           {linkCopied ? (
             <div
               className="font-mono pointer-events-none absolute right-0 top-full z-20 mt-2 whitespace-nowrap rounded border px-3 py-1.5 transition-opacity duration-300"
@@ -2475,7 +2537,7 @@ function HeaderButton({
   disabled,
   title,
 }: {
-  variant?: "share" | "export";
+  variant?: "share" | "export" | "rescan";
   label: string;
   onClick?: () => void;
   disabled?: boolean;
@@ -2508,6 +2570,15 @@ function HeaderButton({
     color: disabled ? "rgba(240,244,255,0.25)" : "rgba(255,255,255,0.5)",
   };
 
+  const rescanIdle: CSSProperties = {
+    ...base,
+    background: "transparent",
+    border: "1px solid #00C8FF",
+    color: "#00C8FF",
+  };
+
+  const idleStyle = variant === "share" ? shareIdle : variant === "rescan" ? rescanIdle : exportIdle;
+
   return (
     <button
       type="button"
@@ -2515,12 +2586,14 @@ function HeaderButton({
       title={title}
       disabled={disabled}
       onClick={onClick}
-      style={variant === "share" ? shareIdle : exportIdle}
+      style={idleStyle}
       onMouseEnter={(e) => {
         if (disabled) return;
         if (variant === "share") {
           e.currentTarget.style.background = "rgba(0,200,255,0.15)";
           e.currentTarget.style.borderColor = "rgba(0,200,255,0.35)";
+        } else if (variant === "rescan") {
+          e.currentTarget.style.background = "rgba(0,200,255,0.08)";
         } else {
           e.currentTarget.style.borderColor = "rgba(255,255,255,0.22)";
           e.currentTarget.style.color = "rgba(255,255,255,0.65)";
@@ -2533,6 +2606,8 @@ function HeaderButton({
           e.currentTarget.style.color = disabled
             ? "rgba(240,244,255,0.25)"
             : "var(--cyan)";
+        } else if (variant === "rescan") {
+          e.currentTarget.style.background = "transparent";
         } else {
           e.currentTarget.style.background = "transparent";
           e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)";

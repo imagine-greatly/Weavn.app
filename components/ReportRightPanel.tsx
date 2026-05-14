@@ -9,6 +9,7 @@ import {
   type ReactNode,
 } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { motion, useInView } from "framer-motion";
 import type { FindingSeverity } from "@/components/FindingCard";
 import type { FindingData } from "@/components/FindingCard";

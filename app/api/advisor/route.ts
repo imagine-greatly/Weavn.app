@@ -177,7 +177,7 @@ export async function POST(req: NextRequest) {
   const stream = await anthropic.messages.stream({
     model: "claude-sonnet-4-20250514",
     max_tokens: 400,
-    system: systemPrompt,
+    system: [{ type: "text", text: systemPrompt, cache_control: { type: "ephemeral" } }],
     messages: [
       ...conversationHistory.map((m) => ({
         role: m.role === "system" ? "user" : m.role,

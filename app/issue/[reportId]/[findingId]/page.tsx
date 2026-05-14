@@ -260,6 +260,115 @@ function FindingExpandedText({
   );
 }
 
+function BriefLoadingPulse() {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    const CYCLE_MS = 2500;
+    const EVOLVE_MS = 4500;
+
+    let raf: number;
+    const t0 = performance.now();
+    let lastEvolve = t0;
+
+    let amplitude = 6;
+    let targetAmplitude = 6;
+    let freq = 1.7;
+    let targetFreq = 1.7;
+
+    const draw = (now: number) => {
+      const elapsed = now - t0;
+
+      if (now - lastEvolve > EVOLVE_MS) {
+        lastEvolve = now;
+        const seed = elapsed * 0.00007;
+        targetAmplitude = 4 + Math.sin(seed * 3.1) * 2;
+        targetFreq = 1.55 + Math.sin(seed * 2.3) * 0.35;
+      }
+      amplitude += (targetAmplitude - amplitude) * 0.012;
+      freq += (targetFreq - freq) * 0.012;
+
+      const w = canvas.width;
+      const h = canvas.height;
+      const cy = h / 2;
+
+      ctx.clearRect(0, 0, w, h);
+
+      const phase = ((elapsed % CYCLE_MS) / CYCLE_MS) * Math.PI * 2;
+
+      ctx.beginPath();
+      ctx.strokeStyle = "rgba(0,200,255,0.7)";
+      ctx.lineWidth = 1;
+      ctx.lineJoin = "round";
+      for (let x = 0; x <= w; x++) {
+        const angle = (x / w) * Math.PI * 2 * freq - phase;
+        const y = cy - ((Math.sin(angle) + Math.sin(angle * 2.1) * 0.18) / 1.18) * amplitude;
+        x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+
+      const scanX = ((elapsed % CYCLE_MS) / CYCLE_MS) * w;
+      ctx.fillStyle = "rgba(0,200,255,0.5)";
+      ctx.fillRect(Math.floor(scanX), 0, 1, h);
+
+      raf = requestAnimationFrame(draw);
+    };
+
+    raf = requestAnimationFrame(draw);
+    return () => cancelAnimationFrame(raf);
+  }, []);
+
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "28px 24px",
+        gap: 10,
+        background: "#0A0F1E",
+        border: "1px solid #1A2035",
+        borderLeft: "3px solid rgba(0,200,255,0.3)",
+        borderRadius: 4,
+        marginBottom: 12,
+      }}
+    >
+      <canvas
+        ref={canvasRef}
+        width={120}
+        height={20}
+        style={{ display: "block", imageRendering: "pixelated" }}
+      />
+      <div
+        style={{
+          fontFamily: "var(--font-jetbrains-mono), var(--font-space-mono), ui-monospace, monospace",
+          color: "#00C8FF",
+          fontSize: 10,
+          letterSpacing: "3px",
+          textTransform: "uppercase",
+        }}
+      >
+        GENERATING DEEP ANALYSIS
+      </div>
+      <div
+        style={{
+          fontFamily: "var(--font-jetbrains-mono), var(--font-space-mono), ui-monospace, monospace",
+          color: "rgba(0,200,255,0.4)",
+          fontSize: 10,
+        }}
+      >
+        Expanding diagnostic intelligence...
+      </div>
+    </div>
+  );
+}
+
 function firstParagraphOrigin(text: string | null | undefined): string {
   if (text == null || !String(text).trim()) return "—";
   const t = String(text).trim();
@@ -1991,37 +2100,7 @@ export default function IssuePage() {
         <div>
           <div style={monoSectionLabel}>DIAGNOSTIC ANALYSIS</div>
           {!hasBrief && expandLoading ? (
-            <div
-              style={{
-                background: "#0A0F1E",
-                border: "1px solid #1A2035",
-                borderLeft: "3px solid rgba(0,200,255,0.3)",
-                borderRadius: 4,
-                padding: "20px 24px",
-                marginBottom: 12,
-              }}
-            >
-              <div
-                style={{
-                  fontFamily: "var(--font-space-mono), ui-monospace, monospace",
-                  color: "#00C8FF",
-                  fontSize: 10,
-                  letterSpacing: "0.15em",
-                  marginBottom: 8,
-                }}
-              >
-                ● GENERATING DEEP ANALYSIS
-              </div>
-              <div
-                style={{
-                  fontFamily: "var(--font-space-mono), ui-monospace, monospace",
-                  color: "#8899AA",
-                  fontSize: 11,
-                }}
-              >
-                Expanding diagnostic intelligence...
-              </div>
-            </div>
+            <BriefLoadingPulse />
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
               {!isPlaceholderContent(diagnosticSummaryBody) && (

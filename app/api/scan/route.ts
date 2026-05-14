@@ -9,15 +9,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { scrapeSite } from "@/lib/scraper";
 import { detectSiteType } from "@/lib/siteType";
 import { runAnalysis } from "@/lib/analyze";
-import type { FindingBriefExpansion } from "@/lib/expandFindingBrief";
 import { saveReport } from "@/lib/supabase";
-import {
-  generateAndPersistExtendedAnalysisForReport,
-  generateAndPersistFirstFindingBrief,
-  generateRemainingExtendedAnalysisForReport,
-  leakKey,
-  resolveLeaksForReportPayload,
-} from "@/lib/findingExtendedAnalysis";
+import { generateAndPersistAllFindingBriefs } from "@/lib/findingExtendedAnalysis";
 
 
 function mergeCookies(from: NextResponse, to: NextResponse) {
@@ -238,72 +231,13 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  let extended_analysis: Record<string, FindingBriefExpansion> | undefined;
-  try {
-    const leaks = resolveLeaksForReportPayload(payload);
-    const topFinding = leaks[0];
-    if (topFinding) {
-      const topLeakKey = leakKey(topFinding);
-      const FIRST_BRIEF_MS = 12_000;
-      const firstOutcome = generateAndPersistFirstFindingBrief(
-        reportId,
-        domain,
-        payload
-      )
-        .then((map) => ({ kind: "first" as const, map }))
-        .catch((err) => {
-          console.warn("[scan] first finding brief failed:", err);
-          return { kind: "first" as const, map: null as null };
-        });
-      let timeoutId: ReturnType<typeof setTimeout> | undefined;
-      const timeoutOutcome = new Promise<{ kind: "timeout" }>((resolve) => {
-        timeoutId = setTimeout(() => resolve({ kind: "timeout" }), FIRST_BRIEF_MS);
-      });
-      const raced = await Promise.race([firstOutcome, timeoutOutcome]);
-      if (timeoutId && raced.kind === "first") {
-        clearTimeout(timeoutId);
-      }
-      if (
-        raced.kind === "first" &&
-        raced.map &&
-        Object.keys(raced.map).length > 0
-      ) {
-        extended_analysis = raced.map;
-        void generateRemainingExtendedAnalysisForReport(
-          reportId,
-          domain,
-          payload,
-          topLeakKey
-        ).catch((err) => {
-          console.error("[scan] extended_analysis remaining generation failed:", err);
-        });
-      } else {
-        void generateAndPersistExtendedAnalysisForReport(reportId, domain, payload).catch(
-          (err) => {
-            console.error("[scan] extended_analysis generation failed:", err);
-          }
-        );
-      }
-    }
-  } catch (err) {
-    console.warn("[scan] staged extended_analysis wait failed:", err);
-    try {
-      void generateAndPersistExtendedAnalysisForReport(reportId, domain, payload).catch(
-        (e) => {
-          console.error("[scan] extended_analysis generation failed:", e);
-        }
-      );
-    } catch (e) {
-      console.warn("[scan] could not schedule extended_analysis fallback:", e);
-    }
-  }
+  // Fire-and-forget: pre-generate AI advisor briefs for all findings in the background.
+  // The response goes out immediately; briefs are written to reports.extended_analysis as they complete.
+  void generateAndPersistAllFindingBriefs(reportId, domain, payload).catch((err) => {
+    console.error("[scan] background brief generation failed:", err);
+  });
 
   return withCookies(
-    NextResponse.json({
-      domain,
-      reportId,
-      payload,
-      ...(extended_analysis ? { extended_analysis } : {}),
-    })
+    NextResponse.json({ domain, reportId, payload })
   );
 }

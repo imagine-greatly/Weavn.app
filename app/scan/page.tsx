@@ -10,6 +10,7 @@ import {
 } from "react";
 import type { CSSProperties } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { getSupabaseBrowserClient } from "@/lib/supabaseBrowser";
 
 const BG = "#000008";
 const CY = "#00C8FF";
@@ -479,6 +480,19 @@ function ScanLoadingInner() {
     }
 
     void (async () => {
+      // Auth must be verified before domain recognition — unauthenticated users go through the auth flow.
+      try {
+        const { data: { session } } = await getSupabaseBrowserClient().auth.getSession();
+        if (!session) {
+          router.replace(`/auth?next=${encodeURIComponent(`/scan?url=${encodeURIComponent(normalized)}`)}`);
+          return;
+        }
+      } catch {
+        // Session check failed — skip domain recognition and run normal scan
+        startNormalScan();
+        return;
+      }
+
       try {
         const checkRes = await fetch(`/api/reports/check?domain=${encodeURIComponent(domain)}`);
         if (checkRes.ok) {

@@ -231,6 +231,66 @@ export async function generateRemainingExtendedAnalysisForReport(
 }
 
 /**
+ * Pre-generates AI advisor briefs for ALL findings in parallel, then merges them into
+ * `reports.extended_analysis`. Intended as a fire-and-forget background task after scan;
+ * logs errors without throwing to the client response path.
+ */
+export async function generateAndPersistAllFindingBriefs(
+  reportId: string,
+  domain: string,
+  payload: ReportPayload
+): Promise<void> {
+  if (!process.env.ANTHROPIC_API_KEY) {
+    console.warn("[extended-analysis] ANTHROPIC_API_KEY missing; skipping batch expansion.");
+    return;
+  }
+
+  const supabase = getServiceSupabase();
+  if (!supabase) {
+    console.warn("[extended-analysis] Supabase service client unavailable; skipping.");
+    return;
+  }
+
+  const leaks = resolveLeaksForReportPayload(payload).slice(0, 3);
+  if (leaks.length === 0) return;
+
+  const overallScore = payload.healthScore ?? payload.growthScore ?? 0;
+
+  const tasks = leaks.map(async (finding): Promise<[string, FindingBriefExpansion | null]> => {
+    const key = leakKey(finding);
+    const body: ExpandFindingBriefRequestBody = {
+      domain,
+      overallScore,
+      finding: leakToFindingInput(finding),
+      relatedFindings: relatedForLeak(finding, leaks),
+    };
+    try {
+      const expansion = await expandFindingBriefWithAnthropic(body);
+      return [key, expansion];
+    } catch (e) {
+      console.warn("[extended-analysis] expansion failed for", key, e);
+      return [key, null];
+    }
+  });
+
+  const settled = await Promise.all(tasks);
+  const map: Record<string, FindingBriefExpansion> = {};
+  for (const [key, expansion] of settled) {
+    if (expansion) map[key] = expansion;
+  }
+
+  if (Object.keys(map).length === 0) {
+    console.warn("[extended-analysis] no successful expansions for report", reportId);
+    return;
+  }
+
+  const merged = await readMergePersistExtendedAnalysis(supabase, reportId, map);
+  if (!merged) {
+    console.warn("[extended-analysis] merge/persist failed for report", reportId);
+  }
+}
+
+/**
  * Generates extended analysis for all dashboard-ranked findings in parallel,
  * then writes `reports.extended_analysis` as { [findingKey]: FindingBriefExpansion }.
  * Safe to fire-and-forget after scan; logs errors without throwing to the client response path.

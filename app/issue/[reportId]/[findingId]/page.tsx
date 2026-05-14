@@ -13,7 +13,7 @@ import { getSupabaseBrowserClient } from "@/lib/supabaseBrowser";
 import type { ReportPayload, Leak } from "@/lib/reportSchema";
 import { getDashboardMoneyLeaks } from "@/lib/dashboardMoneyLeaks";
 import type { FindingBriefExpansion } from "@/lib/prompts";
-import { parseFindingBriefFromStoredValue } from "@/lib/expandFindingBrief";
+import { parseFindingBriefFromStoredValue } from "@/lib/expandFindingBriefParser";
 
 type ReportRow = {
   id: string;

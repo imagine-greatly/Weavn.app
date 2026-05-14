@@ -54,97 +54,40 @@ export function stripMarkdown(text: string): string {
 }
 
 // -- BROWSERLESS (PRIMARY JS RENDERER) --------------------------------
-const BROWSERLESS_TIMEOUT_MS = 25_000
-
-// Strips script tags and HTML tags, returns remaining readable text length
-function readableTextLength(html: string): number {
-  const noScripts = html.replace(/<script[\s\S]*?<\/script>/gi, '')
-  return noScripts.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim().length
-}
-
 async function fetchWithBrowserless(url: string): Promise<string | null> {
   if (!process.env.BROWSERLESS_API_KEY) {
     console.log('[SCRAPER] Browserless key not configured')
     return null
   }
-  console.log('[BROWSERLESS] API key present:', !!process.env.BROWSERLESS_API_KEY, 'Key prefix:', process.env.BROWSERLESS_API_KEY?.slice(0, 8))
-  console.log('[SCRAPER] Browserless request:', { url })
-
-  const ENDPOINT = `https://production-sfo.browserless.io/content?token=${process.env.BROWSERLESS_API_KEY}`
-  const BASE_BODY = {
-    url,
-    stealth: true,
-    bestAttempt: true,
-    rejectRequestPattern: ['.*\\.(png|jpg|jpeg|gif|webp|svg|mp4|woff|woff2|ttf|eot).*'],
-    setExtraHTTPHeaders: {
-      'Accept-Language': 'en-US,en;q=0.9',
-      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-      'Accept-Encoding': 'gzip, deflate, br',
-      'Cache-Control': 'no-cache',
-    },
-    gotoOptions: { waitUntil: 'load', timeout: 20000 },
-  }
 
   try {
-    // -- FIRST ATTEMPT: 8s JS wait --
-    const controller = new AbortController()
-    const timeout = setTimeout(() => controller.abort(), BROWSERLESS_TIMEOUT_MS)
-    const res = await fetch(ENDPOINT, {
-      method: 'POST',
-      signal: controller.signal,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...BASE_BODY, waitFor: { timeout: 5000 } }),
-    })
-    clearTimeout(timeout)
-
-    if (!res.ok) {
-      const errBody = await res.text()
-      console.log(`[scraper] Browserless for ${url}: status=${res.status}, length=${errBody.length}, result=null`)
-      console.log('[SCRAPER] Browserless failed body:', errBody.slice(0, 500))
-      return null
-    }
-
-    const html = await res.text()
-    if (!html) {
-      console.log(`[scraper] Browserless for ${url}: status=${res.status}, length=0, result=null`)
-      return null
-    }
-
-    // -- JS-SHELL CHECK: retry with 12s wait if readable text < 500 chars --
-    if (readableTextLength(html) < 500) {
-      console.log(`[scraper] Browserless for ${url}: JS shell detected (readable<500), retrying with 12s wait`)
-      try {
-        const retryController = new AbortController()
-        const retryTimeout = setTimeout(() => retryController.abort(), 20_000)
-        const retryRes = await fetch(ENDPOINT, {
-          method: 'POST',
-          signal: retryController.signal,
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ...BASE_BODY, waitFor: { timeout: 8000 } }),
-        })
-        clearTimeout(retryTimeout)
-
-        if (retryRes.ok) {
-          const retryHtml = await retryRes.text()
-          if (retryHtml) {
-            console.log(`[scraper] Browserless retry for ${url}: status=${retryRes.status}, length=${retryHtml.length}, result=success`)
-            return retryHtml
+    const response = await fetch(
+      `https://production-sfo.browserless.io/content?token=${process.env.BROWSERLESS_API_KEY}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          url: url,
+          gotoOptions: {
+            waitUntil: 'networkidle2',
+            timeout: 30000
           }
-        } else {
-          const retryErr = await retryRes.text()
-          console.log(`[scraper] Browserless retry for ${url}: status=${retryRes.status}, body=${retryErr.slice(0, 200)}`)
-        }
-      } catch (retryErr) {
-        console.log('[SCRAPER] Browserless retry error:', retryErr instanceof Error ? retryErr.message : retryErr)
+        }),
+        signal: AbortSignal.timeout(35000)
       }
-      // Return original even if still a JS shell — let downstream decide
-      return html
+    )
+
+    if (!response.ok) {
+      const err = await response.text()
+      console.log(`[SCRAPER] Browserless ${response.status}:`, err.slice(0, 300))
+      return null
     }
 
-    console.log(`[scraper] Browserless for ${url}: status=${res.status}, length=${html.length}, result=success`)
-    return html
+    const html = await response.text()
+    console.log(`[SCRAPER] Browserless success for ${url}, length: ${html.length}`)
+    return html || null
+
   } catch (err) {
-    console.log(`[scraper] Browserless for ${url}: status=error, length=0, result=null`)
     console.log('[SCRAPER] Browserless error:', err instanceof Error ? err.message : err)
     return null
   }

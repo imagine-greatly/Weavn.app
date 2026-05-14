@@ -493,7 +493,7 @@ function IssueInitialSkeleton() {
   );
 }
 
-function reportFromLocalStorageForFinding(findingId: string): {
+function reportFromLocalStorageForFinding(reportId: string, findingId: string): {
   report: ReportRow;
   finding: Leak | null;
   leaks: Leak[];
@@ -529,6 +529,7 @@ function reportFromLocalStorageForFinding(findingId: string): {
         extended_analysis: extendedAnalysis,
         finding_briefs: findingBriefs,
       };
+      if (row.id !== reportId) continue;
       const leaks = leaksForIssueLookup(row.analysis);
       const found = findLeakForUrlSegment(leaks, findingId);
       if (found) return { report: row, finding: found, leaks };
@@ -591,7 +592,7 @@ export default function IssuePage() {
       setAdvisorChips([...FALLBACK_ADVISOR_CHIPS]);
       setResolvedLocal(false);
 
-      const cached = reportFromLocalStorageForFinding(findingId);
+      const cached = reportFromLocalStorageForFinding(reportId, findingId);
       if (cached) {
         console.log('[FINDING] Cache hit:', Object.keys(cached));
         const row = cached.report;
@@ -645,8 +646,8 @@ export default function IssuePage() {
 
         if (found) {
           const briefKeyVariants = [...new Set([
-            `webdoc_brief_${findingId}`,
-            extKey ? `webdoc_brief_${extKey}` : "",
+            `webdoc_brief_${reportId}_${findingId}`,
+            extKey ? `webdoc_brief_${reportId}_${extKey}` : "",
           ].filter(Boolean))];
           for (const bk of briefKeyVariants) {
             try {
@@ -847,7 +848,7 @@ export default function IssuePage() {
       }
 
       try {
-        const cachedBriefRaw = localStorage.getItem(`webdoc_brief_${findingId}`);
+        const cachedBriefRaw = localStorage.getItem(`webdoc_brief_${reportId}_${findingId}`);
         if (cachedBriefRaw) {
           const cachedBrief = JSON.parse(cachedBriefRaw) as FindingBriefExpansion;
           setBriefExpanded(cachedBrief);

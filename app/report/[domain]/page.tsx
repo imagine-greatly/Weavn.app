@@ -333,7 +333,7 @@ export default function ReportDomainPage() {
         if (ac.signal.aborted || prefetchedFindings.current.has(fid)) return;
         console.log('[REPORT] Prefetching brief for finding:', fid);
         try {
-          if (localStorage.getItem(`webdoc_brief_${fid}`)) {
+          if (localStorage.getItem(`webdoc_brief_${storedReportId}_${fid}`)) {
             prefetchedFindings.current.set(fid, true);
             return;
           }
@@ -367,7 +367,7 @@ export default function ReportDomainPage() {
               prefetchedFindings.current.set(fid, data);
               console.log('[REPORT] Brief cached for finding:', fid);
               try {
-                localStorage.setItem(`webdoc_brief_${fid}`, JSON.stringify(data));
+                localStorage.setItem(`webdoc_brief_${storedReportId}_${fid}`, JSON.stringify(data));
               } catch {
                 // ignore local brief cache failures
               }

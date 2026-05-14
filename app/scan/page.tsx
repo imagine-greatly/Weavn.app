@@ -639,15 +639,12 @@ function ScanLoadingInner() {
       }
     }
 
-    // Counter: time-based progress capped at 165 until API responds, then 166
+    // Counter: 0→166 over 85% of the estimated 90s scan duration (76,500ms),
+    // then holds at 166 until the scan completes. Never goes backwards, never exceeds 166.
     if (checksCounterRef.current) {
-      if (apiDoneRef.current) {
-        checksCounterRef.current.textContent = "166";
-      } else {
-        const elapsed = now - scanStartTimeRef.current;
-        const count = Math.min(165, Math.floor((Math.max(0, elapsed) / 75_000) * 166));
-        checksCounterRef.current.textContent = String(count);
-      }
+      const elapsed = now - scanStartTimeRef.current;
+      const count = Math.min(166, Math.floor((Math.max(0, elapsed) / 76_500) * 167));
+      checksCounterRef.current.textContent = String(count);
     }
 
     rafScanRef.current = requestAnimationFrame(tickScan);

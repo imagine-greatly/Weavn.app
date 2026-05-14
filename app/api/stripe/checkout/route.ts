@@ -40,15 +40,19 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    let requestBody: Record<string, unknown> = {};
+    try { requestBody = await req.json(); } catch { /* no body */ }
+    const requestedPlan = requestBody?.plan === 'agency' ? 'agency' : 'pro';
+
     const { data: profile } = await supabase
       .from('profiles')
       .select('stripe_customer_id, plan')
       .eq('id', user.id)
       .single();
 
-    if (profile?.plan === 'pro') {
+    if (profile?.plan === requestedPlan) {
       return NextResponse.json(
-        { error: 'Already subscribed to Pro', code: 'CHECKOUT_ALREADY_PRO' },
+        { error: `Already subscribed to ${requestedPlan}`, code: 'CHECKOUT_ALREADY_SUBSCRIBED' },
         { status: 400 }
       );
     }
@@ -68,21 +72,25 @@ export async function POST(req: NextRequest) {
         .eq('id', user.id);
     }
 
+    const priceId = requestedPlan === 'agency'
+      ? process.env.STRIPE_AGENCY_PRICE_ID!
+      : process.env.STRIPE_PRO_PRICE_ID!;
+
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       payment_method_types: ['card'],
       line_items: [
         {
-          price: process.env.STRIPE_PRO_PRICE_ID!,
+          price: priceId,
           quantity: 1,
         },
       ],
       mode: 'subscription',
       success_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?upgraded=true`,
       cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/pricing?cancelled=true`,
-      metadata: { supabase_user_id: user.id },
+      metadata: { supabase_user_id: user.id, plan: requestedPlan },
       subscription_data: {
-        metadata: { supabase_user_id: user.id },
+        metadata: { supabase_user_id: user.id, plan: requestedPlan },
       },
       allow_promotion_codes: true,
     });

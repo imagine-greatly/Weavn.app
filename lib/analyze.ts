@@ -418,8 +418,10 @@ function mapLegacyLeakToNew(input: Record<string, unknown>, fallbackId: string):
 
 export async function runAnalysis(
   extraction: CombinedExtraction,
-  siteType: SiteType
+  siteType: SiteType,
+  plan?: string
 ): Promise<ReportPayload> {
+  const model = plan === "agency" ? "claude-opus-4-5" : "claude-sonnet-4-20250514";
   const client = new Anthropic({
     apiKey: process.env.ANTHROPIC_API_KEY,
   });
@@ -429,7 +431,7 @@ export async function runAnalysis(
 
   const run = async (): Promise<ReportPayload> => {
     const message = await client.messages.create({
-      model: "claude-sonnet-4-20250514",
+      model,
       max_tokens: 4096,
       system: [{ type: "text", text: systemPrompt, cache_control: { type: "ephemeral" } }],
       messages: [{ role: "user", content: userContent }],

@@ -112,10 +112,19 @@ const PRO_FEATURES = [
   "Priority support",
 ];
 
+const AGENCY_FEATURES = [
+  { text: "Up to 10 active site diagnostics", comingSoon: false },
+  { text: "All findings — full finding set with quoted evidence", comingSoon: false },
+  { text: "Deep analysis engine — enhanced diagnostic depth", comingSoon: false },
+  { text: "Priority scanning", comingSoon: false },
+  { text: "API access", comingSoon: true },
+  { text: "White label reports", comingSoon: true },
+];
+
 function PricingCards() {
   return (
     <section className="relative w-full py-[100px] px-6">
-      <div className="mx-auto grid min-w-0 max-w-[800px] gap-6 md:grid-cols-2">
+      <div className="mx-auto grid min-w-0 max-w-[1200px] gap-6 md:grid-cols-3">
         {/* FREE card */}
         <ScrollReveal variant="slide-left" className="min-w-0">
           <div
@@ -232,6 +241,100 @@ function PricingCards() {
                   overflow: "visible",
                 }}
               />
+            </div>
+            <p className="mt-3 text-center font-mono text-[11px]" style={{ color: "var(--text-muted)" }}>
+              Cancel anytime. Access continues through the paid period end.
+            </p>
+          </div>
+        </ScrollReveal>
+
+        {/* AGENCY card */}
+        <ScrollReveal variant="slide-right" className="min-w-0 overflow-visible">
+          <div
+            className="relative flex h-full min-w-0 flex-col overflow-visible rounded border p-10"
+            style={{
+              background: "var(--bg-card)",
+              border: "1px solid rgba(0,230,118,0.3)",
+              boxShadow: "0 0 40px rgba(0,230,118,0.06)",
+              borderRadius: 4,
+            }}
+          >
+            <div
+              className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-1/2 rounded-full px-4 py-1 font-mono text-[10px] uppercase"
+              style={{ background: "var(--green)", color: "#050810" }}
+            >
+              AGENCY
+            </div>
+            <p className="font-mono text-[11px] uppercase" style={{ color: "var(--green)" }}>
+              AGENCY
+            </p>
+            <p
+              className="font-logo mt-2 text-[56px] leading-none"
+              style={{ color: "var(--green)" }}
+            >
+              $150
+            </p>
+            <p className="mt-1 font-sans text-[14px]" style={{ color: "var(--text-muted)" }}>
+              per month · cancel anytime
+            </p>
+            <p className="mt-2 font-sans text-[13px]" style={{ color: "var(--text-muted)" }}>
+              Built for agencies managing multiple client sites. Enhanced diagnostic depth across up to 10 active sites.
+            </p>
+            <div className="my-6 h-px w-full" style={{ background: "var(--border-default)" }} />
+            <ul className="flex-1 space-y-3">
+              {AGENCY_FEATURES.map((f) => (
+                <li key={f.text} className="flex items-start gap-2 font-sans text-[14px]" style={{ color: "var(--text-secondary)" }}>
+                  <span style={{ color: "var(--green)", flexShrink: 0 }}>✓</span>
+                  <span>
+                    {f.text}
+                    {f.comingSoon ? (
+                      <span
+                        className="ml-2 font-mono text-[10px] uppercase"
+                        style={{
+                          color: "var(--text-muted)",
+                          background: "rgba(136,153,170,0.12)",
+                          border: "1px solid rgba(136,153,170,0.2)",
+                          padding: "1px 6px",
+                          borderRadius: 2,
+                        }}
+                      >
+                        Coming Soon
+                      </span>
+                    ) : null}
+                  </span>
+                </li>
+              ))}
+            </ul>
+            <div className="mt-8 w-full min-w-0 overflow-visible">
+              <a
+                href="/api/stripe/checkout?plan=agency"
+                onClick={(e) => {
+                  e.preventDefault();
+                  fetch("/api/stripe/checkout", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ plan: "agency" }),
+                  })
+                    .then((r) => r.json())
+                    .then((d: { url?: string }) => { if (d.url) window.location.href = d.url; })
+                    .catch(() => { window.location.href = "/auth?tab=signin"; });
+                }}
+                className="flex w-full items-center justify-center rounded py-4 font-mono text-[13px] uppercase transition-[border-color,box-shadow,background-color] duration-150"
+                style={{
+                  background: "var(--green)",
+                  color: "#050810",
+                  fontWeight: 700,
+                  minHeight: 44,
+                  borderRadius: 3,
+                  letterSpacing: "0.06em",
+                  textDecoration: "none",
+                  boxSizing: "border-box",
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.opacity = "0.88"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.opacity = "1"; }}
+              >
+                UPGRADE TO AGENCY — $150/MO →
+              </a>
             </div>
             <p className="mt-3 text-center font-mono text-[11px]" style={{ color: "var(--text-muted)" }}>
               Cancel anytime. Access continues through the paid period end.
@@ -385,7 +488,7 @@ const PRICING_FAQ = [
   },
   {
     q: "Agency and multi-site",
-    a: "Dedicated agency tiers are planned. Contact sales for current multi-site options.",
+    a: "The Agency plan is available at $150/month. It supports up to 10 active site diagnostics with enhanced diagnostic depth. API access and white label reports are coming soon.",
   },
 ];
 

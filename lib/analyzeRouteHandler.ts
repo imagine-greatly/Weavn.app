@@ -2993,18 +2993,18 @@ async function checkScanEntitlement(
         return { allowed: true };
       }
 
-      if (
-        typeof profile?.plan === "string" &&
-        profile.plan.toLowerCase() === "pro"
-      ) {
-        const PRO_MAX_SITES = 5;
-        if (existingDomains.size >= PRO_MAX_SITES) {
-          return {
-            allowed: false,
-            reason: "pro_site_limit_reached",
-          };
+      if (typeof profile?.plan === "string") {
+        const planLower = profile.plan.toLowerCase();
+        const siteLimit = planLower === "agency" ? 10 : planLower === "pro" ? 5 : null;
+        if (siteLimit !== null) {
+          if (existingDomains.size >= siteLimit) {
+            return {
+              allowed: false,
+              reason: planLower === "agency" ? "agency_site_limit_reached" : "pro_site_limit_reached",
+            };
+          }
+          return { allowed: true };
         }
-        return { allowed: true };
       }
 
       const scanCount = profile?.scan_count ?? 0;
@@ -3097,8 +3097,10 @@ export async function POST(req: NextRequest) {
         message:
           entitlement.reason === "free_limit_reached"
             ? "You have used your free scan. Upgrade to Pro for unlimited scans."
-            : entitlement.reason === "pro_site_limit_reached"
-              ? "5-site limit reached. Remove a site or upgrade to continue adding new sites."
+            : entitlement.reason === "agency_site_limit_reached"
+              ? "10-site limit reached. Remove a site to continue adding new sites."
+              : entitlement.reason === "pro_site_limit_reached"
+                ? "5-site limit reached. Remove a site or upgrade to Agency to continue adding new sites."
             : "You have used your free scan. Create an account or upgrade to Pro for more scans.",
       },
       { status: 403 }

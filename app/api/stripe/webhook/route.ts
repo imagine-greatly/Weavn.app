@@ -52,6 +52,11 @@ export async function POST(req: NextRequest) {
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
 
+  function planFromPriceId(priceId: string | null | undefined): 'pro' | 'agency' {
+    if (priceId && priceId === process.env.STRIPE_AGENCY_PRICE_ID) return 'agency';
+    return 'pro';
+  }
+
   try {
     switch (event.type) {
       case 'checkout.session.completed': {
@@ -60,15 +65,17 @@ export async function POST(req: NextRequest) {
 
         if (!userId) break;
 
+        const plan = session.metadata?.plan === 'agency' ? 'agency' : 'pro';
+
         await supabase
           .from('profiles')
           .update({
-            plan: 'pro',
+            plan,
             stripe_customer_id: session.customer as string,
           })
           .eq('id', userId);
 
-        console.log(`[webhook] User ${userId} upgraded to pro`);
+        console.log(`[webhook] User ${userId} upgraded to ${plan}`);
         break;
       }
 
@@ -94,14 +101,16 @@ export async function POST(req: NextRequest) {
         if (!userId) break;
 
         const isActive = subscription.status === 'active';
+        const activePriceId = subscription.items.data[0]?.price.id;
+        const activePlan = isActive ? planFromPriceId(activePriceId) : 'free';
 
         await supabase
           .from('profiles')
-          .update({ plan: isActive ? 'pro' : 'free' })
+          .update({ plan: activePlan })
           .eq('id', userId);
 
         console.log(
-          `[webhook] User ${userId} subscription updated: ${subscription.status}`
+          `[webhook] User ${userId} subscription updated: ${subscription.status} → ${activePlan}`
         );
         break;
       }

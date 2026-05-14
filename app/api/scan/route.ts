@@ -5,6 +5,7 @@
  */
 
 import { createServerClient } from "@supabase/ssr";
+import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 import { scrapeSite } from "@/lib/scraper";
 import { detectSiteType } from "@/lib/siteType";
@@ -208,10 +209,29 @@ export async function POST(req: NextRequest) {
   // 2. Detect site type from homepage (gates everything that follows)
   const site_type = detectSiteType(extraction);
 
+  // Fetch user plan for model selection (agency uses higher-capacity model)
+  let userPlan = "free";
+  if (!internalBypass) {
+    try {
+      const supabaseService = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!
+      );
+      const { data: profile } = await supabaseService
+        .from("profiles")
+        .select("plan")
+        .eq("id", userId)
+        .maybeSingle();
+      userPlan = profile?.plan ?? "free";
+    } catch {
+      // non-blocking; fall back to default model
+    }
+  }
+
   // 3. Claude analysis (retry once inside runAnalysis), tailored to site_type
   let payload;
   try {
-    payload = await runAnalysis(extraction, site_type);
+    payload = await runAnalysis(extraction, site_type, userPlan);
   } catch (err) {
     const message = err instanceof Error ? err.message : "Analysis failed.";
     return withCookies(NextResponse.json({ error: message }, { status: 500 }));

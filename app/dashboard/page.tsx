@@ -459,7 +459,7 @@ export default function DashboardPage() {
   const domains = useMemo(() => distinctDomains(reports), [reports]);
 
   const isProPlan =
-    String(plan).trim() === "Pro" || String(plan).trim().toLowerCase() === "pro";
+    String(plan).trim().toLowerCase() === "pro" || String(plan).trim().toLowerCase() === "agency";
   const restrictionsActive = reportsReady && !loading && plan !== "loading" && !isProPlan;
 
   useEffect(() => {

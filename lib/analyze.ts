@@ -425,23 +425,7 @@ export async function runAnalysis(
   });
 
   const systemPrompt = buildSystemPrompt(siteType);
-  const userPrefix = `Analyze this website. You have both the rendered HTML and a screenshot of the above-the-fold viewport. Use both to identify conversion issues including visual hierarchy, color scheme, contrast, CTA prominence, and layout density.\n\n`;
-  const userContent = extraction.screenshot
-    ? [
-        {
-          type: "image" as const,
-          source: {
-            type: "base64" as const,
-            media_type: "image/jpeg" as const,
-            data: extraction.screenshot,
-          },
-        },
-        {
-          type: "text" as const,
-          text: userPrefix + extraction.rawHtml,
-        },
-      ]
-    : userPrefix + extraction.rawHtml;
+  const userContent = `Analyze the following website HTML and return the JSON analysis. The HTML is from a fully rendered page captured by a headless browser:\n\n${extraction.rawHtml}`;
 
   const run = async (): Promise<ReportPayload> => {
     const message = await client.messages.create({

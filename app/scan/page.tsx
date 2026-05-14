@@ -148,6 +148,9 @@ function ScanLoadingInner() {
   const [invalidUrlMessage, setInvalidUrlMessage] = useState<string | null>(null);
   const [statusBarOverride, setStatusBarOverride] = useState<string | null>(null);
   const [scanUserAborted, setScanUserAborted] = useState(false);
+  const [returningData, setReturningData] = useState<{ score: number; reportId: string } | null>(null);
+  const [returningPhase, setReturningPhase] = useState(0);
+  const [returningScore, setReturningScore] = useState(0);
 
   // beam-Y section activation state
   const [activeSection, setActiveSection] = useState<string | null>(null);
@@ -384,82 +387,125 @@ function ScanLoadingInner() {
     domainRef.current = domain;
     normalizedUrlRef.current = normalized;
 
-    window.setTimeout(() => materialize(), 120);
-    window.setTimeout(() => {
-      sectionIdxRef.current = 0;
-      scanNext();
-    }, 900);
+    const startNormalScan = () => {
+      window.setTimeout(() => materialize(), 120);
+      window.setTimeout(() => {
+        sectionIdxRef.current = 0;
+        scanNext();
+      }, 900);
 
-    const runFetch = async () => {
-      apiFailedRef.current = false;
-      setScanFailure(null);
-      setInvalidUrlMessage(null);
-      abortControllerRef.current = new AbortController();
-      const controller = abortControllerRef.current;
-      const timeoutMs = 125000;
-      const timeoutId = window.setTimeout(() => controller.abort(), timeoutMs);
-      try {
-        const res = await fetch("/api/scan", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ url: normalized }),
-          signal: controller.signal,
-        });
-        window.clearTimeout(timeoutId);
-        let data: Record<string, unknown> = {};
+      const runFetch = async () => {
+        apiFailedRef.current = false;
+        setScanFailure(null);
+        setInvalidUrlMessage(null);
+        abortControllerRef.current = new AbortController();
+        const controller = abortControllerRef.current;
+        const timeoutMs = 125000;
+        const timeoutId = window.setTimeout(() => controller.abort(), timeoutMs);
         try {
-          data = (await res.json()) as Record<string, unknown>;
-        } catch {
-          data = {};
-        }
-        if (!res.ok) {
-          apiFailedRef.current = true;
-          apiDoneRef.current = true;
-          if (res.status === 422 && data.error === "invalid_url") {
-            const ivMsg =
-              typeof data.message === "string"
-                ? data.message
-                : "This URL does not appear to be a live website.";
-            setInvalidUrlMessage(ivMsg);
-            beamActiveRef.current = false;
-            beamRafHaltedRef.current = true;
-            cancelAnimationFrame(rafScanRef.current);
+          const res = await fetch("/api/scan", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ url: normalized }),
+            signal: controller.signal,
+          });
+          window.clearTimeout(timeoutId);
+          let data: Record<string, unknown> = {};
+          try {
+            data = (await res.json()) as Record<string, unknown>;
+          } catch {
+            data = {};
+          }
+          if (!res.ok) {
+            apiFailedRef.current = true;
+            apiDoneRef.current = true;
+            if (res.status === 422 && data.error === "invalid_url") {
+              const ivMsg =
+                typeof data.message === "string"
+                  ? data.message
+                  : "This URL does not appear to be a live website.";
+              setInvalidUrlMessage(ivMsg);
+              beamActiveRef.current = false;
+              beamRafHaltedRef.current = true;
+              cancelAnimationFrame(rafScanRef.current);
+              return;
+            }
+            const msg =
+              typeof data.error === "string" ? data.error : "Scan failed.";
+            if (res.status >= 500) {
+              setScanFailure({ kind: "severe" });
+            } else {
+              setScanFailure({ kind: "client", message: msg });
+            }
             return;
           }
-          const msg =
-            typeof data.error === "string" ? data.error : "Scan failed.";
-          if (res.status >= 500) {
+          const hs = Number(
+            (data as { payload?: { healthScore?: number } }).payload?.healthScore ?? 74,
+          );
+          healthScoreRef.current = Number.isFinite(hs)
+            ? Math.min(100, Math.max(0, Math.round(hs)))
+            : 74;
+          apiDoneRef.current = true;
+        } catch (e) {
+          window.clearTimeout(timeoutId);
+          const aborted = e instanceof Error && e.name === "AbortError";
+          if (aborted && cancelRequestedRef.current) {
+            cancelRequestedRef.current = false;
+            return;
+          }
+          apiFailedRef.current = true;
+          apiDoneRef.current = true;
+          if (aborted) {
             setScanFailure({ kind: "severe" });
           } else {
-            setScanFailure({ kind: "client", message: msg });
+            setScanFailure({ kind: "severe" });
           }
-          return;
         }
-        const hs = Number(
-          (data as { payload?: { healthScore?: number } }).payload?.healthScore ?? 74,
-        );
-        healthScoreRef.current = Number.isFinite(hs)
-          ? Math.min(100, Math.max(0, Math.round(hs)))
-          : 74;
-        apiDoneRef.current = true;
-      } catch (e) {
-        window.clearTimeout(timeoutId);
-        const aborted = e instanceof Error && e.name === "AbortError";
-        if (aborted && cancelRequestedRef.current) {
-          cancelRequestedRef.current = false;
-          return;
-        }
-        apiFailedRef.current = true;
-        apiDoneRef.current = true;
-        if (aborted) {
-          setScanFailure({ kind: "severe" });
-        } else {
-          setScanFailure({ kind: "severe" });
-        }
-      }
+      };
+      runFetch();
     };
-    runFetch();
-  }, [resolvedUrl, materialize, scanNext]);
+
+    if (isRescan) {
+      startNormalScan();
+      return;
+    }
+
+    void (async () => {
+      try {
+        const checkRes = await fetch(`/api/reports/check?domain=${encodeURIComponent(domain)}`);
+        if (checkRes.ok) {
+          const checkData = (await checkRes.json()) as {
+            exists: boolean;
+            score?: number;
+            reportId?: string;
+          };
+          if (checkData.exists && typeof checkData.score === "number" && checkData.reportId) {
+            setReturningData({ score: checkData.score, reportId: checkData.reportId });
+            setReturningPhase(1);
+            window.setTimeout(() => setReturningPhase(2), 1000);
+            window.setTimeout(() => {
+              setReturningPhase(3);
+              const target = checkData.score!;
+              const animStart = performance.now();
+              const ANIM_MS = 1500;
+              const tick = () => {
+                const t = Math.min(1, (performance.now() - animStart) / ANIM_MS);
+                setReturningScore(Math.round(cubicEaseInOut(t) * target));
+                if (t < 1) requestAnimationFrame(tick);
+              };
+              requestAnimationFrame(tick);
+            }, 2000);
+            window.setTimeout(() => setReturningPhase(4), 3500);
+            window.setTimeout(() => router.replace(`/report/${domain}`), 4500);
+            return;
+          }
+        }
+      } catch {
+        // Check failed — proceed with normal scan
+      }
+      startNormalScan();
+    })();
+  }, [resolvedUrl, materialize, scanNext, isRescan, router]);
 
   useEffect(() => {
     if (errorMsg) {
@@ -771,6 +817,81 @@ function ScanLoadingInner() {
       >
         No scan URL. Return to home and submit a URL.
       </div>
+    );
+  }
+
+  if (returningData) {
+    return (
+      <>
+        <style>{`
+          @keyframes rdAtmA { from { transform: translate(0,0); } to { transform: translate(80px, 50px); } }
+          @keyframes rdAtmB { from { transform: translate(0,0); } to { transform: translate(-60px, -70px); } }
+          @keyframes rdRingSpring {
+            from { transform: scale(0.4); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+          }
+          .rd-ring { animation: rdRingSpring 0.6s cubic-bezier(0.34,1.56,0.64,1) forwards; }
+        `}</style>
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: BG,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            fontFamily: MONO,
+            overflow: "hidden",
+          }}
+        >
+          {/* Atmosphere */}
+          <div style={{ position: "fixed", inset: 0, zIndex: 1, pointerEvents: "none" }}>
+            <div style={{ position: "absolute", width: 1000, height: 650, top: -200, left: -300, background: "radial-gradient(ellipse, rgba(0,100,255,0.07) 0%, transparent 70%)", filter: "blur(80px)", animation: "rdAtmA 78s ease-in-out infinite alternate" }} />
+            <div style={{ position: "absolute", width: 800, height: 550, bottom: -200, right: -200, background: "radial-gradient(ellipse, rgba(0,60,200,0.05) 0%, transparent 70%)", filter: "blur(90px)", animation: "rdAtmB 96s ease-in-out infinite alternate" }} />
+          </div>
+          {/* Top HUD */}
+          <div style={{ position: "fixed", top: 0, left: 0, right: 0, height: 56, zIndex: 200, background: "linear-gradient(180deg, rgba(0,0,8,0.97) 0%, rgba(0,0,8,0.75) 100%)", backdropFilter: "blur(16px) saturate(1.4)", WebkitBackdropFilter: "blur(16px) saturate(1.4)", borderBottom: "1px solid rgba(0,200,255,0.14)", boxShadow: "0 1px 0 rgba(0,200,255,0.07), 0 8px 40px rgba(0,0,0,0.9)", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 28px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+              {[0, 1, 2].map((i) => (
+                <span key={i} style={{ width: 6, height: 6, borderRadius: "50%", background: CY, opacity: 0.85 }} />
+              ))}
+              <span style={{ fontFamily: MONO, fontSize: 13, color: "#F0F4FF", letterSpacing: "0.04em" }}>{displayDomain}</span>
+            </div>
+            <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.2em", color: "rgba(0,200,255,0.45)", textTransform: "uppercase" }}>
+              RETURNING DOMAIN
+            </span>
+            <div style={{ width: 120 }} />
+          </div>
+          {/* Phase 1–2: text messages */}
+          {returningPhase < 3 && (
+            <div style={{ position: "relative", zIndex: 10, height: 32, display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <div style={{ position: "absolute", fontSize: 11, letterSpacing: "0.4em", textTransform: "uppercase", color: CY, opacity: returningPhase === 1 ? 1 : 0, transition: "opacity 0.4s ease", whiteSpace: "nowrap" }}>
+                ● DOMAIN RECOGNIZED
+              </div>
+              <div style={{ position: "absolute", fontSize: 11, letterSpacing: "0.3em", textTransform: "uppercase", color: CY, opacity: returningPhase === 2 ? 1 : 0, transition: "opacity 0.4s ease", whiteSpace: "nowrap" }}>
+                PREVIOUS DIAGNOSTIC DETECTED
+              </div>
+            </div>
+          )}
+          {/* Phase 3+: score ring */}
+          {returningPhase >= 3 && (
+            <div style={{ position: "relative", zIndex: 10, width: 340, height: 340, display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <div className="rd-ring" style={{ position: "absolute", width: 320, height: 320, borderRadius: "50%", border: "1px solid rgba(0,200,255,0.08)" }} />
+              <div className="rd-ring" style={{ position: "absolute", width: 260, height: 260, borderRadius: "50%", border: "1px solid rgba(0,200,255,0.18)", boxShadow: "0 0 60px rgba(0,200,255,0.08)", animationDelay: "0.08s" }} />
+              <div style={{ position: "absolute", top: 52, fontSize: 9, letterSpacing: "5px", color: "rgba(0,200,255,0.55)", textTransform: "uppercase", fontFamily: MONO, opacity: returningPhase >= 4 ? 1 : 0, transition: "opacity 0.5s ease" }}>
+                DIAGNOSTIC COMPLETE
+              </div>
+              <div style={{ fontFamily: ORBIT, fontWeight: 900, fontSize: "clamp(80px, 14vw, 140px)", color: "#00C8FF", lineHeight: 1, textShadow: "0 0 24px rgba(0,200,255,1), 0 0 70px rgba(0,200,255,0.7), 0 0 140px rgba(0,200,255,0.4), 0 0 250px rgba(0,200,255,0.15)" }}>
+                {returningScore}
+              </div>
+              <div style={{ position: "absolute", bottom: 40, fontFamily: MONO, fontSize: 10, letterSpacing: "4px", color: "rgba(0,200,255,0.45)", opacity: returningPhase >= 4 ? 1 : 0, transition: "opacity 0.5s ease" }}>
+                / 100 REVENUE SCORE
+              </div>
+            </div>
+          )}
+        </div>
+      </>
     );
   }
 

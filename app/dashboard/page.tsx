@@ -374,7 +374,7 @@ export default function DashboardPage() {
         // ignore cache read failures
       }
 
-      const [profileRes, reportsResult, profileFlagsResult] = await Promise.all([
+      const [profileRes, reportsResult, profileFlagsResult, hiddenResult] = await Promise.all([
         fetch("/api/profile", { method: "GET", credentials: "include" }),
         supabase
           .from("reports")
@@ -388,6 +388,10 @@ export default function DashboardPage() {
           .select("has_run_first_scan")
           .eq("user_id", user.id)
           .single(),
+        supabase
+          .from("user_hidden_reports")
+          .select("domain")
+          .eq("user_id", user.id),
       ]);
       if (cancelled) return;
 
@@ -408,7 +412,14 @@ export default function DashboardPage() {
         rawPlan.toLowerCase() === "pro";
       setPlan(urlUpgraded ? "pro" : proFromRow ? "pro" : rawPlan || "free");
 
-      const fetchedReports = normalizeStoredReportRows(reportsResult.data ?? []);
+      const hiddenDomains = new Set(
+        ((hiddenResult.data ?? []) as { domain: string }[]).map((r) =>
+          r.domain.toLowerCase().trim()
+        )
+      );
+      const fetchedReports = normalizeStoredReportRows(reportsResult.data ?? []).filter(
+        (r) => !hiddenDomains.has(r.domain.toLowerCase().trim())
+      );
       setReports(fetchedReports);
       try {
         localStorage.setItem(cacheKey, JSON.stringify(fetchedReports));
@@ -704,12 +715,13 @@ export default function DashboardPage() {
     try {
       const supabase = getSupabaseBrowserClient();
       const { error } = await supabase
-        .from("reports")
-        .delete()
-        .eq("user_id", authUserId)
-        .eq("domain", normalizedDomain);
+        .from("user_hidden_reports")
+        .upsert(
+          { user_id: authUserId, domain: normalizedDomain, hidden_at: new Date().toISOString() },
+          { onConflict: "user_id,domain" }
+        );
       if (error) {
-        console.error("[DASHBOARD] Delete failed:", error);
+        console.error("[DASHBOARD] Hide failed:", error);
         setDeleteErrorDomain(domain);
         return;
       }
@@ -717,19 +729,11 @@ export default function DashboardPage() {
         localStorage.removeItem(`${DASHBOARD_REPORTS_CACHE_PREFIX}${authUserId}`);
         localStorage.removeItem(`${DASHBOARD_REPORTS_CACHE_TS_PREFIX}${authUserId}`);
       } catch { /* ignore */ }
-      // Force fresh fetch from Supabase so deleted items don't reappear from cache
-      const { data: freshData } = await supabase
-        .from("reports")
-        .select(
-          "id, domain, created_at, analysis, dimension_scores, money_leaks, quick_wins, growth_roadmap, verdict, biggest_opportunity, estimated_impact, health_score, critical_count, high_count, total_failed, total_passed, share_token, score_delta, previous_score"
-        )
-        .eq("user_id", authUserId)
-        .order("created_at", { ascending: false });
-      const updatedReports = normalizeStoredReportRows(freshData ?? []);
+      const updatedReports = reports.filter((r) => !domainKeysMatch(r.domain, normalizedDomain));
       setReports(updatedReports);
       setActiveDomain(distinctDomains(updatedReports)[0] ?? "");
     } catch (err) {
-      console.error("[DASHBOARD] Delete failed:", err);
+      console.error("[DASHBOARD] Hide failed:", err);
       setDeleteErrorDomain(domain);
     } finally {
       setDeletingDomain(null);

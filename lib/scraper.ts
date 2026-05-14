@@ -93,56 +93,16 @@ async function fetchWithBrowserless(url: string): Promise<string | null> {
   }
 }
 
-// -- SCREENSHOT CAPTURE -------------------------------------------------
-async function fetchScreenshotWithBrowserless(url: string): Promise<string | null> {
-  if (!process.env.BROWSERLESS_API_KEY) return null
-  try {
-    const response = await fetch(
-      `https://production-sfo.browserless.io/screenshot?token=${process.env.BROWSERLESS_API_KEY}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          url: url,
-          options: {
-            fullPage: false,
-            type: 'jpeg',
-            quality: 80
-          },
-          gotoOptions: {
-            waitUntil: 'networkidle2',
-            timeout: 30000
-          }
-        }),
-        signal: AbortSignal.timeout(35000)
-      }
-    )
-    if (!response.ok) {
-      console.log(`[SCRAPER] Screenshot failed: ${response.status}`)
-      return null
-    }
-    const buffer = await response.arrayBuffer()
-    if (!buffer.byteLength) return null
-    console.log(`[SCRAPER] Screenshot success: ${buffer.byteLength} bytes`)
-    return Buffer.from(buffer).toString('base64')
-  } catch (err) {
-    console.log('[SCRAPER] Screenshot error:', err instanceof Error ? err.message : err)
-    return null
-  }
-}
-
 // -- MAIN SCRAPE FUNCTION -----------------------------------------------
 export interface ScrapeResult {
   rawHtml: string
   method: 'browserless'
   domain: string
-  screenshot: string | null
 }
 
 export interface CombinedExtraction {
   rawHtml: string
   pagesAnalyzed: string[]
-  screenshot?: string | null
 }
 
 export async function scrapeUrl(inputUrl: string): Promise<ScrapeResult> {
@@ -157,13 +117,10 @@ export async function scrapeUrl(inputUrl: string): Promise<ScrapeResult> {
     console.log(`[SCRAPER] ${domain} | method:browserless | html_len:${rawHtml.length}`)
   }
 
-  const screenshot = rawHtml ? await fetchScreenshotWithBrowserless(url) : null
-
   return {
     rawHtml: rawHtml ?? '',
     method: 'browserless',
     domain,
-    screenshot,
   }
 }
 
@@ -195,6 +152,5 @@ export async function scrapeSite(inputUrl: string): Promise<CombinedExtraction> 
   return {
     rawHtml: applySmartTruncation(cleaned),
     pagesAnalyzed: [pageUrl],
-    screenshot: scraped.screenshot,
   }
 }

@@ -81,11 +81,13 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     url = typeof body?.url === "string" ? body.url : "";
+    console.log("[preview] request received for:", body.url);
   } catch {
     return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
   }
 
   const normalized = normalizeUrl(url);
+  console.log("[preview] normalized URL:", normalized);
   if (!normalized) {
     return NextResponse.json({ error: "Please enter a website URL." }, { status: 400 });
   }
@@ -97,6 +99,7 @@ export async function POST(req: NextRequest) {
   }
 
   const domain = getDomain(normalized);
+  console.log("[preview] scanning domain:", domain);
   if (!domain || !domain.includes(".")) {
     return NextResponse.json({ error: "Invalid URL." }, { status: 400 });
   }
@@ -104,16 +107,19 @@ export async function POST(req: NextRequest) {
   // Return cached result if a scan for this domain exists within the last 30 days.
   try {
     const cached = await getCachedPreview(domain);
+    console.log("[preview] cache check done, found:", !!cached);
     if (cached) {
       return NextResponse.json({ domain, ...cached });
     }
   } catch {
     // Cache miss on error — fall through to a fresh scan.
+    console.log("[preview] cache check result: not found (error)");
   }
 
   let extraction;
   try {
     extraction = await scrapeSite(normalized);
+    console.log("[preview] scrape done, rawHtml length:", extraction.rawHtml?.length ?? 0);
   } catch (err) {
     const message = err instanceof Error ? err.message : "Failed to fetch the site.";
     const isBlocked =
@@ -124,7 +130,9 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  console.log("[preview] checking if rawHtml is empty");
   if (!extraction.rawHtml) {
+    console.log("[preview] scrape failed - rawHtml empty for", domain);
     return NextResponse.json(
       { error: "No HTML content could be extracted from the URL." },
       { status: 422 }

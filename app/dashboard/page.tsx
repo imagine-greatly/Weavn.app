@@ -302,7 +302,7 @@ export default function DashboardPage() {
   );
   const [reportsReady, setReportsReady] = useState(false);
 
-  const [reports, setReports] = useState<StoredReportRow[]>([]);
+  const [reports, setReports] = useState<StoredReportRow[] | null>(null);
   const [advisorResetSignal, setAdvisorResetSignal] = useState(0);
 
   const [emptyScanUrl, setEmptyScanUrl] = useState("");
@@ -456,7 +456,7 @@ export default function DashboardPage() {
     return () => { cancelled = true; };
   }, []);
 
-  const domains = useMemo(() => distinctDomains(reports), [reports]);
+  const domains = useMemo(() => distinctDomains(reports ?? []), [reports]);
 
   const isProPlan =
     String(plan).trim().toLowerCase() === "pro" || String(plan).trim().toLowerCase() === "agency";
@@ -529,12 +529,12 @@ export default function DashboardPage() {
   const effectiveDomain = activeDomain || domains[0] || "";
 
   const activeDomainReports = effectiveDomain
-    ? reportsMatchingSelectedDomain(reports, effectiveDomain)
+    ? reportsMatchingSelectedDomain(reports ?? [], effectiveDomain)
     : [];
 
   const reportsForEffectiveDomain = effectiveDomain
     ? activeDomainReports
-    : reports;
+    : (reports ?? []);
 
   const activeLatest = activeDomainReports[0];
   const activePrevious = activeDomainReports[1] ?? null;
@@ -666,7 +666,7 @@ export default function DashboardPage() {
   const domainScores = useMemo(() => {
     const m: Record<string, number> = {};
     for (const d of domains) {
-      const dr = reportsMatchingSelectedDomain(reports, d);
+      const dr = reportsMatchingSelectedDomain(reports ?? [], d);
       m[d] = dr[0]?.analysis?.healthScore ?? 0;
     }
     return m;
@@ -729,7 +729,7 @@ export default function DashboardPage() {
         localStorage.removeItem(`${DASHBOARD_REPORTS_CACHE_PREFIX}${authUserId}`);
         localStorage.removeItem(`${DASHBOARD_REPORTS_CACHE_TS_PREFIX}${authUserId}`);
       } catch { /* ignore */ }
-      const updatedReports = reports.filter((r) => !domainKeysMatch(r.domain, normalizedDomain));
+      const updatedReports = (reports ?? []).filter((r) => !domainKeysMatch(r.domain, normalizedDomain));
       setReports(updatedReports);
       setActiveDomain(distinctDomains(updatedReports)[0] ?? "");
     } catch (err) {
@@ -1036,8 +1036,8 @@ export default function DashboardPage() {
           zIndex: 2,
         }}
       >
-        {/* Empty state */}
-        {reportsReady && reports.length === 0 ? (
+        {/* Empty state — only render when fetch is confirmed complete and returned empty */}
+        {reports !== null && reports.length === 0 ? (
           <div
             style={{
               marginBottom: 32,
@@ -1213,7 +1213,7 @@ export default function DashboardPage() {
                 <p style={{ fontFamily: SG, fontSize: 14, color: "rgba(255,255,255,0.3)", margin: 0, lineHeight: 1.5 }}>
                   Your top exit triggers appear after your first scan.
                 </p>
-              ) : !activeLatest && reports.length === 0 ? (
+              ) : !activeLatest && (reports ?? []).length === 0 ? (
                 <p style={{ fontFamily: SG, fontSize: 14, color: "rgba(255,255,255,0.3)", margin: 0 }}>
                   Priority findings from your scans will list here.
                 </p>

@@ -68,7 +68,7 @@ type Tier2Browser = {
 /** Ensures StealthPlugin is applied once (runtime only). */
 let stealthPluginApplied = false;
 
-const AI_MODEL = "claude-sonnet-4-20250514";
+const AI_MODEL = "claude-sonnet-4-5-20251022";
 
 /** Vercel serverless: maxDuration + memory are set in vercel.json for this route. */
 export const maxDuration = 60;

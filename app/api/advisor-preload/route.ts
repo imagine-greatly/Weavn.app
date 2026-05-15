@@ -43,7 +43,7 @@ Raw why it matters: ${whyItMatters || "(none provided)"}`;
 
     const anthropic = new Anthropic({ apiKey });
     const msg = await anthropic.messages.create({
-      model: "claude-sonnet-4-20250514",
+      model: "claude-sonnet-4-5-20251022",
       max_tokens: 500,
       system: systemPrompt,
       messages: [{ role: "user", content: userMessage }],

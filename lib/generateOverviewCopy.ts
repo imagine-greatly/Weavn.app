@@ -6,7 +6,7 @@ import type Anthropic from "@anthropic-ai/sdk";
 import type { DiagnosticFinding } from "@/lib/processFindings";
 import type { OverviewCopy } from "@/lib/reportSchema";
 
-const DEFAULT_MODEL = "claude-sonnet-4-20250514";
+const DEFAULT_MODEL = "claude-sonnet-4-5-20251022";
 
 function extractFirstTextBlock(response: {
   content: Array<{ type: string; text?: string }>;

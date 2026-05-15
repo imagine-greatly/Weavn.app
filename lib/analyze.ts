@@ -1,6 +1,6 @@
 /**
  * Send combined site extraction to Claude and return structured report.
- * Uses claude-sonnet-4-20250514 and the conversion psychologist system prompt.
+ * Uses claude-sonnet-4-5-20251022 and the conversion psychologist system prompt.
  * Retries once on AI failure.
  */
 
@@ -421,7 +421,7 @@ export async function runAnalysis(
   siteType: SiteType,
   plan?: string
 ): Promise<ReportPayload> {
-  const model = plan === "agency" ? "claude-opus-4-5" : "claude-sonnet-4-20250514";
+  const model = plan === "agency" ? "claude-opus-4-5" : "claude-sonnet-4-5-20251022";
   const client = new Anthropic({
     apiKey: process.env.ANTHROPIC_API_KEY,
   });

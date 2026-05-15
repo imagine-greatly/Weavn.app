@@ -474,7 +474,7 @@ function ScanLoadingInner() {
       runFetch();
     };
 
-    if (isRescan) {
+    if (isRescan || scanFailure !== null) {
       startNormalScan();
       return;
     }
@@ -2542,7 +2542,7 @@ function ScanLoadingInner() {
                   onClick={() => {
                     const u = normalizedUrlRef.current;
                     if (u) {
-                      const path = `/scan?url=${encodeURIComponent(u)}`;
+                      const path = `/scan?url=${encodeURIComponent(u)}&rescan=true`;
                       console.log("[scan-nav] window.location.href (retry)", path);
                       window.location.href = path;
                     } else {

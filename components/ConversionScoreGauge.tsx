@@ -278,18 +278,6 @@ export default function ConversionScoreGauge({
             </div>
           </div>
 
-          <span
-            className="font-mono inline-block"
-            style={{
-              marginTop: 4,
-              fontWeight: 700,
-              fontSize: 9,
-              letterSpacing: "0.12em",
-              color: "var(--text-muted)",
-            }}
-          >
-            {band.label}
-          </span>
           {showDelta && typeof scoreDelta === "number" && scoreDelta !== 0 ? (
             <div
               className="font-mono"

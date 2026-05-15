@@ -116,7 +116,8 @@ function ScanLoadingInner() {
   const searchParams = useSearchParams();
   const urlParam = searchParams.get("url")?.trim() ?? "";
   const [resolvedUrl, setResolvedUrl] = useState("");
-  const isRescan = searchParams.get("rescan") === "true";
+  const isRescan = searchParams.get("rescan") === "true" ||
+    (typeof window !== "undefined" && new URLSearchParams(window.location.search).get("rescan") === "true");
   console.log('[scan] isRescan:', isRescan, 'url param:', urlParam, 'full search params:', searchParams.toString());
 
   useEffect(() => {

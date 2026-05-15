@@ -174,7 +174,7 @@ function ProductProblem() {
               </ScrollReveal>
               <ScrollReveal variant="card" index={2}>
                 <p>
-                  WebDoc maps that gap with 47 checks across six revenue dimensions, cites evidence from your pages, and outputs resolutions ranked by revenue impact.
+                  WebDoc maps that gap with 166 checks across five revenue dimensions, cites evidence from your pages, and outputs resolutions ranked by revenue impact.
                 </p>
               </ScrollReveal>
             </div>
@@ -336,43 +336,37 @@ function ProductDifference() {
   );
 }
 
-// ─── Six Categories ───────────────────────────────────────────────────────
+// ─── Five Categories ──────────────────────────────────────────────────────
 const CATEGORIES = [
   {
     num: "01",
-    name: "PSYCHOLOGY",
+    name: "CONVERSION ARCHITECTURE",
     description:
-      "Decision heuristics in the conversion path. WebDoc scores loss framing, social proof density, authority markers, urgency language, and risk reversal placement against stated outcomes.",
+      "Primary action architecture. WebDoc scores CTA visibility, above-fold placement, commit-step count, offer framing, and risk reversal density on the path to conversion.",
   },
   {
     num: "02",
-    name: "MESSAGING",
+    name: "TRUST SIGNALS",
     description:
-      "Semantic clarity of the offer. WebDoc evaluates whether headlines and body copy state outcomes and specificity or remain feature-only in the first viewport.",
+      "Credibility surface area in early scroll. WebDoc scores social proof density, authority signals, risk reversal visibility, and first-session trust markers that determine whether visitors advance.",
   },
   {
     num: "03",
-    name: "CONVERSION",
+    name: "MESSAGE CLARITY",
     description:
-      "Primary action architecture. WebDoc measures CTA visibility, above-fold placement, commit-step count, offer framing, and risk reversal density on the path to conversion.",
+      "Semantic clarity of the offer. WebDoc evaluates whether headlines and body copy state outcomes and specificity or remain feature-only in the first viewport where orientation completes or fails.",
   },
   {
     num: "04",
-    name: "SEO",
+    name: "TRAFFIC READINESS",
     description:
-      "Search intent alignment. WebDoc checks whether titles, headings, and body content match how prospects query for the solution, not keyword density alone.",
+      "Search intent alignment. WebDoc checks whether titles, headings, and body content match how prospects query for the solution and whether the page is structurally ready to convert paid and organic traffic.",
   },
   {
     num: "05",
-    name: "UX",
+    name: "TECHNICAL FOUNDATION",
     description:
-      "Task completion architecture. WebDoc maps navigation depth, viewport behavior, load latency, and on-page cognitive density where visitors abandon before the primary CTA.",
-  },
-  {
-    num: "06",
-    name: "TRUST",
-    description:
-      "Credibility surface area in early scroll. WebDoc scores social proof density, authority signals, risk reversal visibility, and first-session trust markers.",
+      "Task completion infrastructure. WebDoc maps load latency, viewport behavior, navigation depth, and on-page cognitive density where visitors abandon before the primary CTA.",
   },
 ];
 
@@ -391,14 +385,14 @@ function ProductSixCategories() {
               fontWeight: 800,
             }}
           >
-            Six revenue dimensions<span style={{ color: "var(--cyan)" }}>.</span>
+            Five diagnostic dimensions<span style={{ color: "var(--cyan)" }}>.</span>
           </h2>
         </ScrollReveal>
         <p
           className="mx-auto mt-4 max-w-[560px] font-sans text-[14px] leading-relaxed"
           style={{ color: "var(--text-secondary)" }}
         >
-          WebDoc runs forty-seven checks across six revenue dimensions. Each finding ties to visitor behavior and revenue impact.
+          WebDoc runs one hundred and sixty-six checks across five diagnostic dimensions. Each finding ties directly to conversion suppression and revenue impact.
         </p>
 
         <div className="mt-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">

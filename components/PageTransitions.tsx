@@ -26,96 +26,78 @@ export function ProductDepthMistTransition() {
 
 export function ProductSignalGridTransition() {
   return (
-    <div aria-hidden className="relative h-[84px] w-full overflow-hidden" style={{ background: "var(--bg-base)" }}>
+    <div aria-hidden className="relative h-[68px] w-full overflow-hidden">
+      <style>{`
+        @keyframes prodScanDot {
+          0%   { left: 9%;  opacity: 0; }
+          4%   { opacity: 1; }
+          96%  { opacity: 1; }
+          100% { left: 91%; opacity: 0; }
+        }
+      `}</style>
+      <div className="absolute left-1/2 top-1/2 h-px w-[82%] -translate-x-1/2 -translate-y-1/2" style={{ background: "rgba(0,200,255,0.14)" }} />
+      {[18, 34, 50, 66, 82].map((x, i) => (
+        <div
+          key={i}
+          className="absolute top-1/2 h-1.5 w-1.5 -translate-y-1/2"
+          style={{ left: `${x}%`, background: "rgba(0,200,255,0.28)" }}
+        />
+      ))}
       <div
-        className="absolute inset-0"
+        className="absolute top-1/2 h-2 w-2 -translate-y-1/2 rounded-full"
         style={{
-          background:
-            "repeating-linear-gradient(90deg, rgba(0,200,255,0.06) 0 1px, transparent 1px 36px), repeating-linear-gradient(0deg, rgba(0,200,255,0.04) 0 1px, transparent 1px 24px)",
-          animation: "gridPan 14s linear infinite",
+          background: "var(--cyan)",
+          boxShadow: "0 0 6px rgba(0,200,255,0.6)",
+          animation: "prodScanDot 4s linear infinite",
         }}
-      />
-      <div
-        className="absolute inset-y-0 left-0 w-[22%]"
-        style={{ background: "linear-gradient(90deg, var(--bg-base), transparent)" }}
-      />
-      <div
-        className="absolute inset-y-0 right-0 w-[22%]"
-        style={{ background: "linear-gradient(270deg, var(--bg-base), transparent)" }}
       />
     </div>
   );
 }
 
 export function ProductDiagnosticArcTransition() {
-  const ref = useRef<HTMLDivElement>(null);
-  const [active, setActive] = useState(false);
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const obs = new IntersectionObserver(
-      ([entry]) => {
-        if (!entry?.isIntersecting || active) return;
-        setActive(true);
-        obs.disconnect();
-      },
-      { threshold: 0.25 }
-    );
-    obs.observe(el);
-    return () => obs.disconnect();
-  }, [active]);
-
   return (
-    <div ref={ref} aria-hidden className="relative h-[64px] w-full overflow-hidden">
-      <div className="absolute left-1/2 top-4 h-[42px] w-[520px] -translate-x-1/2 rounded-[999px] border border-[rgba(0,200,255,0.12)]" />
-      <div
-        className="absolute left-1/2 top-4 h-[42px] -translate-x-1/2 rounded-[999px] border"
-        style={{
-          width: active ? 520 : 0,
-          borderColor: "rgba(0,200,255,0.45)",
-          transition: "width 1s ease-out",
-          boxShadow: active ? "0 0 20px rgba(0,200,255,0.2)" : "none",
-        }}
-      />
+    <div aria-hidden className="relative h-[72px] w-full overflow-hidden">
+      <style>{`
+        @keyframes sigBarFade {
+          0%, 100% { opacity: 0.1; }
+          50%       { opacity: 0.32; }
+        }
+      `}</style>
+      {(
+        [
+          [{ w: "11%", left: "8%"  }, { w: "7%",  left: "28%" }, { w: "13%", left: "50%" }, { w: "9%",  left: "74%" }],
+          [{ w: "9%",  left: "14%" }, { w: "13%", left: "36%" }, { w: "7%",  left: "58%" }, { w: "11%", left: "78%" }],
+          [{ w: "7%",  left: "6%"  }, { w: "11%", left: "32%" }, { w: "9%",  left: "54%" }, { w: "13%", left: "76%" }],
+        ] as { w: string; left: string }[][]
+      ).map((row, ri) => (
+        <div key={ri} className="relative" style={{ marginTop: ri === 0 ? 12 : 6, height: 6 }}>
+          {row.map((bar, bi) => (
+            <div
+              key={bi}
+              className="absolute h-full rounded-sm"
+              style={{
+                left: bar.left,
+                width: bar.w,
+                background: "rgba(0,200,255,0.22)",
+                animation: `sigBarFade ${2.4 + bi * 0.3}s ease-in-out ${(ri * 4 + bi) * 0.18}s infinite`,
+              }}
+            />
+          ))}
+        </div>
+      ))}
     </div>
   );
 }
 
 export function ProductFunnelTransition() {
   return (
-    <div aria-hidden className="relative h-[90px] w-full overflow-hidden">
-      <div className="absolute inset-0">
-        {[0, 1, 2].map((n) => (
-          <div key={n} className="absolute inset-0">
-            <div
-              style={{
-                position: "absolute",
-                left: n * 14,
-                top: 0,
-                width: `calc(50% - ${n * 14}px)`,
-                height: 1,
-                transform: "rotate(11deg)",
-                transformOrigin: "left center",
-                background: "rgba(0,200,255,0.06)",
-              }}
-            />
-            <div
-              style={{
-                position: "absolute",
-                right: n * 14,
-                top: 0,
-                width: `calc(50% - ${n * 14}px)`,
-                height: 1,
-                transform: "rotate(-11deg)",
-                transformOrigin: "right center",
-                background: "rgba(0,200,255,0.06)",
-              }}
-            />
-          </div>
-        ))}
-      </div>
-      <div className="absolute bottom-1 left-0 right-0 h-px live-pulse" style={{ background: "rgba(0,200,255,0.15)" }} />
+    <div aria-hidden className="relative h-[60px] w-full overflow-hidden">
+      <div className="absolute left-0 right-0 top-1/2 h-px -translate-y-1/2" style={{ background: "rgba(0,200,255,0.1)" }} />
+      <div
+        className="absolute left-1/2 top-1/2 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full live-pulse"
+        style={{ background: "var(--cyan)", boxShadow: "0 0 8px rgba(0,200,255,0.5)" }}
+      />
     </div>
   );
 }

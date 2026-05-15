@@ -161,6 +161,19 @@ function ScanLoadingInner() {
   const [rdTerminal, setRdTerminal] = useState(false);
   const [rdFadeOut, setRdFadeOut] = useState(false);
 
+  // Cinematic intro
+  const [introVisible, setIntroVisible] = useState(false);
+  const [introFadingOut, setIntroFadingOut] = useState(false);
+  const [introLine1, setIntroLine1] = useState("");
+  const [introLine2Glitch, setIntroLine2Glitch] = useState("");
+  const [introLine2Real, setIntroLine2Real] = useState(0);
+  const [introLine3, setIntroLine3] = useState(false);
+  // Status typewriter
+  const [typedStatus, setTypedStatus] = useState(STATUS_MESSAGES[0]);
+  // Analysis complete flash
+  const [analysisFlash, setAnalysisFlash] = useState(false);
+  const [analysisFlashFade, setAnalysisFlashFade] = useState(false);
+
   // beam-Y section activation state
   const [activeSection, setActiveSection] = useState<string | null>(null);
   const [completedSections, setCompletedSections] = useState<string[]>([]);
@@ -396,7 +409,7 @@ function ScanLoadingInner() {
     }
     domainRef.current = domain;
     normalizedUrlRef.current = normalized;
-    const rescanFlag = isRescan || new URLSearchParams(window.location.search).get("rescan") === "true";
+    const rescanFlag = searchParams.get("rescan") === "true";
 
     const startNormalScan = () => {
       scanStartTimeRef.current = performance.now();
@@ -604,6 +617,77 @@ function ScanLoadingInner() {
     beamRafHaltedRef.current = true;
     cancelAnimationFrame(rafScanRef.current);
   }, [invalidUrlMessage]);
+
+  // Cinematic intro — plays for the first 1.5s of a normal scan
+  useEffect(() => {
+    if (!materialized) return;
+    const domain = domainRef.current;
+    setIntroVisible(true);
+
+    // 800ms: typewriter "INITIATING DIAGNOSTIC"
+    const LINE1 = "INITIATING DIAGNOSTIC";
+    const t1 = window.setTimeout(() => {
+      let i = 0;
+      const charDelay = Math.round(400 / LINE1.length);
+      const iv = window.setInterval(() => {
+        i++;
+        setIntroLine1(LINE1.slice(0, i));
+        if (i >= LINE1.length) clearInterval(iv);
+      }, charDelay);
+    }, 800);
+
+    // 1100ms: glitch → decode domain
+    const t2 = window.setTimeout(() => {
+      const glitchChars = "0134_";
+      let glitchCount = 0;
+      const glitchIv = window.setInterval(() => {
+        let dollarCount = 0;
+        const scrambled = Array.from({ length: domain.length }, () => {
+          if (dollarCount < 2 && Math.random() < 0.15) { dollarCount++; return "$"; }
+          return glitchChars[Math.floor(Math.random() * glitchChars.length)];
+        }).join("");
+        setIntroLine2Glitch(scrambled);
+        glitchCount++;
+        if (glitchCount >= 8) {
+          clearInterval(glitchIv);
+          let revealed = 0;
+          const decodeIv = window.setInterval(() => {
+            revealed++;
+            setIntroLine2Real(revealed);
+            if (revealed >= domain.length) clearInterval(decodeIv);
+          }, 55);
+        }
+      }, 75);
+    }, 1100);
+
+    const t3 = window.setTimeout(() => setIntroLine3(true), 1400);
+    const t4 = window.setTimeout(() => setIntroFadingOut(true), 1500);
+    const t5 = window.setTimeout(() => setIntroVisible(false), 1800);
+
+    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); clearTimeout(t4); clearTimeout(t5); };
+  }, [materialized]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Status typewriter — types each new message in over 0.3s
+  useEffect(() => {
+    let i = 0;
+    setTypedStatus("");
+    const charDelay = Math.max(8, Math.round(300 / statusText.length));
+    const iv = window.setInterval(() => {
+      i++;
+      setTypedStatus(statusText.slice(0, i));
+      if (i >= statusText.length) clearInterval(iv);
+    }, charDelay);
+    return () => clearInterval(iv);
+  }, [statusText]);
+
+  // "ANALYSIS COMPLETE" flash when scan sections finish, before score reveal
+  useEffect(() => {
+    if (!sectionVisualComplete) return;
+    setAnalysisFlash(true);
+    const t1 = window.setTimeout(() => setAnalysisFlashFade(true), 500);
+    const t2 = window.setTimeout(() => setAnalysisFlash(false), 800);
+    return () => { clearTimeout(t1); clearTimeout(t2); };
+  }, [sectionVisualComplete]);
 
   const handleCancelScan = useCallback(() => {
     cancelRequestedRef.current = true;
@@ -828,8 +912,8 @@ function ScanLoadingInner() {
 
       // Scanning line: 1px vertical cursor sweeping left→right over CYCLE_MS, then instant reset
       const scanX = ((elapsed % CYCLE_MS) / CYCLE_MS) * w;
-      ctx.fillStyle = 'rgba(0,200,255,0.5)';
-      ctx.fillRect(Math.floor(scanX), 0, 1, h);
+      ctx.fillStyle = 'rgba(0,200,255,0.7)';
+      ctx.fillRect(Math.floor(scanX), 0, 2, h);
 
       raf = requestAnimationFrame(draw);
     };
@@ -1087,6 +1171,15 @@ function ScanLoadingInner() {
     );
   }
 
+  const introDomainStr = domainRef.current || (resolvedUrl ? getDomain(resolvedUrl.startsWith("http") ? resolvedUrl : `https://${resolvedUrl}`) : "");
+  const introDomainDisplay = !introDomainStr
+    ? introLine2Glitch
+    : introLine2Real >= introDomainStr.length
+      ? introDomainStr
+      : introLine2Real === 0
+        ? (introLine2Glitch || "")
+        : introDomainStr.slice(0, introLine2Real) + (introLine2Glitch ? introLine2Glitch.slice(introLine2Real, introLine2Real + 4) : "") + introDomainStr.slice(introLine2Real + 4);
+
   return (
     <>
       <style>{`
@@ -1254,6 +1347,10 @@ function ScanLoadingInner() {
         @keyframes scanCursorMove {
           from { left: -80px; }
           to { left: calc(100% + 80px); }
+        }
+        @keyframes introSweep {
+          from { transform: translateY(-100%); }
+          to   { transform: translateY(100vh); }
         }
       `}</style>
 
@@ -2237,7 +2334,7 @@ function ScanLoadingInner() {
                   className="status-text"
                   style={{ opacity: statusFading ? 0 : 1 }}
                 >
-                  {bottomStatusText}
+                  {statusBarOverride ?? (scoreReveal ? STATUS_COMPLETE_TEXT : typedStatus)}
                 </span>
               </span>
             </div>
@@ -2382,6 +2479,37 @@ function ScanLoadingInner() {
             background: rgba(0,200,255,0.055);
           }
         `}</style>
+
+        {/* Analysis complete flash — appears between section complete and score reveal */}
+        {analysisFlash && (
+          <div
+            aria-hidden
+            style={{
+              position: "fixed",
+              inset: 0,
+              zIndex: 290,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              pointerEvents: "none",
+              opacity: analysisFlashFade ? 0 : 1,
+              transition: analysisFlashFade ? "opacity 0.3s ease" : "none",
+            }}
+          >
+            <div
+              style={{
+                fontFamily: MONO,
+                fontSize: 13,
+                letterSpacing: "6px",
+                color: CY,
+                textTransform: "uppercase",
+                textShadow: "0 0 20px rgba(0,200,255,0.8), 0 0 60px rgba(0,200,255,0.4)",
+              }}
+            >
+              ANALYSIS COMPLETE
+            </div>
+          </div>
+        )}
 
         {/* Score overlay */}
         <div
@@ -2589,6 +2717,101 @@ function ScanLoadingInner() {
                 >
                   SCAN DIFFERENT SITE
                 </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Cinematic intro overlay — covers the first 1.5s of a normal scan */}
+        {introVisible && (
+          <div
+            style={{
+              position: "fixed",
+              inset: 0,
+              zIndex: 350,
+              background: BG,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              fontFamily: MONO,
+              opacity: introFadingOut ? 0 : 1,
+              transition: introFadingOut ? "opacity 0.3s ease" : "none",
+              pointerEvents: introFadingOut ? "none" : "auto",
+            }}
+          >
+            {/* Horizontal sweep beam */}
+            <div
+              aria-hidden
+              style={{
+                position: "fixed",
+                top: 0,
+                left: 0,
+                right: 0,
+                height: 1,
+                background: "rgba(0,200,255,0.6)",
+                zIndex: 100,
+                boxShadow: "0 0 12px rgba(0,200,255,0.5), 0 0 40px rgba(0,200,255,0.2)",
+                animation: "introSweep 0.8s ease-in-out forwards",
+              }}
+            />
+
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: 20,
+                position: "relative",
+                zIndex: 10,
+              }}
+            >
+              {/* INITIATING DIAGNOSTIC */}
+              <div
+                style={{
+                  fontFamily: "var(--font-jetbrains-mono), var(--font-space-mono), ui-monospace, monospace",
+                  fontSize: 11,
+                  letterSpacing: "4px",
+                  color: CY,
+                  textTransform: "uppercase",
+                  minHeight: 16,
+                }}
+              >
+                {introLine1}
+                {introLine1.length > 0 && introLine1.length < "INITIATING DIAGNOSTIC".length && (
+                  <span style={{ opacity: 0.5 }}>_</span>
+                )}
+              </div>
+
+              {/* TARGET: <domain> with glitch decode */}
+              {(introLine2Real > 0 || introLine2Glitch) && (
+                <div
+                  style={{
+                    fontFamily: "var(--font-jetbrains-mono), var(--font-space-mono), ui-monospace, monospace",
+                    fontSize: 11,
+                    letterSpacing: "4px",
+                    color: CY,
+                    textTransform: "uppercase",
+                  }}
+                >
+                  <span style={{ opacity: 0.4 }}>TARGET: </span>
+                  {introDomainDisplay}
+                </div>
+              )}
+
+              {/* 166 DIAGNOSTIC CHECKS QUEUED */}
+              <div
+                style={{
+                  fontFamily: MONO,
+                  fontSize: 10,
+                  letterSpacing: "3px",
+                  color: "rgba(0,200,255,0.4)",
+                  textTransform: "uppercase",
+                  opacity: introLine3 ? 1 : 0,
+                  transition: "opacity 0.4s ease",
+                }}
+              >
+                166 DIAGNOSTIC CHECKS QUEUED
               </div>
             </div>
           </div>

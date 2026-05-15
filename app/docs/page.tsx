@@ -85,7 +85,7 @@ const PRINCIPLES = [
     name: "The 8-Second Rule",
     definition: "Orientation completes or fails inside the first eight seconds of page load.",
     applies: "The hero must state audience, offer, and next action without scrolling on desktop and primary mobile breakpoints. WebDoc flags feature-led, vague, or below-fold heroes.",
-    example: "Before: 'We help businesses grow.' After: 'Diagnostic scan of your marketing site — URL in, ranked findings out in thirty seconds.'",
+    example: "Before: 'We help businesses grow.' After: 'Diagnostic scan of your marketing site — URL in, ranked findings out in ninety seconds.'",
   },
   {
     name: "Benefit vs Feature Psychology",
@@ -304,7 +304,7 @@ export default function DocsPage() {
               Revenue dimension scores
             </h3>
             <p className="mb-6 font-sans text-[15px] leading-[1.8]" style={{ color: "var(--text-secondary)" }}>
-              Psychology, Messaging, Conversion, SEO, UX, and Trust each expose a bar and sub-score. The lowest bars indicate which dimension currently drives suppression.
+              Conversion Architecture, Trust Signals, Message Clarity, Traffic Readiness, and Technical Foundation each expose a bar and sub-score. The lowest bars indicate which dimension currently drives suppression.
             </p>
             <h3 className="mb-2 max-w-[min(36rem,100%)] font-sans font-extrabold" style={{ color: "var(--text-primary)", fontWeight: 800, fontSize: "clamp(18px, 1.5vw, 22px)", lineHeight: 0.98, letterSpacing: "-0.5px" }}>
               Finding cards

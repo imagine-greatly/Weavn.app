@@ -71,7 +71,7 @@ function HowItWorksHero() {
               fontWeight: 800,
             }}
           >
-            URL to diagnostic report in thirty seconds
+            URL to diagnostic report in ninety seconds
             <span style={{ color: "var(--cyan)" }}>.</span>
           </h1>
         </ScrollReveal>
@@ -372,10 +372,10 @@ const STEPS = [
     num: 3,
     title: "WebDoc performs surgical site scan",
     visual: <Step3Visual />,
-    explanationTitle: "Forty-seven checks across six revenue dimensions",
+    explanationTitle: "One hundred and sixty-six checks across five revenue dimensions",
     explanationBody:
-      "The model evaluates outcome versus feature framing, CTA visibility and placement, trust density, and related conversion architecture signals in parallel. Each check binds to a cited principle and produces machine-readable evidence from your DOM.",
-    tag: "47 CHECKS · 6 REVENUE DIMENSIONS",
+      "One hundred and sixty-six checks run across Conversion Architecture, Trust Signals, Message Clarity, Traffic Readiness, and Technical Foundation in parallel. Each check binds to a cited principle and produces machine-readable evidence from your DOM.",
+    tag: "166 CHECKS · 5 REVENUE DIMENSIONS",
   },
   {
     num: 4,
@@ -591,7 +591,7 @@ function ProcessSteps() {
 // ─── Technology section ───────────────────────────────────────────────────
 const TECH_CARDS = [
   {
-    title: "PSYCHOLOGY ENGINE",
+    title: "DIAGNOSTIC ENGINE",
     body:
       "Scoring maps to established persuasion and attention models (Cialdini, AIDA, loss framing, cognitive load, Von Restorff). Each flagged finding cites the principle and ties it to on-page evidence.",
   },
@@ -689,7 +689,7 @@ const FAQ_ITEMS: { q: string; a: string }[] = [
   },
   {
     q: "Scan duration",
-    a: "Typical completion is twenty to forty seconds. Large multi-page pulls can run to sixty seconds. Each run includes up to five pages.",
+    a: "Typical completion is sixty to ninety seconds. Each run includes up to five pages.",
   },
   {
     q: "Competitor URLs",

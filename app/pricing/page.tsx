@@ -11,10 +11,6 @@ import {
 import { ScrollReveal } from "@/components/ScrollReveal";
 import UpgradeButton from "@/components/UpgradeButton";
 
-const JM = "var(--font-jetbrains-mono), var(--font-space-mono), monospace";
-
-const DIVIDER = <div style={{ height: 1, background: "rgba(0,200,255,0.15)", width: "100%" }} />;
-
 export default function PricingPage() {
   return (
     <>
@@ -24,25 +20,13 @@ export default function PricingPage() {
           100% { left: 110%; }
         }
       `}</style>
-      <div
-        className="min-h-screen"
-        style={{
-          backgroundImage:
-            "repeating-linear-gradient(0deg, rgba(0,200,255,0.02) 0px, rgba(0,200,255,0.02) 1px, transparent 1px, transparent 2px)",
-        }}
-      >
+      <div className="min-h-screen">
         <PricingHero />
-        {DIVIDER}
         <PricingTickerTransition />
-        {DIVIDER}
         <PricingCards />
-        {DIVIDER}
         <PricingBarsTransition />
-        {DIVIDER}
         <ValueJustification />
-        {DIVIDER}
         <PricingDottedBridgeTransition />
-        {DIVIDER}
         <PricingFAQ />
         <PricingHaloTransition />
       </div>
@@ -72,7 +56,7 @@ function PricingHero() {
       <div className="relative z-[2] flex w-full max-w-[min(960px,calc(100vw-48px))] flex-col items-center text-center">
         <p
           className="font-mono text-[11px] uppercase"
-          style={{ color: "#00C8FF", letterSpacing: "4px" }}
+          style={{ color: "var(--cyan)", letterSpacing: "4px" }}
         >
           PRICING
         </p>
@@ -169,12 +153,12 @@ const AGENCY_FEATURES = [
 function FeatureItem({ text, available = true }: { text: string; available?: boolean }) {
   return (
     <li
+      className="font-mono"
       style={{
         borderLeft: available
           ? "2px solid rgba(0,200,255,0.5)"
           : "2px solid rgba(255,255,255,0.1)",
         paddingLeft: 8,
-        fontFamily: JM,
         fontSize: 11,
         letterSpacing: "1px",
         color: available ? "var(--text-secondary)" : "var(--text-muted)",
@@ -190,10 +174,10 @@ function FeatureItem({ text, available = true }: { text: string; available?: boo
 function AgencyFeatureItem({ text, comingSoon }: { text: string; comingSoon: boolean }) {
   return (
     <li
+      className="font-mono"
       style={{
         borderLeft: "2px solid rgba(0,200,255,0.5)",
         paddingLeft: 8,
-        fontFamily: JM,
         fontSize: 11,
         letterSpacing: "1px",
         color: "var(--text-secondary)",
@@ -207,8 +191,8 @@ function AgencyFeatureItem({ text, comingSoon }: { text: string; comingSoon: boo
       {text}
       {comingSoon ? (
         <span
+          className="font-mono"
           style={{
-            fontFamily: JM,
             fontSize: 9,
             color: "var(--text-muted)",
             letterSpacing: "1px",
@@ -224,16 +208,15 @@ function AgencyFeatureItem({ text, comingSoon }: { text: string; comingSoon: boo
 
 function PricingCards() {
   return (
-    <section className="relative w-full py-[100px] px-6">
+    <section className="relative w-full py-[120px] px-6">
       <div className="mx-auto grid min-w-0 max-w-[1200px] gap-6 md:grid-cols-3">
         {/* FREE card */}
         <ScrollReveal variant="slide-left" className="min-w-0">
           <div
-            className="flex h-full min-w-0 flex-col p-10"
+            className="flex h-full min-w-0 flex-col p-10 rounded-lg"
             style={{
               background: "rgba(0,200,255,0.02)",
               border: "1px solid rgba(0,200,255,0.15)",
-              borderRadius: 2,
               transition: "all 0.2s ease",
             }}
             onMouseEnter={(e) => {
@@ -246,8 +229,8 @@ function PricingCards() {
             }}
           >
             <p
+              className="font-mono"
               style={{
-                fontFamily: JM,
                 fontSize: 10,
                 letterSpacing: "3px",
                 textTransform: "uppercase",
@@ -257,8 +240,8 @@ function PricingCards() {
               FREE DIAGNOSTIC
             </p>
             <p
+              className="font-score"
               style={{
-                fontFamily: JM,
                 fontSize: 56,
                 lineHeight: 1,
                 fontWeight: 700,
@@ -269,8 +252,8 @@ function PricingCards() {
               0
             </p>
             <p
+              className="font-mono"
               style={{
-                fontFamily: JM,
                 fontSize: 11,
                 letterSpacing: "0.5px",
                 lineHeight: 1.6,
@@ -288,15 +271,13 @@ function PricingCards() {
             </ul>
             <Link
               href="/"
-              className="mt-8 flex w-full items-center justify-center border py-4"
+              className="mt-8 flex w-full items-center justify-center border py-4 font-mono rounded-lg"
               style={{
                 borderColor: "rgba(0,200,255,0.4)",
-                color: "#00C8FF",
+                color: "var(--cyan)",
                 background: "transparent",
                 minHeight: 44,
-                borderRadius: 2,
                 letterSpacing: "2px",
-                fontFamily: JM,
                 fontSize: 11,
                 fontWeight: 700,
                 textTransform: "uppercase",
@@ -304,7 +285,7 @@ function PricingCards() {
                 transition: "all 0.15s ease",
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.borderColor = "#00C8FF";
+                e.currentTarget.style.borderColor = "var(--cyan)";
                 e.currentTarget.style.boxShadow = "0 0 20px rgba(0,200,255,0.25)";
                 e.currentTarget.style.background = "rgba(0,200,255,0.05)";
               }}
@@ -322,12 +303,11 @@ function PricingCards() {
         {/* PRO card */}
         <ScrollReveal variant="slide-right" className="min-w-0 overflow-visible">
           <div
-            className="relative flex h-full min-w-0 flex-col overflow-visible p-10"
+            className="relative flex h-full min-w-0 flex-col overflow-visible p-10 rounded-lg"
             style={{
               background: "rgba(0,200,255,0.02)",
               border: "1px solid rgba(0,200,255,0.3)",
               boxShadow: "var(--cyan-glow-soft)",
-              borderRadius: 2,
               transition: "all 0.2s ease",
             }}
             onMouseEnter={(e) => {
@@ -340,6 +320,7 @@ function PricingCards() {
             }}
           >
             <div
+              className="font-mono"
               style={{
                 position: "absolute",
                 left: "50%",
@@ -347,7 +328,6 @@ function PricingCards() {
                 transform: "translate(-50%, -50%)",
                 background: "var(--cyan)",
                 color: "#050810",
-                fontFamily: JM,
                 fontSize: 10,
                 letterSpacing: "2px",
                 textTransform: "uppercase",
@@ -359,8 +339,8 @@ function PricingCards() {
               FULL DIAGNOSTIC
             </div>
             <p
+              className="font-mono"
               style={{
-                fontFamily: JM,
                 fontSize: 10,
                 letterSpacing: "3px",
                 textTransform: "uppercase",
@@ -370,20 +350,20 @@ function PricingCards() {
               PRO DIAGNOSTIC
             </p>
             <p
+              className="font-score"
               style={{
-                fontFamily: JM,
                 fontSize: 56,
                 lineHeight: 1,
                 fontWeight: 700,
-                color: "#00C8FF",
+                color: "var(--cyan)",
                 marginTop: 8,
               }}
             >
               50
             </p>
             <p
+              className="font-mono"
               style={{
-                fontFamily: JM,
                 fontSize: 11,
                 letterSpacing: "1px",
                 color: "var(--text-muted)",
@@ -393,8 +373,8 @@ function PricingCards() {
               /mo · cancel anytime
             </p>
             <p
+              className="font-mono"
               style={{
-                fontFamily: JM,
                 fontSize: 11,
                 letterSpacing: "0.5px",
                 lineHeight: 1.6,
@@ -424,16 +404,14 @@ function PricingCards() {
                     .then((d: { url?: string }) => { if (d.url) window.location.href = d.url; })
                     .catch(() => { window.location.href = "/auth?tab=signin"; });
                 }}
-                className="flex w-full items-center justify-center"
+                className="flex w-full items-center justify-center font-mono rounded-lg"
                 style={{
-                  background: "#00C8FF",
+                  background: "var(--cyan)",
                   color: "#050810",
-                  fontFamily: JM,
                   fontWeight: 700,
                   fontSize: 13,
                   textTransform: "uppercase",
                   minHeight: 44,
-                  borderRadius: 2,
                   border: "none",
                   letterSpacing: "2px",
                   textDecoration: "none",
@@ -447,8 +425,8 @@ function PricingCards() {
               </a>
             </div>
             <p
-              className="mt-3 text-center"
-              style={{ fontFamily: JM, fontSize: 11, color: "var(--text-muted)", letterSpacing: "0.5px" }}
+              className="mt-3 text-center font-mono"
+              style={{ fontSize: 11, color: "var(--text-muted)", letterSpacing: "0.5px" }}
             >
               Cancel anytime. Access continues through the paid period end.
             </p>
@@ -458,12 +436,11 @@ function PricingCards() {
         {/* AGENCY card */}
         <ScrollReveal variant="slide-right" className="min-w-0 overflow-visible">
           <div
-            className="relative flex h-full min-w-0 flex-col overflow-visible p-10"
+            className="relative flex h-full min-w-0 flex-col overflow-visible p-10 rounded-lg"
             style={{
               background: "rgba(0,200,255,0.02)",
               border: "1px solid rgba(0,230,118,0.2)",
               boxShadow: "0 0 40px rgba(0,230,118,0.04)",
-              borderRadius: 2,
               transition: "all 0.2s ease",
             }}
             onMouseEnter={(e) => {
@@ -476,6 +453,7 @@ function PricingCards() {
             }}
           >
             <div
+              className="font-mono"
               style={{
                 position: "absolute",
                 left: "50%",
@@ -483,7 +461,6 @@ function PricingCards() {
                 transform: "translate(-50%, -50%)",
                 background: "var(--green)",
                 color: "#050810",
-                fontFamily: JM,
                 fontSize: 10,
                 letterSpacing: "2px",
                 textTransform: "uppercase",
@@ -495,8 +472,8 @@ function PricingCards() {
               AGENCY
             </div>
             <p
+              className="font-mono"
               style={{
-                fontFamily: JM,
                 fontSize: 10,
                 letterSpacing: "3px",
                 textTransform: "uppercase",
@@ -506,8 +483,8 @@ function PricingCards() {
               AGENCY DIAGNOSTIC
             </p>
             <p
+              className="font-score"
               style={{
-                fontFamily: JM,
                 fontSize: 56,
                 lineHeight: 1,
                 fontWeight: 700,
@@ -518,8 +495,8 @@ function PricingCards() {
               150
             </p>
             <p
+              className="font-mono"
               style={{
-                fontFamily: JM,
                 fontSize: 11,
                 letterSpacing: "1px",
                 color: "var(--text-muted)",
@@ -529,8 +506,8 @@ function PricingCards() {
               /mo · cancel anytime
             </p>
             <p
+              className="font-mono"
               style={{
-                fontFamily: JM,
                 fontSize: 11,
                 letterSpacing: "0.5px",
                 lineHeight: 1.6,
@@ -560,16 +537,14 @@ function PricingCards() {
                     .then((d: { url?: string }) => { if (d.url) window.location.href = d.url; })
                     .catch(() => { window.location.href = "/auth?tab=signin"; });
                 }}
-                className="flex w-full items-center justify-center"
+                className="flex w-full items-center justify-center font-mono rounded-lg"
                 style={{
                   background: "var(--green)",
                   color: "#050810",
-                  fontFamily: JM,
                   fontWeight: 700,
                   fontSize: 13,
                   textTransform: "uppercase",
                   minHeight: 44,
-                  borderRadius: 2,
                   border: "none",
                   letterSpacing: "2px",
                   textDecoration: "none",
@@ -583,8 +558,8 @@ function PricingCards() {
               </a>
             </div>
             <p
-              className="mt-3 text-center"
-              style={{ fontFamily: JM, fontSize: 11, color: "var(--text-muted)", letterSpacing: "0.5px" }}
+              className="mt-3 text-center font-mono"
+              style={{ fontSize: 11, color: "var(--text-muted)", letterSpacing: "0.5px" }}
             >
               Cancel anytime. Access continues through the paid period end.
             </p>
@@ -641,14 +616,14 @@ const SCENARIOS = [
 function ValueJustification() {
   return (
     <section
-      className="relative w-full overflow-hidden py-[100px] px-6"
+      className="relative w-full overflow-hidden py-[120px] px-6"
       style={{ background: "var(--bg-surface)" }}
     >
       <div className="mx-auto max-w-[min(1100px,calc(100vw-48px))]">
         <div className="text-center">
           <p
+            className="font-mono"
             style={{
-              fontFamily: JM,
               fontSize: 9,
               letterSpacing: "3px",
               textTransform: "uppercase",
@@ -669,7 +644,7 @@ function ValueJustification() {
                 fontWeight: 800,
               }}
             >
-              <span style={{ color: "#00C8FF" }}>●</span>{" "}
+              <span style={{ color: "var(--cyan)" }}>●</span>{" "}
               Revenue suppression in three traffic models<span style={{ color: "var(--cyan)" }}>.</span>
             </h2>
           </ScrollReveal>
@@ -679,21 +654,21 @@ function ValueJustification() {
           {SCENARIOS.map((s, i) => (
             <ScrollReveal key={s.label} variant="card" index={i}>
               <div
+                className="rounded-lg"
                 style={{
                   background: "rgba(0,200,255,0.03)",
                   border: "1px solid var(--border-default)",
                   borderTop: "1px solid rgba(0,200,255,0.4)",
-                  borderRadius: 2,
                   padding: 24,
                 }}
               >
                 <p
+                  className="font-mono"
                   style={{
-                    fontFamily: JM,
                     fontSize: 9,
                     letterSpacing: "3px",
                     textTransform: "uppercase",
-                    color: "#00C8FF",
+                    color: "var(--cyan)",
                   }}
                 >
                   {s.label}
@@ -714,12 +689,12 @@ function ValueJustification() {
                   {s.lines.map((line) => (
                     <p
                       key={line}
+                      className="font-mono"
                       style={{
-                        fontFamily: JM,
                         fontSize: line === "→" ? 18 : 11,
                         letterSpacing: "0.5px",
                         lineHeight: 1.6,
-                        color: line === "→" ? "#00C8FF" : "var(--text-secondary)",
+                        color: line === "→" ? "var(--cyan)" : "var(--text-secondary)",
                         fontWeight: line === "→" ? 700 : 400,
                       }}
                     >
@@ -728,13 +703,13 @@ function ValueJustification() {
                   ))}
                 </div>
                 <div
+                  className="font-mono"
                   style={{
                     marginTop: 16,
                     display: "inline-block",
                     color: "var(--green)",
                     background: "rgba(0,255,135,0.08)",
                     border: "1px solid rgba(0,255,135,0.2)",
-                    fontFamily: JM,
                     fontSize: 10,
                     letterSpacing: "2px",
                     textTransform: "uppercase",
@@ -768,7 +743,7 @@ const PRICING_FAQ = [
   },
   {
     q: "One scan definition",
-    a: "One scan is one complete domain diagnostic: multi-page crawl, forty-seven evaluated signals, diagnostic report output. Each rescan of the same domain is a new scan. Pro includes the full finding set, history, and up to five concurrently tracked domains.",
+    a: "One scan is one complete domain diagnostic: multi-page crawl, one hundred and sixty-six evaluated signals, diagnostic report output. Each rescan of the same domain is a new scan. Pro includes the full finding set, history, and up to five concurrently tracked domains.",
   },
   {
     q: "Refund guarantee",
@@ -788,12 +763,12 @@ function PricingFAQ() {
   const [openIndex, setOpenIndex] = useState<number | null>(0);
 
   return (
-    <section className="relative w-full overflow-hidden py-[100px] px-6">
+    <section className="relative w-full overflow-hidden py-[120px] px-6">
       <div className="mx-auto max-w-[min(840px,calc(100vw-48px))]">
         <div className="text-center">
           <p
+            className="font-mono"
             style={{
-              fontFamily: JM,
               fontSize: 9,
               letterSpacing: "3px",
               textTransform: "uppercase",
@@ -814,7 +789,7 @@ function PricingFAQ() {
                 fontWeight: 800,
               }}
             >
-              <span style={{ color: "#00C8FF" }}>●</span>{" "}
+              <span style={{ color: "var(--cyan)" }}>●</span>{" "}
               Billing and access<span style={{ color: "var(--cyan)" }}>.</span>
             </h2>
           </ScrollReveal>
@@ -865,9 +840,8 @@ function PricingFAQ() {
               >
                 <div className="min-h-0 overflow-hidden">
                   <div
-                    className="pb-5 pl-5 pr-12"
+                    className="pb-5 pl-5 pr-12 font-mono"
                     style={{
-                      fontFamily: JM,
                       fontSize: 13,
                       letterSpacing: "0.5px",
                       lineHeight: 1.7,

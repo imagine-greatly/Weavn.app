@@ -278,11 +278,6 @@ export default function ConversionScoreGauge({
             </div>
           </div>
 
-          <div className="flex items-center justify-center gap-2" style={{ marginTop: 4, marginBottom: 2 }}>
-            <div style={{ width: 24, height: 1, background: `rgba(${band.rgb},0.45)`, boxShadow: `0 0 6px rgba(${band.rgb},0.35)` }} />
-            <span className="font-mono" style={{ fontSize: 10, color: "var(--text-muted)", letterSpacing: "0.12em" }}>● CONVERSION SCORE</span>
-            <div style={{ width: 24, height: 1, background: `rgba(${band.rgb},0.45)`, boxShadow: `0 0 6px rgba(${band.rgb},0.35)` }} />
-          </div>
           <span
             className="font-mono inline-block"
             style={{
@@ -290,7 +285,7 @@ export default function ConversionScoreGauge({
               fontWeight: 700,
               fontSize: 9,
               letterSpacing: "0.12em",
-              color: band.color,
+              color: "var(--text-muted)",
             }}
           >
             {band.label}

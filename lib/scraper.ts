@@ -73,8 +73,7 @@ async function fetchWithBrowserless(url: string): Promise<string | null> {
             waitUntil: 'domcontentloaded',
             timeout: 30000
           },
-          waitFor: { timeout: 3000 },
-          rejectRequestPattern: ['.*\\.(png|jpg|jpeg|gif|webp|svg|mp4|woff|woff2|ttf|eot).*']
+          waitFor: { timeout: 3000 }
         }),
         signal: AbortSignal.timeout(35000)
       }

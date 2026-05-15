@@ -155,10 +155,13 @@ const PRO_FEATURES = [
 ];
 
 const AGENCY_FEATURES = [
-  { text: "Up to 10 active site diagnostics", comingSoon: false },
-  { text: "All findings — full finding set with quoted evidence", comingSoon: false },
-  { text: "Deep analysis engine — enhanced diagnostic depth", comingSoon: false },
-  { text: "Priority scanning", comingSoon: false },
+  { text: "10 active client site diagnostics", comingSoon: false },
+  { text: "Full diagnostic suite — every finding with revenue impact scoring", comingSoon: false },
+  { text: "Deep analysis engine — enhanced diagnostic intelligence", comingSoon: false },
+  { text: "Priority scan queue — results before standard users", comingSoon: false },
+  { text: "Client-ready shareable diagnostic reports", comingSoon: false },
+  { text: "Exportable PDF diagnostics for client deliverables", comingSoon: false },
+  { text: "Full scan history across all client sites", comingSoon: false },
   { text: "API access", comingSoon: true },
   { text: "White label reports", comingSoon: true },
 ];
@@ -535,7 +538,7 @@ function PricingCards() {
                 marginTop: 8,
               }}
             >
-              Built for agencies managing multiple client sites. Enhanced diagnostic depth across up to 10 active sites.
+              Built for agencies and consultants who deliver conversion intelligence as a service. Run diagnostics across your entire client portfolio.
             </p>
             <div className="my-6 h-px w-full" style={{ background: "rgba(0,200,255,0.1)" }} />
             <ul className="flex-1 space-y-3">

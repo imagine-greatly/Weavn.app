@@ -72,8 +72,7 @@ async function fetchWithBrowserless(url: string): Promise<string | null> {
           gotoOptions: {
             waitUntil: 'domcontentloaded',
             timeout: 30000
-          },
-          waitFor: { timeout: 3000 }
+          }
         }),
         signal: AbortSignal.timeout(35000)
       }

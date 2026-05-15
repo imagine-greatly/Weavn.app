@@ -1,24 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
-
-function buildNumbers(count: number, seed: number): string[] {
-  return Array.from({ length: count }, (_, i) => {
-    const n = Math.floor((Math.sin((i + 1) * (seed + 2.17)) * 10000) % 101);
-    return String(Math.abs(n));
-  });
-}
+import { useEffect, useRef, useState } from "react";
 
 export function ProductDepthMistTransition() {
   return (
-    <div aria-hidden className="relative h-[110px] w-full overflow-hidden">
+    <div aria-hidden className="relative h-[60px] w-full overflow-hidden">
       <div
         className="absolute inset-0"
         style={{ background: "linear-gradient(180deg, transparent 0%, var(--bg-surface) 100%)" }}
-      />
-      <div
-        className="absolute inset-x-0 bottom-0 h-[40px]"
-        style={{ boxShadow: "0 -40px 80px rgba(0,0,0,0.4)" }}
       />
     </div>
   );
@@ -103,46 +92,86 @@ export function ProductFunnelTransition() {
 }
 
 export function PricingTickerTransition() {
-  const left = useMemo(() => buildNumbers(40, 5), []);
-  const right = useMemo(() => buildNumbers(40, 7), []);
   return (
-    <div aria-hidden className="relative h-[80px] w-full overflow-hidden" style={{ background: "var(--bg-surface)" }}>
-      <div className="mt-3 flex w-max whitespace-nowrap" style={{ animation: "scrollLeft 22s linear infinite" }}>
-        {[...left, ...left].map((v, i) => (
-          <span key={`l-${i}`} className="font-mono text-[11px]" style={{ marginRight: 20, letterSpacing: "3px", color: i % 2 ? "rgba(0,200,255,0.08)" : "rgba(0,200,255,0.2)" }}>
-            {v}
+    <div
+      aria-hidden
+      className="relative w-full"
+      style={{
+        height: 60,
+        background: "var(--bg-surface)",
+        borderTop: "1px solid rgba(0,200,255,0.08)",
+        borderBottom: "1px solid rgba(0,200,255,0.08)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
+      {["166 CHECKS", "5 DIAGNOSTIC DIMENSIONS", "90 SECOND SCAN"].map((stat, i) => (
+        <div key={stat} style={{ display: "flex", alignItems: "center" }}>
+          {i > 0 && (
+            <div
+              style={{
+                width: 1,
+                height: 16,
+                background: "rgba(0,200,255,0.15)",
+                margin: "0 32px",
+              }}
+            />
+          )}
+          <span
+            className="font-mono"
+            style={{
+              fontSize: 11,
+              letterSpacing: "3px",
+              color: "rgba(0,200,255,0.35)",
+              textTransform: "uppercase",
+            }}
+          >
+            {stat}
           </span>
-        ))}
-      </div>
-      <div className="mt-2 flex w-max whitespace-nowrap" style={{ animation: "scrollRight 16s linear infinite" }}>
-        {[...right, ...right].map((v, i) => (
-          <span key={`r-${i}`} className="font-mono text-[11px]" style={{ marginRight: 20, letterSpacing: "3px", color: i % 3 ? "rgba(0,200,255,0.12)" : "rgba(0,200,255,0.22)" }}>
-            {v}
-          </span>
-        ))}
-      </div>
+        </div>
+      ))}
     </div>
   );
 }
 
 export function PricingBarsTransition() {
   return (
-    <div aria-hidden className="relative h-[72px] w-full overflow-hidden">
-      <div className="mx-auto flex h-full max-w-[1000px] items-end gap-2 px-6">
-        {[22, 36, 18, 45, 60, 31, 54, 26, 42].map((h, i) => (
-          <div key={i} className="rounded-t-sm" style={{ height: h, flex: 1, background: i % 2 ? "rgba(0,200,255,0.08)" : "rgba(0,200,255,0.16)" }} />
-        ))}
-      </div>
+    <div aria-hidden className="relative h-[68px] w-full overflow-hidden">
+      <style>{`
+        @keyframes pricingScanDot {
+          0%   { left: 91%; opacity: 0; }
+          4%   { opacity: 1; }
+          96%  { opacity: 1; }
+          100% { left: 9%;  opacity: 0; }
+        }
+      `}</style>
+      <div className="absolute left-1/2 top-1/2 h-px w-[82%] -translate-x-1/2 -translate-y-1/2" style={{ background: "rgba(0,200,255,0.14)" }} />
+      {[10, 23, 36, 50, 64, 77, 90].map((x, i) => (
+        <div
+          key={i}
+          className="absolute top-1/2 h-1.5 w-1.5 -translate-y-1/2"
+          style={{ left: `${x}%`, background: "rgba(0,200,255,0.28)" }}
+        />
+      ))}
+      <div
+        className="absolute top-1/2 h-2 w-2 -translate-y-1/2 rounded-full"
+        style={{
+          background: "var(--cyan)",
+          boxShadow: "0 0 6px rgba(0,200,255,0.6)",
+          animation: "pricingScanDot 4s linear infinite",
+        }}
+      />
     </div>
   );
 }
 
 export function PricingDottedBridgeTransition() {
   return (
-    <div aria-hidden className="relative h-[56px] w-full overflow-hidden">
+    <div aria-hidden className="relative h-[48px] w-full overflow-hidden">
       <div
-        className="absolute left-0 right-0 top-1/2 h-px"
-        style={{ background: "repeating-linear-gradient(90deg, rgba(0,200,255,0.24) 0 4px, transparent 4px 14px)" }}
+        className="absolute left-1/2 top-1/2 h-px w-[60%] -translate-x-1/2 -translate-y-1/2"
+        style={{ background: "rgba(0,200,255,0.08)" }}
       />
     </div>
   );
@@ -150,10 +179,19 @@ export function PricingDottedBridgeTransition() {
 
 export function PricingHaloTransition() {
   return (
-    <div aria-hidden className="relative h-[84px] w-full overflow-hidden">
-      <div className="absolute left-1/2 top-1/2 h-[46px] w-[46px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-[rgba(0,200,255,0.25)] live-pulse" />
-      <div className="absolute left-1/2 top-1/2 h-[72px] w-[72px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-[rgba(0,200,255,0.1)]" />
-      <div className="absolute left-1/2 top-1/2 h-[100px] w-[100px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-[rgba(0,200,255,0.06)]" />
+    <div aria-hidden className="relative h-[72px] w-full overflow-hidden">
+      <div
+        className="absolute left-1/2 top-1/2 h-[28px] w-[28px] -translate-x-1/2 -translate-y-1/2 rounded-full border live-pulse"
+        style={{ borderColor: "rgba(0,200,255,0.15)" }}
+      />
+      <div
+        className="absolute left-1/2 top-1/2 h-[6px] w-[6px] -translate-x-1/2 -translate-y-1/2 rounded-full"
+        style={{
+          background: "var(--cyan)",
+          opacity: 0.6,
+          boxShadow: "0 0 8px rgba(0,200,255,0.4)",
+        }}
+      />
     </div>
   );
 }

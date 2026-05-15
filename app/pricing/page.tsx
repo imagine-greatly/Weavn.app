@@ -616,7 +616,7 @@ const SCENARIOS = [
 function ValueJustification() {
   return (
     <section
-      className="relative w-full overflow-hidden py-[120px] px-6"
+      className="relative w-full py-[120px] px-6"
       style={{ background: "var(--bg-surface)" }}
     >
       <div className="mx-auto max-w-[min(1100px,calc(100vw-48px))]">
@@ -624,28 +624,27 @@ function ValueJustification() {
           <p
             className="font-mono"
             style={{
-              fontSize: 9,
+              fontSize: 11,
               letterSpacing: "3px",
               textTransform: "uppercase",
-              color: "rgba(0,200,255,0.4)",
+              color: "var(--text-muted)",
               marginBottom: 12,
             }}
           >
-            REVENUE ANALYSIS
+            DIAGNOSTIC ROI
           </p>
           <ScrollReveal variant="headline">
             <h2
-              className="mx-auto max-w-[min(52rem,calc(100vw-48px))] font-sans font-extrabold"
+              className="mx-auto font-sans font-extrabold"
               style={{
                 color: "var(--text-primary)",
-                fontSize: "clamp(32px, 3.6vw, 48px)",
+                fontSize: "clamp(36px, 4vw, 52px)",
                 lineHeight: 0.98,
-                letterSpacing: "-1.2px",
+                letterSpacing: "-1.5px",
                 fontWeight: 800,
               }}
             >
-              <span style={{ color: "var(--cyan)" }}>●</span>{" "}
-              Revenue suppression in three traffic models<span style={{ color: "var(--cyan)" }}>.</span>
+              What fixing one finding is worth.
             </h2>
           </ScrollReveal>
         </div>
@@ -656,51 +655,103 @@ function ValueJustification() {
               <div
                 className="rounded-lg"
                 style={{
-                  background: "rgba(0,200,255,0.03)",
+                  background: "var(--bg-card)",
                   border: "1px solid var(--border-default)",
-                  borderTop: "1px solid rgba(0,200,255,0.4)",
-                  padding: 24,
+                  borderTop: "2px solid var(--cyan)",
+                  padding: 32,
+                  transition: "all 200ms",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = "rgba(0,200,255,0.3)";
+                  e.currentTarget.style.borderTopColor = "rgba(0,200,255,0.3)";
+                  e.currentTarget.style.boxShadow = "var(--cyan-glow-soft)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = "var(--border-default)";
+                  e.currentTarget.style.borderTopColor = "var(--cyan)";
+                  e.currentTarget.style.boxShadow = "none";
                 }}
               >
                 <p
                   className="font-mono"
                   style={{
-                    fontSize: 9,
+                    fontSize: 10,
                     letterSpacing: "3px",
                     textTransform: "uppercase",
-                    color: "var(--cyan)",
+                    color: "var(--text-muted)",
                   }}
                 >
                   {s.label}
                 </p>
                 <h3
-                  className="mt-2 max-w-[min(22rem,100%)] font-sans font-extrabold"
+                  className="mt-2 font-sans font-extrabold"
                   style={{
                     color: "var(--text-primary)",
-                    fontSize: "clamp(17px, 1.6vw, 20px)",
-                    lineHeight: 0.98,
+                    fontSize: "clamp(18px, 1.8vw, 22px)",
+                    lineHeight: 1.1,
                     letterSpacing: "-0.5px",
                     fontWeight: 800,
                   }}
                 >
                   {s.headline}
                 </h3>
-                <div className="mt-4 space-y-1.5">
-                  {s.lines.map((line) => (
+                <div
+                  className="my-4"
+                  style={{ height: 1, background: "var(--border-default)" }}
+                />
+                <div style={{ display: "flex", gap: 24 }}>
+                  <div style={{ flex: 1 }}>
                     <p
-                      key={line}
                       className="font-mono"
                       style={{
-                        fontSize: line === "→" ? 18 : 11,
-                        letterSpacing: "0.5px",
-                        lineHeight: 1.6,
-                        color: line === "→" ? "var(--cyan)" : "var(--text-secondary)",
-                        fontWeight: line === "→" ? 700 : 400,
+                        fontSize: 9,
+                        letterSpacing: "2px",
+                        textTransform: "uppercase",
+                        color: "var(--text-muted)",
+                        marginBottom: 6,
                       }}
                     >
-                      {line}
+                      BEFORE
                     </p>
-                  ))}
+                    <p
+                      className="font-mono"
+                      style={{ fontSize: 12, color: "var(--text-secondary)", lineHeight: 1.6 }}
+                    >
+                      {s.lines[0]}
+                    </p>
+                    <p
+                      className="font-mono"
+                      style={{ fontSize: 12, color: "var(--text-secondary)", lineHeight: 1.6 }}
+                    >
+                      {s.lines[1]}
+                    </p>
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <p
+                      className="font-mono"
+                      style={{
+                        fontSize: 9,
+                        letterSpacing: "2px",
+                        textTransform: "uppercase",
+                        color: "var(--cyan)",
+                        marginBottom: 6,
+                      }}
+                    >
+                      AFTER
+                    </p>
+                    <p
+                      className="font-mono"
+                      style={{ fontSize: 12, color: "var(--text-secondary)", lineHeight: 1.6 }}
+                    >
+                      {s.lines[3]}
+                    </p>
+                    <p
+                      className="font-mono"
+                      style={{ fontSize: 12, color: "var(--text-secondary)", lineHeight: 1.6 }}
+                    >
+                      {s.lines[4]}
+                    </p>
+                  </div>
                 </div>
                 <div
                   className="font-mono"
@@ -725,10 +776,10 @@ function ValueJustification() {
         </div>
 
         <p
-          className="mx-auto mt-12 max-w-[480px] text-center font-sans text-[16px] leading-relaxed"
-          style={{ color: "var(--text-secondary)" }}
+          className="mx-auto mt-12 max-w-[480px] text-center font-mono"
+          style={{ fontSize: 13, color: "var(--text-muted)" }}
         >
-          Pro is $50 per month. Full finding set, history, and ranked resolutions included.
+          One diagnostic. One finding resolved. The math above uses conservative benchmarks.
         </p>
       </div>
     </section>

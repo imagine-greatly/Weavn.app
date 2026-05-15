@@ -397,6 +397,7 @@ function ScanLoadingInner() {
 
   useEffect(() => {
     if (!resolvedUrl) return;
+    if (!searchParams.toString() && !window.location.search) return;
     console.log("[scan] starting pipeline", { url: resolvedUrl, rescan: isRescan });
     let normalized = resolvedUrl;
     if (!/^https?:\/\//i.test(normalized)) normalized = `https://${normalized}`;
@@ -601,7 +602,7 @@ function ScanLoadingInner() {
       }
       startNormalScan();
     })();
-  }, [resolvedUrl, materialize, scanNext, isRescan, router]);
+  }, [resolvedUrl, materialize, scanNext, isRescan, router, searchParams.toString()]);
 
   useEffect(() => {
     if (errorMsg) {

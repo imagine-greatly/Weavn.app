@@ -169,7 +169,7 @@ function ScanLoadingInner() {
   const [introLine2Real, setIntroLine2Real] = useState(0);
   const [introLine3, setIntroLine3] = useState(false);
   // Status typewriter
-  const [typedStatus, setTypedStatus] = useState(STATUS_MESSAGES[0]);
+  const [typedStatus, setTypedStatus] = useState<string>(STATUS_MESSAGES[0]);
   // Analysis complete flash
   const [analysisFlash, setAnalysisFlash] = useState(false);
   const [analysisFlashFade, setAnalysisFlashFade] = useState(false);

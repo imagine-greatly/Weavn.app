@@ -93,44 +93,11 @@ export function ProductFunnelTransition() {
 
 export function PricingTickerTransition() {
   return (
-    <div
-      aria-hidden
-      className="relative w-full"
-      style={{
-        height: 60,
-        background: "var(--bg-surface)",
-        borderTop: "1px solid rgba(0,200,255,0.08)",
-        borderBottom: "1px solid rgba(0,200,255,0.08)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-      }}
-    >
-      {["166 CHECKS", "5 DIAGNOSTIC DIMENSIONS", "90 SECOND SCAN"].map((stat, i) => (
-        <div key={stat} style={{ display: "flex", alignItems: "center" }}>
-          {i > 0 && (
-            <div
-              style={{
-                width: 1,
-                height: 16,
-                background: "rgba(0,200,255,0.15)",
-                margin: "0 32px",
-              }}
-            />
-          )}
-          <span
-            className="font-mono"
-            style={{
-              fontSize: 11,
-              letterSpacing: "3px",
-              color: "rgba(0,200,255,0.35)",
-              textTransform: "uppercase",
-            }}
-          >
-            {stat}
-          </span>
-        </div>
-      ))}
+    <div aria-hidden className="relative h-[60px] w-full overflow-hidden">
+      <div
+        className="absolute inset-0"
+        style={{ background: "linear-gradient(180deg, transparent 0%, var(--bg-surface) 100%)" }}
+      />
     </div>
   );
 }

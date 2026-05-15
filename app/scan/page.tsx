@@ -120,6 +120,11 @@ function ScanLoadingInner() {
     (typeof window !== "undefined" && new URLSearchParams(window.location.search).get("rescan") === "true");
   console.log('[scan] isRescan:', isRescan, 'url param:', urlParam, 'full search params:', searchParams.toString());
 
+  const rescanFlagRef = useRef(false);
+  if (typeof window !== "undefined") {
+    rescanFlagRef.current = new URLSearchParams(window.location.search).get("rescan") === "true";
+  }
+
   useEffect(() => {
     if (!urlParam) return;
     const t = window.setTimeout(() => setResolvedUrl(urlParam), 300);
@@ -397,7 +402,6 @@ function ScanLoadingInner() {
 
   useEffect(() => {
     if (!resolvedUrl) return;
-    if (!searchParams.toString() && !window.location.search) return;
     console.log("[scan] starting pipeline", { url: resolvedUrl, rescan: isRescan });
     let normalized = resolvedUrl;
     if (!/^https?:\/\//i.test(normalized)) normalized = `https://${normalized}`;
@@ -410,7 +414,6 @@ function ScanLoadingInner() {
     }
     domainRef.current = domain;
     normalizedUrlRef.current = normalized;
-    const rescanFlag = searchParams.get("rescan") === "true";
 
     const startNormalScan = () => {
       scanStartTimeRef.current = performance.now();
@@ -432,7 +435,7 @@ function ScanLoadingInner() {
           const res = await fetch("/api/scan", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ url: normalized, ...(rescanFlag ? { rescan: true } : {}) }),
+            body: JSON.stringify({ url: normalized, ...(rescanFlagRef.current ? { rescan: true } : {}) }),
             signal: controller.signal,
           });
           window.clearTimeout(timeoutId);
@@ -491,8 +494,8 @@ function ScanLoadingInner() {
       runFetch();
     };
 
-    console.log('[scan] isRescan:', isRescan, 'rescanFlag:', rescanFlag, 'url param:', urlParam, 'full search params:', searchParams.toString());
-    if (rescanFlag || scanFailure !== null) {
+    console.log('[scan] isRescan:', isRescan, 'rescanFlagRef:', rescanFlagRef.current, 'url param:', urlParam, 'full search params:', searchParams.toString());
+    if (rescanFlagRef.current || scanFailure !== null) {
       startNormalScan();
       return;
     }
@@ -602,7 +605,7 @@ function ScanLoadingInner() {
       }
       startNormalScan();
     })();
-  }, [resolvedUrl, materialize, scanNext, isRescan, router, searchParams.toString()]);
+  }, [resolvedUrl, materialize, scanNext, isRescan, router]);
 
   useEffect(() => {
     if (errorMsg) {

@@ -953,9 +953,9 @@ export default function DashboardPage() {
           <button
             type="button"
             onClick={() => setShowScanInput(true)}
-            style={{ alignSelf: "flex-start", background: "transparent", border: "1px solid #00C8FF", color: "#00C8FF", fontFamily: SM, fontSize: 9, fontWeight: 700, padding: "4px 10px", borderRadius: 2, cursor: "pointer", letterSpacing: "0.08em", textTransform: "uppercase" }}
-            onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(0,200,255,0.1)"; }}
-            onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+            style={{ alignSelf: "flex-start", background: "transparent", border: "1px solid rgba(0,200,255,0.35)", color: "#00C8FF", fontFamily: SM, fontSize: 9, fontWeight: 700, padding: "4px 10px", borderRadius: 2, cursor: "pointer", letterSpacing: "2px", textTransform: "uppercase", transition: "all 0.15s ease" }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(0,200,255,0.04)"; e.currentTarget.style.borderColor = "#00C8FF"; e.currentTarget.style.boxShadow = "0 0 14px rgba(0,200,255,0.2)"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = "rgba(0,200,255,0.35)"; e.currentTarget.style.boxShadow = "none"; }}
           >
             + SCAN NEW SITE
           </button>

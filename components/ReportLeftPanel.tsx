@@ -237,20 +237,21 @@ export default function ReportLeftPanel({
               width: "100%",
               marginTop: 14,
               marginBottom: 14,
-              padding: "8px",
+              padding: "0 8px",
+              height: 28,
               background: "transparent",
               border: "1px solid #00C8FF",
-              borderRadius: 4,
+              borderRadius: 2,
               color: "#00C8FF",
               fontFamily: "var(--font-jetbrains-mono), var(--font-space-mono), monospace",
-              fontSize: 10,
-              letterSpacing: "2px",
+              fontSize: 9,
+              letterSpacing: "3px",
               textTransform: "uppercase",
               cursor: "pointer",
-              transition: "background 150ms ease",
+              transition: "all 0.15s ease",
             }}
-            onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(0,200,255,0.08)"; }}
-            onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(0,200,255,0.06)"; e.currentTarget.style.boxShadow = "0 0 12px rgba(0,200,255,0.3)"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.boxShadow = "none"; }}
           >
             RESCAN
           </button>

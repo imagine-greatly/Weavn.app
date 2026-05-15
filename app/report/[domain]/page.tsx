@@ -513,13 +513,18 @@ export default function ReportDomainPage() {
                 fontFamily: "var(--font-jetbrains-mono), var(--font-space-mono), monospace",
                 fontWeight: 700,
                 fontSize: 12,
+                letterSpacing: "2px",
+                textTransform: "uppercase",
                 padding: "10px 20px",
-                borderRadius: 4,
+                borderRadius: 2,
                 cursor: "pointer",
                 border: "none",
                 height: 40,
                 whiteSpace: "nowrap",
+                transition: "all 0.15s ease",
               }}
+              onMouseEnter={(e) => { e.currentTarget.style.boxShadow = "0 0 30px rgba(0,200,255,0.6)"; e.currentTarget.style.filter = "brightness(1.1)"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.boxShadow = "none"; e.currentTarget.style.filter = "none"; }}
             >
               CREATE FREE ACCOUNT →
             </button>

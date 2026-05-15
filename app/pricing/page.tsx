@@ -11,23 +11,42 @@ import {
 import { ScrollReveal } from "@/components/ScrollReveal";
 import UpgradeButton from "@/components/UpgradeButton";
 
-/**
- * Pricing page — diagnostic access tiers and terms.
- * DESIGN_SYSTEM.md: typography, glow, colors.
- */
+const JM = "var(--font-jetbrains-mono), var(--font-space-mono), monospace";
+
+const DIVIDER = <div style={{ height: 1, background: "rgba(0,200,255,0.15)", width: "100%" }} />;
 
 export default function PricingPage() {
   return (
-    <div className="min-h-screen">
-      <PricingHero />
-      <PricingTickerTransition />
-      <PricingCards />
-      <PricingBarsTransition />
-      <ValueJustification />
-      <PricingDottedBridgeTransition />
-      <PricingFAQ />
-      <PricingHaloTransition />
-    </div>
+    <>
+      <style>{`
+        @keyframes pricing-scan-beam {
+          0% { left: -60%; }
+          100% { left: 110%; }
+        }
+      `}</style>
+      <div
+        className="min-h-screen"
+        style={{
+          backgroundImage:
+            "repeating-linear-gradient(0deg, rgba(0,200,255,0.02) 0px, rgba(0,200,255,0.02) 1px, transparent 1px, transparent 2px)",
+        }}
+      >
+        <PricingHero />
+        {DIVIDER}
+        <PricingTickerTransition />
+        {DIVIDER}
+        <PricingCards />
+        {DIVIDER}
+        <PricingBarsTransition />
+        {DIVIDER}
+        <ValueJustification />
+        {DIVIDER}
+        <PricingDottedBridgeTransition />
+        {DIVIDER}
+        <PricingFAQ />
+        <PricingHaloTransition />
+      </div>
+    </>
   );
 }
 
@@ -53,7 +72,7 @@ function PricingHero() {
       <div className="relative z-[2] flex w-full max-w-[min(960px,calc(100vw-48px))] flex-col items-center text-center">
         <p
           className="font-mono text-[11px] uppercase"
-          style={{ color: "var(--text-muted)", letterSpacing: "3px" }}
+          style={{ color: "#00C8FF", letterSpacing: "4px" }}
         >
           PRICING
         </p>
@@ -73,6 +92,29 @@ function PricingHero() {
             Everything after that is worth it<span style={{ color: "var(--cyan)" }}>.</span>
           </h1>
         </ScrollReveal>
+
+        <div
+          style={{
+            position: "relative",
+            overflow: "hidden",
+            width: "100%",
+            height: 1,
+            marginTop: 24,
+          }}
+        >
+          <div
+            style={{
+              position: "absolute",
+              top: 0,
+              left: "-60%",
+              width: "60%",
+              height: 1,
+              background: "linear-gradient(90deg, transparent, rgba(0,200,255,0.3), transparent)",
+              animation: "pricing-scan-beam 4s linear infinite",
+            }}
+          />
+        </div>
+
         <ScrollReveal variant="card">
           <p
             className="mt-6 font-sans text-[18px] leading-relaxed"
@@ -121,6 +163,62 @@ const AGENCY_FEATURES = [
   { text: "White label reports", comingSoon: true },
 ];
 
+function FeatureItem({ text, available = true }: { text: string; available?: boolean }) {
+  return (
+    <li
+      style={{
+        borderLeft: available
+          ? "2px solid rgba(0,200,255,0.5)"
+          : "2px solid rgba(255,255,255,0.1)",
+        paddingLeft: 8,
+        fontFamily: JM,
+        fontSize: 11,
+        letterSpacing: "1px",
+        color: available ? "var(--text-secondary)" : "var(--text-muted)",
+        opacity: available ? 1 : 0.45,
+        lineHeight: 1.55,
+      }}
+    >
+      {text}
+    </li>
+  );
+}
+
+function AgencyFeatureItem({ text, comingSoon }: { text: string; comingSoon: boolean }) {
+  return (
+    <li
+      style={{
+        borderLeft: "2px solid rgba(0,200,255,0.5)",
+        paddingLeft: 8,
+        fontFamily: JM,
+        fontSize: 11,
+        letterSpacing: "1px",
+        color: "var(--text-secondary)",
+        lineHeight: 1.55,
+        display: "flex",
+        alignItems: "baseline",
+        gap: 6,
+        flexWrap: "wrap",
+      }}
+    >
+      {text}
+      {comingSoon ? (
+        <span
+          style={{
+            fontFamily: JM,
+            fontSize: 9,
+            color: "var(--text-muted)",
+            letterSpacing: "1px",
+            textTransform: "uppercase",
+          }}
+        >
+          coming soon
+        </span>
+      ) : null}
+    </li>
+  );
+}
+
 function PricingCards() {
   return (
     <section className="relative w-full py-[100px] px-6">
@@ -128,55 +226,89 @@ function PricingCards() {
         {/* FREE card */}
         <ScrollReveal variant="slide-left" className="min-w-0">
           <div
-            className="flex h-full min-w-0 flex-col rounded border p-10"
+            className="flex h-full min-w-0 flex-col p-10"
             style={{
-              background: "var(--bg-card)",
-              border: "1px solid var(--border-default)",
-              borderRadius: 4,
+              background: "rgba(0,200,255,0.02)",
+              border: "1px solid rgba(0,200,255,0.15)",
+              borderRadius: 2,
+              transition: "all 0.2s ease",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor = "rgba(0,200,255,0.4)";
+              e.currentTarget.style.boxShadow = "0 0 30px rgba(0,200,255,0.08)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = "rgba(0,200,255,0.15)";
+              e.currentTarget.style.boxShadow = "none";
             }}
           >
-            <p className="font-mono text-[11px] uppercase" style={{ color: "var(--text-muted)" }}>
-              FREE
+            <p
+              style={{
+                fontFamily: JM,
+                fontSize: 10,
+                letterSpacing: "3px",
+                textTransform: "uppercase",
+                color: "rgba(0,200,255,0.6)",
+              }}
+            >
+              FREE DIAGNOSTIC
             </p>
             <p
-              className="font-logo mt-2 text-[56px] leading-none"
-              style={{ color: "var(--text-primary)" }}
+              style={{
+                fontFamily: JM,
+                fontSize: 56,
+                lineHeight: 1,
+                fontWeight: 700,
+                color: "rgba(0,200,255,0.45)",
+                marginTop: 8,
+              }}
             >
-              $0
+              0
             </p>
-            <p className="mt-1 font-sans text-[14px]" style={{ color: "var(--text-muted)" }}>
+            <p
+              style={{
+                fontFamily: JM,
+                fontSize: 11,
+                letterSpacing: "0.5px",
+                lineHeight: 1.6,
+                color: "var(--text-muted)",
+                marginTop: 8,
+              }}
+            >
               Three diagnostic findings per scan. Single-site diagnostic. No card on first run.
             </p>
-            <div className="my-6 h-px w-full" style={{ background: "var(--border-default)" }} />
+            <div className="my-6 h-px w-full" style={{ background: "rgba(0,200,255,0.1)" }} />
             <ul className="flex-1 space-y-3">
               {FREE_FEATURES.map((f) => (
-                <li key={f.text} className="flex items-start gap-2 font-sans text-[14px]" style={{ color: "var(--text-secondary)" }}>
-                  {f.check ? (
-                    <span style={{ color: "var(--green)" }}>✓</span>
-                  ) : (
-                    <span style={{ color: "var(--text-muted)" }}>✗</span>
-                  )}
-                  {f.text}
-                </li>
+                <FeatureItem key={f.text} text={f.text} available={f.check} />
               ))}
             </ul>
             <Link
               href="/"
-              className="font-button mt-8 flex w-full items-center justify-center rounded border py-4 text-sm transition-[border-color,box-shadow,background-color] duration-150"
+              className="mt-8 flex w-full items-center justify-center border py-4"
               style={{
                 borderColor: "rgba(0,200,255,0.4)",
-                color: "var(--cyan)",
+                color: "#00C8FF",
                 background: "transparent",
                 minHeight: 44,
-                borderRadius: 3,
+                borderRadius: 2,
+                letterSpacing: "2px",
+                fontFamily: JM,
+                fontSize: 11,
+                fontWeight: 700,
+                textTransform: "uppercase",
+                textDecoration: "none",
+                transition: "all 0.15s ease",
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.borderColor = "rgba(0,200,255,0.7)";
-                e.currentTarget.style.boxShadow = "var(--cyan-glow-active)";
+                e.currentTarget.style.borderColor = "#00C8FF";
+                e.currentTarget.style.boxShadow = "0 0 20px rgba(0,200,255,0.25)";
+                e.currentTarget.style.background = "rgba(0,200,255,0.05)";
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.borderColor = "rgba(0,200,255,0.4)";
                 e.currentTarget.style.boxShadow = "none";
+                e.currentTarget.style.background = "transparent";
               }}
             >
               BEGIN FREE DIAGNOSTIC
@@ -187,42 +319,92 @@ function PricingCards() {
         {/* PRO card */}
         <ScrollReveal variant="slide-right" className="min-w-0 overflow-visible">
           <div
-            className="relative flex h-full min-w-0 flex-col overflow-visible rounded border p-10"
+            className="relative flex h-full min-w-0 flex-col overflow-visible p-10"
             style={{
-              background: "var(--bg-card)",
+              background: "rgba(0,200,255,0.02)",
               border: "1px solid rgba(0,200,255,0.3)",
               boxShadow: "var(--cyan-glow-soft)",
-              borderRadius: 4,
+              borderRadius: 2,
+              transition: "all 0.2s ease",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor = "rgba(0,200,255,0.4)";
+              e.currentTarget.style.boxShadow = "0 0 30px rgba(0,200,255,0.08)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = "rgba(0,200,255,0.3)";
+              e.currentTarget.style.boxShadow = "var(--cyan-glow-soft)";
             }}
           >
             <div
-              className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-1/2 rounded-full px-4 py-1 font-mono text-[10px] uppercase"
-              style={{ background: "var(--cyan)", color: "#050810" }}
+              style={{
+                position: "absolute",
+                left: "50%",
+                top: 0,
+                transform: "translate(-50%, -50%)",
+                background: "var(--cyan)",
+                color: "#050810",
+                fontFamily: JM,
+                fontSize: 10,
+                letterSpacing: "2px",
+                textTransform: "uppercase",
+                padding: "2px 12px",
+                borderRadius: 2,
+                whiteSpace: "nowrap",
+              }}
             >
               FULL DIAGNOSTIC
             </div>
-            <p className="font-mono text-[11px] uppercase" style={{ color: "var(--cyan)" }}>
-              PRO
+            <p
+              style={{
+                fontFamily: JM,
+                fontSize: 10,
+                letterSpacing: "3px",
+                textTransform: "uppercase",
+                color: "rgba(0,200,255,0.6)",
+              }}
+            >
+              PRO DIAGNOSTIC
             </p>
             <p
-              className="font-logo mt-2 text-[56px] leading-none"
-              style={{ color: "var(--cyan)" }}
+              style={{
+                fontFamily: JM,
+                fontSize: 56,
+                lineHeight: 1,
+                fontWeight: 700,
+                color: "#00C8FF",
+                marginTop: 8,
+              }}
             >
-              $50
+              50
             </p>
-            <p className="mt-1 font-sans text-[14px]" style={{ color: "var(--text-muted)" }}>
-              per month · cancel anytime
+            <p
+              style={{
+                fontFamily: JM,
+                fontSize: 11,
+                letterSpacing: "1px",
+                color: "var(--text-muted)",
+                marginTop: 4,
+              }}
+            >
+              /mo · cancel anytime
             </p>
-            <p className="mt-2 font-sans text-[13px]" style={{ color: "var(--text-muted)" }}>
+            <p
+              style={{
+                fontFamily: JM,
+                fontSize: 11,
+                letterSpacing: "0.5px",
+                lineHeight: 1.6,
+                color: "var(--text-muted)",
+                marginTop: 8,
+              }}
+            >
               Full diagnostic access. Up to five active site scans. Complete finding set with revenue impact ranking and exact resolutions.
             </p>
-            <div className="my-6 h-px w-full" style={{ background: "var(--border-default)" }} />
+            <div className="my-6 h-px w-full" style={{ background: "rgba(0,200,255,0.1)" }} />
             <ul className="flex-1 space-y-3">
               {PRO_FEATURES.map((text) => (
-                <li key={text} className="flex items-start gap-2 font-sans text-[14px]" style={{ color: "var(--text-secondary)" }}>
-                  <span style={{ color: "var(--green)" }}>✓</span>
-                  {text}
-                </li>
+                <FeatureItem key={text} text={text} available={true} />
               ))}
             </ul>
             <div className="mt-8 w-full min-w-0 overflow-visible">
@@ -239,24 +421,32 @@ function PricingCards() {
                     .then((d: { url?: string }) => { if (d.url) window.location.href = d.url; })
                     .catch(() => { window.location.href = "/auth?tab=signin"; });
                 }}
-                className="flex w-full items-center justify-center rounded py-4 font-mono text-[13px] uppercase transition-[border-color,box-shadow,background-color] duration-150"
+                className="flex w-full items-center justify-center"
                 style={{
                   background: "#00C8FF",
                   color: "#050810",
+                  fontFamily: JM,
                   fontWeight: 700,
+                  fontSize: 13,
+                  textTransform: "uppercase",
                   minHeight: 44,
-                  borderRadius: 3,
-                  letterSpacing: "0.06em",
+                  borderRadius: 2,
+                  border: "none",
+                  letterSpacing: "2px",
                   textDecoration: "none",
                   boxSizing: "border-box",
+                  transition: "all 0.15s ease",
                 }}
-                onMouseEnter={(e) => { e.currentTarget.style.opacity = "0.88"; }}
-                onMouseLeave={(e) => { e.currentTarget.style.opacity = "1"; }}
+                onMouseEnter={(e) => { e.currentTarget.style.boxShadow = "0 0 30px rgba(0,200,255,0.6)"; e.currentTarget.style.filter = "brightness(1.1)"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.boxShadow = "none"; e.currentTarget.style.filter = "none"; }}
               >
                 UPGRADE TO PRO — $50/MO →
               </a>
             </div>
-            <p className="mt-3 text-center font-mono text-[11px]" style={{ color: "var(--text-muted)" }}>
+            <p
+              className="mt-3 text-center"
+              style={{ fontFamily: JM, fontSize: 11, color: "var(--text-muted)", letterSpacing: "0.5px" }}
+            >
               Cancel anytime. Access continues through the paid period end.
             </p>
           </div>
@@ -265,58 +455,92 @@ function PricingCards() {
         {/* AGENCY card */}
         <ScrollReveal variant="slide-right" className="min-w-0 overflow-visible">
           <div
-            className="relative flex h-full min-w-0 flex-col overflow-visible rounded border p-10"
+            className="relative flex h-full min-w-0 flex-col overflow-visible p-10"
             style={{
-              background: "var(--bg-card)",
-              border: "1px solid rgba(0,230,118,0.3)",
-              boxShadow: "0 0 40px rgba(0,230,118,0.06)",
-              borderRadius: 4,
+              background: "rgba(0,200,255,0.02)",
+              border: "1px solid rgba(0,230,118,0.2)",
+              boxShadow: "0 0 40px rgba(0,230,118,0.04)",
+              borderRadius: 2,
+              transition: "all 0.2s ease",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor = "rgba(0,200,255,0.4)";
+              e.currentTarget.style.boxShadow = "0 0 30px rgba(0,200,255,0.08)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = "rgba(0,230,118,0.2)";
+              e.currentTarget.style.boxShadow = "0 0 40px rgba(0,230,118,0.04)";
             }}
           >
             <div
-              className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-1/2 rounded-full px-4 py-1 font-mono text-[10px] uppercase"
-              style={{ background: "var(--green)", color: "#050810" }}
+              style={{
+                position: "absolute",
+                left: "50%",
+                top: 0,
+                transform: "translate(-50%, -50%)",
+                background: "var(--green)",
+                color: "#050810",
+                fontFamily: JM,
+                fontSize: 10,
+                letterSpacing: "2px",
+                textTransform: "uppercase",
+                padding: "2px 12px",
+                borderRadius: 2,
+                whiteSpace: "nowrap",
+              }}
             >
               AGENCY
             </div>
-            <p className="font-mono text-[11px] uppercase" style={{ color: "var(--green)" }}>
-              AGENCY
+            <p
+              style={{
+                fontFamily: JM,
+                fontSize: 10,
+                letterSpacing: "3px",
+                textTransform: "uppercase",
+                color: "rgba(0,200,255,0.6)",
+              }}
+            >
+              AGENCY DIAGNOSTIC
             </p>
             <p
-              className="font-logo mt-2 text-[56px] leading-none"
-              style={{ color: "var(--green)" }}
+              style={{
+                fontFamily: JM,
+                fontSize: 56,
+                lineHeight: 1,
+                fontWeight: 700,
+                color: "var(--green)",
+                marginTop: 8,
+              }}
             >
-              $150
+              150
             </p>
-            <p className="mt-1 font-sans text-[14px]" style={{ color: "var(--text-muted)" }}>
-              per month · cancel anytime
+            <p
+              style={{
+                fontFamily: JM,
+                fontSize: 11,
+                letterSpacing: "1px",
+                color: "var(--text-muted)",
+                marginTop: 4,
+              }}
+            >
+              /mo · cancel anytime
             </p>
-            <p className="mt-2 font-sans text-[13px]" style={{ color: "var(--text-muted)" }}>
+            <p
+              style={{
+                fontFamily: JM,
+                fontSize: 11,
+                letterSpacing: "0.5px",
+                lineHeight: 1.6,
+                color: "var(--text-muted)",
+                marginTop: 8,
+              }}
+            >
               Built for agencies managing multiple client sites. Enhanced diagnostic depth across up to 10 active sites.
             </p>
-            <div className="my-6 h-px w-full" style={{ background: "var(--border-default)" }} />
+            <div className="my-6 h-px w-full" style={{ background: "rgba(0,200,255,0.1)" }} />
             <ul className="flex-1 space-y-3">
               {AGENCY_FEATURES.map((f) => (
-                <li key={f.text} className="flex items-start gap-2 font-sans text-[14px]" style={{ color: "var(--text-secondary)" }}>
-                  <span style={{ color: "var(--green)", flexShrink: 0 }}>✓</span>
-                  <span>
-                    {f.text}
-                    {f.comingSoon ? (
-                      <span
-                        className="ml-2 font-mono text-[10px] uppercase"
-                        style={{
-                          color: "var(--text-muted)",
-                          background: "rgba(136,153,170,0.12)",
-                          border: "1px solid rgba(136,153,170,0.2)",
-                          padding: "1px 6px",
-                          borderRadius: 2,
-                        }}
-                      >
-                        Coming Soon
-                      </span>
-                    ) : null}
-                  </span>
-                </li>
+                <AgencyFeatureItem key={f.text} text={f.text} comingSoon={f.comingSoon} />
               ))}
             </ul>
             <div className="mt-8 w-full min-w-0 overflow-visible">
@@ -333,24 +557,32 @@ function PricingCards() {
                     .then((d: { url?: string }) => { if (d.url) window.location.href = d.url; })
                     .catch(() => { window.location.href = "/auth?tab=signin"; });
                 }}
-                className="flex w-full items-center justify-center rounded py-4 font-mono text-[13px] uppercase transition-[border-color,box-shadow,background-color] duration-150"
+                className="flex w-full items-center justify-center"
                 style={{
                   background: "var(--green)",
                   color: "#050810",
+                  fontFamily: JM,
                   fontWeight: 700,
+                  fontSize: 13,
+                  textTransform: "uppercase",
                   minHeight: 44,
-                  borderRadius: 3,
-                  letterSpacing: "0.06em",
+                  borderRadius: 2,
+                  border: "none",
+                  letterSpacing: "2px",
                   textDecoration: "none",
                   boxSizing: "border-box",
+                  transition: "all 0.15s ease",
                 }}
-                onMouseEnter={(e) => { e.currentTarget.style.opacity = "0.88"; }}
-                onMouseLeave={(e) => { e.currentTarget.style.opacity = "1"; }}
+                onMouseEnter={(e) => { e.currentTarget.style.boxShadow = "0 0 30px rgba(0,255,136,0.6)"; e.currentTarget.style.filter = "brightness(1.1)"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.boxShadow = "none"; e.currentTarget.style.filter = "none"; }}
               >
                 UPGRADE TO AGENCY — $150/MO →
               </a>
             </div>
-            <p className="mt-3 text-center font-mono text-[11px]" style={{ color: "var(--text-muted)" }}>
+            <p
+              className="mt-3 text-center"
+              style={{ fontFamily: JM, fontSize: 11, color: "var(--text-muted)", letterSpacing: "0.5px" }}
+            >
               Cancel anytime. Access continues through the paid period end.
             </p>
           </div>
@@ -368,7 +600,7 @@ const SCENARIOS = [
     lines: [
       "1,000 visitors × 1.2% = 12 customers",
       "Average order $100 = $1,200/month",
-      "↓",
+      "→",
       "Resolving hero + CTA = 2.8% conversion",
       "1,000 × 2.8% = 28 customers",
       "$2,800/month — $1,600 more",
@@ -381,7 +613,7 @@ const SCENARIOS = [
     lines: [
       "500 signups × 2% = 10 paying customers",
       "Avg $80/month = $800/month",
-      "↓",
+      "→",
       "Stronger messaging = 3.5% conversion",
       "500 × 3.5% = 17.5 customers",
       "$1,400/month — $600 more",
@@ -394,7 +626,7 @@ const SCENARIOS = [
     lines: [
       "800 × 0.5% = 4 leads",
       "Avg job $500 = $2,000/month",
-      "↓",
+      "→",
       "Trust + CTA resolutions = 1.2% conversion",
       "800 × 1.2% = 9.6 leads",
       "$4,800/month — $2,800 more",
@@ -410,33 +642,57 @@ function ValueJustification() {
       style={{ background: "var(--bg-surface)" }}
     >
       <div className="mx-auto max-w-[min(1100px,calc(100vw-48px))]">
-        <ScrollReveal variant="headline">
-          <h2
-            className="mx-auto max-w-[min(52rem,calc(100vw-48px))] text-center font-sans font-extrabold"
+        <div className="text-center">
+          <p
             style={{
-              color: "var(--text-primary)",
-              fontSize: "clamp(32px, 3.6vw, 48px)",
-              lineHeight: 0.98,
-              letterSpacing: "-1.2px",
-              fontWeight: 800,
+              fontFamily: JM,
+              fontSize: 9,
+              letterSpacing: "3px",
+              textTransform: "uppercase",
+              color: "rgba(0,200,255,0.4)",
+              marginBottom: 12,
             }}
           >
-            Revenue suppression in three traffic models<span style={{ color: "var(--cyan)" }}>.</span>
-          </h2>
-        </ScrollReveal>
+            REVENUE ANALYSIS
+          </p>
+          <ScrollReveal variant="headline">
+            <h2
+              className="mx-auto max-w-[min(52rem,calc(100vw-48px))] font-sans font-extrabold"
+              style={{
+                color: "var(--text-primary)",
+                fontSize: "clamp(32px, 3.6vw, 48px)",
+                lineHeight: 0.98,
+                letterSpacing: "-1.2px",
+                fontWeight: 800,
+              }}
+            >
+              <span style={{ color: "#00C8FF" }}>●</span>{" "}
+              Revenue suppression in three traffic models<span style={{ color: "var(--cyan)" }}>.</span>
+            </h2>
+          </ScrollReveal>
+        </div>
 
         <div className="mt-14 grid gap-6 md:grid-cols-3">
           {SCENARIOS.map((s, i) => (
             <ScrollReveal key={s.label} variant="card" index={i}>
               <div
-                className="rounded border p-6"
                 style={{
-                  background: "var(--bg-card)",
+                  background: "rgba(0,200,255,0.03)",
                   border: "1px solid var(--border-default)",
-                  borderRadius: 4,
+                  borderTop: "1px solid rgba(0,200,255,0.4)",
+                  borderRadius: 2,
+                  padding: 24,
                 }}
               >
-                <p className="font-mono text-[11px] uppercase" style={{ color: "var(--text-muted)" }}>
+                <p
+                  style={{
+                    fontFamily: JM,
+                    fontSize: 9,
+                    letterSpacing: "3px",
+                    textTransform: "uppercase",
+                    color: "#00C8FF",
+                  }}
+                >
                   {s.label}
                 </p>
                 <h3
@@ -451,17 +707,36 @@ function ValueJustification() {
                 >
                   {s.headline}
                 </h3>
-                <div className="mt-4 space-y-1.5 font-sans text-[14px] leading-relaxed" style={{ color: "var(--text-secondary)" }}>
+                <div className="mt-4 space-y-1.5">
                   {s.lines.map((line) => (
-                    <p key={line}>{line}</p>
+                    <p
+                      key={line}
+                      style={{
+                        fontFamily: JM,
+                        fontSize: line === "→" ? 18 : 11,
+                        letterSpacing: "0.5px",
+                        lineHeight: 1.6,
+                        color: line === "→" ? "#00C8FF" : "var(--text-secondary)",
+                        fontWeight: line === "→" ? 700 : 400,
+                      }}
+                    >
+                      {line}
+                    </p>
                   ))}
                 </div>
                 <div
-                  className="mt-4 inline-block rounded-full px-3 py-1.5 font-mono text-[10px] uppercase"
                   style={{
+                    marginTop: 16,
+                    display: "inline-block",
                     color: "var(--green)",
                     background: "rgba(0,255,135,0.08)",
                     border: "1px solid rgba(0,255,135,0.2)",
+                    fontFamily: JM,
+                    fontSize: 10,
+                    letterSpacing: "2px",
+                    textTransform: "uppercase",
+                    padding: "4px 12px",
+                    borderRadius: 2,
                   }}
                 >
                   {s.result}
@@ -512,30 +787,42 @@ function PricingFAQ() {
   return (
     <section className="relative w-full overflow-hidden py-[100px] px-6">
       <div className="mx-auto max-w-[min(840px,calc(100vw-48px))]">
-        <p className="font-ui-label text-center" style={{ color: "var(--text-muted)" }}>
-          PRICING FAQ
-        </p>
-        <ScrollReveal variant="headline">
-          <h2
-            className="mx-auto mt-3 max-w-[min(40rem,calc(100vw-48px))] text-center font-sans font-extrabold"
+        <div className="text-center">
+          <p
             style={{
-              color: "var(--text-primary)",
-              fontSize: "clamp(32px, 3.4vw, 44px)",
-              lineHeight: 0.98,
-              letterSpacing: "-1.2px",
-              fontWeight: 800,
+              fontFamily: JM,
+              fontSize: 9,
+              letterSpacing: "3px",
+              textTransform: "uppercase",
+              color: "rgba(0,200,255,0.4)",
+              marginBottom: 12,
             }}
           >
-            Billing and access<span style={{ color: "var(--cyan)" }}>.</span>
-          </h2>
-        </ScrollReveal>
+            DOCUMENTATION
+          </p>
+          <ScrollReveal variant="headline">
+            <h2
+              className="mx-auto mt-3 max-w-[min(40rem,calc(100vw-48px))] font-sans font-extrabold"
+              style={{
+                color: "var(--text-primary)",
+                fontSize: "clamp(32px, 3.4vw, 44px)",
+                lineHeight: 0.98,
+                letterSpacing: "-1.2px",
+                fontWeight: 800,
+              }}
+            >
+              <span style={{ color: "#00C8FF" }}>●</span>{" "}
+              Billing and access<span style={{ color: "var(--cyan)" }}>.</span>
+            </h2>
+          </ScrollReveal>
+        </div>
 
         <div className="mt-12 space-y-0">
           {PRICING_FAQ.map((item, i) => (
             <div
               key={i}
               className="border-b"
-              style={{ borderColor: "var(--border-default)" }}
+              style={{ borderColor: "rgba(0,200,255,0.1)" }}
             >
               <button
                 type="button"
@@ -575,8 +862,14 @@ function PricingFAQ() {
               >
                 <div className="min-h-0 overflow-hidden">
                   <div
-                    className="pb-5 pl-5 pr-12 font-sans text-[15px] leading-relaxed"
-                    style={{ color: "var(--text-secondary)" }}
+                    className="pb-5 pl-5 pr-12"
+                    style={{
+                      fontFamily: JM,
+                      fontSize: 13,
+                      letterSpacing: "0.5px",
+                      lineHeight: 1.7,
+                      color: "var(--text-secondary)",
+                    }}
                   >
                     {item.a}
                   </div>
@@ -589,4 +882,3 @@ function PricingFAQ() {
     </section>
   );
 }
-

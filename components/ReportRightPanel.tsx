@@ -1260,9 +1260,8 @@ export default function ReportRightPanel({
             <div
               style={{
                 display: "flex",
-                border: "1px solid rgba(0,200,255,0.3)",
-                borderRadius: 4,
-                overflow: "hidden",
+                border: "1px solid rgba(0,200,255,0.35)",
+                borderRadius: 2,
               }}
             >
               <button
@@ -1273,17 +1272,17 @@ export default function ReportRightPanel({
                   fontFamily: "var(--font-jetbrains-mono), var(--font-space-mono), monospace",
                   fontWeight: 600,
                   fontSize: 10,
-                  letterSpacing: "0.08em",
+                  letterSpacing: "2px",
                   padding: "6px 16px",
-                  background: "rgba(0,200,255,0.08)",
+                  background: "transparent",
                   border: "none",
-                  borderRight: "1px solid rgba(0,200,255,0.3)",
-                  color: "var(--cyan)",
+                  borderRight: "1px solid rgba(0,200,255,0.35)",
+                  color: "#00C8FF",
                   cursor: "pointer",
-                  transition: "background 150ms ease",
+                  transition: "all 0.15s ease",
                 }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(0,200,255,0.15)"; }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(0,200,255,0.08)"; }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(0,200,255,0.04)"; e.currentTarget.style.boxShadow = "0 0 14px rgba(0,200,255,0.2)"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.boxShadow = "none"; }}
               >
                 {linkCopied ? "LINK COPIED" : "SHARE REPORT"}
               </button>
@@ -1298,16 +1297,16 @@ export default function ReportRightPanel({
                   fontFamily: "var(--font-jetbrains-mono), var(--font-space-mono), monospace",
                   fontWeight: 600,
                   fontSize: 10,
-                  letterSpacing: "0.08em",
+                  letterSpacing: "2px",
                   padding: "6px 16px",
                   background: "transparent",
                   border: "none",
-                  color: "rgba(255,255,255,0.5)",
+                  color: "#00C8FF",
                   cursor: "pointer",
-                  transition: "color 150ms ease",
+                  transition: "all 0.15s ease",
                 }}
-                onMouseEnter={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.65)"; }}
-                onMouseLeave={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.5)"; }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(0,200,255,0.04)"; e.currentTarget.style.boxShadow = "0 0 14px rgba(0,200,255,0.2)"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.boxShadow = "none"; }}
               >
                 EXPORT PDF
               </button>

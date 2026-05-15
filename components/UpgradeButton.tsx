@@ -8,18 +8,18 @@ const OUTLINE_BASE: CSSProperties = {
   alignItems: "center",
   justifyContent: "center",
   background: "transparent",
-  border: "1px solid #00C8FF",
+  border: "1px solid rgba(0,200,255,0.35)",
   color: "#00C8FF",
   fontFamily: "var(--font-jetbrains-mono), var(--font-space-mono), monospace",
   fontWeight: 700,
   fontSize: 12,
-  letterSpacing: "0.08em",
+  letterSpacing: "2px",
   textTransform: "uppercase",
   minHeight: 44,
   padding: "0 32px",
   borderRadius: 2,
   cursor: "pointer",
-  transition: "background 150ms ease, box-shadow 150ms ease",
+  transition: "all 0.15s ease",
   whiteSpace: "nowrap",
   boxSizing: "border-box",
 };
@@ -116,7 +116,9 @@ export default function UpgradeButton({
               e.currentTarget.style.background = "#F2F4F8";
               e.currentTarget.style.borderColor = "#F2F4F8";
             } else {
-              e.currentTarget.style.background = "rgba(0,200,255,0.08)";
+              e.currentTarget.style.background = "rgba(0,200,255,0.04)";
+              e.currentTarget.style.borderColor = "#00C8FF";
+              e.currentTarget.style.boxShadow = "0 0 14px rgba(0,200,255,0.2)";
             }
           }
         }}
@@ -126,6 +128,8 @@ export default function UpgradeButton({
             e.currentTarget.style.borderColor = "#FFFFFF";
           } else {
             e.currentTarget.style.background = "transparent";
+            e.currentTarget.style.borderColor = "rgba(0,200,255,0.35)";
+            e.currentTarget.style.boxShadow = "none";
           }
         }}
       >

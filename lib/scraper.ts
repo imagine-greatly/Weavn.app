@@ -68,10 +68,13 @@ async function fetchWithBrowserless(url: string): Promise<string | null> {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           url: url,
+          bestAttempt: true,
           gotoOptions: {
-            waitUntil: 'networkidle2',
+            waitUntil: 'domcontentloaded',
             timeout: 30000
-          }
+          },
+          waitFor: { timeout: 3000 },
+          rejectRequestPattern: ['.*\\.(png|jpg|jpeg|gif|webp|svg|mp4|woff|woff2|ttf|eot).*']
         }),
         signal: AbortSignal.timeout(35000)
       }

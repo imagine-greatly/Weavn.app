@@ -127,6 +127,8 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     url = typeof body?.url === "string" ? body.url : "";
+    const isRescan = body?.rescan === true;
+    console.log("[scan] rescan flag:", isRescan);
   } catch {
     return withCookies(
       NextResponse.json(

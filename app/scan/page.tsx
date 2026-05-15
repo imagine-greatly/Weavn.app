@@ -395,6 +395,7 @@ function ScanLoadingInner() {
     }
     domainRef.current = domain;
     normalizedUrlRef.current = normalized;
+    const rescanFlag = isRescan || new URLSearchParams(window.location.search).get("rescan") === "true";
 
     const startNormalScan = () => {
       scanStartTimeRef.current = performance.now();
@@ -416,7 +417,7 @@ function ScanLoadingInner() {
           const res = await fetch("/api/scan", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ url: normalized }),
+            body: JSON.stringify({ url: normalized, ...(rescanFlag ? { rescan: true } : {}) }),
             signal: controller.signal,
           });
           window.clearTimeout(timeoutId);
@@ -475,8 +476,8 @@ function ScanLoadingInner() {
       runFetch();
     };
 
-    console.log('[scan] isRescan:', isRescan, 'url param:', urlParam, 'full search params:', searchParams.toString());
-    if (isRescan || scanFailure !== null) {
+    console.log('[scan] isRescan:', isRescan, 'rescanFlag:', rescanFlag, 'url param:', urlParam, 'full search params:', searchParams.toString());
+    if (rescanFlag || scanFailure !== null) {
       startNormalScan();
       return;
     }

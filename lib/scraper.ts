@@ -54,11 +54,24 @@ export function stripMarkdown(text: string): string {
 }
 
 // -- BROWSERLESS (PRIMARY JS RENDERER) --------------------------------
+function readableTextLength(html: string): number {
+  return html
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .length
+}
+
 async function fetchWithBrowserless(url: string): Promise<string | null> {
   if (!process.env.BROWSERLESS_API_KEY) {
     console.log('[SCRAPER] Browserless key not configured')
     return null
   }
+
+  // Attempt 1 — Fast scan (domcontentloaded + wait for real text)
+  const controller1 = new AbortController()
+  const timer1 = setTimeout(() => controller1.abort(), 40000)
+  let html1: string | null = null
 
   try {
     const response = await fetch(
@@ -71,27 +84,75 @@ async function fetchWithBrowserless(url: string): Promise<string | null> {
           bestAttempt: true,
           gotoOptions: {
             waitUntil: 'domcontentloaded',
-            timeout: 30000
+            timeout: 25000
+          },
+          waitFor: {
+            function: "() => document.body && document.body.innerText.trim().length > 300"
           }
         }),
-        signal: AbortSignal.timeout(35000)
+        signal: controller1.signal
       }
     )
 
     if (!response.ok) {
       const err = await response.text()
-      console.log(`[SCRAPER] Browserless ${response.status}:`, err.slice(0, 300))
-      return null
+      console.log(`[SCRAPER] Browserless attempt 1 ${response.status}:`, err.slice(0, 300))
+    } else {
+      html1 = await response.text() || null
+      console.log(`[SCRAPER] Browserless attempt 1 success for ${url}, length: ${html1?.length ?? 0}`)
     }
-
-    const html = await response.text()
-    console.log(`[SCRAPER] Browserless success for ${url}, length: ${html.length}`)
-    return html || null
-
   } catch (err) {
-    console.log('[SCRAPER] Browserless error:', err instanceof Error ? err.message : err)
-    return null
+    console.log('[SCRAPER] Browserless attempt 1 error:', err instanceof Error ? err.message : err)
+  } finally {
+    clearTimeout(timer1)
   }
+
+  if (html1 && readableTextLength(html1) >= 500) {
+    return html1
+  }
+
+  // Attempt 2 — Full JS render (networkidle2)
+  console.log(`[SCRAPER] Browserless attempt 1 insufficient, running attempt 2 for ${url}`)
+  const controller2 = new AbortController()
+  const timer2 = setTimeout(() => controller2.abort(), 45000)
+  let html2: string | null = null
+
+  try {
+    const response = await fetch(
+      `https://production-sfo.browserless.io/content?token=${process.env.BROWSERLESS_API_KEY}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          url: url,
+          bestAttempt: true,
+          gotoOptions: {
+            waitUntil: 'networkidle2',
+            timeout: 30000
+          }
+        }),
+        signal: controller2.signal
+      }
+    )
+
+    if (!response.ok) {
+      const err = await response.text()
+      console.log(`[SCRAPER] Browserless attempt 2 ${response.status}:`, err.slice(0, 300))
+    } else {
+      html2 = await response.text() || null
+      console.log(`[SCRAPER] Browserless attempt 2 success for ${url}, length: ${html2?.length ?? 0}`)
+    }
+  } catch (err) {
+    console.log('[SCRAPER] Browserless attempt 2 error:', err instanceof Error ? err.message : err)
+  } finally {
+    clearTimeout(timer2)
+  }
+
+  const len1 = html1 ? readableTextLength(html1) : 0
+  const len2 = html2 ? readableTextLength(html2) : 0
+  console.log(`[SCRAPER] Browserless readable text — attempt 1: ${len1}, attempt 2: ${len2}`)
+
+  return len2 > len1 ? html2 : html1
 }
 
 // -- MAIN SCRAPE FUNCTION -----------------------------------------------

@@ -153,7 +153,7 @@ function ScanLoadingInner() {
   const [statusBarOverride, setStatusBarOverride] = useState<string | null>(null);
   const [scanUserAborted, setScanUserAborted] = useState(false);
   // Cinematic intro
-  const [introVisible, setIntroVisible] = useState(!isRescanActive);
+  const [introVisible, setIntroVisible] = useState(false);
   const [introFadingOut, setIntroFadingOut] = useState(false);
   const [introLine1, setIntroLine1] = useState("");
   const [introLine2Glitch, setIntroLine2Glitch] = useState("");

@@ -84,12 +84,12 @@ export default function LandingFinalCTA({ url, onUrlChange, autoFocus }: Props) 
         }}
       />
 
-      <div className="relative z-[3] mx-auto max-w-[min(640px,calc(100vw-32px))] px-6">
+      <div className="relative z-[3] mx-auto max-w-[min(960px,calc(100vw-48px))] px-6">
         <ScrollReveal variant="headline">
           <h2
             className="text-center font-sans font-extrabold"
             style={{
-              fontSize: "clamp(32px, 4.5vw, 68px)",
+              fontSize: "clamp(40px, 5.2vw, 72px)",
               lineHeight: 1.02,
               letterSpacing: "-2px",
               color: "var(--text-primary)",
@@ -102,7 +102,7 @@ export default function LandingFinalCTA({ url, onUrlChange, autoFocus }: Props) 
           <p
             className="mt-2 text-center font-sans font-bold"
             style={{
-              fontSize: "clamp(36px, 4.5vw, 56px)",
+              fontSize: "clamp(38px, 4.8vw, 64px)",
               lineHeight: 0.95,
               letterSpacing: "-1.5px",
               color: "var(--text-primary)",
@@ -116,13 +116,13 @@ export default function LandingFinalCTA({ url, onUrlChange, autoFocus }: Props) 
         <ScrollReveal variant="sub" delay={0.1}>
           <p
             className="mx-auto mt-5 max-w-[400px] text-center font-sans text-[18px] font-light"
-            style={{ color: "var(--text-secondary)", lineHeight: 1.8 }}
+            style={{ color: "var(--text-secondary)", lineHeight: 1.5 }}
           >
             The scan completes in approximately 60 seconds. You receive ranked diagnostic findings with evidence and resolutions mapped to revenue impact.
           </p>
         </ScrollReveal>
 
-        <ScrollReveal variant="headline" delay={0.15} className="relative mx-auto mt-10 w-full max-w-[520px]">
+        <ScrollReveal variant="headline" delay={0.15} className="relative mx-auto mt-10 w-full max-w-[600px]">
           <div
             className="pointer-events-none absolute rounded-[10px]"
             style={{

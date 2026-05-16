@@ -6,7 +6,6 @@ import {
   ProductDepthMistTransition,
   ProductDiagnosticArcTransition,
   ProductFunnelTransition,
-  ProductSignalGridTransition,
 } from "@/components/PageTransitions";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import LandingFinalCTA from "@/components/landing/LandingFinalCTA";
@@ -24,7 +23,6 @@ export default function ProductPage() {
       <ProductHero />
       <ProductDepthMistTransition />
       <ProductProblem />
-      <ProductSignalGridTransition />
       <ProductDifference />
       <ProductDiagnosticArcTransition />
       <ProductSixCategories />

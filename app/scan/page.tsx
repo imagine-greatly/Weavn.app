@@ -124,8 +124,7 @@ function ScanLoadingInner() {
   if (rescanFlagRef.current === null && typeof window !== "undefined") {
     rescanFlagRef.current = new URLSearchParams(window.location.search).get("rescan") === "true";
   }
-  const domainCheckFiredRef = useRef(false);
-
+  const pipelineFiredForUrl = useRef<string>("");
   useEffect(() => {
     if (!urlParam) return;
     const t = window.setTimeout(() => setResolvedUrl(urlParam), 300);
@@ -256,8 +255,6 @@ function ScanLoadingInner() {
       const t = window.setTimeout(() => setResolvedUrl(normalized), 500);
       return () => clearTimeout(t);
     }
-    const urlQuery = searchParams.get("url")?.trim();
-    if (urlQuery) setResolvedUrl(urlQuery);
   }, [urlParam, searchParams]);
 
   useEffect(() => {
@@ -403,8 +400,8 @@ function ScanLoadingInner() {
 
   useEffect(() => {
     if (!resolvedUrl) return;
-    if (domainCheckFiredRef.current) return;
-    domainCheckFiredRef.current = true;
+    if (pipelineFiredForUrl.current === resolvedUrl) return;
+    pipelineFiredForUrl.current = resolvedUrl;
     console.log("[scan] starting pipeline", { url: resolvedUrl, rescan: isRescan });
     let normalized = resolvedUrl;
     if (!/^https?:\/\//i.test(normalized)) normalized = `https://${normalized}`;

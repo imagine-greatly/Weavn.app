@@ -3,9 +3,6 @@
 import Link from "next/link";
 import { useState } from "react";
 import {
-  PricingBarsTransition,
-  PricingDottedBridgeTransition,
-  PricingHaloTransition,
   PricingTickerTransition,
 } from "@/components/PageTransitions";
 import { ScrollReveal } from "@/components/ScrollReveal";
@@ -24,11 +21,8 @@ export default function PricingPage() {
         <PricingHero />
         <PricingTickerTransition />
         <PricingCards />
-        <PricingBarsTransition />
         <ValueJustification />
-        <PricingDottedBridgeTransition />
         <PricingFAQ />
-        <PricingHaloTransition />
       </div>
     </>
   );

@@ -96,7 +96,7 @@ export default function LandingFinalCTA({ url, onUrlChange, autoFocus }: Props) 
               fontWeight: 800,
             }}
           >
-            Conversion suppression is common
+            Your site has conversion suppressors
             <span style={{ color: "var(--cyan)" }}>.</span>
           </h2>
           <p
@@ -109,7 +109,7 @@ export default function LandingFinalCTA({ url, onUrlChange, autoFocus }: Props) 
               fontWeight: 700,
             }}
           >
-            Run a diagnostic on your site.
+            Find out exactly what they are.
           </p>
         </ScrollReveal>
 
@@ -118,7 +118,7 @@ export default function LandingFinalCTA({ url, onUrlChange, autoFocus }: Props) 
             className="mx-auto mt-5 max-w-[400px] text-center font-sans text-[18px] font-light"
             style={{ color: "var(--text-secondary)", lineHeight: 1.5 }}
           >
-            The scan completes in approximately 60 seconds. You receive ranked diagnostic findings with evidence and resolutions mapped to revenue impact.
+            One scan. Ranked findings with quoted evidence from your live pages. Resolutions ranked by revenue impact.
           </p>
         </ScrollReveal>
 

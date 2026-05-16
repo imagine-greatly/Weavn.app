@@ -116,15 +116,11 @@ function ScanLoadingInner() {
   const searchParams = useSearchParams();
   const urlParam = searchParams.get("url")?.trim() ?? "";
   const [resolvedUrl, setResolvedUrl] = useState("");
-  const isRescan = searchParams.get("rescan") === "true" ||
-    (typeof window !== "undefined" && new URLSearchParams(window.location.search).get("rescan") === "true");
-  console.log('[scan] isRescan:', isRescan, 'url param:', urlParam, 'full search params:', searchParams.toString());
-
-  const rescanFlagRef = useRef<boolean | null>(null);
-  if (rescanFlagRef.current === null && typeof window !== "undefined") {
-    rescanFlagRef.current = new URLSearchParams(window.location.search).get("rescan") === "true";
-  }
-  const pipelineFiredForUrl = useRef<string>("");
+  const isRescanActive =
+    searchParams.get("rescan") === "true" ||
+    (typeof window !== "undefined" &&
+      new URLSearchParams(window.location.search).get("rescan") === "true");
+  console.log('[scan] isRescanActive:', isRescanActive, 'url param:', urlParam, 'full search params:', searchParams.toString());
   useEffect(() => {
     if (!urlParam) return;
     const t = window.setTimeout(() => setResolvedUrl(urlParam), 300);
@@ -400,9 +396,7 @@ function ScanLoadingInner() {
 
   useEffect(() => {
     if (!resolvedUrl) return;
-    if (pipelineFiredForUrl.current === resolvedUrl) return;
-    pipelineFiredForUrl.current = resolvedUrl;
-    console.log("[scan] starting pipeline", { url: resolvedUrl, rescan: isRescan });
+    console.log("[scan] starting pipeline", { url: resolvedUrl, rescan: isRescanActive });
     let normalized = resolvedUrl;
     if (!/^https?:\/\//i.test(normalized)) normalized = `https://${normalized}`;
     let domain = "";
@@ -435,7 +429,7 @@ function ScanLoadingInner() {
           const res = await fetch("/api/scan", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ url: normalized, ...(rescanFlagRef.current === true ? { rescan: true } : {}) }),
+            body: JSON.stringify({ url: normalized, ...(isRescanActive ? { rescan: true } : {}) }),
             signal: controller.signal,
           });
           window.clearTimeout(timeoutId);
@@ -494,8 +488,8 @@ function ScanLoadingInner() {
       runFetch();
     };
 
-    console.log('[scan] isRescan:', isRescan, 'rescanFlagRef:', rescanFlagRef.current, 'url param:', urlParam, 'full search params:', searchParams.toString());
-    if (rescanFlagRef.current === true || scanFailure !== null) {
+    console.log('[scan] isRescanActive:', isRescanActive, 'url param:', urlParam, 'full search params:', searchParams.toString());
+    if (isRescanActive || scanFailure !== null) {
       startNormalScan();
       return;
     }
@@ -522,7 +516,7 @@ function ScanLoadingInner() {
             score?: number;
             reportId?: string;
           };
-          if (checkData.exists && typeof checkData.score === "number" && checkData.reportId) {
+          if (checkData.exists && typeof checkData.score === "number" && checkData.reportId && !isRescanActive) {
             setReturningData({ score: checkData.score, reportId: checkData.reportId });
             setReturningPhase(1); // sweep line
 
@@ -605,7 +599,7 @@ function ScanLoadingInner() {
       }
       startNormalScan();
     })();
-  }, [resolvedUrl, materialize, scanNext, isRescan, router]);
+  }, [resolvedUrl, materialize, scanNext, isRescanActive, router]);
 
   useEffect(() => {
     if (errorMsg) {

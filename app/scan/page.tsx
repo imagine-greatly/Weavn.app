@@ -152,15 +152,6 @@ function ScanLoadingInner() {
   const [invalidUrlMessage, setInvalidUrlMessage] = useState<string | null>(null);
   const [statusBarOverride, setStatusBarOverride] = useState<string | null>(null);
   const [scanUserAborted, setScanUserAborted] = useState(false);
-  const [returningData, setReturningData] = useState<{ score: number; reportId: string } | null>(null);
-  const [returningPhase, setReturningPhase] = useState(0);
-  const [returningScore, setReturningScore] = useState(0);
-  const [rdGlitchText, setRdGlitchText] = useState("");
-  const [rdRealCount, setRdRealCount] = useState(0);
-  const [rdLine1, setRdLine1] = useState("");
-  const [rdLine2, setRdLine2] = useState("");
-  const [rdTerminal, setRdTerminal] = useState(false);
-  const [rdFadeOut, setRdFadeOut] = useState(false);
   // Cinematic intro
   const [introVisible, setIntroVisible] = useState(false);
   const [introFadingOut, setIntroFadingOut] = useState(false);
@@ -488,7 +479,9 @@ function ScanLoadingInner() {
           }
         }
       };
-      runFetch();
+      // Delay fetch until the intro cinematic completes:
+      // materialize() fires at 120ms, intro runs for 1800ms → handoff at ~1920ms
+      window.setTimeout(() => { runFetch(); }, 1900);
     };
 
     if (scanFailure !== null) {
@@ -497,8 +490,6 @@ function ScanLoadingInner() {
     }
 
     void (async () => {
-      const shouldRescan = window.location.search.includes("rescan=true");
-      // Auth must be verified before domain recognition — unauthenticated users go through the auth flow.
       try {
         const { data: { session } } = await getSupabaseBrowserClient().auth.getSession();
         if (!session) {
@@ -506,101 +497,7 @@ function ScanLoadingInner() {
           return;
         }
       } catch {
-        // Session check failed — skip domain recognition and run normal scan
-        startNormalScan();
-        return;
-      }
-
-      if (!shouldRescan) {
-        try {
-          const checkRes = await fetch(`/api/reports/check?domain=${encodeURIComponent(domain)}`);
-          if (checkRes.ok) {
-            const checkData = (await checkRes.json()) as {
-              exists: boolean;
-              score?: number;
-              reportId?: string;
-            };
-            if (checkData.exists && typeof checkData.score === "number" && checkData.reportId) {
-              setReturningData({ score: checkData.score, reportId: checkData.reportId });
-              setReturningPhase(1); // sweep line
-
-              // Step 2: glitch/decode at 1200ms
-              window.setTimeout(() => {
-                setReturningPhase(2);
-                const glitchChars = "0134_";
-                const domainStr = domain;
-                let glitchCount = 0;
-                const glitchIv = window.setInterval(() => {
-                  let dollarCount = 0;
-                  const scrambled = Array.from({ length: domainStr.length }, () => {
-                    if (dollarCount < 2 && Math.random() < 0.15) { dollarCount++; return "$"; }
-                    return glitchChars[Math.floor(Math.random() * glitchChars.length)];
-                  }).join("");
-                  setRdGlitchText(scrambled);
-                  glitchCount++;
-                  if (glitchCount >= 8) {
-                    clearInterval(glitchIv);
-                    let revealed = 0;
-                    const decodeIv = window.setInterval(() => {
-                      revealed++;
-                      setRdRealCount(revealed);
-                      if (revealed >= domainStr.length) clearInterval(decodeIv);
-                    }, 55);
-                  }
-                }, 75);
-              }, 1200);
-
-              // Step 3: status lines typewriter at 2200ms
-              window.setTimeout(() => {
-                setReturningPhase(3);
-                const LINE1 = "DOMAIN RECOGNIZED";
-                let i1 = 0;
-                const iv1 = window.setInterval(() => {
-                  i1++;
-                  setRdLine1(LINE1.slice(0, i1));
-                  if (i1 >= LINE1.length) {
-                    clearInterval(iv1);
-                    window.setTimeout(() => {
-                      const LINE2 = "PREVIOUS DIAGNOSTIC ON FILE";
-                      let i2 = 0;
-                      const iv2 = window.setInterval(() => {
-                        i2++;
-                        setRdLine2(LINE2.slice(0, i2));
-                        if (i2 >= LINE2.length) clearInterval(iv2);
-                      }, 35);
-                    }, 600);
-                  }
-                }, 40);
-              }, 2200);
-
-              // Step 4: terminal block at 3500ms
-              window.setTimeout(() => setRdTerminal(true), 3500);
-
-              // Step 5: fade out at 4500ms, score ring 500ms later
-              window.setTimeout(() => {
-                setRdFadeOut(true);
-                window.setTimeout(() => {
-                  setReturningPhase(5);
-                  const target = checkData.score!;
-                  const animStart = performance.now();
-                  const ANIM_MS = 1500;
-                  const tick = () => {
-                    const t = Math.min(1, (performance.now() - animStart) / ANIM_MS);
-                    setReturningScore(Math.round(cubicEaseInOut(t) * target));
-                    if (t < 1) requestAnimationFrame(tick);
-                  };
-                  requestAnimationFrame(tick);
-                  window.setTimeout(() => setReturningPhase(6), 1500);
-                }, 500);
-              }, 4500);
-
-              window.setTimeout(() => router.replace(`/report/${domain}`), 7500);
-              return;
-            }
-          }
-        } catch {
-          // Check failed — proceed with normal scan
-        }
+        // Session check failed — proceed with normal scan
       }
       startNormalScan();
     })();
@@ -985,192 +882,6 @@ function ScanLoadingInner() {
       >
         No scan URL. Return to home and submit a URL.
       </div>
-    );
-  }
-
-  if (returningData) {
-    const domainStr = displayDomain === "—" ? "" : displayDomain;
-    const glitchDisplay = rdRealCount >= domainStr.length
-      ? domainStr
-      : rdRealCount === 0
-        ? (rdGlitchText || "")
-        : domainStr.slice(0, rdRealCount) + (rdGlitchText ? rdGlitchText.slice(rdRealCount, rdRealCount + 4) : "") + domainStr.slice(rdRealCount + 4);
-
-    return (
-      <>
-        <style>{`
-          @keyframes rdSweepLine {
-            from { transform: translateY(-100%); }
-            to   { transform: translateY(100vh); }
-          }
-          @keyframes rdAtmA { from { transform: translate(0,0); } to { transform: translate(80px, 50px); } }
-          @keyframes rdAtmB { from { transform: translate(0,0); } to { transform: translate(-60px, -70px); } }
-          @keyframes rdRingSpring {
-            from { transform: scale(0.4); opacity: 0; }
-            to   { transform: scale(1); opacity: 1; }
-          }
-          .rd-ring { animation: rdRingSpring 0.6s cubic-bezier(0.34,1.56,0.64,1) forwards; }
-        `}</style>
-
-        <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            background: BG,
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            fontFamily: MONO,
-            overflow: "hidden",
-          }}
-        >
-          {/* CRT scanline overlay */}
-          <div
-            aria-hidden
-            style={{
-              position: "fixed",
-              inset: 0,
-              zIndex: 1000,
-              pointerEvents: "none",
-              backgroundImage: "repeating-linear-gradient(0deg, rgba(0,0,0,0.03) 0px, rgba(0,0,0,0.03) 1px, transparent 1px, transparent 2px)",
-              backgroundSize: "100% 2px",
-            }}
-          />
-
-          {/* Atmosphere blobs */}
-          <div style={{ position: "fixed", inset: 0, zIndex: 1, pointerEvents: "none" }}>
-            <div style={{ position: "absolute", width: 1000, height: 650, top: -200, left: -300, background: "radial-gradient(ellipse, rgba(0,100,255,0.07) 0%, transparent 70%)", filter: "blur(80px)", animation: "rdAtmA 78s ease-in-out infinite alternate" }} />
-            <div style={{ position: "absolute", width: 800, height: 550, bottom: -200, right: -200, background: "radial-gradient(ellipse, rgba(0,60,200,0.05) 0%, transparent 70%)", filter: "blur(90px)", animation: "rdAtmB 96s ease-in-out infinite alternate" }} />
-          </div>
-
-          {/* Step 1: recognition sweep line */}
-          {returningPhase >= 1 && returningPhase < 5 && (
-            <div
-              aria-hidden
-              style={{
-                position: "fixed",
-                top: 0,
-                left: 0,
-                right: 0,
-                height: 1,
-                background: "rgba(0,200,255,0.6)",
-                zIndex: 100,
-                boxShadow: "0 0 12px rgba(0,200,255,0.5), 0 0 40px rgba(0,200,255,0.2)",
-                animation: "rdSweepLine 1.5s ease-in-out forwards",
-              }}
-            />
-          )}
-
-          {/* Steps 2–4: pre-score content block */}
-          {returningPhase < 5 && (
-            <div
-              style={{
-                position: "relative",
-                zIndex: 10,
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                gap: 28,
-                opacity: rdFadeOut ? 0 : 1,
-                transition: "opacity 0.5s ease",
-              }}
-            >
-              {/* Step 2: domain name with glitch/decode */}
-              {returningPhase >= 2 && (
-                <div
-                  style={{
-                    fontFamily: "var(--font-jetbrains-mono), var(--font-space-mono), ui-monospace, monospace",
-                    fontSize: "13px",
-                    fontWeight: 400,
-                    color: "#00C8FF",
-                    letterSpacing: "2px",
-                    lineHeight: 1.4,
-                  }}
-                >
-                  <span style={{ opacity: 0.4 }}>RETRIEVING: </span>{glitchDisplay}
-                </div>
-              )}
-
-              {/* Step 3: status lines typewriter */}
-              {returningPhase >= 3 && (
-                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }}>
-                  <div
-                    style={{
-                      fontFamily: MONO,
-                      fontSize: 11,
-                      letterSpacing: "4px",
-                      textTransform: "uppercase",
-                      color: "#00C8FF",
-                      minHeight: 16,
-                    }}
-                  >
-                    {rdLine1}
-                  </div>
-                  <div
-                    style={{
-                      fontFamily: MONO,
-                      fontSize: 11,
-                      letterSpacing: "4px",
-                      textTransform: "uppercase",
-                      color: "#00C8FF",
-                      minHeight: 16,
-                    }}
-                  >
-                    {rdLine2}
-                  </div>
-                </div>
-              )}
-
-              {/* Step 4: terminal data block */}
-              <div
-                style={{
-                  borderLeft: "2px solid rgba(0,200,255,0.35)",
-                  paddingLeft: 16,
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: 5,
-                  opacity: rdTerminal ? 1 : 0,
-                  transition: "opacity 0.6s ease",
-                  alignSelf: "flex-start",
-                  marginTop: 4,
-                }}
-              >
-                {["LAST SCAN: < 30 DAYS AGO", "REPORT STATUS: RETRIEVED", "LOADING INTELLIGENCE..."].map((line) => (
-                  <div
-                    key={line}
-                    style={{
-                      fontFamily: MONO,
-                      fontSize: 10,
-                      letterSpacing: "0.08em",
-                      color: "rgba(0,200,255,0.4)",
-                    }}
-                  >
-                    {line}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Step 5+: score ring */}
-          {returningPhase >= 5 && (
-            <div style={{ position: "relative", zIndex: 10, width: 340, height: 340, display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <div className="rd-ring" style={{ position: "absolute", width: 320, height: 320, borderRadius: "50%", border: "1px solid rgba(0,200,255,0.08)" }} />
-              <div className="rd-ring" style={{ position: "absolute", width: 260, height: 260, borderRadius: "50%", border: "1px solid rgba(0,200,255,0.18)", boxShadow: "0 0 60px rgba(0,200,255,0.08)", animationDelay: "0.08s" }} />
-              <div style={{ position: "absolute", top: 52, fontSize: 9, letterSpacing: "5px", color: "rgba(0,200,255,0.55)", textTransform: "uppercase", fontFamily: MONO, opacity: returningPhase >= 6 ? 1 : 0, transition: "opacity 0.5s ease" }}>
-                DIAGNOSTIC COMPLETE
-              </div>
-              <div style={{ fontFamily: ORBIT, fontWeight: 900, fontSize: "clamp(80px, 14vw, 140px)", color: "#00C8FF", lineHeight: 1, textShadow: "0 0 24px rgba(0,200,255,1), 0 0 70px rgba(0,200,255,0.7), 0 0 140px rgba(0,200,255,0.4), 0 0 250px rgba(0,200,255,0.15)" }}>
-                {returningScore}
-              </div>
-              <div style={{ position: "absolute", bottom: 40, fontFamily: MONO, fontSize: 10, letterSpacing: "4px", color: "rgba(0,200,255,0.45)", opacity: returningPhase >= 6 ? 1 : 0, transition: "opacity 0.5s ease" }}>
-                / 100 REVENUE SCORE
-              </div>
-            </div>
-          )}
-        </div>
-      </>
     );
   }
 

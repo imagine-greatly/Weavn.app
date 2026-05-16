@@ -180,6 +180,7 @@ function ScanLoadingInner() {
   const abortControllerRef = useRef<AbortController | null>(null);
   const beamRafHaltedRef = useRef(false);
   const cancelRequestedRef = useRef(false);
+  const isRescanRef = useRef(false);
 
   const beamActiveRef = useRef(false);
   const sectionIdxRef = useRef(0);
@@ -390,6 +391,7 @@ function ScanLoadingInner() {
     // isRescanActive. useSearchParams() inside Suspense can lag behind the actual URL by one or
     // more renders; window.location.search is always live and correct at this moment.
     const isRescan = new URLSearchParams(window.location.search).get("rescan") === "true";
+    isRescanRef.current = isRescan;
     console.log("[scan] starting pipeline", { url: resolvedUrl, rescan: isRescan });
     let normalized = resolvedUrl;
     if (!/^https?:\/\//i.test(normalized)) normalized = `https://${normalized}`;
@@ -479,9 +481,9 @@ function ScanLoadingInner() {
           }
         }
       };
-      // Delay fetch until intro cinematic is fully gone:
-      // materialize() at 120ms + ~16ms React render + 1800ms intro = ~1936ms total
-      window.setTimeout(() => { runFetch(); }, 2000);
+      // For rescan there is no intro, so fetch starts immediately.
+      // For normal scans, delay until cinematic is gone: materialize() at 120ms + 1800ms intro ≈ 1936ms.
+      window.setTimeout(() => { runFetch(); }, isRescan ? 0 : 2000);
     };
 
     if (scanFailure !== null) {
@@ -521,7 +523,7 @@ function ScanLoadingInner() {
   // Cinematic intro — plays for the first 1.5s of a normal scan
   useEffect(() => {
     if (!materialized) return;
-    if (window.location.search.includes("rescan=true")) return;
+    if (isRescanRef.current) { setIntroVisible(false); return; }
     const domain = domainRef.current;
     setIntroVisible(true);
 

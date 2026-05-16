@@ -153,8 +153,14 @@ function ScanLoadingInner() {
   const [invalidUrlMessage, setInvalidUrlMessage] = useState<string | null>(null);
   const [statusBarOverride, setStatusBarOverride] = useState<string | null>(null);
   const [scanUserAborted, setScanUserAborted] = useState(false);
-  // Cinematic intro
-  const [introVisible, setIntroVisible] = useState(false);
+  // Cinematic intro — starts true for fresh scans so the overlay is visible on the very first frame
+  const [introVisible, setIntroVisible] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    const p = new URLSearchParams(window.location.search);
+    if (p.get("rescan") === "true") return false;
+    return p.get("url") !== null ||
+      (typeof sessionStorage !== "undefined" && sessionStorage.getItem("pendingUrl") !== null);
+  });
   const [introFadingOut, setIntroFadingOut] = useState(false);
   const [introLine1, setIntroLine1] = useState("");
   const [introLine2Glitch, setIntroLine2Glitch] = useState("");
@@ -219,6 +225,24 @@ function ScanLoadingInner() {
     nudgeScheduled: false,
     nudgePendingAt: 0,
     nudgeDelta: { x: 0, y: 0 },
+  });
+
+  const wpRef = useRef<{
+    tx: number;
+    ty: number;
+    dwell: number;
+    force: number;
+    phase: "scan" | "seek";
+    sweepRight: boolean;
+    lastSecId: string | null;
+  }>({
+    tx: 0,
+    ty: 0,
+    dwell: 0,
+    force: 0.022,
+    phase: "seek",
+    sweepRight: true,
+    lastSecId: null,
   });
 
   const sectionBoundsRef = useRef<Array<{ id: string; top: number; bottom: number }>>([]);
@@ -521,14 +545,16 @@ function ScanLoadingInner() {
     cancelAnimationFrame(rafScanRef.current);
   }, [invalidUrlMessage]);
 
-  // Cinematic intro — plays for the first 1.5s of a normal scan
+  // Cinematic intro — fires as soon as introVisible becomes true (which is on the very first render
+  // for fresh scans, before materialized). Domain is read inside the t2 callback so it is always
+  // set by the time the timer fires (~1100ms after mount, domain arrives at ~316ms).
   useEffect(() => {
-    if (!materialized) return;
-    if (isRescanRef.current) { setIntroVisible(false); return; }
-    const domain = domainRef.current;
-    setIntroVisible(true);
+    if (!introVisible) return;
+    if (new URLSearchParams(window.location.search).get("rescan") === "true") {
+      setIntroVisible(false);
+      return;
+    }
 
-    // 800ms: typewriter "INITIATING DIAGNOSTIC"
     const LINE1 = "INITIATING DIAGNOSTIC";
     const t1 = window.setTimeout(() => {
       let i = 0;
@@ -540,8 +566,10 @@ function ScanLoadingInner() {
       }, charDelay);
     }, 800);
 
-    // 1100ms: glitch → decode domain
+    // 1100ms: glitch → decode domain (domain is set well before this fires)
     const t2 = window.setTimeout(() => {
+      const domain = domainRef.current;
+      if (!domain) return;
       const glitchChars = "0134_";
       let glitchCount = 0;
       const glitchIv = window.setInterval(() => {
@@ -569,7 +597,7 @@ function ScanLoadingInner() {
     const t5 = window.setTimeout(() => setIntroVisible(false), 1800);
 
     return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); clearTimeout(t4); clearTimeout(t5); };
-  }, [materialized]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [introVisible]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Status typewriter — types each new message in over 0.3s
   useEffect(() => {
@@ -689,11 +717,17 @@ function ScanLoadingInner() {
     const lineEl = laserLineRef.current;
 
     const BEAM_W = 160;
-    const CYCLE_MS = 2500;
     const s = beamStateRef.current;
+    const wp = wpRef.current;
     s.lastFrameTime = performance.now();
     s.pos = { x: 0, y: window.innerHeight / 2 };
     s.velocity = { x: 0, y: 0 };
+    wp.tx = 0;
+    wp.ty = window.innerHeight / 2;
+    wp.dwell = 0;
+    wp.phase = "seek";
+    wp.sweepRight = true;
+    wp.lastSecId = null;
     el.style.opacity = "1";
     if (lineEl) lineEl.style.opacity = "1";
 
@@ -704,24 +738,49 @@ function ScanLoadingInner() {
         return;
       }
 
+      const dt = Math.min(50, now - s.lastFrameTime);
       s.lastFrameTime = now;
 
-      // X: deterministic sine oscillation — one full sweep per CYCLE_MS
-      const phase = (now % CYCLE_MS) / CYCLE_MS;
-      const tx = (Math.sin(phase * Math.PI * 2) * 0.5 + 0.5) * Math.max(0, window.innerWidth - BEAM_W);
-
-      // Y: center of the current active section in viewport coords
       const schRect = schematicRef.current?.getBoundingClientRect();
       const sTop = sectionTopRef.current;
       const sBot = sectionBotRef.current;
-      const ty =
-        schRect && sBot > sTop
-          ? schRect.top + (sTop + sBot) / 2
-          : window.innerHeight / 2;
+      const vW = window.innerWidth;
+      const vH = window.innerHeight;
 
-      // Slow, deliberate spring — force 0.022, damping 0.88
-      s.velocity.x += (tx - s.pos.x) * 0.022;
-      s.velocity.y += (ty - s.pos.y) * 0.022;
+      // Force new waypoint on section change
+      if (activeSectionIdRef.current !== wp.lastSecId) {
+        wp.lastSecId = activeSectionIdRef.current;
+        wp.dwell = 0;
+      }
+
+      wp.dwell -= dt;
+
+      if (wp.dwell <= 0) {
+        const margin = 24;
+        const secTop = schRect && sBot > sTop ? schRect.top + sTop + margin : vH * 0.15;
+        const secBot = schRect && sBot > sTop ? schRect.top + sBot - margin : vH * 0.85;
+        const ySpan = Math.max(40, secBot - secTop);
+
+        if (wp.phase === "seek") {
+          // Arrived — do a slow horizontal scan at this Y
+          wp.phase = "scan";
+          wp.ty = secTop + Math.random() * ySpan;
+          wp.sweepRight = !wp.sweepRight;
+          wp.tx = wp.sweepRight ? vW - BEAM_W : 0;
+          wp.force = 0.013 + Math.random() * 0.009;
+          wp.dwell = 650 + Math.random() * 1150;
+        } else {
+          // Seek a new area of the current section
+          wp.phase = "seek";
+          wp.ty = secTop + Math.random() * ySpan;
+          wp.tx = Math.random() * Math.max(0, vW - BEAM_W);
+          wp.force = 0.038 + Math.random() * 0.030;
+          wp.dwell = 60 + Math.random() * 200;
+        }
+      }
+
+      s.velocity.x += (wp.tx - s.pos.x) * wp.force;
+      s.velocity.y += (wp.ty - s.pos.y) * wp.force;
       s.velocity.x *= 0.88;
       s.velocity.y *= 0.88;
       s.pos.x += s.velocity.x;

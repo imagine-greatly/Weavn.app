@@ -153,7 +153,7 @@ function ScanLoadingInner() {
   const [statusBarOverride, setStatusBarOverride] = useState<string | null>(null);
   const [scanUserAborted, setScanUserAborted] = useState(false);
   // Cinematic intro
-  const [introVisible, setIntroVisible] = useState(false);
+  const [introVisible, setIntroVisible] = useState(!isRescanActive);
   const [introFadingOut, setIntroFadingOut] = useState(false);
   const [introLine1, setIntroLine1] = useState("");
   const [introLine2Glitch, setIntroLine2Glitch] = useState("");
@@ -404,11 +404,8 @@ function ScanLoadingInner() {
     normalizedUrlRef.current = normalized;
 
     const startNormalScan = () => {
-      const isRescan = window.location.search.includes("rescan=true");
       scanStartTimeRef.current = performance.now();
-      if (!isRescan) {
-        window.setTimeout(() => materialize(), 120);
-      }
+      window.setTimeout(() => materialize(), 120);
       window.setTimeout(() => {
         sectionIdxRef.current = 0;
         scanNext();
@@ -482,13 +479,9 @@ function ScanLoadingInner() {
           }
         }
       };
-      if (isRescan) {
-        runFetch();
-      } else {
-        // Delay fetch until intro cinematic is fully gone:
-        // materialize() at 120ms + ~16ms React render + 1800ms intro = ~1936ms total
-        window.setTimeout(() => { runFetch(); }, 2000);
-      }
+      // Delay fetch until intro cinematic is fully gone:
+      // materialize() at 120ms + ~16ms React render + 1800ms intro = ~1936ms total
+      window.setTimeout(() => { runFetch(); }, 2000);
     };
 
     if (scanFailure !== null) {
@@ -528,6 +521,7 @@ function ScanLoadingInner() {
   // Cinematic intro — plays for the first 1.5s of a normal scan
   useEffect(() => {
     if (!materialized) return;
+    if (window.location.search.includes("rescan=true")) return;
     const domain = domainRef.current;
     setIntroVisible(true);
 

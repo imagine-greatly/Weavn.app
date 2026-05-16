@@ -396,7 +396,11 @@ function ScanLoadingInner() {
 
   useEffect(() => {
     if (!resolvedUrl) return;
-    console.log("[scan] starting pipeline", { url: resolvedUrl, rescan: isRescanActive });
+    // Read from window.location.search at effect execution time — not from the render-closure
+    // isRescanActive. useSearchParams() inside Suspense can lag behind the actual URL by one or
+    // more renders; window.location.search is always live and correct at this moment.
+    const isRescan = new URLSearchParams(window.location.search).get("rescan") === "true";
+    console.log("[scan] starting pipeline", { url: resolvedUrl, rescan: isRescan });
     let normalized = resolvedUrl;
     if (!/^https?:\/\//i.test(normalized)) normalized = `https://${normalized}`;
     let domain = "";
@@ -429,7 +433,7 @@ function ScanLoadingInner() {
           const res = await fetch("/api/scan", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ url: normalized, ...(isRescanActive ? { rescan: true } : {}) }),
+            body: JSON.stringify({ url: normalized, ...(isRescan ? { rescan: true } : {}) }),
             signal: controller.signal,
           });
           window.clearTimeout(timeoutId);
@@ -488,8 +492,8 @@ function ScanLoadingInner() {
       runFetch();
     };
 
-    console.log('[scan] isRescanActive:', isRescanActive, 'url param:', urlParam, 'full search params:', searchParams.toString());
-    if (isRescanActive || scanFailure !== null) {
+    console.log('[scan] isRescan (effect-time):', isRescan, 'url param:', urlParam, 'full search params:', searchParams.toString());
+    if (isRescan || scanFailure !== null) {
       startNormalScan();
       return;
     }
@@ -516,7 +520,7 @@ function ScanLoadingInner() {
             score?: number;
             reportId?: string;
           };
-          if (checkData.exists && typeof checkData.score === "number" && checkData.reportId && !isRescanActive) {
+          if (checkData.exists && typeof checkData.score === "number" && checkData.reportId && !isRescan) {
             setReturningData({ score: checkData.score, reportId: checkData.reportId });
             setReturningPhase(1); // sweep line
 
@@ -599,7 +603,7 @@ function ScanLoadingInner() {
       }
       startNormalScan();
     })();
-  }, [resolvedUrl, materialize, scanNext, isRescanActive, router]);
+  }, [resolvedUrl, materialize, scanNext, router]);
 
   useEffect(() => {
     if (errorMsg) {

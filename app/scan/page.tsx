@@ -161,7 +161,6 @@ function ScanLoadingInner() {
   const [rdLine2, setRdLine2] = useState("");
   const [rdTerminal, setRdTerminal] = useState(false);
   const [rdFadeOut, setRdFadeOut] = useState(false);
-
   // Cinematic intro
   const [introVisible, setIntroVisible] = useState(false);
   const [introFadingOut, setIntroFadingOut] = useState(false);

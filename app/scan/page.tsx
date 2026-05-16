@@ -128,6 +128,7 @@ function ScanLoadingInner() {
   }, [urlParam]);
 
   const beamDivRef = useRef<HTMLDivElement>(null);
+  const laserLineRef = useRef<HTMLDivElement>(null);
   const beamRafRef = useRef<number>(0);
   const schematicRef = useRef<HTMLDivElement>(null);
   const progressFillRef = useRef<HTMLDivElement>(null);
@@ -685,6 +686,7 @@ function ScanLoadingInner() {
     if (!materialized) return;
     const el = beamDivRef.current;
     if (!el) return;
+    const lineEl = laserLineRef.current;
 
     const BEAM_W = 160;
     const CYCLE_MS = 2500;
@@ -693,10 +695,12 @@ function ScanLoadingInner() {
     s.pos = { x: 0, y: window.innerHeight / 2 };
     s.velocity = { x: 0, y: 0 };
     el.style.opacity = "1";
+    if (lineEl) lineEl.style.opacity = "1";
 
     const tick = (now: number) => {
       if (beamRafHaltedRef.current) {
         el.style.opacity = "0";
+        if (lineEl) lineEl.style.opacity = "0";
         return;
       }
 
@@ -724,6 +728,7 @@ function ScanLoadingInner() {
       s.pos.y += s.velocity.y;
 
       el.style.transform = `translate(${s.pos.x}px, ${s.pos.y}px)`;
+      if (lineEl) lineEl.style.transform = `translateY(${s.pos.y + 0.5}px)`;
 
       // Section label activation by beam Y (viewport coords)
       const beamY = s.pos.y;
@@ -1099,6 +1104,23 @@ function ScanLoadingInner() {
             opacity: 0,
             willChange: "transform",
             background: "linear-gradient(90deg, transparent 0%, rgba(0,200,255,0.15) 10%, rgba(0,200,255,0.9) 40%, rgba(0,200,255,1) 50%, rgba(0,200,255,0.9) 60%, rgba(0,200,255,0.15) 90%, transparent 100%)",
+          }}
+        />
+        {/* Laser line — full-width 1px rule that travels at the beam's Y center */}
+        <div
+          ref={laserLineRef}
+          aria-hidden
+          style={{
+            position: "fixed",
+            left: 0,
+            top: 0,
+            width: "100vw",
+            height: 1,
+            zIndex: 49,
+            pointerEvents: "none",
+            opacity: 0,
+            willChange: "transform",
+            background: "rgba(0,200,255,0.35)",
           }}
         />
 

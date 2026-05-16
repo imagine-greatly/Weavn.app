@@ -404,8 +404,11 @@ function ScanLoadingInner() {
     normalizedUrlRef.current = normalized;
 
     const startNormalScan = () => {
+      const isRescan = window.location.search.includes("rescan=true");
       scanStartTimeRef.current = performance.now();
-      window.setTimeout(() => materialize(), 120);
+      if (!isRescan) {
+        window.setTimeout(() => materialize(), 120);
+      }
       window.setTimeout(() => {
         sectionIdxRef.current = 0;
         scanNext();
@@ -479,9 +482,13 @@ function ScanLoadingInner() {
           }
         }
       };
-      // Delay fetch until the intro cinematic completes:
-      // materialize() fires at 120ms, intro runs for 1800ms → handoff at ~1920ms
-      window.setTimeout(() => { runFetch(); }, 1900);
+      if (isRescan) {
+        runFetch();
+      } else {
+        // Delay fetch until intro cinematic is fully gone:
+        // materialize() at 120ms + ~16ms React render + 1800ms intro = ~1936ms total
+        window.setTimeout(() => { runFetch(); }, 2000);
+      }
     };
 
     if (scanFailure !== null) {

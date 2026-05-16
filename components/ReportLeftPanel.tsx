@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { displayScoreColor } from "@/lib/displayScoreColor";
 import ConversionScoreGauge from "@/components/ConversionScoreGauge";
 
@@ -104,7 +103,6 @@ export default function ReportLeftPanel({
   activeNavSection,
   onNavSectionChange,
 }: ReportLeftPanelProps) {
-  const router = useRouter();
   return (
     <aside
       className="report-left-aside flex h-full w-[300px] shrink-0 flex-col overflow-hidden border-r"
@@ -231,7 +229,7 @@ export default function ReportLeftPanel({
         {!readOnlyLeftPanel ? (
           <button
             type="button"
-            onClick={() => router.push(`/scan?url=${encodeURIComponent(domain)}`)}
+            onClick={() => onRescan?.()}
             style={{
               display: "block",
               width: "100%",

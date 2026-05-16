@@ -492,13 +492,13 @@ function ScanLoadingInner() {
       runFetch();
     };
 
-    console.log('[scan] isRescan (effect-time):', isRescan, 'url param:', urlParam, 'full search params:', searchParams.toString());
-    if (isRescan || scanFailure !== null) {
+    if (scanFailure !== null) {
       startNormalScan();
       return;
     }
 
     void (async () => {
+      const shouldRescan = window.location.search.includes("rescan=true");
       // Auth must be verified before domain recognition — unauthenticated users go through the auth flow.
       try {
         const { data: { session } } = await getSupabaseBrowserClient().auth.getSession();
@@ -512,94 +512,96 @@ function ScanLoadingInner() {
         return;
       }
 
-      try {
-        const checkRes = await fetch(`/api/reports/check?domain=${encodeURIComponent(domain)}`);
-        if (checkRes.ok) {
-          const checkData = (await checkRes.json()) as {
-            exists: boolean;
-            score?: number;
-            reportId?: string;
-          };
-          if (checkData.exists && typeof checkData.score === "number" && checkData.reportId && !isRescan) {
-            setReturningData({ score: checkData.score, reportId: checkData.reportId });
-            setReturningPhase(1); // sweep line
+      if (!shouldRescan) {
+        try {
+          const checkRes = await fetch(`/api/reports/check?domain=${encodeURIComponent(domain)}`);
+          if (checkRes.ok) {
+            const checkData = (await checkRes.json()) as {
+              exists: boolean;
+              score?: number;
+              reportId?: string;
+            };
+            if (checkData.exists && typeof checkData.score === "number" && checkData.reportId) {
+              setReturningData({ score: checkData.score, reportId: checkData.reportId });
+              setReturningPhase(1); // sweep line
 
-            // Step 2: glitch/decode at 1200ms
-            window.setTimeout(() => {
-              setReturningPhase(2);
-              const glitchChars = "0134_";
-              const domainStr = domain;
-              let glitchCount = 0;
-              const glitchIv = window.setInterval(() => {
-                let dollarCount = 0;
-                const scrambled = Array.from({ length: domainStr.length }, () => {
-                  if (dollarCount < 2 && Math.random() < 0.15) { dollarCount++; return "$"; }
-                  return glitchChars[Math.floor(Math.random() * glitchChars.length)];
-                }).join("");
-                setRdGlitchText(scrambled);
-                glitchCount++;
-                if (glitchCount >= 8) {
-                  clearInterval(glitchIv);
-                  let revealed = 0;
-                  const decodeIv = window.setInterval(() => {
-                    revealed++;
-                    setRdRealCount(revealed);
-                    if (revealed >= domainStr.length) clearInterval(decodeIv);
-                  }, 55);
-                }
-              }, 75);
-            }, 1200);
-
-            // Step 3: status lines typewriter at 2200ms
-            window.setTimeout(() => {
-              setReturningPhase(3);
-              const LINE1 = "DOMAIN RECOGNIZED";
-              let i1 = 0;
-              const iv1 = window.setInterval(() => {
-                i1++;
-                setRdLine1(LINE1.slice(0, i1));
-                if (i1 >= LINE1.length) {
-                  clearInterval(iv1);
-                  window.setTimeout(() => {
-                    const LINE2 = "PREVIOUS DIAGNOSTIC ON FILE";
-                    let i2 = 0;
-                    const iv2 = window.setInterval(() => {
-                      i2++;
-                      setRdLine2(LINE2.slice(0, i2));
-                      if (i2 >= LINE2.length) clearInterval(iv2);
-                    }, 35);
-                  }, 600);
-                }
-              }, 40);
-            }, 2200);
-
-            // Step 4: terminal block at 3500ms
-            window.setTimeout(() => setRdTerminal(true), 3500);
-
-            // Step 5: fade out at 4500ms, score ring 500ms later
-            window.setTimeout(() => {
-              setRdFadeOut(true);
+              // Step 2: glitch/decode at 1200ms
               window.setTimeout(() => {
-                setReturningPhase(5);
-                const target = checkData.score!;
-                const animStart = performance.now();
-                const ANIM_MS = 1500;
-                const tick = () => {
-                  const t = Math.min(1, (performance.now() - animStart) / ANIM_MS);
-                  setReturningScore(Math.round(cubicEaseInOut(t) * target));
-                  if (t < 1) requestAnimationFrame(tick);
-                };
-                requestAnimationFrame(tick);
-                window.setTimeout(() => setReturningPhase(6), 1500);
-              }, 500);
-            }, 4500);
+                setReturningPhase(2);
+                const glitchChars = "0134_";
+                const domainStr = domain;
+                let glitchCount = 0;
+                const glitchIv = window.setInterval(() => {
+                  let dollarCount = 0;
+                  const scrambled = Array.from({ length: domainStr.length }, () => {
+                    if (dollarCount < 2 && Math.random() < 0.15) { dollarCount++; return "$"; }
+                    return glitchChars[Math.floor(Math.random() * glitchChars.length)];
+                  }).join("");
+                  setRdGlitchText(scrambled);
+                  glitchCount++;
+                  if (glitchCount >= 8) {
+                    clearInterval(glitchIv);
+                    let revealed = 0;
+                    const decodeIv = window.setInterval(() => {
+                      revealed++;
+                      setRdRealCount(revealed);
+                      if (revealed >= domainStr.length) clearInterval(decodeIv);
+                    }, 55);
+                  }
+                }, 75);
+              }, 1200);
 
-            window.setTimeout(() => router.replace(`/report/${domain}`), 7500);
-            return;
+              // Step 3: status lines typewriter at 2200ms
+              window.setTimeout(() => {
+                setReturningPhase(3);
+                const LINE1 = "DOMAIN RECOGNIZED";
+                let i1 = 0;
+                const iv1 = window.setInterval(() => {
+                  i1++;
+                  setRdLine1(LINE1.slice(0, i1));
+                  if (i1 >= LINE1.length) {
+                    clearInterval(iv1);
+                    window.setTimeout(() => {
+                      const LINE2 = "PREVIOUS DIAGNOSTIC ON FILE";
+                      let i2 = 0;
+                      const iv2 = window.setInterval(() => {
+                        i2++;
+                        setRdLine2(LINE2.slice(0, i2));
+                        if (i2 >= LINE2.length) clearInterval(iv2);
+                      }, 35);
+                    }, 600);
+                  }
+                }, 40);
+              }, 2200);
+
+              // Step 4: terminal block at 3500ms
+              window.setTimeout(() => setRdTerminal(true), 3500);
+
+              // Step 5: fade out at 4500ms, score ring 500ms later
+              window.setTimeout(() => {
+                setRdFadeOut(true);
+                window.setTimeout(() => {
+                  setReturningPhase(5);
+                  const target = checkData.score!;
+                  const animStart = performance.now();
+                  const ANIM_MS = 1500;
+                  const tick = () => {
+                    const t = Math.min(1, (performance.now() - animStart) / ANIM_MS);
+                    setReturningScore(Math.round(cubicEaseInOut(t) * target));
+                    if (t < 1) requestAnimationFrame(tick);
+                  };
+                  requestAnimationFrame(tick);
+                  window.setTimeout(() => setReturningPhase(6), 1500);
+                }, 500);
+              }, 4500);
+
+              window.setTimeout(() => router.replace(`/report/${domain}`), 7500);
+              return;
+            }
           }
+        } catch {
+          // Check failed — proceed with normal scan
         }
-      } catch {
-        // Check failed — proceed with normal scan
       }
       startNormalScan();
     })();

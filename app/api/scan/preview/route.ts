@@ -5,7 +5,7 @@ import { scrapeSite } from "@/lib/scraper";
 import { detectSiteType } from "@/lib/siteType";
 import { runAnalysis } from "@/lib/analyze";
 
-export const maxDuration = 120;
+export const maxDuration = 300;
 
 const PREVIEW_HTML_CAP = 8_000;
 const CACHE_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 days

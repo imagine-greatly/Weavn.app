@@ -70,7 +70,7 @@ async function fetchWithBrowserless(url: string): Promise<string | null> {
 
   // Attempt 1 — Fast scan (domcontentloaded + wait for real text)
   const controller1 = new AbortController()
-  const timer1 = setTimeout(() => controller1.abort(), 40000)
+  const timer1 = setTimeout(() => controller1.abort(), 28000)
   let html1: string | null = null
 
   try {
@@ -114,7 +114,7 @@ async function fetchWithBrowserless(url: string): Promise<string | null> {
   // Attempt 2 — Full JS render (networkidle2)
   console.log(`[SCRAPER] Browserless attempt 1 insufficient, running attempt 2 for ${url}`)
   const controller2 = new AbortController()
-  const timer2 = setTimeout(() => controller2.abort(), 45000)
+  const timer2 = setTimeout(() => controller2.abort(), 33000)
   let html2: string | null = null
 
   try {

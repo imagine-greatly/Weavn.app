@@ -6,7 +6,6 @@ import { runAnalysis } from "@/lib/analyze";
 
 export const maxDuration = 120;
 
-const PREVIEW_MODEL = "claude-haiku-4-5-20251001";
 const PREVIEW_HTML_CAP = 8_000;
 const CACHE_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
 
@@ -146,7 +145,7 @@ export async function POST(req: NextRequest) {
 
   let payload;
   try {
-    payload = await runAnalysis(extraction, site_type, PREVIEW_MODEL);
+    payload = await runAnalysis(extraction, site_type);
   } catch (err) {
     const message = err instanceof Error ? err.message : "Analysis failed.";
     return NextResponse.json({ error: message }, { status: 500 });

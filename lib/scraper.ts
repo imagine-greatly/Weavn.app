@@ -155,10 +155,31 @@ async function fetchWithBrowserless(url: string): Promise<string | null> {
   return len2 > len1 ? html2 : html1
 }
 
+// -- PLAIN HTTP FALLBACK (used when Browserless is unavailable/rate-limited) --
+async function fetchWithPlainHttp(url: string): Promise<string | null> {
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), 15000)
+  try {
+    const res = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (compatible; WebDocBot/1.0)',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+      },
+      signal: controller.signal,
+    })
+    clearTimeout(timer)
+    if (!res.ok) return null
+    return await res.text() || null
+  } catch {
+    clearTimeout(timer)
+    return null
+  }
+}
+
 // -- MAIN SCRAPE FUNCTION -----------------------------------------------
 export interface ScrapeResult {
   rawHtml: string
-  method: 'browserless'
+  method: 'browserless' | 'fetch'
   domain: string
 }
 
@@ -171,17 +192,25 @@ export async function scrapeUrl(inputUrl: string): Promise<ScrapeResult> {
   const url = normalizeToHomepage(inputUrl)
   const domain = new URL(url).hostname.replace(/^www\./, '')
 
-  const rawHtml = await fetchWithBrowserless(url)
+  let rawHtml = await fetchWithBrowserless(url)
+  let method: ScrapeResult['method'] = 'browserless'
 
   if (!rawHtml) {
-    console.log(`[scraper] Browserless failed for ${url}`)
+    console.log(`[SCRAPER] Browserless failed for ${url}, falling back to plain HTTP fetch`)
+    rawHtml = await fetchWithPlainHttp(url)
+    method = 'fetch'
+    if (rawHtml) {
+      console.log(`[SCRAPER] ${domain} | method:fetch | html_len:${rawHtml.length}`)
+    } else {
+      console.log(`[SCRAPER] Plain HTTP fetch also failed for ${url}`)
+    }
   } else {
     console.log(`[SCRAPER] ${domain} | method:browserless | html_len:${rawHtml.length}`)
   }
 
   return {
     rawHtml: rawHtml ?? '',
-    method: 'browserless',
+    method,
     domain,
   }
 }

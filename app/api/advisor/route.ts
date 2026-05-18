@@ -193,7 +193,7 @@ export async function POST(req: NextRequest) {
 
   // messages.stream() enables token-by-token streaming (Anthropic SDK equivalent of stream: true).
   const stream = await anthropic.messages.stream({
-    model: "claude-sonnet-4-5-20251022",
+    model: "claude-sonnet-4-6",
     max_tokens: 400,
     system: [{ type: "text", text: systemPrompt, cache_control: { type: "ephemeral" } }],
     messages: [

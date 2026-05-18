@@ -1,6 +1,6 @@
 /**
  * Send combined site extraction to Claude and return structured report.
- * Uses claude-sonnet-4-5 and the conversion psychologist system prompt.
+ * Uses claude-sonnet-4-6 and the conversion psychologist system prompt.
  * Retries once on AI failure.
  */
 
@@ -422,7 +422,7 @@ export async function runAnalysis(
   plan?: string,
   model?: string
 ): Promise<ReportPayload> {
-  const resolvedModel = model ?? (plan === "agency" ? "claude-opus-4-5" : "claude-sonnet-4-5");
+  const resolvedModel = model ?? (plan === "agency" ? "claude-opus-4-7" : "claude-sonnet-4-6");
   const client = new Anthropic({
     apiKey: process.env.ANTHROPIC_API_KEY,
   });

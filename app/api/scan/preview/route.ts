@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { scrapeSite } from "@/lib/scraper";
 import { detectSiteType } from "@/lib/siteType";
-import { runAnalysis } from "@/lib/analyze";
+import { runPreviewAnalysis } from "@/lib/analyze";
 
 export const maxDuration = 300;
 
@@ -146,26 +146,7 @@ export async function POST(req: NextRequest) {
 
   const site_type = detectSiteType(extraction);
 
-  let payload;
-  try {
-    payload = await runAnalysis(extraction, site_type);
-  } catch (err) {
-    const message = err instanceof Error ? err.message : "Analysis failed.";
-    return NextResponse.json({ error: message }, { status: 500 });
-  }
+  const { conversionScore, topFinding } = await runPreviewAnalysis(extraction, site_type);
 
-  const topLeak = payload.leaks?.[0];
-  const topFinding: TopFinding = topLeak
-    ? {
-        title: topLeak.title,
-        description: topLeak.whatWeFound,
-        severity: topLeak.severity,
-      }
-    : null;
-
-  return NextResponse.json({
-    domain,
-    conversionScore: payload.conversionScore,
-    topFinding,
-  });
+  return NextResponse.json({ domain, conversionScore, topFinding });
 }

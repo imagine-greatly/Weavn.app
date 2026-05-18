@@ -239,7 +239,7 @@ function ScanLoadingInner() {
     tx: 0,
     ty: 0,
     dwell: 0,
-    force: 0.022,
+    force: 0.016,
     phase: "seek",
     sweepRight: true,
     lastSecId: null,
@@ -762,27 +762,27 @@ function ScanLoadingInner() {
         const ySpan = Math.max(40, secBot - secTop);
 
         if (wp.phase === "seek") {
-          // Arrived — do a slow horizontal scan at this Y
+          // Arrived — do a slow horizontal scan at this Y, pausing to "read"
           wp.phase = "scan";
           wp.ty = secTop + Math.random() * ySpan;
           wp.sweepRight = !wp.sweepRight;
           wp.tx = wp.sweepRight ? vW - BEAM_W : 0;
-          wp.force = 0.013 + Math.random() * 0.009;
-          wp.dwell = 650 + Math.random() * 1150;
+          wp.force = 0.007 + Math.random() * 0.004;
+          wp.dwell = 1600 + Math.random() * 2200;
         } else {
-          // Seek a new area of the current section
+          // Deliberately seek a new area of the current section
           wp.phase = "seek";
           wp.ty = secTop + Math.random() * ySpan;
           wp.tx = Math.random() * Math.max(0, vW - BEAM_W);
-          wp.force = 0.038 + Math.random() * 0.030;
-          wp.dwell = 60 + Math.random() * 200;
+          wp.force = 0.016 + Math.random() * 0.008;
+          wp.dwell = 200 + Math.random() * 350;
         }
       }
 
       s.velocity.x += (wp.tx - s.pos.x) * wp.force;
       s.velocity.y += (wp.ty - s.pos.y) * wp.force;
-      s.velocity.x *= 0.88;
-      s.velocity.y *= 0.88;
+      s.velocity.x *= 0.84;
+      s.velocity.y *= 0.84;
       s.pos.x += s.velocity.x;
       s.pos.y += s.velocity.y;
 

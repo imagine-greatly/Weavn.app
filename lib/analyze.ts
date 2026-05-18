@@ -419,9 +419,10 @@ function mapLegacyLeakToNew(input: Record<string, unknown>, fallbackId: string):
 export async function runAnalysis(
   extraction: CombinedExtraction,
   siteType: SiteType,
-  plan?: string
+  plan?: string,
+  model?: string
 ): Promise<ReportPayload> {
-  const model = plan === "agency" ? "claude-opus-4-5" : "claude-sonnet-4-5";
+  const resolvedModel = model ?? (plan === "agency" ? "claude-opus-4-5" : "claude-sonnet-4-5");
   const client = new Anthropic({
     apiKey: process.env.ANTHROPIC_API_KEY,
   });
@@ -431,7 +432,7 @@ export async function runAnalysis(
 
   const run = async (): Promise<ReportPayload> => {
     const message = await client.messages.create({
-      model,
+      model: resolvedModel,
       max_tokens: 4096,
       system: [{ type: "text", text: systemPrompt, cache_control: { type: "ephemeral" } }],
       messages: [{ role: "user", content: userContent }],
@@ -456,5 +457,63 @@ export async function runAnalysis(
     } catch (secondErr) {
       throw firstErr instanceof Error ? firstErr : new Error("Analysis failed. Please try again.");
     }
+  }
+}
+
+export interface PreviewResult {
+  conversionScore: number;
+  topFinding: { title: string; description: string; severity: string } | null;
+}
+
+const PREVIEW_SYSTEM_PROMPT = `You are a conversion analyst. Return ONLY valid JSON with no markdown fences or preamble:
+{"conversionScore":<integer 0-100>,"topFinding":{"title":"<under 10 words>","description":"<1-2 sentences>","severity":"critical"|"high"|"medium"}}`;
+
+export async function runPreviewAnalysis(
+  extraction: CombinedExtraction,
+  siteType: SiteType
+): Promise<PreviewResult> {
+  const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+
+  const attempt = async (): Promise<PreviewResult> => {
+    const message = await client.messages.create({
+      model: "claude-haiku-4-5-20251001",
+      max_tokens: 1024,
+      system: PREVIEW_SYSTEM_PROMPT,
+      messages: [
+        {
+          role: "user",
+          content: `Site type: ${siteType}. Score the conversion readiness and identify the single biggest issue from this homepage HTML:\n\n${extraction.rawHtml}`,
+        },
+      ],
+    });
+
+    const block = message.content.find((c) => c.type === "text");
+    if (!block || block.type !== "text") throw new Error("No text response from model.");
+
+    let raw = block.text.replace(/^```(?:json)?\s*\n?/m, "").replace(/\n?```\s*$/m, "").trim();
+
+    try {
+      const parsed = JSON.parse(raw) as Record<string, unknown>;
+      const score = Math.min(100, Math.max(0, Math.round(Number(parsed.conversionScore ?? 50))));
+      const tf = parsed.topFinding as Record<string, unknown> | undefined;
+      return {
+        conversionScore: score,
+        topFinding: tf
+          ? {
+              title: String(tf.title ?? ""),
+              description: String(tf.description ?? ""),
+              severity: String(tf.severity ?? "medium"),
+            }
+          : null,
+      };
+    } catch {
+      return { conversionScore: 50, topFinding: null };
+    }
+  };
+
+  try {
+    return await attempt();
+  } catch {
+    return { conversionScore: 50, topFinding: null };
   }
 }

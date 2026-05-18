@@ -4,6 +4,7 @@
  * Returns: { domain, reportId, payload } or { error }
  */
 
+import { timingSafeEqual } from "crypto";
 import { createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
@@ -66,10 +67,12 @@ async function validateUrl(url: string): Promise<{ valid: boolean; reason?: stri
 export async function POST(req: NextRequest) {
   // Internal API key bypass — checked before any auth/session logic
   const internalKey = req.headers.get("x-internal-key");
+  const expectedKey = process.env.INTERNAL_SCAN_KEY ?? "";
   const internalBypass =
     internalKey !== null &&
-    Boolean(process.env.INTERNAL_SCAN_KEY) &&
-    internalKey === process.env.INTERNAL_SCAN_KEY;
+    expectedKey.length > 0 &&
+    internalKey.length === expectedKey.length &&
+    timingSafeEqual(Buffer.from(internalKey), Buffer.from(expectedKey));
 
   let userId: string;
   let withCookies: (res: NextResponse) => NextResponse;

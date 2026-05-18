@@ -1,3 +1,5 @@
+import { cookies } from "next/headers";
+import { createServerClient } from "@supabase/ssr";
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { formatWebDocScoreWithBand } from "@/lib/displayScoreColor";
@@ -84,19 +86,35 @@ function buildContext(
   return blocks.join("\n\n");
 }
 
+async function getSessionUserId(): Promise<string> {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!url || !anonKey) return "";
+  const cookieStore = await cookies();
+  const supabase = createServerClient(url, anonKey, {
+    cookies: {
+      getAll() { return cookieStore.getAll(); },
+      setAll() {},
+    },
+  });
+  const { data: { user } } = await supabase.auth.getUser();
+  return user?.id ?? "";
+}
+
 export async function POST(req: NextRequest) {
   try {
   const body = (await req.json().catch(() => ({}))) as {
     message?: string;
-    userId?: string | null;
     activeDomain?: string;
     conversationHistory?: Array<{ role: "user" | "assistant" | "system"; content: string }>;
     issueContext?: unknown;
   };
 
   const message = typeof body.message === "string" ? body.message : "";
-  const userId =
-    typeof body.userId === "string" && body.userId.length > 0 ? body.userId : "";
+  const userId = await getSessionUserId();
+  if (!userId) {
+    return NextResponse.json({ error: "Unauthorized.", code: "UNAUTHORIZED" }, { status: 401 });
+  }
   const conversationHistory = Array.isArray(body.conversationHistory) ? body.conversationHistory : [];
   const activeDomain = typeof body.activeDomain === "string" ? body.activeDomain : "";
 

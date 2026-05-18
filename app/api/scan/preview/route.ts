@@ -1,3 +1,4 @@
+import { timingSafeEqual } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { scrapeSite } from "@/lib/scraper";
@@ -68,11 +69,13 @@ async function getCachedPreview(domain: string): Promise<CachedPreview> {
 
 export async function POST(req: NextRequest) {
   const internalKey = req.headers.get("x-internal-key");
-  if (
-    !internalKey ||
-    !process.env.INTERNAL_SCAN_KEY ||
-    internalKey !== process.env.INTERNAL_SCAN_KEY
-  ) {
+  const expectedKey = process.env.INTERNAL_SCAN_KEY ?? "";
+  const authorized =
+    internalKey !== null &&
+    expectedKey.length > 0 &&
+    internalKey.length === expectedKey.length &&
+    timingSafeEqual(Buffer.from(internalKey), Buffer.from(expectedKey));
+  if (!authorized) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

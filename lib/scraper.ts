@@ -53,7 +53,10 @@ export function stripMarkdown(text: string): string {
     .trim()
 }
 
-// -- BROWSERLESS (PRIMARY JS RENDERER) --------------------------------
+// -- HELPERS ------------------------------------------------------------
+const REALISTIC_UA =
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
+
 function readableTextLength(html: string): number {
   return html
     .replace(/<[^>]+>/g, ' ')
@@ -62,44 +65,52 @@ function readableTextLength(html: string): number {
     .length
 }
 
+// -- BROWSERLESS (TIER 1 — JS-rendered, stealth) -----------------------
 async function fetchWithBrowserless(url: string): Promise<string | null> {
   if (!process.env.BROWSERLESS_API_KEY) {
     console.log('[SCRAPER] Browserless key not configured')
     return null
   }
 
-  // Attempt 1 — Fast scan (domcontentloaded + wait for real text)
+  const endpoint = `https://production-sfo.browserless.io/content?token=${process.env.BROWSERLESS_API_KEY}`
+
+  const baseBody = {
+    bestAttempt: true,
+    stealth: true,
+    setExtraHTTPHeaders: {
+      'Accept-Language': 'en-US,en;q=0.9',
+      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+      'User-Agent': REALISTIC_UA,
+    },
+  }
+
+  // Attempt 1 — fast (domcontentloaded, wait for visible text)
   const controller1 = new AbortController()
-  const timer1 = setTimeout(() => controller1.abort(), 28000)
+  const timer1 = setTimeout(() => controller1.abort(), 20000)
   let html1: string | null = null
 
   try {
-    const response = await fetch(
-      `https://production-sfo.browserless.io/content?token=${process.env.BROWSERLESS_API_KEY}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          url: url,
-          bestAttempt: true,
-          gotoOptions: {
-            waitUntil: 'domcontentloaded',
-            timeout: 25000
-          },
-          waitFor: {
-            function: "() => document.body && document.body.innerText.trim().length > 300"
-          }
-        }),
-        signal: controller1.signal
-      }
-    )
-
-    if (!response.ok) {
-      const err = await response.text()
-      console.log(`[SCRAPER] Browserless attempt 1 ${response.status}:`, err.slice(0, 300))
+    const res = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        ...baseBody,
+        url,
+        gotoOptions: { waitUntil: 'domcontentloaded', timeout: 15000 },
+        waitForFunction: {
+          fn: "() => document.body && document.body.innerText.trim().length > 200",
+          timeout: 8000,
+        },
+      }),
+      signal: controller1.signal,
+    })
+    if (res.ok) {
+      html1 = await res.text() || null
+      const readable = html1 ? readableTextLength(html1) : 0
+      console.log(`[SCRAPER] Browserless attempt 1: readable=${readable} url=${url}`)
     } else {
-      html1 = await response.text() || null
-      console.log(`[SCRAPER] Browserless attempt 1 success for ${url}, length: ${html1?.length ?? 0}`)
+      const err = await res.text()
+      console.log(`[SCRAPER] Browserless attempt 1 HTTP ${res.status}: ${err.slice(0, 200)}`)
     }
   } catch (err) {
     console.log('[SCRAPER] Browserless attempt 1 error:', err instanceof Error ? err.message : err)
@@ -107,40 +118,32 @@ async function fetchWithBrowserless(url: string): Promise<string | null> {
     clearTimeout(timer1)
   }
 
-  if (html1 && readableTextLength(html1) >= 500) {
-    return html1
-  }
+  if (html1 && readableTextLength(html1) >= 500) return html1
 
-  // Attempt 2 — Full JS render (networkidle2)
-  console.log(`[SCRAPER] Browserless attempt 1 insufficient, running attempt 2 for ${url}`)
+  // Attempt 2 — full JS render (networkidle2, longer wait)
+  console.log(`[SCRAPER] Browserless attempt 1 insufficient, trying attempt 2 for ${url}`)
   const controller2 = new AbortController()
-  const timer2 = setTimeout(() => controller2.abort(), 33000)
+  const timer2 = setTimeout(() => controller2.abort(), 28000)
   let html2: string | null = null
 
   try {
-    const response = await fetch(
-      `https://production-sfo.browserless.io/content?token=${process.env.BROWSERLESS_API_KEY}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          url: url,
-          bestAttempt: true,
-          gotoOptions: {
-            waitUntil: 'networkidle2',
-            timeout: 30000
-          }
-        }),
-        signal: controller2.signal
-      }
-    )
-
-    if (!response.ok) {
-      const err = await response.text()
-      console.log(`[SCRAPER] Browserless attempt 2 ${response.status}:`, err.slice(0, 300))
+    const res = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        ...baseBody,
+        url,
+        gotoOptions: { waitUntil: 'networkidle2', timeout: 24000 },
+      }),
+      signal: controller2.signal,
+    })
+    if (res.ok) {
+      html2 = await res.text() || null
+      const readable = html2 ? readableTextLength(html2) : 0
+      console.log(`[SCRAPER] Browserless attempt 2: readable=${readable} url=${url}`)
     } else {
-      html2 = await response.text() || null
-      console.log(`[SCRAPER] Browserless attempt 2 success for ${url}, length: ${html2?.length ?? 0}`)
+      const err = await res.text()
+      console.log(`[SCRAPER] Browserless attempt 2 HTTP ${res.status}: ${err.slice(0, 200)}`)
     }
   } catch (err) {
     console.log('[SCRAPER] Browserless attempt 2 error:', err instanceof Error ? err.message : err)
@@ -148,30 +151,73 @@ async function fetchWithBrowserless(url: string): Promise<string | null> {
     clearTimeout(timer2)
   }
 
-  const len1 = html1 ? readableTextLength(html1) : 0
-  const len2 = html2 ? readableTextLength(html2) : 0
-  console.log(`[SCRAPER] Browserless readable text — attempt 1: ${len1}, attempt 2: ${len2}`)
+  // Return the better result if it has any meaningful content
+  const len1 = readableTextLength(html1 ?? '')
+  const len2 = readableTextLength(html2 ?? '')
+  console.log(`[SCRAPER] Browserless results: attempt1=${len1} attempt2=${len2}`)
+  const best = len2 > len1 ? html2 : html1
+  if (best && readableTextLength(best) >= 300) return best
 
-  return len2 > len1 ? html2 : html1
+  console.log(`[SCRAPER] Browserless both attempts insufficient for ${url}`)
+  return null
 }
 
-// -- PLAIN HTTP FALLBACK (used when Browserless is unavailable/rate-limited) --
-async function fetchWithPlainHttp(url: string): Promise<string | null> {
+// -- JINA (TIER 2 — clean markdown, handles bot-protected sites) --------
+async function fetchWithJina(url: string): Promise<string | null> {
+  const jinaUrl = `https://r.jina.ai/${url}`
+  const headers: Record<string, string> = { Accept: 'text/markdown' }
+  if (process.env.JINA_API_KEY) {
+    headers['Authorization'] = `Bearer ${process.env.JINA_API_KEY}`
+  }
+
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), 15000)
   try {
+    const res = await fetch(jinaUrl, {
+      method: 'GET',
+      headers,
+      signal: controller.signal,
+      cache: 'no-store',
+    })
+    const body = await res.text()
+    if (!res.ok || body.trim().length < 200) {
+      console.log(`[SCRAPER] Jina HTTP ${res.status}, body length=${body.length} for ${url}`)
+      return null
+    }
+    console.log(`[SCRAPER] Jina success: length=${body.length} url=${url}`)
+    return body
+  } catch (err) {
+    console.log('[SCRAPER] Jina error:', err instanceof Error ? err.message : err)
+    return null
+  } finally {
+    clearTimeout(timer)
+  }
+}
+
+// -- PLAIN HTTP FALLBACK (TIER 3) --------------------------------------
+async function fetchWithPlainHttp(url: string): Promise<string | null> {
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), 12000)
+  try {
     const res = await fetch(url, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (compatible; WebDocBot/1.0)',
+        'User-Agent': REALISTIC_UA,
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.9',
       },
       signal: controller.signal,
     })
     clearTimeout(timer)
-    if (!res.ok) return null
-    return await res.text() || null
-  } catch {
+    if (!res.ok) {
+      console.log(`[SCRAPER] Plain HTTP ${res.status} for ${url}`)
+      return null
+    }
+    const html = await res.text() || null
+    console.log(`[SCRAPER] Plain HTTP success: length=${html?.length ?? 0} url=${url}`)
+    return html
+  } catch (err) {
     clearTimeout(timer)
+    console.log('[SCRAPER] Plain HTTP error:', err instanceof Error ? err.message : err)
     return null
   }
 }
@@ -179,7 +225,7 @@ async function fetchWithPlainHttp(url: string): Promise<string | null> {
 // -- MAIN SCRAPE FUNCTION -----------------------------------------------
 export interface ScrapeResult {
   rawHtml: string
-  method: 'browserless' | 'fetch'
+  method: 'browserless' | 'jina' | 'fetch'
   domain: string
 }
 
@@ -192,27 +238,31 @@ export async function scrapeUrl(inputUrl: string): Promise<ScrapeResult> {
   const url = normalizeToHomepage(inputUrl)
   const domain = new URL(url).hostname.replace(/^www\./, '')
 
+  // Tier 1: Browserless — JS-rendered, stealth, handles SPAs
   let rawHtml = await fetchWithBrowserless(url)
-  let method: ScrapeResult['method'] = 'browserless'
-
-  if (!rawHtml) {
-    console.log(`[SCRAPER] Browserless failed for ${url}, falling back to plain HTTP fetch`)
-    rawHtml = await fetchWithPlainHttp(url)
-    method = 'fetch'
-    if (rawHtml) {
-      console.log(`[SCRAPER] ${domain} | method:fetch | html_len:${rawHtml.length}`)
-    } else {
-      console.log(`[SCRAPER] Plain HTTP fetch also failed for ${url}`)
-    }
-  } else {
+  if (rawHtml) {
     console.log(`[SCRAPER] ${domain} | method:browserless | html_len:${rawHtml.length}`)
+    return { rawHtml, method: 'browserless', domain }
   }
 
-  return {
-    rawHtml: rawHtml ?? '',
-    method,
-    domain,
+  // Tier 2: Jina — clean markdown, bypasses many bot-detection layers
+  console.log(`[SCRAPER] Browserless failed for ${url}, trying Jina`)
+  rawHtml = await fetchWithJina(url)
+  if (rawHtml) {
+    console.log(`[SCRAPER] ${domain} | method:jina | html_len:${rawHtml.length}`)
+    return { rawHtml, method: 'jina', domain }
   }
+
+  // Tier 3: Plain HTTP — simple fetch, last resort
+  console.log(`[SCRAPER] Jina failed for ${url}, trying plain HTTP`)
+  rawHtml = await fetchWithPlainHttp(url)
+  if (rawHtml) {
+    console.log(`[SCRAPER] ${domain} | method:fetch | html_len:${rawHtml.length}`)
+    return { rawHtml, method: 'fetch', domain }
+  }
+
+  console.log(`[SCRAPER] All tiers failed for ${url}`)
+  return { rawHtml: '', method: 'fetch', domain }
 }
 
 // -- HTML CLEANING -------------------------------------------------------
@@ -220,11 +270,20 @@ export function cleanHtml(html: string): string {
   return html
     .replace(/<script[\s\S]*?<\/script>/gi, '')
     .replace(/<style[\s\S]*?<\/style>/gi, '')
+    .replace(/<!--[\s\S]*?-->/g, '')
+    // Remove noisy attributes — class, data-*, style, aria-*, event handlers
     .replace(/\s+class=(?:"[^"]*"|'[^']*'|[^\s/>]*)/gi, '')
     .replace(/\s+data-[a-z][a-z0-9-]*=(?:"[^"]*"|'[^']*'|[^\s/>]*)/gi, '')
+    .replace(/\s+style=(?:"[^"]*"|'[^']*'|[^\s/>]*)/gi, '')
+    .replace(/\s+aria-[a-z-]+=(?:"[^"]*"|'[^']*'|[^\s/>]*)/gi, '')
+    .replace(/\s+on[a-z]+=(?:"[^"]*"|'[^']*'|[^\s/>]*)/gi, '')
+    // Strip data URIs (base64 images bloat tokens)
+    .replace(/(?:src|href)="data:[^"]*"/gi, '')
+    .replace(/\s+/g, ' ')
+    .trim()
 }
 
-// -- SMART TRUNCATION ----------------------------------------------------
+// -- SMART TRUNCATION ---------------------------------------------------
 const TRUNCATION_SEPARATOR = '\n<!-- ... content truncated ... -->\n'
 
 export function applySmartTruncation(html: string): string {
@@ -238,8 +297,15 @@ export function applySmartTruncation(html: string): string {
 export async function scrapeSite(inputUrl: string): Promise<CombinedExtraction> {
   const pageUrl = normalizeToHomepage(inputUrl)
   const scraped = await scrapeUrl(inputUrl)
-  const cleaned = cleanHtml(scraped.rawHtml)
-  console.log(`[SCRAPER] clean html_len:${cleaned.length} (raw:${scraped.rawHtml.length})`)
+
+  // Jina returns Markdown — skip HTML cleaning regexes, truncate directly
+  const cleaned =
+    scraped.method === 'jina' ? scraped.rawHtml : cleanHtml(scraped.rawHtml)
+
+  console.log(
+    `[SCRAPER] method:${scraped.method} raw:${scraped.rawHtml.length} clean:${cleaned.length}`
+  )
+
   return {
     rawHtml: applySmartTruncation(cleaned),
     pagesAnalyzed: [pageUrl],

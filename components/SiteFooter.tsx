@@ -53,6 +53,7 @@ export default function SiteFooter() {
 
   return (
     <footer
+      className="site-footer-root"
       style={{
         background: "#050810",
         padding: "64px 48px 40px",

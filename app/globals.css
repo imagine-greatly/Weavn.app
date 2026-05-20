@@ -1111,3 +1111,89 @@ body {
 svg line { fill: none !important; }
 svg polyline { fill: none !important; }
 svg path { fill: none !important; }
+
+/* ---------------------------------------------------------------------------
+   Mobile fixes — site footer, scan page, landing sections
+   --------------------------------------------------------------------------- */
+
+/* Site footer — reduce aggressive 48px side padding on mobile */
+@media (max-width: 768px) {
+  .site-footer-root {
+    padding-left: 20px !important;
+    padding-right: 20px !important;
+    padding-top: 48px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .site-footer-root {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
+}
+
+/* LandingDiagnosticOutput — score header row wraps on small screens */
+@media (max-width: 640px) {
+  .ldo-header-row {
+    flex-wrap: wrap !important;
+    gap: 12px !important;
+  }
+  .ldo-section-root {
+    padding: 56px 16px !important;
+  }
+}
+
+/* Landing hero form — better button stacking at 480-640px */
+@media (max-width: 640px) {
+  .landing-hero-scan-form {
+    flex-wrap: wrap !important;
+    height: auto !important;
+    padding: 8px !important;
+    gap: 6px !important;
+  }
+  /* Hide >_ terminal prefix — looks orphaned in stacked layout */
+  .landing-hero-scan-form > span:first-child {
+    display: none !important;
+  }
+  .landing-hero-scan-form input {
+    flex: 1 1 100% !important;
+    min-height: 44px !important;
+    padding-left: 14px !important;
+    padding-right: 12px !important;
+  }
+  .landing-hero-scan-form button[type="submit"] {
+    flex: 1 1 100% !important;
+    margin: 0 !important;
+    min-height: 48px !important;
+    height: 48px !important;
+    justify-content: center !important;
+    border-radius: 4px !important;
+  }
+}
+
+/* Scan page — section body padding override (also in embedded style but CSS cascade needs this) */
+@media (max-width: 768px) {
+  .scan-hud-center-label { display: none !important; }
+  .scan-bottom-bar-inner { padding-left: 14px !important; padding-right: 14px !important; gap: 10px !important; }
+  .scan-pulse-canvas { display: none !important; }
+  .scan-sec-body { padding-left: 16px !important; padding-right: 16px !important; }
+  .score-overlay-rings { width: 280px !important; height: 280px !important; }
+  .score-overlay-rings .ring-outer { width: 260px !important; height: 260px !important; }
+  .score-overlay-rings .ring-inner { width: 210px !important; height: 210px !important; }
+}
+
+/* Landing section headings — prevent 52px+ text from being unwieldy on small screens */
+@media (max-width: 640px) {
+  .landing-how-heading {
+    font-size: clamp(28px, 7.5vw, 42px) !important;
+    letter-spacing: -1px !important;
+  }
+  .landing-dashboard-heading {
+    font-size: clamp(28px, 7.5vw, 42px) !important;
+    letter-spacing: -1px !important;
+  }
+  .landing-blueprint-heading {
+    font-size: clamp(28px, 7.5vw, 42px) !important;
+    letter-spacing: -1px !important;
+  }
+}

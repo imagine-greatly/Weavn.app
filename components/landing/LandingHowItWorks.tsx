@@ -133,7 +133,7 @@ export default function LandingHowItWorks() {
           </p>
         </ScrollReveal>
         <ScrollReveal variant="headline" delay={0.06}>
-          <h2 className="mt-3 font-sans text-[52px] font-bold leading-tight" style={{ color: "var(--text-primary)", letterSpacing: "-1.5px" }}>
+          <h2 className="landing-how-heading mt-3 font-sans text-[52px] font-bold leading-tight" style={{ color: "var(--text-primary)", letterSpacing: "-1.5px" }}>
             From URL to ranked diagnostic output
             <br />
             — full coverage, no shortcuts.

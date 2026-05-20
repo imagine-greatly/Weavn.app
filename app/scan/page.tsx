@@ -717,9 +717,9 @@ function ScanLoadingInner() {
     const lineEl = laserLineRef.current;
 
     const BEAM_W = 200;
-    const SWEEP_SPEED = 0.24;   // px per ms (~240 px/s) — purposeful, not slow
+    const SWEEP_SPEED = 0.55;   // px per ms (~550 px/s) — urgent, intelligent
     const STEP_DOWN   = 14;     // px to advance Y at each edge turn
-    const EASE_ZONE   = 90;     // px before edge where beam decelerates
+    const EASE_ZONE   = 55;     // px before edge where beam decelerates
 
     // All mutable sweep state lives here — no re-renders
     const sw = {
@@ -1152,6 +1152,31 @@ function ScanLoadingInner() {
           from { transform: translateY(-100%); }
           to   { transform: translateY(100vh); }
         }
+
+        @media (max-width: 768px) {
+          /* Top HUD — hide center label to prevent overflow */
+          .scan-hud-center-label { display: none !important; }
+          /* Bottom bar — tighter padding */
+          .scan-bottom-bar-inner { padding: 0 14px !important; gap: 10px !important; }
+          /* Hide waveform canvas on narrow screens to save space */
+          .scan-pulse-canvas { display: none !important; }
+          /* Section bodies — reduce horizontal padding from 80px → 16px */
+          .scan-sec-body { padding: 0 16px !important; }
+          /* Score overlay — scale rings for small screens */
+          .score-overlay-rings { width: 280px !important; height: 280px !important; }
+          .score-overlay-rings .ring-outer { width: 260px !important; height: 260px !important; }
+          .score-overlay-rings .ring-inner { width: 210px !important; height: 210px !important; }
+          /* Abort button — compact on mobile */
+          .scan-abort-btn { font-size: 8px !important; padding: 5px 8px !important; letter-spacing: 0.1em !important; }
+        }
+
+        @media (max-width: 480px) {
+          /* Checks counter — hide label, keep number */
+          .scan-bottom-checks-block > span { display: none !important; }
+          /* Reduce section label font even further */
+          .scan-sec .sec-label { font-size: 7px !important; letter-spacing: 2px !important; }
+          .scan-sec .sec-badge { font-size: 6px !important; letter-spacing: 1.5px !important; }
+        }
       `}</style>
 
       <div
@@ -1290,6 +1315,7 @@ function ScanLoadingInner() {
             </span>
           </div>
           <span
+            className="scan-hud-center-label"
             style={{
               fontFamily: MONO,
               fontSize: 9,
@@ -2124,6 +2150,7 @@ function ScanLoadingInner() {
             }}
           />
           <div
+            className="scan-bottom-bar-inner"
             style={{
               display: "flex",
               alignItems: "center",
@@ -2157,6 +2184,7 @@ function ScanLoadingInner() {
               </span>
             </div>
             <div
+              className="scan-bottom-checks-block"
               style={{
                 flexShrink: 0,
                 display: "flex",
@@ -2201,6 +2229,7 @@ function ScanLoadingInner() {
                 </span>
                 <canvas
                   ref={pulseCanvasRef}
+                  className="scan-pulse-canvas"
                   width={128}
                   height={26}
                   style={{ display: "block", imageRendering: "pixelated" }}
@@ -2347,7 +2376,7 @@ function ScanLoadingInner() {
             transition: "background 0.6s ease, backdrop-filter 0.6s ease",
           }}
         >
-          <div style={{ position: "relative", width: 340, height: 340, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div className="score-overlay-rings" style={{ position: "relative", width: 340, height: 340, display: "flex", alignItems: "center", justifyContent: "center" }}>
             <div
               ref={ringOuterRef}
               className="score-ring ring-outer"

@@ -157,11 +157,12 @@ export default function LandingDiagnosticOutput() {
         @keyframes ldo-dot-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
         .ldo-dot { animation: ldo-dot-pulse 2s ease-in-out infinite; }
       `}</style>
-      <section style={{ padding: "80px 24px" }}>
+      <section className="ldo-section-root" style={{ padding: "80px 24px" }}>
         <div style={{ maxWidth: 940, margin: "0 auto" }}>
 
           {/* Element 1 — Domain Header Bar */}
           <div
+            className="ldo-header-row"
             style={{
               display: "flex",
               justifyContent: "space-between",

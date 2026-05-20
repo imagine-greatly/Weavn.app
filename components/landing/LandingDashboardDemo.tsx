@@ -246,7 +246,7 @@ export default function LandingDashboardDemo() {
           </ScrollReveal>
           <ScrollReveal variant="headline" delay={0.06}>
             <h2
-              className="mt-3 font-sans text-[44px] font-bold"
+              className="landing-dashboard-heading mt-3 font-sans text-[44px] font-bold"
               style={{ color: "#FFFFFF", letterSpacing: "-1.5px", lineHeight: 1.1 }}
             >
               Your score goes up.

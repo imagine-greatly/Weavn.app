@@ -709,26 +709,30 @@ function ScanLoadingInner() {
     return () => clearTimeout(timer);
   }, [materialized]);
 
-  // beam RAF — deterministic sine sweep, no randomness
+  // beam RAF — document-reader sweep: left→right, step down, right→left, repeat
   useEffect(() => {
     if (!materialized) return;
     const el = beamDivRef.current;
     if (!el) return;
     const lineEl = laserLineRef.current;
 
-    const BEAM_W = 160;
-    const s = beamStateRef.current;
-    const wp = wpRef.current;
-    s.lastFrameTime = performance.now();
-    s.pos = { x: 0, y: window.innerHeight / 2 };
-    s.velocity = { x: 0, y: 0 };
-    wp.tx = 0;
-    wp.ty = window.innerHeight / 2;
-    wp.dwell = 0;
-    wp.phase = "seek";
-    wp.sweepRight = true;
-    wp.lastSecId = null;
-    el.style.opacity = "1";
+    const BEAM_W = 200;
+    const SWEEP_SPEED = 0.24;   // px per ms (~240 px/s) — purposeful, not slow
+    const STEP_DOWN   = 14;     // px to advance Y at each edge turn
+    const EASE_ZONE   = 90;     // px before edge where beam decelerates
+
+    // All mutable sweep state lives here — no re-renders
+    const sw = {
+      x:           0,
+      y:           window.innerHeight * 0.22,
+      dir:         1 as 1 | -1,
+      pauseMs:     0,
+      t:           0,      // cumulative ms — drives all sine breathing
+      lastTime:    performance.now(),
+      edgeCount:   0,      // how many edge turns so far (for deterministic pausing)
+    };
+
+    el.style.opacity  = "1";
     if (lineEl) lineEl.style.opacity = "1";
 
     const tick = (now: number) => {
@@ -738,78 +742,93 @@ function ScanLoadingInner() {
         return;
       }
 
-      const dt = Math.min(50, now - s.lastFrameTime);
-      s.lastFrameTime = now;
+      const dt = Math.min(50, now - sw.lastTime);
+      sw.lastTime = now;
+      sw.t += dt;
 
+      // Content area bounds
       const schRect = schematicRef.current?.getBoundingClientRect();
-      const sTop = sectionTopRef.current;
-      const sBot = sectionBotRef.current;
-      const vW = window.innerWidth;
-      const vH = window.innerHeight;
+      const sTop    = sectionTopRef.current;
+      const sBot    = sectionBotRef.current;
+      const vW      = window.innerWidth;
+      const vH      = window.innerHeight;
+      const margin  = 28;
+      const areaTop = schRect && sBot > sTop ? schRect.top + sTop + margin : vH * 0.14;
+      const areaBot = schRect && sBot > sTop ? schRect.top + sBot - margin : vH * 0.86;
+      const maxX    = vW - BEAM_W;
 
-      // Force new waypoint on section change
-      if (activeSectionIdRef.current !== wp.lastSecId) {
-        wp.lastSecId = activeSectionIdRef.current;
-        wp.dwell = 0;
-      }
+      // Keep Y inside content area; loop back to top when we reach bottom
+      if (sw.y < areaTop) sw.y = areaTop;
+      if (sw.y > areaBot - STEP_DOWN) sw.y = areaTop + (areaBot - areaTop) * 0.06;
 
-      wp.dwell -= dt;
+      // Sine-based breathing — no Math.random, no jumps
+      // Opacity: gentle 4.3s cycle, 0.68 → 1.0
+      const breathOpacity = 0.68 + Math.sin(sw.t * 0.00146) * 0.32;
+      // Micro Y drift: ±1.6px over a slow 6.8s cycle — makes it feel alive
+      const microY = Math.sin(sw.t * 0.000925 + sw.y * 0.003) * 1.6;
 
-      if (wp.dwell <= 0) {
-        const margin = 24;
-        const secTop = schRect && sBot > sTop ? schRect.top + sTop + margin : vH * 0.15;
-        const secBot = schRect && sBot > sTop ? schRect.top + sBot - margin : vH * 0.85;
-        const ySpan = Math.max(40, secBot - secTop);
+      if (sw.pauseMs > 0) {
+        // Micro-pause at edge — beam still, laser line sharpens
+        sw.pauseMs = Math.max(0, sw.pauseMs - dt);
+        el.style.opacity    = String(Math.min(1, breathOpacity * 1.25));
+        el.style.transform  = `translate(${sw.x}px, ${sw.y + microY}px)`;
+        if (lineEl) {
+          lineEl.style.opacity   = "0.30";
+          lineEl.style.transform = `translateY(${sw.y + microY + 0.5}px)`;
+        }
+      } else {
+        // Sweep — decelerate smoothly in the last EASE_ZONE px before each edge
+        const distToEdge = sw.dir > 0 ? maxX - sw.x : sw.x;
+        const easeFactor = distToEdge < EASE_ZONE
+          ? 0.30 + 0.70 * (distToEdge / EASE_ZONE)
+          : 1.0;
+        sw.x += sw.dir * SWEEP_SPEED * easeFactor * dt;
+        sw.x  = Math.max(0, Math.min(maxX, sw.x));
 
-        if (wp.phase === "seek") {
-          // Arrived — do a slow horizontal scan at this Y, pausing to "read"
-          wp.phase = "scan";
-          wp.ty = secTop + Math.random() * ySpan;
-          wp.sweepRight = !wp.sweepRight;
-          wp.tx = wp.sweepRight ? vW - BEAM_W : 0;
-          wp.force = 0.007 + Math.random() * 0.004;
-          wp.dwell = 1600 + Math.random() * 2200;
-        } else {
-          // Deliberately seek a new area of the current section
-          wp.phase = "seek";
-          wp.ty = secTop + Math.random() * ySpan;
-          wp.tx = Math.random() * Math.max(0, vW - BEAM_W);
-          wp.force = 0.016 + Math.random() * 0.008;
-          wp.dwell = 200 + Math.random() * 350;
+        // Edge turn
+        const hitEdge = (sw.dir > 0 && sw.x >= maxX) || (sw.dir < 0 && sw.x <= 0);
+        if (hitEdge) {
+          sw.x        = sw.dir > 0 ? maxX : 0;
+          sw.dir      = sw.dir > 0 ? -1 : 1;
+          sw.y        = Math.min(sw.y + STEP_DOWN, areaBot - STEP_DOWN * 2);
+          sw.edgeCount++;
+
+          // Pause every ~3rd edge turn (sine-derived, not random)
+          const pauseSeed = Math.sin(sw.edgeCount * 1.618) * 0.5 + 0.5; // 0–1
+          if (pauseSeed > 0.60) {
+            sw.pauseMs = 180 + pauseSeed * 280; // 180–460 ms
+          }
+
+          // Loop back to top after reaching bottom
+          if (sw.y >= areaBot - STEP_DOWN * 2) {
+            sw.y = areaTop + (areaBot - areaTop) * 0.06;
+          }
+        }
+
+        el.style.opacity    = String(breathOpacity);
+        el.style.transform  = `translate(${sw.x}px, ${sw.y + microY}px)`;
+        if (lineEl) {
+          lineEl.style.opacity   = "0.16";
+          lineEl.style.transform = `translateY(${sw.y + microY + 0.5}px)`;
         }
       }
 
-      s.velocity.x += (wp.tx - s.pos.x) * wp.force;
-      s.velocity.y += (wp.ty - s.pos.y) * wp.force;
-      s.velocity.x *= 0.84;
-      s.velocity.y *= 0.84;
-      s.pos.x += s.velocity.x;
-      s.pos.y += s.velocity.y;
-
-      el.style.transform = `translate(${s.pos.x}px, ${s.pos.y}px)`;
-      if (lineEl) lineEl.style.transform = `translateY(${s.pos.y + 0.5}px)`;
-
-      // Section label activation by beam Y (viewport coords)
-      const beamY = s.pos.y;
+      // Section label activation by beam Y
+      const beamY  = sw.y + microY;
       const bounds = sectionBoundsRef.current;
       let newSec: string | null = null;
       for (const b of bounds) {
-        if (beamY >= b.top && beamY <= b.bottom) {
-          newSec = b.id;
-          break;
-        }
+        if (beamY >= b.top && beamY <= b.bottom) { newSec = b.id; break; }
       }
       if (newSec !== activeSectionIdRef.current) {
         const prev = activeSectionIdRef.current;
         activeSectionIdRef.current = newSec;
         if (prev && !completedSectionIdsRef.current.has(prev)) {
           completedSectionIdsRef.current.add(prev);
-          const prevEl = document.querySelector(`[data-section="${prev}"]`);
-          prevEl?.classList.remove("beam-active");
+          document.querySelector(`[data-section="${prev}"]`)?.classList.remove("beam-active");
         }
         if (newSec) {
-          const newEl = document.querySelector(`[data-section="${newSec}"]`);
-          newEl?.classList.add("beam-active");
+          document.querySelector(`[data-section="${newSec}"]`)?.classList.add("beam-active");
         }
         setActiveSection(newSec);
         if (prev) setCompletedSections(Array.from(completedSectionIdsRef.current));
@@ -1147,7 +1166,7 @@ function ScanLoadingInner() {
           fontFamily: MONO,
         }}
       >
-        {/* Beam — the only moving element */}
+        {/* Beam — document-reader scan head */}
         <div
           ref={beamDivRef}
           aria-hidden
@@ -1155,17 +1174,18 @@ function ScanLoadingInner() {
             position: "fixed",
             left: 0,
             top: 0,
-            width: 160,
-            height: 2,
-            borderRadius: 2,
+            width: 200,
+            height: 3,
+            borderRadius: 3,
             zIndex: 50,
             pointerEvents: "none",
             opacity: 0,
             willChange: "transform",
-            background: "linear-gradient(90deg, transparent 0%, rgba(0,200,255,0.15) 10%, rgba(0,200,255,0.9) 40%, rgba(0,200,255,1) 50%, rgba(0,200,255,0.9) 60%, rgba(0,200,255,0.15) 90%, transparent 100%)",
+            background: "linear-gradient(90deg, transparent 0%, rgba(0,200,255,0.08) 8%, rgba(0,200,255,0.85) 35%, rgba(0,200,255,1) 50%, rgba(0,200,255,0.85) 65%, rgba(0,200,255,0.08) 92%, transparent 100%)",
+            boxShadow: "0 0 12px 2px rgba(0,200,255,0.35), 0 0 30px 6px rgba(0,200,255,0.12)",
           }}
         />
-        {/* Laser line — full-width 1px rule that travels at the beam's Y center */}
+        {/* Laser line — full-width hairline that rides at beam Y */}
         <div
           ref={laserLineRef}
           aria-hidden
@@ -1179,7 +1199,7 @@ function ScanLoadingInner() {
             pointerEvents: "none",
             opacity: 0,
             willChange: "transform",
-            background: "rgba(0,200,255,0.35)",
+            background: "linear-gradient(90deg, transparent 0%, rgba(0,200,255,0.18) 15%, rgba(0,200,255,0.22) 50%, rgba(0,200,255,0.18) 85%, transparent 100%)",
           }}
         />
 

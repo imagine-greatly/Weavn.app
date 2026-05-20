@@ -55,7 +55,78 @@ export function stripMarkdown(text: string): string {
 
 // -- HELPERS ------------------------------------------------------------
 const REALISTIC_UA =
-  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'
+
+const FETCH_HEADERS = {
+  'User-Agent': REALISTIC_UA,
+  'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+  'Accept-Language': 'en-US,en;q=0.9',
+} as const
+
+// Browserless base body — mirrors a real incognito Chrome browser.
+// userAgent + viewport + setExtraHTTPHeaders + stealth + ignoreHTTPSErrors closes every gap
+// between Browserless and a real browser in incognito mode.
+const BL_BASE = {
+  bestAttempt: true,
+  stealth: true,
+  ignoreHTTPSErrors: true,      // handles goldcare.com-type broken/missing-chain SSL certs
+  userAgent: REALISTIC_UA,       // sets the browser UA string (correct Browserless v2 field)
+  viewport: { width: 1280, height: 800, deviceScaleFactor: 1, isMobile: false },
+  setExtraHTTPHeaders: {
+    'Accept-Language': 'en-US,en;q=0.9',
+    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+    'Cache-Control': 'no-cache',
+    'Pragma': 'no-cache',
+  },
+}
+
+// -- SSL-BYPASS FETCH ---------------------------------------------------
+// Uses node:https directly with rejectUnauthorized:false for sites whose TLS cert chain
+// is broken, self-signed, or expired. Follows up to 3 redirects manually.
+// Safe for reading public content — no credentials are ever sent.
+async function fetchInsecureHtml(url: string, hopsLeft = 3): Promise<string | null> {
+  if (hopsLeft <= 0) return null
+  const [{ default: httpsLib }, { default: httpLib }] = await Promise.all([
+    import('node:https'),
+    import('node:http'),
+  ])
+  return new Promise((resolve) => {
+    let parsed: URL
+    try { parsed = new URL(url) } catch { resolve(null); return }
+    const isHttps = parsed.protocol === 'https:'
+    const lib = isHttps ? httpsLib : httpLib
+    const req = lib.request(
+      {
+        hostname: parsed.hostname,
+        port: parsed.port || (isHttps ? 443 : 80),
+        path: parsed.pathname + (parsed.search || ''),
+        method: 'GET',
+        rejectUnauthorized: false,
+        headers: {
+          'User-Agent': REALISTIC_UA,
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+          'Accept-Language': 'en-US,en;q=0.9',
+        },
+      },
+      (res) => {
+        if (res.statusCode && res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+          res.resume()
+          try {
+            fetchInsecureHtml(new URL(res.headers.location, url).href, hopsLeft - 1).then(resolve)
+          } catch { resolve(null) }
+          return
+        }
+        const chunks: Buffer[] = []
+        res.on('data', (c: Buffer) => chunks.push(c))
+        res.on('end', () => resolve(Buffer.concat(chunks).toString('utf-8') || null))
+        res.on('error', () => resolve(null))
+      }
+    )
+    req.setTimeout(12000, () => { req.destroy(); resolve(null) })
+    req.on('error', () => resolve(null))
+    req.end()
+  })
+}
 
 function readableTextLength(html: string): number {
   return html
@@ -65,28 +136,21 @@ function readableTextLength(html: string): number {
     .length
 }
 
-// -- BROWSERLESS (TIER 1 — JS-rendered, stealth) -----------------------
+// -- BROWSERLESS (TIER 1 — JS-rendered, stealth, full Chrome) -----------
+// Standard: identical capabilities to a human in incognito Chrome.
+// Two attempts: fast (domcontentloaded) then thorough (networkidle2).
 async function fetchWithBrowserless(url: string): Promise<string | null> {
   if (!process.env.BROWSERLESS_API_KEY) {
-    console.log('[SCRAPER] Browserless key not configured')
+    console.log('[SCRAPER] Browserless key not configured — skipping tier 1')
     return null
   }
 
   const endpoint = `https://production-sfo.browserless.io/content?token=${process.env.BROWSERLESS_API_KEY}`
 
-  const baseBody = {
-    bestAttempt: true,
-    stealth: true,
-    setExtraHTTPHeaders: {
-      'Accept-Language': 'en-US,en;q=0.9',
-      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-      'User-Agent': REALISTIC_UA,
-    },
-  }
-
-  // Attempt 1 — fast (domcontentloaded, wait for visible text)
+  // Attempt 1 — fast path: domcontentloaded + 2 s JS execution window.
+  // Handles SSR sites, simple SPAs, and most marketing pages.
   const controller1 = new AbortController()
-  const timer1 = setTimeout(() => controller1.abort(), 20000)
+  const timer1 = setTimeout(() => controller1.abort(), 22000)
   let html1: string | null = null
 
   try {
@@ -94,13 +158,10 @@ async function fetchWithBrowserless(url: string): Promise<string | null> {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        ...baseBody,
+        ...BL_BASE,
         url,
-        gotoOptions: { waitUntil: 'domcontentloaded', timeout: 15000 },
-        waitForFunction: {
-          fn: "() => document.body && document.body.innerText.trim().length > 200",
-          timeout: 8000,
-        },
+        gotoOptions: { waitUntil: 'domcontentloaded', timeout: 18000 },
+        waitForTimeout: 2000,
       }),
       signal: controller1.signal,
     })
@@ -110,7 +171,7 @@ async function fetchWithBrowserless(url: string): Promise<string | null> {
       console.log(`[SCRAPER] Browserless attempt 1: readable=${readable} url=${url}`)
     } else {
       const err = await res.text()
-      console.log(`[SCRAPER] Browserless attempt 1 HTTP ${res.status}: ${err.slice(0, 200)}`)
+      console.log(`[SCRAPER] Browserless attempt 1 HTTP ${res.status}: ${err.slice(0, 300)}`)
     }
   } catch (err) {
     console.log('[SCRAPER] Browserless attempt 1 error:', err instanceof Error ? err.message : err)
@@ -120,10 +181,11 @@ async function fetchWithBrowserless(url: string): Promise<string | null> {
 
   if (html1 && readableTextLength(html1) >= 500) return html1
 
-  // Attempt 2 — full JS render (networkidle2, longer wait)
+  // Attempt 2 — thorough path: networkidle2 waits for all async JS to finish.
+  // Required for heavy SPAs (React, Next.js, Vue) that render content after hydration.
   console.log(`[SCRAPER] Browserless attempt 1 insufficient, trying attempt 2 for ${url}`)
   const controller2 = new AbortController()
-  const timer2 = setTimeout(() => controller2.abort(), 28000)
+  const timer2 = setTimeout(() => controller2.abort(), 30000)
   let html2: string | null = null
 
   try {
@@ -131,9 +193,9 @@ async function fetchWithBrowserless(url: string): Promise<string | null> {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        ...baseBody,
+        ...BL_BASE,
         url,
-        gotoOptions: { waitUntil: 'networkidle2', timeout: 24000 },
+        gotoOptions: { waitUntil: 'networkidle2', timeout: 25000 },
       }),
       signal: controller2.signal,
     })
@@ -143,7 +205,7 @@ async function fetchWithBrowserless(url: string): Promise<string | null> {
       console.log(`[SCRAPER] Browserless attempt 2: readable=${readable} url=${url}`)
     } else {
       const err = await res.text()
-      console.log(`[SCRAPER] Browserless attempt 2 HTTP ${res.status}: ${err.slice(0, 200)}`)
+      console.log(`[SCRAPER] Browserless attempt 2 HTTP ${res.status}: ${err.slice(0, 300)}`)
     }
   } catch (err) {
     console.log('[SCRAPER] Browserless attempt 2 error:', err instanceof Error ? err.message : err)
@@ -151,18 +213,17 @@ async function fetchWithBrowserless(url: string): Promise<string | null> {
     clearTimeout(timer2)
   }
 
-  // Return the better result if it has any meaningful content
   const len1 = readableTextLength(html1 ?? '')
   const len2 = readableTextLength(html2 ?? '')
   console.log(`[SCRAPER] Browserless results: attempt1=${len1} attempt2=${len2}`)
   const best = len2 > len1 ? html2 : html1
-  if (best && readableTextLength(best) >= 300) return best
+  if (best && readableTextLength(best) >= 200) return best
 
   console.log(`[SCRAPER] Browserless both attempts insufficient for ${url}`)
   return null
 }
 
-// -- JINA (TIER 2 — clean markdown, handles bot-protected sites) --------
+// -- JINA (TIER 2 — clean markdown, bypasses many bot layers) -----------
 async function fetchWithJina(url: string): Promise<string | null> {
   const jinaUrl = `https://r.jina.ai/${url}`
   const headers: Record<string, string> = { Accept: 'text/markdown' }
@@ -171,7 +232,7 @@ async function fetchWithJina(url: string): Promise<string | null> {
   }
 
   const controller = new AbortController()
-  const timer = setTimeout(() => controller.abort(), 15000)
+  const timer = setTimeout(() => controller.abort(), 14000)
   try {
     const res = await fetch(jinaUrl, {
       method: 'GET',
@@ -195,19 +256,13 @@ async function fetchWithJina(url: string): Promise<string | null> {
 }
 
 // -- PLAIN HTTP FALLBACK (TIER 3) --------------------------------------
+// Simple fetch for static/SSR sites. Falls through to SSL-bypass path on any
+// HTTPS network failure — handles sites like goldcare.com with broken cert chains.
 async function fetchWithPlainHttp(url: string): Promise<string | null> {
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), 12000)
   try {
-    const res = await fetch(url, {
-      headers: {
-        'User-Agent': REALISTIC_UA,
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-        'Accept-Language': 'en-US,en;q=0.9',
-      },
-      signal: controller.signal,
-    })
-    clearTimeout(timer)
+    const res = await fetch(url, { headers: FETCH_HEADERS, signal: controller.signal })
     if (!res.ok) {
       console.log(`[SCRAPER] Plain HTTP ${res.status} for ${url}`)
       return null
@@ -216,9 +271,21 @@ async function fetchWithPlainHttp(url: string): Promise<string | null> {
     console.log(`[SCRAPER] Plain HTTP success: length=${html?.length ?? 0} url=${url}`)
     return html
   } catch (err) {
-    clearTimeout(timer)
-    console.log('[SCRAPER] Plain HTTP error:', err instanceof Error ? err.message : err)
+    // For any non-abort HTTPS network failure, try SSL-bypass (node:https with
+    // rejectUnauthorized:false). This catches SSL cert errors, chain errors, and
+    // similar TLS issues that fetch rejects but a real browser would accept via
+    // "Proceed anyway". goldcare.com-type sites land here.
+    const isAbort = err instanceof Error && err.name === 'AbortError'
+    if (!isAbort && url.startsWith('https:')) {
+      const causeStr = String((err as any)?.cause?.message ?? (err as any)?.cause?.code ?? '')
+      const errStr = err instanceof Error ? err.message : String(err)
+      console.log(`[SCRAPER] Plain HTTP HTTPS error — ${errStr}${causeStr ? ` (${causeStr})` : ''} — trying SSL bypass for ${url}`)
+      return fetchInsecureHtml(url)
+    }
+    console.log(`[SCRAPER] Plain HTTP error: ${err instanceof Error ? err.message : err} url=${url}`)
     return null
+  } finally {
+    clearTimeout(timer)
   }
 }
 
@@ -238,7 +305,7 @@ export async function scrapeUrl(inputUrl: string): Promise<ScrapeResult> {
   const url = normalizeToHomepage(inputUrl)
   const domain = new URL(url).hostname.replace(/^www\./, '')
 
-  // Tier 1: Browserless — JS-rendered, stealth, handles SPAs
+  // Tier 1: Browserless — JS-rendered, stealth, handles SPAs and Cloudflare
   let rawHtml = await fetchWithBrowserless(url)
   if (rawHtml) {
     console.log(`[SCRAPER] ${domain} | method:browserless | html_len:${rawHtml.length}`)
@@ -253,7 +320,7 @@ export async function scrapeUrl(inputUrl: string): Promise<ScrapeResult> {
     return { rawHtml, method: 'jina', domain }
   }
 
-  // Tier 3: Plain HTTP — simple fetch, last resort
+  // Tier 3: Plain HTTP — simple fetch with SSL-bypass fallback
   console.log(`[SCRAPER] Jina failed for ${url}, trying plain HTTP`)
   rawHtml = await fetchWithPlainHttp(url)
   if (rawHtml) {

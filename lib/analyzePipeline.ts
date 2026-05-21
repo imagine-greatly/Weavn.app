@@ -8,6 +8,7 @@ const BLOCKED_PROTOCOL = /^(file|ftp|data|javascript):/i;
 export function validateAndNormalizeUrl(
   input: string
 ): { url: string; domain: string } | { error: string } {
+  console.error('[PIPELINE] validateAndNormalizeUrl called — analyzePipeline.ts is in the call chain')
   const raw = (input || "").trim();
   if (!raw) return { error: "Invalid URL" };
   let urlStr = raw;

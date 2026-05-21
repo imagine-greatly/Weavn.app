@@ -41,6 +41,8 @@ function getDomain(urlStr: string): string {
 
 
 export async function POST(req: NextRequest) {
+  console.error('[ROUTE] scan started', new Date().toISOString())
+
   // Internal API key bypass — checked before any auth/session logic
   const internalKey = req.headers.get("x-internal-key");
   const expectedKey = process.env.INTERNAL_SCAN_KEY ?? "";
@@ -54,7 +56,7 @@ export async function POST(req: NextRequest) {
   let withCookies: (res: NextResponse) => NextResponse;
 
   if (internalBypass) {
-    console.log("[scan] internal key auth - bypass active");
+    console.error("[scan] internal key auth - bypass active");
     userId = "internal";
     withCookies = (res) => res;
   } else {
@@ -107,7 +109,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     url = typeof body?.url === "string" ? body.url : "";
     const isRescan = body?.rescan === true;
-    console.log("[scan] rescan flag:", isRescan);
+    console.error("[scan] rescan flag:", isRescan);
   } catch {
     return withCookies(
       NextResponse.json(
@@ -155,15 +157,15 @@ export async function POST(req: NextRequest) {
   }
 
   const scanStart = Date.now()
-  console.log(`[scan] START | url=${normalized} domain=${domain} userId=${userId}`)
+  console.error(`[scan] START | url=${normalized} domain=${domain} userId=${userId}`)
 
   // 1. Scrape: homepage + up to 4 internal pages
   let extraction;
   const scrapeStart = Date.now()
-  console.log(`[scan] SCRAPE START | url=${normalized}`)
+  console.error(`[scan] SCRAPE START | url=${normalized}`)
   try {
     extraction = await scrapeSite(normalized);
-    console.log(
+    console.error(
       `[scan] SCRAPE DONE | domain=${domain}` +
       ` rawHtml_len=${extraction.rawHtml.length}` +
       ` pages=${extraction.pagesAnalyzed.length}` +
@@ -171,10 +173,13 @@ export async function POST(req: NextRequest) {
       ` elapsed=${Date.now() - scrapeStart}ms`
     )
   } catch (err) {
-    console.error(`[scan] SCRAPE ERROR | domain=${domain} elapsed=${Date.now() - scrapeStart}ms`, err instanceof Error ? (err.stack ?? err.message) : err)
+    const scrapeElapsed = Date.now() - scrapeStart
     const message = err instanceof Error ? err.message : "Failed to fetch the site.";
     const isBlocked =
       /block|forbidden|403|401|access denied|scraping|cannot fetch/i.test(message);
+    console.error(`[scan] SCRAPE ERROR | domain=${domain} elapsed=${scrapeElapsed}ms | isBlocked=${isBlocked} | message=${message}`)
+    console.error(`[scan] SCRAPE ERROR stack:`, err instanceof Error ? (err.stack ?? err.message) : err)
+    console.error(`[scan] returning 422 | domain=${domain}`)
     return withCookies(
       NextResponse.json(
         {
@@ -189,7 +194,7 @@ export async function POST(req: NextRequest) {
 
   // If we have no meaningful content, still try AI (it may return a minimal report)
   if (!extraction.rawHtml) {
-    console.log(`[scan] ABORT no rawHtml | domain=${domain} elapsed=${Date.now() - scanStart}ms`)
+    console.error(`[scan] 422 no rawHtml | domain=${domain} elapsed=${Date.now() - scanStart}ms`)
     return withCookies(
       NextResponse.json(
         {
@@ -203,7 +208,7 @@ export async function POST(req: NextRequest) {
 
   // 2. Detect site type from homepage (gates everything that follows)
   const site_type = detectSiteType(extraction);
-  console.log(`[scan] SITE_TYPE | domain=${domain} site_type=${site_type} elapsed=${Date.now() - scanStart}ms`)
+  console.error(`[scan] SITE_TYPE | domain=${domain} site_type=${site_type} elapsed=${Date.now() - scanStart}ms`)
 
   // Fetch user plan for model selection (agency uses higher-capacity model)
   let userPlan = "free";
@@ -220,7 +225,7 @@ export async function POST(req: NextRequest) {
         .eq("id", userId)
         .maybeSingle();
       userPlan = profile?.plan ?? "free";
-      console.log(`[scan] USER_PLAN | domain=${domain} plan=${userPlan} elapsed=${Date.now() - planStart}ms`)
+      console.error(`[scan] USER_PLAN | domain=${domain} plan=${userPlan} elapsed=${Date.now() - planStart}ms`)
     } catch (err) {
       console.error(`[scan] USER_PLAN ERROR (non-fatal, using free) | domain=${domain}`, err instanceof Error ? (err.stack ?? err.message) : err)
     }
@@ -229,10 +234,10 @@ export async function POST(req: NextRequest) {
   // 3. Claude analysis (retry once inside runAnalysis), tailored to site_type
   let payload;
   const analyzeStart = Date.now()
-  console.log(`[scan] ANALYZE START | domain=${domain} site_type=${site_type} userPlan=${userPlan}`)
+  console.error(`[scan] ANALYZE START | domain=${domain} site_type=${site_type} userPlan=${userPlan}`)
   try {
     payload = await runAnalysis(extraction, site_type, userPlan);
-    console.log(`[scan] ANALYZE DONE | domain=${domain} elapsed=${Date.now() - analyzeStart}ms`)
+    console.error(`[scan] ANALYZE DONE | domain=${domain} elapsed=${Date.now() - analyzeStart}ms`)
   } catch (err) {
     console.error(`[scan] ANALYZE ERROR | domain=${domain} elapsed=${Date.now() - analyzeStart}ms`, err instanceof Error ? (err.stack ?? err.message) : err)
     const message = err instanceof Error ? err.message : "Analysis failed.";
@@ -242,10 +247,10 @@ export async function POST(req: NextRequest) {
   // 4. Store in Supabase (keyed by domain + timestamp)
   let reportId: string;
   const saveStart = Date.now()
-  console.log(`[scan] SAVE START | domain=${domain}`)
+  console.error(`[scan] SAVE START | domain=${domain}`)
   try {
     reportId = await saveReport(domain, payload, userId);
-    console.log(`[scan] SAVE DONE | domain=${domain} reportId=${reportId} elapsed=${Date.now() - saveStart}ms`)
+    console.error(`[scan] SAVE DONE | domain=${domain} reportId=${reportId} elapsed=${Date.now() - saveStart}ms`)
   } catch (err) {
     console.error(`[scan] SAVE ERROR | domain=${domain} elapsed=${Date.now() - saveStart}ms`, err instanceof Error ? (err.stack ?? err.message) : err)
     const message = err instanceof Error ? err.message : "Failed to save report.";
@@ -257,7 +262,7 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  console.log(`[scan] COMPLETE | domain=${domain} reportId=${reportId} total_elapsed=${Date.now() - scanStart}ms`)
+  console.error(`[scan] COMPLETE | domain=${domain} reportId=${reportId} total_elapsed=${Date.now() - scanStart}ms`)
 
   // Fire-and-forget: pre-generate AI advisor briefs for all findings in the background.
   // The response goes out immediately; briefs are written to reports.extended_analysis as they complete.

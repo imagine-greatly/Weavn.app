@@ -31,11 +31,8 @@ export function isInvalidHeadline(text: string): boolean {
   if (badPatterns.some(p => p.test(text.trim()))) return true
   const t = text.toLowerCase()
   const navLikePhrases = [
-    'your cart is empty',
-    'have an account',
-    'log in',
-    'continue shopping',
-    'total items in cart',
+    'your cart is empty', 'have an account', 'log in',
+    'continue shopping', 'total items in cart',
   ]
   if (navLikePhrases.some(p => t.includes(p))) return true
   return false
@@ -62,40 +59,55 @@ function readableTextLength(html: string): number {
     .length
 }
 
-// Extract HTML from a Browserless /unblock response.
-// /unblock returns JSON: { content: "<!DOCTYPE html>..." }
+// /unblock returns JSON: { content: "<html>..." }
 async function extractUnblockHtml(res: Response): Promise<string | null> {
   try {
     const json = await res.json() as Record<string, unknown>
     const html = typeof json.content === 'string' ? json.content : null
-    return html || null
+    return html && html.length > 0 ? html : null
   } catch {
     return null
   }
 }
 
-// -- BROWSERLESS /unblock (bot-detection bypass, JS-rendered) -----------
-// /unblock is the correct endpoint for bypassing Cloudflare, DataDome, etc.
-// It returns JSON { content: "<html>..." } instead of raw HTML.
-// stealth, userAgent, viewport, setExtraHTTPHeaders are NOT valid body fields
-// for /content or /unblock — they were silently ignored before this fix.
-// ignoreHTTPSErrors is passed as a launch query param (browser-level flag).
-// Two attempts: fast (domcontentloaded) then thorough (networkidle2).
-// Max wall time: 22 s + 30 s = 52 s.
+// -- BROWSERLESS /unblock — highest-fidelity human browser session ------
+//
+// Why /unblock over /content:
+//   /content is a basic headless fetch. /unblock runs the full Browserless
+//   bot-detection bypass stack and returns content after CAPTCHAs and
+//   Cloudflare challenges are solved.
+//
+// Why proxy=residential:
+//   Cloudflare, Stripe, Notion, Linear, Shopify all check IP reputation.
+//   Datacenter IPs (AWS, GCP, Vercel) get immediately challenged.
+//   Residential IPs are indistinguishable from real user traffic and pass
+//   every IP-reputation gate. This is the single most important field for
+//   reaching Cloudflare-protected sites.
+//
+// Why waitForTimeout: 4000 on attempt 1:
+//   domcontentloaded fires before React/Next.js hydration completes.
+//   4 s gives JS time to render content into the DOM before we snapshot it.
+//
+// Attempt 1 (fast):  domcontentloaded + 4 s hydration wait   ≈ 24 s max
+// Attempt 2 (deep):  networkidle2 (waits for all XHR to quiet) ≈ 38 s max
+// Total worst case:  62 s — well under the 120 s scan timeout
+//
 async function fetchWithBrowserless(url: string): Promise<string> {
   if (!process.env.BROWSERLESS_API_KEY) {
     throw new Error('Browserless API key not configured — set BROWSERLESS_API_KEY')
   }
 
-  // ignoreHTTPSErrors as a launch param handles goldcare.com-style broken SSL certs
-  const launchParam = encodeURIComponent(JSON.stringify({ ignoreHTTPSErrors: true }))
+  // proxy=residential: routes through real home/mobile IPs, bypasses
+  // Cloudflare's datacenter IP blocks that otherwise stop /unblock cold.
   const endpoint =
     `https://production-sfo.browserless.io/unblock` +
-    `?token=${process.env.BROWSERLESS_API_KEY}&launch=${launchParam}`
+    `?token=${process.env.BROWSERLESS_API_KEY}&proxy=residential`
 
-  // Attempt 1 — fast path: domcontentloaded + 2 s JS execution window.
-  const controller1 = new AbortController()
-  const timer1 = setTimeout(() => controller1.abort(), 22000)
+  // Attempt 1 — fast path -----------------------------------------------
+  // domcontentloaded fires early; waitForTimeout:4000 lets React/Vue/Next
+  // hydrate and fill the DOM before we snapshot. Catches most SSR + SPA sites.
+  const ctrl1 = new AbortController()
+  const t1 = setTimeout(() => ctrl1.abort(), 26000)
   let html1: string | null = null
 
   try {
@@ -107,30 +119,33 @@ async function fetchWithBrowserless(url: string): Promise<string> {
         content: true,
         bestAttempt: true,
         gotoOptions: { waitUntil: 'domcontentloaded', timeout: 18000 },
-        waitForTimeout: 2000,
+        waitForTimeout: 4000,
       }),
-      signal: controller1.signal,
+      signal: ctrl1.signal,
     })
     if (res.ok) {
       html1 = await extractUnblockHtml(res)
-      const readable = html1 ? readableTextLength(html1) : 0
-      console.log(`[SCRAPER] Browserless attempt 1: readable=${readable} url=${url}`)
+      console.log(`[SCRAPER] attempt1: readable=${readableTextLength(html1 ?? '')} url=${url}`)
     } else {
       const err = await res.text()
-      console.log(`[SCRAPER] Browserless attempt 1 HTTP ${res.status}: ${err.slice(0, 300)}`)
+      console.log(`[SCRAPER] attempt1 HTTP ${res.status}: ${err.slice(0, 400)}`)
     }
   } catch (err) {
-    console.log('[SCRAPER] Browserless attempt 1 error:', err instanceof Error ? err.message : err)
+    console.log('[SCRAPER] attempt1 error:', err instanceof Error ? err.message : err)
   } finally {
-    clearTimeout(timer1)
+    clearTimeout(t1)
   }
 
   if (html1 && readableTextLength(html1) >= 500) return html1
 
-  // Attempt 2 — thorough path: networkidle2 waits for all async JS to finish.
-  console.log(`[SCRAPER] Browserless attempt 1 insufficient, trying attempt 2 for ${url}`)
-  const controller2 = new AbortController()
-  const timer2 = setTimeout(() => controller2.abort(), 30000)
+  // Attempt 2 — deep path -----------------------------------------------
+  // networkidle2: waits until no more than 2 in-flight XHR for 500 ms.
+  // Required for heavy SPAs (Notion, Linear) that stream content via fetch
+  // after initial render. No extra waitForTimeout — networkidle2 already
+  // waits for JS quiet.
+  console.log(`[SCRAPER] attempt1 insufficient, trying attempt2 for ${url}`)
+  const ctrl2 = new AbortController()
+  const t2 = setTimeout(() => ctrl2.abort(), 38000)
   let html2: string | null = null
 
   try {
@@ -141,27 +156,26 @@ async function fetchWithBrowserless(url: string): Promise<string> {
         url,
         content: true,
         bestAttempt: true,
-        gotoOptions: { waitUntil: 'networkidle2', timeout: 25000 },
+        gotoOptions: { waitUntil: 'networkidle2', timeout: 32000 },
       }),
-      signal: controller2.signal,
+      signal: ctrl2.signal,
     })
     if (res.ok) {
       html2 = await extractUnblockHtml(res)
-      const readable = html2 ? readableTextLength(html2) : 0
-      console.log(`[SCRAPER] Browserless attempt 2: readable=${readable} url=${url}`)
+      console.log(`[SCRAPER] attempt2: readable=${readableTextLength(html2 ?? '')} url=${url}`)
     } else {
       const err = await res.text()
-      console.log(`[SCRAPER] Browserless attempt 2 HTTP ${res.status}: ${err.slice(0, 300)}`)
+      console.log(`[SCRAPER] attempt2 HTTP ${res.status}: ${err.slice(0, 400)}`)
     }
   } catch (err) {
-    console.log('[SCRAPER] Browserless attempt 2 error:', err instanceof Error ? err.message : err)
+    console.log('[SCRAPER] attempt2 error:', err instanceof Error ? err.message : err)
   } finally {
-    clearTimeout(timer2)
+    clearTimeout(t2)
   }
 
   const len1 = readableTextLength(html1 ?? '')
   const len2 = readableTextLength(html2 ?? '')
-  console.log(`[SCRAPER] Browserless results: attempt1=${len1} attempt2=${len2}`)
+  console.log(`[SCRAPER] results: attempt1=${len1} attempt2=${len2} url=${url}`)
   const best = len2 > len1 ? html2 : html1
 
   if (best && readableTextLength(best) >= 200) return best
@@ -200,13 +214,11 @@ export function cleanHtml(html: string): string {
     .replace(/<script[\s\S]*?<\/script>/gi, '')
     .replace(/<style[\s\S]*?<\/style>/gi, '')
     .replace(/<!--[\s\S]*?-->/g, '')
-    // Remove noisy attributes — class, data-*, style, aria-*, event handlers
     .replace(/\s+class=(?:"[^"]*"|'[^']*'|[^\s/>]*)/gi, '')
     .replace(/\s+data-[a-z][a-z0-9-]*=(?:"[^"]*"|'[^']*'|[^\s/>]*)/gi, '')
     .replace(/\s+style=(?:"[^"]*"|'[^']*'|[^\s/>]*)/gi, '')
     .replace(/\s+aria-[a-z-]+=(?:"[^"]*"|'[^']*'|[^\s/>]*)/gi, '')
     .replace(/\s+on[a-z]+=(?:"[^"]*"|'[^']*'|[^\s/>]*)/gi, '')
-    // Strip data URIs (base64 images bloat tokens)
     .replace(/(?:src|href)="data:[^"]*"/gi, '')
     .replace(/\s+/g, ' ')
     .trim()

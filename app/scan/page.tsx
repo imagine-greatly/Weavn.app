@@ -627,7 +627,7 @@ function ScanLoadingInner() {
 
   useEffect(() => {
     if (!materialized) return;
-    const timers: ReturnType<typeof setTimeout>[] = [];
+    const timers: number[] = [];
     MILESTONE_FLASHES.forEach(({ ms, text }) => {
       timers.push(window.setTimeout(() => {
         if (scoreRevealRef.current) return;

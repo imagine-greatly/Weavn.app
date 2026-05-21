@@ -39,30 +39,6 @@ function getDomain(urlStr: string): string {
   }
 }
 
-async function validateUrl(url: string): Promise<{ valid: boolean; reason?: string }> {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 8000);
-  try {
-    const res = await fetch(url, {
-      method: "HEAD",
-      signal: controller.signal,
-      redirect: "follow",
-      headers: { "User-Agent": "Mozilla/5.0 (compatible; WebDocBot/1.0)" },
-    });
-    clearTimeout(timeout);
-    if (res.status >= 200 && res.status < 500) {
-      return { valid: true };
-    }
-    return { valid: false, reason: `Site returned status ${res.status}` };
-  } catch (err) {
-    clearTimeout(timeout);
-    const message = err instanceof Error ? err.message : String(err);
-    if (message.includes("abort")) {
-      return { valid: false, reason: "Site did not respond within 8 seconds" };
-    }
-    return { valid: false, reason: "Site could not be reached" };
-  }
-}
 
 export async function POST(req: NextRequest) {
   // Internal API key bypass — checked before any auth/session logic

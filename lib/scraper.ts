@@ -69,92 +69,117 @@ function readableTextLength(html: string): number {
 // to Claude and ensures we always try attempt 2 for blocked pages.
 function isBlockPage(html: string): boolean {
   const t = html.toLowerCase()
+
   // Cloudflare JS challenge and Turnstile
   if (
     t.includes('cf-browser-verification') ||
     t.includes('_cf_chl_') ||
     t.includes('cf_chl_opt') ||
+    t.includes('cf-challenge-error') ||
+    t.includes('cf-challenge-running') ||
     (t.includes('just a moment') && t.includes('cloudflare')) ||
-    t.includes('checking your browser before accessing')
+    t.includes('checking your browser before accessing') ||
+    t.includes('enable javascript and cookies to continue')
   ) return true
+
   // DDoS-Guard
   if (t.includes('ddos-guard')) return true
-  // Thin access-denied / human-verification pages
+
+  // PerimeterX — always a challenge page regardless of content length
+  if (t.includes('px-captcha') || t.includes('_pxhd') || t.includes('perimeterx')) return true
+
+  // Kasada bot-protection — always a challenge page
+  if (t.includes('kasada')) return true
+
+  // Imperva / Incapsula
+  if (t.includes('incapsula') && t.includes('incident')) return true
+
+  // DataDome — challenge/block page (not a content mention)
+  if (t.includes('datadome') && (t.includes('blocked') || t.includes('captcha') || readableTextLength(html) < 900)) return true
+
+  // Thin access-denied / human-verification pages (< 900 chars readable)
   if (readableTextLength(html) < 900) {
     if (
       t.includes('access denied') ||
       t.includes('403 forbidden') ||
       t.includes('please verify you are human') ||
       t.includes('verify you are human') ||
+      t.includes('are you a robot') ||
       t.includes('enable javascript and cookies') ||
       t.includes('your connection was interrupted') ||
+      t.includes('attention required') ||
       t.includes('login to continue') ||
       t.includes('sign in to continue') ||
-      t.includes('log in to access')
+      t.includes('log in to access') ||
+      t.includes('hcaptcha') ||
+      t.includes('recaptcha') ||
+      t.includes('you have been blocked')
     ) return true
   }
+
   return false
 }
 
-// /unblock returns JSON: { content: "<html>..." }
-// Falls back to json.html in case Browserless changes the response key.
-async function extractUnblockHtml(res: Response): Promise<string | null> {
+// /unblock returns JSON: { content: "<html>...", cookies: [...] }
+// Both fields are requested; html falls back to json.html for forward-compat.
+interface UnblockResponse { html: string | null; cookieCount: number }
+async function parseUnblockResponse(res: Response): Promise<UnblockResponse> {
   try {
     const json = await res.json() as Record<string, unknown>
     const html =
       (typeof json.content === 'string' ? json.content : null) ??
       (typeof json.html === 'string' ? json.html : null)
-    return html && html.length > 0 ? html : null
+    const cookieCount = Array.isArray(json.cookies) ? json.cookies.length : 0
+    return { html: html && html.length > 0 ? html : null, cookieCount }
   } catch {
-    return null
+    return { html: null, cookieCount: 0 }
   }
 }
 
-// -- BROWSERLESS /unblock — highest-fidelity human browser session ------
+// -- BROWSERLESS /unblock — Pro feature stack ----------------------------
 //
-// Why /unblock over /content:
-//   /content is a basic headless fetch. /unblock runs the full Browserless
-//   bot-detection bypass stack and returns content after CAPTCHAs and
-//   Cloudflare challenges are solved.
+// Pro proxy stack (all query params):
+//   proxy=residential   — real home/mobile IPs; passes Cloudflare IP-rep checks
+//   proxyCountry=us     — US exit nodes; most target sites expect US visitor IPs
+//   proxySticky         — same exit node for all sub-requests within a session;
+//                         avoids IP-consistency anomalies that trigger bot flags
+//   proxyLocaleMatch=1  — auto-sets Accept-Language to match the proxy country
+//                         (en-US for us); fingerprint aligns with the IP origin
 //
-// Why proxy=residential:
-//   Cloudflare, Stripe, Notion, Linear, Shopify all check IP reputation.
-//   Datacenter IPs (AWS, GCP, Vercel) get immediately challenged.
-//   Residential IPs are indistinguishable from real user traffic and pass
-//   every IP-reputation gate.
+// Body — cookies:true (Pro):
+//   Returns the cookies set by the target site after load. Logged for
+//   diagnostics; future use: feed challenge cookies into a re-attempt.
 //
-// Why waitForTimeout: 4000 on attempt 1:
-//   domcontentloaded fires before React/Next.js hydration completes.
-//   4 s gives JS time to render content into the DOM before we snapshot it.
+// Body — waitForSelector (Attempt 1):
+//   Stops waiting the moment a primary content element appears in the DOM,
+//   rather than always sleeping a fixed 4 s. Fast SSR pages return in ~1 s;
+//   slower React/Vue/Next pages wait until h1/main renders. bestAttempt:true
+//   ensures the selector timeout never hard-blocks a response.
 //
-// Why blockAds: true on both attempts:
-//   Ad/analytics scripts fire dozens of tracking XHR that keep networkidle2
-//   from ever settling. Blocking them makes attempt 2 up to 6 s faster.
-//
-// Why scrollPage: true on attempt 2:
-//   Many pages lazy-load content behind intersection observers. Scrolling
-//   triggers those loads so we see the full page, not just above-the-fold.
-//
-// Attempt 1 (fast):  domcontentloaded + 4 s hydration wait   ≈ 24 s max
-// Attempt 2 (deep):  networkidle2 + scroll                   ≈ 34 s max
-// Total worst case:  58 s — leaves room for the ~22 s Claude call under the 90 s budget
+// Attempt 1 (fast):  domcontentloaded + selector sentinel + 2 s hydration   ≈ 22 s max
+// Attempt 2 (deep):  networkidle2 + 2 s settle                              ≈ 30 s max
+// Total worst case:  52 s — leaves room for the ~25 s Claude call under the 90 s budget
 //
 async function fetchWithBrowserless(url: string): Promise<string> {
   if (!process.env.BROWSERLESS_API_KEY) {
     throw new Error('Browserless API key not configured — set BROWSERLESS_API_KEY')
   }
 
-  // proxy=residential: routes through real home/mobile IPs, bypasses
-  // Cloudflare's datacenter IP blocks that otherwise stop /unblock cold.
+  // Pro proxy params: residential IPs, US geo-target, sticky per-session,
+  // locale header matched to exit-node country.
   const endpoint =
     `https://production-sfo.browserless.io/unblock` +
-    `?token=${process.env.BROWSERLESS_API_KEY}&proxy=residential`
+    `?token=${process.env.BROWSERLESS_API_KEY}` +
+    `&proxy=residential&proxyCountry=us&proxySticky&proxyLocaleMatch=1`
 
   // Attempt 1 — fast path -----------------------------------------------
-  // domcontentloaded fires early; waitForTimeout:4000 lets React/Vue/Next
-  // hydrate and fill the DOM before we snapshot. Catches most SSR + SPA sites.
+  // waitForSelector: stop as soon as a primary content node appears instead
+  // of always burning 4 s. bestAttempt:true returns whatever is rendered
+  // if the selector never fires (e.g. unusual page structure).
+  // waitForTimeout:2000 gives JS frameworks a 2 s hydration window after
+  // the selector resolves.
   const ctrl1 = new AbortController()
-  const t1 = setTimeout(() => ctrl1.abort(), 26000)
+  const t1 = setTimeout(() => ctrl1.abort(), 24000)
   let html1: string | null = null
 
   try {
@@ -164,18 +189,20 @@ async function fetchWithBrowserless(url: string): Promise<string> {
       body: JSON.stringify({
         url,
         content: true,
+        cookies: true,
         bestAttempt: true,
-        blockAds: true,
         gotoOptions: { waitUntil: 'domcontentloaded', timeout: 18000 },
-        waitForTimeout: 4000,
+        waitForSelector: "h1, main, article, [role='main'], [class*='hero'], #main, #content",
+        waitForTimeout: 2000,
       }),
       signal: ctrl1.signal,
     })
     if (res.ok) {
-      html1 = await extractUnblockHtml(res)
+      const parsed = await parseUnblockResponse(res)
+      html1 = parsed.html
       const len = readableTextLength(html1 ?? '')
       const blocked = html1 !== null && isBlockPage(html1)
-      console.log(`[SCRAPER] attempt1: readable=${len} blocked=${blocked} url=${url}`)
+      console.log(`[SCRAPER] attempt1: readable=${len} blocked=${blocked} cookies=${parsed.cookieCount} url=${url}`)
     } else {
       const err = await res.text()
       console.log(`[SCRAPER] attempt1 HTTP ${res.status}: ${err.slice(0, 400)}`)
@@ -199,12 +226,11 @@ async function fetchWithBrowserless(url: string): Promise<string> {
   // Attempt 2 — deep path -----------------------------------------------
   // networkidle2: waits until no more than 2 in-flight XHR for 500 ms.
   // Required for heavy SPAs (Notion, Linear) that stream content via fetch
-  // after initial render.
-  // scrollPage triggers lazy-load intersection observers so below-fold
-  // content (testimonials, pricing, features) is present in the snapshot.
+  // after initial render. waitForTimeout:2000 gives JS an extra 2 s to
+  // finish rendering after the network quiets.
   console.log(`[SCRAPER] attempt1 insufficient (${len1Early} chars), trying attempt2 for ${url}`)
   const ctrl2 = new AbortController()
-  const t2 = setTimeout(() => ctrl2.abort(), 34000)
+  const t2 = setTimeout(() => ctrl2.abort(), 30000)
   let html2: string | null = null
 
   try {
@@ -214,18 +240,19 @@ async function fetchWithBrowserless(url: string): Promise<string> {
       body: JSON.stringify({
         url,
         content: true,
+        cookies: true,
         bestAttempt: true,
-        blockAds: true,
-        scrollPage: true,
-        gotoOptions: { waitUntil: 'networkidle2', timeout: 28000 },
+        gotoOptions: { waitUntil: 'networkidle2', timeout: 26000 },
+        waitForTimeout: 2000,
       }),
       signal: ctrl2.signal,
     })
     if (res.ok) {
-      html2 = await extractUnblockHtml(res)
+      const parsed = await parseUnblockResponse(res)
+      html2 = parsed.html
       const len = readableTextLength(html2 ?? '')
       const blocked = html2 !== null && isBlockPage(html2)
-      console.log(`[SCRAPER] attempt2: readable=${len} blocked=${blocked} url=${url}`)
+      console.log(`[SCRAPER] attempt2: readable=${len} blocked=${blocked} cookies=${parsed.cookieCount} url=${url}`)
     } else {
       const err = await res.text()
       console.log(`[SCRAPER] attempt2 HTTP ${res.status}: ${err.slice(0, 400)}`)
@@ -253,14 +280,29 @@ async function fetchWithBrowserless(url: string): Promise<string> {
 
   if (best && readableTextLength(best) >= 200) return best
 
-  const allBlocked = (blocked1 || !html1) && (blocked2 || !html2)
+  // Classify the failure correctly so the user-facing message is honest:
+  // - Both attempts returned a block page → real bot protection, retry may help
+  // - Both attempts returned no HTML at all → Browserless/network problem, not the site
+  // - Otherwise → thin or error content
+  const bothBlocked = blocked1 && blocked2
+  const noResponseAtAll = !html1 && !html2
+
+  if (bothBlocked) {
+    throw new Error(
+      `This site's bot protection blocked the scanner (attempt1=${len1}, attempt2=${len2}). ` +
+      `Retrying in a few minutes usually works.`
+    )
+  }
+  if (noResponseAtAll) {
+    throw new Error(
+      `Scraper service did not return any content for ${url}. ` +
+      `The Browserless request may have failed — check server logs for HTTP status.`
+    )
+  }
   throw new Error(
-    allBlocked
-      ? `This site's bot protection blocked the scanner (attempt1=${len1}, attempt2=${len2}). ` +
-        `Retrying in a few minutes usually works.`
-      : `Could not retrieve usable content from ${url} ` +
-        `(attempt1=${len1} chars, attempt2=${len2} chars). ` +
-        `The site may have returned an error page or requires authentication.`
+    `Could not retrieve usable content from ${url} ` +
+    `(attempt1=${len1} chars, attempt2=${len2} chars). ` +
+    `The site may have returned an error page or requires authentication.`
   )
 }
 
@@ -286,12 +328,16 @@ export async function scrapeUrl(inputUrl: string): Promise<ScrapeResult> {
 }
 
 // -- HTML CLEANING -------------------------------------------------------
+// class= attributes are intentionally kept: extractPageData (called from
+// buildPageSummary) relies heavily on class-based selectors like
+// [class*='hero'], [class*='pricing'], [class*='testimonial'], etc.
+// Stripping classes here silently kills all of those selectors and degrades
+// the structured summary sent to Claude. Size is controlled by applySmartTruncation.
 export function cleanHtml(html: string): string {
   return html
     .replace(/<script[\s\S]*?<\/script>/gi, '')
     .replace(/<style[\s\S]*?<\/style>/gi, '')
     .replace(/<!--[\s\S]*?-->/g, '')
-    .replace(/\s+class=(?:"[^"]*"|'[^']*'|[^\s/>]*)/gi, '')
     .replace(/\s+data-[a-z][a-z0-9-]*=(?:"[^"]*"|'[^']*'|[^\s/>]*)/gi, '')
     .replace(/\s+style=(?:"[^"]*"|'[^']*'|[^\s/>]*)/gi, '')
     .replace(/\s+aria-[a-z-]+=(?:"[^"]*"|'[^']*'|[^\s/>]*)/gi, '')

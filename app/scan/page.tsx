@@ -709,7 +709,7 @@ function ScanLoadingInner() {
     return () => clearTimeout(timer);
   }, [materialized]);
 
-  // beam RAF — deterministic sine sweep, no randomness
+  // beam RAF — intelligent diagnostic scanner: SEEK → SWEEP → DWELL → BACKTRACK state machine
   useEffect(() => {
     if (!materialized) return;
     const el = beamDivRef.current;
@@ -719,18 +719,100 @@ function ScanLoadingInner() {
     const BEAM_W = 160;
     const s = beamStateRef.current;
     const wp = wpRef.current;
-    s.lastFrameTime = performance.now();
-    s.pos = { x: 0, y: window.innerHeight / 2 };
-    s.velocity = { x: 0, y: 0 };
-    wp.tx = 0;
-    wp.ty = window.innerHeight / 2;
-    wp.dwell = 0;
-    wp.phase = "seek";
-    wp.sweepRight = true;
-    wp.lastSecId = null;
+
     el.style.opacity = "1";
     if (lineEl) lineEl.style.opacity = "1";
 
+    // ── State machine ──────────────────────────────────────────────────────
+    // SEEK:      fast spring toward a target — committed, purposeful
+    // SWEEP:     slow eased horizontal crawl across a reading row
+    // DWELL:     multi-frequency micro-jitter in place (parsing detail)
+    // BACKTRACK: brief upward retreat before resuming downward progress
+    type BsmState = 'SEEK' | 'SWEEP' | 'DWELL' | 'BACKTRACK';
+    let bsm: BsmState = 'SEEK';
+    let bsmTimer = 0;
+
+    // SEEK / BACKTRACK
+    let seekX = 0, seekY = 0, seekK = 0.018;
+
+    // SWEEP
+    let swStartX = 0, swEndX = 0, swY = 0, swDur = 0, swElapsed = 0, swRight = false;
+
+    // DWELL anchor
+    let dwX = 0, dwY = 0;
+
+    // BACKTRACK retreat target Y
+    let btY = 0;
+
+    // Reading row — walks downward through each section over time
+    let rowY = 0;
+
+    // Detect pipeline section advances by watching sectionTopRef
+    let lastSecTop = -1;
+
+    // Transition counter — seeds deterministic pseudo-variance without Math.random.
+    // tv(offset) → stable 0..1 for this transition; offset decorrelates independent choices.
+    let tc = 0;
+    const tv = (o = 0): number => (Math.sin((tc + o) * 2.3999) + 1) / 2;
+
+    // Current section's viewport bounds in screen coords
+    const secBounds = (): { top: number; bot: number; span: number } => {
+      const r = schematicRef.current?.getBoundingClientRect();
+      const mg = 22;
+      const st = sectionTopRef.current, sb = sectionBotRef.current;
+      const top = r && sb > st ? r.top + st + mg : window.innerHeight * 0.12;
+      const bot = r && sb > st ? r.top + sb - mg : window.innerHeight * 0.88;
+      return { top, bot, span: Math.max(40, bot - top) };
+    };
+
+    // Transition helpers — each increments tc so the next tv() yields fresh values
+    const goSeek = (x: number, y: number, k: number, ms: number) => {
+      bsm = 'SEEK'; seekX = x; seekY = y; seekK = k; bsmTimer = ms; tc++;
+    };
+    const goSweep = () => {
+      const vW = window.innerWidth;
+      bsm = 'SWEEP';
+      swRight  = !swRight;
+      swStartX = swRight ? 50 : vW - BEAM_W - 50;
+      swEndX   = swRight ? vW - BEAM_W - 50 : 50;
+      swY      = rowY;
+      swDur    = 1100 + tv() * 1400;   // 1.1 – 2.5 s per row sweep
+      swElapsed = 0;
+      bsmTimer = swDur;
+      tc++;
+    };
+    const goDwell = (ax: number, ay: number) => {
+      bsm = 'DWELL'; dwX = ax; dwY = ay;
+      bsmTimer = 350 + tv() * 700;     // 0.35 – 1.05 s
+      tc++;
+    };
+    const goBacktrack = () => {
+      bsm = 'BACKTRACK';
+      btY   = s.pos.y - 18 - tv()     * 42;  // retreat 18–60 px upward
+      seekX = s.pos.x + (tv(1) - 0.5) * 50;  // subtle X wander during retreat
+      seekK = 0.009;
+      bsmTimer = 380 + tv() * 280;
+      tc++;
+    };
+
+    // Called when the scan pipeline advances to a new section
+    const onSectionAdvance = () => {
+      const { top } = secBounds();
+      rowY    = top;
+      swRight = false;   // goSweep() will flip → first sweep goes L→R
+      goSeek(50, top, 0.022, 260 + tv() * 180);
+    };
+
+    // ── Init ──────────────────────────────────────────────────────────────
+    s.lastFrameTime = performance.now();
+    const { top: initTop } = secBounds();
+    s.pos      = { x: 50, y: initTop };
+    s.velocity = { x: 0, y: 0 };
+    rowY = initTop;
+    wp.lastSecId = null;
+    goSweep();
+
+    // ── RAF tick ──────────────────────────────────────────────────────────
     const tick = (now: number) => {
       if (beamRafHaltedRef.current) {
         el.style.opacity = "0";
@@ -741,50 +823,96 @@ function ScanLoadingInner() {
       const dt = Math.min(50, now - s.lastFrameTime);
       s.lastFrameTime = now;
 
-      const schRect = schematicRef.current?.getBoundingClientRect();
-      const sTop = sectionTopRef.current;
-      const sBot = sectionBotRef.current;
       const vW = window.innerWidth;
-      const vH = window.innerHeight;
+      const { top: sTop, bot: sBot, span: sSpan } = secBounds();
 
-      // Force new waypoint on section change
-      if (activeSectionIdRef.current !== wp.lastSecId) {
-        wp.lastSecId = activeSectionIdRef.current;
-        wp.dwell = 0;
+      // Detect pipeline section advance (sectionTopRef updates inside updateSectionBounds)
+      if (sectionTopRef.current > 0 && sectionTopRef.current !== lastSecTop) {
+        lastSecTop = sectionTopRef.current;
+        onSectionAdvance();
       }
 
-      wp.dwell -= dt;
+      bsmTimer -= dt;
 
-      if (wp.dwell <= 0) {
-        const margin = 24;
-        const secTop = schRect && sBot > sTop ? schRect.top + sTop + margin : vH * 0.15;
-        const secBot = schRect && sBot > sTop ? schRect.top + sBot - margin : vH * 0.85;
-        const ySpan = Math.max(40, secBot - secTop);
+      switch (bsm) {
+        case 'SEEK': {
+          const dx = seekX - s.pos.x, dy = seekY - s.pos.y;
+          s.velocity.x += dx * seekK;
+          s.velocity.y += dy * seekK;
+          s.velocity.x *= 0.80; s.velocity.y *= 0.80;
+          s.pos.x += s.velocity.x; s.pos.y += s.velocity.y;
+          // Transition when arrived or time forced
+          if (bsmTimer <= 0 || Math.hypot(dx, dy) < 16) goSweep();
+          break;
+        }
 
-        if (wp.phase === "seek") {
-          // Arrived — do a slow horizontal scan at this Y, pausing to "read"
-          wp.phase = "scan";
-          wp.ty = secTop + Math.random() * ySpan;
-          wp.sweepRight = !wp.sweepRight;
-          wp.tx = wp.sweepRight ? vW - BEAM_W : 0;
-          wp.force = 0.007 + Math.random() * 0.004;
-          wp.dwell = 1600 + Math.random() * 2200;
-        } else {
-          // Deliberately seek a new area of the current section
-          wp.phase = "seek";
-          wp.ty = secTop + Math.random() * ySpan;
-          wp.tx = Math.random() * Math.max(0, vW - BEAM_W);
-          wp.force = 0.016 + Math.random() * 0.008;
-          wp.dwell = 200 + Math.random() * 350;
+        case 'SWEEP': {
+          swElapsed = Math.min(swElapsed + dt, swDur);
+          const t = swElapsed / swDur;
+          // Ease-in-out: slow start (settling into row), decelerate to stop
+          const eased = t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2;
+          const tgtX = swStartX + (swEndX - swStartX) * eased;
+          // Multi-frequency reading micro-jitter
+          const jX = Math.sin(now * 0.0068) * 2.2 + Math.sin(now * 0.0193) * 0.9;
+          const jY = Math.sin(now * 0.0115) * 1.6;
+          s.velocity.x += (tgtX + jX - s.pos.x) * 0.10;
+          s.velocity.y += (swY  + jY - s.pos.y) * 0.07;
+          s.velocity.x *= 0.70; s.velocity.y *= 0.70;
+          s.pos.x += s.velocity.x; s.pos.y += s.velocity.y;
+
+          if (swElapsed >= swDur) {
+            // Advance reading row downward — 17–29 % of section height per sweep
+            rowY = Math.min(sBot - 8, rowY + sSpan * (0.17 + tv() * 0.12));
+            if (tv(2) < 0.22) {
+              // ~22 % of sweeps: pause at row end (interesting element found)
+              goDwell(s.pos.x, s.pos.y);
+            } else {
+              // Seek to start position of next row sweep
+              const nxtX = !swRight ? 50 : vW - BEAM_W - 50;
+              goSeek(nxtX, rowY, 0.016, 220 + tv() * 280);
+            }
+          }
+          break;
+        }
+
+        case 'DWELL': {
+          // Three overlapping sines → organic micro-motion, never completely still
+          const jX = Math.sin(now * 0.0079) * 3.8
+                    + Math.sin(now * 0.0214) * 1.6
+                    + Math.sin(now * 0.0431) * 0.6;
+          const jY = Math.sin(now * 0.0127) * 2.2
+                    + Math.sin(now * 0.0318) * 0.9;
+          s.velocity.x += (dwX + jX - s.pos.x) * 0.035;
+          s.velocity.y += (dwY + jY - s.pos.y) * 0.035;
+          s.velocity.x *= 0.80; s.velocity.y *= 0.80;
+          s.pos.x += s.velocity.x; s.pos.y += s.velocity.y;
+
+          if (bsmTimer <= 0) {
+            if (tv() < 0.26 && sSpan > 50) {
+              // ~26 % chance: re-check something above (backtrack)
+              goBacktrack();
+            } else {
+              const nxtX = !swRight ? 50 : vW - BEAM_W - 50;
+              goSeek(nxtX, rowY, 0.015, 230 + tv() * 260);
+            }
+          }
+          break;
+        }
+
+        case 'BACKTRACK': {
+          // Deliberate upward retreat — slow spring, slight X drift
+          s.velocity.x += (seekX - s.pos.x) * seekK;
+          s.velocity.y += (btY   - s.pos.y) * seekK;
+          s.velocity.x *= 0.84; s.velocity.y *= 0.84;
+          s.pos.x += s.velocity.x; s.pos.y += s.velocity.y;
+          if (bsmTimer <= 0) {
+            // Satisfied — resume downward to next reading row
+            const nxtX = !swRight ? 50 : vW - BEAM_W - 50;
+            goSeek(nxtX, rowY, 0.017, 200 + tv() * 230);
+          }
+          break;
         }
       }
-
-      s.velocity.x += (wp.tx - s.pos.x) * wp.force;
-      s.velocity.y += (wp.ty - s.pos.y) * wp.force;
-      s.velocity.x *= 0.84;
-      s.velocity.y *= 0.84;
-      s.pos.x += s.velocity.x;
-      s.pos.y += s.velocity.y;
 
       el.style.transform = `translate(${s.pos.x}px, ${s.pos.y}px)`;
       if (lineEl) lineEl.style.transform = `translateY(${s.pos.y + 0.5}px)`;

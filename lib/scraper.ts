@@ -136,50 +136,43 @@ async function parseUnblockResponse(res: Response): Promise<UnblockResponse> {
   }
 }
 
-// -- BROWSERLESS /unblock — Pro feature stack ----------------------------
+// -- BROWSERLESS /unblock ------------------------------------------------
 //
-// Pro proxy stack (all query params):
-//   proxy=residential   — real home/mobile IPs; passes Cloudflare IP-rep checks
-//   proxyCountry=us     — US exit nodes; most target sites expect US visitor IPs
-//   proxySticky         — same exit node for all sub-requests within a session;
-//                         avoids IP-consistency anomalies that trigger bot flags
-//   proxyLocaleMatch=1  — auto-sets Accept-Language to match the proxy country
-//                         (en-US for us); fingerprint aligns with the IP origin
+// Documented query params (https://docs.browserless.io/rest-apis/unblock):
+//   token=<key>         — required auth
+//   proxy=residential   — residential IPs; bypasses Cloudflare IP-rep checks
 //
-// Body — cookies:true (Pro):
-//   Returns the cookies set by the target site after load. Logged for
-//   diagnostics; future use: feed challenge cookies into a re-attempt.
+// Body params (all documented):
+//   content:true        — returns full page HTML after unblocking
+//   cookies:true        — returns cookies set by the target site
+//   bestAttempt:true    — return whatever is rendered if any wait condition
+//                         times out, rather than erroring
+//   gotoOptions         — passed to Puppeteer page.goto()
+//   waitForTimeout      — additional settle time (ms) after navigation
 //
-// Body — waitForSelector (Attempt 1):
-//   Stops waiting the moment a primary content element appears in the DOM,
-//   rather than always sleeping a fixed 4 s. Fast SSR pages return in ~1 s;
-//   slower React/Vue/Next pages wait until h1/main renders. bestAttempt:true
-//   ensures the selector timeout never hard-blocks a response.
-//
-// Attempt 1 (fast):  domcontentloaded + selector sentinel + 2 s hydration   ≈ 22 s max
-// Attempt 2 (deep):  networkidle2 + 2 s settle                              ≈ 30 s max
-// Total worst case:  52 s — leaves room for the ~25 s Claude call under the 90 s budget
+// Attempt 1 (fast):  domcontentloaded + 2 s hydration    ≈ 17 s typical, 20 s max
+// Attempt 2 (deep):  networkidle2 + 2 s settle           ≈ 20 s typical, 22 s max
+// Total worst case:  42 s — leaves ≥ 43 s for Claude + Supabase under 85 s budget
 //
 async function fetchWithBrowserless(url: string): Promise<string> {
   if (!process.env.BROWSERLESS_API_KEY) {
     throw new Error('Browserless API key not configured — set BROWSERLESS_API_KEY')
   }
 
-  // Pro proxy params: residential IPs, US geo-target, sticky per-session,
-  // locale header matched to exit-node country.
+  // Only token and proxy are documented query params for /unblock.
   const endpoint =
     `https://production-sfo.browserless.io/unblock` +
     `?token=${process.env.BROWSERLESS_API_KEY}` +
-    `&proxy=residential&proxyCountry=us&proxySticky&proxyLocaleMatch=1`
+    `&proxy=residential`
 
   // Attempt 1 — fast path -----------------------------------------------
-  // waitForSelector: stop as soon as a primary content node appears instead
-  // of always burning 4 s. bestAttempt:true returns whatever is rendered
-  // if the selector never fires (e.g. unusual page structure).
-  // waitForTimeout:2000 gives JS frameworks a 2 s hydration window after
-  // the selector resolves.
+  // domcontentloaded fires as soon as the HTML is parsed; waitForTimeout
+  // gives JS frameworks 2 s to hydrate after that. bestAttempt:true
+  // returns whatever is rendered if the goto times out.
+  // No waitForSelector — its Puppeteer default of 30 s would always exceed
+  // our abort budget and cause every attempt to be cancelled at 20 s.
   const ctrl1 = new AbortController()
-  const t1 = setTimeout(() => ctrl1.abort(), 24000)
+  const t1 = setTimeout(() => ctrl1.abort(), 20000)
   let html1: string | null = null
 
   try {
@@ -191,8 +184,7 @@ async function fetchWithBrowserless(url: string): Promise<string> {
         content: true,
         cookies: true,
         bestAttempt: true,
-        gotoOptions: { waitUntil: 'domcontentloaded', timeout: 18000 },
-        waitForSelector: "h1, main, article, [role='main'], [class*='hero'], #main, #content",
+        gotoOptions: { waitUntil: 'domcontentloaded', timeout: 15000 },
         waitForTimeout: 2000,
       }),
       signal: ctrl1.signal,
@@ -225,12 +217,11 @@ async function fetchWithBrowserless(url: string): Promise<string> {
 
   // Attempt 2 — deep path -----------------------------------------------
   // networkidle2: waits until no more than 2 in-flight XHR for 500 ms.
-  // Required for heavy SPAs (Notion, Linear) that stream content via fetch
-  // after initial render. waitForTimeout:2000 gives JS an extra 2 s to
-  // finish rendering after the network quiets.
+  // Better for SPAs that stream content after initial render.
+  // waitForTimeout:2000 gives JS an extra 2 s after the network quiets.
   console.log(`[SCRAPER] attempt1 insufficient (${len1Early} chars), trying attempt2 for ${url}`)
   const ctrl2 = new AbortController()
-  const t2 = setTimeout(() => ctrl2.abort(), 30000)
+  const t2 = setTimeout(() => ctrl2.abort(), 22000)
   let html2: string | null = null
 
   try {
@@ -242,7 +233,7 @@ async function fetchWithBrowserless(url: string): Promise<string> {
         content: true,
         cookies: true,
         bestAttempt: true,
-        gotoOptions: { waitUntil: 'networkidle2', timeout: 26000 },
+        gotoOptions: { waitUntil: 'networkidle2', timeout: 18000 },
         waitForTimeout: 2000,
       }),
       signal: ctrl2.signal,

@@ -98,6 +98,17 @@ const SECTION_MESSAGES: Record<string, string[]> = {
 
 const STATUS_COMPLETE_TEXT = "Scan complete. Diagnostic report ready.";
 
+const MILESTONE_FLASHES = [
+  { ms:  8_000, text: "NAVIGATION ARCHITECTURE MAPPED" },
+  { ms: 19_000, text: "HERO CONVERSION SIGNALS EXTRACTED" },
+  { ms: 30_000, text: "TRUST SIGNAL DENSITY SCORED" },
+  { ms: 41_000, text: "CTA ARCHITECTURE ANALYZED" },
+  { ms: 52_000, text: "PERSUASION PATTERNS IDENTIFIED" },
+  { ms: 63_000, text: "TRAFFIC READINESS EVALUATED" },
+  { ms: 74_000, text: "REVENUE SUPPRESSION PATTERNS FLAGGED" },
+  { ms: 84_000, text: "DIAGNOSTIC FINDINGS RANKED" },
+] as const;
+
 function cubicEaseInOut(t: number): number {
   return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 }
@@ -143,6 +154,7 @@ function ScanLoadingInner() {
   const [sectionVisualComplete, setSectionVisualComplete] = useState(false);
   const [materialized, setMaterialized] = useState(false);
   const [scoreReveal, setScoreReveal] = useState(false);
+  const scoreRevealRef = useRef(false);
   const [displayScore, setDisplayScore] = useState(0);
   const [subLabelVis, setSubLabelVis] = useState(false);
   const [diagLabelVis, setDiagLabelVis] = useState(false);
@@ -168,9 +180,8 @@ function ScanLoadingInner() {
   const [introLine3, setIntroLine3] = useState(false);
   // Status typewriter
   const [typedStatus, setTypedStatus] = useState<string>(STATUS_MESSAGES[0]);
-  // Analysis complete flash
-  const [analysisFlash, setAnalysisFlash] = useState(false);
-  const [analysisFlashFade, setAnalysisFlashFade] = useState(false);
+  const [milestoneFlash, setMilestoneFlash] = useState<string | null>(null);
+  const [milestoneFlashFade, setMilestoneFlashFade] = useState(false);
 
   // beam-Y section activation state
   const [activeSection, setActiveSection] = useState<string | null>(null);
@@ -612,14 +623,25 @@ function ScanLoadingInner() {
     return () => clearInterval(iv);
   }, [statusText]);
 
-  // "ANALYSIS COMPLETE" flash when scan sections finish, before score reveal
+  useEffect(() => { scoreRevealRef.current = scoreReveal; }, [scoreReveal]);
+
   useEffect(() => {
-    if (!sectionVisualComplete) return;
-    setAnalysisFlash(true);
-    const t1 = window.setTimeout(() => setAnalysisFlashFade(true), 500);
-    const t2 = window.setTimeout(() => setAnalysisFlash(false), 800);
-    return () => { clearTimeout(t1); clearTimeout(t2); };
-  }, [sectionVisualComplete]);
+    if (!materialized) return;
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    MILESTONE_FLASHES.forEach(({ ms, text }) => {
+      timers.push(window.setTimeout(() => {
+        if (scoreRevealRef.current) return;
+        setMilestoneFlash(text);
+        setMilestoneFlashFade(false);
+      }, ms));
+      timers.push(window.setTimeout(() => setMilestoneFlashFade(true), ms + 600));
+      timers.push(window.setTimeout(() => {
+        setMilestoneFlash(null);
+        setMilestoneFlashFade(false);
+      }, ms + 950));
+    });
+    return () => timers.forEach(clearTimeout);
+  }, [materialized]);
 
   const handleCancelScan = useCallback(() => {
     cancelRequestedRef.current = true;
@@ -2406,8 +2428,8 @@ function ScanLoadingInner() {
           }
         `}</style>
 
-        {/* Analysis complete flash — appears between section complete and score reveal */}
-        {analysisFlash && (
+        {/* Milestone diagnostic flashes — timed throughout the scan */}
+        {milestoneFlash && (
           <div
             aria-hidden
             style={{
@@ -2418,8 +2440,8 @@ function ScanLoadingInner() {
               alignItems: "center",
               justifyContent: "center",
               pointerEvents: "none",
-              opacity: analysisFlashFade ? 0 : 1,
-              transition: analysisFlashFade ? "opacity 0.3s ease" : "none",
+              opacity: milestoneFlashFade ? 0 : 1,
+              transition: milestoneFlashFade ? "opacity 0.35s ease" : "none",
             }}
           >
             <div
@@ -2432,7 +2454,7 @@ function ScanLoadingInner() {
                 textShadow: "0 0 20px rgba(0,200,255,0.8), 0 0 60px rgba(0,200,255,0.4)",
               }}
             >
-              ANALYSIS COMPLETE
+              {milestoneFlash}
             </div>
           </div>
         )}

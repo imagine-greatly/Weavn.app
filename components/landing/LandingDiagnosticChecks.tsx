@@ -78,7 +78,7 @@ export default function LandingDiagnosticChecks() {
   return (
     <section
       className="relative w-full overflow-hidden px-6 py-[120px]"
-      style={{ background: "#050810" }}
+      style={{ background: "transparent" }}
     >
       <div
         className="pointer-events-none absolute inset-0"

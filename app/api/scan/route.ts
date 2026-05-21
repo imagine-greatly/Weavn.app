@@ -154,11 +154,24 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  const scanStart = Date.now()
+  console.log(`[scan] START | url=${normalized} domain=${domain} userId=${userId}`)
+
   // 1. Scrape: homepage + up to 4 internal pages
   let extraction;
+  const scrapeStart = Date.now()
+  console.log(`[scan] SCRAPE START | url=${normalized}`)
   try {
     extraction = await scrapeSite(normalized);
+    console.log(
+      `[scan] SCRAPE DONE | domain=${domain}` +
+      ` rawHtml_len=${extraction.rawHtml.length}` +
+      ` pages=${extraction.pagesAnalyzed.length}` +
+      ` pagesAnalyzed=${JSON.stringify(extraction.pagesAnalyzed)}` +
+      ` elapsed=${Date.now() - scrapeStart}ms`
+    )
   } catch (err) {
+    console.error(`[scan] SCRAPE ERROR | domain=${domain} elapsed=${Date.now() - scrapeStart}ms`, err instanceof Error ? (err.stack ?? err.message) : err)
     const message = err instanceof Error ? err.message : "Failed to fetch the site.";
     const isBlocked =
       /block|forbidden|403|401|access denied|scraping|cannot fetch/i.test(message);
@@ -176,6 +189,7 @@ export async function POST(req: NextRequest) {
 
   // If we have no meaningful content, still try AI (it may return a minimal report)
   if (!extraction.rawHtml) {
+    console.log(`[scan] ABORT no rawHtml | domain=${domain} elapsed=${Date.now() - scanStart}ms`)
     return withCookies(
       NextResponse.json(
         {
@@ -189,10 +203,12 @@ export async function POST(req: NextRequest) {
 
   // 2. Detect site type from homepage (gates everything that follows)
   const site_type = detectSiteType(extraction);
+  console.log(`[scan] SITE_TYPE | domain=${domain} site_type=${site_type} elapsed=${Date.now() - scanStart}ms`)
 
   // Fetch user plan for model selection (agency uses higher-capacity model)
   let userPlan = "free";
   if (!internalBypass) {
+    const planStart = Date.now()
     try {
       const supabaseService = createClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -204,25 +220,34 @@ export async function POST(req: NextRequest) {
         .eq("id", userId)
         .maybeSingle();
       userPlan = profile?.plan ?? "free";
-    } catch {
-      // non-blocking; fall back to default model
+      console.log(`[scan] USER_PLAN | domain=${domain} plan=${userPlan} elapsed=${Date.now() - planStart}ms`)
+    } catch (err) {
+      console.error(`[scan] USER_PLAN ERROR (non-fatal, using free) | domain=${domain}`, err instanceof Error ? (err.stack ?? err.message) : err)
     }
   }
 
   // 3. Claude analysis (retry once inside runAnalysis), tailored to site_type
   let payload;
+  const analyzeStart = Date.now()
+  console.log(`[scan] ANALYZE START | domain=${domain} site_type=${site_type} userPlan=${userPlan}`)
   try {
     payload = await runAnalysis(extraction, site_type, userPlan);
+    console.log(`[scan] ANALYZE DONE | domain=${domain} elapsed=${Date.now() - analyzeStart}ms`)
   } catch (err) {
+    console.error(`[scan] ANALYZE ERROR | domain=${domain} elapsed=${Date.now() - analyzeStart}ms`, err instanceof Error ? (err.stack ?? err.message) : err)
     const message = err instanceof Error ? err.message : "Analysis failed.";
     return withCookies(NextResponse.json({ error: message }, { status: 500 }));
   }
 
   // 4. Store in Supabase (keyed by domain + timestamp)
   let reportId: string;
+  const saveStart = Date.now()
+  console.log(`[scan] SAVE START | domain=${domain}`)
   try {
     reportId = await saveReport(domain, payload, userId);
+    console.log(`[scan] SAVE DONE | domain=${domain} reportId=${reportId} elapsed=${Date.now() - saveStart}ms`)
   } catch (err) {
+    console.error(`[scan] SAVE ERROR | domain=${domain} elapsed=${Date.now() - saveStart}ms`, err instanceof Error ? (err.stack ?? err.message) : err)
     const message = err instanceof Error ? err.message : "Failed to save report.";
     return withCookies(
       NextResponse.json(
@@ -232,10 +257,12 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  console.log(`[scan] COMPLETE | domain=${domain} reportId=${reportId} total_elapsed=${Date.now() - scanStart}ms`)
+
   // Fire-and-forget: pre-generate AI advisor briefs for all findings in the background.
   // The response goes out immediately; briefs are written to reports.extended_analysis as they complete.
   void generateAndPersistAllFindingBriefs(reportId, domain, payload).catch((err) => {
-    console.error("[scan] background brief generation failed:", err);
+    console.error("[scan] background brief generation failed:", err instanceof Error ? (err.stack ?? err.message) : err);
   });
 
   return withCookies(

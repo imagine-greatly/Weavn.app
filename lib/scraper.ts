@@ -403,6 +403,7 @@ export function applySmartTruncation(html: string): string {
 }
 
 export async function scrapeSite(inputUrl: string): Promise<CombinedExtraction> {
+  console.error('[PIPELINE] scrape starting', inputUrl)
   const pageUrl = normalizeToHomepage(inputUrl)
   const scraped = await scrapeUrl(inputUrl)
   const cleaned = cleanHtml(scraped.rawHtml)

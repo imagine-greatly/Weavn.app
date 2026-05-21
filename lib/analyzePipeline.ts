@@ -204,6 +204,7 @@ export function extractPageData(
   url: string,
   pageType: string
 ): ExtractedPage {
+  console.error('[PIPELINE] extractPageData called', url)
   const $ = cheerio.load(html);
   $("script, style, noscript, svg").remove();
 

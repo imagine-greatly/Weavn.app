@@ -6,6 +6,7 @@
 
 import Anthropic from "@anthropic-ai/sdk";
 import type { CombinedExtraction } from "./scraper";
+import { extractPageData } from "@/lib/analyzePipeline";
 import type {
   ReportPayload,
   SiteType,
@@ -416,6 +417,131 @@ function mapLegacyLeakToNew(input: Record<string, unknown>, fallbackId: string):
   };
 }
 
+/**
+ * Converts raw HTML extraction into a compact labelled summary for Claude.
+ * Cuts input from ~7k tokens (28k chars raw HTML) to ~1.5k tokens,
+ * reducing TTFT and eliminating the retry that was burning 5s before the real call.
+ */
+function buildPageSummary(extraction: CombinedExtraction): string {
+  const url = extraction.pagesAnalyzed[0] ?? "";
+  const page = extractPageData(extraction.rawHtml, url, "homepage");
+  const parts: string[] = [];
+
+  if (url) parts.push(`URL: ${url}`);
+
+  const metaLines = [
+    page.meta.title && `Title: ${page.meta.title}`,
+    page.meta.description && `Description: ${page.meta.description}`,
+    page.meta.ogTitle && page.meta.ogTitle !== page.meta.title && `OG Title: ${page.meta.ogTitle}`,
+    page.meta.ogDescription &&
+      page.meta.ogDescription !== page.meta.description &&
+      `OG Description: ${page.meta.ogDescription}`,
+  ].filter(Boolean);
+  if (metaLines.length) parts.push(`META\n${metaLines.join("\n")}`);
+
+  const heroLines = [
+    page.hero.headline && `Headline: ${page.hero.headline}`,
+    page.hero.subheadline && `Subheadline: ${page.hero.subheadline}`,
+    page.hero.ctaText &&
+      `CTA: "${page.hero.ctaText}"${page.hero.ctaHref ? ` → ${page.hero.ctaHref}` : ""}`,
+    page.hero.bodyText && `Body: ${page.hero.bodyText.slice(0, 400)}`,
+  ].filter(Boolean);
+  if (heroLines.length) parts.push(`HERO\n${heroLines.join("\n")}`);
+
+  const h1s = page.headlines.filter((h) => h.tag === "h1").map((h) => `"${h.text}"`);
+  const h2s = page.headlines.filter((h) => h.tag === "h2").slice(0, 8).map((h) => `"${h.text}"`);
+  const h3s = page.headlines.filter((h) => h.tag === "h3").slice(0, 5).map((h) => `"${h.text}"`);
+  if (h1s.length) parts.push(`H1: ${h1s.join(" | ")}`);
+  if (h2s.length) parts.push(`H2: ${h2s.join(" | ")}`);
+  if (h3s.length) parts.push(`H3: ${h3s.join(" | ")}`);
+
+  if (page.sections.length) {
+    const sectionText = page.sections
+      .slice(0, 6)
+      .map((s) => `[${s.label}] ${s.text.slice(0, 250)}`)
+      .join("\n");
+    parts.push(`SECTIONS\n${sectionText}`);
+  }
+
+  if (page.paragraphs) {
+    parts.push(`BODY TEXT\n${page.paragraphs.slice(0, 2000)}`);
+  }
+
+  if (page.pricing.length) {
+    const pricingText = page.pricing
+      .map(
+        (p) =>
+          `${p.planName}: ${p.price}${p.features.length ? ` | ${p.features.slice(0, 5).join(", ")}` : ""}`
+      )
+      .join("\n");
+    parts.push(`PRICING\n${pricingText}`);
+  }
+
+  if (page.testimonials.length) {
+    const testText = page.testimonials
+      .slice(0, 4)
+      .map(
+        (t) =>
+          `"${t.text.slice(0, 200)}" — ${t.author}${t.result ? ` [${t.result}]` : ""}`
+      )
+      .join("\n");
+    parts.push(`TESTIMONIALS\n${testText}`);
+  }
+
+  const sp = page.socialProof;
+  const spParts = [
+    sp.reviewCount && `${sp.reviewCount} reviews`,
+    sp.starRating && `${sp.starRating} stars`,
+    sp.customerCount && `${sp.customerCount} customers`,
+    sp.clientLogos.length && `Client logos: ${sp.clientLogos.slice(0, 5).join(", ")}`,
+    sp.pressLogos.length && `Press: ${sp.pressLogos.slice(0, 3).join(", ")}`,
+    sp.certifications.length && `Certs: ${sp.certifications.slice(0, 3).join(", ")}`,
+  ].filter(Boolean);
+  if (spParts.length) parts.push(`SOCIAL PROOF: ${spParts.join(" | ")}`);
+
+  if (page.trust.length) {
+    const trustText = page.trust
+      .slice(0, 6)
+      .map((t) => t.text.slice(0, 120))
+      .join(" | ");
+    parts.push(`TRUST SIGNALS: ${trustText}`);
+  }
+
+  if (page.buttons.length) {
+    const ctaText = page.buttons
+      .slice(0, 10)
+      .map((b) => `"${b.text}"${b.href ? ` → ${b.href}` : ""}`)
+      .join(" | ");
+    parts.push(`CTAs: ${ctaText}`);
+  }
+
+  if (page.navigation.length) {
+    parts.push(`NAVIGATION: ${page.navigation.slice(0, 10).join(" | ")}`);
+  }
+
+  if (page.forms.length) {
+    const formText = page.forms
+      .map((f) => `Fields: [${f.fields.slice(0, 5).join(", ")}] → "${f.submitText}"`)
+      .join(" | ");
+    parts.push(`FORMS: ${formText}`);
+  }
+
+  const contact = [
+    page.hasPhoneNumber && "phone present",
+    page.hasEmailAddress && "email present",
+    page.hasAddress && "physical address present",
+  ].filter(Boolean);
+  if (contact.length) parts.push(`CONTACT: ${contact.join(", ")}`);
+
+  if (page.structured_data.length) {
+    parts.push(`SCHEMA.ORG: ${page.structured_data.join(", ")}`);
+  }
+
+  parts.push(`PAGE STATS: ${page.wordCount} words | ${page.h1Count} H1s | ${page.ctaCount} CTAs`);
+
+  return parts.join("\n\n");
+}
+
 export async function runAnalysis(
   extraction: CombinedExtraction,
   siteType: SiteType,
@@ -428,7 +554,8 @@ export async function runAnalysis(
   });
 
   const systemPrompt = buildSystemPrompt(siteType);
-  const userContent = `Analyze the following website HTML and return the JSON analysis. The HTML is from a fully rendered page captured by a headless browser:\n\n${extraction.rawHtml}`;
+  const summary = buildPageSummary(extraction);
+  const userContent = `Analyze the following structured data extracted from a fully-rendered website page and return your JSON analysis:\n\n${summary}`;
 
   const run = async (): Promise<ReportPayload> => {
     const message = await client.messages.create({

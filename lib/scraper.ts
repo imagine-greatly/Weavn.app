@@ -54,27 +54,6 @@ export function stripMarkdown(text: string): string {
 }
 
 // -- HELPERS ------------------------------------------------------------
-const REALISTIC_UA =
-  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'
-
-// Browserless base body — mirrors a real incognito Chrome browser.
-// stealth + ignoreHTTPSErrors closes every gap between Browserless and a
-// real browser: bot detection, broken/self-signed SSL certs (goldcare.com),
-// and HTTPS errors that Chrome shows "Proceed anyway" for.
-const BL_BASE = {
-  bestAttempt: true,
-  stealth: true,
-  ignoreHTTPSErrors: true,
-  userAgent: REALISTIC_UA,
-  viewport: { width: 1280, height: 800, deviceScaleFactor: 1, isMobile: false },
-  setExtraHTTPHeaders: {
-    'Accept-Language': 'en-US,en;q=0.9',
-    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-    'Cache-Control': 'no-cache',
-    'Pragma': 'no-cache',
-  },
-}
-
 function readableTextLength(html: string): number {
   return html
     .replace(/<[^>]+>/g, ' ')
@@ -83,19 +62,38 @@ function readableTextLength(html: string): number {
     .length
 }
 
-// -- BROWSERLESS (stealth Chrome, JS-rendered) --------------------------
+// Extract HTML from a Browserless /unblock response.
+// /unblock returns JSON: { content: "<!DOCTYPE html>..." }
+async function extractUnblockHtml(res: Response): Promise<string | null> {
+  try {
+    const json = await res.json() as Record<string, unknown>
+    const html = typeof json.content === 'string' ? json.content : null
+    return html || null
+  } catch {
+    return null
+  }
+}
+
+// -- BROWSERLESS /unblock (bot-detection bypass, JS-rendered) -----------
+// /unblock is the correct endpoint for bypassing Cloudflare, DataDome, etc.
+// It returns JSON { content: "<html>..." } instead of raw HTML.
+// stealth, userAgent, viewport, setExtraHTTPHeaders are NOT valid body fields
+// for /content or /unblock — they were silently ignored before this fix.
+// ignoreHTTPSErrors is passed as a launch query param (browser-level flag).
 // Two attempts: fast (domcontentloaded) then thorough (networkidle2).
-// Returns the best HTML found, or throws if both attempts return insufficient content.
 // Max wall time: 22 s + 30 s = 52 s.
 async function fetchWithBrowserless(url: string): Promise<string> {
   if (!process.env.BROWSERLESS_API_KEY) {
     throw new Error('Browserless API key not configured — set BROWSERLESS_API_KEY')
   }
 
-  const endpoint = `https://production-sfo.browserless.io/content?token=${process.env.BROWSERLESS_API_KEY}`
+  // ignoreHTTPSErrors as a launch param handles goldcare.com-style broken SSL certs
+  const launchParam = encodeURIComponent(JSON.stringify({ ignoreHTTPSErrors: true }))
+  const endpoint =
+    `https://production-sfo.browserless.io/unblock` +
+    `?token=${process.env.BROWSERLESS_API_KEY}&launch=${launchParam}`
 
   // Attempt 1 — fast path: domcontentloaded + 2 s JS execution window.
-  // Handles SSR sites, simple SPAs, and most marketing pages.
   const controller1 = new AbortController()
   const timer1 = setTimeout(() => controller1.abort(), 22000)
   let html1: string | null = null
@@ -105,15 +103,16 @@ async function fetchWithBrowserless(url: string): Promise<string> {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        ...BL_BASE,
         url,
+        content: true,
+        bestAttempt: true,
         gotoOptions: { waitUntil: 'domcontentloaded', timeout: 18000 },
         waitForTimeout: 2000,
       }),
       signal: controller1.signal,
     })
     if (res.ok) {
-      html1 = await res.text() || null
+      html1 = await extractUnblockHtml(res)
       const readable = html1 ? readableTextLength(html1) : 0
       console.log(`[SCRAPER] Browserless attempt 1: readable=${readable} url=${url}`)
     } else {
@@ -129,7 +128,6 @@ async function fetchWithBrowserless(url: string): Promise<string> {
   if (html1 && readableTextLength(html1) >= 500) return html1
 
   // Attempt 2 — thorough path: networkidle2 waits for all async JS to finish.
-  // Required for heavy SPAs (React, Next.js, Vue) that render content after hydration.
   console.log(`[SCRAPER] Browserless attempt 1 insufficient, trying attempt 2 for ${url}`)
   const controller2 = new AbortController()
   const timer2 = setTimeout(() => controller2.abort(), 30000)
@@ -140,14 +138,15 @@ async function fetchWithBrowserless(url: string): Promise<string> {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        ...BL_BASE,
         url,
+        content: true,
+        bestAttempt: true,
         gotoOptions: { waitUntil: 'networkidle2', timeout: 25000 },
       }),
       signal: controller2.signal,
     })
     if (res.ok) {
-      html2 = await res.text() || null
+      html2 = await extractUnblockHtml(res)
       const readable = html2 ? readableTextLength(html2) : 0
       console.log(`[SCRAPER] Browserless attempt 2: readable=${readable} url=${url}`)
     } else {
@@ -170,7 +169,7 @@ async function fetchWithBrowserless(url: string): Promise<string> {
   throw new Error(
     `Browserless could not retrieve sufficient content from ${url} ` +
     `(attempt1=${len1} chars, attempt2=${len2} chars). ` +
-    `The site may block automated access or return a login/CAPTCHA wall.`
+    `The site may be blocking automated access or returned a login/CAPTCHA wall.`
   )
 }
 

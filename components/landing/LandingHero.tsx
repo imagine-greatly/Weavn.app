@@ -375,12 +375,6 @@ export default function LandingHero({ url, onUrlChange, autoFocus }: Props) {
             <span style={{ color: "var(--border-default)" }}>·</span> No credit card{" "}
             <span style={{ color: "var(--border-default)" }}>·</span> Takes 90 seconds
           </p>
-          <p
-            className="text-center font-mono text-[11px]"
-            style={{ color: "#8899AA", marginTop: 12 }}
-          >
-            Create your free account to run your diagnostic — takes 60 seconds.
-          </p>
         </ScrollReveal>
       </div>
 

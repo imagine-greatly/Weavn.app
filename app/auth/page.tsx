@@ -109,8 +109,6 @@ function AuthPageContent() {
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [signupEmailSent, setSignupEmailSent] = useState(false);
   const [pendingDomain, setPendingDomain] = useState<string | null>(null);
-  const [diagnosticsCount, setDiagnosticsCount] = useState<number | null | "loading">("loading");
-
   useEffect(() => {
     if (typeof sessionStorage === "undefined") return;
     const raw = sessionStorage.getItem("pendingUrl");
@@ -122,31 +120,6 @@ function AuthPageContent() {
     } catch {
       setPendingDomain(raw);
     }
-  }, []);
-
-  useEffect(() => {
-    const supabase = getSupabaseBrowserClient();
-
-    (async () => {
-      try {
-        const { count } = await supabase.from("reports").select("*", { count: "exact", head: true });
-        const displayCount = (count ?? 0) + 47;
-        setDiagnosticsCount(displayCount);
-      } catch {
-        setDiagnosticsCount(null);
-      }
-    })();
-
-    const channel = supabase
-      .channel("reports-count")
-      .on(
-        "postgres_changes",
-        { event: "INSERT", schema: "public", table: "reports" },
-        () => { setDiagnosticsCount((prev) => (typeof prev === "number" ? prev + 1 : prev)); },
-      )
-      .subscribe();
-
-    return () => { supabase.removeChannel(channel); };
   }, []);
 
   const resetFormState = useCallback(() => {
@@ -716,25 +689,6 @@ function AuthPageContent() {
         </div>
       </div>
 
-      {/* STEP 4 — Bottom anchor: diagnostics count */}
-      <div
-        style={{
-          position: "fixed",
-          bottom: 24,
-          left: "50%",
-          transform: "translateX(-50%)",
-          zIndex: 10,
-          whiteSpace: "nowrap",
-        }}
-      >
-        {diagnosticsCount === "loading" ? (
-          <span style={{ fontFamily: MONO, color: C.labelMuted, fontSize: 11, letterSpacing: "0.1em" }}>· · ·</span>
-        ) : typeof diagnosticsCount === "number" ? (
-          <span style={{ fontFamily: MONO, color: C.labelMuted, fontSize: 11, letterSpacing: "0.1em" }}>
-            {diagnosticsCount.toLocaleString()} diagnostics run.
-          </span>
-        ) : null}
-      </div>
     </>
   );
 }

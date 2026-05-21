@@ -9,6 +9,7 @@ import {
 } from "@/components/PageTransitions";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import LandingFinalCTA from "@/components/landing/LandingFinalCTA";
+import DIAGNOSTIC_CHECKS from "@/lib/diagnosticRubric";
 
 /**
  * How-it-works page — diagnostic pipeline from URL to report.
@@ -27,6 +28,7 @@ export default function HowItWorksPage() {
       <HowPacketsTransition />
       <TechnologySection />
       <HowTraceTransition />
+      <CompleteDiagnosticDatabase />
       <FAQSection />
       <HowTargetTransition />
       <LandingFinalCTA url={url} onUrlChange={setUrl} />
@@ -664,6 +666,237 @@ function TechnologySection() {
             </ScrollReveal>
           ))}
         </div>
+      </div>
+    </section>
+  );
+}
+
+// ─── Complete Diagnostic Database ─────────────────────────────────────────
+
+const DIMENSION_CATEGORIES: { name: string; categories: string[] }[] = [
+  {
+    name: "Conversion Architecture",
+    categories: ["CTA & Conversion", "Checkout & Purchase Friction", "Offer & Pricing", "Email & Retention"],
+  },
+  {
+    name: "Trust & Credibility",
+    categories: ["Trust & Credibility", "Social Proof", "Return Visitor & Retention"],
+  },
+  {
+    name: "Message Clarity",
+    categories: ["Hero Section", "Messaging & Clarity", "Specificity & Claim Quality"],
+  },
+  {
+    name: "Psychology & Persuasion",
+    categories: ["Psychology & Persuasion", "Emotional Sequence & Page Flow", "Competitive Differentiation"],
+  },
+  {
+    name: "Traffic Readiness",
+    categories: ["SEO & Metadata", "Page & Content Gaps"],
+  },
+  {
+    name: "Technical Foundation",
+    categories: ["Navigation & UX", "Mobile Experience", "Page Speed & Technical", "Product Page", "Accessibility & Inclusion"],
+  },
+];
+
+const SEVERITY_STYLES: Record<string, { color: string; bg: string; label: string }> = {
+  Critical: { color: "rgba(255,55,55,0.9)", bg: "rgba(255,55,55,0.08)", label: "CRIT" },
+  High:     { color: "rgba(255,145,30,0.9)", bg: "rgba(255,145,30,0.08)", label: "HIGH" },
+  Medium:   { color: "rgba(0,200,255,0.7)", bg: "rgba(0,200,255,0.06)", label: "MED" },
+  Low:      { color: "rgba(100,130,150,0.8)", bg: "rgba(100,130,150,0.06)", label: "LOW" },
+};
+
+function CompleteDiagnosticDatabase() {
+  const [openDim, setOpenDim] = useState<string | null>(null);
+
+  const dimensions = DIMENSION_CATEGORIES.map((dim) => {
+    const checks = DIAGNOSTIC_CHECKS.filter((c) => dim.categories.includes(c.category));
+    return { ...dim, checks };
+  });
+
+  return (
+    <section
+      className="relative w-full overflow-hidden px-6 py-[120px]"
+      style={{ background: "var(--bg-surface)" }}
+    >
+      <div className="mx-auto max-w-[min(1100px,calc(100vw-48px))]">
+        <p className="font-ui-label text-center" style={{ color: "var(--text-muted)" }}>
+          COMPLETE DIAGNOSTIC DATABASE
+        </p>
+        <ScrollReveal variant="headline">
+          <h2
+            className="mx-auto mt-3 max-w-[min(52rem,calc(100vw-48px))] text-center font-sans font-extrabold"
+            style={{
+              color: "var(--text-primary)",
+              fontSize: "clamp(36px, 4vw, 52px)",
+              lineHeight: 0.98,
+              letterSpacing: "-1.5px",
+              fontWeight: 800,
+            }}
+          >
+            All 166 checks, every scan
+            <span style={{ color: "var(--cyan)" }}>.</span>
+          </h2>
+        </ScrollReveal>
+        <ScrollReveal variant="card">
+          <p
+            className="mx-auto mt-5 max-w-[540px] text-center font-sans text-[16px] leading-relaxed"
+            style={{ color: "var(--text-secondary)" }}
+          >
+            Every check WebDoc runs, grouped by revenue dimension. Click a dimension to expand its full check list.
+          </p>
+        </ScrollReveal>
+
+        <div className="mt-14 space-y-3">
+          {dimensions.map((dim, di) => {
+            const isOpen = openDim === dim.name;
+            return (
+              <ScrollReveal key={dim.name} variant="card" index={di}>
+                <div
+                  className="overflow-hidden rounded-sm border transition-[border-color] duration-200"
+                  style={{
+                    borderColor: isOpen ? "rgba(0,200,255,0.3)" : "var(--border-default)",
+                    background: "var(--bg-card)",
+                  }}
+                >
+                  {/* Dimension header — always visible */}
+                  <button
+                    type="button"
+                    className="flex w-full items-center justify-between gap-4 px-6 py-5 text-left"
+                    onClick={() => setOpenDim(isOpen ? null : dim.name)}
+                  >
+                    <div className="flex items-center gap-4 min-w-0">
+                      <span
+                        className="shrink-0 font-mono text-[10px] uppercase tracking-[2px] tabular-nums"
+                        style={{ color: "var(--cyan)", minWidth: 60 }}
+                      >
+                        {dim.checks.length} CHECKS
+                      </span>
+                      <span
+                        className="font-sans font-extrabold"
+                        style={{
+                          color: "var(--text-primary)",
+                          fontSize: "clamp(15px, 1.4vw, 18px)",
+                          letterSpacing: "-0.4px",
+                          lineHeight: 1.1,
+                        }}
+                      >
+                        {dim.name}
+                      </span>
+                    </div>
+                    <div className="flex shrink-0 items-center gap-3">
+                      {/* Severity breakdown */}
+                      <div className="hidden items-center gap-2 sm:flex">
+                        {(["Critical", "High", "Medium", "Low"] as const).map((sev) => {
+                          const n = dim.checks.filter((c) => c.severity === sev).length;
+                          if (!n) return null;
+                          const s = SEVERITY_STYLES[sev];
+                          return (
+                            <span
+                              key={sev}
+                              className="rounded px-1.5 py-0.5 font-mono text-[10px]"
+                              style={{ color: s.color, background: s.bg, border: `1px solid ${s.color}` }}
+                            >
+                              {n} {s.label}
+                            </span>
+                          );
+                        })}
+                      </div>
+                      <span
+                        className="font-mono text-[16px] transition-transform duration-200"
+                        style={{
+                          color: "var(--text-muted)",
+                          transform: isOpen ? "rotate(45deg)" : "rotate(0deg)",
+                        }}
+                      >
+                        +
+                      </span>
+                    </div>
+                  </button>
+
+                  {/* Expanded check list */}
+                  <div
+                    className="grid transition-[grid-template-rows] duration-300 ease-out"
+                    style={{ gridTemplateRows: isOpen ? "1fr" : "0fr" }}
+                  >
+                    <div className="min-h-0 overflow-hidden">
+                      <div className="border-t px-6 pb-6 pt-4" style={{ borderColor: "var(--border-default)" }}>
+                        {/* Group by sub-category */}
+                        {dim.categories.map((cat) => {
+                          const catChecks = dim.checks.filter((c) => c.category === cat);
+                          if (!catChecks.length) return null;
+                          return (
+                            <div key={cat} className="mb-5 last:mb-0">
+                              <p
+                                className="mb-3 font-mono text-[10px] uppercase tracking-[2px]"
+                                style={{ color: "var(--text-muted)" }}
+                              >
+                                {cat}
+                              </p>
+                              <div className="grid gap-2 sm:grid-cols-2">
+                                {catChecks.map((check) => {
+                                  const s = SEVERITY_STYLES[check.severity];
+                                  return (
+                                    <div
+                                      key={check.id}
+                                      className="flex items-start gap-2.5"
+                                    >
+                                      <span
+                                        className="mt-0.5 shrink-0 rounded px-1 py-0.5 font-mono text-[9px] font-bold leading-none"
+                                        style={{
+                                          color: s.color,
+                                          background: s.bg,
+                                          border: `1px solid ${s.color}`,
+                                        }}
+                                      >
+                                        {s.label}
+                                      </span>
+                                      <span
+                                        className="font-mono text-[11px] leading-snug"
+                                        style={{ color: "var(--text-secondary)" }}
+                                      >
+                                        {check.title}
+                                      </span>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </ScrollReveal>
+            );
+          })}
+        </div>
+
+        {/* Total tally */}
+        <ScrollReveal variant="card">
+          <div
+            className="mt-8 flex items-center justify-center gap-3 rounded-sm border px-6 py-4"
+            style={{
+              borderColor: "rgba(0,200,255,0.15)",
+              background: "rgba(0,200,255,0.03)",
+            }}
+          >
+            <span className="font-mono text-[11px] uppercase tracking-[2px]" style={{ color: "var(--text-muted)" }}>
+              Total
+            </span>
+            <span
+              className="font-sans font-extrabold"
+              style={{ color: "var(--cyan)", fontSize: 22, letterSpacing: "-0.8px" }}
+            >
+              166
+            </span>
+            <span className="font-mono text-[11px] uppercase tracking-[2px]" style={{ color: "var(--text-muted)" }}>
+              checks · every scan · no sampling
+            </span>
+          </div>
+        </ScrollReveal>
       </div>
     </section>
   );

@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import BeforeAfterSection from "@/components/BeforeAfterSection";
 import SiteFooter from "@/components/SiteFooter";
-import SocialProofSection from "@/components/SocialProofSection";
 import LandingFinalCTA from "@/components/landing/LandingFinalCTA";
 import LandingHero from "@/components/landing/LandingHero";
 import LandingHowItWorks from "@/components/landing/LandingHowItWorks";
@@ -12,6 +11,7 @@ import LandingThreeNumbers from "@/components/landing/LandingThreeNumbers";
 import LandingDashboardDemo from "@/components/landing/LandingDashboardDemo";
 import LandingDiagnosticOutput from "@/components/landing/LandingDiagnosticOutput";
 import LandingGrowthBlueprint from "@/components/landing/LandingGrowthBlueprint";
+import LandingDiagnosticChecks from "@/components/landing/LandingDiagnosticChecks";
 
 const LANDING_BG_BASE = "#050810";
 
@@ -32,13 +32,13 @@ export default function LandingPage() {
     <div className="relative min-h-screen" style={{ background: LANDING_BG_BASE }}>
       <div className="relative z-10">
         <LandingHero url={url} onUrlChange={setUrl} autoFocus={!scanFocus} />
+        <LandingDiagnosticChecks />
         <LandingDiagnosticOutput />
         <LandingThreeNumbers />
         <LandingHowItWorks />
         <LandingDashboardDemo />
         <LandingGrowthBlueprint />
         <BeforeAfterSection />
-        <SocialProofSection />
         <LandingFinalCTA url={url} onUrlChange={setUrl} autoFocus={scanFocus} />
         <SiteFooter />
       </div>

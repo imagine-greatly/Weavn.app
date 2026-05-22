@@ -97,13 +97,14 @@ Return valid JSON matching this schema exactly:
 }
 
 Rules:
-- diagnosticBrief: REQUIRED — 3–4 sentence executive diagnostic summary per product spec (classification, score read, dominant suppression pattern with counts, leverage of resolving top findings). diagnosticBrief may duplicate intelligenceBrief or intelligenceBrief may be omitted.
+- diagnosticBrief: REQUIRED — max 60 words; cover site classification, score read, dominant suppression pattern, and top leverage point. diagnosticBrief may duplicate intelligenceBrief or intelligenceBrief may be omitted.
 - intelligenceBrief: optional legacy; if present without diagnosticBrief, use as executive narrative
-- conversionKillers: max 8; titles under 10 words; evidence quoted from actual page
+- conversionKillers: max 8; titles under 10 words; evidence quoted from actual page — max 40 words per evidence field
 - conversionKillers.exitTrigger: The specific experience the visitor has on the page that causes them to hesitate, doubt, or leave. Describe what they see, read, or feel — not the business consequence. Example: 'Visitor reads the headline but cannot determine what makes this product different from Amazon.'
 - conversionKillers.conversionCost: The business consequence in concrete terms — lost sales, abandoned signups, missed leads. Use a specific metric or percentage where accurate. Example: 'Estimated 60-70% of comparison shoppers exit without converting due to no visible differentiator.' These two fields must never contain the same text. exitTrigger describes the visitor experience. conversionCost describes the business impact.
-- conversionKillers.implementation: Tell the site owner WHAT to change and WHERE, not what the end result should say. We do not know their brand voice — give them the directive, they write the copy. Good: 'Replace the hero headline with a specific outcome statement that names who it is for and what result they get — test 2-3 variants.' Bad: 'Change headline to: Get More Customers with Our Platform'. Never write the actual copy for them. Describe the change, the location on page, and the principle behind it. Start with a verb. Under 2 sentences.
+- conversionKillers.implementation: Tell the site owner WHAT to change and WHERE, not what the end result should say. We do not know their brand voice — give them the directive, they write the copy. Good: 'Replace the hero headline with a specific outcome statement that names who it is for and what result they get — test 2-3 variants.' Bad: 'Change headline to: Get More Customers with Our Platform'. Never write the actual copy for them. Describe the change, the location on page, and the principle behind it. Start with a verb. Max 40 words.
 - conversionTransformation.currentCta: Only return text if a clear, intentional hero-section call-to-action button exists above the fold. If the only buttons found are generic UI elements like 'Add', 'Add to cart', 'Menu', 'Search', or navigation links, return 'None detected' instead. Do not invent a CTA that is not clearly present as a primary action.
+- growthBlueprint: weekOne and weekTwoToFour max 3 items each; monthTwo, projectedLift, and projectedLiftNarrative each max 50 words
 - dimensionScores: exactly 5 objects one per dimension; score 0-100; insight one sentence specific to this site
 - conversionScore: integer 0-100
 - healthScore: same value as conversionScore for backwards compatibility
@@ -592,7 +593,7 @@ export async function runAnalysis(
     process.stderr.write(`[ANALYZE] claude START | attempt=${attempt} model=${resolvedModel} contentLen=${userContent.length}\n`);
     const message = await client.messages.create({
       model: resolvedModel,
-      max_tokens: 4096,
+      max_tokens: 2000,
       system: [{ type: "text", text: systemPrompt, cache_control: { type: "ephemeral" } }],
       messages: [{ role: "user", content: userContent }],
     });

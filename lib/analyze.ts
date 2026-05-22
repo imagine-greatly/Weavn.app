@@ -593,7 +593,7 @@ export async function runAnalysis(
     process.stderr.write(`[ANALYZE] claude START | attempt=${attempt} model=${resolvedModel} contentLen=${userContent.length}\n`);
     const message = await client.messages.create({
       model: resolvedModel,
-      max_tokens: 3500,
+      max_tokens: 4500,
       system: [{ type: "text", text: systemPrompt, cache_control: { type: "ephemeral" } }],
       messages: [{ role: "user", content: userContent }],
     });

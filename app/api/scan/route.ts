@@ -159,14 +159,15 @@ export async function POST(req: NextRequest) {
   const scanStart = Date.now()
   console.error(`[scan] START | url=${normalized} domain=${domain} userId=${userId}`)
 
-  // Hard 85 s deadline — ensures a clean return before Vercel's 120 s kill so all logs flush.
-  // Each major await is raced against this; whichever fires first wins.
-  const deadline = new Promise<never>((_, reject) =>
-    setTimeout(
+  // Hard 85 s deadline for scrape + analysis only. Timer is cleared once Claude succeeds so
+  // saveReport always runs to completion (it takes 2-3 s and must not be interrupted).
+  let deadlineTimerId: ReturnType<typeof setTimeout>;
+  const deadline = new Promise<never>((_, reject) => {
+    deadlineTimerId = setTimeout(
       () => reject(new Error('[TIMEOUT] Scan exceeded 85 s deadline — exiting cleanly to flush logs')),
       85_000
-    )
-  )
+    );
+  });
 
   // 1. Scrape: homepage + up to 4 internal pages
   let extraction;
@@ -271,6 +272,8 @@ export async function POST(req: NextRequest) {
     payload = await Promise.race([runAnalysis(extraction, site_type, userPlan), analyzeDeadline]);
     process.stderr.write(`[ROUTE] runAnalysis DONE | elapsed=${Date.now() - analyzeStart}ms\n`)
     console.error(`[scan] ANALYZE DONE | domain=${domain} elapsed=${Date.now() - analyzeStart}ms`)
+    // Analysis succeeded — cancel the global deadline so saveReport can't be interrupted.
+    clearTimeout(deadlineTimerId!);
   } catch (err) {
     process.stderr.write(`[ROUTE] runAnalysis ERROR | elapsed=${Date.now() - analyzeStart}ms | ${err instanceof Error ? (err.stack ?? err.message) : String(err)}\n`)
     console.error(`[scan] ANALYZE ERROR | domain=${domain} elapsed=${Date.now() - analyzeStart}ms`, err instanceof Error ? (err.stack ?? err.message) : err)
@@ -284,7 +287,7 @@ export async function POST(req: NextRequest) {
   process.stderr.write(`[ROUTE] saveReport START | domain=${domain}\n`)
   console.error(`[scan] SAVE START | domain=${domain}`)
   try {
-    reportId = await Promise.race([saveReport(domain, payload, userId), deadline]);
+    reportId = await saveReport(domain, payload, userId);
     process.stderr.write(`[ROUTE] saveReport DONE | reportId=${reportId} elapsed=${Date.now() - saveStart}ms\n`)
     console.error(`[scan] SAVE DONE | domain=${domain} reportId=${reportId} elapsed=${Date.now() - saveStart}ms`)
   } catch (err) {

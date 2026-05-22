@@ -259,8 +259,8 @@ export async function POST(req: NextRequest) {
   // slow-but-successful Claude call has room to land. Vercel maxDuration=120 is the wall.
   const analyzeDeadline = new Promise<never>((_, reject) =>
     setTimeout(
-      () => reject(new Error('[TIMEOUT] Analysis exceeded 70 s deadline')),
-      70_000
+      () => reject(new Error('[TIMEOUT] Analysis exceeded 85 s deadline')),
+      85_000
     )
   )
   let payload;

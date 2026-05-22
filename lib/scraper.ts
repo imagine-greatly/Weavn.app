@@ -166,8 +166,8 @@ async function parseUnblockResponse(res: Response): Promise<UnblockResponse> {
 // Total worst case:  42 s — leaves ≥ 43 s for Claude + Supabase under 85 s budget
 //
 async function fetchWithBrowserless(url: string): Promise<string> {
-  console.error('[SCRAPER] function entered, url:', url)
-  console.error('[SCRAPER] token present:', !!process.env.BROWSERLESS_API_KEY)
+  process.stderr.write(`[SCRAPER] function entered, url: ${url}\n`)
+  process.stderr.write(`[SCRAPER] token present: ${!!process.env.BROWSERLESS_API_KEY}\n`)
 
   if (!process.env.BROWSERLESS_API_KEY) {
     console.error('[SCRAPER] FATAL: BROWSERLESS_API_KEY env var is not set')
@@ -197,8 +197,8 @@ async function fetchWithBrowserless(url: string): Promise<string> {
     gotoOptions: { waitUntil: 'domcontentloaded', timeout: 15000 },
     waitForTimeout: 2000,
   }
-  console.error(`[SCRAPER] attempt1 START | url=${url}`)
-  console.error(`[SCRAPER] attempt1 request | endpoint=${endpointRedacted} | body=${JSON.stringify(body1)}`)
+  process.stderr.write(`[SCRAPER] attempt1 START | url=${url}\n`)
+  process.stderr.write(`[SCRAPER] attempt1 request | endpoint=${endpointRedacted} | body=${JSON.stringify(body1)}\n`)
 
   const ctrl1 = new AbortController()
   const t1 = setTimeout(() => ctrl1.abort(), 20000)
@@ -264,9 +264,9 @@ async function fetchWithBrowserless(url: string): Promise<string> {
     gotoOptions: { waitUntil: 'networkidle2', timeout: 18000 },
     waitForTimeout: 2000,
   }
-  console.error(`[SCRAPER] attempt1 insufficient (${len1Early} chars), trying attempt2 for ${url}`)
-  console.error(`[SCRAPER] attempt2 START | url=${url}`)
-  console.error(`[SCRAPER] attempt2 request | endpoint=${endpointRedacted} | body=${JSON.stringify(body2)}`)
+  process.stderr.write(`[SCRAPER] attempt1 insufficient (${len1Early} chars), trying attempt2 for ${url}\n`)
+  process.stderr.write(`[SCRAPER] attempt2 START | url=${url}\n`)
+  process.stderr.write(`[SCRAPER] attempt2 request | endpoint=${endpointRedacted} | body=${JSON.stringify(body2)}\n`)
 
   const ctrl2 = new AbortController()
   const t2 = setTimeout(() => ctrl2.abort(), 22000)
@@ -403,7 +403,7 @@ export function applySmartTruncation(html: string): string {
 }
 
 export async function scrapeSite(inputUrl: string): Promise<CombinedExtraction> {
-  console.error('[PIPELINE] scrape starting', inputUrl)
+  process.stderr.write(`[PIPELINE] scrape starting ${inputUrl}\n`)
   const pageUrl = normalizeToHomepage(inputUrl)
   const scraped = await scrapeUrl(inputUrl)
   const cleaned = cleanHtml(scraped.rawHtml)

@@ -159,12 +159,21 @@ export async function POST(req: NextRequest) {
   const scanStart = Date.now()
   console.error(`[scan] START | url=${normalized} domain=${domain} userId=${userId}`)
 
+  // Hard 85 s deadline — ensures a clean return before Vercel's 120 s kill so all logs flush.
+  // Each major await is raced against this; whichever fires first wins.
+  const deadline = new Promise<never>((_, reject) =>
+    setTimeout(
+      () => reject(new Error('[TIMEOUT] Scan exceeded 85 s deadline — exiting cleanly to flush logs')),
+      85_000
+    )
+  )
+
   // 1. Scrape: homepage + up to 4 internal pages
   let extraction;
   const scrapeStart = Date.now()
   console.error(`[scan] SCRAPE START | url=${normalized}`)
   try {
-    extraction = await scrapeSite(normalized);
+    extraction = await Promise.race([scrapeSite(normalized), deadline]);
     console.error(
       `[scan] SCRAPE DONE | domain=${domain}` +
       ` rawHtml_len=${extraction.rawHtml.length}` +
@@ -236,7 +245,7 @@ export async function POST(req: NextRequest) {
   const analyzeStart = Date.now()
   console.error(`[scan] ANALYZE START | domain=${domain} site_type=${site_type} userPlan=${userPlan}`)
   try {
-    payload = await runAnalysis(extraction, site_type, userPlan);
+    payload = await Promise.race([runAnalysis(extraction, site_type, userPlan), deadline]);
     console.error(`[scan] ANALYZE DONE | domain=${domain} elapsed=${Date.now() - analyzeStart}ms`)
   } catch (err) {
     console.error(`[scan] ANALYZE ERROR | domain=${domain} elapsed=${Date.now() - analyzeStart}ms`, err instanceof Error ? (err.stack ?? err.message) : err)
@@ -249,7 +258,7 @@ export async function POST(req: NextRequest) {
   const saveStart = Date.now()
   console.error(`[scan] SAVE START | domain=${domain}`)
   try {
-    reportId = await saveReport(domain, payload, userId);
+    reportId = await Promise.race([saveReport(domain, payload, userId), deadline]);
     console.error(`[scan] SAVE DONE | domain=${domain} reportId=${reportId} elapsed=${Date.now() - saveStart}ms`)
   } catch (err) {
     console.error(`[scan] SAVE ERROR | domain=${domain} elapsed=${Date.now() - saveStart}ms`, err instanceof Error ? (err.stack ?? err.message) : err)

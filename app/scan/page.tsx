@@ -731,7 +731,9 @@ function ScanLoadingInner() {
     return () => clearTimeout(timer);
   }, [materialized]);
 
-  // beam RAF — intelligent diagnostic scanner: SEEK → SWEEP → DWELL → BACKTRACK state machine
+  // beam RAF — organic consciousness: spring chaser on a continuously-wandering target.
+  // No phases, no waypoints, no scheduled sweeps. K and damping vary dramatically over
+  // overlapping slow cycles; occasional impulse jumps pull the beam toward cold screen regions.
   useEffect(() => {
     if (!materialized) return;
     const el = beamDivRef.current;
@@ -739,102 +741,47 @@ function ScanLoadingInner() {
     const lineEl = laserLineRef.current;
 
     const BEAM_W = 160;
-    const s = beamStateRef.current;
-    const wp = wpRef.current;
 
     el.style.opacity = "1";
     if (lineEl) lineEl.style.opacity = "1";
 
-    // ── State machine ──────────────────────────────────────────────────────
-    // SEEK:      fast spring toward a target — committed, purposeful
-    // SWEEP:     slow eased horizontal crawl across a reading row
-    // DWELL:     multi-frequency micro-jitter in place (parsing detail)
-    // BACKTRACK: brief upward retreat before resuming downward progress
-    type BsmState = 'SEEK' | 'SWEEP' | 'DWELL' | 'BACKTRACK';
-    let bsm: BsmState = 'SEEK';
-    let bsmTimer = 0;
+    // Position and velocity — local vars, no shared ref needed
+    let px = window.innerWidth * 0.5;
+    let py = window.innerHeight * 0.5;
+    let vx = 1.4, vy = 0.9;   // small initial nudge so motion starts immediately
 
-    // SEEK / BACKTRACK
-    let seekX = 0, seekY = 0, seekK = 0.018;
+    // Wandering target the spring chases
+    let tx = px, ty = py;
 
-    // SWEEP
-    let swStartX = 0, swEndX = 0, swY = 0, swDur = 0, swElapsed = 0, swRight = false;
+    // Spring character — re-derived every frame from slowly-varying oscillators
+    let k = 0.018;
+    let damp = 0.84;
 
-    // DWELL anchor
-    let dwX = 0, dwY = 0;
+    // Impulse scheduling — sudden target leap to a far/cold region
+    let nextImpulse = performance.now() + 1600 + Math.random() * 3800;
 
-    // BACKTRACK retreat target Y
-    let btY = 0;
+    // Visit grid — beam accumulates presence; impulses bias toward cold cells
+    const GCOLS = 6, GROWS = 5;
+    const visited = new Float32Array(GCOLS * GROWS).fill(0);
 
-    // Reading row — walks downward through each section over time
-    let rowY = 0;
-
-    // Detect pipeline section advances by watching sectionTopRef
-    let lastSecTop = -1;
-
-    // Transition counter — seeds deterministic pseudo-variance without Math.random.
-    // tv(offset) → stable 0..1 for this transition; offset decorrelates independent choices.
-    let tc = 0;
-    const tv = (o = 0): number => (Math.sin((tc + o) * 2.3999) + 1) / 2;
-
-    // Current section's viewport bounds in screen coords
-    const secBounds = (): { top: number; bot: number; span: number } => {
-      const r = schematicRef.current?.getBoundingClientRect();
-      const mg = 22;
-      const st = sectionTopRef.current, sb = sectionBotRef.current;
-      const top = r && sb > st ? r.top + st + mg : window.innerHeight * 0.12;
-      const bot = r && sb > st ? r.top + sb - mg : window.innerHeight * 0.88;
-      return { top, bot, span: Math.max(40, bot - top) };
+    const recordVisit = (x: number, y: number) => {
+      const vW = window.innerWidth, vH = window.innerHeight;
+      const yMin = 56, ySpan = Math.max(1, vH - 60 - yMin);
+      const ci = Math.min(GCOLS - 1, Math.max(0, Math.floor((x / Math.max(1, vW)) * GCOLS)));
+      const ri = Math.min(GROWS - 1, Math.max(0, Math.floor(((y - yMin) / ySpan) * GROWS)));
+      visited[ri * GCOLS + ci] += 1;
     };
 
-    // Transition helpers — each increments tc so the next tv() yields fresh values
-    const goSeek = (x: number, y: number, k: number, ms: number) => {
-      bsm = 'SEEK'; seekX = x; seekY = y; seekK = k; bsmTimer = ms; tc++;
-    };
-    const goSweep = () => {
-      const vW = window.innerWidth;
-      bsm = 'SWEEP';
-      swRight  = !swRight;
-      swStartX = swRight ? 50 : vW - BEAM_W - 50;
-      swEndX   = swRight ? vW - BEAM_W - 50 : 50;
-      swY      = rowY;
-      swDur    = 1100 + tv() * 1400;   // 1.1 – 2.5 s per row sweep
-      swElapsed = 0;
-      bsmTimer = swDur;
-      tc++;
-    };
-    const goDwell = (ax: number, ay: number) => {
-      bsm = 'DWELL'; dwX = ax; dwY = ay;
-      bsmTimer = 350 + tv() * 700;     // 0.35 – 1.05 s
-      tc++;
-    };
-    const goBacktrack = () => {
-      bsm = 'BACKTRACK';
-      btY   = s.pos.y - 18 - tv()     * 42;  // retreat 18–60 px upward
-      seekX = s.pos.x + (tv(1) - 0.5) * 50;  // subtle X wander during retreat
-      seekK = 0.009;
-      bsmTimer = 380 + tv() * 280;
-      tc++;
+    const coldCell = (): number => {
+      let minV = Infinity, minI = 0;
+      for (let i = 0; i < visited.length; i++) {
+        if (visited[i] < minV) { minV = visited[i]; minI = i; }
+      }
+      return minI;
     };
 
-    // Called when the scan pipeline advances to a new section
-    const onSectionAdvance = () => {
-      const { top } = secBounds();
-      rowY    = top;
-      swRight = false;   // goSweep() will flip → first sweep goes L→R
-      goSeek(50, top, 0.022, 260 + tv() * 180);
-    };
+    let lastTime = performance.now();
 
-    // ── Init ──────────────────────────────────────────────────────────────
-    s.lastFrameTime = performance.now();
-    const { top: initTop } = secBounds();
-    s.pos      = { x: 50, y: initTop };
-    s.velocity = { x: 0, y: 0 };
-    rowY = initTop;
-    wp.lastSecId = null;
-    goSweep();
-
-    // ── RAF tick ──────────────────────────────────────────────────────────
     const tick = (now: number) => {
       if (beamRafHaltedRef.current) {
         el.style.opacity = "0";
@@ -842,105 +789,88 @@ function ScanLoadingInner() {
         return;
       }
 
-      const dt = Math.min(50, now - s.lastFrameTime);
-      s.lastFrameTime = now;
+      const dt = Math.min(50, now - lastTime);
+      lastTime = now;
+      void dt; // dt available for future use; spring is frame-rate-normalized by the clamp above
+      const t = now * 0.001;  // seconds
 
-      const vW = window.innerWidth;
-      const { top: sTop, bot: sBot, span: sSpan } = secBounds();
+      const xM = window.innerWidth - BEAM_W;
+      const yMin = 56;
+      const yM = window.innerHeight - 60;
+      const xR = Math.max(1, xM);
+      const yR = Math.max(1, yM - yMin);
 
-      // Detect pipeline section advance (sectionTopRef updates inside updateSectionBounds)
-      if (sectionTopRef.current > 0 && sectionTopRef.current !== lastSecTop) {
-        lastSecTop = sectionTopRef.current;
-        onSectionAdvance();
+      // ── Spring character: K and damping vary over overlapping slow cycles ──────────────
+      // K: 0.004 (barely-responsive, near drift) → 0.055 (snappy, purposeful)
+      // Frequencies are irrational multiples so no two cycles align within the scan window.
+      k = 0.029
+        + Math.sin(t * 0.091) * 0.016   // ~69 s cycle
+        + Math.sin(t * 0.157) * 0.009   // ~40 s cycle
+        + Math.cos(t * 0.241) * 0.006;  // ~26 s cycle
+      // Damping: 0.73 (loose, overshoots) → 0.94 (overdamped, creeps)
+      damp = 0.83
+        + Math.sin(t * 0.073) * 0.065
+        + Math.sin(t * 0.191) * 0.030;
+
+      // ── Wandering target: 5 overlapping oscillators at irrational frequency ratios ─────
+      // Ratios derived from √2, √3, π, φ — produce complex non-repeating Lissajous paths.
+      const txRaw = xR * 0.5
+        + Math.sin(t * 0.113) * xR * 0.44    // ~55 s — big lateral sweep
+        + Math.cos(t * 0.197) * xR * 0.30    // ~32 s
+        + Math.sin(t * 0.347) * xR * 0.15    // ~18 s — medium detail
+        + Math.cos(t * 0.619) * xR * 0.07    // ~10 s
+        + Math.sin(t * 1.131) * xR * 0.025;  // ~5.5 s — micro-drift
+
+      const tyRaw = yMin + yR * 0.5
+        + Math.sin(t * 0.083) * yR * 0.42    // ~76 s — main vertical sweep
+        + Math.cos(t * 0.151) * yR * 0.28    // ~42 s
+        + Math.sin(t * 0.277) * yR * 0.14    // ~23 s
+        + Math.cos(t * 0.491) * yR * 0.07    // ~13 s
+        + Math.sin(t * 0.883) * yR * 0.025;  // ~7 s — micro
+
+      tx = Math.max(0, Math.min(xM, txRaw));
+      ty = Math.max(yMin, Math.min(yM, tyRaw));
+
+      // ── Impulse: occasional sudden leap to a far / less-visited region ─────────────────
+      if (now >= nextImpulse) {
+        nextImpulse = now + 4500 + Math.random() * 8500;  // 4.5–13 s between leaps
+        const ci = coldCell();
+        const col = ci % GCOLS, row = Math.floor(ci / GCOLS);
+        tx = col * (xM / GCOLS) + Math.random() * (xM / GCOLS);
+        ty = yMin + row * (yR / GROWS) + Math.random() * (yR / GROWS);
+        // Spike K briefly → the leap feels fast and purposeful
+        k = Math.min(0.06, k + 0.026 + Math.random() * 0.018);
       }
 
-      bsmTimer -= dt;
+      // ── Spring integration ────────────────────────────────────────────────────────────
+      vx += (tx - px) * k;
+      vy += (ty - py) * k;
+      vx *= damp;
+      vy *= damp;
+      px += vx;
+      py += vy;
 
-      switch (bsm) {
-        case 'SEEK': {
-          const dx = seekX - s.pos.x, dy = seekY - s.pos.y;
-          s.velocity.x += dx * seekK;
-          s.velocity.y += dy * seekK;
-          s.velocity.x *= 0.80; s.velocity.y *= 0.80;
-          s.pos.x += s.velocity.x; s.pos.y += s.velocity.y;
-          // Transition when arrived or time forced
-          if (bsmTimer <= 0 || Math.hypot(dx, dy) < 16) goSweep();
-          break;
-        }
-
-        case 'SWEEP': {
-          swElapsed = Math.min(swElapsed + dt, swDur);
-          const t = swElapsed / swDur;
-          // Ease-in-out: slow start (settling into row), decelerate to stop
-          const eased = t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2;
-          const tgtX = swStartX + (swEndX - swStartX) * eased;
-          // Multi-frequency reading micro-jitter
-          const jX = Math.sin(now * 0.0068) * 2.2 + Math.sin(now * 0.0193) * 0.9;
-          const jY = Math.sin(now * 0.0115) * 1.6;
-          s.velocity.x += (tgtX + jX - s.pos.x) * 0.10;
-          s.velocity.y += (swY  + jY - s.pos.y) * 0.07;
-          s.velocity.x *= 0.70; s.velocity.y *= 0.70;
-          s.pos.x += s.velocity.x; s.pos.y += s.velocity.y;
-
-          if (swElapsed >= swDur) {
-            // Advance reading row downward — 17–29 % of section height per sweep
-            rowY = Math.min(sBot - 8, rowY + sSpan * (0.17 + tv() * 0.12));
-            if (tv(2) < 0.22) {
-              // ~22 % of sweeps: pause at row end (interesting element found)
-              goDwell(s.pos.x, s.pos.y);
-            } else {
-              // Seek to start position of next row sweep
-              const nxtX = !swRight ? 50 : vW - BEAM_W - 50;
-              goSeek(nxtX, rowY, 0.016, 220 + tv() * 280);
-            }
-          }
-          break;
-        }
-
-        case 'DWELL': {
-          // Three overlapping sines → organic micro-motion, never completely still
-          const jX = Math.sin(now * 0.0079) * 3.8
-                    + Math.sin(now * 0.0214) * 1.6
-                    + Math.sin(now * 0.0431) * 0.6;
-          const jY = Math.sin(now * 0.0127) * 2.2
-                    + Math.sin(now * 0.0318) * 0.9;
-          s.velocity.x += (dwX + jX - s.pos.x) * 0.035;
-          s.velocity.y += (dwY + jY - s.pos.y) * 0.035;
-          s.velocity.x *= 0.80; s.velocity.y *= 0.80;
-          s.pos.x += s.velocity.x; s.pos.y += s.velocity.y;
-
-          if (bsmTimer <= 0) {
-            if (tv() < 0.26 && sSpan > 50) {
-              // ~26 % chance: re-check something above (backtrack)
-              goBacktrack();
-            } else {
-              const nxtX = !swRight ? 50 : vW - BEAM_W - 50;
-              goSeek(nxtX, rowY, 0.015, 230 + tv() * 260);
-            }
-          }
-          break;
-        }
-
-        case 'BACKTRACK': {
-          // Deliberate upward retreat — slow spring, slight X drift
-          s.velocity.x += (seekX - s.pos.x) * seekK;
-          s.velocity.y += (btY   - s.pos.y) * seekK;
-          s.velocity.x *= 0.84; s.velocity.y *= 0.84;
-          s.pos.x += s.velocity.x; s.pos.y += s.velocity.y;
-          if (bsmTimer <= 0) {
-            // Satisfied — resume downward to next reading row
-            const nxtX = !swRight ? 50 : vW - BEAM_W - 50;
-            goSeek(nxtX, rowY, 0.017, 200 + tv() * 230);
-          }
-          break;
-        }
+      // ── Minimum motion: always some life even when nearly still ───────────────────────
+      // Golden-angle rotation on t ensures nudge direction itself wanders unpredictably.
+      if (Math.sqrt(vx * vx + vy * vy) < 0.10) {
+        const θ = t * 2.6180339887;
+        vx += Math.cos(θ) * 0.15;
+        vy += Math.sin(θ) * 0.15;
       }
 
-      el.style.transform = `translate(${s.pos.x}px, ${s.pos.y}px)`;
-      if (lineEl) lineEl.style.transform = `translateY(${s.pos.y + 0.5}px)`;
+      // ── Soft boundary: reflect velocity on contact, lose some energy ─────────────────
+      if (px < 0)   { px = 0;   vx =  Math.abs(vx) * 0.4; }
+      if (px > xM)  { px = xM;  vx = -Math.abs(vx) * 0.4; }
+      if (py < yMin){ py = yMin; vy =  Math.abs(vy) * 0.4; }
+      if (py > yM)  { py = yM;   vy = -Math.abs(vy) * 0.4; }
 
-      // Section label activation by beam Y (viewport coords)
-      const beamY = s.pos.y;
+      recordVisit(px, py);
+
+      el.style.transform = `translate(${px}px, ${py}px)`;
+      if (lineEl) lineEl.style.transform = `translateY(${py + 0.5}px)`;
+
+      // Section label activation by beam Y (viewport coords) — unchanged logic
+      const beamY = py;
       const bounds = sectionBoundsRef.current;
       let newSec: string | null = null;
       for (const b of bounds) {

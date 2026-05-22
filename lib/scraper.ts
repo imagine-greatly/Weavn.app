@@ -4,7 +4,7 @@ export function normalizeToHomepage(input: string): string {
   try {
     const url = input.startsWith('http') ? input : `https://${input}`
     const parsed = new URL(url)
-    return `${parsed.protocol}//${parsed.hostname}/`
+    return `${parsed.protocol}//${parsed.hostname.toLowerCase()}/`
   } catch {
     return input
   }
@@ -166,14 +166,15 @@ async function fetchWithBrowserless(url: string): Promise<string> {
     url,
     content: true,
     bestAttempt: true,
+    ignoreHTTPSErrors: true,
     gotoOptions: { waitUntil: 'domcontentloaded', timeout: 15000 },
-    waitForTimeout: 2000,
+    waitForTimeout: 5000,
   }
   process.stderr.write(`[SCRAPER] attempt1 START | url=${url}\n`)
   process.stderr.write(`[SCRAPER] attempt1 request | body=${JSON.stringify(body1)}\n`)
 
   const ctrl1 = new AbortController()
-  const t1 = setTimeout(() => ctrl1.abort(), 20000)
+  const t1 = setTimeout(() => ctrl1.abort(), 25000)
   let html1: string | null = null
   const a1Start = Date.now()
 

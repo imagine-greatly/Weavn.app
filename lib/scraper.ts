@@ -132,6 +132,7 @@ function isBlockPage(html: string): boolean {
 // causes Browserless to return HTTP 400.
 //
 async function fetchWithBrowserless(url: string): Promise<string> {
+  try {
   process.stderr.write(`[SCRAPER] function entered, url: ${url}\n`)
 
   const apiKey = (process.env.BROWSERLESS_API_KEY ?? '').trim()
@@ -356,6 +357,10 @@ async function fetchWithBrowserless(url: string): Promise<string> {
     `(attempt1=${len1} chars, attempt2=${len2} chars). ` +
     `The site may have returned an error page or requires authentication.`
   )
+  } catch (e) {
+    process.stderr.write('[SCRAPER] FATAL fetchWithBrowserless: ' + (e instanceof Error ? e.stack : String(e)) + '\n')
+    throw e
+  }
 }
 
 // -- MAIN SCRAPE FUNCTION -----------------------------------------------
@@ -420,16 +425,21 @@ export function applySmartTruncation(html: string): string {
 
 export async function scrapeSite(inputUrl: string): Promise<CombinedExtraction> {
   process.stderr.write(`[PIPELINE] scrape starting ${inputUrl}\n`)
-  const pageUrl = normalizeToHomepage(inputUrl)
-  const scraped = await scrapeUrl(inputUrl)
-  const cleaned = cleanHtml(scraped.rawHtml)
+  try {
+    const pageUrl = normalizeToHomepage(inputUrl)
+    const scraped = await scrapeUrl(inputUrl)
+    const cleaned = cleanHtml(scraped.rawHtml)
 
-  console.error(
-    `[SCRAPER] method:${scraped.method} raw:${scraped.rawHtml.length} clean:${cleaned.length}`
-  )
+    console.error(
+      `[SCRAPER] method:${scraped.method} raw:${scraped.rawHtml.length} clean:${cleaned.length}`
+    )
 
-  return {
-    rawHtml: applySmartTruncation(cleaned),
-    pagesAnalyzed: [pageUrl],
+    return {
+      rawHtml: applySmartTruncation(cleaned),
+      pagesAnalyzed: [pageUrl],
+    }
+  } catch (e) {
+    process.stderr.write('[SCRAPER] FATAL scrapeSite: ' + (e instanceof Error ? e.stack : String(e)) + '\n')
+    throw e
   }
 }

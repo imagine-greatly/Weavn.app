@@ -177,8 +177,10 @@ async function fetchWithBrowserless(url: string): Promise<string> {
   const t1 = setTimeout(() => ctrl1.abort(), 25000)
   let html1: string | null = null
   const a1Start = Date.now()
+  process.stderr.write('[SCRAPER] url-built: ' + url + '\n')
 
   try {
+    process.stderr.write('[SCRAPER] pre-attempt1\n')
     process.stderr.write('[SCRAPER] attempt1 sending request\n')
     const res1 = await fetch(makeEndpoint(true), {
       method: 'POST',
@@ -364,7 +366,15 @@ export interface CombinedExtraction {
 
 export async function scrapeUrl(inputUrl: string): Promise<ScrapeResult> {
   const url = normalizeToHomepage(inputUrl)
-  const domain = new URL(url).hostname.replace(/^www\./, '')
+  process.stderr.write(`[SCRAPER] scrapeUrl entered | input=${inputUrl} normalized=${url}\n`)
+  let domain: string
+  try {
+    domain = new URL(url).hostname.replace(/^www\./, '')
+  } catch (err) {
+    process.stderr.write(`[SCRAPER] scrapeUrl domain parse FAILED | url=${url} err=${err}\n`)
+    throw new Error(`Invalid URL after normalization: ${url}`)
+  }
+  process.stderr.write(`[SCRAPER] scrapeUrl domain=${domain}\n`)
 
   const rawHtml = await fetchWithBrowserless(url)
   console.error(`[SCRAPER] ${domain} | method:browserless | html_len:${rawHtml.length}`)

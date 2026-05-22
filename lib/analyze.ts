@@ -551,19 +551,41 @@ export async function runAnalysis(
   const resolvedModel = model ?? (plan === "agency" ? "claude-opus-4-7" : "claude-sonnet-4-6");
   const client = new Anthropic({
     apiKey: process.env.ANTHROPIC_API_KEY,
+    timeout: 40_000,
   });
 
   const systemPrompt = buildSystemPrompt(siteType);
-  const summary = buildPageSummary(extraction);
-  const userContent = `Analyze the following structured data extracted from a fully-rendered website page and return your JSON analysis:\n\n${summary}`;
 
+  process.stderr.write(`[ANALYZE] buildPageSummary START | rawHtml_len=${extraction.rawHtml.length}\n`);
+  let summary: string;
+  try {
+    summary = buildPageSummary(extraction);
+  } catch (e) {
+    process.stderr.write(`[ANALYZE] buildPageSummary THREW | ${e instanceof Error ? e.stack ?? e.message : String(e)}\n`);
+    throw e;
+  }
+  process.stderr.write(`[ANALYZE] buildPageSummary DONE | summary_len=${summary.length}\n`);
+
+  // Hard cap: if summary exceeds 20 000 chars something went wrong — truncate to protect Claude call.
+  const cappedSummary = summary.length > 20_000 ? summary.slice(0, 20_000) + "\n\n[summary truncated]" : summary;
+  if (summary.length > 20_000) {
+    process.stderr.write(`[ANALYZE] WARNING summary exceeded 20 000 chars (${summary.length}) — truncated\n`);
+  }
+
+  const userContent = `Analyze the following structured data extracted from a fully-rendered website page and return your JSON analysis:\n\n${cappedSummary}`;
+  process.stderr.write(`[ANALYZE] userContent_len=${userContent.length}\n`);
+
+  let attempt = 0;
   const run = async (): Promise<ReportPayload> => {
+    attempt++;
+    process.stderr.write(`[ANALYZE] claude START | attempt=${attempt} model=${resolvedModel} contentLen=${userContent.length}\n`);
     const message = await client.messages.create({
       model: resolvedModel,
       max_tokens: 4096,
       system: [{ type: "text", text: systemPrompt, cache_control: { type: "ephemeral" } }],
       messages: [{ role: "user", content: userContent }],
     });
+    process.stderr.write(`[ANALYZE] claude DONE | attempt=${attempt} stop_reason=${message.stop_reason} input_tokens=${message.usage?.input_tokens} output_tokens=${message.usage?.output_tokens}\n`);
 
     const block = message.content.find((c) => c.type === "text");
     if (!block || block.type !== "text") {
@@ -572,16 +594,20 @@ export async function runAnalysis(
 
     let raw: string = block.text;
     raw = raw.replace(/^```(?:json)?\s*\n?/m, "").replace(/\n?```\s*$/m, "").trim();
+    process.stderr.write(`[ANALYZE] JSON.parse START | raw_len=${raw.length}\n`);
     const parsed: unknown = JSON.parse(raw);
+    process.stderr.write(`[ANALYZE] JSON.parse DONE\n`);
     return ensurePayload(parsed, siteType);
   };
 
   try {
     return await run();
   } catch (firstErr) {
+    process.stderr.write(`[ANALYZE] attempt 1 FAILED | ${firstErr instanceof Error ? firstErr.message : String(firstErr)}\n`);
     try {
       return await run();
     } catch (secondErr) {
+      process.stderr.write(`[ANALYZE] attempt 2 FAILED | ${secondErr instanceof Error ? secondErr.message : String(secondErr)}\n`);
       throw firstErr instanceof Error ? firstErr : new Error("Analysis failed. Please try again.");
     }
   }

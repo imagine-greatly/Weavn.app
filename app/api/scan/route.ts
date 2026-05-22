@@ -171,21 +171,25 @@ export async function POST(req: NextRequest) {
   // 1. Scrape: homepage + up to 4 internal pages
   let extraction;
   const scrapeStart = Date.now()
+  process.stderr.write(`[ROUTE] SCRAPE START | url=${normalized}\n`)
   console.error(`[scan] SCRAPE START | url=${normalized}`)
   try {
     extraction = await Promise.race([scrapeSite(normalized), deadline]);
+    const scrapeElapsedMs = Date.now() - scrapeStart
+    process.stderr.write(`[ROUTE] SCRAPE DONE | rawHtml_len=${extraction.rawHtml.length} pages=${extraction.pagesAnalyzed.length} elapsed=${scrapeElapsedMs}ms\n`)
     console.error(
       `[scan] SCRAPE DONE | domain=${domain}` +
       ` rawHtml_len=${extraction.rawHtml.length}` +
       ` pages=${extraction.pagesAnalyzed.length}` +
       ` pagesAnalyzed=${JSON.stringify(extraction.pagesAnalyzed)}` +
-      ` elapsed=${Date.now() - scrapeStart}ms`
+      ` elapsed=${scrapeElapsedMs}ms`
     )
   } catch (err) {
     const scrapeElapsed = Date.now() - scrapeStart
     const message = err instanceof Error ? err.message : "Failed to fetch the site.";
     const isBlocked =
       /block|forbidden|403|401|access denied|scraping|cannot fetch/i.test(message);
+    process.stderr.write(`[ROUTE] SCRAPE ERROR | elapsed=${scrapeElapsed}ms isBlocked=${isBlocked} message=${message}\n`)
     console.error(`[scan] SCRAPE ERROR | domain=${domain} elapsed=${scrapeElapsed}ms | isBlocked=${isBlocked} | message=${message}`)
     console.error(`[scan] SCRAPE ERROR stack:`, err instanceof Error ? (err.stack ?? err.message) : err)
     console.error(`[scan] returning 422 | domain=${domain}`)
@@ -203,6 +207,7 @@ export async function POST(req: NextRequest) {
 
   // If we have no meaningful content, still try AI (it may return a minimal report)
   if (!extraction.rawHtml) {
+    process.stderr.write(`[ROUTE] 422 no rawHtml | elapsed=${Date.now() - scanStart}ms\n`)
     console.error(`[scan] 422 no rawHtml | domain=${domain} elapsed=${Date.now() - scanStart}ms`)
     return withCookies(
       NextResponse.json(
@@ -216,7 +221,15 @@ export async function POST(req: NextRequest) {
   }
 
   // 2. Detect site type from homepage (gates everything that follows)
-  const site_type = detectSiteType(extraction);
+  process.stderr.write(`[ROUTE] detectSiteType START | htmlLen=${extraction.rawHtml.length}\n`)
+  let site_type: ReturnType<typeof detectSiteType>;
+  try {
+    site_type = detectSiteType(extraction);
+  } catch (err) {
+    process.stderr.write(`[ROUTE] detectSiteType THREW | ${err instanceof Error ? (err.stack ?? err.message) : String(err)}\n`)
+    throw err;
+  }
+  process.stderr.write(`[ROUTE] detectSiteType DONE | site_type=${site_type} elapsed=${Date.now() - scanStart}ms\n`)
   console.error(`[scan] SITE_TYPE | domain=${domain} site_type=${site_type} elapsed=${Date.now() - scanStart}ms`)
 
   // Fetch user plan for model selection (agency uses higher-capacity model)
@@ -240,14 +253,26 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  // 3. Claude analysis (retry once inside runAnalysis), tailored to site_type
+  // 3. Claude analysis (retry once inside runAnalysis), tailored to site_type.
+  // Use a FRESH deadline scoped to just the analyze step so a long scrape doesn't
+  // eat into the budget. Budget: up to 50 s for Claude (2 × 40 s SDK timeout,
+  // but the outer race fires first). Vercel's maxDuration=120 is the hard wall.
+  const analyzeDeadline = new Promise<never>((_, reject) =>
+    setTimeout(
+      () => reject(new Error('[TIMEOUT] Analysis exceeded 50 s deadline')),
+      50_000
+    )
+  )
   let payload;
   const analyzeStart = Date.now()
+  process.stderr.write(`[ROUTE] runAnalysis START | domain=${domain} site_type=${site_type} plan=${userPlan} elapsed_since_scan_start=${Date.now() - scanStart}ms\n`)
   console.error(`[scan] ANALYZE START | domain=${domain} site_type=${site_type} userPlan=${userPlan}`)
   try {
-    payload = await Promise.race([runAnalysis(extraction, site_type, userPlan), deadline]);
+    payload = await Promise.race([runAnalysis(extraction, site_type, userPlan), analyzeDeadline]);
+    process.stderr.write(`[ROUTE] runAnalysis DONE | elapsed=${Date.now() - analyzeStart}ms\n`)
     console.error(`[scan] ANALYZE DONE | domain=${domain} elapsed=${Date.now() - analyzeStart}ms`)
   } catch (err) {
+    process.stderr.write(`[ROUTE] runAnalysis ERROR | elapsed=${Date.now() - analyzeStart}ms | ${err instanceof Error ? (err.stack ?? err.message) : String(err)}\n`)
     console.error(`[scan] ANALYZE ERROR | domain=${domain} elapsed=${Date.now() - analyzeStart}ms`, err instanceof Error ? (err.stack ?? err.message) : err)
     const message = err instanceof Error ? err.message : "Analysis failed.";
     return withCookies(NextResponse.json({ error: message }, { status: 500 }));
@@ -256,11 +281,14 @@ export async function POST(req: NextRequest) {
   // 4. Store in Supabase (keyed by domain + timestamp)
   let reportId: string;
   const saveStart = Date.now()
+  process.stderr.write(`[ROUTE] saveReport START | domain=${domain}\n`)
   console.error(`[scan] SAVE START | domain=${domain}`)
   try {
     reportId = await Promise.race([saveReport(domain, payload, userId), deadline]);
+    process.stderr.write(`[ROUTE] saveReport DONE | reportId=${reportId} elapsed=${Date.now() - saveStart}ms\n`)
     console.error(`[scan] SAVE DONE | domain=${domain} reportId=${reportId} elapsed=${Date.now() - saveStart}ms`)
   } catch (err) {
+    process.stderr.write(`[ROUTE] saveReport ERROR | elapsed=${Date.now() - saveStart}ms | ${err instanceof Error ? (err.stack ?? err.message) : String(err)}\n`)
     console.error(`[scan] SAVE ERROR | domain=${domain} elapsed=${Date.now() - saveStart}ms`, err instanceof Error ? (err.stack ?? err.message) : err)
     const message = err instanceof Error ? err.message : "Failed to save report.";
     return withCookies(

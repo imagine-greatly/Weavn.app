@@ -257,7 +257,7 @@ async function fetchWithBrowserless(url: string): Promise<string> {
     const a2FetchMs = Date.now() - a2Start
     const rawText2 = await res2.text()
     process.stderr.write('[SCRAPER] attempt2 response: ' + res2.status + ' chars: ' + rawText2.length + '\n')
-    process.stderr.write('[SCRAPER] attempt2 body: ' + rawText2 + '\n')
+    process.stderr.write('[SCRAPER] attempt2 body: ' + rawText2.slice(0, 300) + '\n')
     console.error(`[SCRAPER] attempt2 response | status=${res2.status} ${res2.statusText} | fetch_elapsed=${a2FetchMs}ms`)
     console.error(`[SCRAPER] attempt2 raw body | length=${rawText2.length} | first500: ${rawText2.slice(0, 500)}`)
 

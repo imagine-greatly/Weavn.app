@@ -122,10 +122,14 @@ function isBlockPage(html: string): boolean {
 
 // -- BROWSERLESS /unblock ------------------------------------------------
 //
-// Attempt 1 (fast):   residential proxy, domcontentloaded + 2 s hydration  ≈ 20 s max
-// Attempt 2 (deep):   residential proxy, networkidle2 + 2 s settle         ≈ 22 s max
-// Attempt 3 (no-proxy fallback): bare request, domcontentloaded            ≈ 15 s max
-// Total worst case:   57 s — leaves ≥ 28 s for Claude + Supabase under 85 s budget
+// Attempt 1 (fast):   residential proxy, domcontentloaded + 5 s settle     ≈ 25 s max
+// Attempt 2 (deep):   residential proxy, networkidle2 + 3 s settle         ≈ 25 s max
+// Attempt 3 (no-proxy fallback): bare bestAttempt                          ≈ 15 s max
+// Total worst case:   65 s — leaves ≥ 20 s for Claude + Supabase under 85 s budget
+//
+// ignoreHTTPSErrors is a CDPLaunchOption — it goes in the `launch` query
+// param as URL-encoded JSON, NOT in the request body. Putting it in the body
+// causes Browserless to return HTTP 400.
 //
 async function fetchWithBrowserless(url: string): Promise<string> {
   process.stderr.write(`[SCRAPER] function entered, url: ${url}\n`)
@@ -138,9 +142,12 @@ async function fetchWithBrowserless(url: string): Promise<string> {
     throw new Error('Browserless API key not configured — set BROWSERLESS_API_KEY')
   }
 
+  // ignoreHTTPSErrors is a CDPLaunchOption, passed as ?launch=<json> query param
+  const launchParam = encodeURIComponent(JSON.stringify({ ignoreHTTPSErrors: true }))
   const makeEndpoint = (proxy: boolean) =>
     `https://production-sfo.browserless.io/unblock` +
     `?token=${apiKey}` +
+    `&launch=${launchParam}` +
     (proxy ? `&proxy=residential` : '')
 
   // Parse HTML out of a Browserless /unblock response body (text already read).
@@ -161,12 +168,10 @@ async function fetchWithBrowserless(url: string): Promise<string> {
     }
   }
 
-  // Attempt 1 — fast path with residential proxy
+  // Attempt 1 — fast path: domcontentloaded + 5 s settle, residential proxy
   const body1 = {
     url,
-    content: true,
     bestAttempt: true,
-    ignoreHTTPSErrors: true,
     gotoOptions: { waitUntil: 'domcontentloaded', timeout: 15000 },
     waitForTimeout: 5000,
   }
@@ -192,6 +197,7 @@ async function fetchWithBrowserless(url: string): Promise<string> {
     // Read body ONCE — res.clone() + res.json() can race on some runtimes
     const rawText1 = await res1.text()
     process.stderr.write('[SCRAPER] attempt1 response: ' + res1.status + ' chars: ' + rawText1.length + '\n')
+    process.stderr.write('[SCRAPER] attempt1 body: ' + rawText1.slice(0, 300) + '\n')
     console.error(`[SCRAPER] attempt1 response | status=${res1.status} ${res1.statusText} | fetch_elapsed=${a1FetchMs}ms`)
     console.error(`[SCRAPER] attempt1 raw body | length=${rawText1.length} | first500: ${rawText1.slice(0, 500)}`)
 
@@ -223,21 +229,19 @@ async function fetchWithBrowserless(url: string): Promise<string> {
     console.error(`[SCRAPER] attempt1 returned a block/challenge page — escalating to attempt2`)
   }
 
-  // Attempt 2 — deep path with residential proxy
+  // Attempt 2 — deep path: networkidle2 + 3 s settle, residential proxy
   const body2 = {
     url,
-    content: true,
     bestAttempt: true,
-    ignoreHTTPSErrors: true,
     gotoOptions: { waitUntil: 'networkidle2', timeout: 18000 },
-    waitForTimeout: 2000,
+    waitForTimeout: 3000,
   }
   process.stderr.write(`[SCRAPER] attempt1 insufficient (${len1Early} chars), trying attempt2 for ${url}\n`)
   process.stderr.write(`[SCRAPER] attempt2 START | url=${url}\n`)
   process.stderr.write(`[SCRAPER] attempt2 request | body=${JSON.stringify(body2)}\n`)
 
   const ctrl2 = new AbortController()
-  const t2 = setTimeout(() => ctrl2.abort(), 22000)
+  const t2 = setTimeout(() => ctrl2.abort(), 25000)
   let html2: string | null = null
   const a2Start = Date.now()
 
@@ -295,7 +299,7 @@ async function fetchWithBrowserless(url: string): Promise<string> {
       const res3 = await fetch(makeEndpoint(false), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url, content: true, bestAttempt: true }),
+        body: JSON.stringify({ url, bestAttempt: true }),
         signal: ctrl3.signal,
       })
       const rawText3 = await res3.text()

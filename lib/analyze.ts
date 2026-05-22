@@ -18,7 +18,7 @@ import type {
   DimensionScoreRow,
 } from "./reportSchema";
 
-const SYSTEM_PROMPT_BASE = `You are a senior conversion intelligence analyst. You identify exactly why visitors are not converting on this site and what must change for them to convert. Be specific to this site — quote actual page content. Never be generic.`;
+const SYSTEM_PROMPT_BASE = `You are a senior conversion intelligence analyst. You identify exactly why visitors are not converting on this site and what must change for them to convert. Be surgical and specific — quote actual text from the page, name exact elements by their visible label or position, and give precise directives. A founder must read each finding in 10 seconds and know exactly what to change. Never be generic.`;
 
 const SITE_TYPE_INSTRUCTIONS: Record<SiteType, string> = {
   ecommerce: `Focus on purchase psychology. Every finding should relate to why someone would hesitate to buy or click away before purchasing. The goal of this site is transactions.`,
@@ -97,15 +97,15 @@ Return valid JSON matching this schema exactly:
 }
 
 Rules:
-- diagnosticBrief: REQUIRED — max 60 words; cover site classification, score read, dominant suppression pattern, and top leverage point. diagnosticBrief may duplicate intelligenceBrief or intelligenceBrief may be omitted.
+- diagnosticBrief: REQUIRED — max 50 words; cover site classification, score read, dominant suppression pattern, and top leverage point. diagnosticBrief may duplicate intelligenceBrief or intelligenceBrief may be omitted.
 - intelligenceBrief: optional legacy; if present without diagnosticBrief, use as executive narrative
-- conversionKillers: max 8; titles under 10 words; evidence quoted from actual page — max 40 words per evidence field
-- conversionKillers.exitTrigger: The specific experience the visitor has on the page that causes them to hesitate, doubt, or leave. Describe what they see, read, or feel — not the business consequence. Example: 'Visitor reads the headline but cannot determine what makes this product different from Amazon.'
-- conversionKillers.conversionCost: The business consequence in concrete terms — lost sales, abandoned signups, missed leads. Use a specific metric or percentage where accurate. Example: 'Estimated 60-70% of comparison shoppers exit without converting due to no visible differentiator.' These two fields must never contain the same text. exitTrigger describes the visitor experience. conversionCost describes the business impact.
-- conversionKillers.implementation: Tell the site owner WHAT to change and WHERE, not what the end result should say. We do not know their brand voice — give them the directive, they write the copy. Good: 'Replace the hero headline with a specific outcome statement that names who it is for and what result they get — test 2-3 variants.' Bad: 'Change headline to: Get More Customers with Our Platform'. Never write the actual copy for them. Describe the change, the location on page, and the principle behind it. Start with a verb. Max 40 words.
+- conversionKillers: exactly 5, ranked by revenue impact highest first; titles under 10 words; evidence must quote actual page text — max 25 words per evidence field
+- conversionKillers.exitTrigger: The specific experience the visitor has on the page that causes them to hesitate, doubt, or leave. Name the exact element and quote its visible text where possible. Describe what they see or feel — not the business consequence. Example: 'Hero headline reads "Welcome" — visitor cannot determine what the site sells or who it is for.'
+- conversionKillers.conversionCost: The business consequence in concrete terms — lost sales, abandoned signups, missed leads. Use a specific metric or percentage where accurate. These two fields must never contain the same text. exitTrigger = visitor experience. conversionCost = business impact.
+- conversionKillers.implementation: Name the exact element and its location, then state the precise change. Start with a verb. Max 30 words. No category advice — tell them exactly what to click and what to change.
 - conversionTransformation.currentCta: Only return text if a clear, intentional hero-section call-to-action button exists above the fold. If the only buttons found are generic UI elements like 'Add', 'Add to cart', 'Menu', 'Search', or navigation links, return 'None detected' instead. Do not invent a CTA that is not clearly present as a primary action.
-- growthBlueprint: weekOne and weekTwoToFour max 3 items each; monthTwo, projectedLift, and projectedLiftNarrative each max 50 words
-- dimensionScores: exactly 5 objects one per dimension; score 0-100; insight one sentence specific to this site
+- growthBlueprint: weekOne and weekTwoToFour max 3 items each; monthTwo, projectedLift, and projectedLiftNarrative each max 40 words
+- dimensionScores: exactly 5 objects one per dimension; score 0-100; insight max 20 words, specific to this site
 - conversionScore: integer 0-100
 - healthScore: same value as conversionScore for backwards compatibility
 - Return only valid JSON, no markdown, no preamble`;

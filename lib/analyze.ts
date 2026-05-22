@@ -554,12 +554,22 @@ export async function runAnalysis(
     timeout: 40_000,
   });
 
+  // Hard cap: never pass more than 50 000 chars of HTML into the analysis pipeline.
+  // scrapeSite.applySmartTruncation already caps at ~28 KB; this is a safety net in case
+  // a future code path bypasses that truncation or the caller passes raw un-truncated HTML.
+  let safeExtraction = extraction;
+  if (extraction.rawHtml.length > 50_000) {
+    process.stderr.write('[ANALYZE] HARD CAP applied: rawHtml ' + extraction.rawHtml.length + ' chars → 50000\n');
+    safeExtraction = { ...extraction, rawHtml: extraction.rawHtml.slice(0, 50_000) };
+  }
+  process.stderr.write('[ANALYZE] rawHtml entering pipeline: ' + safeExtraction.rawHtml.length + ' chars\n');
+
   const systemPrompt = buildSystemPrompt(siteType);
 
-  process.stderr.write(`[ANALYZE] buildPageSummary START | rawHtml_len=${extraction.rawHtml.length}\n`);
+  process.stderr.write(`[ANALYZE] buildPageSummary START | rawHtml_len=${safeExtraction.rawHtml.length}\n`);
   let summary: string;
   try {
-    summary = buildPageSummary(extraction);
+    summary = buildPageSummary(safeExtraction);
   } catch (e) {
     process.stderr.write(`[ANALYZE] buildPageSummary THREW | ${e instanceof Error ? e.stack ?? e.message : String(e)}\n`);
     throw e;
@@ -574,6 +584,7 @@ export async function runAnalysis(
 
   const userContent = `Analyze the following structured data extracted from a fully-rendered website page and return your JSON analysis:\n\n${cappedSummary}`;
   process.stderr.write(`[ANALYZE] userContent_len=${userContent.length}\n`);
+  process.stderr.write('[ANALYZE] prompt chars: ' + userContent.length + '\n');
 
   let attempt = 0;
   const run = async (): Promise<ReportPayload> => {

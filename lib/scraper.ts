@@ -428,14 +428,27 @@ export async function scrapeSite(inputUrl: string): Promise<CombinedExtraction> 
   try {
     const pageUrl = normalizeToHomepage(inputUrl)
     const scraped = await scrapeUrl(inputUrl)
-    const cleaned = cleanHtml(scraped.rawHtml)
+
+    process.stderr.write('[SCRAPER] raw html chars: ' + scraped.rawHtml.length + '\n')
+
+    let cleaned: string
+    try {
+      cleaned = cleanHtml(scraped.rawHtml)
+    } catch (cleanErr) {
+      process.stderr.write('[SCRAPER] cleanHtml THREW: ' + (cleanErr instanceof Error ? cleanErr.stack ?? cleanErr.message : String(cleanErr)) + '\n')
+      throw cleanErr
+    }
+    process.stderr.write('[ANALYZE] cleaned html chars: ' + cleaned.length + '\n')
 
     console.error(
       `[SCRAPER] method:${scraped.method} raw:${scraped.rawHtml.length} clean:${cleaned.length}`
     )
 
+    const truncated = applySmartTruncation(cleaned)
+    process.stderr.write('[SCRAPER] truncated html chars: ' + truncated.length + '\n')
+
     return {
-      rawHtml: applySmartTruncation(cleaned),
+      rawHtml: truncated,
       pagesAnalyzed: [pageUrl],
     }
   } catch (e) {

@@ -731,9 +731,9 @@ function ScanLoadingInner() {
     return () => clearTimeout(timer);
   }, [materialized]);
 
-  // beam RAF — organic consciousness: spring chaser on a continuously-wandering target.
-  // No phases, no waypoints, no scheduled sweeps. K and damping vary dramatically over
-  // overlapping slow cycles; occasional impulse jumps pull the beam toward cold screen regions.
+  // beam RAF — waypoint spring: seeks freely-chosen 2-D targets anywhere on the viewport.
+  // Restores the SEEK/DWELL state machine with spring physics; removes the left-right-then-down
+  // typewriter sweep so the pulse can drift up, down, sideways, or diagonally at any moment.
   useEffect(() => {
     if (!materialized) return;
     const el = beamDivRef.current;
@@ -741,47 +741,53 @@ function ScanLoadingInner() {
     const lineEl = laserLineRef.current;
 
     const BEAM_W = 160;
+    const s = beamStateRef.current;
 
     el.style.opacity = "1";
     if (lineEl) lineEl.style.opacity = "1";
 
-    // Position and velocity — local vars, no shared ref needed
-    let px = window.innerWidth * 0.5;
-    let py = window.innerHeight * 0.5;
-    let vx = 1.4, vy = 0.9;   // small initial nudge so motion starts immediately
+    // ── State machine: SEEK → DWELL → SEEK (no rows, no sweeps, fully free 2D) ──────────
+    type BsmState = 'SEEK' | 'DWELL';
+    let bsm: BsmState = 'SEEK';
+    let bsmTimer = 0;
 
-    // Wandering target the spring chases
-    let tx = px, ty = py;
+    let seekX = 0, seekY = 0, seekK = 0.018;
+    let dwX = 0, dwY = 0;
 
-    // Spring character — re-derived every frame from slowly-varying oscillators
-    let k = 0.018;
-    let damp = 0.84;
+    // Deterministic pseudo-variance — increments tc so each tv() call yields a fresh value
+    let tc = 0;
+    const tv = (o = 0): number => (Math.sin((tc + o) * 2.3999) + 1) / 2;
 
-    // Impulse scheduling — sudden target leap to a far/cold region
-    let nextImpulse = performance.now() + 1600 + Math.random() * 3800;
-
-    // Visit grid — beam accumulates presence; impulses bias toward cold cells
-    const GCOLS = 6, GROWS = 5;
-    const visited = new Float32Array(GCOLS * GROWS).fill(0);
-
-    const recordVisit = (x: number, y: number) => {
-      const vW = window.innerWidth, vH = window.innerHeight;
-      const yMin = 56, ySpan = Math.max(1, vH - 60 - yMin);
-      const ci = Math.min(GCOLS - 1, Math.max(0, Math.floor((x / Math.max(1, vW)) * GCOLS)));
-      const ri = Math.min(GROWS - 1, Math.max(0, Math.floor(((y - yMin) / ySpan) * GROWS)));
-      visited[ri * GCOLS + ci] += 1;
+    const vBounds = () => {
+      const yMin = 56, yMax = window.innerHeight - 60;
+      const xMax = window.innerWidth - BEAM_W;
+      return { yMin, yMax, xMax };
     };
 
-    const coldCell = (): number => {
-      let minV = Infinity, minI = 0;
-      for (let i = 0; i < visited.length; i++) {
-        if (visited[i] < minV) { minV = visited[i]; minI = i; }
-      }
-      return minI;
+    // Pick any 2D waypoint anywhere in the live viewport — no row or column constraint
+    const pickTarget = (): { x: number; y: number } => {
+      const { yMin, yMax, xMax } = vBounds();
+      return { x: tv() * xMax, y: yMin + tv(1) * (yMax - yMin) };
     };
 
-    let lastTime = performance.now();
+    const goSeek = (x: number, y: number, k: number, ms: number) => {
+      bsm = 'SEEK'; seekX = x; seekY = y; seekK = k; bsmTimer = ms; tc++;
+    };
+    const goDwell = (ax: number, ay: number) => {
+      bsm = 'DWELL'; dwX = ax; dwY = ay;
+      bsmTimer = 350 + tv() * 700;   // 0.35 – 1.05 s
+      tc++;
+    };
 
+    // ── Init ──────────────────────────────────────────────────────────────
+    s.lastFrameTime = performance.now();
+    const { yMin: iYMin, yMax: iYMax, xMax: iXMax } = vBounds();
+    s.pos = { x: iXMax * 0.5, y: iYMin + (iYMax - iYMin) * 0.3 };
+    s.velocity = { x: 0, y: 0 };
+    const initT = pickTarget();
+    goSeek(initT.x, initT.y, 0.022, 400);
+
+    // ── RAF tick ──────────────────────────────────────────────────────────
     const tick = (now: number) => {
       if (beamRafHaltedRef.current) {
         el.style.opacity = "0";
@@ -789,88 +795,61 @@ function ScanLoadingInner() {
         return;
       }
 
-      const dt = Math.min(50, now - lastTime);
-      lastTime = now;
-      void dt; // dt available for future use; spring is frame-rate-normalized by the clamp above
-      const t = now * 0.001;  // seconds
+      const dt = Math.min(50, now - s.lastFrameTime);
+      s.lastFrameTime = now;
 
-      const xM = window.innerWidth - BEAM_W;
-      const yMin = 56;
-      const yM = window.innerHeight - 60;
-      const xR = Math.max(1, xM);
-      const yR = Math.max(1, yM - yMin);
+      bsmTimer -= dt;
 
-      // ── Spring character: K and damping vary over overlapping slow cycles ──────────────
-      // K: 0.004 (barely-responsive, near drift) → 0.055 (snappy, purposeful)
-      // Frequencies are irrational multiples so no two cycles align within the scan window.
-      k = 0.029
-        + Math.sin(t * 0.091) * 0.016   // ~69 s cycle
-        + Math.sin(t * 0.157) * 0.009   // ~40 s cycle
-        + Math.cos(t * 0.241) * 0.006;  // ~26 s cycle
-      // Damping: 0.73 (loose, overshoots) → 0.94 (overdamped, creeps)
-      damp = 0.83
-        + Math.sin(t * 0.073) * 0.065
-        + Math.sin(t * 0.191) * 0.030;
+      switch (bsm) {
+        case 'SEEK': {
+          const dx = seekX - s.pos.x, dy = seekY - s.pos.y;
+          s.velocity.x += dx * seekK;
+          s.velocity.y += dy * seekK;
+          s.velocity.x *= 0.80; s.velocity.y *= 0.80;
+          s.pos.x += s.velocity.x; s.pos.y += s.velocity.y;
+          if (bsmTimer <= 0 || Math.hypot(dx, dy) < 16) {
+            if (tv() < 0.35) {
+              goDwell(s.pos.x, s.pos.y);
+            } else {
+              const tgt = pickTarget();
+              // Vary K: sometimes slow and drifting (0.010), sometimes purposeful (0.024)
+              goSeek(tgt.x, tgt.y, 0.010 + tv(2) * 0.014, 400 + tv(1) * 1000);
+            }
+          }
+          break;
+        }
 
-      // ── Wandering target: 5 overlapping oscillators at irrational frequency ratios ─────
-      // Ratios derived from √2, √3, π, φ — produce complex non-repeating Lissajous paths.
-      const txRaw = xR * 0.5
-        + Math.sin(t * 0.113) * xR * 0.44    // ~55 s — big lateral sweep
-        + Math.cos(t * 0.197) * xR * 0.30    // ~32 s
-        + Math.sin(t * 0.347) * xR * 0.15    // ~18 s — medium detail
-        + Math.cos(t * 0.619) * xR * 0.07    // ~10 s
-        + Math.sin(t * 1.131) * xR * 0.025;  // ~5.5 s — micro-drift
-
-      const tyRaw = yMin + yR * 0.5
-        + Math.sin(t * 0.083) * yR * 0.42    // ~76 s — main vertical sweep
-        + Math.cos(t * 0.151) * yR * 0.28    // ~42 s
-        + Math.sin(t * 0.277) * yR * 0.14    // ~23 s
-        + Math.cos(t * 0.491) * yR * 0.07    // ~13 s
-        + Math.sin(t * 0.883) * yR * 0.025;  // ~7 s — micro
-
-      tx = Math.max(0, Math.min(xM, txRaw));
-      ty = Math.max(yMin, Math.min(yM, tyRaw));
-
-      // ── Impulse: occasional sudden leap to a far / less-visited region ─────────────────
-      if (now >= nextImpulse) {
-        nextImpulse = now + 4500 + Math.random() * 8500;  // 4.5–13 s between leaps
-        const ci = coldCell();
-        const col = ci % GCOLS, row = Math.floor(ci / GCOLS);
-        tx = col * (xM / GCOLS) + Math.random() * (xM / GCOLS);
-        ty = yMin + row * (yR / GROWS) + Math.random() * (yR / GROWS);
-        // Spike K briefly → the leap feels fast and purposeful
-        k = Math.min(0.06, k + 0.026 + Math.random() * 0.018);
+        case 'DWELL': {
+          // Three overlapping sines → organic micro-motion, never completely still
+          const jX = Math.sin(now * 0.0079) * 3.8
+                    + Math.sin(now * 0.0214) * 1.6
+                    + Math.sin(now * 0.0431) * 0.6;
+          const jY = Math.sin(now * 0.0127) * 2.2
+                    + Math.sin(now * 0.0318) * 0.9;
+          s.velocity.x += (dwX + jX - s.pos.x) * 0.035;
+          s.velocity.y += (dwY + jY - s.pos.y) * 0.035;
+          s.velocity.x *= 0.80; s.velocity.y *= 0.80;
+          s.pos.x += s.velocity.x; s.pos.y += s.velocity.y;
+          if (bsmTimer <= 0) {
+            const tgt = pickTarget();
+            goSeek(tgt.x, tgt.y, 0.012 + tv(1) * 0.010, 350 + tv() * 750);
+          }
+          break;
+        }
       }
 
-      // ── Spring integration ────────────────────────────────────────────────────────────
-      vx += (tx - px) * k;
-      vy += (ty - py) * k;
-      vx *= damp;
-      vy *= damp;
-      px += vx;
-      py += vy;
+      // Soft boundary — reflect velocity on contact, lose some energy
+      const { yMin, yMax, xMax } = vBounds();
+      if (s.pos.x < 0)    { s.pos.x = 0;    s.velocity.x =  Math.abs(s.velocity.x) * 0.3; }
+      if (s.pos.x > xMax) { s.pos.x = xMax; s.velocity.x = -Math.abs(s.velocity.x) * 0.3; }
+      if (s.pos.y < yMin) { s.pos.y = yMin; s.velocity.y =  Math.abs(s.velocity.y) * 0.3; }
+      if (s.pos.y > yMax) { s.pos.y = yMax; s.velocity.y = -Math.abs(s.velocity.y) * 0.3; }
 
-      // ── Minimum motion: always some life even when nearly still ───────────────────────
-      // Golden-angle rotation on t ensures nudge direction itself wanders unpredictably.
-      if (Math.sqrt(vx * vx + vy * vy) < 0.10) {
-        const θ = t * 2.6180339887;
-        vx += Math.cos(θ) * 0.15;
-        vy += Math.sin(θ) * 0.15;
-      }
-
-      // ── Soft boundary: reflect velocity on contact, lose some energy ─────────────────
-      if (px < 0)   { px = 0;   vx =  Math.abs(vx) * 0.4; }
-      if (px > xM)  { px = xM;  vx = -Math.abs(vx) * 0.4; }
-      if (py < yMin){ py = yMin; vy =  Math.abs(vy) * 0.4; }
-      if (py > yM)  { py = yM;   vy = -Math.abs(vy) * 0.4; }
-
-      recordVisit(px, py);
-
-      el.style.transform = `translate(${px}px, ${py}px)`;
-      if (lineEl) lineEl.style.transform = `translateY(${py + 0.5}px)`;
+      el.style.transform = `translate(${s.pos.x}px, ${s.pos.y}px)`;
+      if (lineEl) lineEl.style.transform = `translateY(${s.pos.y + 0.5}px)`;
 
       // Section label activation by beam Y (viewport coords) — unchanged logic
-      const beamY = py;
+      const beamY = s.pos.y;
       const bounds = sectionBoundsRef.current;
       let newSec: string | null = null;
       for (const b of bounds) {

@@ -120,85 +120,57 @@ function isBlockPage(html: string): boolean {
   return false
 }
 
-// /unblock returns JSON: { content: "<html>...", cookies: [...] }
-// Both fields are requested; html falls back to json.html for forward-compat.
-interface UnblockResponse { html: string | null; cookieCount: number }
-async function parseUnblockResponse(res: Response): Promise<UnblockResponse> {
-  try {
-    const json = await res.json() as Record<string, unknown>
-    const topLevelKeys = Object.keys(json)
-    const html =
-      (typeof json.content === 'string' ? json.content : null) ??
-      (typeof json.html === 'string' ? json.html : null)
-    const cookieCount = Array.isArray(json.cookies) ? json.cookies.length : 0
-    const htmlLen = html ? html.length : 0
-    const contentType = typeof json.content
-    const htmlType = typeof json.html
-    console.error(
-      `[SCRAPER] parseUnblockResponse | top_level_keys=[${topLevelKeys.join(',')}]` +
-      ` content_type=${contentType} html_type=${htmlType}` +
-      ` html_chars=${htmlLen} cookieCount=${cookieCount}` +
-      ` html_null=${html === null}`
-    )
-    return { html: html && html.length > 0 ? html : null, cookieCount }
-  } catch (err) {
-    console.error('[SCRAPER] parseUnblockResponse JSON parse FAILED:', err instanceof Error ? (err.stack ?? err.message) : err)
-    return { html: null, cookieCount: 0 }
-  }
-}
-
 // -- BROWSERLESS /unblock ------------------------------------------------
 //
-// Documented query params (https://docs.browserless.io/rest-apis/unblock):
-//   token=<key>         — required auth
-//   proxy=residential   — residential IPs; bypasses Cloudflare IP-rep checks
-//
-// Body params (all documented):
-//   content:true        — returns full page HTML after unblocking
-//   cookies:true        — returns cookies set by the target site
-//   bestAttempt:true    — return whatever is rendered if any wait condition
-//                         times out, rather than erroring
-//   gotoOptions         — passed to Puppeteer page.goto()
-//   waitForTimeout      — additional settle time (ms) after navigation
-//
-// Attempt 1 (fast):  domcontentloaded + 2 s hydration    ≈ 17 s typical, 20 s max
-// Attempt 2 (deep):  networkidle2 + 2 s settle           ≈ 20 s typical, 22 s max
-// Total worst case:  42 s — leaves ≥ 43 s for Claude + Supabase under 85 s budget
+// Attempt 1 (fast):   residential proxy, domcontentloaded + 2 s hydration  ≈ 20 s max
+// Attempt 2 (deep):   residential proxy, networkidle2 + 2 s settle         ≈ 22 s max
+// Attempt 3 (no-proxy fallback): bare request, domcontentloaded            ≈ 15 s max
+// Total worst case:   57 s — leaves ≥ 28 s for Claude + Supabase under 85 s budget
 //
 async function fetchWithBrowserless(url: string): Promise<string> {
   process.stderr.write(`[SCRAPER] function entered, url: ${url}\n`)
-  process.stderr.write(`[SCRAPER] token present: ${!!process.env.BROWSERLESS_API_KEY}\n`)
 
-  if (!process.env.BROWSERLESS_API_KEY) {
+  const apiKey = (process.env.BROWSERLESS_API_KEY ?? '').trim()
+  process.stderr.write(`[SCRAPER] token present: ${!!apiKey} prefix: ${apiKey.slice(0, 6) || '(empty)'}\n`)
+
+  if (!apiKey) {
     console.error('[SCRAPER] FATAL: BROWSERLESS_API_KEY env var is not set')
     throw new Error('Browserless API key not configured — set BROWSERLESS_API_KEY')
   }
 
-  // Only token and proxy are documented query params for /unblock.
-  const endpoint =
+  const makeEndpoint = (proxy: boolean) =>
     `https://production-sfo.browserless.io/unblock` +
-    `?token=${process.env.BROWSERLESS_API_KEY}` +
-    `&proxy=residential`
+    `?token=${apiKey}` +
+    (proxy ? `&proxy=residential` : '')
 
-  const endpointRedacted =
-    `https://production-sfo.browserless.io/unblock?token=<redacted>&proxy=residential`
+  // Parse HTML out of a Browserless /unblock response body (text already read).
+  // Checks content / html / data in case the field name varies by API version.
+  const extractHtml = (text: string): string | null => {
+    try {
+      const json = JSON.parse(text) as Record<string, unknown>
+      const topLevelKeys = Object.keys(json)
+      console.error(`[SCRAPER] response keys: [${topLevelKeys.join(',')}]`)
+      const html =
+        (typeof json.content === 'string' ? json.content : null) ??
+        (typeof json.html === 'string' ? json.html : null) ??
+        (typeof json.data === 'string' ? json.data : null)
+      return html && html.length > 0 ? html : null
+    } catch (err) {
+      console.error('[SCRAPER] JSON parse FAILED:', err instanceof Error ? err.message : err)
+      return null
+    }
+  }
 
-  // Attempt 1 — fast path -----------------------------------------------
-  // domcontentloaded fires as soon as the HTML is parsed; waitForTimeout
-  // gives JS frameworks 2 s to hydrate after that. bestAttempt:true
-  // returns whatever is rendered if the goto times out.
-  // No waitForSelector — its Puppeteer default of 30 s would always exceed
-  // our abort budget and cause every attempt to be cancelled at 20 s.
+  // Attempt 1 — fast path with residential proxy
   const body1 = {
     url,
     content: true,
-    cookies: true,
     bestAttempt: true,
     gotoOptions: { waitUntil: 'domcontentloaded', timeout: 15000 },
     waitForTimeout: 2000,
   }
   process.stderr.write(`[SCRAPER] attempt1 START | url=${url}\n`)
-  process.stderr.write(`[SCRAPER] attempt1 request | endpoint=${endpointRedacted} | body=${JSON.stringify(body1)}\n`)
+  process.stderr.write(`[SCRAPER] attempt1 request | body=${JSON.stringify(body1)}\n`)
 
   const ctrl1 = new AbortController()
   const t1 = setTimeout(() => ctrl1.abort(), 20000)
@@ -206,29 +178,27 @@ async function fetchWithBrowserless(url: string): Promise<string> {
   const a1Start = Date.now()
 
   try {
-    const res = await fetch(endpoint, {
+    process.stderr.write('[SCRAPER] attempt1 sending request\n')
+    const res1 = await fetch(makeEndpoint(true), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body1),
       signal: ctrl1.signal,
     })
     const a1FetchMs = Date.now() - a1Start
-    console.error(`[SCRAPER] attempt1 response | status=${res.status} ${res.statusText} | fetch_elapsed=${a1FetchMs}ms`)
-    const a1Headers: Record<string, string> = {}
-    res.headers.forEach((val, key) => { a1Headers[key] = val })
-    console.error(`[SCRAPER] attempt1 response headers:`, JSON.stringify(a1Headers))
-
-    const rawText1 = await res.clone().text().catch(() => '<could not read body>')
+    // Read body ONCE — res.clone() + res.json() can race on some runtimes
+    const rawText1 = await res1.text()
+    process.stderr.write('[SCRAPER] attempt1 response: ' + res1.status + ' chars: ' + rawText1.length + '\n')
+    console.error(`[SCRAPER] attempt1 response | status=${res1.status} ${res1.statusText} | fetch_elapsed=${a1FetchMs}ms`)
     console.error(`[SCRAPER] attempt1 raw body | length=${rawText1.length} | first500: ${rawText1.slice(0, 500)}`)
 
-    if (res.ok) {
-      const parsed = await parseUnblockResponse(res)
-      html1 = parsed.html
+    if (res1.ok) {
+      html1 = extractHtml(rawText1)
       const len = readableTextLength(html1 ?? '')
       const blocked = html1 !== null && isBlockPage(html1)
-      console.error(`[SCRAPER] attempt1 parsed | html_chars=${html1?.length ?? 0} readable=${len} blocked=${blocked} cookies=${parsed.cookieCount} | total_elapsed=${Date.now() - a1Start}ms`)
+      console.error(`[SCRAPER] attempt1 parsed | html_chars=${html1?.length ?? 0} readable=${len} blocked=${blocked} | total_elapsed=${Date.now() - a1Start}ms`)
     } else {
-      console.error(`[SCRAPER] attempt1 FAILED | HTTP ${res.status} | elapsed=${a1FetchMs}ms`)
+      console.error(`[SCRAPER] attempt1 FAILED | HTTP ${res1.status} | body: ${rawText1.slice(0, 300)} | elapsed=${a1FetchMs}ms`)
     }
   } catch (err) {
     const a1Elapsed = Date.now() - a1Start
@@ -240,8 +210,6 @@ async function fetchWithBrowserless(url: string): Promise<string> {
   }
 
   // Accept attempt 1 only if it has real content AND is not a bot-block page.
-  // isBlockPage covers Cloudflare challenges, DDoS-Guard, and thin access-denied
-  // pages that return 200 OK but contain no useful site content.
   const len1Early = readableTextLength(html1 ?? '')
   if (html1 && len1Early >= 500 && !isBlockPage(html1)) {
     console.error(`[SCRAPER] attempt1 ACCEPTED | readable=${len1Early} | total_elapsed=${Date.now() - a1Start}ms`)
@@ -252,21 +220,17 @@ async function fetchWithBrowserless(url: string): Promise<string> {
     console.error(`[SCRAPER] attempt1 returned a block/challenge page — escalating to attempt2`)
   }
 
-  // Attempt 2 — deep path -----------------------------------------------
-  // networkidle2: waits until no more than 2 in-flight XHR for 500 ms.
-  // Better for SPAs that stream content after initial render.
-  // waitForTimeout:2000 gives JS an extra 2 s after the network quiets.
+  // Attempt 2 — deep path with residential proxy
   const body2 = {
     url,
     content: true,
-    cookies: true,
     bestAttempt: true,
     gotoOptions: { waitUntil: 'networkidle2', timeout: 18000 },
     waitForTimeout: 2000,
   }
   process.stderr.write(`[SCRAPER] attempt1 insufficient (${len1Early} chars), trying attempt2 for ${url}\n`)
   process.stderr.write(`[SCRAPER] attempt2 START | url=${url}\n`)
-  process.stderr.write(`[SCRAPER] attempt2 request | endpoint=${endpointRedacted} | body=${JSON.stringify(body2)}\n`)
+  process.stderr.write(`[SCRAPER] attempt2 request | body=${JSON.stringify(body2)}\n`)
 
   const ctrl2 = new AbortController()
   const t2 = setTimeout(() => ctrl2.abort(), 22000)
@@ -274,29 +238,26 @@ async function fetchWithBrowserless(url: string): Promise<string> {
   const a2Start = Date.now()
 
   try {
-    const res = await fetch(endpoint, {
+    process.stderr.write('[SCRAPER] attempt2 sending request\n')
+    const res2 = await fetch(makeEndpoint(true), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body2),
       signal: ctrl2.signal,
     })
     const a2FetchMs = Date.now() - a2Start
-    console.error(`[SCRAPER] attempt2 response | status=${res.status} ${res.statusText} | fetch_elapsed=${a2FetchMs}ms`)
-    const a2Headers: Record<string, string> = {}
-    res.headers.forEach((val, key) => { a2Headers[key] = val })
-    console.error(`[SCRAPER] attempt2 response headers:`, JSON.stringify(a2Headers))
-
-    const rawText2 = await res.clone().text().catch(() => '<could not read body>')
+    const rawText2 = await res2.text()
+    process.stderr.write('[SCRAPER] attempt2 response: ' + res2.status + ' chars: ' + rawText2.length + '\n')
+    console.error(`[SCRAPER] attempt2 response | status=${res2.status} ${res2.statusText} | fetch_elapsed=${a2FetchMs}ms`)
     console.error(`[SCRAPER] attempt2 raw body | length=${rawText2.length} | first500: ${rawText2.slice(0, 500)}`)
 
-    if (res.ok) {
-      const parsed = await parseUnblockResponse(res)
-      html2 = parsed.html
+    if (res2.ok) {
+      html2 = extractHtml(rawText2)
       const len = readableTextLength(html2 ?? '')
       const blocked = html2 !== null && isBlockPage(html2)
-      console.error(`[SCRAPER] attempt2 parsed | html_chars=${html2?.length ?? 0} readable=${len} blocked=${blocked} cookies=${parsed.cookieCount} | total_elapsed=${Date.now() - a2Start}ms`)
+      console.error(`[SCRAPER] attempt2 parsed | html_chars=${html2?.length ?? 0} readable=${len} blocked=${blocked} | total_elapsed=${Date.now() - a2Start}ms`)
     } else {
-      console.error(`[SCRAPER] attempt2 FAILED | HTTP ${res.status} | elapsed=${a2FetchMs}ms`)
+      console.error(`[SCRAPER] attempt2 FAILED | HTTP ${res2.status} | body: ${rawText2.slice(0, 300)} | elapsed=${a2FetchMs}ms`)
     }
   } catch (err) {
     const a2Elapsed = Date.now() - a2Start
@@ -312,8 +273,50 @@ async function fetchWithBrowserless(url: string): Promise<string> {
   const blocked1 = html1 !== null && isBlockPage(html1)
   const blocked2 = html2 !== null && isBlockPage(html2)
   console.error(
-    `[SCRAPER] final: attempt1=${len1}(blocked=${blocked1}) attempt2=${len2}(blocked=${blocked2}) url=${url}`
+    `[SCRAPER] final proxy attempts: attempt1=${len1}(blocked=${blocked1}) attempt2=${len2}(blocked=${blocked2}) url=${url}`
   )
+
+  // If both proxy attempts returned zero content (both 4xx/5xx or network error),
+  // try once more without proxy — some Browserless plans don't include residential,
+  // and some sites actively block residential IPs.
+  if (!html1 && !html2) {
+    process.stderr.write(`[SCRAPER] attempt3 START (no proxy) | url=${url}\n`)
+    const ctrl3 = new AbortController()
+    const t3 = setTimeout(() => ctrl3.abort(), 15000)
+    const a3Start = Date.now()
+
+    try {
+      process.stderr.write('[SCRAPER] attempt3 sending request\n')
+      const res3 = await fetch(makeEndpoint(false), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url, content: true, bestAttempt: true }),
+        signal: ctrl3.signal,
+      })
+      const rawText3 = await res3.text()
+      process.stderr.write('[SCRAPER] attempt3 response: ' + res3.status + ' chars: ' + rawText3.length + '\n')
+      console.error(`[SCRAPER] attempt3 response | status=${res3.status} | elapsed=${Date.now() - a3Start}ms`)
+      console.error(`[SCRAPER] attempt3 raw body first500: ${rawText3.slice(0, 500)}`)
+
+      if (res3.ok) {
+        const html3 = extractHtml(rawText3)
+        const len3 = readableTextLength(html3 ?? '')
+        console.error(`[SCRAPER] attempt3 parsed | html_chars=${html3?.length ?? 0} readable=${len3}`)
+        if (html3 && len3 >= 200) {
+          console.error('[SCRAPER] attempt3 ACCEPTED')
+          return html3
+        }
+      } else {
+        console.error(`[SCRAPER] attempt3 FAILED | HTTP ${res3.status}`)
+      }
+    } catch (err) {
+      const isAbort = err instanceof Error && err.name === 'AbortError'
+      console.error(`[SCRAPER] attempt3 ERROR | ${isAbort ? 'ABORTED by 15s timeout' : 'threw exception'}`)
+      console.error('[SCRAPER] attempt3 exception:', err instanceof Error ? err.message : err)
+    } finally {
+      clearTimeout(t3)
+    }
+  }
 
   // Prefer non-blocked content regardless of which attempt it came from.
   // Only fall back to a block page if both attempts returned one.
@@ -324,10 +327,6 @@ async function fetchWithBrowserless(url: string): Promise<string> {
 
   if (best && readableTextLength(best) >= 200) return best
 
-  // Classify the failure correctly so the user-facing message is honest:
-  // - Both attempts returned a block page → real bot protection, retry may help
-  // - Both attempts returned no HTML at all → Browserless/network problem, not the site
-  // - Otherwise → thin or error content
   const bothBlocked = blocked1 && blocked2
   const noResponseAtAll = !html1 && !html2
 

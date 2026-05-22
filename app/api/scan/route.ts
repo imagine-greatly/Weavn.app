@@ -254,13 +254,13 @@ export async function POST(req: NextRequest) {
   }
 
   // 3. Claude analysis (retry once inside runAnalysis), tailored to site_type.
-  // Use a FRESH deadline scoped to just the analyze step so a long scrape doesn't
-  // eat into the budget. Budget: up to 50 s for Claude (2 × 40 s SDK timeout,
-  // but the outer race fires first). Vercel's maxDuration=120 is the hard wall.
+  // Fresh deadline scoped to just the analyze step — independent of scrape duration.
+  // Budget: 70 s. Anthropic SDK per-call timeout is 65 s (see analyze.ts), so a single
+  // slow-but-successful Claude call has room to land. Vercel maxDuration=120 is the wall.
   const analyzeDeadline = new Promise<never>((_, reject) =>
     setTimeout(
-      () => reject(new Error('[TIMEOUT] Analysis exceeded 50 s deadline')),
-      50_000
+      () => reject(new Error('[TIMEOUT] Analysis exceeded 70 s deadline')),
+      70_000
     )
   )
   let payload;

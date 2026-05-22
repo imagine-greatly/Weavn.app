@@ -551,7 +551,7 @@ export async function runAnalysis(
   const resolvedModel = model ?? (plan === "agency" ? "claude-opus-4-7" : "claude-sonnet-4-6");
   const client = new Anthropic({
     apiKey: process.env.ANTHROPIC_API_KEY,
-    timeout: 40_000,
+    timeout: 65_000,
   });
 
   // Hard cap: never pass more than 50 000 chars of HTML into the analysis pipeline.

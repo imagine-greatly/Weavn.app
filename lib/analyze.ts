@@ -97,15 +97,15 @@ Return valid JSON matching this schema exactly:
 }
 
 Rules:
-- diagnosticBrief: REQUIRED — max 80 words; cover site classification, score read, dominant suppression pattern with finding count, and the highest-leverage resolution. Be specific to this domain — cite real page elements. diagnosticBrief may duplicate intelligenceBrief or intelligenceBrief may be omitted.
+- diagnosticBrief: REQUIRED — max 72 words; cover site classification, score read, dominant suppression pattern with finding count, and the highest-leverage resolution. Be specific to this domain — cite real page elements. diagnosticBrief may duplicate intelligenceBrief or intelligenceBrief may be omitted.
 - intelligenceBrief: optional legacy; if present without diagnosticBrief, use as executive narrative
-- conversionKillers: exactly 5, ranked by revenue impact highest first; titles under 10 words; evidence must quote actual page text — max 50 words per evidence field
+- conversionKillers: exactly 5, ranked by revenue impact highest first; titles under 10 words; evidence must quote actual page text — max 45 words per evidence field
 - conversionKillers.exitTrigger: The specific experience the visitor has on the page that causes them to hesitate, doubt, or leave. Name the exact element and quote its visible text. Describe what they see or feel — not the business consequence. Example: 'Hero headline reads "Welcome" — visitor cannot determine what the site sells or who it is for.'
 - conversionKillers.conversionCost: The business consequence in concrete terms — lost sales, abandoned signups, missed leads. Use a specific metric or percentage where accurate. These two fields must never contain the same text. exitTrigger = visitor experience. conversionCost = business impact.
-- conversionKillers.implementation: Name the exact element and its page location. State the precise change a developer or marketer could act on immediately. Include why the change works. Start with a verb. Max 60 words. No category advice — be specific enough that a developer knows exactly what to do without follow-up questions.
+- conversionKillers.implementation: Name the exact element and its page location. State the precise change a developer or marketer could act on immediately. Include why the change works. Start with a verb. Max 55 words. No category advice — be specific enough that a developer knows exactly what to do without follow-up questions.
 - conversionTransformation.currentCta: Only return text if a clear, intentional hero-section call-to-action button exists above the fold. If the only buttons found are generic UI elements like 'Add', 'Add to cart', 'Menu', 'Search', or navigation links, return 'None detected' instead. Do not invent a CTA that is not clearly present as a primary action.
-- growthBlueprint: weekOne and weekTwoToFour max 3 items each; monthTwo, projectedLift, and projectedLiftNarrative each max 80 words
-- dimensionScores: exactly 5 objects one per dimension; score 0-100; insight max 35 words, specific to this site with reference to actual page evidence
+- growthBlueprint: weekOne and weekTwoToFour max 3 items each; monthTwo, projectedLift, and projectedLiftNarrative each max 70 words
+- dimensionScores: exactly 5 objects one per dimension; score 0-100; insight max 30 words, specific to this site with reference to actual page evidence
 - conversionScore: integer 0-100
 - healthScore: same value as conversionScore for backwards compatibility
 - Return only valid JSON, no markdown, no preamble`;
@@ -593,7 +593,7 @@ export async function runAnalysis(
     process.stderr.write(`[ANALYZE] claude START | attempt=${attempt} model=${resolvedModel} contentLen=${userContent.length}\n`);
     const message = await client.messages.create({
       model: resolvedModel,
-      max_tokens: 4500,
+      max_tokens: 3800,
       system: [{ type: "text", text: systemPrompt, cache_control: { type: "ephemeral" } }],
       messages: [{ role: "user", content: userContent }],
     });

@@ -41,19 +41,25 @@ export async function expandFindingBriefWithAnthropic(
     related: body.relatedFindings,
   });
 
-  const anthropic = new Anthropic({ apiKey });
-  const msg = await anthropic.messages.create({
-    model: "claude-sonnet-4-6",
-    max_tokens: 1500,
-    system: [{ type: "text", text: EXPAND_FINDING_BRIEF_SYSTEM_PROMPT, cache_control: { type: "ephemeral" } }],
-    messages: [{ role: "user", content: userMessage }],
-  });
-
-  const textBlock = msg.content.find((b) => b.type === "text");
-  const rawText = textBlock && textBlock.type === "text" ? textBlock.text : "";
+  const anthropic = new Anthropic({ apiKey, timeout: 55_000 });
+  let rawText = "";
+  try {
+    const msg = await anthropic.messages.create({
+      model: "claude-sonnet-4-6",
+      max_tokens: 3000,
+      system: [{ type: "text", text: EXPAND_FINDING_BRIEF_SYSTEM_PROMPT, cache_control: { type: "ephemeral" } }],
+      messages: [{ role: "user", content: userMessage }],
+    });
+    const textBlock = msg.content.find((b) => b.type === "text");
+    rawText = textBlock && textBlock.type === "text" ? textBlock.text : "";
+    console.log(`[expand-finding] claude done | stop_reason=${msg.stop_reason} output_tokens=${msg.usage?.output_tokens}`);
+  } catch (err) {
+    console.error("[expand-finding] claude API error", err instanceof Error ? err.message : String(err));
+    throw err;
+  }
   const parsed = parseFindingBriefFromModelText(rawText);
   if (!parsed && rawText.trim()) {
-    console.error("[expand-finding] parse failed", rawText.slice(0, 800));
+    console.error("[expand-finding] parse failed | raw_len=" + rawText.length, rawText.slice(0, 800));
   }
   return parsed;
 }

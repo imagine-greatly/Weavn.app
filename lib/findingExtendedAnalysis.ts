@@ -117,6 +117,74 @@ async function readMergePersistExtendedAnalysis(
 }
 
 /**
+ * Writes generated briefs to both extended_analysis and finding_briefs in one
+ * read+write so the expand-finding API's cache check (which reads finding_briefs)
+ * finds the data immediately after background generation completes.
+ */
+async function persistBriefsBatch(
+  supabase: SupabaseClient,
+  reportId: string,
+  newEntries: Record<string, FindingBriefExpansion>
+): Promise<void> {
+  if (Object.keys(newEntries).length === 0) return;
+
+  const { data: row, error: readErr } = await supabase
+    .from("reports")
+    .select("extended_analysis, finding_briefs")
+    .eq("id", reportId)
+    .maybeSingle();
+
+  if (readErr) {
+    console.warn("[extended-analysis] persistBriefsBatch read failed:", readErr.message);
+    // Fall back to extended_analysis only so at least something is persisted
+    await readMergePersistExtendedAnalysis(supabase, reportId, newEntries);
+    return;
+  }
+
+  const priorEA =
+    row?.extended_analysis &&
+    typeof row.extended_analysis === "object" &&
+    !Array.isArray(row.extended_analysis)
+      ? (row.extended_analysis as Record<string, unknown>)
+      : {};
+
+  const priorFB =
+    row?.finding_briefs &&
+    typeof row.finding_briefs === "object" &&
+    !Array.isArray(row.finding_briefs)
+      ? (row.finding_briefs as Record<string, unknown>)
+      : {};
+
+  const { error: writeErr } = await supabase
+    .from("reports")
+    .update({
+      extended_analysis: { ...priorEA, ...newEntries },
+      finding_briefs: { ...priorFB, ...newEntries },
+    })
+    .eq("id", reportId);
+
+  if (writeErr) {
+    // finding_briefs column may not exist yet — fall back to extended_analysis only
+    const msg = writeErr.message ?? "";
+    const isColumnErr =
+      writeErr.code === "PGRST204" || /column.*does not exist/i.test(msg);
+    if (isColumnErr) {
+      await supabase
+        .from("reports")
+        .update({ extended_analysis: { ...priorEA, ...newEntries } })
+        .eq("id", reportId);
+    } else {
+      console.error("[extended-analysis] persistBriefsBatch write failed", reportId, msg);
+    }
+  } else {
+    console.log(
+      `[extended-analysis] persisted ${Object.keys(newEntries).length} briefs to extended_analysis + finding_briefs for report`,
+      reportId
+    );
+  }
+}
+
+/**
  * Expands and persists the first dashboard-ranked finding only; returns merged
  * `extended_analysis` after write (for immediate client use), or null on skip/failure.
  */
@@ -231,9 +299,10 @@ export async function generateRemainingExtendedAnalysisForReport(
 }
 
 /**
- * Pre-generates AI advisor briefs for ALL findings in parallel, then merges them into
- * `reports.extended_analysis`. Intended as a fire-and-forget background task after scan;
- * logs errors without throwing to the client response path.
+ * Pre-generates AI advisor briefs for all 5 dashboard-ranked findings in parallel,
+ * then writes them to both reports.extended_analysis and reports.finding_briefs so
+ * the expand-finding API's cache check finds the data immediately.
+ * Intended as a fire-and-forget background task after scan; logs errors without throwing.
  */
 export async function generateAndPersistAllFindingBriefs(
   reportId: string,
@@ -251,32 +320,36 @@ export async function generateAndPersistAllFindingBriefs(
     return;
   }
 
-  const leaks = resolveLeaksForReportPayload(payload).slice(0, 3);
+  const allLeaks = resolveLeaksForReportPayload(payload);
+  const leaks = allLeaks.slice(0, 5);
   if (leaks.length === 0) return;
 
   const overallScore = payload.healthScore ?? payload.growthScore ?? 0;
+  console.log(`[extended-analysis] generating briefs for ${leaks.length} findings | report=${reportId}`);
 
-  const tasks = leaks.map(async (finding): Promise<[string, FindingBriefExpansion | null]> => {
-    const key = leakKey(finding);
-    const body: ExpandFindingBriefRequestBody = {
-      domain,
-      overallScore,
-      finding: leakToFindingInput(finding),
-      relatedFindings: relatedForLeak(finding, leaks),
-    };
-    try {
+  const results = await Promise.allSettled(
+    leaks.map(async (finding): Promise<[string, FindingBriefExpansion]> => {
+      const key = leakKey(finding);
+      const body: ExpandFindingBriefRequestBody = {
+        domain,
+        overallScore,
+        finding: leakToFindingInput(finding),
+        relatedFindings: relatedForLeak(finding, allLeaks),
+      };
       const expansion = await expandFindingBriefWithAnthropic(body);
+      if (!expansion) throw new Error(`null expansion for ${key}`);
       return [key, expansion];
-    } catch (e) {
-      console.warn("[extended-analysis] expansion failed for", key, e);
-      return [key, null];
-    }
-  });
+    })
+  );
 
-  const settled = await Promise.all(tasks);
   const map: Record<string, FindingBriefExpansion> = {};
-  for (const [key, expansion] of settled) {
-    if (expansion) map[key] = expansion;
+  for (const result of results) {
+    if (result.status === "fulfilled") {
+      const [key, expansion] = result.value;
+      map[key] = expansion;
+    } else {
+      console.warn("[extended-analysis] brief generation failed:", result.reason);
+    }
   }
 
   if (Object.keys(map).length === 0) {
@@ -284,10 +357,7 @@ export async function generateAndPersistAllFindingBriefs(
     return;
   }
 
-  const merged = await readMergePersistExtendedAnalysis(supabase, reportId, map);
-  if (!merged) {
-    console.warn("[extended-analysis] merge/persist failed for report", reportId);
-  }
+  await persistBriefsBatch(supabase, reportId, map);
 }
 
 /**

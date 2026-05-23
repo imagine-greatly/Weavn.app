@@ -3,6 +3,9 @@
     "app/api/analyze/route.ts": {
       "memory": 1024,
       "maxDuration": 60
+    },
+    "app/api/expand-finding/route.ts": {
+      "maxDuration": 60
     }
   }
 }

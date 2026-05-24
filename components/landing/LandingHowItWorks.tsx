@@ -104,14 +104,14 @@ const STEPS = [
   {
     n: "01",
     title: "Submit your URL",
-    body: "Enter your website URL. WebDoc ingests your pages and extracts headlines, CTAs, trust signals, conversion architecture, and structural markers across every revenue dimension.",
+    body: "Enter your website URL. WebDoc ingests your homepage and up to two additional subpages (Pro) — extracting headlines, CTAs, trust signals, conversion architecture, and structural markers across every revenue dimension.",
     tag: "MULTI-PAGE INGESTION",
   },
   {
     n: "02",
-    title: "166 diagnostic checks execute",
-    body: "The diagnostic engine scores messaging clarity, CTA architecture, trust signal density, authority signals, psychological triggers, and technical conversion patterns against your site class. 166 checks. 60 seconds. No shortcuts.",
-    tag: "166 DIAGNOSTIC CHECKS",
+    title: "200 diagnostic checks execute",
+    body: "The diagnostic engine scores messaging clarity, CTA architecture, trust signal density, authority signals, psychological triggers, and technical conversion patterns against your site class. 200 checks. 60 seconds. No shortcuts.",
+    tag: "200 DIAGNOSTIC CHECKS",
   },
   {
     n: "03",

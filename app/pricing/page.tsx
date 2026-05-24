@@ -132,7 +132,7 @@ const PRO_FEATURES = [
   "Unlimited rescans per tracked domain and WebDoc Score tracking",
   "Full scan history",
   "Shareable public diagnostic report links",
-  "Up to five pages per scan — same depth as Free",
+  "Homepage + up to 2 subpages per scan",
   "Priority support",
 ];
 
@@ -362,7 +362,7 @@ function PricingCards() {
                 marginTop: 8,
               }}
             >
-              Three diagnostic findings per scan. Single-site diagnostic. No card on first run.
+              Three diagnostic findings per scan. Homepage scan only. No card on first run.
             </p>
             <div className="my-6 h-px w-full" style={{ background: "rgba(0,200,255,0.1)" }} />
             <ul className="flex-1 space-y-3">
@@ -784,7 +784,7 @@ const PRICING_FAQ = [
   },
   {
     q: "One scan definition",
-    a: "One scan is one complete domain diagnostic: multi-page crawl, one hundred and sixty-six evaluated signals, diagnostic report output. Each rescan of the same domain is a new scan. Pro includes the full finding set, history, and up to five concurrently tracked domains.",
+    a: "One scan is one complete domain diagnostic: homepage + up to 2 subpages (Pro) crawl, two hundred evaluated signals, diagnostic report output. Free scans the homepage only. Each rescan of the same domain is a new scan. Pro includes the full finding set, history, and up to five concurrently tracked domains.",
   },
   {
     q: "Refund guarantee",

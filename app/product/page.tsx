@@ -174,7 +174,7 @@ function ProductProblem() {
               </ScrollReveal>
               <ScrollReveal variant="card" index={2}>
                 <p>
-                  WebDoc maps that gap with 166 checks across five revenue dimensions, cites evidence from your pages, and outputs resolutions ranked by revenue impact.
+                  WebDoc maps that gap with 200 checks across six revenue dimensions, cites evidence from your pages, and outputs resolutions ranked by revenue impact.
                 </p>
               </ScrollReveal>
             </div>
@@ -392,7 +392,7 @@ function ProductSixCategories() {
           className="mx-auto mt-4 max-w-[560px] font-sans text-[14px] leading-relaxed"
           style={{ color: "var(--text-secondary)" }}
         >
-          WebDoc runs one hundred and sixty-six checks across five diagnostic dimensions. Each finding ties directly to conversion suppression and revenue impact.
+          WebDoc runs two hundred checks across six diagnostic dimensions. Each finding ties directly to conversion suppression and revenue impact.
         </p>
 
         <div className="mt-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">

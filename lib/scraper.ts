@@ -470,7 +470,7 @@ export function selectSubpageUrls(links: string[], siteType: string): string[] {
   return selected;
 }
 
-// Single fast attempt for subpages — no retry, 18 s abort
+// Single fast attempt for subpages — no retry, 10 s abort
 async function fetchSubpageFast(url: string): Promise<string | null> {
   const apiKey = (process.env.BROWSERLESS_API_KEY ?? '').trim();
   if (!apiKey) return null;
@@ -479,7 +479,7 @@ async function fetchSubpageFast(url: string): Promise<string | null> {
     `https://production-sfo.browserless.io/unblock` +
     `?token=${apiKey}&launch=${launchParam}&proxy=residential`;
   const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), 18_000);
+  const timer = setTimeout(() => ctrl.abort(), 10_000);
   try {
     const res = await fetch(endpoint, {
       method: 'POST',
@@ -487,8 +487,8 @@ async function fetchSubpageFast(url: string): Promise<string | null> {
       body: JSON.stringify({
         url,
         bestAttempt: true,
-        gotoOptions: { waitUntil: 'domcontentloaded', timeout: 12_000 },
-        waitForTimeout: 2_000,
+        gotoOptions: { waitUntil: 'domcontentloaded', timeout: 8_000 },
+        waitForTimeout: 1_000,
       }),
       signal: ctrl.signal,
     });

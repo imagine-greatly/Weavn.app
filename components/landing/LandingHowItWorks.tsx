@@ -104,7 +104,7 @@ const STEPS = [
   {
     n: "01",
     title: "Submit your URL",
-    body: "Enter your website URL. WebDoc ingests your homepage and up to two additional subpages (Pro) — extracting headlines, CTAs, trust signals, conversion architecture, and structural markers across every revenue dimension.",
+    body: "Enter your website URL. WebDoc ingests your landing page and up to two additional subpages (Pro) — extracting headlines, CTAs, trust signals, conversion architecture, and structural markers across every revenue dimension.",
     tag: "MULTI-PAGE INGESTION",
   },
   {

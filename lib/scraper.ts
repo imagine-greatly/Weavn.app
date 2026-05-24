@@ -10,6 +10,17 @@ export function normalizeToHomepage(input: string): string {
   }
 }
 
+// Normalizes protocol/host but preserves the path (used for entry URL handling).
+function normalizeUrlPreservingPath(input: string): string {
+  try {
+    const url = input.startsWith('http') ? input : `https://${input}`
+    const parsed = new URL(url)
+    return `${parsed.protocol}//${parsed.hostname.toLowerCase()}${parsed.pathname}`
+  } catch {
+    return input
+  }
+}
+
 // -- INVALID HEADLINE DETECTION -----------------------------------------
 export function isInvalidHeadline(text: string): boolean {
   if (!text || text.length < 4) return true
@@ -519,7 +530,7 @@ export async function scrapeSubpageSafe(url: string): Promise<{ url: string; raw
 }
 
 export async function scrapeUrl(inputUrl: string): Promise<ScrapeResult> {
-  const url = normalizeToHomepage(inputUrl)
+  const url = normalizeUrlPreservingPath(inputUrl)
   process.stderr.write(`[SCRAPER] scrapeUrl entered | input=${inputUrl} normalized=${url}\n`)
   let domain: string
   try {
@@ -569,7 +580,7 @@ export function applySmartTruncation(html: string): string {
 export async function scrapeSite(inputUrl: string): Promise<CombinedExtraction> {
   process.stderr.write(`[PIPELINE] scrape starting ${inputUrl}\n`)
   try {
-    const pageUrl = normalizeToHomepage(inputUrl)
+    const pageUrl = normalizeUrlPreservingPath(inputUrl)
     const scraped = await scrapeUrl(inputUrl)
 
     process.stderr.write('[SCRAPER] raw html chars: ' + scraped.rawHtml.length + '\n')

@@ -11,7 +11,7 @@ const exampleIssues = [
   },
   {
     type: "SEO Issue",
-    description: "No H1 tag detected on the homepage.",
+    description: "No H1 tag detected on the landing page.",
     icon: Search,
   },
   {

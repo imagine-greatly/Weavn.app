@@ -15,7 +15,7 @@ const LOCKED_BORDER_CYCLE = ["#FF2D2D", "#FF6B00"] as const;
 
 const FAKE_BLUR_BODY = {
   evidence:
-    "Homepage hero lacks a primary conversion path above the fold. Elevated bounce on first paint without a clear next step.",
+    "Landing page hero lacks a primary conversion path above the fold. Elevated bounce on first paint without a clear next step.",
   cost: "Estimated 12–28% of qualified sessions exit before any micro-conversion.",
   resolution:
     "Replace feature-led copy with outcome-led headline and a singular CTA with risk reversal above the fold.",

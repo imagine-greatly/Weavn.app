@@ -315,7 +315,7 @@ export default function LandingDiagnosticOutput() {
                   margin: 0,
                 }}
               >
-                client-ecommerce.com presents a critical conversion architecture failure scoring 38/100. The homepage communicates no clear value proposition above the fold — visitors see a brand name and lifestyle imagery with no product category, benefit statement, or primary action. Trust infrastructure is absent: no reviews, no guarantees, no credibility signals visible without scrolling. The site is losing an estimated 60–70% of first-time visitors before they reach any product.
+                client-ecommerce.com presents a critical conversion architecture failure scoring 38/100. The landing page communicates no clear value proposition above the fold — visitors see a brand name and lifestyle imagery with no product category, benefit statement, or primary action. Trust infrastructure is absent: no reviews, no guarantees, no credibility signals visible without scrolling. The site is losing an estimated 60–70% of first-time visitors before they reach any product.
               </p>
             </div>
           </div>
@@ -334,7 +334,7 @@ export default function LandingDiagnosticOutput() {
             severity="critical"
             tagLabel="trust"
             title="Complete Absence of Social Proof"
-            evidence="No customer reviews, testimonials, star ratings, or trust badges visible on the homepage or product pages. Competitors show 4.8★ ratings and 2,400+ reviews above the fold."
+            evidence="No customer reviews, testimonials, star ratings, or trust badges visible on the landing page or product pages. Competitors show 4.8★ ratings and 2,400+ reviews above the fold."
             impact="High-consideration purchases require social validation before commitment. Without proof, first-time visitors have no basis for trust and no reason to proceed."
           />
           <DiagnosticFindingCard

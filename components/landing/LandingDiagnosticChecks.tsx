@@ -65,7 +65,7 @@ const DIMENSIONS = [
     checks: [
       "Hero content not visible above fold on mobile",
       "Page weight suggests slow load time",
-      "No clear path from homepage to purchase",
+      "No clear path from landing page to purchase",
       "CTA not visible above fold on mobile",
       "Text contrast ratio insufficient",
     ],

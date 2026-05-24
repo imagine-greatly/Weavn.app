@@ -364,8 +364,8 @@ const STEPS = [
     visual: <Step1Visual />,
     explanationTitle: "Target pages are retrieved and parsed",
     explanationBody:
-      "WebDoc requests your URL and ingests raw HTML for the homepage and up to two additional subpages on Pro. Free tier scans the homepage only. Headlines, CTAs, body copy, trust markers, and structural elements are extracted for scoring.",
-    tag: "PRO: HOMEPAGE + UP TO 2 SUBPAGES",
+      "WebDoc requests your URL and ingests raw HTML for the landing page and up to two additional subpages on Pro. Free tier scans the landing page only. Headlines, CTAs, body copy, trust markers, and structural elements are extracted for scoring.",
+    tag: "PRO: LANDING PAGE + UP TO 2 SUBPAGES",
   },
   {
     num: 2,
@@ -909,7 +909,7 @@ const FAQ_ITEMS: { q: string; a: string }[] = [
   },
   {
     q: "Scan duration",
-    a: "Typical completion is sixty to ninety seconds. Pro scans cover the homepage and up to two additional subpages. Free scans cover the homepage only.",
+    a: "Typical completion is sixty to ninety seconds. Pro scans cover the landing page and up to two additional subpages. Free scans cover the landing page only.",
   },
   {
     q: "Competitor URLs",

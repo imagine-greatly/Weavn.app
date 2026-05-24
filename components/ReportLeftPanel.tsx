@@ -87,21 +87,20 @@ const NAV_PILLS: { id: ReportNavSectionId; label: string }[] = [
 const MONO = "var(--font-jetbrains-mono), var(--font-space-mono), monospace";
 
 function guessPageLabel(url: string, index: number): string {
-  if (index === 0) return "HOMEPAGE";
   try {
     const path = new URL(url).pathname.toLowerCase();
-    if (/\/pricing/i.test(path)) return "PRICING PAGE";
+    if (path === "/" || path === "") return "LANDING PAGE";
+    if (/\/pricing|\/plans/i.test(path)) return "PRICING PAGE";
     if (/\/features?/i.test(path)) return "FEATURES PAGE";
     if (/\/(signup|register|trial)/i.test(path)) return "SIGNUP PAGE";
     if (/\/about/i.test(path)) return "ABOUT PAGE";
-    if (/\/contact/i.test(path)) return "CONTACT PAGE";
+    if (/\/(contact|book(?:ing)?|schedule)/i.test(path)) return "CONTACT PAGE";
     if (/\/services?/i.test(path)) return "SERVICES PAGE";
-    if (/\/products?/i.test(path)) return "PRODUCTS PAGE";
-    if (/\/shop/i.test(path)) return "SHOP PAGE";
-    if (/\/booking/i.test(path)) return "BOOKING PAGE";
-    if (/\/collections?/i.test(path)) return "COLLECTIONS PAGE";
+    if (/\/(products?|shop|store)/i.test(path)) return "PRODUCT PAGE";
+    if (/\/(collections?|categor|catalog)/i.test(path)) return "COLLECTIONS PAGE";
+    if (/\/blog/i.test(path)) return "BLOG PAGE";
     const seg = path.replace(/^\//, "").split("/")[0] ?? "";
-    return seg ? seg.replace(/-/g, " ").toUpperCase() + " PAGE" : `PAGE ${index + 1}`;
+    return seg ? seg.replace(/-/g, " ").toUpperCase() + " PAGE" : "LANDING PAGE";
   } catch { return `PAGE ${index + 1}`; }
 }
 

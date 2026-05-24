@@ -232,14 +232,14 @@ export default function DocsPage() {
         >
           <DocSection id="getting-your-first-scan" title="Running your first diagnostic" visible={visibleIds.has("getting-your-first-scan")}>
             <p className="mb-6 font-sans text-[15px] leading-[1.8]" style={{ color: "var(--text-secondary)" }}>
-              Enter your URL on the homepage. Select depth if prompted. Run diagnostic. No account is required for the first run.
+              Enter your URL on the landing page. Select depth if prompted. Run diagnostic. No account is required for the first run.
             </p>
             <h3 className="mb-3 max-w-[min(36rem,100%)] font-sans font-extrabold" style={{ color: "var(--text-primary)", fontWeight: 800, fontSize: "clamp(18px, 1.5vw, 22px)", lineHeight: 0.98, letterSpacing: "-0.5px" }}>
               URL hygiene
             </h3>
             <ul className="mb-6 list-disc space-y-2 pl-5 font-sans text-[15px] leading-[1.8]" style={{ color: "var(--text-secondary)" }}>
               <li>Include the scheme: https://</li>
-              <li>Start with the homepage; highest traffic and highest suppression surface area</li>
+              <li>Start with the landing page; highest traffic and highest suppression surface area</li>
               <li>On fetch errors, toggle www. or apex to match the live canonical host</li>
             </ul>
             <h3 className="mb-3 max-w-[min(36rem,100%)] font-sans font-extrabold" style={{ color: "var(--text-primary)", fontWeight: 800, fontSize: "clamp(18px, 1.5vw, 22px)", lineHeight: 0.98, letterSpacing: "-0.5px" }}>
@@ -254,7 +254,7 @@ export default function DocsPage() {
                   </tr>
                 </thead>
                 <tbody style={{ color: "var(--text-secondary)" }}>
-                  <tr style={{ borderBottom: "1px solid var(--border-default)" }}><td className="p-3">Homepage</td><td className="p-3">Hero, messaging, primary CTA, trust signal architecture</td></tr>
+                  <tr style={{ borderBottom: "1px solid var(--border-default)" }}><td className="p-3">Landing Page</td><td className="p-3">Hero, messaging, primary CTA, trust signal architecture</td></tr>
                   <tr style={{ borderBottom: "1px solid var(--border-default)" }}><td className="p-3">Pricing</td><td className="p-3">Offer clarity, commitment step count</td></tr>
                   <tr style={{ borderBottom: "1px solid var(--border-default)" }}><td className="p-3">About</td><td className="p-3">Authority and credibility density</td></tr>
                   <tr style={{ borderBottom: "1px solid var(--border-default)" }}><td className="p-3">Product/Service</td><td className="p-3">Outcome proof, purchase path continuity</td></tr>
@@ -404,7 +404,7 @@ export default function DocsPage() {
 
           <DocSection id="best-urls-to-scan" title="Recommended URLs" visible={visibleIds.has("best-urls-to-scan")}>
             <p className="mb-6 font-sans text-[15px] leading-[1.8]" style={{ color: "var(--text-secondary)" }}>
-              Queue homepage first, then pricing, about, and primary product or service URLs. Each diagnostic scan ingests up to five pages.
+              Queue landing page first, then pricing, about, and primary product or service URLs. Each diagnostic scan ingests the landing page and up to two additional subpages (Pro).
             </p>
             <p className="font-sans text-[15px] leading-[1.8]" style={{ color: "var(--text-secondary)" }}>
               Match the hostname pattern used in paid and organic entry (www versus apex) so the HTML matches visitor-facing infrastructure.

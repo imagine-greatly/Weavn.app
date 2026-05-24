@@ -29,6 +29,8 @@ export const REPORT_OPTIONAL_SCALAR_COLUMNS = [
   "share_token",
   "biggest_opportunity",
   "estimated_impact",
+  "source",
+  "scan_type",
 ] as const;
 
 export function stripReportOptionalJsonbColumns<T extends Record<string, unknown>>(
@@ -134,7 +136,8 @@ function rowToStoredReport(row: ReportRowRaw): StoredReportRow {
 export async function saveReport(
   domain: string,
   analysis: ReportPayload,
-  userId: string
+  userId: string,
+  options?: { source?: string | null; scan_type?: string | null }
 ): Promise<string> {
   const uid = typeof userId === "string" ? userId.trim() : "";
   if (!uid) {
@@ -186,6 +189,8 @@ export async function saveReport(
     total_failed: analysis.totalFailed ?? null,
     total_passed: analysis.totalPassed ?? null,
     dimension_scores: analysis.dimensionScores ?? null,
+    source: options?.source ?? null,
+    scan_type: options?.scan_type ?? 'full',
   };
 
   let data: { id: string } | null = null;

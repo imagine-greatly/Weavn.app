@@ -105,10 +105,14 @@ export async function POST(req: NextRequest) {
   }
 
   let url: string;
+  let reqSource: string | null = null;
+  let reqScanType: string | null = null;
   try {
     const body = await req.json();
     url = typeof body?.url === "string" ? body.url : "";
     const isRescan = body?.rescan === true;
+    reqSource = typeof body?.source === "string" ? body.source : null;
+    reqScanType = typeof body?.scan_type === "string" ? body.scan_type : null;
     console.log("[scan] rescan flag:", isRescan);
   } catch {
     return withCookies(
@@ -321,7 +325,7 @@ export async function POST(req: NextRequest) {
   process.stderr.write(`[ROUTE] saveReport START | domain=${domain}\n`)
   console.log(`[scan] SAVE START | domain=${domain}`)
   try {
-    reportId = await saveReport(domain, payload, userId);
+    reportId = await saveReport(domain, payload, userId, { source: reqSource, scan_type: reqScanType });
     process.stderr.write(`[ROUTE] saveReport DONE | reportId=${reportId} elapsed=${Date.now() - saveStart}ms\n`)
     console.log(`[scan] SAVE DONE | domain=${domain} reportId=${reportId} elapsed=${Date.now() - saveStart}ms`)
   } catch (err) {

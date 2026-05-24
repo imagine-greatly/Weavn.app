@@ -41,7 +41,7 @@ function getDomain(urlStr: string): string {
 
 
 export async function POST(req: NextRequest) {
-  console.error('[ROUTE] scan started', new Date().toISOString())
+  console.log('[ROUTE] scan started', new Date().toISOString())
 
   // Internal API key bypass — checked before any auth/session logic
   const internalKey = req.headers.get("x-internal-key");
@@ -56,7 +56,7 @@ export async function POST(req: NextRequest) {
   let withCookies: (res: NextResponse) => NextResponse;
 
   if (internalBypass) {
-    console.error("[scan] internal key auth - bypass active");
+    console.log("[scan] internal key auth - bypass active");
     userId = "internal";
     withCookies = (res) => res;
   } else {
@@ -109,7 +109,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     url = typeof body?.url === "string" ? body.url : "";
     const isRescan = body?.rescan === true;
-    console.error("[scan] rescan flag:", isRescan);
+    console.log("[scan] rescan flag:", isRescan);
   } catch {
     return withCookies(
       NextResponse.json(
@@ -157,7 +157,7 @@ export async function POST(req: NextRequest) {
   }
 
   const scanStart = Date.now()
-  console.error(`[scan] START | url=${normalized} domain=${domain} userId=${userId}`)
+  console.log(`[scan] START | url=${normalized} domain=${domain} userId=${userId}`)
 
   // Hard 85 s deadline for scrape + analysis only. Timer is cleared once Claude succeeds so
   // saveReport always runs to completion (it takes 2-3 s and must not be interrupted).
@@ -173,12 +173,12 @@ export async function POST(req: NextRequest) {
   let extraction;
   const scrapeStart = Date.now()
   process.stderr.write(`[ROUTE] SCRAPE START | url=${normalized}\n`)
-  console.error(`[scan] SCRAPE START | url=${normalized}`)
+  console.log(`[scan] SCRAPE START | url=${normalized}`)
   try {
     extraction = await Promise.race([scrapeSite(normalized), deadline]);
     const scrapeElapsedMs = Date.now() - scrapeStart
     process.stderr.write(`[ROUTE] SCRAPE DONE | rawHtml_len=${extraction.rawHtml.length} pages=${extraction.pagesAnalyzed.length} elapsed=${scrapeElapsedMs}ms\n`)
-    console.error(
+    console.log(
       `[scan] SCRAPE DONE | domain=${domain}` +
       ` rawHtml_len=${extraction.rawHtml.length}` +
       ` pages=${extraction.pagesAnalyzed.length}` +
@@ -193,7 +193,7 @@ export async function POST(req: NextRequest) {
     process.stderr.write(`[ROUTE] SCRAPE ERROR | elapsed=${scrapeElapsed}ms isBlocked=${isBlocked} message=${message}\n`)
     console.error(`[scan] SCRAPE ERROR | domain=${domain} elapsed=${scrapeElapsed}ms | isBlocked=${isBlocked} | message=${message}`)
     console.error(`[scan] SCRAPE ERROR stack:`, err instanceof Error ? (err.stack ?? err.message) : err)
-    console.error(`[scan] returning 422 | domain=${domain}`)
+    console.log(`[scan] returning 422 | domain=${domain}`)
     return withCookies(
       NextResponse.json(
         {
@@ -209,7 +209,7 @@ export async function POST(req: NextRequest) {
   // If we have no meaningful content, still try AI (it may return a minimal report)
   if (!extraction.rawHtml) {
     process.stderr.write(`[ROUTE] 422 no rawHtml | elapsed=${Date.now() - scanStart}ms\n`)
-    console.error(`[scan] 422 no rawHtml | domain=${domain} elapsed=${Date.now() - scanStart}ms`)
+    console.log(`[scan] 422 no rawHtml | domain=${domain} elapsed=${Date.now() - scanStart}ms`)
     return withCookies(
       NextResponse.json(
         {
@@ -231,7 +231,7 @@ export async function POST(req: NextRequest) {
     throw err;
   }
   process.stderr.write(`[ROUTE] detectSiteType DONE | site_type=${site_type} elapsed=${Date.now() - scanStart}ms\n`)
-  console.error(`[scan] SITE_TYPE | domain=${domain} site_type=${site_type} elapsed=${Date.now() - scanStart}ms`)
+  console.log(`[scan] SITE_TYPE | domain=${domain} site_type=${site_type} elapsed=${Date.now() - scanStart}ms`)
 
   // Fetch user plan for model selection (agency uses higher-capacity model)
   let userPlan = "free";
@@ -248,9 +248,9 @@ export async function POST(req: NextRequest) {
         .eq("id", userId)
         .maybeSingle();
       userPlan = profile?.plan ?? "free";
-      console.error(`[scan] USER_PLAN | domain=${domain} plan=${userPlan} elapsed=${Date.now() - planStart}ms`)
+      console.log(`[scan] USER_PLAN | domain=${domain} plan=${userPlan} elapsed=${Date.now() - planStart}ms`)
     } catch (err) {
-      console.error(`[scan] USER_PLAN ERROR (non-fatal, using free) | domain=${domain}`, err instanceof Error ? (err.stack ?? err.message) : err)
+      console.log(`[scan] USER_PLAN ERROR (non-fatal, using free) | domain=${domain}`, err instanceof Error ? (err.stack ?? err.message) : err)
     }
   }
 
@@ -301,16 +301,16 @@ export async function POST(req: NextRequest) {
   let payload;
   const analyzeStart = Date.now()
   process.stderr.write(`[ROUTE] runAnalysis START | domain=${domain} site_type=${site_type} plan=${userPlan} pagesAnalyzed=${extraction.pagesAnalyzed.length} analyzeTimeoutMs=${analyzeTimeoutMs} elapsed_since_scan_start=${Date.now() - scanStart}ms\n`)
-  console.error(`[scan] ANALYZE START | domain=${domain} site_type=${site_type} userPlan=${userPlan} pages=${extraction.pagesAnalyzed.length}`)
+  console.log(`[scan] ANALYZE START | domain=${domain} site_type=${site_type} userPlan=${userPlan} pages=${extraction.pagesAnalyzed.length}`)
   try {
     payload = await Promise.race([runAnalysis(extraction, site_type, userPlan), analyzeDeadline]);
     process.stderr.write(`[ROUTE] runAnalysis DONE | elapsed=${Date.now() - analyzeStart}ms\n`)
-    console.error(`[scan] ANALYZE DONE | domain=${domain} elapsed=${Date.now() - analyzeStart}ms`)
+    console.log(`[scan] ANALYZE DONE | domain=${domain} elapsed=${Date.now() - analyzeStart}ms`)
     // Analysis succeeded — cancel the global deadline so saveReport can't be interrupted.
     clearTimeout(deadlineTimerId!);
   } catch (err) {
     process.stderr.write(`[ROUTE] runAnalysis ERROR | elapsed=${Date.now() - analyzeStart}ms | ${err instanceof Error ? (err.stack ?? err.message) : String(err)}\n`)
-    console.error(`[scan] ANALYZE ERROR | domain=${domain} elapsed=${Date.now() - analyzeStart}ms`, err instanceof Error ? (err.stack ?? err.message) : err)
+    console.error(`[scan] ANALYZE ERROR | domain=${domain} elapsed=${Date.now() - analyzeStart}ms | ${err instanceof Error ? (err.stack ?? err.message) : err}`)
     const message = err instanceof Error ? err.message : "Analysis failed.";
     return withCookies(NextResponse.json({ error: message }, { status: 500 }));
   }
@@ -319,14 +319,14 @@ export async function POST(req: NextRequest) {
   let reportId: string;
   const saveStart = Date.now()
   process.stderr.write(`[ROUTE] saveReport START | domain=${domain}\n`)
-  console.error(`[scan] SAVE START | domain=${domain}`)
+  console.log(`[scan] SAVE START | domain=${domain}`)
   try {
     reportId = await saveReport(domain, payload, userId);
     process.stderr.write(`[ROUTE] saveReport DONE | reportId=${reportId} elapsed=${Date.now() - saveStart}ms\n`)
-    console.error(`[scan] SAVE DONE | domain=${domain} reportId=${reportId} elapsed=${Date.now() - saveStart}ms`)
+    console.log(`[scan] SAVE DONE | domain=${domain} reportId=${reportId} elapsed=${Date.now() - saveStart}ms`)
   } catch (err) {
     process.stderr.write(`[ROUTE] saveReport ERROR | elapsed=${Date.now() - saveStart}ms | ${err instanceof Error ? (err.stack ?? err.message) : String(err)}\n`)
-    console.error(`[scan] SAVE ERROR | domain=${domain} elapsed=${Date.now() - saveStart}ms`, err instanceof Error ? (err.stack ?? err.message) : err)
+    console.error(`[scan] SAVE ERROR | domain=${domain} elapsed=${Date.now() - saveStart}ms | ${err instanceof Error ? (err.stack ?? err.message) : err}`)
     const message = err instanceof Error ? err.message : "Failed to save report.";
     return withCookies(
       NextResponse.json(
@@ -336,12 +336,12 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  console.error(`[scan] COMPLETE | domain=${domain} reportId=${reportId} total_elapsed=${Date.now() - scanStart}ms`)
+  console.log(`[scan] COMPLETE | domain=${domain} reportId=${reportId} total_elapsed=${Date.now() - scanStart}ms`)
 
   // Fire-and-forget: pre-generate AI advisor briefs for all findings in the background.
   // The response goes out immediately; briefs are written to reports.extended_analysis as they complete.
   void generateAndPersistAllFindingBriefs(reportId, domain, payload).catch((err) => {
-    console.error("[scan] background brief generation failed:", err instanceof Error ? (err.stack ?? err.message) : err);
+    console.log("[scan] background brief generation failed:", err instanceof Error ? (err.stack ?? err.message) : err);
   });
 
   return withCookies(

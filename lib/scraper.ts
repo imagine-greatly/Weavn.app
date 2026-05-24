@@ -157,7 +157,7 @@ async function fetchWithBrowserless(url: string): Promise<string> {
     try {
       const json = JSON.parse(text) as Record<string, unknown>
       const topLevelKeys = Object.keys(json)
-      console.error(`[SCRAPER] response keys: [${topLevelKeys.join(',')}]`)
+      console.log(`[SCRAPER] response keys: [${topLevelKeys.join(',')}]`)
       const html =
         (typeof json.content === 'string' ? json.content : null) ??
         (typeof json.html === 'string' ? json.html : null) ??
@@ -199,22 +199,22 @@ async function fetchWithBrowserless(url: string): Promise<string> {
     const rawText1 = await res1.text()
     process.stderr.write('[SCRAPER] attempt1 response: ' + res1.status + ' chars: ' + rawText1.length + '\n')
     process.stderr.write('[SCRAPER] attempt1 body: ' + rawText1.slice(0, 300) + '\n')
-    console.error(`[SCRAPER] attempt1 response | status=${res1.status} ${res1.statusText} | fetch_elapsed=${a1FetchMs}ms`)
-    console.error(`[SCRAPER] attempt1 raw body | length=${rawText1.length} | first500: ${rawText1.slice(0, 500)}`)
+    console.log(`[SCRAPER] attempt1 response | status=${res1.status} ${res1.statusText} | fetch_elapsed=${a1FetchMs}ms`)
+    console.log(`[SCRAPER] attempt1 raw body | length=${rawText1.length} | first500: ${rawText1.slice(0, 500)}`)
 
     if (res1.ok) {
       html1 = extractHtml(rawText1)
       const len = readableTextLength(html1 ?? '')
       const blocked = html1 !== null && isBlockPage(html1)
-      console.error(`[SCRAPER] attempt1 parsed | html_chars=${html1?.length ?? 0} readable=${len} blocked=${blocked} | total_elapsed=${Date.now() - a1Start}ms`)
+      console.log(`[SCRAPER] attempt1 parsed | html_chars=${html1?.length ?? 0} readable=${len} blocked=${blocked} | total_elapsed=${Date.now() - a1Start}ms`)
     } else {
-      console.error(`[SCRAPER] attempt1 FAILED | HTTP ${res1.status} | body: ${rawText1.slice(0, 300)} | elapsed=${a1FetchMs}ms`)
+      console.log(`[SCRAPER] attempt1 FAILED | HTTP ${res1.status} | body: ${rawText1.slice(0, 300)} | elapsed=${a1FetchMs}ms`)
     }
   } catch (err) {
     const a1Elapsed = Date.now() - a1Start
     const isAbort = err instanceof Error && err.name === 'AbortError'
-    console.error(`[SCRAPER] attempt1 ERROR | ${isAbort ? 'ABORTED by 20s timeout' : 'threw exception'} | elapsed=${a1Elapsed}ms`)
-    console.error('[SCRAPER] attempt1 exception:', err instanceof Error ? (err.stack ?? err.message) : err)
+    console.log(`[SCRAPER] attempt1 ERROR | ${isAbort ? 'ABORTED by 20s timeout' : 'threw exception'} | elapsed=${a1Elapsed}ms`)
+    console.log('[SCRAPER] attempt1 exception:', err instanceof Error ? (err.stack ?? err.message) : err)
   } finally {
     clearTimeout(t1)
   }
@@ -222,12 +222,12 @@ async function fetchWithBrowserless(url: string): Promise<string> {
   // Accept attempt 1 only if it has real content AND is not a bot-block page.
   const len1Early = readableTextLength(html1 ?? '')
   if (html1 && len1Early >= 500 && !isBlockPage(html1)) {
-    console.error(`[SCRAPER] attempt1 ACCEPTED | readable=${len1Early} | total_elapsed=${Date.now() - a1Start}ms`)
+    console.log(`[SCRAPER] attempt1 ACCEPTED | readable=${len1Early} | total_elapsed=${Date.now() - a1Start}ms`)
     return html1
   }
 
   if (html1 && isBlockPage(html1)) {
-    console.error(`[SCRAPER] attempt1 returned a block/challenge page — escalating to attempt2`)
+    console.log(`[SCRAPER] attempt1 returned a block/challenge page — escalating to attempt2`)
   }
 
   // Attempt 2 — deep path: networkidle2 + 3 s settle, residential proxy
@@ -258,22 +258,22 @@ async function fetchWithBrowserless(url: string): Promise<string> {
     const rawText2 = await res2.text()
     process.stderr.write('[SCRAPER] attempt2 response: ' + res2.status + ' chars: ' + rawText2.length + '\n')
     process.stderr.write('[SCRAPER] attempt2 body: ' + rawText2.slice(0, 300) + '\n')
-    console.error(`[SCRAPER] attempt2 response | status=${res2.status} ${res2.statusText} | fetch_elapsed=${a2FetchMs}ms`)
-    console.error(`[SCRAPER] attempt2 raw body | length=${rawText2.length} | first500: ${rawText2.slice(0, 500)}`)
+    console.log(`[SCRAPER] attempt2 response | status=${res2.status} ${res2.statusText} | fetch_elapsed=${a2FetchMs}ms`)
+    console.log(`[SCRAPER] attempt2 raw body | length=${rawText2.length} | first500: ${rawText2.slice(0, 500)}`)
 
     if (res2.ok) {
       html2 = extractHtml(rawText2)
       const len = readableTextLength(html2 ?? '')
       const blocked = html2 !== null && isBlockPage(html2)
-      console.error(`[SCRAPER] attempt2 parsed | html_chars=${html2?.length ?? 0} readable=${len} blocked=${blocked} | total_elapsed=${Date.now() - a2Start}ms`)
+      console.log(`[SCRAPER] attempt2 parsed | html_chars=${html2?.length ?? 0} readable=${len} blocked=${blocked} | total_elapsed=${Date.now() - a2Start}ms`)
     } else {
-      console.error(`[SCRAPER] attempt2 FAILED | HTTP ${res2.status} | body: ${rawText2.slice(0, 300)} | elapsed=${a2FetchMs}ms`)
+      console.log(`[SCRAPER] attempt2 FAILED | HTTP ${res2.status} | body: ${rawText2.slice(0, 300)} | elapsed=${a2FetchMs}ms`)
     }
   } catch (err) {
     const a2Elapsed = Date.now() - a2Start
     const isAbort = err instanceof Error && err.name === 'AbortError'
-    console.error(`[SCRAPER] attempt2 ERROR | ${isAbort ? 'ABORTED by 22s timeout' : 'threw exception'} | elapsed=${a2Elapsed}ms`)
-    console.error('[SCRAPER] attempt2 exception:', err instanceof Error ? (err.stack ?? err.message) : err)
+    console.log(`[SCRAPER] attempt2 ERROR | ${isAbort ? 'ABORTED by 22s timeout' : 'threw exception'} | elapsed=${a2Elapsed}ms`)
+    console.log('[SCRAPER] attempt2 exception:', err instanceof Error ? (err.stack ?? err.message) : err)
   } finally {
     clearTimeout(t2)
   }
@@ -282,7 +282,7 @@ async function fetchWithBrowserless(url: string): Promise<string> {
   const len2 = readableTextLength(html2 ?? '')
   const blocked1 = html1 !== null && isBlockPage(html1)
   const blocked2 = html2 !== null && isBlockPage(html2)
-  console.error(
+  console.log(
     `[SCRAPER] final proxy attempts: attempt1=${len1}(blocked=${blocked1}) attempt2=${len2}(blocked=${blocked2}) url=${url}`
   )
 
@@ -305,24 +305,24 @@ async function fetchWithBrowserless(url: string): Promise<string> {
       })
       const rawText3 = await res3.text()
       process.stderr.write('[SCRAPER] attempt3 response: ' + res3.status + ' chars: ' + rawText3.length + '\n')
-      console.error(`[SCRAPER] attempt3 response | status=${res3.status} | elapsed=${Date.now() - a3Start}ms`)
-      console.error(`[SCRAPER] attempt3 raw body first500: ${rawText3.slice(0, 500)}`)
+      console.log(`[SCRAPER] attempt3 response | status=${res3.status} | elapsed=${Date.now() - a3Start}ms`)
+      console.log(`[SCRAPER] attempt3 raw body first500: ${rawText3.slice(0, 500)}`)
 
       if (res3.ok) {
         const html3 = extractHtml(rawText3)
         const len3 = readableTextLength(html3 ?? '')
-        console.error(`[SCRAPER] attempt3 parsed | html_chars=${html3?.length ?? 0} readable=${len3}`)
+        console.log(`[SCRAPER] attempt3 parsed | html_chars=${html3?.length ?? 0} readable=${len3}`)
         if (html3 && len3 >= 200) {
-          console.error('[SCRAPER] attempt3 ACCEPTED')
+          console.log('[SCRAPER] attempt3 ACCEPTED')
           return html3
         }
       } else {
-        console.error(`[SCRAPER] attempt3 FAILED | HTTP ${res3.status}`)
+        console.log(`[SCRAPER] attempt3 FAILED | HTTP ${res3.status}`)
       }
     } catch (err) {
       const isAbort = err instanceof Error && err.name === 'AbortError'
-      console.error(`[SCRAPER] attempt3 ERROR | ${isAbort ? 'ABORTED by 15s timeout' : 'threw exception'}`)
-      console.error('[SCRAPER] attempt3 exception:', err instanceof Error ? err.message : err)
+      console.log(`[SCRAPER] attempt3 ERROR | ${isAbort ? 'ABORTED by 15s timeout' : 'threw exception'}`)
+      console.log('[SCRAPER] attempt3 exception:', err instanceof Error ? err.message : err)
     } finally {
       clearTimeout(t3)
     }
@@ -378,6 +378,9 @@ export interface CombinedExtraction {
 
 // -- LINK EXTRACTION & SUBPAGE SELECTION --------------------------------
 
+const NON_HTML_EXT = /\.(css|js|png|jpg|jpeg|gif|svg|webp|ico|pdf|woff2?|ttf)(\?|#|$)/i;
+const STATIC_PATH_SEGMENT = /\/(src|assets|static|_next|cdn-cgi)(\/|$)/i;
+
 export function extractInternalLinks(html: string, baseUrl: string): string[] {
   try {
     const base = new URL(baseUrl);
@@ -391,6 +394,7 @@ export function extractInternalLinks(html: string, baseUrl: string): string[] {
       try {
         const u = new URL(href, base);
         if (u.origin !== base.origin) continue;
+        if (NON_HTML_EXT.test(u.pathname) || STATIC_PATH_SEGMENT.test(u.pathname)) continue;
         const path = u.pathname.replace(/\/$/, '') || '/';
         if (path === '/') continue;
         const key = `${u.origin}${path}`;
@@ -527,7 +531,7 @@ export async function scrapeUrl(inputUrl: string): Promise<ScrapeResult> {
   process.stderr.write(`[SCRAPER] scrapeUrl domain=${domain}\n`)
 
   const rawHtml = await fetchWithBrowserless(url)
-  console.error(`[SCRAPER] ${domain} | method:browserless | html_len:${rawHtml.length}`)
+  console.log(`[SCRAPER] ${domain} | method:browserless | html_len:${rawHtml.length}`)
   return { rawHtml, method: 'browserless', domain }
 }
 
@@ -579,7 +583,7 @@ export async function scrapeSite(inputUrl: string): Promise<CombinedExtraction> 
     }
     process.stderr.write('[ANALYZE] cleaned html chars: ' + cleaned.length + '\n')
 
-    console.error(
+    console.log(
       `[SCRAPER] method:${scraped.method} raw:${scraped.rawHtml.length} clean:${cleaned.length}`
     )
 

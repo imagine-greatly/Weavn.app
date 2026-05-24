@@ -345,6 +345,8 @@ export function buildExpandFindingBriefUserMessage(input: {
   overallScore: number;
   finding: ExpandFindingBriefFindingInput;
   related: ExpandFindingBriefRelated[];
+  pageSummary?: string;
+  siteType?: string;
 }): string {
   const rel =
     input.related.length > 0
@@ -356,8 +358,13 @@ export function buildExpandFindingBriefUserMessage(input: {
           .join("\n")
       : "(none — return relatedFindingInteractions as [])";
 
+  const siteTypeLine = input.siteType ? `\nSite type: ${input.siteType}` : "";
+  const pageSummaryBlock = input.pageSummary
+    ? `\nPAGE CONTEXT (structured summary of the scanned page — use this to ground every analysis paragraph in real page evidence, not generic CRO advice)\n${input.pageSummary.slice(0, 4000)}\n`
+    : "";
+
   return `Domain: ${input.domain || "unknown"}
-Overall diagnostic score: ${input.overallScore}/100
+Overall diagnostic score: ${input.overallScore}/100${siteTypeLine}${pageSummaryBlock}
 
 PRIMARY FINDING
 Title: ${input.finding.title}
@@ -375,7 +382,7 @@ OTHER FINDINGS ON THE SAME REPORT (for interaction paragraphs and relatedFinding
 ${rel}
 
 TASK
-Produce the full clinical brief as JSON.
+Produce the full clinical brief as JSON. Ground every analysis paragraph in the PAGE CONTEXT above — reference actual headlines, CTAs, copy, and page structure. Do not produce generic CRO advice. Every sentence must be specific to this domain and this evidence.
 
 Rules:
 - diagnosticSummary: attending-physician style; reference the actual domain and quoted or paraphrased evidence.

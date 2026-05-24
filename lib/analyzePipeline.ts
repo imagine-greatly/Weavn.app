@@ -8,7 +8,7 @@ const BLOCKED_PROTOCOL = /^(file|ftp|data|javascript):/i;
 export function validateAndNormalizeUrl(
   input: string
 ): { url: string; domain: string } | { error: string } {
-  console.error('[PIPELINE] validateAndNormalizeUrl called — analyzePipeline.ts is in the call chain')
+  console.log('[PIPELINE] validateAndNormalizeUrl called — analyzePipeline.ts is in the call chain')
   const raw = (input || "").trim();
   if (!raw) return { error: "Invalid URL" };
   let urlStr = raw;
@@ -197,6 +197,7 @@ export interface ExtractedPage {
   hasEmailAddress: boolean;
   hasAddress: boolean;
   structured_data: string[];
+  faq?: Array<{ question: string; answer: string }>;
 }
 
 export function extractPageData(
@@ -204,7 +205,7 @@ export function extractPageData(
   url: string,
   pageType: string
 ): ExtractedPage {
-  console.error('[PIPELINE] extractPageData called', url)
+  console.log('[PIPELINE] extractPageData called', url)
   const $ = cheerio.load(html);
   $("script, style, noscript, svg").remove();
 
@@ -462,12 +463,28 @@ export function extractPageData(
       sections.push({ label: heading || `Section ${i + 1}`, text: body });
   });
 
-  // ── PARAGRAPHS ──
+  // ── PARAGRAPHS — prefer main content area, skip nav/header/footer ──
   const paragraphChunks: string[] = [];
-  $("p, li").each((_, el) => {
-    const text = $(el).text().replace(/\s+/g, " ").trim();
-    if (text.length > 15) paragraphChunks.push(text.slice(0, 800));
-  });
+  const paragraphSeen = new Set<string>();
+  const addParagraph = (text: string) => {
+    const t = text.replace(/\s+/g, " ").trim();
+    if (t.length > 15 && !paragraphSeen.has(t)) {
+      paragraphSeen.add(t);
+      paragraphChunks.push(t.slice(0, 800));
+    }
+  };
+
+  const mainContent = $("main, article, [role='main'], #main, #content").first();
+  if (mainContent.length) {
+    mainContent.find("p, li").each((_, el) => addParagraph($(el).text()));
+  }
+  // Fallback when main area is empty or too thin
+  if (paragraphChunks.join(" ").length < 300) {
+    $("p, li").each((_, el) => {
+      const isInChrome = $(el).parents("nav, header, footer, [role='navigation'], [role='banner'], [role='contentinfo']").length > 0;
+      if (!isInChrome) addParagraph($(el).text());
+    });
+  }
   const paragraphs = paragraphChunks.join(" ").trim().slice(0, 4000);
   const wordCount = paragraphs.split(/\s+/).filter(Boolean).length;
 
@@ -754,6 +771,52 @@ export function extractPageData(
   const hasAddress =
     /(street|avenue|blvd|suite|floor|\bst\b|\bave\b)/i.test(bodyTextFull);
 
+  // ── FAQ ──
+  const faq: Array<{ question: string; answer: string }> = [];
+
+  // Semantic details/summary elements
+  $("details").each((_, el) => {
+    const question = $(el).find("summary").first().text().trim();
+    const $clone = $(el).clone();
+    $clone.find("summary").remove();
+    const answer = $clone.text().replace(/\s+/g, " ").trim();
+    if (question.length > 5 && answer.length > 10 && faq.length < 12) {
+      faq.push({ question: question.slice(0, 200), answer: answer.slice(0, 400) });
+    }
+  });
+
+  // Class-based FAQ/accordion patterns
+  if (faq.length < 8) {
+    $(
+      "[class*='faq'] [class*='item'], [class*='faq'] [class*='question'], " +
+      "[class*='accordion'] [class*='item'], [class*='collapse'], [class*='qa-']"
+    ).each((_, el) => {
+      const question = $(el)
+        .find("h2, h3, h4, [class*='question'], [class*='title'], [class*='header'], button")
+        .first().text().trim();
+      const answer = $(el)
+        .find("p, [class*='answer'], [class*='content'], [class*='body'], [class*='panel']")
+        .first().text().replace(/\s+/g, " ").trim();
+      if (question.length > 5 && answer.length > 10 && faq.length < 12) {
+        faq.push({ question: question.slice(0, 200), answer: answer.slice(0, 400) });
+      }
+    });
+  }
+
+  // Question-pattern headings followed by a paragraph
+  if (faq.length < 4) {
+    const questionPattern = /^(what|why|how|is|are|can|do|does|will|when|where|who|which|should)\b.{5,}/i;
+    $("h2, h3, h4").each((_, el) => {
+      const text = $(el).text().trim();
+      if (questionPattern.test(text) && text.endsWith("?") && faq.length < 12) {
+        const answer = $(el).next().text().replace(/\s+/g, " ").trim();
+        if (answer.length > 10 && answer.length < 600) {
+          faq.push({ question: text.slice(0, 200), answer: answer.slice(0, 400) });
+        }
+      }
+    });
+  }
+
   // ── STRUCTURED DATA ──
   const structured_data: string[] = [];
   $('script[type="application/ld+json"]').each((_, el) => {
@@ -778,6 +841,7 @@ export function extractPageData(
     },
     trust, images, forms, wordCount, h1Count, ctaCount,
     hasPhoneNumber, hasEmailAddress, hasAddress, structured_data,
+    ...(faq.length > 0 ? { faq } : {}),
   };
 }
 

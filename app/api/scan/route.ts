@@ -10,7 +10,7 @@ import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 import { scrapeSite, extractInternalLinks, selectSubpageUrls, scrapeSubpageSafe } from "@/lib/scraper";
 import { detectSiteType } from "@/lib/siteType";
-import { runAnalysis } from "@/lib/analyze";
+import { runAnalysis, buildPageSummary } from "@/lib/analyze";
 import { saveReport } from "@/lib/supabase";
 import { generateAndPersistAllFindingBriefs } from "@/lib/findingExtendedAnalysis";
 
@@ -340,7 +340,8 @@ export async function POST(req: NextRequest) {
 
   // Fire-and-forget: pre-generate AI advisor briefs for all findings in the background.
   // The response goes out immediately; briefs are written to reports.extended_analysis as they complete.
-  void generateAndPersistAllFindingBriefs(reportId, domain, payload).catch((err) => {
+  const pageSummaryForBriefs = buildPageSummary(extraction).slice(0, 5000);
+  void generateAndPersistAllFindingBriefs(reportId, domain, payload, pageSummaryForBriefs).catch((err) => {
     console.log("[scan] background brief generation failed:", err instanceof Error ? (err.stack ?? err.message) : err);
   });
 

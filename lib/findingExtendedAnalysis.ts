@@ -307,7 +307,8 @@ export async function generateRemainingExtendedAnalysisForReport(
 export async function generateAndPersistAllFindingBriefs(
   reportId: string,
   domain: string,
-  payload: ReportPayload
+  payload: ReportPayload,
+  pageSummary?: string
 ): Promise<void> {
   if (!process.env.ANTHROPIC_API_KEY) {
     console.warn("[extended-analysis] ANTHROPIC_API_KEY missing; skipping batch expansion.");
@@ -335,6 +336,8 @@ export async function generateAndPersistAllFindingBriefs(
         overallScore,
         finding: leakToFindingInput(finding),
         relatedFindings: relatedForLeak(finding, allLeaks),
+        pageSummary,
+        siteType: payload.site_type,
       };
       const expansion = await expandFindingBriefWithAnthropic(body);
       if (!expansion) throw new Error(`null expansion for ${key}`);

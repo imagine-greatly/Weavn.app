@@ -25,6 +25,8 @@ export type ExpandFindingBriefRequestBody = {
   overallScore: number;
   finding: ExpandFindingBriefFindingInput;
   relatedFindings: ExpandFindingBriefRelated[];
+  pageSummary?: string;
+  siteType?: string;
 };
 
 /** Calls Claude and returns parsed expansion, or null on failure. */
@@ -39,6 +41,8 @@ export async function expandFindingBriefWithAnthropic(
     overallScore: body.overallScore,
     finding: body.finding,
     related: body.relatedFindings,
+    pageSummary: body.pageSummary,
+    siteType: body.siteType,
   });
 
   const anthropic = new Anthropic({ apiKey, timeout: 55_000 });

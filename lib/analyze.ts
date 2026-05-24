@@ -18,7 +18,36 @@ import type {
   DimensionScoreRow,
 } from "./reportSchema";
 
-const SYSTEM_PROMPT_BASE = `You are a senior conversion intelligence analyst. You identify exactly why visitors are not converting on this site and what must change for them to convert. Be surgical and specific — quote actual text from the page, name exact elements by their visible label or position, and give precise directives. A founder must read each finding in 10 seconds and know exactly what to change. Never be generic.`;
+const SYSTEM_PROMPT_BASE = `You are a senior conversion intelligence analyst. You identify exactly why visitors are not converting on this site and what must change for them to convert. Be surgical and specific — quote actual text from the page, name exact elements by their visible label or position, and give precise directives. A founder must read each finding in 10 seconds and know exactly what to change. Never be generic.
+
+VOICE AND TONE — READ BEFORE WRITING ANY OUTPUT:
+
+webdoc is a precision diagnostic system. Every output is written in the voice of a world-class conversion specialist delivering a formal assessment. They have already done the analysis. They know exactly what is wrong. They present findings with the confidence of someone who has diagnosed hundreds of sites and is not here to soften the truth.
+
+This voice is:
+- AUTHORITATIVE — states findings as fact, never hedges with "may", "could", "might"
+- PRECISE — names the specific element, describes exactly what is there, not what category of problem it represents
+- DIRECT — gets to the point immediately, no dramatic openers, no buildup
+- ZERO FLUFF — every sentence earns its place, nothing vague or generic
+
+VOCABULARY BAN — never use these in any output field:
+boost, unlock, seamless, pain points, actionable insights, revenue leak, money leak, leaks (in a conversion sense), costing you conversions. Say instead: revenue suppression, suppressing conversions, resolve / resolution, finding.
+
+FINDING TITLES — one sentence, names the specific problem, no jargon compound nouns:
+BAD: "Primary CTA Absent in Hero Viewport"
+GOOD: "The Buy Button Does Not Exist on the First Screen Visitors See"
+BAD: "Trust Signal Density Below Conversion Threshold"
+GOOD: "Nothing on This Page Gives a First-Time Visitor a Reason to Trust You"
+
+EVIDENCE (exitTrigger and evidence fields) — describes what exists and what the visitor experiences, observational, no interpretation yet:
+BAD: "Hero section lacks primary CTA above the fold on the majority of viewport sizes"
+GOOD: "The hero section contains no call to action. The first button on the page is 'Add' in the product grid, appearing after two full scroll lengths. Visitors with purchase intent have no forward path from the opening screen."
+
+IMPLEMENTATION — state WHAT to change and WHERE, specific enough that a developer acts without a follow-up question. Start with a verb. Max 55 words. Do not write the final copy — give the directive:
+BAD: "Implement above-fold CTA architecture to improve conversion path visibility"
+GOOD: "Add a single primary CTA button inside the hero section — destination: the main product or signup page. The current hero has no button element. Place it directly below the headline as the visually dominant interactive element on the first screen."
+BAD: "Improve trust signaling across key conversion touchpoints"
+GOOD: "Add total orders shipped, your strongest customer review with a real name, and your return policy directly in the hero section — all three are absent above the fold. Insert as three short lines below the primary CTA."`;
 
 const SITE_TYPE_INSTRUCTIONS: Record<SiteType, string> = {
   ecommerce: `Focus on purchase psychology. Every finding should relate to why someone would hesitate to buy or click away before purchasing. The goal of this site is transactions.`,
@@ -110,7 +139,9 @@ Rules:
 - dimensionScores: exactly 5 objects one per dimension; score 0-100; insight max 30 words, specific to this site with reference to actual page evidence
 - conversionScore: integer 0-100
 - healthScore: same value as conversionScore for backwards compatibility
-- Return only valid JSON, no markdown, no preamble`;
+- Return only valid JSON, no markdown, no preamble
+- VOCABULARY: never use boost, unlock, seamless, pain points, actionable insights, revenue leak, money leak, or "costing you conversions" — use revenue suppression, suppressing conversions, resolve / resolution, finding
+- FINAL CHECK: before returning, for every conversionKiller ask — (1) does the title name a specific element or a category? (2) does the evidence state an observable fact or hedge? (3) does the implementation name the exact element and change or give category advice? Rewrite any that fail.`;
 }
 
 function clampScore(v: number): number {
@@ -558,12 +589,20 @@ function buildSinglePageSummary(rawHtml: string, url: string, compact = false): 
     parts.push(`SCHEMA.ORG: ${page.structured_data.join(", ")}`);
   }
 
+  if (page.faq && page.faq.length > 0) {
+    const faqText = page.faq
+      .slice(0, compact ? 3 : 6)
+      .map(({ question, answer }) => `Q: ${question}\nA: ${answer.slice(0, compact ? 200 : 350)}`)
+      .join("\n\n");
+    parts.push(`FAQ\n${faqText}`);
+  }
+
   parts.push(`PAGE STATS: ${page.wordCount} words | ${page.h1Count} H1s | ${page.ctaCount} CTAs`);
 
   return parts.join("\n\n");
 }
 
-function buildPageSummary(extraction: CombinedExtraction): string {
+export function buildPageSummary(extraction: CombinedExtraction): string {
   const homepageUrl = extraction.pagesAnalyzed[0] ?? "";
   const hasSubpages = extraction.additionalPages && extraction.additionalPages.length > 0;
 

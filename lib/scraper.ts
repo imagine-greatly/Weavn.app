@@ -378,7 +378,7 @@ export interface CombinedExtraction {
 
 // -- LINK EXTRACTION & SUBPAGE SELECTION --------------------------------
 
-const NON_HTML_EXT = /\.(css|js|png|jpg|jpeg|gif|svg|webp|ico|pdf|woff2?|ttf)(\?|#|$)/i;
+const NON_HTML_EXT = /\.(css|js|map|png|jpg|jpeg|gif|svg|webp|ico|pdf|woff2?|ttf)(\?|#|$)/i;
 const STATIC_PATH_SEGMENT = /\/(src|assets|static|_next|cdn-cgi)(\/|$)/i;
 
 export function extractInternalLinks(html: string, baseUrl: string): string[] {
@@ -409,7 +409,7 @@ export function extractInternalLinks(html: string, baseUrl: string): string[] {
   }
 }
 
-const SUBPAGE_BLOCKLIST = /\/(blog(?:\/|$)|news(?:\/|$)|press(?:\/|$)|legal(?:\/|$)|terms(?:\/|$)|privacy(?:\/|$)|policy(?:\/|$)|careers(?:\/|$)|jobs(?:\/|$)|sitemap|tags?(?:\/|$)|authors?(?:\/|$)|logout|login|signin|signup|register|cart(?:\/|$)|checkout(?:\/|$)|account(?:\/|$)|search(?:\/|$)|404)/i;
+const SUBPAGE_BLOCKLIST = /\/(login|signin|logout|signup|register|admin|dashboard|account|privacy|terms|policy|cookies|legal)(?:[-\/]|$)/i;
 
 const SUBPAGE_PRIORITY: Record<string, RegExp[]> = {
   saas:       [/\/pricing/i, /\/features/i, /\/(signup|register|trial)/i, /\/about/i],
@@ -488,7 +488,7 @@ async function fetchSubpageFast(url: string): Promise<string | null> {
       (typeof json.content === 'string' ? json.content : null) ??
       (typeof json.html === 'string' ? json.html : null) ??
       (typeof json.data === 'string' ? json.data : null);
-    if (!html || readableTextLength(html) < 300 || isBlockPage(html)) return null;
+    if (!html || isBlockPage(html)) return null;
     return html;
   } catch {
     return null;

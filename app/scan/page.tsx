@@ -774,7 +774,7 @@ function ScanLoadingInner() {
     };
     const goDwell = (ax: number, ay: number) => {
       bsm = 'DWELL'; dwX = ax; dwY = ay;
-      bsmTimer = 350 + tv() * 700;   // 0.35 – 1.05 s
+      bsmTimer = 3000 + tv() * 2000;  // 3 – 5 s
       tc++;
     };
 
@@ -807,7 +807,7 @@ function ScanLoadingInner() {
           s.velocity.x *= 0.85; s.velocity.y *= 0.85;
           s.pos.x += s.velocity.x; s.pos.y += s.velocity.y;
           if (bsmTimer <= 0 || Math.hypot(dx, dy) < 16) {
-            if (tv() < 0.35) {
+            if (tv() < 0.70) {
               goDwell(s.pos.x, s.pos.y);
             } else {
               const tgt = pickTarget();
@@ -1124,9 +1124,9 @@ function ScanLoadingInner() {
           from { transform: translateY(-100%); }
           to   { transform: translateY(100vh); }
         }
-        @keyframes beamPulse {
-          from { left: -28px; }
-          to { left: 188px; }
+        @keyframes beamSweep {
+          from { left: -40px; }
+          to { left: 200px; }
         }
         .scan-beam {
           overflow: hidden;
@@ -1135,11 +1135,11 @@ function ScanLoadingInner() {
           content: "";
           position: absolute;
           top: 0;
-          left: -28px;
-          width: 28px;
+          left: -40px;
+          width: 40px;
           height: 100%;
-          background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.9) 50%, transparent 100%);
-          animation: beamPulse 1.6s linear infinite;
+          background: linear-gradient(90deg, transparent 0%, rgba(0,200,255,0.95) 50%, transparent 100%);
+          animation: beamSweep 1.8s ease-in-out infinite alternate;
         }
       `}</style>
 
@@ -2185,7 +2185,7 @@ function ScanLoadingInner() {
                   0
                 </span>
                 <span style={{ color: "rgba(0,200,255,0.3)" }}> / </span>
-                <span style={{ color: "rgba(0,200,255,0.4)" }}>166</span>
+                <span style={{ color: "rgba(0,200,255,0.4)" }}>200</span>
               </span>
             </div>
             <div style={{ flex: 1, textAlign: "right" }}>
@@ -2610,7 +2610,7 @@ function ScanLoadingInner() {
                   transition: "opacity 0.4s ease",
                 }}
               >
-                166 DIAGNOSTIC CHECKS QUEUED
+                200 DIAGNOSTIC CHECKS QUEUED
               </div>
             </div>
           </div>

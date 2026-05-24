@@ -678,10 +678,13 @@ export async function runAnalysis(
       max_tokens: maxTokens,
       temperature: 0,
       system: [{ type: "text", text: systemPrompt, cache_control: { type: "ephemeral" } }],
-      messages: [{ role: "user", content: userContent }],
+      messages: [{ role: "user", content: [{ type: "text", text: userContent, cache_control: { type: "ephemeral" } }] }],
     });
+    const cacheRead = message.usage?.cache_read_input_tokens ?? 0;
+    const cacheWrite = message.usage?.cache_creation_input_tokens ?? 0;
+    const cacheHit = cacheRead > 0;
     process.stderr.write(`[ANALYZE] claude DONE | attempt=${attempt} stop_reason=${message.stop_reason} input_tokens=${message.usage?.input_tokens} output_tokens=${message.usage?.output_tokens}\n`);
-    process.stderr.write(`[ANALYZE] cache_creation_input_tokens=${message.usage?.cache_creation_input_tokens} cache_read_input_tokens=${message.usage?.cache_read_input_tokens}\n`);
+    process.stderr.write(`[ANALYZE] CACHE | hit=${cacheHit} cache_read=${cacheRead} cache_write=${cacheWrite}\n`);
 
     if (message.stop_reason === "max_tokens") {
       const err = new Error("Analysis response truncated: max_tokens ceiling reached. Retrying would yield the same result.");

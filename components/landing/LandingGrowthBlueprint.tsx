@@ -92,7 +92,7 @@ function ActionItem({ text }: { text: string }) {
 
 export default function LandingGrowthBlueprint() {
   return (
-    <section className="px-6" style={{ background: "#070C14", paddingTop: 120, paddingBottom: 120 }}>
+    <section className="px-6" style={{ background: "#050810", paddingTop: 120, paddingBottom: 120 }}>
       {/* Header */}
       <div className="mx-auto max-w-[600px] text-center mb-12">
         <ScrollReveal variant="headline">

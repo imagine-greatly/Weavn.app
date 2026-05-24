@@ -236,7 +236,7 @@ function AiAdvisorMock() {
 
 export default function LandingDashboardDemo() {
   return (
-    <section className="px-6 py-[120px]" style={{ background: "#070C14" }}>
+    <section className="px-6 py-[120px]" style={{ background: "#050810" }}>
       <div className="mx-auto flex max-w-[1040px] flex-col gap-12 lg:flex-row lg:items-start lg:gap-[40px]">
         <div className="min-w-0 lg:w-[45%]">
           <ScrollReveal variant="headline">

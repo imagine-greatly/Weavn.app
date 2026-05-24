@@ -78,7 +78,7 @@ export default function LandingDiagnosticChecks() {
   return (
     <section
       className="relative w-full overflow-hidden px-6 py-[120px]"
-      style={{ background: "#000008" }}
+      style={{ background: "#050810" }}
     >
 
       <div className="relative mx-auto max-w-[min(1200px,calc(100vw-48px))]">

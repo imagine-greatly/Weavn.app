@@ -125,7 +125,7 @@ export default function LandingHowItWorks() {
   const [hoveredStep, setHoveredStep] = useState<number | null>(null);
 
   return (
-    <section className="relative overflow-hidden px-6 py-[120px]" style={{ background: "#050810" }}>
+    <section className="relative overflow-hidden px-6 py-[120px]" style={{ background: "var(--bg-surface)" }}>
       <div className="mx-auto max-w-[1000px] text-center">
         <ScrollReveal variant="headline">
           <p className="font-mono text-[11px] uppercase" style={{ color: "var(--text-muted)", letterSpacing: "3px" }}>

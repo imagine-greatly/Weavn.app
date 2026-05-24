@@ -12,6 +12,7 @@ import LandingDashboardDemo from "@/components/landing/LandingDashboardDemo";
 import LandingDiagnosticOutput from "@/components/landing/LandingDiagnosticOutput";
 import LandingGrowthBlueprint from "@/components/landing/LandingGrowthBlueprint";
 import LandingDiagnosticChecks from "@/components/landing/LandingDiagnosticChecks";
+import { MistTransitionDown, MistTransitionUp } from "@/components/PageTransitions";
 
 const LANDING_BG_BASE = "#050810";
 
@@ -35,8 +36,10 @@ export default function LandingPage() {
         <LandingDiagnosticChecks />
         <LandingDiagnosticOutput />
         <LandingThreeNumbers />
+        <MistTransitionDown />
         <LandingHowItWorks />
         <LandingDashboardDemo />
+        <MistTransitionUp />
         <LandingGrowthBlueprint />
         <BeforeAfterSection />
         <LandingFinalCTA url={url} onUrlChange={setUrl} autoFocus={scanFocus} />

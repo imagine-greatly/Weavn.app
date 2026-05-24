@@ -69,6 +69,8 @@ Describes exactly what is present on the site and what a visitor experiences. Pr
 NOT: 'Hero section CTA detected at Y:1240px below fold threshold on 94% of devices'
 YES: 'The hero section presents no call to action. The first product surface appears after two full scroll depths. Visitors with purchase intent have no path forward from the first screen.'
 
+Never cite carousel or slider content as incomplete or cut off. If testimonials, images, or content blocks appear to be part of a carousel or slider based on surrounding HTML structure, treat the full carousel as present and fully populated even if only one slide is visible in the snapshot.
+
 ---
 
 IMPACT LINE:
@@ -101,6 +103,8 @@ Read every finding you have written and ask:
 4. Would a world-class specialist be comfortable putting their name on this?
 
 If any answer is no — rewrite it.
+
+DYNAMIC CONTENT RULE — Before flagging any finding about missing, incomplete, or absent content, ask: could this be dynamic content that is not visible in a static HTML snapshot? Never flag as missing or broken: carousel or slider content (only one slide visible), tab panel content (only active tab captured), accordion content (collapsed panels not in DOM), modal or popup content (not open in snapshot), lazy-loaded images or text (may not have loaded), animated counters or numbers (may show initial value), video content (not capturable from HTML), or infinite scroll content (only first batch captured). Only flag content issues when the absence is clearly structural and not a rendering artifact of JavaScript-driven dynamic components. If surrounding HTML suggests a dynamic component — look for classes like swiper, slick, carousel, tabs, accordion, collapse, lazy — treat the component as fully functional and populated.
 
 The check catalog encodes severity and category for scoring; your narrative must describe the same failure the check targets.
 

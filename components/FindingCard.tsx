@@ -47,6 +47,8 @@ export type FindingData = {
   revenueEffort?: RevenueEffortLabel;
   /** Conversion killer: visitor exit trigger line (optional on legacy leaks). */
   exitTrigger?: string;
+  /** Source page for multi-page scans — shown in severity badge row. */
+  sourcePage?: string;
 };
 
 export type FindingCardVariant = "default" | "revenue" | "compact" | "killer";

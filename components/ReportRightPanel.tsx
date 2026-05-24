@@ -432,6 +432,11 @@ export function ReportFindingPreview({
             }}
           >
             {severityBadgeLabel(finding)}
+            {finding.sourcePage ? (
+              <span style={{ fontWeight: 400, opacity: 0.65, marginLeft: 4 }}>
+                · {finding.sourcePage}
+              </span>
+            ) : null}
           </span>
           <span
             style={{

@@ -68,7 +68,8 @@ Return valid JSON matching this schema exactly:
       "implementation": string,
       "effort": "Today" | "This Week" | "This Month",
       "severity": "critical" | "high" | "medium",
-      "category": string
+      "category": string,
+      "sourcePage": string
     }
   ],
   "growthBlueprint": {
@@ -103,6 +104,7 @@ Rules:
 - conversionKillers.exitTrigger: The specific experience the visitor has on the page that causes them to hesitate, doubt, or leave. Name the exact element and quote its visible text. Describe what they see or feel — not the business consequence. Example: 'Hero headline reads "Welcome" — visitor cannot determine what the site sells or who it is for.'
 - conversionKillers.conversionCost: The business consequence in concrete terms — lost sales, abandoned signups, missed leads. Use a specific metric or percentage where accurate. These two fields must never contain the same text. exitTrigger = visitor experience. conversionCost = business impact.
 - conversionKillers.implementation: Name the exact element and its page location. State the precise change a developer or marketer could act on immediately. Include why the change works. Start with a verb. Max 55 words. No category advice — be specific enough that a developer knows exactly what to do without follow-up questions.
+- conversionKillers.sourcePage: Label the page this finding comes from — e.g. "HOMEPAGE", "PRICING PAGE", "FEATURES PAGE", "ABOUT PAGE", "CONTACT PAGE". For single-page analyses always use "HOMEPAGE".
 - conversionTransformation.currentCta: Only return text if a clear, intentional hero-section call-to-action button exists above the fold. If the only buttons found are generic UI elements like 'Add', 'Add to cart', 'Menu', 'Search', or navigation links, return 'None detected' instead. Do not invent a CTA that is not clearly present as a primary action.
 - growthBlueprint: weekOne and weekTwoToFour max 3 items each; monthTwo, projectedLift, and projectedLiftNarrative each max 70 words
 - dimensionScores: exactly 5 objects one per dimension; score 0-100; insight max 30 words, specific to this site with reference to actual page evidence
@@ -184,9 +186,12 @@ function mapConversionKillerToLeak(
   };
 }
 
-function parseConversionIntelligencePayload(o: Record<string, unknown>, siteType: SiteType): ReportPayload {
+function parseConversionIntelligencePayload(o: Record<string, unknown>, siteType: SiteType, fallbackPages?: string[]): ReportPayload {
   const categoryScoresIn = (o.categoryScores as Record<string, number>) ?? {};
-  const pagesAnalyzed = Array.isArray(o.pagesAnalyzed) ? o.pagesAnalyzed.map(String) : [];
+  const pagesAnalyzed =
+    Array.isArray(o.pagesAnalyzed) && o.pagesAnalyzed.length > 0
+      ? o.pagesAnalyzed.map(String)
+      : (fallbackPages ?? []);
   const convScore = clampScore(Number(o.conversionScore ?? o.healthScore ?? 50));
   const ct = (o.conversionTransformation as Record<string, unknown>) ?? {};
   const gb = (o.growthBlueprint as Record<string, unknown>) ?? {};
@@ -221,6 +226,7 @@ function parseConversionIntelligencePayload(o: Record<string, unknown>, siteType
       effort: e,
       severity: s,
       category: String(r.category ?? "general"),
+      sourcePage: typeof r.sourcePage === "string" && r.sourcePage.trim() ? r.sourcePage.trim() : undefined,
     };
   });
 
@@ -367,7 +373,7 @@ function parseLegacyPsychologistPayload(o: Record<string, unknown>, siteType: Si
   };
 }
 
-function ensurePayload(raw: unknown, siteType: SiteType): ReportPayload {
+function ensurePayload(raw: unknown, siteType: SiteType, fallbackPages?: string[]): ReportPayload {
   const o = raw as Record<string, unknown>;
   if (
     o.heroRewrite != null &&
@@ -378,7 +384,7 @@ function ensurePayload(raw: unknown, siteType: SiteType): ReportPayload {
   ) {
     return parseLegacyPsychologistPayload(o, siteType);
   }
-  return parseConversionIntelligencePayload(o, siteType);
+  return parseConversionIntelligencePayload(o, siteType, fallbackPages);
 }
 
 function mapLegacyLeakToNew(input: Record<string, unknown>, fallbackId: string): ReportPayload["leaks"][number] | undefined {
@@ -418,14 +424,28 @@ function mapLegacyLeakToNew(input: Record<string, unknown>, fallbackId: string):
   };
 }
 
+function guessPageLabel(url: string): string {
+  try {
+    const path = new URL(url).pathname.toLowerCase();
+    if (/\/pricing/.test(path)) return 'PRICING PAGE';
+    if (/\/features/.test(path)) return 'FEATURES PAGE';
+    if (/\/(signup|register|trial)/.test(path)) return 'SIGNUP PAGE';
+    if (/\/about/.test(path)) return 'ABOUT PAGE';
+    if (/\/contact/.test(path)) return 'CONTACT PAGE';
+    if (/\/services?/.test(path)) return 'SERVICES PAGE';
+    if (/\/products?\//.test(path)) return 'PRODUCT PAGE';
+    if (/\/collections?\//.test(path)) return 'COLLECTION PAGE';
+    if (/\/blog\//.test(path)) return 'BLOG POST';
+  } catch { /* fall through */ }
+  return 'SUBPAGE';
+}
+
 /**
- * Converts raw HTML extraction into a compact labelled summary for Claude.
- * Cuts input from ~7k tokens (28k chars raw HTML) to ~1.5k tokens,
- * reducing TTFT and eliminating the retry that was burning 5s before the real call.
+ * Converts raw HTML into a compact labelled summary for Claude.
+ * compact=true reduces per-section limits when combining multiple pages.
  */
-function buildPageSummary(extraction: CombinedExtraction): string {
-  const url = extraction.pagesAnalyzed[0] ?? "";
-  const page = extractPageData(extraction.rawHtml, url, "homepage");
+function buildSinglePageSummary(rawHtml: string, url: string, compact = false): string {
+  const page = extractPageData(rawHtml, url, "homepage");
   const parts: string[] = [];
 
   if (url) parts.push(`URL: ${url}`);
@@ -445,27 +465,27 @@ function buildPageSummary(extraction: CombinedExtraction): string {
     page.hero.subheadline && `Subheadline: ${page.hero.subheadline}`,
     page.hero.ctaText &&
       `CTA: "${page.hero.ctaText}"${page.hero.ctaHref ? ` → ${page.hero.ctaHref}` : ""}`,
-    page.hero.bodyText && `Body: ${page.hero.bodyText.slice(0, 400)}`,
+    page.hero.bodyText && `Body: ${page.hero.bodyText.slice(0, compact ? 200 : 400)}`,
   ].filter(Boolean);
   if (heroLines.length) parts.push(`HERO\n${heroLines.join("\n")}`);
 
   const h1s = page.headlines.filter((h) => h.tag === "h1").map((h) => `"${h.text}"`);
-  const h2s = page.headlines.filter((h) => h.tag === "h2").slice(0, 8).map((h) => `"${h.text}"`);
-  const h3s = page.headlines.filter((h) => h.tag === "h3").slice(0, 5).map((h) => `"${h.text}"`);
+  const h2s = page.headlines.filter((h) => h.tag === "h2").slice(0, compact ? 5 : 8).map((h) => `"${h.text}"`);
+  const h3s = page.headlines.filter((h) => h.tag === "h3").slice(0, compact ? 3 : 5).map((h) => `"${h.text}"`);
   if (h1s.length) parts.push(`H1: ${h1s.join(" | ")}`);
   if (h2s.length) parts.push(`H2: ${h2s.join(" | ")}`);
   if (h3s.length) parts.push(`H3: ${h3s.join(" | ")}`);
 
   if (page.sections.length) {
     const sectionText = page.sections
-      .slice(0, 6)
-      .map((s) => `[${s.label}] ${s.text.slice(0, 250)}`)
+      .slice(0, compact ? 4 : 6)
+      .map((s) => `[${s.label}] ${s.text.slice(0, compact ? 150 : 250)}`)
       .join("\n");
     parts.push(`SECTIONS\n${sectionText}`);
   }
 
   if (page.paragraphs) {
-    parts.push(`BODY TEXT\n${page.paragraphs.slice(0, 2000)}`);
+    parts.push(`BODY TEXT\n${page.paragraphs.slice(0, compact ? 1200 : 2000)}`);
   }
 
   if (page.pricing.length) {
@@ -480,10 +500,10 @@ function buildPageSummary(extraction: CombinedExtraction): string {
 
   if (page.testimonials.length) {
     const testText = page.testimonials
-      .slice(0, 4)
+      .slice(0, compact ? 2 : 4)
       .map(
         (t) =>
-          `"${t.text.slice(0, 200)}" — ${t.author}${t.result ? ` [${t.result}]` : ""}`
+          `"${t.text.slice(0, compact ? 150 : 200)}" — ${t.author}${t.result ? ` [${t.result}]` : ""}`
       )
       .join("\n");
     parts.push(`TESTIMONIALS\n${testText}`);
@@ -502,7 +522,7 @@ function buildPageSummary(extraction: CombinedExtraction): string {
 
   if (page.trust.length) {
     const trustText = page.trust
-      .slice(0, 6)
+      .slice(0, compact ? 3 : 6)
       .map((t) => t.text.slice(0, 120))
       .join(" | ");
     parts.push(`TRUST SIGNALS: ${trustText}`);
@@ -510,7 +530,7 @@ function buildPageSummary(extraction: CombinedExtraction): string {
 
   if (page.buttons.length) {
     const ctaText = page.buttons
-      .slice(0, 10)
+      .slice(0, compact ? 6 : 10)
       .map((b) => `"${b.text}"${b.href ? ` → ${b.href}` : ""}`)
       .join(" | ");
     parts.push(`CTAs: ${ctaText}`);
@@ -543,13 +563,30 @@ function buildPageSummary(extraction: CombinedExtraction): string {
   return parts.join("\n\n");
 }
 
+function buildPageSummary(extraction: CombinedExtraction): string {
+  const homepageUrl = extraction.pagesAnalyzed[0] ?? "";
+  const hasSubpages = extraction.additionalPages && extraction.additionalPages.length > 0;
+
+  if (!hasSubpages) {
+    return buildSinglePageSummary(extraction.rawHtml, homepageUrl, false);
+  }
+
+  const sections: string[] = [];
+  sections.push(`=== [HOMEPAGE] ===\n${buildSinglePageSummary(extraction.rawHtml, homepageUrl, true)}`);
+  for (const { url, rawHtml } of extraction.additionalPages!) {
+    const label = guessPageLabel(url);
+    sections.push(`=== [${label}] ===\n${buildSinglePageSummary(rawHtml, url, true)}`);
+  }
+  return sections.join("\n\n");
+}
+
 export async function runAnalysis(
   extraction: CombinedExtraction,
   siteType: SiteType,
   plan?: string,
   model?: string
 ): Promise<ReportPayload> {
-  const resolvedModel = model ?? (plan === "agency" ? "claude-opus-4-7" : "claude-sonnet-4-6");
+  const resolvedModel = model ?? "claude-sonnet-4-6";
   const client = new Anthropic({
     apiKey: process.env.ANTHROPIC_API_KEY,
     timeout: 82_000,
@@ -583,8 +620,12 @@ export async function runAnalysis(
     process.stderr.write(`[ANALYZE] WARNING summary exceeded 20 000 chars (${summary.length}) — truncated\n`);
   }
 
-  const userContent = `Analyze the following structured data extracted from a fully-rendered website page and return your JSON analysis:\n\n${cappedSummary}`;
-  process.stderr.write(`[ANALYZE] userContent_len=${userContent.length}\n`);
+  const isMultiPage = (safeExtraction.additionalPages?.length ?? 0) > 0;
+  const pageCount = 1 + (safeExtraction.additionalPages?.length ?? 0);
+  const userContent = isMultiPage
+    ? `Analyze structured data from ${pageCount} pages of a website. Produce 5 unified findings ranked by revenue impact across all pages. In the evidence field of each finding, name which page it came from.\n\n${cappedSummary}`
+    : `Analyze the following structured data extracted from a fully-rendered website page and return your JSON analysis:\n\n${cappedSummary}`;
+  process.stderr.write(`[ANALYZE] userContent_len=${userContent.length} isMultiPage=${isMultiPage}\n`);
   process.stderr.write('[ANALYZE] prompt chars: ' + userContent.length + '\n');
 
   let attempt = 0;
@@ -599,6 +640,12 @@ export async function runAnalysis(
     });
     process.stderr.write(`[ANALYZE] claude DONE | attempt=${attempt} stop_reason=${message.stop_reason} input_tokens=${message.usage?.input_tokens} output_tokens=${message.usage?.output_tokens}\n`);
 
+    if (message.stop_reason === "max_tokens") {
+      const err = new Error("Analysis response truncated: max_tokens ceiling reached. Retrying would yield the same result.");
+      (err as Error & { noRetry: boolean }).noRetry = true;
+      throw err;
+    }
+
     const block = message.content.find((c) => c.type === "text");
     if (!block || block.type !== "text") {
       throw new Error("AI returned no text content.");
@@ -609,13 +656,14 @@ export async function runAnalysis(
     process.stderr.write(`[ANALYZE] JSON.parse START | raw_len=${raw.length}\n`);
     const parsed: unknown = JSON.parse(raw);
     process.stderr.write(`[ANALYZE] JSON.parse DONE\n`);
-    return ensurePayload(parsed, siteType);
+    return ensurePayload(parsed, siteType, safeExtraction.pagesAnalyzed);
   };
 
   try {
     return await run();
   } catch (firstErr) {
     process.stderr.write(`[ANALYZE] attempt 1 FAILED | ${firstErr instanceof Error ? firstErr.message : String(firstErr)}\n`);
+    if ((firstErr as Error & { noRetry?: boolean }).noRetry) throw firstErr;
     try {
       return await run();
     } catch (secondErr) {

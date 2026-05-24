@@ -8,7 +8,7 @@ import { timingSafeEqual } from "crypto";
 import { createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
-import { scrapeSite } from "@/lib/scraper";
+import { scrapeSite, extractInternalLinks, selectSubpageUrls, scrapeSubpageSafe } from "@/lib/scraper";
 import { detectSiteType } from "@/lib/siteType";
 import { runAnalysis } from "@/lib/analyze";
 import { saveReport } from "@/lib/supabase";
@@ -21,7 +21,7 @@ function mergeCookies(from: NextResponse, to: NextResponse) {
   });
 }
 
-export const maxDuration = 120;
+export const maxDuration = 115;
 
 function normalizeUrl(input: string): string {
   const trimmed = input.trim();
@@ -254,20 +254,54 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  // 2.5. Pro plan: scrape 2 subpages in parallel for deeper multi-page analysis
+  const planLower = userPlan.toLowerCase();
+  const isProPlan = planLower === 'pro' || planLower === 'agency';
+  const homepageScrapeMs = Date.now() - scrapeStart;
+
+  if (isProPlan && homepageScrapeMs < 45_000) {
+    const subpageStart = Date.now();
+    process.stderr.write(`[ROUTE] subpage scraping START | homepageScrapeMs=${homepageScrapeMs} elapsed=${Date.now() - scanStart}ms\n`);
+    try {
+      const allLinks = extractInternalLinks(extraction.rawHtml, normalized);
+      const subpageUrls = selectSubpageUrls(allLinks, site_type);
+      process.stderr.write(`[ROUTE] subpages selected=${JSON.stringify(subpageUrls)}\n`);
+
+      if (subpageUrls.length > 0) {
+        const results = await Promise.allSettled(
+          subpageUrls.map(url => scrapeSubpageSafe(url))
+        );
+        const additionalPages = results
+          .map(r => r.status === 'fulfilled' ? r.value : null)
+          .filter((p): p is { url: string; rawHtml: string } => p !== null);
+
+        if (additionalPages.length > 0) {
+          extraction = {
+            ...extraction,
+            additionalPages,
+            pagesAnalyzed: [extraction.pagesAnalyzed[0], ...additionalPages.map(p => p.url)],
+          };
+          process.stderr.write(`[ROUTE] subpages added=${additionalPages.length} pagesAnalyzed=${JSON.stringify(extraction.pagesAnalyzed)} elapsed=${Date.now() - subpageStart}ms\n`);
+        }
+      }
+    } catch (err) {
+      process.stderr.write(`[ROUTE] subpage scraping ERROR (non-fatal) | ${err instanceof Error ? err.message : String(err)}\n`);
+    }
+  }
+
   // 3. Claude analysis (retry once inside runAnalysis), tailored to site_type.
-  // Fresh deadline scoped to just the analyze step — independent of scrape duration.
-  // Budget: 70 s. Anthropic SDK per-call timeout is 65 s (see analyze.ts), so a single
-  // slow-but-successful Claude call has room to land. Vercel maxDuration=120 is the wall.
+  // Deadline is time-aware: allocates remaining budget minus 5 s for save.
+  const analyzeTimeoutMs = Math.max(40_000, Math.min(82_000, 110_000 - (Date.now() - scanStart)));
   const analyzeDeadline = new Promise<never>((_, reject) =>
     setTimeout(
-      () => reject(new Error('[TIMEOUT] Analysis exceeded 85 s deadline')),
-      85_000
+      () => reject(new Error('[TIMEOUT] Analysis timed out')),
+      analyzeTimeoutMs
     )
   )
   let payload;
   const analyzeStart = Date.now()
-  process.stderr.write(`[ROUTE] runAnalysis START | domain=${domain} site_type=${site_type} plan=${userPlan} elapsed_since_scan_start=${Date.now() - scanStart}ms\n`)
-  console.error(`[scan] ANALYZE START | domain=${domain} site_type=${site_type} userPlan=${userPlan}`)
+  process.stderr.write(`[ROUTE] runAnalysis START | domain=${domain} site_type=${site_type} plan=${userPlan} pagesAnalyzed=${extraction.pagesAnalyzed.length} analyzeTimeoutMs=${analyzeTimeoutMs} elapsed_since_scan_start=${Date.now() - scanStart}ms\n`)
+  console.error(`[scan] ANALYZE START | domain=${domain} site_type=${site_type} userPlan=${userPlan} pages=${extraction.pagesAnalyzed.length}`)
   try {
     payload = await Promise.race([runAnalysis(extraction, site_type, userPlan), analyzeDeadline]);
     process.stderr.write(`[ROUTE] runAnalysis DONE | elapsed=${Date.now() - analyzeStart}ms\n`)

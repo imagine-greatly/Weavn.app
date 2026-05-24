@@ -458,8 +458,8 @@ export default function DashboardPage() {
 
   const domains = useMemo(() => distinctDomains(reports ?? []), [reports]);
 
-  const isProPlan =
-    String(plan).trim().toLowerCase() === "pro" || String(plan).trim().toLowerCase() === "agency";
+  const rawPlanLower = String(plan).trim().toLowerCase();
+  const isProPlan = rawPlanLower === "pro" || rawPlanLower === "agency";
   const restrictionsActive = reportsReady && !loading && plan !== "loading" && !isProPlan;
 
   useEffect(() => {
@@ -1292,6 +1292,31 @@ export default function DashboardPage() {
                 currentScore={activeScore}
                 axisCaption={`Fix the top 3 above to reach ${Math.min(100, activeScore + 15)}+`}
               />
+              {activeDomainReports.length > 0 && (
+                <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 3, borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: 8 }}>
+                  {[...activeDomainReports]
+                    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+                    .slice(0, 5)
+                    .map((r) => {
+                      const pages = Array.isArray(r.analysis?.pagesAnalyzed) ? r.analysis.pagesAnalyzed : [];
+                      const pageCount = pages.length > 0 ? pages.length : 1;
+                      return (
+                        <div key={r.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                          <span style={{ fontFamily: SM, fontSize: 9, color: "rgba(255,255,255,0.28)" }}>
+                            {new Date(r.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                          </span>
+                          <div style={{ display: "flex", gap: 4 }}>
+                            {[0, 1, 2].map((i) => (
+                              <span key={i} style={{ fontSize: 8, color: pageCount > i ? "#00C8FF" : "rgba(255,255,255,0.12)", lineHeight: 1 }}>
+                                {pageCount > i ? "●" : "○"}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
+                </div>
+              )}
             </div>
             {restrictionsActive ? (
               <p style={{ margin: "10px 0 0 0", fontFamily: SM, fontSize: 11, color: "#8899AA" }}>

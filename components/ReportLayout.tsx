@@ -189,6 +189,7 @@ function leaksToFindingData(leaks: Leak[]): FindingData[] {
       rubricSeverity: leak?.rubricSeverity,
       rubricMode: leak?.rubricMode,
       revenueEffort: leak?.revenueEffort,
+      sourcePage: leak?.sourcePage,
     };
   });
 }
@@ -357,6 +358,7 @@ function conversionKillersToFindingData(killers: ConversionKiller[]): FindingDat
           ? "High"
           : "Medium",
     revenueEffort: k.effort,
+    sourcePage: k.sourcePage,
   }));
 }
 
@@ -747,6 +749,8 @@ export default function ReportLayout({
           }
           scoreDelta={payload?.scoreDelta}
           previousScanAt={payload?.previousScanAt}
+          pagesAnalyzed={payload?.pagesAnalyzed}
+          totalChecked={diagnosticStats?.totalChecked}
         />
       </div>
 

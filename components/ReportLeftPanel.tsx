@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { displayScoreColor } from "@/lib/displayScoreColor";
 import ConversionScoreGauge from "@/components/ConversionScoreGauge";
 
@@ -70,6 +71,10 @@ export type ReportLeftPanelProps = {
   exitTriggersCount: number;
   activeNavSection: ReportNavSectionId;
   onNavSectionChange: (id: ReportNavSectionId) => void;
+  /** Pages analyzed in this scan — drives DIAGNOSTIC COVERAGE animation. */
+  pagesAnalyzed?: string[];
+  /** Total rubric checks run — shown in coverage summary line. */
+  totalChecked?: number;
 };
 
 const NAV_PILLS: { id: ReportNavSectionId; label: string }[] = [
@@ -78,6 +83,93 @@ const NAV_PILLS: { id: ReportNavSectionId; label: string }[] = [
   { id: "killers", label: "FINDINGS" },
   { id: "blueprint", label: "BLUEPRINT" },
 ];
+
+const MONO = "var(--font-jetbrains-mono), var(--font-space-mono), monospace";
+
+function guessPageLabel(url: string, index: number): string {
+  if (index === 0) return "HOMEPAGE";
+  try {
+    const path = new URL(url).pathname.toLowerCase();
+    if (/\/pricing/i.test(path)) return "PRICING PAGE";
+    if (/\/features?/i.test(path)) return "FEATURES PAGE";
+    if (/\/(signup|register|trial)/i.test(path)) return "SIGNUP PAGE";
+    if (/\/about/i.test(path)) return "ABOUT PAGE";
+    if (/\/contact/i.test(path)) return "CONTACT PAGE";
+    if (/\/services?/i.test(path)) return "SERVICES PAGE";
+    if (/\/products?/i.test(path)) return "PRODUCTS PAGE";
+    if (/\/shop/i.test(path)) return "SHOP PAGE";
+    if (/\/booking/i.test(path)) return "BOOKING PAGE";
+    if (/\/collections?/i.test(path)) return "COLLECTIONS PAGE";
+    const seg = path.replace(/^\//, "").split("/")[0] ?? "";
+    return seg ? seg.replace(/-/g, " ").toUpperCase() + " PAGE" : `PAGE ${index + 1}`;
+  } catch { return `PAGE ${index + 1}`; }
+}
+
+function DiagnosticCoverage({ pagesAnalyzed, totalChecked }: { pagesAnalyzed: string[]; totalChecked?: number }) {
+  const [revealedPages, setRevealedPages] = useState(0);
+  const [checkedPages, setCheckedPages] = useState(0);
+  const [showSummary, setShowSummary] = useState(false);
+
+  useEffect(() => {
+    if (pagesAnalyzed.length === 0) return;
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    let delay = 250;
+    for (let i = 0; i < pagesAnalyzed.length; i++) {
+      const capturedI = i;
+      timers.push(setTimeout(() => setRevealedPages(capturedI + 1), delay));
+      timers.push(setTimeout(() => setCheckedPages(capturedI + 1), delay + 380));
+      delay += 480;
+    }
+    timers.push(setTimeout(() => setShowSummary(true), delay + 80));
+    return () => timers.forEach(clearTimeout);
+  }, [pagesAnalyzed]);
+
+  return (
+    <div style={{ padding: "16px 20px 0" }}>
+      <div style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.14em", color: "rgba(0,200,255,0.55)", textTransform: "uppercase", marginBottom: 8 }}>
+        DIAGNOSTIC COVERAGE
+      </div>
+      <div style={{ height: 1, background: "rgba(0,200,255,0.1)", marginBottom: 10 }} />
+      {pagesAnalyzed.map((url, i) => {
+        const label = guessPageLabel(url, i);
+        const revealed = revealedPages > i;
+        const checked = checkedPages > i;
+        return (
+          <div
+            key={i}
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: 7,
+              opacity: revealed ? 1 : 0,
+              transition: "opacity 180ms ease",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+              <span style={{ fontFamily: MONO, fontSize: 8, color: "rgba(0,200,255,0.4)" }}>›</span>
+              <span style={{ fontFamily: MONO, fontSize: 9, color: checked ? "rgba(240,244,255,0.6)" : "#00C8FF", letterSpacing: "0.1em" }}>
+                {label}
+                {revealed && !checked && (
+                  <span className="coverage-cursor" aria-hidden />
+                )}
+              </span>
+            </div>
+            {checked && (
+              <span style={{ fontFamily: MONO, fontSize: 8, color: "rgba(0,200,255,0.5)", letterSpacing: "0.08em" }}>
+                ✓ ANALYZED
+              </span>
+            )}
+          </div>
+        );
+      })}
+      <div style={{ height: 1, background: "rgba(0,200,255,0.1)", marginTop: 8, marginBottom: 8 }} />
+      <div style={{ fontFamily: MONO, fontSize: 8, color: "rgba(0,200,255,0.4)", letterSpacing: "0.1em", opacity: showSummary ? 1 : 0, transition: "opacity 200ms ease" }}>
+        {pagesAnalyzed.length} {pagesAnalyzed.length === 1 ? "PAGE" : "PAGES"} · {totalChecked ?? 166} CHECKS ANALYZED
+      </div>
+    </div>
+  );
+}
 
 export default function ReportLeftPanel({
   domain,
@@ -102,6 +194,8 @@ export default function ReportLeftPanel({
   exitTriggersCount,
   activeNavSection,
   onNavSectionChange,
+  pagesAnalyzed,
+  totalChecked,
 }: ReportLeftPanelProps) {
   return (
     <aside
@@ -124,6 +218,8 @@ export default function ReportLeftPanel({
       <style>{`
         .category-scroll::-webkit-scrollbar { display: none; }
         .category-scroll { scrollbar-width: none; }
+        @keyframes coverage-blink { 0%,100% { opacity: 1; } 50% { opacity: 0; } }
+        .coverage-cursor { display: inline-block; width: 5px; height: 10px; background: #00C8FF; margin-left: 2px; vertical-align: middle; animation: coverage-blink 0.65s step-end infinite; }
         @media (max-width: 768px) {
           .report-left-aside {
             width: 100% !important;
@@ -337,8 +433,12 @@ export default function ReportLeftPanel({
 
       <div
         className="category-scroll min-h-0 flex-1 overflow-y-auto"
-        style={{ padding: "12px 20px 0" }}
-      />
+        style={{ padding: 0 }}
+      >
+        {pagesAnalyzed && pagesAnalyzed.length > 0 && (
+          <DiagnosticCoverage pagesAnalyzed={pagesAnalyzed} totalChecked={totalChecked} />
+        )}
+      </div>
 
       <div
         className="report-left-bottom shrink-0 border-t"

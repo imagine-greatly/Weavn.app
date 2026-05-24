@@ -373,6 +373,145 @@ export interface ScrapeResult {
 export interface CombinedExtraction {
   rawHtml: string
   pagesAnalyzed: string[]
+  additionalPages?: Array<{ url: string; rawHtml: string }>
+}
+
+// -- LINK EXTRACTION & SUBPAGE SELECTION --------------------------------
+
+export function extractInternalLinks(html: string, baseUrl: string): string[] {
+  try {
+    const base = new URL(baseUrl);
+    const seen = new Set<string>();
+    const links: string[] = [];
+    const re = /href=["']([^"']+?)["']/gi;
+    let m: RegExpExecArray | null;
+    while ((m = re.exec(html)) !== null) {
+      const href = m[1];
+      if (!href || href.startsWith('#') || href.startsWith('mailto:') || href.startsWith('tel:') || href.startsWith('javascript:')) continue;
+      try {
+        const u = new URL(href, base);
+        if (u.origin !== base.origin) continue;
+        const path = u.pathname.replace(/\/$/, '') || '/';
+        if (path === '/') continue;
+        const key = `${u.origin}${path}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        links.push(`${u.origin}${path}`);
+      } catch { /* skip */ }
+    }
+    return links;
+  } catch {
+    return [];
+  }
+}
+
+const SUBPAGE_BLOCKLIST = /\/(blog(?:\/|$)|news(?:\/|$)|press(?:\/|$)|legal(?:\/|$)|terms(?:\/|$)|privacy(?:\/|$)|policy(?:\/|$)|careers(?:\/|$)|jobs(?:\/|$)|sitemap|tags?(?:\/|$)|authors?(?:\/|$)|logout|login|signin|signup|register|cart(?:\/|$)|checkout(?:\/|$)|account(?:\/|$)|search(?:\/|$)|404)/i;
+
+const SUBPAGE_PRIORITY: Record<string, RegExp[]> = {
+  saas:       [/\/pricing/i, /\/features/i, /\/(signup|register|trial)/i, /\/about/i],
+  ecommerce:  [/\/collections?\//i, /\/products?\//i, /\/shop/i, /\/about/i],
+  service:    [/\/services?/i, /\/contact/i, /\/about/i, /\/booking/i],
+  local:      [/\/services?/i, /\/contact/i, /\/about/i, /\/menu/i],
+  content:    [/\/about/i, /\/start/i, /\/newsletter/i, /\/blog\//i],
+  general:    [/\/pricing/i, /\/about/i, /\/services/i, /\/contact/i],
+  unknown:    [/\/pricing/i, /\/about/i, /\/services/i, /\/contact/i],
+};
+
+export function selectSubpageUrls(links: string[], siteType: string): string[] {
+  const patterns = SUBPAGE_PRIORITY[siteType] ?? SUBPAGE_PRIORITY.general;
+  const selected: string[] = [];
+  const usedPaths = new Set<string>();
+
+  for (const pattern of patterns) {
+    if (selected.length >= 2) break;
+    for (const link of links) {
+      try {
+        const path = new URL(link).pathname;
+        if (SUBPAGE_BLOCKLIST.test(path)) continue;
+        if (usedPaths.has(path)) continue;
+        if (pattern.test(path)) {
+          selected.push(link);
+          usedPaths.add(path);
+          break;
+        }
+      } catch { /* skip */ }
+    }
+  }
+
+  // Fallback: take any non-blocklisted nav link
+  if (selected.length < 2) {
+    for (const link of links) {
+      if (selected.length >= 2) break;
+      try {
+        const path = new URL(link).pathname;
+        if (SUBPAGE_BLOCKLIST.test(path)) continue;
+        if (usedPaths.has(path)) continue;
+        selected.push(link);
+        usedPaths.add(path);
+      } catch { /* skip */ }
+    }
+  }
+
+  return selected;
+}
+
+// Single fast attempt for subpages — no retry, 18 s abort
+async function fetchSubpageFast(url: string): Promise<string | null> {
+  const apiKey = (process.env.BROWSERLESS_API_KEY ?? '').trim();
+  if (!apiKey) return null;
+  const launchParam = encodeURIComponent(JSON.stringify({ ignoreHTTPSErrors: true }));
+  const endpoint =
+    `https://production-sfo.browserless.io/unblock` +
+    `?token=${apiKey}&launch=${launchParam}&proxy=residential`;
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 18_000);
+  try {
+    const res = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        url,
+        bestAttempt: true,
+        gotoOptions: { waitUntil: 'domcontentloaded', timeout: 12_000 },
+        waitForTimeout: 2_000,
+      }),
+      signal: ctrl.signal,
+    });
+    if (!res.ok) return null;
+    const text = await res.text();
+    const json = JSON.parse(text) as Record<string, unknown>;
+    const html =
+      (typeof json.content === 'string' ? json.content : null) ??
+      (typeof json.html === 'string' ? json.html : null) ??
+      (typeof json.data === 'string' ? json.data : null);
+    if (!html || readableTextLength(html) < 300 || isBlockPage(html)) return null;
+    return html;
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+export async function scrapeSubpageSafe(url: string): Promise<{ url: string; rawHtml: string } | null> {
+  process.stderr.write(`[SCRAPER] subpage START | url=${url}\n`);
+  try {
+    const html = await fetchSubpageFast(url);
+    if (!html) {
+      process.stderr.write(`[SCRAPER] subpage EMPTY | url=${url}\n`);
+      return null;
+    }
+    const cleaned = cleanHtml(html);
+    const capped =
+      cleaned.length > 20_000
+        ? cleaned.slice(0, 17_000) + TRUNCATION_SEPARATOR + cleaned.slice(-3_000)
+        : cleaned;
+    process.stderr.write(`[SCRAPER] subpage DONE | url=${url} chars=${capped.length}\n`);
+    return { url, rawHtml: capped };
+  } catch (err) {
+    process.stderr.write(`[SCRAPER] subpage ERROR | url=${url} | ${err instanceof Error ? err.message : String(err)}\n`);
+    return null;
+  }
 }
 
 export async function scrapeUrl(inputUrl: string): Promise<ScrapeResult> {

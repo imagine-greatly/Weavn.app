@@ -56,6 +56,8 @@ export interface Leak {
   severity: LeakSeverity;
   /** Omitted on older payloads; \"missing\" = blueprint gap finding */
   type?: "existing" | "missing";
+  /** Source page label for multi-page scans (e.g. "PRICING PAGE", "HOMEPAGE"). */
+  sourcePage?: string;
   title: string;
   /** Business-framed headline (under 12 words); preferred over technical check title in UI. */
   revenueTitle?: string;
@@ -152,6 +154,8 @@ export interface ConversionKiller {
   effort: RevenueEffortLabel;
   severity: "critical" | "high" | "medium";
   category: string;
+  /** Source page label for multi-page scans (e.g. “PRICING PAGE”, “HOMEPAGE”). */
+  sourcePage?: string;
 }
 
 /** Conversion Intelligence — phased action plan. */

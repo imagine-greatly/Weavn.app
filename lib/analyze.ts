@@ -628,17 +628,21 @@ export async function runAnalysis(
   process.stderr.write(`[ANALYZE] userContent_len=${userContent.length} isMultiPage=${isMultiPage}\n`);
   process.stderr.write('[ANALYZE] prompt chars: ' + userContent.length + '\n');
 
+  const maxTokens = isMultiPage ? 5000 : 3800;
+
   let attempt = 0;
   const run = async (): Promise<ReportPayload> => {
     attempt++;
-    process.stderr.write(`[ANALYZE] claude START | attempt=${attempt} model=${resolvedModel} contentLen=${userContent.length}\n`);
+    process.stderr.write(`[ANALYZE] claude START | attempt=${attempt} model=${resolvedModel} contentLen=${userContent.length} maxTokens=${maxTokens}\n`);
     const message = await client.messages.create({
       model: resolvedModel,
-      max_tokens: 3800,
+      max_tokens: maxTokens,
+      temperature: 0,
       system: [{ type: "text", text: systemPrompt, cache_control: { type: "ephemeral" } }],
       messages: [{ role: "user", content: userContent }],
     });
     process.stderr.write(`[ANALYZE] claude DONE | attempt=${attempt} stop_reason=${message.stop_reason} input_tokens=${message.usage?.input_tokens} output_tokens=${message.usage?.output_tokens}\n`);
+    process.stderr.write(`[ANALYZE] cache_creation_input_tokens=${message.usage?.cache_creation_input_tokens} cache_read_input_tokens=${message.usage?.cache_read_input_tokens}\n`);
 
     if (message.stop_reason === "max_tokens") {
       const err = new Error("Analysis response truncated: max_tokens ceiling reached. Retrying would yield the same result.");

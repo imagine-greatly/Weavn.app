@@ -52,8 +52,7 @@ export async function POST(req: NextRequest) {
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
 
-  function planFromPriceId(priceId: string | null | undefined): 'pro' | 'agency' {
-    if (priceId && priceId === process.env.STRIPE_AGENCY_PRICE_ID) return 'agency';
+  function planFromPriceId(_priceId: string | null | undefined): 'pro' {
     return 'pro';
   }
 
@@ -65,7 +64,7 @@ export async function POST(req: NextRequest) {
 
         if (!userId) break;
 
-        const plan = session.metadata?.plan === 'agency' ? 'agency' : 'pro';
+        const plan = 'pro';
 
         await supabase
           .from('profiles')

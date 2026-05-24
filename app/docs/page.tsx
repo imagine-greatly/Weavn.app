@@ -49,7 +49,6 @@ const NAV: { section: string; items: { label: string; id: string }[] }[] = [
       { label: "Scan history", id: "scan-history" },
       { label: "Sharing reports", id: "sharing-reports" },
       { label: "Billing", id: "billing" },
-      { label: "Agency plan", id: "agency-plan" },
     ],
   },
 ];
@@ -448,17 +447,6 @@ export default function DocsPage() {
             </p>
           </DocSection>
 
-          <DocSection id="agency-plan" title="Agency plan" visible={visibleIds.has("agency-plan")}>
-            <p className="font-sans text-[15px] leading-[1.8]" style={{ color: "var(--text-secondary)" }}>
-              The Agency plan is $150 per month and supports up to 10 active client site diagnostics. It includes the full diagnostic suite, enhanced diagnostic depth, priority scan queue, and client-ready shareable diagnostic reports. Full scan history is retained across all client sites.
-            </p>
-            <p className="mt-4 font-sans text-[15px] leading-[1.8]" style={{ color: "var(--text-secondary)" }}>
-              API access and white label report exports are in development and will be added to the Agency plan on release.
-            </p>
-            <p className="mt-4 font-sans text-[15px] leading-[1.8]" style={{ color: "var(--text-secondary)" }}>
-              Upgrade to Agency from account settings or the pricing page. Cancel anytime — access continues through the end of the paid period.
-            </p>
-          </DocSection>
         </main>
       </div>
       <LandingFinalCTA url={ctaUrl} onUrlChange={setCtaUrl} />

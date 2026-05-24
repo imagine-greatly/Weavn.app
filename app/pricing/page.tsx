@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useState } from "react";
 import {
   PricingTickerTransition,
+  MistTransitionDown,
+  MistTransitionUp,
 } from "@/components/PageTransitions";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import UpgradeButton from "@/components/UpgradeButton";
@@ -21,7 +23,9 @@ export default function PricingPage() {
         <PricingHero />
         <PricingTickerTransition />
         <PricingCards />
+        <MistTransitionDown />
         <ValueJustification />
+        <MistTransitionUp />
         <PricingFAQ />
       </div>
     </>
@@ -132,16 +136,22 @@ const PRO_FEATURES = [
   "Priority support",
 ];
 
-const AGENCY_FEATURES = [
-  { text: "10 active client site diagnostics", comingSoon: false },
-  { text: "Full diagnostic suite — every finding with revenue impact scoring", comingSoon: false },
-  { text: "Deep analysis engine — enhanced diagnostic intelligence", comingSoon: false },
-  { text: "Priority scan queue — results before standard users", comingSoon: false },
-  { text: "Client-ready shareable diagnostic reports", comingSoon: false },
-  { text: "Exportable PDF diagnostics for client deliverables", comingSoon: false },
-  { text: "Full scan history across all client sites", comingSoon: false },
-  { text: "API access", comingSoon: true },
-  { text: "White label reports", comingSoon: true },
+const AGENCY_COMING_FEATURES = [
+  "Competitor conversion scanning",
+  "White-label client reports",
+  "Multi-client dashboard",
+  "Bulk site diagnostics",
+  "Priority scan queue",
+  "Client sharing and export",
+];
+
+const ENTERPRISE_COMING_FEATURES = [
+  "API access for programmatic scanning",
+  "Custom Claude model tier",
+  "Dedicated infrastructure",
+  "SSO and team management",
+  "Custom integrations",
+  "Dedicated account support",
 ];
 
 function FeatureItem({ text, available = true }: { text: string; available?: boolean }) {
@@ -165,45 +175,142 @@ function FeatureItem({ text, available = true }: { text: string; available?: boo
   );
 }
 
-function AgencyFeatureItem({ text, comingSoon }: { text: string; comingSoon: boolean }) {
+function ComingSoonCard({
+  tier,
+  tagline,
+  features,
+  ctaLabel,
+  ctaHref,
+}: {
+  tier: string;
+  tagline: string;
+  features: string[];
+  ctaLabel: string;
+  ctaHref: string;
+}) {
   return (
-    <li
-      className="font-mono"
+    <div
+      className="relative flex h-full min-w-0 flex-col p-10 rounded-lg"
       style={{
-        borderLeft: "2px solid rgba(0,200,255,0.5)",
-        paddingLeft: 8,
-        fontSize: 11,
-        letterSpacing: "1px",
-        color: "var(--text-secondary)",
-        lineHeight: 1.55,
-        display: "flex",
-        alignItems: "baseline",
-        gap: 6,
-        flexWrap: "wrap",
+        background: "rgba(0,200,255,0.012)",
+        border: "1px solid rgba(0,200,255,0.14)",
+        transition: "border-color 0.2s ease",
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.borderColor = "rgba(0,200,255,0.3)";
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.borderColor = "rgba(0,200,255,0.14)";
       }}
     >
-      {text}
-      {comingSoon ? (
-        <span
-          className="font-mono"
-          style={{
-            fontSize: 9,
-            color: "var(--text-muted)",
-            letterSpacing: "1px",
-            textTransform: "uppercase",
-          }}
-        >
-          coming soon
-        </span>
-      ) : null}
-    </li>
+      {/* COMING SOON badge */}
+      <div
+        className="font-mono"
+        style={{
+          position: "absolute",
+          left: "50%",
+          top: 0,
+          transform: "translate(-50%, -50%)",
+          background: "transparent",
+          border: "1px solid rgba(0,200,255,0.5)",
+          color: "var(--cyan)",
+          fontSize: 9,
+          letterSpacing: "2.5px",
+          textTransform: "uppercase",
+          padding: "2px 12px",
+          borderRadius: 2,
+          whiteSpace: "nowrap",
+        }}
+      >
+        COMING SOON
+      </div>
+
+      {/* Tier label */}
+      <p
+        className="font-mono"
+        style={{
+          fontSize: 10,
+          letterSpacing: "3px",
+          textTransform: "uppercase",
+          color: "rgba(0,200,255,0.4)",
+        }}
+      >
+        {tier}
+      </p>
+
+      {/* Price — intentionally withheld */}
+      <p
+        className="font-score"
+        style={{
+          fontSize: 36,
+          lineHeight: 1,
+          fontWeight: 700,
+          color: "rgba(0,200,255,0.18)",
+          marginTop: 12,
+          letterSpacing: "6px",
+        }}
+      >
+        · · ·
+      </p>
+
+      {/* Tagline */}
+      <p
+        className="font-mono"
+        style={{
+          fontSize: 11,
+          letterSpacing: "0.5px",
+          lineHeight: 1.65,
+          color: "rgba(var(--text-muted-rgb,136,153,170),0.7)",
+          marginTop: 14,
+        }}
+      >
+        {tagline}
+      </p>
+
+      <div className="my-6 h-px w-full" style={{ background: "rgba(0,200,255,0.07)" }} />
+
+      {/* Feature list — intentionally dimmed */}
+      <ul className="flex-1 space-y-3" style={{ opacity: 0.45 }}>
+        {features.map((text) => (
+          <FeatureItem key={text} text={text} available={true} />
+        ))}
+      </ul>
+
+      {/* CTA */}
+      <a
+        href={ctaHref}
+        className="mt-8 flex w-full items-center justify-center font-mono rounded-lg"
+        style={{
+          color: "rgba(0,200,255,0.45)",
+          fontSize: 11,
+          letterSpacing: "2px",
+          textTransform: "uppercase",
+          textDecoration: "none",
+          padding: "12px 0",
+          border: "1px solid rgba(0,200,255,0.13)",
+          transition: "all 0.15s ease",
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.color = "var(--cyan)";
+          e.currentTarget.style.borderColor = "rgba(0,200,255,0.35)";
+          e.currentTarget.style.background = "rgba(0,200,255,0.04)";
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.color = "rgba(0,200,255,0.45)";
+          e.currentTarget.style.borderColor = "rgba(0,200,255,0.13)";
+          e.currentTarget.style.background = "transparent";
+        }}
+      >
+        {ctaLabel}
+      </a>
+    </div>
   );
 }
 
 function PricingCards() {
   return (
     <section className="relative w-full py-[120px] px-6">
-      <div className="mx-auto grid min-w-0 max-w-[1200px] gap-6 md:grid-cols-3">
+      <div className="mx-auto grid min-w-0 max-w-[1560px] gap-5 sm:grid-cols-2 xl:grid-cols-4">
         {/* FREE card */}
         <ScrollReveal variant="slide-left" className="min-w-0">
           <div
@@ -427,137 +534,26 @@ function PricingCards() {
           </div>
         </ScrollReveal>
 
-        {/* AGENCY card */}
+        {/* AGENCY — COMING SOON */}
         <ScrollReveal variant="slide-right" className="min-w-0 overflow-visible">
-          <div
-            className="relative flex h-full min-w-0 flex-col overflow-visible p-10 rounded-lg"
-            style={{
-              background: "rgba(0,200,255,0.02)",
-              border: "1px solid rgba(0,230,118,0.2)",
-              boxShadow: "0 0 40px rgba(0,230,118,0.04)",
-              transition: "all 0.2s ease",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.borderColor = "rgba(0,200,255,0.4)";
-              e.currentTarget.style.boxShadow = "0 0 30px rgba(0,200,255,0.08)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.borderColor = "rgba(0,230,118,0.2)";
-              e.currentTarget.style.boxShadow = "0 0 40px rgba(0,230,118,0.04)";
-            }}
-          >
-            <div
-              className="font-mono"
-              style={{
-                position: "absolute",
-                left: "50%",
-                top: 0,
-                transform: "translate(-50%, -50%)",
-                background: "var(--green)",
-                color: "#050810",
-                fontSize: 10,
-                letterSpacing: "2px",
-                textTransform: "uppercase",
-                padding: "2px 12px",
-                borderRadius: 2,
-                whiteSpace: "nowrap",
-              }}
-            >
-              AGENCY
-            </div>
-            <p
-              className="font-mono"
-              style={{
-                fontSize: 10,
-                letterSpacing: "3px",
-                textTransform: "uppercase",
-                color: "rgba(0,200,255,0.6)",
-              }}
-            >
-              AGENCY DIAGNOSTIC
-            </p>
-            <p
-              className="font-score"
-              style={{
-                fontSize: 56,
-                lineHeight: 1,
-                fontWeight: 700,
-                color: "var(--green)",
-                marginTop: 8,
-              }}
-            >
-              150
-            </p>
-            <p
-              className="font-mono"
-              style={{
-                fontSize: 11,
-                letterSpacing: "1px",
-                color: "var(--text-muted)",
-                marginTop: 4,
-              }}
-            >
-              /mo · cancel anytime
-            </p>
-            <p
-              className="font-mono"
-              style={{
-                fontSize: 11,
-                letterSpacing: "0.5px",
-                lineHeight: 1.6,
-                color: "var(--text-muted)",
-                marginTop: 8,
-              }}
-            >
-              Built for agencies and consultants who deliver conversion intelligence as a service. Run diagnostics across your entire client portfolio.
-            </p>
-            <div className="my-6 h-px w-full" style={{ background: "rgba(0,200,255,0.1)" }} />
-            <ul className="flex-1 space-y-3">
-              {AGENCY_FEATURES.map((f) => (
-                <AgencyFeatureItem key={f.text} text={f.text} comingSoon={f.comingSoon} />
-              ))}
-            </ul>
-            <div className="mt-8 w-full min-w-0 overflow-visible">
-              <a
-                href="/api/stripe/checkout?plan=agency"
-                onClick={(e) => {
-                  e.preventDefault();
-                  fetch("/api/stripe/checkout", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ plan: "agency" }),
-                  })
-                    .then((r) => r.json())
-                    .then((d: { url?: string }) => { if (d.url) window.location.href = d.url; })
-                    .catch(() => { window.location.href = "/auth?tab=signin"; });
-                }}
-                className="flex w-full items-center justify-center font-mono rounded-lg"
-                style={{
-                  background: "var(--green)",
-                  color: "#050810",
-                  fontWeight: 700,
-                  fontSize: 13,
-                  textTransform: "uppercase",
-                  minHeight: 44,
-                  border: "none",
-                  letterSpacing: "2px",
-                  textDecoration: "none",
-                  boxSizing: "border-box",
-                  transition: "all 0.15s ease",
-                }}
-                onMouseEnter={(e) => { e.currentTarget.style.boxShadow = "0 0 30px rgba(0,255,136,0.6)"; e.currentTarget.style.filter = "brightness(1.1)"; }}
-                onMouseLeave={(e) => { e.currentTarget.style.boxShadow = "none"; e.currentTarget.style.filter = "none"; }}
-              >
-                UPGRADE TO AGENCY — $150/MO →
-              </a>
-            </div>
-            <p
-              className="mt-3 text-center font-mono"
-              style={{ fontSize: 11, color: "var(--text-muted)", letterSpacing: "0.5px" }}
-            >
-              Cancel anytime. Access continues through the paid period end.
-            </p>
-          </div>
+          <ComingSoonCard
+            tier="AGENCY"
+            tagline="For agencies managing client portfolios. Competitor scanning, white-label reports, client dashboard."
+            features={AGENCY_COMING_FEATURES}
+            ctaLabel="Join waitlist →"
+            ctaHref="mailto:devon@webdocai.com?subject=Agency%20Waitlist"
+          />
+        </ScrollReveal>
+
+        {/* ENTERPRISE — COMING SOON */}
+        <ScrollReveal variant="slide-right" className="min-w-0 overflow-visible">
+          <ComingSoonCard
+            tier="ENTERPRISE"
+            tagline="For teams at scale. API access, custom integrations, dedicated support."
+            features={ENTERPRISE_COMING_FEATURES}
+            ctaLabel="Contact us →"
+            ctaHref="mailto:devon@webdocai.com?subject=Enterprise%20Inquiry"
+          />
         </ScrollReveal>
       </div>
     </section>
@@ -799,8 +795,8 @@ const PRICING_FAQ = [
     a: "Annual plans are not live yet. Billing is monthly until announced otherwise.",
   },
   {
-    q: "Agency and multi-site",
-    a: "The Agency plan is available at $150/month. It supports up to 10 active site diagnostics with enhanced diagnostic depth. API access and white label reports are coming soon.",
+    q: "Agency and Enterprise",
+    a: "Agency and Enterprise plans are in development. Agency is designed for agencies managing client portfolios — competitor scanning, white-label reports, and a client dashboard. Enterprise adds API access, custom integrations, and dedicated support. Join the waitlist from the pricing page.",
   },
 ];
 

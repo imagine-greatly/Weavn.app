@@ -78,16 +78,8 @@ export default function LandingDiagnosticChecks() {
   return (
     <section
       className="relative w-full overflow-hidden px-6 py-[120px]"
-      style={{ background: "transparent" }}
+      style={{ background: "#000008" }}
     >
-      <div
-        className="pointer-events-none absolute inset-0"
-        aria-hidden
-        style={{
-          background:
-            "radial-gradient(ellipse 120% 50% at 50% 0%, rgba(0,200,255,0.04) 0%, transparent 70%)",
-        }}
-      />
 
       <div className="relative mx-auto max-w-[min(1200px,calc(100vw-48px))]">
         <div className="mb-14 text-center">
@@ -108,7 +100,7 @@ export default function LandingDiagnosticChecks() {
                 fontWeight: 800,
               }}
             >
-              166 diagnostic checks
+              200 diagnostic checks
               <span style={{ color: "var(--cyan)" }}>.</span>
             </h2>
           </ScrollReveal>
@@ -117,7 +109,7 @@ export default function LandingDiagnosticChecks() {
               className="mx-auto mt-5 max-w-[540px] font-sans text-[17px] leading-relaxed"
               style={{ color: "var(--text-secondary)" }}
             >
-              Every scan runs all 166 checks across six revenue dimensions. No sampling, no shortcuts.
+              Every scan runs all 200 checks across six revenue dimensions. No sampling, no shortcuts.
             </p>
           </ScrollReveal>
         </div>
@@ -137,7 +129,7 @@ export default function LandingDiagnosticChecks() {
               className="font-mono text-[12px] uppercase tracking-[2px] transition-colors duration-200 hover:text-white"
               style={{ color: "var(--cyan)" }}
             >
-              SEE ALL 166 CHECKS →
+              SEE ALL 200 CHECKS →
             </Link>
           </div>
         </ScrollReveal>

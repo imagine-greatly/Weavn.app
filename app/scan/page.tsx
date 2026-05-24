@@ -148,7 +148,6 @@ function ScanLoadingInner() {
   const ringOuterRef = useRef<HTMLDivElement>(null);
   const scoreNumRef = useRef<HTMLDivElement>(null);
   const checksCounterRef = useRef<HTMLSpanElement>(null);
-  const pulseCanvasRef = useRef<HTMLCanvasElement>(null);
 
   const [elapsedMs, setElapsedMs] = useState(0);
   const [sectionVisualComplete, setSectionVisualComplete] = useState(false);
@@ -695,11 +694,11 @@ function ScanLoadingInner() {
       }
     }
 
-    // Counter: 0→166 over 85% of the estimated 90s scan duration (76,500ms),
-    // then holds at 166 until the scan completes. Never goes backwards, never exceeds 166.
+    // Counter: 0→200 over 85% of the estimated 90s scan duration (76,500ms),
+    // then holds at 200 until the scan completes. Never goes backwards, never exceeds 200.
     if (checksCounterRef.current) {
       const elapsed = now - scanStartTimeRef.current;
-      const count = Math.min(166, Math.floor((Math.max(0, elapsed) / 76_500) * 167));
+      const count = Math.min(200, Math.floor((Math.max(0, elapsed) / 76_500) * 201));
       checksCounterRef.current.textContent = String(count);
     }
 
@@ -751,7 +750,7 @@ function ScanLoadingInner() {
     let bsm: BsmState = 'SEEK';
     let bsmTimer = 0;
 
-    let seekX = 0, seekY = 0, seekK = 0.018;
+    let seekX = 0, seekY = 0, seekK = 0.010;
     let dwX = 0, dwY = 0;
 
     // Deterministic pseudo-variance — increments tc so each tv() call yields a fresh value
@@ -785,7 +784,7 @@ function ScanLoadingInner() {
     s.pos = { x: iXMax * 0.5, y: iYMin + (iYMax - iYMin) * 0.3 };
     s.velocity = { x: 0, y: 0 };
     const initT = pickTarget();
-    goSeek(initT.x, initT.y, 0.022, 400);
+    goSeek(initT.x, initT.y, 0.010, 700);
 
     // ── RAF tick ──────────────────────────────────────────────────────────
     const tick = (now: number) => {
@@ -805,7 +804,7 @@ function ScanLoadingInner() {
           const dx = seekX - s.pos.x, dy = seekY - s.pos.y;
           s.velocity.x += dx * seekK;
           s.velocity.y += dy * seekK;
-          s.velocity.x *= 0.80; s.velocity.y *= 0.80;
+          s.velocity.x *= 0.85; s.velocity.y *= 0.85;
           s.pos.x += s.velocity.x; s.pos.y += s.velocity.y;
           if (bsmTimer <= 0 || Math.hypot(dx, dy) < 16) {
             if (tv() < 0.35) {
@@ -813,7 +812,7 @@ function ScanLoadingInner() {
             } else {
               const tgt = pickTarget();
               // Vary K: sometimes slow and drifting (0.010), sometimes purposeful (0.024)
-              goSeek(tgt.x, tgt.y, 0.010 + tv(2) * 0.014, 400 + tv(1) * 1000);
+              goSeek(tgt.x, tgt.y, 0.005 + tv(2) * 0.007, 700 + tv(1) * 1500);
             }
           }
           break;
@@ -826,13 +825,13 @@ function ScanLoadingInner() {
                     + Math.sin(now * 0.0431) * 0.6;
           const jY = Math.sin(now * 0.0127) * 2.2
                     + Math.sin(now * 0.0318) * 0.9;
-          s.velocity.x += (dwX + jX - s.pos.x) * 0.035;
-          s.velocity.y += (dwY + jY - s.pos.y) * 0.035;
-          s.velocity.x *= 0.80; s.velocity.y *= 0.80;
+          s.velocity.x += (dwX + jX - s.pos.x) * 0.020;
+          s.velocity.y += (dwY + jY - s.pos.y) * 0.020;
+          s.velocity.x *= 0.85; s.velocity.y *= 0.85;
           s.pos.x += s.velocity.x; s.pos.y += s.velocity.y;
           if (bsmTimer <= 0) {
             const tgt = pickTarget();
-            goSeek(tgt.x, tgt.y, 0.012 + tv(1) * 0.010, 350 + tv() * 750);
+            goSeek(tgt.x, tgt.y, 0.005 + tv(1) * 0.006, 600 + tv() * 1200);
           }
           break;
         }
@@ -880,73 +879,6 @@ function ScanLoadingInner() {
     beamRafRef.current = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(beamRafRef.current);
   }, [materialized]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Pulse waveform canvas animation
-  useEffect(() => {
-    const canvas = pulseCanvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    const CYCLE_MS = 2500;
-    const EVOLVE_MS = 4500;
-
-    let raf: number;
-    const t0 = performance.now();
-    let lastEvolve = t0;
-
-    // Wave params — start values, smoothly lerped toward targets
-    let amplitude = 9;
-    let targetAmplitude = 9;
-    let freq = 1.7;       // sine cycles visible across canvas width
-    let targetFreq = 1.7;
-
-    const draw = (now: number) => {
-      const elapsed = now - t0;
-
-      // Pick new targets every EVOLVE_MS using deterministic trig (no Math.random)
-      if (now - lastEvolve > EVOLVE_MS) {
-        lastEvolve = now;
-        const seed = elapsed * 0.00007;
-        targetAmplitude = 7 + Math.sin(seed * 3.1) * 3.5;       // 3.5–10.5
-        targetFreq      = 1.55 + Math.sin(seed * 2.3) * 0.35;   // 1.2–1.9
-      }
-      // Smooth lerp — no sudden jumps
-      amplitude += (targetAmplitude - amplitude) * 0.012;
-      freq      += (targetFreq      - freq)      * 0.012;
-
-      const w  = canvas.width;
-      const h  = canvas.height;
-      const cy = h / 2;
-
-      ctx.clearRect(0, 0, w, h);
-
-      // Phase advances one full 2π per CYCLE_MS → seamless loop
-      const phase = ((elapsed % CYCLE_MS) / CYCLE_MS) * Math.PI * 2;
-
-      // Wave: primary sine + subtle 2nd harmonic for slight EKG texture
-      ctx.beginPath();
-      ctx.strokeStyle = 'rgba(0,200,255,0.72)';
-      ctx.lineWidth   = 1;
-      ctx.lineJoin    = 'round';
-      for (let x = 0; x <= w; x++) {
-        const angle = (x / w) * Math.PI * 2 * freq - phase;
-        const y = cy - (Math.sin(angle) + Math.sin(angle * 2.1) * 0.18) / 1.18 * amplitude;
-        x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-      }
-      ctx.stroke();
-
-      // Scanning line: 1px vertical cursor sweeping left→right over CYCLE_MS, then instant reset
-      const scanX = ((elapsed % CYCLE_MS) / CYCLE_MS) * w;
-      ctx.fillStyle = 'rgba(0,200,255,0.7)';
-      ctx.fillRect(Math.floor(scanX), 0, 2, h);
-
-      raf = requestAnimationFrame(draw);
-    };
-
-    raf = requestAnimationFrame(draw);
-    return () => cancelAnimationFrame(raf);
-  }, []); // independent of render state — pure visual loop
 
   const getSectionLabelClass = (sectionId: string): string => {
     if (sectionId === activeSection) return "section-active";
@@ -1192,6 +1124,23 @@ function ScanLoadingInner() {
           from { transform: translateY(-100%); }
           to   { transform: translateY(100vh); }
         }
+        @keyframes beamPulse {
+          from { left: -28px; }
+          to { left: 188px; }
+        }
+        .scan-beam {
+          overflow: hidden;
+        }
+        .scan-beam::after {
+          content: "";
+          position: absolute;
+          top: 0;
+          left: -28px;
+          width: 28px;
+          height: 100%;
+          background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.9) 50%, transparent 100%);
+          animation: beamPulse 1.6s linear infinite;
+        }
       `}</style>
 
       <div
@@ -1209,6 +1158,7 @@ function ScanLoadingInner() {
         {/* Beam — the only moving element */}
         <div
           ref={beamDivRef}
+          className="scan-beam"
           aria-hidden
           style={{
             position: "fixed",
@@ -2217,34 +2167,26 @@ function ScanLoadingInner() {
               >
                 REVENUE CHECKS
               </span>
-              <div style={{ display: "flex", alignItems: "flex-end", gap: 10 }}>
+              <span
+                style={{
+                  fontFamily: ORBIT,
+                  fontWeight: 700,
+                  fontSize: 16,
+                  fontVariantNumeric: "tabular-nums",
+                }}
+              >
                 <span
+                  ref={checksCounterRef}
                   style={{
-                    fontFamily: ORBIT,
-                    fontWeight: 700,
-                    fontSize: 16,
-                    fontVariantNumeric: "tabular-nums",
+                    color: "#00C8FF",
+                    textShadow: "0 0 10px #00C8FF, 0 0 25px rgba(0,200,255,0.5)",
                   }}
                 >
-                  <span
-                    ref={checksCounterRef}
-                    style={{
-                      color: "#00C8FF",
-                      textShadow: "0 0 10px #00C8FF, 0 0 25px rgba(0,200,255,0.5)",
-                    }}
-                  >
-                    0
-                  </span>
-                  <span style={{ color: "rgba(0,200,255,0.3)" }}> / </span>
-                  <span style={{ color: "rgba(0,200,255,0.4)" }}>166</span>
+                  0
                 </span>
-                <canvas
-                  ref={pulseCanvasRef}
-                  width={128}
-                  height={26}
-                  style={{ display: "block", imageRendering: "pixelated" }}
-                />
-              </div>
+                <span style={{ color: "rgba(0,200,255,0.3)" }}> / </span>
+                <span style={{ color: "rgba(0,200,255,0.4)" }}>166</span>
+              </span>
             </div>
             <div style={{ flex: 1, textAlign: "right" }}>
               <span

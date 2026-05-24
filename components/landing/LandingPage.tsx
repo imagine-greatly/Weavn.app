@@ -15,6 +15,23 @@ import LandingDiagnosticChecks from "@/components/landing/LandingDiagnosticCheck
 
 const LANDING_BG_BASE = "#050810";
 
+function LandingMist({ from, to }: { from: string; to: string }) {
+  return (
+    <div aria-hidden className="relative h-[60px] w-full overflow-hidden pointer-events-none">
+      <div className="absolute inset-0" style={{ background: `linear-gradient(180deg, ${from} 0%, ${to} 100%)` }} />
+      <div
+        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
+        style={{
+          width: 800,
+          height: 200,
+          background: "radial-gradient(ellipse, rgba(0,200,255,0.04) 0%, transparent 70%)",
+          filter: "blur(30px)",
+        }}
+      />
+    </div>
+  );
+}
+
 export default function LandingPage() {
   const [url, setUrl] = useState("");
   const searchParams = useSearchParams();
@@ -33,11 +50,15 @@ export default function LandingPage() {
       <div className="relative z-10">
         <LandingHero url={url} onUrlChange={setUrl} autoFocus={!scanFocus} />
         <LandingDiagnosticChecks />
+        <LandingMist from="#000008" to="#0D1321" />
         <LandingDiagnosticOutput />
+        <LandingMist from="#0D1321" to="#050810" />
         <LandingThreeNumbers />
+        <LandingMist from="#050810" to="#070C14" />
         <LandingHowItWorks />
         <LandingDashboardDemo />
         <LandingGrowthBlueprint />
+        <LandingMist from="#070C14" to="#050810" />
         <BeforeAfterSection />
         <LandingFinalCTA url={url} onUrlChange={setUrl} autoFocus={scanFocus} />
         <SiteFooter />

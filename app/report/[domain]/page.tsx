@@ -81,7 +81,7 @@ function cachePlan(plan: string): void {
 function computeIsPro(plan: string | null, is_pro?: boolean): boolean {
   if (is_pro === true) return true;
   const p = String(plan ?? "").trim().toLowerCase();
-  return p === "pro" || p === "agency";
+  return p === "pro" || p === "agency"; // agency treated as pro
 }
 
 function ReportSkeleton() {

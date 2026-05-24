@@ -6,6 +6,8 @@ import {
   HowPipelineTransition,
   HowTargetTransition,
   HowTraceTransition,
+  MistTransitionDown,
+  MistTransitionUp,
 } from "@/components/PageTransitions";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import LandingFinalCTA from "@/components/landing/LandingFinalCTA";
@@ -25,10 +27,14 @@ export default function HowItWorksPage() {
       <HowItWorksHero />
       <HowPipelineTransition />
       <ProcessSteps />
+      <MistTransitionDown />
       <HowPacketsTransition />
       <TechnologySection />
+      <MistTransitionUp />
       <HowTraceTransition />
+      <MistTransitionDown />
       <CompleteDiagnosticDatabase />
+      <MistTransitionUp />
       <FAQSection />
       <HowTargetTransition />
       <LandingFinalCTA url={url} onUrlChange={setUrl} />
@@ -374,10 +380,10 @@ const STEPS = [
     num: 3,
     title: "WebDoc performs surgical site scan",
     visual: <Step3Visual />,
-    explanationTitle: "One hundred and sixty-six checks across five revenue dimensions",
+    explanationTitle: "Two hundred checks across six revenue dimensions",
     explanationBody:
-      "One hundred and sixty-six checks run across Conversion Architecture, Trust Signals, Message Clarity, Traffic Readiness, and Technical Foundation in parallel. Each check binds to a cited principle and produces machine-readable evidence from your DOM.",
-    tag: "166 CHECKS · 5 REVENUE DIMENSIONS",
+      "Two hundred checks run across Conversion Architecture, Trust Signals, Message Clarity, Traffic Readiness, Technical Foundation, and Vertical Signals in parallel. Each check binds to a cited principle and produces machine-readable evidence from your DOM.",
+    tag: "200 CHECKS · 6 REVENUE DIMENSIONS",
   },
   {
     num: 4,
@@ -698,13 +704,17 @@ const DIMENSION_CATEGORIES: { name: string; categories: string[] }[] = [
     name: "Technical Foundation",
     categories: ["Navigation & UX", "Mobile Experience", "Page Speed & Technical", "Product Page", "Accessibility & Inclusion"],
   },
+  {
+    name: "Vertical & Universal Signals",
+    categories: ["Universal & Cross-Vertical", "SaaS-Specific", "E-commerce Specific", "Agency & Service", "Conversion Path Expansion"],
+  },
 ];
 
-const SEVERITY_STYLES: Record<string, { color: string; bg: string; label: string }> = {
-  Critical: { color: "rgba(255,55,55,0.9)", bg: "rgba(255,55,55,0.08)", label: "CRIT" },
-  High:     { color: "rgba(255,145,30,0.9)", bg: "rgba(255,145,30,0.08)", label: "HIGH" },
-  Medium:   { color: "rgba(0,200,255,0.7)", bg: "rgba(0,200,255,0.06)", label: "MED" },
-  Low:      { color: "rgba(100,130,150,0.8)", bg: "rgba(100,130,150,0.06)", label: "LOW" },
+const SEVERITY_DOT: Record<string, { background: string }> = {
+  Critical: { background: "rgba(0,200,255,1)" },
+  High:     { background: "rgba(0,200,255,0.45)" },
+  Medium:   { background: "rgba(0,200,255,0.18)" },
+  Low:      { background: "rgba(0,200,255,0.07)" },
 };
 
 function CompleteDiagnosticDatabase() {
@@ -735,7 +745,7 @@ function CompleteDiagnosticDatabase() {
               fontWeight: 800,
             }}
           >
-            All 166 checks, every scan
+            All 200 checks, every scan
             <span style={{ color: "var(--cyan)" }}>.</span>
           </h2>
         </ScrollReveal>
@@ -786,23 +796,6 @@ function CompleteDiagnosticDatabase() {
                       </span>
                     </div>
                     <div className="flex shrink-0 items-center gap-3">
-                      {/* Severity breakdown */}
-                      <div className="hidden items-center gap-2 sm:flex">
-                        {(["Critical", "High", "Medium", "Low"] as const).map((sev) => {
-                          const n = dim.checks.filter((c) => c.severity === sev).length;
-                          if (!n) return null;
-                          const s = SEVERITY_STYLES[sev];
-                          return (
-                            <span
-                              key={sev}
-                              className="rounded px-1.5 py-0.5 font-mono text-[10px]"
-                              style={{ color: s.color, background: s.bg, border: `1px solid ${s.color}` }}
-                            >
-                              {n} {s.label}
-                            </span>
-                          );
-                        })}
-                      </div>
                       <span
                         className="font-mono text-[16px] transition-transform duration-200"
                         style={{
@@ -827,31 +820,25 @@ function CompleteDiagnosticDatabase() {
                           const catChecks = dim.checks.filter((c) => c.category === cat);
                           if (!catChecks.length) return null;
                           return (
-                            <div key={cat} className="mb-5 last:mb-0">
+                            <div key={cat} className="mb-8 last:mb-0">
                               <p
-                                className="mb-3 font-mono text-[10px] uppercase tracking-[2px]"
-                                style={{ color: "var(--text-muted)" }}
+                                className="mb-4 font-mono text-[9px] uppercase"
+                                style={{ color: "rgba(100,120,140,0.45)", letterSpacing: "3px" }}
                               >
                                 {cat}
                               </p>
-                              <div className="grid gap-2 sm:grid-cols-2">
+                              <div className="grid gap-3 sm:grid-cols-2">
                                 {catChecks.map((check) => {
-                                  const s = SEVERITY_STYLES[check.severity];
+                                  const dot = SEVERITY_DOT[check.severity];
                                   return (
                                     <div
                                       key={check.id}
-                                      className="flex items-start gap-2.5"
+                                      className="flex items-start gap-3"
                                     >
                                       <span
-                                        className="mt-0.5 shrink-0 rounded px-1 py-0.5 font-mono text-[9px] font-bold leading-none"
-                                        style={{
-                                          color: s.color,
-                                          background: s.bg,
-                                          border: `1px solid ${s.color}`,
-                                        }}
-                                      >
-                                        {s.label}
-                                      </span>
+                                        className="mt-[5px] h-1.5 w-1.5 shrink-0 rounded-full"
+                                        style={{ background: dot.background }}
+                                      />
                                       <span
                                         className="font-mono text-[11px] leading-snug"
                                         style={{ color: "var(--text-secondary)" }}
@@ -890,7 +877,7 @@ function CompleteDiagnosticDatabase() {
               className="font-sans font-extrabold"
               style={{ color: "var(--cyan)", fontSize: 22, letterSpacing: "-0.8px" }}
             >
-              166
+              200
             </span>
             <span className="font-mono text-[11px] uppercase tracking-[2px]" style={{ color: "var(--text-muted)" }}>
               checks · every scan · no sampling

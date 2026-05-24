@@ -6,7 +6,7 @@ import { getSupabaseBrowserClient } from "@/lib/supabaseBrowser";
 import PageLoadSkeleton from "@/components/PageLoadSkeleton";
 
 type SettingsSection = "profile" | "security" | "subscription" | "notifications" | "account";
-type PlanType = "free" | "pro" | "agency";
+type PlanType = "free" | "pro";
 type SubscriptionData = {
   id: string;
   status: string;
@@ -19,14 +19,13 @@ type PaymentMethodData = { brand: string; last4: string; exp: string };
 type LastScan = { domain: string | null; created_at: string | null };
 
 /** Normalize plan from a profiles row (handles alternate column names / casing). */
-function normalizePlanFromProfile(row: Record<string, unknown> | null | undefined): "free" | "pro" | "agency" {
+function normalizePlanFromProfile(row: Record<string, unknown> | null | undefined): "free" | "pro" {
   if (!row || typeof row !== "object") return "free";
   if (row.is_pro === true) return "pro";
   const raw = row.plan ?? row.subscription_tier ?? row.subscription ?? row.tier;
   if (raw == null || raw === "") return "free";
   const s = String(raw).trim().toLowerCase();
-  if (s === "agency") return "agency";
-  if (s === "pro" || s === "professional" || s === "paid" || s === "business" || s === "premium") return "pro";
+  if (s === "agency" || s === "pro" || s === "professional" || s === "paid" || s === "business" || s === "premium") return "pro";
   return "free";
 }
 
@@ -286,7 +285,7 @@ export default function SettingsPage() {
   const pwReqNum = /\d/.test(newPassword);
   const pwAllGood = pwReqLen && pwReqUpper && pwReqNum;
   const canDelete = deleteConfirmEmail.trim().toLowerCase() === email.trim().toLowerCase();
-  const scanLimit = plan === "agency" ? 10 : plan === "pro" ? 5 : 1;
+  const scanLimit = plan === "pro" ? 5 : 1;
   const scanPct = Math.min(100, Math.round((scanUsage / Math.max(1, scanLimit)) * 100));
 
   async function loadSubscription(token: string): Promise<PlanType> {
@@ -294,7 +293,7 @@ export default function SettingsPage() {
     const json = (await res.json().catch(() => ({}))) as Record<string, unknown>;
     if (!res.ok) throw new Error(String(json.error ?? "Failed to load subscription."));
     const rawPlan = (json.plan as string) ?? "free";
-    const apiPlan: PlanType = rawPlan === "agency" ? "agency" : rawPlan === "pro" ? "pro" : "free";
+    const apiPlan: PlanType = (rawPlan === "agency" || rawPlan === "pro") ? "pro" : "free";
     setSubscription((json.subscription as SubscriptionData | null) ?? null);
     setPaymentMethod((json.payment_method as PaymentMethodData | null) ?? null);
     setNotificationScanComplete(Boolean(json.notification_scan_complete ?? true));
@@ -821,10 +820,10 @@ export default function SettingsPage() {
                 <div style={panelStyle}>
                   <div style={{ background: C.inner, border: `1px solid ${C.border}`, borderRadius: 4, padding: 20, marginBottom: 16 }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 }}>
-                      <div style={{ color: C.white, fontFamily: GROTESK, fontSize: 18 }}>{plan === "agency" ? "Agency Plan" : plan === "pro" ? "Pro Plan" : "Free Plan"}</div>
-                      <div style={{ color: plan === "agency" || plan === "pro" ? C.green : C.muted, fontFamily: MONO, fontSize: 10, letterSpacing: "0.08em" }}>{plan === "agency" ? "ACTIVE" : plan === "pro" ? "ACTIVE" : "FREE"}</div>
+                      <div style={{ color: C.white, fontFamily: GROTESK, fontSize: 18 }}>{plan === "pro" ? "Pro Plan" : "Free Plan"}</div>
+                      <div style={{ color: plan === "pro" ? C.green : C.muted, fontFamily: MONO, fontSize: 10, letterSpacing: "0.08em" }}>{plan === "pro" ? "ACTIVE" : "FREE"}</div>
                     </div>
-                    {plan === "pro" || plan === "agency" ? (
+                    {plan === "pro" ? (
                       <>
                         <div style={{ marginTop: 12, color: C.muted, fontFamily: MONO, fontSize: 13 }}>
                           {`${fmtCurrency(subscription?.amount ?? null, subscription?.currency ?? "USD")}/month \u00b7 Renews ${fmtDate(subscription?.current_period_end ?? null)}`}
@@ -838,7 +837,7 @@ export default function SettingsPage() {
                     ) : null}
                     <div style={{ marginTop: 14, color: C.muted, fontFamily: MONO, fontSize: 10, letterSpacing: "0.08em" }}>DIAGNOSTIC SCANS THIS MONTH</div>
                     <div style={{ marginTop: 8, width: "100%", height: 2, background: C.border }}>
-                      <div style={{ width: `${scanPct}%`, height: "100%", background: plan === "pro" || plan === "agency" ? C.cyan : scanUsage >= scanLimit ? C.red : C.amber }} />
+                      <div style={{ width: `${scanPct}%`, height: "100%", background: plan === "pro" ? C.cyan : scanUsage >= scanLimit ? C.red : C.amber }} />
                     </div>
                     <div style={{ marginTop: 8, color: scanUsage >= scanLimit ? C.red : C.muted, fontFamily: MONO, fontSize: 11 }}>
                       {scanUsage >= scanLimit && plan === "free" ? "Scan limit reached. Upgrade to continue." : `${scanUsage} of ${scanLimit} sites used`}

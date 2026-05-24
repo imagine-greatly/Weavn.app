@@ -230,6 +230,28 @@ export function HowTraceTransition() {
   );
 }
 
+export function MistTransitionDown() {
+  return (
+    <div aria-hidden className="relative h-[60px] w-full overflow-hidden">
+      <div
+        className="absolute inset-0"
+        style={{ background: "linear-gradient(180deg, transparent 0%, var(--bg-surface) 100%)" }}
+      />
+    </div>
+  );
+}
+
+export function MistTransitionUp() {
+  return (
+    <div aria-hidden className="relative h-[60px] w-full overflow-hidden">
+      <div
+        className="absolute inset-0"
+        style={{ background: "linear-gradient(180deg, var(--bg-surface) 0%, transparent 100%)" }}
+      />
+    </div>
+  );
+}
+
 export function HowTargetTransition() {
   return (
     <div aria-hidden className="relative h-[86px] w-full overflow-hidden">

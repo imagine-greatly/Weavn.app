@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
 
     let requestBody: Record<string, unknown> = {};
     try { requestBody = await req.json(); } catch { /* no body */ }
-    const requestedPlan = requestBody?.plan === 'agency' ? 'agency' : 'pro';
+    const requestedPlan = 'pro';
 
     const { data: profile } = await supabase
       .from('profiles')
@@ -72,9 +72,7 @@ export async function POST(req: NextRequest) {
         .eq('id', user.id);
     }
 
-    const priceId = requestedPlan === 'agency'
-      ? process.env.STRIPE_AGENCY_PRICE_ID!
-      : process.env.STRIPE_PRO_PRICE_ID!;
+    const priceId = process.env.STRIPE_PRO_PRICE_ID!;
 
     const session = await stripe.checkout.sessions.create({
       customer: customerId,

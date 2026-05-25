@@ -690,7 +690,7 @@ export async function runAnalysis(
   process.stderr.write(`[ANALYZE] userContent_len=${userContent.length} isMultiPage=${isMultiPage} failedPages=${failedPages.length}\n`);
   process.stderr.write('[ANALYZE] prompt chars: ' + userContent.length + '\n');
 
-  const maxTokens = isMultiPage ? 5000 : 3800;
+  const maxTokens = isMultiPage ? 3500 : 3800;
 
   let attempt = 0;
   const run = async (): Promise<ReportPayload> => {

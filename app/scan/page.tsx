@@ -1126,7 +1126,7 @@ function ScanLoadingInner() {
         }
         @keyframes beamSweep {
           from { left: -40px; }
-          to { left: 200px; }
+          to { left: 160px; }
         }
         .scan-beam {
           overflow: hidden;
@@ -1139,7 +1139,7 @@ function ScanLoadingInner() {
           width: 40px;
           height: 100%;
           background: linear-gradient(90deg, transparent 0%, rgba(0,200,255,0.95) 50%, transparent 100%);
-          animation: beamSweep 1.8s ease-in-out infinite alternate;
+          animation: beamSweep 1.4s linear infinite;
         }
       `}</style>
 
@@ -1171,7 +1171,7 @@ function ScanLoadingInner() {
             pointerEvents: "none",
             opacity: 0,
             willChange: "transform",
-            background: "linear-gradient(90deg, transparent 0%, rgba(0,200,255,0.15) 10%, rgba(0,200,255,0.9) 40%, rgba(0,200,255,1) 50%, rgba(0,200,255,0.9) 60%, rgba(0,200,255,0.15) 90%, transparent 100%)",
+            background: "linear-gradient(90deg, transparent 0%, rgba(0,200,255,0.3) 15%, rgba(0,200,255,0.3) 85%, transparent 100%)",
           }}
         />
         {/* Laser line — full-width 1px rule that travels at the beam's Y center */}

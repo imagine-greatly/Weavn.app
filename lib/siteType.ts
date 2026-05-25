@@ -30,6 +30,9 @@ const ECOMMERCE = {
     "view cart",
     "your cart",
     "add to basket",
+    "free shipping",
+    "in stock",
+    "out of stock",
   ],
   paths: [/\/products?\//i, /\/collections?\//i, /\/cart\/?/i, /\/shop\/?/i],
   pricePattern: /\$\d{1,6}(\.\d{2})?|\d+\.\d{2}\s*\$/, // $XX.XX or XX.XX $
@@ -61,6 +64,10 @@ const SAAS = {
     "team of",
     "seats",
     "users",
+    "14-day",
+    "30-day",
+    "cancel anytime",
+    "no credit card",
   ],
   paths: [/\/pricing\/?/i, /\/features\/?/i, /\/integrations?\/?/i],
 };
@@ -76,6 +83,29 @@ const SERVICE = {
     "get a quote",
     "contact us",
     "hire us",
+    "medical",
+    "healthcare",
+    "health",
+    "wellness",
+    "clinic",
+    "patient",
+    "doctor",
+    "therapy",
+    "therapist",
+    "attorney",
+    "lawyer",
+    "accountant",
+    "consultant",
+    "agency",
+    "studio",
+    "firm",
+    "freelance",
+    "quote",
+    "proposal",
+    "project",
+    "retainer",
+    "discovery call",
+    "free consultation",
   ],
   paths: [/\/services?\/?/i, /\/booking\/?/i, /\/contact\/?/i],
   phonePattern: /\+?\d{1,3}[-.\s]?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}/,
@@ -96,6 +126,27 @@ const LOCAL = {
     "walk-in",
     "appointment",
     "location",
+    "restaurant",
+    "cafe",
+    "salon",
+    "spa",
+    "gym",
+    "fitness",
+    "dental",
+    "dentist",
+    "chiropractor",
+    "optometrist",
+    "veterinarian",
+    "vet",
+    "barbershop",
+    "dine",
+    "menu",
+    "reserve a table",
+    "open daily",
+    "open monday",
+    "directions",
+    "parking",
+    "walk-ins welcome",
   ],
   paths: [], // address/city/state are in text
   addressLike: /\b\d+\s+[\w\s]+(?:street|st|ave|avenue|blvd|road|rd|drive|dr|lane|ln)\b/i,
@@ -104,6 +155,7 @@ const LOCAL = {
   yelpTripAdvisor: /yelp\.com|tripadvisor\.com/i,
   localBusinessSchema: /localbusiness/i,
   areaCodePhone: /\(?\d{3}\)?[-.\s]\d{3}[-.\s]\d{4}/,
+  servingCity: /\bserving\b.{1,40}\b(?:area|metro|city|residents|community|locals|neighborhood)\b/i,
 };
 
 const CONTENT = {
@@ -181,9 +233,18 @@ function scoreType(
       if (LOCAL.yelpTripAdvisor.test(hrefs)) score += 3;
       if (LOCAL.localBusinessSchema.test(text)) score += 3;
       if (LOCAL.areaCodePhone.test(text)) score += 3;
+      if (LOCAL.servingCity.test(text)) score += 2;
       break;
     }
     case "content": {
+      // Veto: pure content sites have no conversion actions — any of these signals disqualifies
+      const contentVetoTerms = [
+        "membership", "join now", "join today", "subscribe now",
+        "pricing", "per month", "per year", "sign up",
+        "get started", "book", "schedule", "appointment", "buy",
+      ];
+      if (contentVetoTerms.some((t) => text.includes(t))) return 0;
+      if (text.includes("subscribe") && ECOMMERCE.pricePattern.test(text)) return 0;
       for (const p of CONTENT.phrases) {
         if (text.includes(p)) score += 2;
       }
@@ -193,7 +254,6 @@ function scoreType(
       }
       if (contentPathHits >= 2) score += 3; // blog + articles or similar
       if (CONTENT.datePattern.test(text)) score += 1;
-      // No strong product/service CTAs: if we have few ecommerce/saas/service signals, content gets a boost
       break;
     }
     default:
@@ -235,9 +295,36 @@ export function detectSiteType(extraction: CombinedExtraction): SiteType {
     bestScore = contentScore;
   }
 
-  // Force local when all three hard signals are present, regardless of other scores
+  // ── Force rules: unconditional classification when signal clusters are definitive ──────────
+
+  // Force ecommerce: purchase-intent signals + price on page
+  if (
+    (text.includes("add to cart") || text.includes("buy now") || text.includes("shop now")) &&
+    ECOMMERCE.pricePattern.test(text)
+  ) {
+    return "ecommerce";
+  }
+
+  // Force service: medical/health vertical + booking signal
+  if (
+    (text.includes("medical") || text.includes("healthcare") || text.includes("clinic") ||
+     text.includes("dental") || text.includes("therapy")) &&
+    (text.includes("book") || text.includes("schedule") || text.includes("appointment"))
+  ) {
+    return "service";
+  }
+
+  // Force local: address + phone + hours
   if (LOCAL.addressLike.test(text) && SERVICE.phonePattern.test(text) && /\bhours\b/.test(text)) {
     return "local";
+  }
+
+  // Force saas: platform signals (ecommerce force already returned before reaching here)
+  if (
+    text.includes("dashboard") || text.includes("workspace") ||
+    text.includes("per user") || text.includes("api key") || text.includes("webhook")
+  ) {
+    return "saas";
   }
 
   return bestScore > 0 ? best : "unknown";

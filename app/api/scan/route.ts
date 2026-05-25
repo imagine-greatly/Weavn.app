@@ -303,7 +303,7 @@ export async function POST(req: NextRequest) {
 
   // 3. Claude analysis (retry once inside runAnalysis), tailored to site_type.
   // Deadline is time-aware: allocates remaining budget minus 5 s for save.
-  const analyzeTimeoutMs = Math.max(60_000, Math.min(80_000, 95_000 - (Date.now() - scanStart)));
+  const analyzeTimeoutMs = Math.max(72_000, Math.min(82_000, 105_000 - (Date.now() - scanStart)));
   const analyzeDeadline = new Promise<never>((_, reject) =>
     setTimeout(
       () => reject(new Error('[TIMEOUT] Analysis timed out')),

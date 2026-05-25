@@ -471,6 +471,7 @@ const SUBPAGE_PRIORITY: Record<string, RegExp[]> = {
   ],
   service: [
     /\/services?/i,
+    /\/membership/i,
     /\/contact/i,
     /\/booking/i,
     /\/book-a-call/i,

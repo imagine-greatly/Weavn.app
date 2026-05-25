@@ -29,6 +29,40 @@ export type ExpandFindingBriefRequestBody = {
   siteType?: string;
 };
 
+function extractRelevantSummarySection(pageSummary: string, category: string, title: string): string {
+  const signal = `${category} ${title}`.toLowerCase();
+
+  let sectionHeaders: string[];
+  if (/trust|testimonial|review|social.proof|credib|authority|proof/i.test(signal)) {
+    sectionHeaders = ['TESTIMONIALS', 'SOCIAL PROOF', 'TRUST SIGNALS'];
+  } else if (/pric|plan|tier|cost|package|billing/i.test(signal)) {
+    sectionHeaders = ['PRICING'];
+  } else if (/cta|call.to.action|button|convert|signup|form|lead/i.test(signal)) {
+    sectionHeaders = ['CTAs', 'FORMS', 'HERO'];
+  } else if (/seo|meta|search|schema|structured|canonical/i.test(signal)) {
+    sectionHeaders = ['META', 'SCHEMA.ORG', 'H1', 'H2', 'H3'];
+  } else if (/hero|headline|message|clarity|copy|value.prop/i.test(signal)) {
+    sectionHeaders = ['HERO', 'H1', 'H2'];
+  } else if (/faq|question|support|help/i.test(signal)) {
+    sectionHeaders = ['FAQ', 'SECTIONS'];
+  } else {
+    return pageSummary.slice(0, 4000);
+  }
+
+  const extracted: string[] = [];
+  for (const header of sectionHeaders) {
+    const idx = pageSummary.search(new RegExp(`\\b${header}\\b`, 'i'));
+    if (idx === -1) continue;
+    const chunk = pageSummary.slice(idx, idx + 1500);
+    extracted.push(chunk);
+    if (extracted.join('\n\n').length >= 3000) break;
+  }
+
+  if (extracted.length === 0) return pageSummary.slice(0, 4000);
+  const combined = extracted.join('\n\n');
+  return combined.length > 4000 ? combined.slice(0, 4000) : combined;
+}
+
 /** Calls Claude and returns parsed expansion, or null on failure. */
 export async function expandFindingBriefWithAnthropic(
   body: ExpandFindingBriefRequestBody
@@ -36,12 +70,20 @@ export async function expandFindingBriefWithAnthropic(
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) return null;
 
+  const relevantSummary = body.pageSummary
+    ? extractRelevantSummarySection(
+        body.pageSummary,
+        String((body.finding as Record<string, unknown>).category ?? ''),
+        String((body.finding as Record<string, unknown>).title ?? '')
+      )
+    : undefined;
+
   const userMessage = buildExpandFindingBriefUserMessage({
     domain: body.domain,
     overallScore: body.overallScore,
     finding: body.finding,
     related: body.relatedFindings,
-    pageSummary: body.pageSummary,
+    pageSummary: relevantSummary,
     siteType: body.siteType,
   });
 

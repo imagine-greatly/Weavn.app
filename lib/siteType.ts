@@ -50,6 +50,17 @@ const SAAS = {
     "start for free",
     "try free",
     "get started free",
+    "workspace",
+    "integration",
+    "api",
+    "webhook",
+    "automation",
+    "workflow",
+    "sync",
+    "connect your",
+    "team of",
+    "seats",
+    "users",
   ],
   paths: [/\/pricing\/?/i, /\/features\/?/i, /\/integrations?\/?/i],
 };
@@ -79,11 +90,20 @@ const LOCAL = {
     "our location",
     "get directions",
     "find us",
+    "hours",
+    "open",
+    "closed",
+    "walk-in",
+    "appointment",
+    "location",
   ],
   paths: [], // address/city/state are in text
   addressLike: /\b\d+\s+[\w\s]+(?:street|st|ave|avenue|blvd|road|rd|drive|dr|lane|ln)\b/i,
   cityState: /\b(?:alabama|alaska|arizona|california|colorado|connecticut|delaware|florida|georgia|hawaii|illinois|indiana|iowa|kansas|kentucky|louisiana|maine|maryland|massachusetts|michigan|minnesota|mississippi|missouri|montana|nebraska|nevada|new hampshire|new jersey|new mexico|new york|north carolina|north dakota|ohio|oklahoma|oregon|pennsylvania|rhode island|south carolina|south dakota|tennessee|texas|utah|vermont|virginia|washington|west virginia|wisconsin|wyoming)\b/i,
   mapsEmbed: /maps\.google|google\.com\/maps|embed.*map/i,
+  yelpTripAdvisor: /yelp\.com|tripadvisor\.com/i,
+  localBusinessSchema: /localbusiness/i,
+  areaCodePhone: /\(?\d{3}\)?[-.\s]\d{3}[-.\s]\d{4}/,
 };
 
 const CONTENT = {
@@ -94,7 +114,9 @@ const CONTENT = {
     "latest posts",
     "published",
     "author:",
+    "author",
     "by ",
+    "min read",
   ],
   paths: [/\/blog\/?/i, /\/articles?\/?/i, /\/guides?\/?/i, /\/resources?\/?/i],
   datePattern: /(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\s+\d{1,2},?\s*\d{4}|\d{1,2}\/\d{1,2}\/\d{2,4}/i,
@@ -151,16 +173,19 @@ function scoreType(
     }
     case "local": {
       for (const p of LOCAL.phrases) {
-        if (text.includes(p)) score += 2;
+        if (text.includes(p)) score += 3;
       }
-      if (LOCAL.addressLike.test(text)) score += 2;
+      if (LOCAL.addressLike.test(text)) score += 3;
       if (LOCAL.cityState.test(text)) score += 1;
-      if (LOCAL.mapsEmbed.test(text) || LOCAL.mapsEmbed.test(hrefs)) score += 2;
+      if (LOCAL.mapsEmbed.test(text) || LOCAL.mapsEmbed.test(hrefs)) score += 3;
+      if (LOCAL.yelpTripAdvisor.test(hrefs)) score += 3;
+      if (LOCAL.localBusinessSchema.test(text)) score += 3;
+      if (LOCAL.areaCodePhone.test(text)) score += 3;
       break;
     }
     case "content": {
       for (const p of CONTENT.phrases) {
-        if (text.includes(p)) score += 1;
+        if (text.includes(p)) score += 2;
       }
       let contentPathHits = 0;
       for (const re of CONTENT.paths) {
@@ -208,6 +233,11 @@ export function detectSiteType(extraction: CombinedExtraction): SiteType {
   ) {
     best = "content";
     bestScore = contentScore;
+  }
+
+  // Force local when all three hard signals are present, regardless of other scores
+  if (LOCAL.addressLike.test(text) && SERVICE.phonePattern.test(text) && /\bhours\b/.test(text)) {
+    return "local";
   }
 
   return bestScore > 0 ? best : "unknown";

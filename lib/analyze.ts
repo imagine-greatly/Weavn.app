@@ -66,6 +66,8 @@ SITE TYPE: ${siteType.toUpperCase()}.
 
 ${instructions}
 
+LANGUAGE HANDLING — If the page content is primarily in a non-English language, identify the language in the diagnosticBrief and conduct the full analysis in that context. Quote page elements in their original language. Do not translate copy and then critique the translation. Apply conversion principles universally but ground evidence in the actual language of the page. If you cannot read the language well enough to produce specific evidence-based findings, state this clearly in the diagnosticBrief rather than producing generic findings.
+
 Return valid JSON matching this schema exactly:
 {
   "diagnosticBrief": string,
@@ -129,21 +131,22 @@ Return valid JSON matching this schema exactly:
 Rules:
 - diagnosticBrief: REQUIRED — max 72 words; cover site classification, score read, dominant suppression pattern with finding count, and the highest-leverage resolution. Be specific to this domain — cite real page elements. diagnosticBrief may duplicate intelligenceBrief or intelligenceBrief may be omitted.
 - intelligenceBrief: optional legacy; if present without diagnosticBrief, use as executive narrative
-- conversionKillers: exactly 5, ranked by revenue impact highest first; titles under 10 words; evidence must quote actual page text — max 45 words per evidence field
+- conversionKillers: minimum 3, maximum 7, ranked by revenue impact. If the site has fewer than 3 genuine conversion problems, produce only what exists — do not invent findings to reach a minimum. If the site has more than 7 genuine problems, surface the 7 highest revenue impact issues. Never produce a finding you cannot support with specific evidence from the page. Titles under 10 words; evidence must quote actual page text — max 45 words per evidence field
 - conversionKillers evidence — Never cite carousel or slider content as incomplete or cut off. If testimonials, images, or content blocks appear to be part of a carousel or slider based on surrounding HTML structure, treat the full carousel as present and fully populated even if only one slide is visible in the snapshot.
 - conversionKillers.exitTrigger: The specific experience the visitor has on the page that causes them to hesitate, doubt, or leave. Name the exact element and quote its visible text. Describe what they see or feel — not the business consequence. Example: 'Hero headline reads "Welcome" — visitor cannot determine what the site sells or who it is for.'
 - conversionKillers.conversionCost: The business consequence in concrete terms — lost sales, abandoned signups, missed leads. Use a specific metric or percentage where accurate. These two fields must never contain the same text. exitTrigger = visitor experience. conversionCost = business impact.
 - conversionKillers.implementation: Name the exact element and its page location. State the precise change a developer or marketer could act on immediately. Include why the change works. Start with a verb. Max 55 words. No category advice — be specific enough that a developer knows exactly what to do without follow-up questions.
 - conversionKillers.sourcePage: Label the page this finding comes from — e.g. "LANDING PAGE", "PRICING PAGE", "FEATURES PAGE", "ABOUT PAGE", "CONTACT PAGE". For single-page analyses always use "LANDING PAGE".
 - conversionTransformation.currentCta: Only return text if a clear, intentional hero-section call-to-action button exists above the fold. If the only buttons found are generic UI elements like 'Add', 'Add to cart', 'Menu', 'Search', or navigation links, return 'None detected' instead. Do not invent a CTA that is not clearly present as a primary action.
-- growthBlueprint: weekOne and weekTwoToFour max 3 items each; monthTwo, projectedLift, and projectedLiftNarrative each max 70 words
+- growthBlueprint: weekOne and weekTwoToFour max 3 items each; monthTwo, projectedLift, and projectedLiftNarrative each max 70 words; weekOne actions must directly reference and address the highest-severity conversionKillers by their specific finding titles; weekTwoToFour must address remaining conversionKillers; every action item must name the specific element or issue it resolves — no generic advice; the blueprint is the execution plan for the findings, not a separate generic CRO checklist
 - dimensionScores: exactly 5 objects one per dimension; score 0-100; insight max 30 words, specific to this site with reference to actual page evidence
 - conversionScore: integer 0-100
 - healthScore: same value as conversionScore for backwards compatibility
 - Return only valid JSON, no markdown, no preamble
 - VOCABULARY: never use boost, unlock, seamless, pain points, actionable insights, revenue leak, money leak, or "costing you conversions" — use revenue suppression, suppressing conversions, resolve / resolution, finding
 - FINAL CHECK: before returning, for every conversionKiller ask — (1) does the title name a specific element or a category? (2) does the evidence state an observable fact or hedge? (3) does the implementation name the exact element and change or give category advice? Rewrite any that fail.
-- DYNAMIC CONTENT RULE — Before flagging any finding about missing, incomplete, or absent content, ask: could this be dynamic content that is not visible in a static HTML snapshot? Never flag as missing or broken: carousel or slider content (only one slide visible), tab panel content (only active tab captured), accordion content (collapsed panels not in DOM), modal or popup content (not open in snapshot), lazy-loaded images or text (may not have loaded), animated counters or numbers (may show initial value), video content (not capturable from HTML), or infinite scroll content (only first batch captured). Only flag content issues when the absence is clearly structural and not a rendering artifact of JavaScript-driven dynamic components. If surrounding HTML suggests a dynamic component — look for classes like swiper, slick, carousel, tabs, accordion, collapse, lazy — treat the component as fully functional and populated.`;
+- DYNAMIC CONTENT RULE — Before flagging any finding about missing, incomplete, or absent content, ask: could this be dynamic content that is not visible in a static HTML snapshot? Never flag as missing or broken: carousel or slider content (only one slide visible), tab panel content (only active tab captured), accordion content (collapsed panels not in DOM), modal or popup content (not open in snapshot), lazy-loaded images or text (may not have loaded), animated counters or numbers (may show initial value), video content (not capturable from HTML), or infinite scroll content (only first batch captured). Only flag content issues when the absence is clearly structural and not a rendering artifact of JavaScript-driven dynamic components. If surrounding HTML suggests a dynamic component — look for classes like swiper, slick, carousel, tabs, accordion, collapse, lazy — treat the component as fully functional and populated.
+- UNREACHABLE PAGES — If the user message lists pages that were attempted but failed to load, do not generate findings about content that should be on those pages — note that the page was unreachable instead.`;
 }
 
 function clampScore(v: number): number {
@@ -478,7 +481,17 @@ function guessPageLabel(url: string): string {
  * compact=true reduces per-section limits when combining multiple pages.
  */
 function buildSinglePageSummary(rawHtml: string, url: string, compact = false): string {
-  const page = extractPageData(rawHtml, url, "homepage");
+  let pageType = 'homepage';
+  try {
+    const path = new URL(url).pathname;
+    if (path && path !== '/') {
+      const label = guessPageLabel(url);
+      pageType = label !== 'SUBPAGE'
+        ? label.toLowerCase().replace(/ page$/, '').replace(/\s+/g, '-')
+        : 'subpage';
+    }
+  } catch { /* keep 'homepage' */ }
+  const page = extractPageData(rawHtml, url, pageType);
   const parts: string[] = [];
 
   if (url) parts.push(`URL: ${url}`);
@@ -663,10 +676,18 @@ export async function runAnalysis(
 
   const isMultiPage = (safeExtraction.additionalPages?.length ?? 0) > 0;
   const pageCount = 1 + (safeExtraction.additionalPages?.length ?? 0);
+
+  const failedPages = (safeExtraction.pagesAttempted ?? []).filter(
+    u => !safeExtraction.pagesAnalyzed.includes(u)
+  );
+  const failureNote = failedPages.length > 0
+    ? `\n\nPAGES ATTEMPTED BUT FAILED TO LOAD (treat as unreachable — do not generate findings about content that should be on these pages): ${failedPages.join(', ')}`
+    : '';
+
   const userContent = isMultiPage
-    ? `Analyze structured data from ${pageCount} pages of a website. Produce 5 unified findings ranked by revenue impact across all pages. In the evidence field of each finding, name which page it came from.\n\n${cappedSummary}`
-    : `Analyze the following structured data extracted from a fully-rendered website page and return your JSON analysis:\n\n${cappedSummary}`;
-  process.stderr.write(`[ANALYZE] userContent_len=${userContent.length} isMultiPage=${isMultiPage}\n`);
+    ? `Analyze structured data from ${pageCount} pages of a website. Produce 3-7 findings ranked by revenue impact across all pages. In the evidence field of each finding, name which page it came from.\n\n${cappedSummary}${failureNote}`
+    : `Analyze the following structured data extracted from a fully-rendered website page and return your JSON analysis:\n\n${cappedSummary}${failureNote}`;
+  process.stderr.write(`[ANALYZE] userContent_len=${userContent.length} isMultiPage=${isMultiPage} failedPages=${failedPages.length}\n`);
   process.stderr.write('[ANALYZE] prompt chars: ' + userContent.length + '\n');
 
   const maxTokens = isMultiPage ? 5000 : 3800;

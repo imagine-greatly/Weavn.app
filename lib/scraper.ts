@@ -384,6 +384,7 @@ export interface ScrapeResult {
 export interface CombinedExtraction {
   rawHtml: string
   pagesAnalyzed: string[]
+  pagesAttempted?: string[]
   additionalPages?: Array<{ url: string; rawHtml: string }>
 }
 
@@ -420,16 +421,140 @@ export function extractInternalLinks(html: string, baseUrl: string): string[] {
   }
 }
 
-const SUBPAGE_BLOCKLIST = /\/(login|signin|logout|signup|register|admin|dashboard|account|privacy|terms|policy|cookies|legal)(?:[-\/]|$)/i;
+const SUBPAGE_BLOCKLIST = /\/(login|signin|logout|admin|dashboard|account|privacy|terms|policy|cookies|legal)(?:[-\/]|$)/i;
 
 const SUBPAGE_PRIORITY: Record<string, RegExp[]> = {
-  saas:       [/\/pricing/i, /\/features/i, /\/(signup|register|trial)/i, /\/about/i],
-  ecommerce:  [/\/collections?\//i, /\/products?\//i, /\/shop/i, /\/about/i],
-  service:    [/\/services?/i, /\/contact/i, /\/about/i, /\/booking/i],
-  local:      [/\/services?/i, /\/contact/i, /\/about/i, /\/menu/i],
-  content:    [/\/about/i, /\/start/i, /\/newsletter/i, /\/blog\//i],
-  general:    [/\/pricing/i, /\/about/i, /\/services/i, /\/contact/i],
-  unknown:    [/\/pricing/i, /\/about/i, /\/services/i, /\/contact/i],
+  saas: [
+    /\/pricing/i,
+    /\/features/i,
+    /\/plans?/i,
+    /\/solutions/i,
+    /\/platform/i,
+    /\/how-it-works/i,
+    /\/tour/i,
+    /\/demo/i,
+    /\/book-demo/i,
+    /\/get-started/i,
+    /\/(signup|register|trial)/i,
+    /\/use-cases/i,
+    /\/why-us/i,
+    /\/compare/i,
+    /\/about/i,
+    /\/reviews/i,
+    /\/testimonials/i,
+    /\/faqs?/i,
+    /\/press/i,
+    /\/media/i,
+    /\/help/i,
+    /\/why/i,
+  ],
+  ecommerce: [
+    /\/collections?\//i,
+    /\/products?\//i,
+    /\/collections\/?$/i,
+    /\/products\/?$/i,
+    /\/shop/i,
+    /\/sale/i,
+    /\/new-arrivals/i,
+    /\/bestsellers/i,
+    /\/all-products/i,
+    /\/catalog/i,
+    /\/store/i,
+    /\/about/i,
+    /\/reviews/i,
+    /\/testimonials/i,
+    /\/faqs?/i,
+    /\/press/i,
+    /\/media/i,
+    /\/help/i,
+    /\/why/i,
+  ],
+  service: [
+    /\/services?/i,
+    /\/contact/i,
+    /\/booking/i,
+    /\/book-a-call/i,
+    /\/book/i,
+    /\/schedule/i,
+    /\/consultation/i,
+    /\/free-consultation/i,
+    /\/work-with-us/i,
+    /\/hire-us/i,
+    /\/portfolio/i,
+    /\/our-work/i,
+    /\/case-studies/i,
+    /\/results/i,
+    /\/team/i,
+    /\/our-team/i,
+    /\/process/i,
+    /\/approach/i,
+    /\/packages/i,
+    /\/about/i,
+    /\/reviews/i,
+    /\/testimonials/i,
+    /\/faqs?/i,
+    /\/press/i,
+    /\/media/i,
+    /\/help/i,
+    /\/why/i,
+  ],
+  local: [
+    /\/services?/i,
+    /\/contact/i,
+    /\/menu/i,
+    /\/gallery/i,
+    /\/photos/i,
+    /\/rates/i,
+    /\/specials/i,
+    /\/reservations/i,
+    /\/about/i,
+    /\/reviews/i,
+    /\/testimonials/i,
+    /\/faqs?/i,
+    /\/press/i,
+    /\/media/i,
+    /\/help/i,
+    /\/why/i,
+  ],
+  content: [
+    /\/about/i,
+    /\/start/i,
+    /\/newsletter/i,
+    /\/blog\//i,
+    /\/reviews/i,
+    /\/testimonials/i,
+    /\/faqs?/i,
+    /\/press/i,
+    /\/media/i,
+    /\/help/i,
+    /\/why/i,
+  ],
+  general: [
+    /\/pricing/i,
+    /\/about/i,
+    /\/services/i,
+    /\/contact/i,
+    /\/reviews/i,
+    /\/testimonials/i,
+    /\/faqs?/i,
+    /\/press/i,
+    /\/media/i,
+    /\/help/i,
+    /\/why/i,
+  ],
+  unknown: [
+    /\/pricing/i,
+    /\/about/i,
+    /\/services/i,
+    /\/contact/i,
+    /\/reviews/i,
+    /\/testimonials/i,
+    /\/faqs?/i,
+    /\/press/i,
+    /\/media/i,
+    /\/help/i,
+    /\/why/i,
+  ],
 };
 
 export function selectSubpageUrls(links: string[], siteType: string): string[] {
@@ -554,7 +679,7 @@ export async function scrapeUrl(inputUrl: string): Promise<ScrapeResult> {
 // the structured summary sent to Claude. Size is controlled by applySmartTruncation.
 export function cleanHtml(html: string): string {
   return html
-    .replace(/<script[\s\S]*?<\/script>/gi, '')
+    .replace(/<script(?!\s[^>]*type=["']application\/ld\+json["'])[^>]*>[\s\S]*?<\/script>/gi, '')
     .replace(/<style[\s\S]*?<\/style>/gi, '')
     .replace(/<!--[\s\S]*?-->/g, '')
     .replace(/\s+data-[a-z][a-z0-9-]*=(?:"[^"]*"|'[^']*'|[^\s/>]*)/gi, '')

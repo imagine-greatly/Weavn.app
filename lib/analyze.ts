@@ -643,7 +643,7 @@ export async function runAnalysis(
   const resolvedModel = model ?? "claude-sonnet-4-6";
   const client = new Anthropic({
     apiKey: process.env.ANTHROPIC_API_KEY,
-    timeout: 82_000,
+    timeout: 100_000,
   });
 
   // Hard cap: never pass more than 50 000 chars of HTML into the analysis pipeline.
@@ -690,7 +690,8 @@ export async function runAnalysis(
   process.stderr.write(`[ANALYZE] userContent_len=${userContent.length} isMultiPage=${isMultiPage} failedPages=${failedPages.length}\n`);
   process.stderr.write('[ANALYZE] prompt chars: ' + userContent.length + '\n');
 
-  const maxTokens = isMultiPage ? 3200 : 3800;
+  const summaryLen = cappedSummary.length
+  const maxTokens = summaryLen < 3000 ? 2800 : summaryLen <= 5000 ? 3500 : 4200
 
   let attempt = 0;
   const run = async (): Promise<ReportPayload> => {

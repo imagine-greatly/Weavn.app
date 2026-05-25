@@ -142,7 +142,7 @@ function isBlockPage(html: string): boolean {
 // param as URL-encoded JSON, NOT in the request body. Putting it in the body
 // causes Browserless to return HTTP 400.
 //
-async function fetchWithBrowserless(url: string): Promise<string> {
+async function fetchWithBrowserless(url: string): Promise<{ html: string; complexity: SiteComplexity; readableRatio: number }> {
   try {
   process.stderr.write(`[SCRAPER] function entered, url: ${url}\n`)
 
@@ -185,7 +185,7 @@ async function fetchWithBrowserless(url: string): Promise<string> {
     url,
     bestAttempt: true,
     gotoOptions: { waitUntil: 'domcontentloaded', timeout: 15000 },
-    waitForTimeout: 2000,
+    waitForTimeout: 1500,
   }
   process.stderr.write(`[SCRAPER] attempt1 START | url=${url}\n`)
   process.stderr.write(`[SCRAPER] attempt1 request | body=${JSON.stringify(body1)}\n`)
@@ -230,11 +230,15 @@ async function fetchWithBrowserless(url: string): Promise<string> {
     clearTimeout(t1)
   }
 
+  // Compute complexity from attempt1 result — drives adaptive timeouts downstream.
+  const readableRatio = html1 && html1.length > 0 ? readableTextLength(html1) / html1.length : 0
+  const complexity: SiteComplexity = readableRatio > 0.4 ? 'simple' : readableRatio >= 0.15 ? 'medium' : 'complex'
+
   // Accept attempt 1 only if it has real content AND is not a bot-block page.
   const len1Early = readableTextLength(html1 ?? '')
   if (html1 && len1Early >= 500 && !isBlockPage(html1)) {
     console.log(`[SCRAPER] attempt1 ACCEPTED | readable=${len1Early} | total_elapsed=${Date.now() - a1Start}ms`)
-    return html1
+    return { html: html1, complexity, readableRatio }
   }
 
   if (html1 && isBlockPage(html1)) {
@@ -242,11 +246,12 @@ async function fetchWithBrowserless(url: string): Promise<string> {
   }
 
   // Attempt 2 — deep path: networkidle2 + 3 s settle, residential proxy
+  const subWait = complexity === 'simple' ? 1500 : complexity === 'complex' ? 5000 : 3000
   const body2 = {
     url,
     bestAttempt: true,
     gotoOptions: { waitUntil: 'networkidle2', timeout: 18000 },
-    waitForTimeout: 3000,
+    waitForTimeout: subWait,
   }
   process.stderr.write(`[SCRAPER] attempt1 insufficient (${len1Early} chars), trying attempt2 for ${url}\n`)
   process.stderr.write(`[SCRAPER] attempt2 START | url=${url}\n`)
@@ -325,7 +330,7 @@ async function fetchWithBrowserless(url: string): Promise<string> {
         console.log(`[SCRAPER] attempt3 parsed | html_chars=${html3?.length ?? 0} readable=${len3}`)
         if (html3 && len3 >= 200) {
           console.log('[SCRAPER] attempt3 ACCEPTED')
-          return html3
+          return { html: html3, complexity, readableRatio }
         }
       } else {
         console.log(`[SCRAPER] attempt3 FAILED | HTTP ${res3.status}`)
@@ -346,7 +351,7 @@ async function fetchWithBrowserless(url: string): Promise<string> {
     (!blocked1 && html1 && len1 > 0) ? html1 :
     (len2 > len1 ? html2 : html1)  // both blocked — take the longer one as last resort
 
-  if (best && readableTextLength(best) >= 200) return best
+  if (best && readableTextLength(best) >= 200) return { html: best, complexity, readableRatio }
 
   const bothBlocked = blocked1 && blocked2
   const noResponseAtAll = !html1 && !html2
@@ -375,10 +380,14 @@ async function fetchWithBrowserless(url: string): Promise<string> {
 }
 
 // -- MAIN SCRAPE FUNCTION -----------------------------------------------
+export type SiteComplexity = 'simple' | 'medium' | 'complex'
+
 export interface ScrapeResult {
   rawHtml: string
   method: 'browserless'
   domain: string
+  complexity: SiteComplexity
+  readableRatio: number
 }
 
 export interface CombinedExtraction {
@@ -386,6 +395,8 @@ export interface CombinedExtraction {
   pagesAnalyzed: string[]
   pagesAttempted?: string[]
   additionalPages?: Array<{ url: string; rawHtml: string }>
+  complexity?: SiteComplexity
+  readableRatio?: number
 }
 
 // -- LINK EXTRACTION & SUBPAGE SELECTION --------------------------------
@@ -596,8 +607,8 @@ export function selectSubpageUrls(links: string[], siteType: string): string[] {
   return selected;
 }
 
-// Single fast attempt for subpages — no retry, 14 s abort
-async function fetchSubpageFast(url: string): Promise<string | null> {
+// Single fast attempt for subpages — no retry, complexity-adaptive abort timeout
+async function fetchSubpageFast(url: string, abortMs: number): Promise<string | null> {
   const apiKey = (process.env.BROWSERLESS_API_KEY ?? '').trim();
   if (!apiKey) return null;
   const launchParam = encodeURIComponent(JSON.stringify({ ignoreHTTPSErrors: true }));
@@ -605,7 +616,7 @@ async function fetchSubpageFast(url: string): Promise<string | null> {
     `https://production-sfo.browserless.io/unblock` +
     `?token=${apiKey}&launch=${launchParam}&proxy=residential`;
   const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), 9_000);
+  const timer = setTimeout(() => ctrl.abort(), abortMs);
   try {
     const res = await fetch(endpoint, {
       method: 'POST',
@@ -634,10 +645,11 @@ async function fetchSubpageFast(url: string): Promise<string | null> {
   }
 }
 
-export async function scrapeSubpageSafe(url: string): Promise<{ url: string; rawHtml: string } | null> {
+export async function scrapeSubpageSafe(url: string, complexity?: SiteComplexity): Promise<{ url: string; rawHtml: string } | null> {
+  const abortMs = complexity === 'simple' ? 8_000 : complexity === 'complex' ? 13_000 : 10_000
   process.stderr.write(`[SCRAPER] subpage START | url=${url}\n`);
   try {
-    const html = await fetchSubpageFast(url);
+    const html = await fetchSubpageFast(url, abortMs);
     if (!html) {
       process.stderr.write(`[SCRAPER] subpage EMPTY | url=${url}\n`);
       return null;
@@ -667,9 +679,9 @@ export async function scrapeUrl(inputUrl: string): Promise<ScrapeResult> {
   }
   process.stderr.write(`[SCRAPER] scrapeUrl domain=${domain}\n`)
 
-  const rawHtml = await fetchWithBrowserless(url)
+  const { html: rawHtml, complexity, readableRatio } = await fetchWithBrowserless(url)
   console.log(`[SCRAPER] ${domain} | method:browserless | html_len:${rawHtml.length}`)
-  return { rawHtml, method: 'browserless', domain }
+  return { rawHtml, method: 'browserless', domain, complexity, readableRatio }
 }
 
 // -- HTML CLEANING -------------------------------------------------------
@@ -710,6 +722,7 @@ export async function scrapeSite(inputUrl: string): Promise<CombinedExtraction> 
     const scraped = await scrapeUrl(inputUrl)
 
     process.stderr.write('[SCRAPER] raw html chars: ' + scraped.rawHtml.length + '\n')
+    process.stderr.write('[SCAN] complexity=' + scraped.complexity + ' ratio=' + scraped.readableRatio.toFixed(2) + '\n')
 
     let cleaned: string
     try {
@@ -730,6 +743,8 @@ export async function scrapeSite(inputUrl: string): Promise<CombinedExtraction> 
     return {
       rawHtml: truncated,
       pagesAnalyzed: [pageUrl],
+      complexity: scraped.complexity,
+      readableRatio: scraped.readableRatio,
     }
   } catch (e) {
     process.stderr.write('[SCRAPER] FATAL scrapeSite: ' + (e instanceof Error ? e.stack : String(e)) + '\n')

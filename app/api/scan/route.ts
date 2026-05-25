@@ -259,6 +259,7 @@ export async function POST(req: NextRequest) {
   }
 
   // 2.5. Pro plan: scrape 2 subpages in parallel for deeper multi-page analysis
+  const complexity = extraction.complexity ?? 'medium'
   const planLower = userPlan.toLowerCase();
   const isProPlan = planLower === 'pro' || planLower === 'agency';
   const homepageScrapeMs = Date.now() - scrapeStart;
@@ -273,7 +274,7 @@ export async function POST(req: NextRequest) {
 
       if (subpageUrls.length > 0) {
         const results = await Promise.allSettled(
-          subpageUrls.map(url => scrapeSubpageSafe(url))
+          subpageUrls.map(url => scrapeSubpageSafe(url, complexity))
         );
         const additionalPages = results
           .map(r => r.status === 'fulfilled' ? r.value : null)
@@ -302,8 +303,16 @@ export async function POST(req: NextRequest) {
   }
 
   // 3. Claude analysis (retry once inside runAnalysis), tailored to site_type.
-  // Deadline is time-aware: allocates remaining budget minus 5 s for save.
-  const analyzeTimeoutMs = Math.max(68_000, Math.min(78_000, 95_000 - (Date.now() - scanStart)));
+  // Deadline is complexity-aware: simple sites get less time, complex sites more.
+  const isMultiPage = (extraction.additionalPages?.length ?? 0) > 0
+  const elapsed = Date.now() - scanStart
+  const analyzeTimeoutMs = isMultiPage
+    ? Math.max(70_000, 100_000 - elapsed)
+    : complexity === 'simple'
+      ? Math.max(55_000, 80_000 - elapsed)
+      : complexity === 'complex'
+        ? Math.max(68_000, 95_000 - elapsed)
+        : Math.max(62_000, 88_000 - elapsed)
   const analyzeDeadline = new Promise<never>((_, reject) =>
     setTimeout(
       () => reject(new Error('[TIMEOUT] Analysis timed out')),

@@ -43,7 +43,7 @@ EVIDENCE (exitTrigger and evidence fields) — describes what exists and what th
 BAD: "Hero section lacks primary CTA above the fold on the majority of viewport sizes"
 GOOD: "The hero section contains no call to action. The first button on the page is 'Add' in the product grid, appearing after two full scroll lengths. Visitors with purchase intent have no forward path from the opening screen."
 
-IMPLEMENTATION — state WHAT to change and WHERE, specific enough that a developer acts without a follow-up question. Start with a verb. Max 55 words. Do not write the final copy — give the directive:
+IMPLEMENTATION — state WHAT to change and WHERE, specific enough that a developer acts without a follow-up question. Start with a verb. Max 40 words. Do not write the final copy — give the directive:
 BAD: "Implement above-fold CTA architecture to improve conversion path visibility"
 GOOD: "Add a single primary CTA button inside the hero section — destination: the main product or signup page. The current hero has no button element. Place it directly below the headline as the visually dominant interactive element on the first screen."
 BAD: "Improve trust signaling across key conversion touchpoints"
@@ -129,17 +129,17 @@ Return valid JSON matching this schema exactly:
 }
 
 Rules:
-- diagnosticBrief: REQUIRED — max 72 words; cover site classification, score read, dominant suppression pattern with finding count, and the highest-leverage resolution. Be specific to this domain — cite real page elements. diagnosticBrief may duplicate intelligenceBrief or intelligenceBrief may be omitted.
+- diagnosticBrief: REQUIRED — max 55 words; cover site classification, score read, dominant suppression pattern with finding count, and the highest-leverage resolution. Be specific to this domain — cite real page elements. diagnosticBrief may duplicate intelligenceBrief or intelligenceBrief may be omitted.
 - intelligenceBrief: optional legacy; if present without diagnosticBrief, use as executive narrative
-- conversionKillers: minimum 3, maximum 7, ranked by revenue impact. If the site has fewer than 3 genuine conversion problems, produce only what exists — do not invent findings to reach a minimum. If the site has more than 7 genuine problems, surface the 7 highest revenue impact issues. Never produce a finding you cannot support with specific evidence from the page. Titles under 10 words; evidence must quote actual page text — max 45 words per evidence field
+- conversionKillers: minimum 3, maximum 7, ranked by revenue impact. If the site has fewer than 3 genuine conversion problems, produce only what exists — do not invent findings to reach a minimum. If the site has more than 7 genuine problems, surface the 7 highest revenue impact issues. Never produce a finding you cannot support with specific evidence from the page. Titles under 10 words; evidence must quote actual page text — max 35 words per evidence field
 - conversionKillers evidence — Never cite carousel or slider content as incomplete or cut off. If testimonials, images, or content blocks appear to be part of a carousel or slider based on surrounding HTML structure, treat the full carousel as present and fully populated even if only one slide is visible in the snapshot.
 - conversionKillers.exitTrigger: The specific experience the visitor has on the page that causes them to hesitate, doubt, or leave. Name the exact element and quote its visible text. Describe what they see or feel — not the business consequence. Example: 'Hero headline reads "Welcome" — visitor cannot determine what the site sells or who it is for.'
 - conversionKillers.conversionCost: The business consequence in concrete terms — lost sales, abandoned signups, missed leads. Use a specific metric or percentage where accurate. These two fields must never contain the same text. exitTrigger = visitor experience. conversionCost = business impact.
-- conversionKillers.implementation: Name the exact element and its page location. State the precise change a developer or marketer could act on immediately. Include why the change works. Start with a verb. Max 55 words. No category advice — be specific enough that a developer knows exactly what to do without follow-up questions.
+- conversionKillers.implementation: Name the exact element and its page location. State the precise change a developer or marketer could act on immediately. Include why the change works. Start with a verb. Max 40 words. No category advice — be specific enough that a developer knows exactly what to do without follow-up questions.
 - conversionKillers.sourcePage: Label the page this finding comes from — e.g. "LANDING PAGE", "PRICING PAGE", "FEATURES PAGE", "ABOUT PAGE", "CONTACT PAGE". For single-page analyses always use "LANDING PAGE".
 - conversionTransformation.currentCta: Only return text if a clear, intentional hero-section call-to-action button exists above the fold. If the only buttons found are generic UI elements like 'Add', 'Add to cart', 'Menu', 'Search', or navigation links, return 'None detected' instead. Do not invent a CTA that is not clearly present as a primary action.
-- growthBlueprint: weekOne and weekTwoToFour max 3 items each; monthTwo, projectedLift, and projectedLiftNarrative each max 70 words; weekOne actions must directly reference and address the highest-severity conversionKillers by their specific finding titles; weekTwoToFour must address remaining conversionKillers; every action item must name the specific element or issue it resolves — no generic advice; the blueprint is the execution plan for the findings, not a separate generic CRO checklist
-- dimensionScores: exactly 5 objects one per dimension; score 0-100; insight max 30 words, specific to this site with reference to actual page evidence
+- growthBlueprint: weekOne and weekTwoToFour max 3 items each; monthTwo, projectedLift, and projectedLiftNarrative each max 50 words; weekOne actions must directly reference and address the highest-severity conversionKillers by their specific finding titles; weekTwoToFour must address remaining conversionKillers; every action item must name the specific element or issue it resolves — no generic advice; the blueprint is the execution plan for the findings, not a separate generic CRO checklist
+- dimensionScores: exactly 5 objects one per dimension; score 0-100; insight max 20 words, specific to this site with reference to actual page evidence
 - conversionScore: integer 0-100
 - healthScore: same value as conversionScore for backwards compatibility
 - Return only valid JSON, no markdown, no preamble
@@ -690,7 +690,7 @@ export async function runAnalysis(
   process.stderr.write(`[ANALYZE] userContent_len=${userContent.length} isMultiPage=${isMultiPage} failedPages=${failedPages.length}\n`);
   process.stderr.write('[ANALYZE] prompt chars: ' + userContent.length + '\n');
 
-  const maxTokens = isMultiPage ? 4500 : 3800;
+  const maxTokens = isMultiPage ? 3200 : 3800;
 
   let attempt = 0;
   const run = async (): Promise<ReportPayload> => {

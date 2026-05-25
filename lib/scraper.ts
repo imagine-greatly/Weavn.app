@@ -185,7 +185,7 @@ async function fetchWithBrowserless(url: string): Promise<string> {
     url,
     bestAttempt: true,
     gotoOptions: { waitUntil: 'domcontentloaded', timeout: 15000 },
-    waitForTimeout: 5000,
+    waitForTimeout: 2000,
   }
   process.stderr.write(`[SCRAPER] attempt1 START | url=${url}\n`)
   process.stderr.write(`[SCRAPER] attempt1 request | body=${JSON.stringify(body1)}\n`)
@@ -605,7 +605,7 @@ async function fetchSubpageFast(url: string): Promise<string | null> {
     `https://production-sfo.browserless.io/unblock` +
     `?token=${apiKey}&launch=${launchParam}&proxy=residential`;
   const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), 14_000);
+  const timer = setTimeout(() => ctrl.abort(), 9_000);
   try {
     const res = await fetch(endpoint, {
       method: 'POST',

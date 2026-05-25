@@ -690,7 +690,7 @@ export async function runAnalysis(
   process.stderr.write(`[ANALYZE] userContent_len=${userContent.length} isMultiPage=${isMultiPage} failedPages=${failedPages.length}\n`);
   process.stderr.write('[ANALYZE] prompt chars: ' + userContent.length + '\n');
 
-  const maxTokens = isMultiPage ? 3500 : 3800;
+  const maxTokens = isMultiPage ? 4500 : 3800;
 
   let attempt = 0;
   const run = async (): Promise<ReportPayload> => {
@@ -701,7 +701,7 @@ export async function runAnalysis(
       max_tokens: maxTokens,
       temperature: 0,
       system: [{ type: "text", text: systemPrompt, cache_control: { type: "ephemeral" } }],
-      messages: [{ role: "user", content: [{ type: "text", text: userContent, cache_control: { type: "ephemeral" } }] }],
+      messages: [{ role: "user", content: userContent }],
     });
     const cacheRead = message.usage?.cache_read_input_tokens ?? 0;
     const cacheWrite = message.usage?.cache_creation_input_tokens ?? 0;

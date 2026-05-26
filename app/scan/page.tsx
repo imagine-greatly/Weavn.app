@@ -881,20 +881,19 @@ function ScanLoadingInner() {
     return () => cancelAnimationFrame(beamRafRef.current);
   }, [materialized]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Pulse strip on the scanning beam (laser line)
+  // Pulse hotspot — bounces L↔R along the beam line, ~1800ms per full crossing
   useEffect(() => {
     if (!materialized) return;
     const el = pulseBarRef.current;
     if (!el) return;
 
-    let pulseWidth = window.innerWidth * 0.35;
-    let x = -pulseWidth;
-    let lastTime = performance.now();
+    const PULSE_W = 50;
+    const CROSSING_MS = 1800;
+    const startTime = performance.now();
     let rafId = 0;
+    let maxX = Math.max(0, window.innerWidth - PULSE_W);
 
-    const syncSize = () => {
-      pulseWidth = window.innerWidth * 0.35;
-    };
+    const syncSize = () => { maxX = Math.max(0, window.innerWidth - PULSE_W); };
     window.addEventListener('resize', syncSize);
 
     const tick = (now: number) => {
@@ -903,13 +902,12 @@ function ScanLoadingInner() {
         return;
       }
       el.style.opacity = '1';
-      const dt = Math.min(50, now - lastTime) / 1000;
-      lastTime = now;
 
-      x += 350 * dt;
-      if (x >= window.innerWidth) { x = -pulseWidth; }
-
-      el.style.transform = `translateX(${x}px)`;
+      const elapsed = now - startTime;
+      const cycle = elapsed % (CROSSING_MS * 2);
+      // t: 0→1 (L→R) then 1→0 (R→L), instant reversal at each edge
+      const t = cycle < CROSSING_MS ? cycle / CROSSING_MS : 1 - (cycle - CROSSING_MS) / CROSSING_MS;
+      el.style.transform = `translateX(${cubicEaseInOut(t) * maxX}px)`;
       rafId = requestAnimationFrame(tick);
     };
 
@@ -1219,7 +1217,7 @@ function ScanLoadingInner() {
             opacity: 0,
             willChange: "transform",
             background: "#00C8FF",
-            boxShadow: "0 0 4px 2px rgba(0,200,255,0.6), 0 0 8px 4px rgba(0,200,255,0.2)",
+            boxShadow: "0 0 3px 1px rgba(0,200,255,0.45)",
             overflow: "visible",
           }}
         >
@@ -1228,13 +1226,13 @@ function ScanLoadingInner() {
             aria-hidden
             style={{
               position: "absolute",
-              top: "0",
+              top: "-3px",
               left: 0,
-              width: "35%",
-              height: "1px",
-              background: "linear-gradient(90deg, transparent, #00C8FF, transparent)",
-              boxShadow: "0 0 6px 3px rgba(0,200,255,0.9), 0 0 10px 5px rgba(0,200,255,0.45)",
-              borderRadius: "0",
+              width: "50px",
+              height: "7px",
+              background: "radial-gradient(ellipse at center, rgba(255,255,255,0.92) 0%, rgba(0,200,255,0.88) 40%, transparent 100%)",
+              boxShadow: "0 0 6px 2px rgba(0,200,255,0.9), 0 0 12px 3px rgba(0,200,255,0.4)",
+              borderRadius: "50%",
               pointerEvents: "none",
               opacity: 0,
             }}

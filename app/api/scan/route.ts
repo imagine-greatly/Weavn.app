@@ -168,8 +168,8 @@ export async function POST(req: NextRequest) {
   let deadlineTimerId: ReturnType<typeof setTimeout>;
   const deadline = new Promise<never>((_, reject) => {
     deadlineTimerId = setTimeout(
-      () => reject(new Error('[TIMEOUT] Scan exceeded 85 s deadline — exiting cleanly to flush logs')),
-      85_000
+      () => reject(new Error('[TIMEOUT] Scan exceeded 115 s deadline — exiting cleanly to flush logs')),
+      115_000
     );
   });
 

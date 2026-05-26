@@ -646,7 +646,7 @@ async function fetchSubpageFast(url: string, abortMs: number): Promise<string | 
 }
 
 export async function scrapeSubpageSafe(url: string, complexity?: SiteComplexity): Promise<{ url: string; rawHtml: string } | null> {
-  const abortMs = complexity === 'simple' ? 8_000 : complexity === 'complex' ? 13_000 : 10_000
+  const abortMs = complexity === 'simple' ? 8_000 : complexity === 'complex' ? 14_000 : 10_000
   process.stderr.write(`[SCRAPER] subpage START | url=${url}\n`);
   try {
     const html = await fetchSubpageFast(url, abortMs);
@@ -708,11 +708,11 @@ export function cleanHtml(html: string): string {
 const TRUNCATION_SEPARATOR = '\n<!-- ... content truncated ... -->\n'
 
 export function applySmartTruncation(html: string): string {
-  if (html.length <= 30_000) return html
+  if (html.length <= 40_000) return html
   if (html.length <= 80_000) {
-    return html.slice(0, 25_000) + TRUNCATION_SEPARATOR + html.slice(-8_000)
+    return html.slice(0, 30_000) + TRUNCATION_SEPARATOR + html.slice(-8_000)
   }
-  return html.slice(0, 20_000) + TRUNCATION_SEPARATOR + html.slice(-8_000)
+  return html.slice(0, 25_000) + TRUNCATION_SEPARATOR + html.slice(-8_000)
 }
 
 export async function scrapeSite(inputUrl: string): Promise<CombinedExtraction> {

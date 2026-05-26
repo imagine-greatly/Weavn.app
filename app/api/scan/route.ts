@@ -21,7 +21,7 @@ function mergeCookies(from: NextResponse, to: NextResponse) {
   });
 }
 
-export const maxDuration = 120;
+export const maxDuration = 300;
 
 function normalizeUrl(input: string): string {
   const trimmed = input.trim();

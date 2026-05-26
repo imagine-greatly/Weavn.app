@@ -148,7 +148,7 @@ function ScanLoadingInner() {
   const ringOuterRef = useRef<HTMLDivElement>(null);
   const scoreNumRef = useRef<HTMLDivElement>(null);
   const checksCounterRef = useRef<HTMLSpanElement>(null);
-  const beamOvalCanvasRef = useRef<HTMLCanvasElement>(null);
+  const pulseBarRef = useRef<HTMLDivElement>(null);
 
   const [elapsedMs, setElapsedMs] = useState(0);
   const [sectionVisualComplete, setSectionVisualComplete] = useState(false);
@@ -881,48 +881,35 @@ function ScanLoadingInner() {
     return () => cancelAnimationFrame(beamRafRef.current);
   }, [materialized]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Bouncing oval pulse on the scanning beam (laser line)
+  // Pulse strip on the scanning beam (laser line)
   useEffect(() => {
     if (!materialized) return;
-    const canvas = beamOvalCanvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
+    const el = pulseBarRef.current;
+    if (!el) return;
 
-    const syncSize = () => {
-      canvas.width = window.innerWidth;
-      canvas.height = 20;
-    };
-    syncSize();
-    window.addEventListener('resize', syncSize);
-
-    let x = 50;
-    let dir = 1;
+    let pulseWidth = window.innerWidth * 0.35;
+    let x = -pulseWidth;
     let lastTime = performance.now();
     let rafId = 0;
 
+    const syncSize = () => {
+      pulseWidth = window.innerWidth * 0.35;
+    };
+    window.addEventListener('resize', syncSize);
+
     const tick = (now: number) => {
       if (beamRafHaltedRef.current) {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        el.style.opacity = '0';
         return;
       }
+      el.style.opacity = '1';
       const dt = Math.min(50, now - lastTime) / 1000;
       lastTime = now;
 
-      x += dir * 250 * dt;
-      if (x + 50 >= canvas.width) { x = canvas.width - 50; dir = -1; }
-      if (x - 50 <= 0) { x = 50; dir = 1; }
+      x += 350 * dt;
+      if (x >= window.innerWidth) { x = -pulseWidth; }
 
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.save();
-      ctx.shadowColor = '#00C8FF';
-      ctx.shadowBlur = 16;
-      ctx.fillStyle = '#00C8FF';
-      ctx.beginPath();
-      ctx.ellipse(x, canvas.height / 2, 50, 2, 0, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.restore();
-
+      el.style.transform = `translateX(${x}px)`;
       rafId = requestAnimationFrame(tick);
     };
 
@@ -1184,16 +1171,6 @@ function ScanLoadingInner() {
         .scan-beam {
           overflow: hidden;
         }
-        .scan-beam::after {
-          content: "";
-          position: absolute;
-          top: 0;
-          left: -40px;
-          width: 40px;
-          height: 100%;
-          background: linear-gradient(90deg, transparent 0%, rgba(0,200,255,0.95) 50%, transparent 100%);
-          animation: beamSweep 1.4s linear infinite;
-        }
       `}</style>
 
       <div
@@ -1245,16 +1222,20 @@ function ScanLoadingInner() {
             overflow: "visible",
           }}
         >
-          <canvas
-            ref={beamOvalCanvasRef}
+          <div
+            ref={pulseBarRef}
             aria-hidden
             style={{
               position: "absolute",
-              top: -9,
+              top: "-1px",
               left: 0,
-              width: "100%",
-              height: 20,
+              width: "35%",
+              height: "3px",
+              background: "linear-gradient(90deg, transparent, #00C8FF, transparent)",
+              boxShadow: "0 0 8px #00C8FF, 0 0 20px #00C8FF, 0 0 45px rgba(0,200,255,0.35)",
+              borderRadius: "2px",
               pointerEvents: "none",
+              opacity: 0,
             }}
           />
         </div>

@@ -127,6 +127,39 @@ function effortLabel(effort: FindingData["effortToFix"]): string {
   return "MEDIUM EFFORT";
 }
 
+function revenueImpactLabel(filled: number): string {
+  if (filled >= 9) return "SEVERE REVENUE LOSS";
+  if (filled >= 7) return "HIGH REVENUE LOSS";
+  if (filled >= 5) return "MODERATE REVENUE LOSS";
+  if (filled >= 3) return "LOW REVENUE LOSS";
+  return "MINIMAL IMPACT";
+}
+
+function revenueEffortBadgeLabel(eff: RevenueEffortLabel): string {
+  if (eff === "Today") return "FIX TODAY";
+  if (eff === "This Week") return "FIX THIS WEEK";
+  if (eff === "This Month") return "FIX THIS MONTH";
+  return String(eff).toUpperCase();
+}
+
+function revenueEffortBadgeStyle(eff: RevenueEffortLabel): {
+  background: string;
+  color: string;
+  border: string;
+} {
+  if (eff === "Today")
+    return { background: "#FF2D2D", color: "#FFFFFF", border: "1px solid #FF2D2D" };
+  if (eff === "This Week")
+    return { background: "#FF6B00", color: "#050810", border: "1px solid #FF6B00" };
+  if (eff === "This Month")
+    return { background: "#FFB800", color: "#050810", border: "1px solid #FFB800" };
+  return {
+    background: "transparent",
+    color: "var(--text-muted)",
+    border: "1px solid var(--border-default)",
+  };
+}
+
 function rubricSeverityPillStyle(sev: RubricSeverityLabel): {
   border: string;
   color: string;
@@ -1097,6 +1130,19 @@ export default function FindingCard({
                 );
               })}
             </div>
+            <span
+              className="font-mono shrink-0"
+              style={{
+                fontSize: 9,
+                color: "var(--text-muted)",
+                letterSpacing: "0.08em",
+                marginLeft: 6,
+              }}
+            >
+              {revenueImpactLabel(
+                Math.max(0, Math.min(10, Math.round(finding.revenueImpact)))
+              )}
+            </span>
           </div>
           <span
             className="font-mono shrink-0"
@@ -1117,18 +1163,44 @@ export default function FindingCard({
 
       {/* Zone 2 — Title */}
       <div style={{ padding: "20px 22px 0 22px" }}>
-        <h3
-          className="font-body font-bold leading-[1.3]"
-          style={{
-            fontSize: 18,
-            color: "var(--text-primary)",
-            letterSpacing: "-0.01em",
-          }}
-        >
-          {finding.title}
-        </h3>
+        {/* FIX 1: revenueTitle as primary headline */}
+        {finding.revenueTitle?.trim() ? (
+          <>
+            <h3
+              className="font-body font-bold leading-[1.3]"
+              style={{
+                fontSize: 18,
+                color: "var(--text-primary)",
+                letterSpacing: "-0.01em",
+              }}
+            >
+              {stripMarkdownForDisplay(finding.revenueTitle.trim())}
+            </h3>
+            <p
+              style={{
+                fontSize: 14,
+                color: "var(--text-muted)",
+                margin: "4px 0 0 0",
+                lineHeight: 1.35,
+              }}
+            >
+              {finding.title}
+            </p>
+          </>
+        ) : (
+          <h3
+            className="font-body font-bold leading-[1.3]"
+            style={{
+              fontSize: 18,
+              color: "var(--text-primary)",
+              letterSpacing: "-0.01em",
+            }}
+          >
+            {finding.title}
+          </h3>
+        )}
         <div
-          className="flex flex-row items-center gap-2"
+          className="flex flex-row flex-wrap items-center gap-2"
           style={{ marginTop: 12, marginBottom: 0 }}
         >
           <span
@@ -1156,18 +1228,46 @@ export default function FindingCard({
           >
             {finding.timeToFix}
           </span>
+          {/* FIX 3: revenueEffort urgency badge */}
+          {finding.revenueEffort ? (
+            <>
+              <span style={{ color: "var(--text-muted)", fontSize: 14 }}>·</span>
+              <span
+                className="font-mono"
+                style={{
+                  fontSize: 10,
+                  borderRadius: 4,
+                  padding: "4px 10px",
+                  ...revenueEffortBadgeStyle(finding.revenueEffort),
+                }}
+              >
+                {revenueEffortBadgeLabel(finding.revenueEffort)}
+              </span>
+            </>
+          ) : null}
         </div>
-        {isMissing && finding.page_location ? (
-          <div style={{ marginTop: 10 }}>
+        {/* FIX 5: sourcePage / page_location always visible */}
+        {(finding.sourcePage?.trim() || finding.page_location?.trim()) ? (
+          <div className="flex items-center gap-1.5" style={{ marginTop: 10 }}>
             <span
               className="font-mono"
               style={{
-                fontSize: 10,
+                fontSize: 11,
+                color: "var(--text-muted)",
+                letterSpacing: "0.08em",
+              }}
+            >
+              FOUND ON
+            </span>
+            <span
+              className="font-mono"
+              style={{
+                fontSize: 11,
                 color: "var(--text-muted)",
                 letterSpacing: "0.06em",
               }}
             >
-              {finding.page_location}
+              {finding.sourcePage?.trim() || finding.page_location?.trim()}
             </span>
           </div>
         ) : null}
@@ -1256,6 +1356,54 @@ export default function FindingCard({
           </p>
         </div>
 
+        {/* FIX 4: EXIT TRIGGER — between Evidence and Why It Matters */}
+        {finding.exitTrigger?.trim() ? (
+          <div
+            style={{
+              padding: "16px 18px",
+              borderBottom: "1px solid var(--border-default)",
+            }}
+          >
+            <div
+              className="flex flex-row items-center gap-2"
+              style={{ marginBottom: 10 }}
+            >
+              <div
+                style={{
+                  width: 2,
+                  height: 14,
+                  background: "rgba(0,200,255,0.4)",
+                  borderRadius: 1,
+                  flexShrink: 0,
+                }}
+                aria-hidden
+              />
+              <span
+                className="font-mono"
+                style={{
+                  fontSize: 10,
+                  color: "var(--text-muted)",
+                  letterSpacing: "0.1em",
+                }}
+              >
+                EXIT TRIGGER
+              </span>
+            </div>
+            <p
+              className="font-body text-left font-normal"
+              style={{
+                fontSize: 14,
+                fontStyle: "italic",
+                color: "var(--text-muted)",
+                lineHeight: 1.65,
+                margin: 0,
+              }}
+            >
+              → {finding.exitTrigger.trim()}
+            </p>
+          </div>
+        ) : null}
+
         {/* WHY IT MATTERS */}
         <div
           style={{
@@ -1300,6 +1448,63 @@ export default function FindingCard({
             {finding.whyItMatters}
           </div>
         </div>
+
+        {/* FIX 2: REVENUE IMPACT — after Why It Matters, before How To Fix It */}
+        {finding.businessCost?.trim() ? (
+          <div
+            style={{
+              padding: "16px 18px",
+              borderBottom: "1px solid var(--border-default)",
+              background: "rgba(255,107,0,0.02)",
+            }}
+          >
+            <div
+              className="flex flex-row items-center gap-2"
+              style={{ marginBottom: 10 }}
+            >
+              <div
+                style={{
+                  width: 2,
+                  height: 14,
+                  background: "rgba(255,107,0,0.6)",
+                  borderRadius: 1,
+                  flexShrink: 0,
+                }}
+                aria-hidden
+              />
+              <span
+                className="font-mono"
+                style={{
+                  fontSize: 10,
+                  color: "#FF6B00",
+                  letterSpacing: "0.1em",
+                }}
+              >
+                REVENUE IMPACT
+              </span>
+            </div>
+            <div
+              style={{
+                background: "rgba(255,107,0,0.04)",
+                borderRadius: 6,
+                padding: "12px 14px",
+                border: "1px solid rgba(255,107,0,0.12)",
+              }}
+            >
+              <p
+                className="font-body text-left font-normal"
+                style={{
+                  fontSize: 15,
+                  color: "var(--text-secondary)",
+                  lineHeight: 1.65,
+                  margin: 0,
+                }}
+              >
+                {finding.businessCost.trim()}
+              </p>
+            </div>
+          </div>
+        ) : null}
 
         {/* IMPLEMENTATION */}
         <div style={{ padding: "16px 18px" }}>

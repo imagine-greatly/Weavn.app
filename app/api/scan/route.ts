@@ -326,10 +326,10 @@ export async function POST(req: NextRequest) {
     if (isMultiPage) return 100_000
     if (complexity === 'complex') return 75_000
     if (complexity === 'medium') return 68_000
-    return 60_000
+    return 65_000
   })()
   const analyzeTimeoutMs = Math.max(
-    isMultiPage ? 55_000 : 40_000,
+    isMultiPage ? 65_000 : 55_000,
     baseTimeout - elapsed
   )
   console.log(`[ROUTE] analyzeTimeoutMs=${analyzeTimeoutMs} complexity=${complexity} elapsed=${elapsed}ms`)

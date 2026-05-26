@@ -672,7 +672,7 @@ async function fetchSubpageFast(url: string, abortMs: number, complexity?: SiteC
 }
 
 export async function scrapeSubpageSafe(url: string, complexity?: SiteComplexity): Promise<{ url: string; rawHtml: string } | null> {
-  const abortMs = complexity === 'simple' ? 8_000 : complexity === 'complex' ? 14_000 : 10_000
+  const abortMs = complexity === 'simple' ? 12_000 : complexity === 'complex' ? 18_000 : 14_000
   process.stderr.write(`[SCRAPER] subpage START | url=${url}\n`);
   try {
     const html = await fetchSubpageFast(url, abortMs, complexity);

@@ -1384,7 +1384,7 @@ export default function DashboardPage() {
                   </button>
                 </div>
                 <p style={{ margin: "14px 0 0 0", fontFamily: SM, fontSize: 11, color: "#8899AA", textAlign: "center" }}>
-                  Guest diagnostic available · No account required · 90 second scan
+                  Guest diagnostic available · No account required · Under 2 minutes
                 </p>
               </form>
             </div>

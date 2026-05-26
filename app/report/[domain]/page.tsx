@@ -491,7 +491,7 @@ export default function ReportDomainPage() {
               Save this report and track your score over time
             </div>
             <div className="font-mono" style={{ color: "var(--text-muted)", fontSize: 11, marginTop: 2 }}>
-              Free account · No credit card · Takes about 90 seconds
+              Free account · No credit card · Under 2 minutes
             </div>
           </div>
 

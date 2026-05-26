@@ -79,7 +79,7 @@ function HowItWorksHero() {
               fontWeight: 800,
             }}
           >
-            URL to diagnostic report in ninety seconds
+            URL to diagnostic report in under two minutes
             <span style={{ color: "var(--cyan)" }}>.</span>
           </h1>
         </ScrollReveal>
@@ -909,7 +909,7 @@ const FAQ_ITEMS: { q: string; a: string }[] = [
   },
   {
     q: "Scan duration",
-    a: "Typical completion is sixty to ninety seconds. Pro scans cover the landing page and up to two additional subpages. Free scans cover the landing page only.",
+    a: "Typical completion is under two minutes. Pro scans cover the landing page and up to two additional subpages. Free scans cover the landing page only.",
   },
   {
     q: "Competitor URLs",

@@ -373,7 +373,7 @@ export default function LandingHero({ url, onUrlChange, autoFocus }: Props) {
           >
             Free account required{" "}
             <span style={{ color: "var(--border-default)" }}>·</span> No credit card{" "}
-            <span style={{ color: "var(--border-default)" }}>·</span> Takes 90 seconds
+            <span style={{ color: "var(--border-default)" }}>·</span> Under 2 minutes
           </p>
         </ScrollReveal>
       </div>

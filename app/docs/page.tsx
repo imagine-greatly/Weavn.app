@@ -85,7 +85,7 @@ const PRINCIPLES = [
     name: "The 8-Second Rule",
     definition: "Orientation completes or fails inside the first eight seconds of page load.",
     applies: "The hero must state audience, offer, and next action without scrolling on desktop and primary mobile breakpoints. WebDoc flags feature-led, vague, or below-fold heroes.",
-    example: "Before: 'We help businesses grow.' After: 'Diagnostic scan of your marketing site — URL in, ranked findings out in ninety seconds.'",
+    example: "Before: 'We help businesses grow.' After: 'Diagnostic scan of your marketing site — URL in, ranked findings out in under two minutes.'",
   },
   {
     name: "Benefit vs Feature Psychology",

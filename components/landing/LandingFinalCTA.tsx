@@ -288,14 +288,14 @@ export default function LandingFinalCTA({ url, onUrlChange, autoFocus }: Props) 
           >
             Free account required{" "}
             <span style={{ color: "var(--border-default)" }}>·</span> No credit card{" "}
-            <span style={{ color: "var(--border-default)" }}>·</span> Takes 90 seconds
+            <span style={{ color: "var(--border-default)" }}>·</span> Under 2 minutes
           </p>
 
           <p className="mt-7 text-center font-mono text-[11px]" style={{ color: "var(--text-muted)" }}>
             Free tier: one full diagnostic scan · Pro: $50/month · Cancel anytime
           </p>
           <p className="mt-4 text-center font-mono text-[11px]" style={{ color: "var(--text-muted)" }}>
-            ▪ 90 SECOND SCAN
+            ▪ UNDER 2 MINUTES
           </p>
           <div
             style={{

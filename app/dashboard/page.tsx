@@ -8,7 +8,6 @@ import { ScrollReveal } from "@/components/ScrollReveal";
 import ScoreHistoryChart from "@/components/dashboard/ScoreHistoryChart";
 import { getDashboardMoneyLeaks } from "@/lib/dashboardMoneyLeaks";
 import AdvisorChat from "@/components/dashboard/AdvisorChat";
-import ScanUrlBar from "@/components/ScanUrlBar";
 import PageLoadSkeleton from "@/components/PageLoadSkeleton";
 import { getBlockedMessage, isBlockedDomain } from "@/lib/scanGuard";
 import { convertLeaksToFindingData } from "@/lib/convertLeakToFindingData";
@@ -314,7 +313,9 @@ export default function DashboardPage() {
   const [newUserSubmitting, setNewUserSubmitting] = useState(false);
   const [firstScanFieldFocused, setFirstScanFieldFocused] = useState(false);
   const [firstScanCtaHover, setFirstScanCtaHover] = useState(false);
+  const [emptyScanFieldFocused, setEmptyScanFieldFocused] = useState(false);
   const firstScanFieldRef = useRef<HTMLDivElement>(null);
+  const initialLoadCompleteRef = useRef(false);
   const [enterpriseBlockOpen, setEnterpriseBlockOpen] = useState(false);
   const [enterpriseBlockHighlight, setEnterpriseBlockHighlight] = useState<"empty" | "modal" | null>(null);
   const [deletingDomain, setDeletingDomain] = useState<string | null>(null);
@@ -331,6 +332,7 @@ export default function DashboardPage() {
   useEffect(() => {
     let cancelled = false;
     (async () => {
+      if (initialLoadCompleteRef.current) return;
       setLoading(true);
       const supabase = getSupabaseBrowserClient();
 
@@ -451,6 +453,7 @@ export default function DashboardPage() {
         return;
       }
 
+      initialLoadCompleteRef.current = true;
       setReportsReady(true);
     })();
     return () => { cancelled = true; };
@@ -1055,23 +1058,94 @@ export default function DashboardPage() {
               No saved conversion intelligence reports yet. Completed scans show up here with your
               conversion score, top exit triggers, and history. Enter a URL to run one.
             </p>
-            <div style={{ maxWidth: 560, borderRadius: 4, boxShadow: enterpriseBlockHighlight === "empty" ? "0 0 0 2px rgba(0,200,255,0.45)" : undefined }}>
-              <ScanUrlBar
-                value={emptyScanUrl}
-                onChange={setEmptyScanUrl}
-                buttonLabel="RUN CONVERSION INTELLIGENCE →"
-                onSubmit={(normalized: string) => {
-                  if (isBlockedDomain(normalized)) {
-                    setEnterpriseBlockHighlight("empty");
-                    setEnterpriseBlockOpen(true);
-                    return;
-                  }
-                  const path = `/scan?url=${encodeURIComponent(normalized)}`;
-                  console.log("[scan-nav] router.push", path);
-                  router.push(path);
+            <style>{`.empty-scan-input::placeholder { color: rgba(255,255,255,0.25); opacity: 1; }`}</style>
+            <form
+              className="hero-bar-focus-within"
+              onSubmit={(e) => {
+                e.preventDefault();
+                const normalized = normalizeScanUrlForGuard(emptyScanUrl);
+                if (!normalized) return;
+                if (isBlockedDomain(normalized)) {
+                  setEnterpriseBlockHighlight("empty");
+                  setEnterpriseBlockOpen(true);
+                  return;
+                }
+                const path = `/scan?url=${encodeURIComponent(normalized)}`;
+                console.log("[scan-nav] router.push", path);
+                router.push(path);
+              }}
+              style={{ maxWidth: 560 }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  height: 52,
+                  background: "rgba(10,13,26,0.95)",
+                  border: `1px solid ${emptyScanFieldFocused ? "rgba(0,200,255,0.4)" : "rgba(0,200,255,0.2)"}`,
+                  borderRadius: 4,
+                  padding: "0 6px 0 0",
+                  boxShadow: enterpriseBlockHighlight === "empty"
+                    ? "0 0 0 2px rgba(0,200,255,0.45)"
+                    : emptyScanFieldFocused
+                      ? "0 0 0 1px rgba(0,200,255,0.15), 0 0 20px rgba(0,200,255,0.08)"
+                      : "none",
+                  transition: "border-color 150ms ease, box-shadow 150ms ease",
+                  boxSizing: "border-box",
                 }}
-              />
-            </div>
+              >
+                <span
+                  style={{ fontFamily: SM, fontSize: 13, color: "#00C8FF", opacity: 0.5, paddingLeft: 16, flexShrink: 0, userSelect: "none" }}
+                  aria-hidden
+                >
+                  &gt;_
+                </span>
+                <input
+                  type="text"
+                  className="empty-scan-input"
+                  value={emptyScanUrl}
+                  onChange={(e) => setEmptyScanUrl(e.target.value)}
+                  onFocus={() => setEmptyScanFieldFocused(true)}
+                  onBlur={() => setEmptyScanFieldFocused(false)}
+                  placeholder="yourwebsite.com"
+                  style={{
+                    flex: 1,
+                    minWidth: 0,
+                    height: "100%",
+                    background: "transparent",
+                    border: "none",
+                    outline: "none",
+                    color: "#FFFFFF",
+                    fontFamily: SM,
+                    fontSize: 13,
+                    padding: "0 12px",
+                  }}
+                />
+                <button
+                  type="submit"
+                  style={{
+                    flexShrink: 0,
+                    height: 40,
+                    margin: "6px 0 6px 0",
+                    padding: "0 18px",
+                    border: "none",
+                    borderRadius: 3,
+                    cursor: "pointer",
+                    background: "#00C8FF",
+                    color: "#050810",
+                    fontFamily: SM,
+                    fontSize: 11,
+                    fontWeight: 700,
+                    letterSpacing: "0.08em",
+                    textTransform: "uppercase" as const,
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = "#33D6FF"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = "#00C8FF"; }}
+                >
+                  RUN CONVERSION INTELLIGENCE →
+                </button>
+              </div>
+            </form>
           </div>
         ) : null}
 

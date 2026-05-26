@@ -1163,44 +1163,18 @@ export default function FindingCard({
 
       {/* Zone 2 — Title */}
       <div style={{ padding: "20px 22px 0 22px" }}>
-        {/* FIX 1: revenueTitle as primary headline */}
-        {finding.revenueTitle?.trim() ? (
-          <>
-            <h3
-              className="font-body font-bold leading-[1.3]"
-              style={{
-                fontSize: 18,
-                color: "var(--text-primary)",
-                letterSpacing: "-0.01em",
-              }}
-            >
-              {stripMarkdownForDisplay(finding.revenueTitle.trim())}
-            </h3>
-            <p
-              style={{
-                fontSize: 14,
-                color: "var(--text-muted)",
-                margin: "4px 0 0 0",
-                lineHeight: 1.35,
-              }}
-            >
-              {finding.title}
-            </p>
-          </>
-        ) : (
-          <h3
-            className="font-body font-bold leading-[1.3]"
-            style={{
-              fontSize: 18,
-              color: "var(--text-primary)",
-              letterSpacing: "-0.01em",
-            }}
-          >
-            {finding.title}
-          </h3>
-        )}
+        <h3
+          className="font-body font-bold leading-[1.3]"
+          style={{
+            fontSize: 18,
+            color: "var(--text-primary)",
+            letterSpacing: "-0.01em",
+          }}
+        >
+          {finding.title}
+        </h3>
         <div
-          className="flex flex-row flex-wrap items-center gap-2"
+          className="flex flex-row items-center gap-2"
           style={{ marginTop: 12, marginBottom: 0 }}
         >
           <span
@@ -1228,26 +1202,8 @@ export default function FindingCard({
           >
             {finding.timeToFix}
           </span>
-          {/* FIX 3: revenueEffort urgency badge */}
-          {finding.revenueEffort ? (
-            <>
-              <span style={{ color: "var(--text-muted)", fontSize: 14 }}>·</span>
-              <span
-                className="font-mono"
-                style={{
-                  fontSize: 10,
-                  borderRadius: 4,
-                  padding: "4px 10px",
-                  ...revenueEffortBadgeStyle(finding.revenueEffort),
-                }}
-              >
-                {revenueEffortBadgeLabel(finding.revenueEffort)}
-              </span>
-            </>
-          ) : null}
         </div>
-        {/* FIX 5: sourcePage / page_location always visible */}
-        {(finding.sourcePage?.trim() || finding.page_location?.trim()) ? (
+        {isMissing && finding.page_location?.trim() ? (
           <div className="flex items-center gap-1.5" style={{ marginTop: 10 }}>
             <span
               className="font-mono"
@@ -1267,7 +1223,7 @@ export default function FindingCard({
                 letterSpacing: "0.06em",
               }}
             >
-              {finding.sourcePage?.trim() || finding.page_location?.trim()}
+              {finding.page_location.trim()}
             </span>
           </div>
         ) : null}
@@ -1356,54 +1312,6 @@ export default function FindingCard({
           </p>
         </div>
 
-        {/* FIX 4: EXIT TRIGGER — between Evidence and Why It Matters */}
-        {finding.exitTrigger?.trim() ? (
-          <div
-            style={{
-              padding: "16px 18px",
-              borderBottom: "1px solid var(--border-default)",
-            }}
-          >
-            <div
-              className="flex flex-row items-center gap-2"
-              style={{ marginBottom: 10 }}
-            >
-              <div
-                style={{
-                  width: 2,
-                  height: 14,
-                  background: "rgba(0,200,255,0.4)",
-                  borderRadius: 1,
-                  flexShrink: 0,
-                }}
-                aria-hidden
-              />
-              <span
-                className="font-mono"
-                style={{
-                  fontSize: 10,
-                  color: "var(--text-muted)",
-                  letterSpacing: "0.1em",
-                }}
-              >
-                EXIT TRIGGER
-              </span>
-            </div>
-            <p
-              className="font-body text-left font-normal"
-              style={{
-                fontSize: 14,
-                fontStyle: "italic",
-                color: "var(--text-muted)",
-                lineHeight: 1.65,
-                margin: 0,
-              }}
-            >
-              → {finding.exitTrigger.trim()}
-            </p>
-          </div>
-        ) : null}
-
         {/* WHY IT MATTERS */}
         <div
           style={{
@@ -1448,63 +1356,6 @@ export default function FindingCard({
             {finding.whyItMatters}
           </div>
         </div>
-
-        {/* FIX 2: REVENUE IMPACT — after Why It Matters, before How To Fix It */}
-        {finding.businessCost?.trim() ? (
-          <div
-            style={{
-              padding: "16px 18px",
-              borderBottom: "1px solid var(--border-default)",
-              background: "rgba(255,107,0,0.02)",
-            }}
-          >
-            <div
-              className="flex flex-row items-center gap-2"
-              style={{ marginBottom: 10 }}
-            >
-              <div
-                style={{
-                  width: 2,
-                  height: 14,
-                  background: "rgba(255,107,0,0.6)",
-                  borderRadius: 1,
-                  flexShrink: 0,
-                }}
-                aria-hidden
-              />
-              <span
-                className="font-mono"
-                style={{
-                  fontSize: 10,
-                  color: "#FF6B00",
-                  letterSpacing: "0.1em",
-                }}
-              >
-                REVENUE IMPACT
-              </span>
-            </div>
-            <div
-              style={{
-                background: "rgba(255,107,0,0.04)",
-                borderRadius: 6,
-                padding: "12px 14px",
-                border: "1px solid rgba(255,107,0,0.12)",
-              }}
-            >
-              <p
-                className="font-body text-left font-normal"
-                style={{
-                  fontSize: 15,
-                  color: "var(--text-secondary)",
-                  lineHeight: 1.65,
-                  margin: 0,
-                }}
-              >
-                {finding.businessCost.trim()}
-              </p>
-            </div>
-          </div>
-        ) : null}
 
         {/* IMPLEMENTATION */}
         <div style={{ padding: "16px 18px" }}>

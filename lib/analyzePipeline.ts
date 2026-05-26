@@ -127,7 +127,7 @@ export function discoverPages(
         seen.add(key);
         out.push(u.href);
         break;
-      } catch { /* skip */ }
+      } catch (err) { process.stderr.write('[PIPELINE] discoverPages ERROR | ' + err + '\n') }
     }
   }
   return out.slice(0, 4);
@@ -827,7 +827,7 @@ export function extractPageData(
           ? json["@type"]
           : json["@type"]?.[0];
       if (t) structured_data.push(t);
-    } catch { /* ignore */ }
+    } catch (err) { process.stderr.write('[PIPELINE] JSON-LD parse ERROR | ' + err + '\n') }
   });
 
   return {

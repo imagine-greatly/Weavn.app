@@ -541,6 +541,15 @@ function isPlaceholderContent(text: string | null | undefined): boolean {
   return t.length === 0 || t === "—";
 }
 
+function capToSentences(text: string, max: number): string {
+  const t = (text ?? "").trim();
+  if (!t) return t;
+  const re = /[^.!?]*[.!?]+(?:\s+|$)/g;
+  const matches = t.match(re);
+  if (!matches || matches.length <= max) return t;
+  return matches.slice(0, max).join("").trim();
+}
+
 function skeletonWidthForKey(key: string): string {
   let h = 0;
   for (let i = 0; i < key.length; i++) h = (h + key.charCodeAt(i) * 13) % 1000;
@@ -687,6 +696,7 @@ export default function IssuePage() {
   ]);
   const [resolveBusy, setResolveBusy] = useState(false);
   const [resolvedLocal, setResolvedLocal] = useState(false);
+  const [analysisExpanded, setAnalysisExpanded] = useState(false);
   useEffect(() => {
     if (!reportId) return;
     let cancelled = false;
@@ -1421,6 +1431,38 @@ export default function IssuePage() {
     },
   ] as const;
 
+  const psychRaw = (finding.psychologyPrinciple ?? "").trim();
+  const psychColonIdx = psychRaw.indexOf(":");
+  const psychName = psychColonIdx >= 0 ? psychRaw.slice(0, psychColonIdx).trim() : psychRaw;
+  const psychExplanation = psychColonIdx >= 0 ? psychRaw.slice(psychColonIdx + 1).trim() : "";
+
+  const hasCollapsedContent =
+    !isPlaceholderContent(scopeOfImpactRaw) ||
+    !isPlaceholderContent(interactionEffectRaw) ||
+    !isPlaceholderContent(originAnalysisFull) ||
+    !isPlaceholderContent(compoundingRiskRaw);
+
+  const exampleFixRaw = (finding.exampleFix ?? "").trim();
+  const exampleFixItems = (() => {
+    if (!exampleFixRaw) return [];
+    const numberedRe = /^\s*\d+\.\s+/m;
+    if (!numberedRe.test(exampleFixRaw)) return [exampleFixRaw];
+    const lines = exampleFixRaw.split("\n");
+    const numberedLine = /^\s*\d+\.\s+/;
+    const items: string[] = [];
+    let current: string[] = [];
+    for (const line of lines) {
+      if (numberedLine.test(line)) {
+        if (current.length) items.push(current.join("\n").trim());
+        current = [line.replace(numberedLine, "").trim()];
+      } else if (current.length) {
+        current.push(line);
+      }
+    }
+    if (current.length) items.push(current.join("\n").trim());
+    return items.filter(Boolean);
+  })();
+
   const bodyCopy: CSSProperties = {
     fontFamily: "var(--font-space-grotesk), sans-serif",
     fontSize: 15,
@@ -1732,6 +1774,21 @@ export default function IssuePage() {
               >
                 {(finding.category ?? "").trim() || finding.id || "FINDING"}
               </span>
+              {finding.timeToFix?.trim() ? (
+                <span
+                  style={{
+                    fontFamily: "var(--font-jetbrains-mono), var(--font-space-mono), monospace",
+                    fontSize: 9,
+                    color: "var(--text-muted)",
+                    border: "1px solid var(--border-default)",
+                    borderRadius: 3,
+                    padding: "2px 8px",
+                    letterSpacing: "1px",
+                  }}
+                >
+                  {finding.timeToFix.trim()}
+                </span>
+              ) : null}
               <span
                 style={{
                   fontFamily: "var(--font-jetbrains-mono), var(--font-space-mono), monospace",
@@ -2104,30 +2161,81 @@ export default function IssuePage() {
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
               {!isPlaceholderContent(diagnosticSummaryBody) && (
-                <p style={{ margin: 0, maxWidth: 820, ...bodyCopy }}>{diagnosticSummaryBody}</p>
+                <p style={{ margin: 0, maxWidth: 820, ...bodyCopy }}>{capToSentences(diagnosticSummaryBody, 3)}</p>
               )}
               {!isPlaceholderContent(behavioralMechanismRaw) && (
-                <p style={{ margin: 0, maxWidth: 820, ...bodyCopy }}>{behavioralMechanismRaw}</p>
+                <p style={{ margin: 0, maxWidth: 820, ...bodyCopy }}>{capToSentences(behavioralMechanismRaw, 3)}</p>
               )}
               {!isPlaceholderContent(conversionConsequenceRaw) && (
-                <p style={{ margin: 0, maxWidth: 820, ...bodyCopy }}>{conversionConsequenceRaw}</p>
+                <p style={{ margin: 0, maxWidth: 820, ...bodyCopy }}>{capToSentences(conversionConsequenceRaw, 3)}</p>
               )}
-              {!isPlaceholderContent(scopeOfImpactRaw) && (
-                <p style={{ margin: 0, maxWidth: 820, ...bodyCopy }}>{scopeOfImpactRaw}</p>
+              {analysisExpanded && (
+                <>
+                  {!isPlaceholderContent(scopeOfImpactRaw) && (
+                    <p style={{ margin: 0, maxWidth: 820, ...bodyCopy }}>{scopeOfImpactRaw}</p>
+                  )}
+                  {!isPlaceholderContent(interactionEffectRaw) && (
+                    <p style={{ margin: 0, maxWidth: 820, ...bodyCopy }}>{interactionEffectRaw}</p>
+                  )}
+                  {!isPlaceholderContent(originAnalysisFull) && (
+                    <p style={{ margin: 0, maxWidth: 820, ...bodyCopy, whiteSpace: "pre-wrap" }}>
+                      {originAnalysisFull}
+                    </p>
+                  )}
+                  {!isPlaceholderContent(compoundingRiskRaw) && (
+                    <p style={{ margin: 0, maxWidth: 820, ...bodyCopy, whiteSpace: "pre-wrap" }}>
+                      {compoundingRiskRaw}
+                    </p>
+                  )}
+                </>
               )}
-              {!isPlaceholderContent(interactionEffectRaw) && (
-                <p style={{ margin: 0, maxWidth: 820, ...bodyCopy }}>{interactionEffectRaw}</p>
-              )}
-              {!isPlaceholderContent(originAnalysisFull) && (
-                <p style={{ margin: 0, maxWidth: 820, ...bodyCopy, whiteSpace: "pre-wrap" }}>
-                  {originAnalysisFull}
-                </p>
-              )}
-              {!isPlaceholderContent(compoundingRiskRaw) && (
-                <p style={{ margin: 0, maxWidth: 820, ...bodyCopy, whiteSpace: "pre-wrap" }}>
-                  {compoundingRiskRaw}
-                </p>
-              )}
+              {psychRaw ? (
+                <div style={{ borderTop: "1px solid #1A2035", paddingTop: 20 }}>
+                  <div
+                    style={{
+                      fontFamily: "var(--font-space-mono), ui-monospace, monospace",
+                      fontSize: 11,
+                      color: "rgba(0,200,255,0.7)",
+                      letterSpacing: "0.15em",
+                      textTransform: "uppercase",
+                      fontWeight: 400,
+                      marginBottom: 8,
+                    }}
+                  >
+                    CONVERSION MECHANISM
+                  </div>
+                  <p style={{ margin: 0, maxWidth: 820, ...bodyCopy }}>
+                    {psychName ? (
+                      <span style={{ color: "#00C8FF", fontWeight: 500 }}>
+                        {psychName}{psychExplanation ? ": " : ""}
+                      </span>
+                    ) : null}
+                    {psychExplanation ? (
+                      <span style={{ color: "#8899AA" }}>{psychExplanation}</span>
+                    ) : null}
+                  </p>
+                </div>
+              ) : null}
+              {hasCollapsedContent ? (
+                <button
+                  type="button"
+                  onClick={() => setAnalysisExpanded((v) => !v)}
+                  style={{
+                    alignSelf: "flex-start",
+                    background: "transparent",
+                    border: "none",
+                    cursor: "pointer",
+                    fontFamily: "var(--font-space-mono), ui-monospace, monospace",
+                    fontSize: 11,
+                    color: "#00C8FF",
+                    letterSpacing: "0.08em",
+                    textTransform: "uppercase",
+                    padding: 0,
+                  }}
+                >
+                  {analysisExpanded ? "COLLAPSE ANALYSIS ↑" : "VIEW FULL ANALYSIS →"}
+                </button>
+              ) : null}
             </div>
           )}
         </div>
@@ -2229,6 +2337,66 @@ export default function IssuePage() {
         <SectionDivider />
         <div id="issue-resolution-protocol">
           <div style={monoSectionLabel}>RESOLUTION PROTOCOL</div>
+          {finding.howToFixIt?.trim() ? (
+            <p
+              style={{
+                margin: "0 0 24px 0",
+                maxWidth: 820,
+                fontFamily: "var(--font-space-grotesk), sans-serif",
+                fontSize: 16,
+                fontWeight: 400,
+                color: "var(--text-primary)",
+                lineHeight: 1.7,
+              }}
+            >
+              {finding.howToFixIt.trim()}
+            </p>
+          ) : null}
+          {exampleFixItems.length > 0 ? (
+            <div style={{ marginBottom: 28 }}>
+              <div
+                style={{
+                  fontFamily: "var(--font-space-mono), ui-monospace, monospace",
+                  fontSize: 11,
+                  color: "rgba(0,200,255,0.7)",
+                  letterSpacing: "0.15em",
+                  textTransform: "uppercase" as const,
+                  fontWeight: 400,
+                  marginBottom: 12,
+                }}
+              >
+                EXAMPLE
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {exampleFixItems.map((item, idx) => (
+                  <blockquote
+                    key={idx}
+                    style={{
+                      margin: 0,
+                      padding: "14px 18px 14px 20px",
+                      borderLeft: "3px solid #00C8FF",
+                      background: "rgba(0,200,255,0.06)",
+                      borderRadius: "0 8px 8px 0",
+                      fontStyle: "normal",
+                    }}
+                  >
+                    <span
+                      style={{
+                        display: "block",
+                        fontFamily: "var(--font-space-mono), ui-monospace, monospace",
+                        fontSize: 13,
+                        color: "#8899AA",
+                        lineHeight: 1.6,
+                        whiteSpace: "pre-wrap",
+                      }}
+                    >
+                      {item}
+                    </span>
+                  </blockquote>
+                ))}
+              </div>
+            </div>
+          ) : null}
           <div style={{ display: "flex", flexDirection: "column", gap: 20, marginBottom: 24 }}>
             {resolutionTiers.map((tier) => (
               <div

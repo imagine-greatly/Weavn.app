@@ -639,7 +639,8 @@ export async function runAnalysis(
   extraction: CombinedExtraction,
   siteType: SiteType,
   plan?: string,
-  model?: string
+  model?: string,
+  timeoutMs?: number
 ): Promise<ReportPayload> {
   const resolvedModel = model ?? "claude-sonnet-4-6";
   const client = new Anthropic({
@@ -647,13 +648,13 @@ export async function runAnalysis(
     timeout: 100_000,
   });
 
-  // Hard cap: never pass more than 50 000 chars of HTML into the analysis pipeline.
-  // scrapeSite.applySmartTruncation already caps at ~28 KB; this is a safety net in case
-  // a future code path bypasses that truncation or the caller passes raw un-truncated HTML.
+  // Hard cap: never pass more than 40 000 chars of HTML into the analysis pipeline.
+  // scrapeSite.applySmartTruncation already caps at ~38 KB; this is a safety net in case
+  // a caller bypasses truncation.
   let safeExtraction = extraction;
-  if (extraction.rawHtml.length > 50_000) {
-    process.stderr.write('[ANALYZE] HARD CAP applied: rawHtml ' + extraction.rawHtml.length + ' chars → 50000\n');
-    safeExtraction = { ...extraction, rawHtml: extraction.rawHtml.slice(0, 50_000) };
+  if (extraction.rawHtml.length > 40_000) {
+    process.stderr.write('[ANALYZE] HARD CAP applied: rawHtml ' + extraction.rawHtml.length + ' chars → 40000\n');
+    safeExtraction = { ...extraction, rawHtml: extraction.rawHtml.slice(0, 40_000) };
   }
   process.stderr.write('[ANALYZE] rawHtml entering pipeline: ' + safeExtraction.rawHtml.length + ' chars\n');
 
@@ -730,11 +731,18 @@ export async function runAnalysis(
     return ensurePayload(parsed, siteType, safeExtraction.pagesAnalyzed);
   };
 
+  const runStart = Date.now()
   try {
     return await run();
   } catch (firstErr) {
     process.stderr.write(`[ANALYZE] attempt 1 FAILED | ${firstErr instanceof Error ? firstErr.message : String(firstErr)}\n`);
     if ((firstErr as Error & { noRetry?: boolean }).noRetry) throw firstErr;
+    const runElapsed = Date.now() - runStart
+    const remaining = timeoutMs != null ? timeoutMs - runElapsed : Infinity
+    if (remaining < 20_000) {
+      process.stderr.write(`[ANALYZE] skipping attempt 2 — ${remaining}ms remaining, need 20000\n`)
+      throw firstErr instanceof Error ? firstErr : new Error("Analysis failed. Please try again.")
+    }
     try {
       return await run();
     } catch (secondErr) {
@@ -756,7 +764,7 @@ export async function runPreviewAnalysis(
   extraction: CombinedExtraction,
   siteType: SiteType
 ): Promise<PreviewResult> {
-  const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+  const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY, timeout: 30_000 });
 
   const attempt = async (): Promise<PreviewResult> => {
     const message = await client.messages.create({
@@ -790,14 +798,16 @@ export async function runPreviewAnalysis(
             }
           : null,
       };
-    } catch {
+    } catch (err) {
+      process.stderr.write('[ANALYZE] preview JSON parse ERROR | ' + err + '\n')
       return { conversionScore: 50, topFinding: null };
     }
   };
 
   try {
     return await attempt();
-  } catch {
+  } catch (err) {
+    process.stderr.write('[ANALYZE] preview ERROR | ' + err + '\n')
     return { conversionScore: 50, topFinding: null };
   }
 }

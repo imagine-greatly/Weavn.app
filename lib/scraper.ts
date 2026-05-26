@@ -239,6 +239,11 @@ async function fetchWithBrowserless(url: string): Promise<{ html: string; comple
   let readableRatio = html1 && html1.length > 0 ? readableTextLength(html1) / html1.length : 0
   let complexity: SiteComplexity = readableRatio > 0.4 ? 'simple' : readableRatio >= 0.15 ? 'medium' : 'complex'
 
+  if (html1?.includes('data-wf-site=') || html1?.includes('data-wf-page=')) {
+    complexity = 'simple'
+    console.log('[SCRAPER] Webflow detected — complexity forced to simple')
+  }
+
   // Accept attempt 1 only if it has real content AND is not a bot-block page.
   const len1Early = readableTextLength(html1 ?? '')
   if (html1 && len1Early >= 1500 && !isBlockPage(html1)) {

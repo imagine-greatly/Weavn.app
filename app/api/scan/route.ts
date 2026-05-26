@@ -246,14 +246,18 @@ export async function POST(req: NextRequest) {
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
         process.env.SUPABASE_SERVICE_ROLE_KEY!
       );
-      const { data: profile } = await supabaseService
-        .from("profiles")
-        .select("plan")
-        .eq("id", userId)
-        .maybeSingle();
-      userPlan = profile?.plan ?? "free";
+      const planResult = await Promise.race([
+        supabaseService.from("profiles").select("plan").eq("id", userId).maybeSingle(),
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('[TIMEOUT] plan lookup')), 5_000)
+        ),
+      ]);
+      userPlan = planResult.data?.plan ?? "free";
       console.log(`[scan] USER_PLAN | domain=${domain} plan=${userPlan} elapsed=${Date.now() - planStart}ms`)
     } catch (err) {
+      if (err instanceof Error && err.message === '[TIMEOUT] plan lookup') {
+        process.stderr.write('[ROUTE] plan lookup TIMEOUT — defaulting to free\n')
+      }
       console.log(`[scan] USER_PLAN ERROR (non-fatal, using free) | domain=${domain}`, err instanceof Error ? (err.stack ?? err.message) : err)
     }
   }
@@ -273,9 +277,21 @@ export async function POST(req: NextRequest) {
       process.stderr.write(`[ROUTE] subpages selected=${JSON.stringify(subpageUrls)}\n`);
 
       if (subpageUrls.length > 0) {
-        const results = await Promise.allSettled(
-          subpageUrls.map(url => scrapeSubpageSafe(url, complexity))
-        );
+        const subpageCapMs = complexity === 'simple' ? 16_000 : complexity === 'complex' ? 28_000 : 22_000
+        const collected: PromiseSettledResult<{ url: string; rawHtml: string } | null>[] = []
+        const tasks = subpageUrls.map(u =>
+          scrapeSubpageSafe(u, complexity)
+            .then(v => { collected.push({ status: 'fulfilled', value: v }); return v })
+            .catch(e => { collected.push({ status: 'rejected', reason: e }); return null })
+        )
+        await Promise.race([
+          Promise.all(tasks),
+          new Promise<void>(resolve => setTimeout(resolve, subpageCapMs)),
+        ])
+        if (collected.length < subpageUrls.length) {
+          process.stderr.write(`[ROUTE] subpage outer race TIMEOUT | capMs=${subpageCapMs} dropped=${subpageUrls.length - collected.length}\n`)
+        }
+        const results = collected;
         const additionalPages = results
           .map(r => r.status === 'fulfilled' ? r.value : null)
           .filter((p): p is { url: string; rawHtml: string } => p !== null);
@@ -305,7 +321,18 @@ export async function POST(req: NextRequest) {
   // 3. Claude analysis (retry once inside runAnalysis), tailored to site_type.
   // Deadline is complexity-aware: simple sites get less time, complex sites more.
   const elapsed = Date.now() - scanStart
-  const analyzeTimeoutMs = Math.max(80_000, Math.min(95_000, 120_000 - elapsed))
+  const isMultiPage = (extraction.additionalPages?.length ?? 0) > 0
+  const baseTimeout = (() => {
+    if (isMultiPage) return 100_000
+    if (complexity === 'complex') return 75_000
+    if (complexity === 'medium') return 68_000
+    return 60_000
+  })()
+  const analyzeTimeoutMs = Math.max(
+    isMultiPage ? 55_000 : 40_000,
+    baseTimeout - elapsed
+  )
+  console.log(`[ROUTE] analyzeTimeoutMs=${analyzeTimeoutMs} complexity=${complexity} elapsed=${elapsed}ms`)
   const analyzeDeadline = new Promise<never>((_, reject) =>
     setTimeout(
       () => reject(new Error('[TIMEOUT] Analysis timed out')),
@@ -317,7 +344,7 @@ export async function POST(req: NextRequest) {
   process.stderr.write(`[ROUTE] runAnalysis START | domain=${domain} site_type=${site_type} plan=${userPlan} pagesAnalyzed=${extraction.pagesAnalyzed.length} analyzeTimeoutMs=${analyzeTimeoutMs} elapsed_since_scan_start=${Date.now() - scanStart}ms\n`)
   console.log(`[scan] ANALYZE START | domain=${domain} site_type=${site_type} userPlan=${userPlan} pages=${extraction.pagesAnalyzed.length}`)
   try {
-    payload = await Promise.race([runAnalysis(extraction, site_type, userPlan), analyzeDeadline]);
+    payload = await Promise.race([runAnalysis(extraction, site_type, userPlan, undefined, analyzeTimeoutMs), analyzeDeadline]);
     process.stderr.write(`[ROUTE] runAnalysis DONE | elapsed=${Date.now() - analyzeStart}ms\n`)
     console.log(`[scan] ANALYZE DONE | domain=${domain} elapsed=${Date.now() - analyzeStart}ms`)
     // Analysis succeeded — cancel the global deadline so saveReport can't be interrupted.
@@ -330,24 +357,33 @@ export async function POST(req: NextRequest) {
   }
 
   // 4. Store in Supabase (keyed by domain + timestamp)
-  let reportId: string;
+  let reportId = '';
   const saveStart = Date.now()
   process.stderr.write(`[ROUTE] saveReport START | domain=${domain}\n`)
   console.log(`[scan] SAVE START | domain=${domain}`)
   try {
-    reportId = await saveReport(domain, payload, userId, { source: reqSource, scan_type: reqScanType });
+    reportId = await Promise.race([
+      saveReport(domain, payload, userId, { source: reqSource, scan_type: reqScanType }),
+      new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('[ROUTE] saveReport TIMEOUT')), 10_000)
+      ),
+    ]);
     process.stderr.write(`[ROUTE] saveReport DONE | reportId=${reportId} elapsed=${Date.now() - saveStart}ms\n`)
     console.log(`[scan] SAVE DONE | domain=${domain} reportId=${reportId} elapsed=${Date.now() - saveStart}ms`)
   } catch (err) {
-    process.stderr.write(`[ROUTE] saveReport ERROR | elapsed=${Date.now() - saveStart}ms | ${err instanceof Error ? (err.stack ?? err.message) : String(err)}\n`)
-    console.error(`[scan] SAVE ERROR | domain=${domain} elapsed=${Date.now() - saveStart}ms | ${err instanceof Error ? (err.stack ?? err.message) : err}`)
-    const message = err instanceof Error ? err.message : "Failed to save report.";
-    return withCookies(
-      NextResponse.json(
-        { error: message, code: "SCAN_SAVE_FAILED" },
-        { status: 500 }
-      )
-    );
+    if (err instanceof Error && err.message === '[ROUTE] saveReport TIMEOUT') {
+      process.stderr.write('[ROUTE] saveReport TIMEOUT\n')
+    } else {
+      process.stderr.write(`[ROUTE] saveReport ERROR | elapsed=${Date.now() - saveStart}ms | ${err instanceof Error ? (err.stack ?? err.message) : String(err)}\n`)
+      console.error(`[scan] SAVE ERROR | domain=${domain} elapsed=${Date.now() - saveStart}ms | ${err instanceof Error ? (err.stack ?? err.message) : err}`)
+      const message = err instanceof Error ? err.message : "Failed to save report.";
+      return withCookies(
+        NextResponse.json(
+          { error: message, code: "SCAN_SAVE_FAILED" },
+          { status: 500 }
+        )
+      );
+    }
   }
 
   console.log(`[scan] COMPLETE | domain=${domain} reportId=${reportId} total_elapsed=${Date.now() - scanStart}ms`)

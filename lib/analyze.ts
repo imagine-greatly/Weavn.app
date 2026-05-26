@@ -690,8 +690,8 @@ export async function runAnalysis(
   process.stderr.write(`[ANALYZE] userContent_len=${userContent.length} isMultiPage=${isMultiPage} failedPages=${failedPages.length}\n`);
   process.stderr.write('[ANALYZE] prompt chars: ' + userContent.length + '\n');
 
-  const summaryLen = cappedSummary.length
-  const maxTokens = summaryLen < 3000 ? 2800 : summaryLen <= 5000 ? 3500 : 4200
+  const complexity = safeExtraction.complexity ?? 'medium'
+  const maxTokens = isMultiPage ? 5000 : complexity === 'simple' ? 3500 : 4200
 
   let attempt = 0;
   const run = async (): Promise<ReportPayload> => {

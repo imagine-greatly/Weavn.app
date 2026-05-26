@@ -1218,7 +1218,8 @@ function ScanLoadingInner() {
             pointerEvents: "none",
             opacity: 0,
             willChange: "transform",
-            background: "rgba(0,200,255,0.35)",
+            background: "#00C8FF",
+            boxShadow: "0 0 4px 2px rgba(0,200,255,0.6), 0 0 8px 4px rgba(0,200,255,0.2)",
             overflow: "visible",
           }}
         >
@@ -1227,13 +1228,13 @@ function ScanLoadingInner() {
             aria-hidden
             style={{
               position: "absolute",
-              top: "-1px",
+              top: "0",
               left: 0,
               width: "35%",
-              height: "3px",
+              height: "1px",
               background: "linear-gradient(90deg, transparent, #00C8FF, transparent)",
-              boxShadow: "0 0 8px #00C8FF, 0 0 20px #00C8FF, 0 0 45px rgba(0,200,255,0.35)",
-              borderRadius: "2px",
+              boxShadow: "0 0 6px 3px rgba(0,200,255,0.9), 0 0 10px 5px rgba(0,200,255,0.45)",
+              borderRadius: "0",
               pointerEvents: "none",
               opacity: 0,
             }}

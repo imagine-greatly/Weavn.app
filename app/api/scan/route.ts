@@ -344,7 +344,7 @@ export async function POST(req: NextRequest) {
   process.stderr.write(`[ROUTE] runAnalysis START | domain=${domain} site_type=${site_type} plan=${userPlan} pagesAnalyzed=${extraction.pagesAnalyzed.length} analyzeTimeoutMs=${analyzeTimeoutMs} elapsed_since_scan_start=${Date.now() - scanStart}ms\n`)
   console.log(`[scan] ANALYZE START | domain=${domain} site_type=${site_type} userPlan=${userPlan} pages=${extraction.pagesAnalyzed.length}`)
   try {
-    payload = await Promise.race([runAnalysis(extraction, site_type, userPlan, undefined, analyzeTimeoutMs), analyzeDeadline]);
+    payload = await Promise.race([runAnalysis(extraction, site_type, userPlan, undefined), analyzeDeadline]);
     process.stderr.write(`[ROUTE] runAnalysis DONE | elapsed=${Date.now() - analyzeStart}ms\n`)
     console.log(`[scan] ANALYZE DONE | domain=${domain} elapsed=${Date.now() - analyzeStart}ms`)
     // Analysis succeeded — cancel the global deadline so saveReport can't be interrupted.

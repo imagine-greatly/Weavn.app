@@ -148,7 +148,7 @@ function ScanLoadingInner() {
   const ringOuterRef = useRef<HTMLDivElement>(null);
   const scoreNumRef = useRef<HTMLDivElement>(null);
   const checksCounterRef = useRef<HTMLSpanElement>(null);
-  const pulseCanvasRef = useRef<HTMLCanvasElement>(null);
+  const beamOvalCanvasRef = useRef<HTMLCanvasElement>(null);
 
   const [elapsedMs, setElapsedMs] = useState(0);
   const [sectionVisualComplete, setSectionVisualComplete] = useState(false);
@@ -881,16 +881,16 @@ function ScanLoadingInner() {
     return () => cancelAnimationFrame(beamRafRef.current);
   }, [materialized]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Bouncing oval pulse on the progress bar canvas
+  // Bouncing oval pulse on the scanning beam (laser line)
   useEffect(() => {
     if (!materialized) return;
-    const canvas = pulseCanvasRef.current;
+    const canvas = beamOvalCanvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
     const syncSize = () => {
-      canvas.width = canvas.offsetWidth;
+      canvas.width = window.innerWidth;
       canvas.height = 20;
     };
     syncSize();
@@ -1242,8 +1242,22 @@ function ScanLoadingInner() {
             opacity: 0,
             willChange: "transform",
             background: "rgba(0,200,255,0.35)",
+            overflow: "visible",
           }}
-        />
+        >
+          <canvas
+            ref={beamOvalCanvasRef}
+            aria-hidden
+            style={{
+              position: "absolute",
+              top: -9,
+              left: 0,
+              width: "100%",
+              height: 20,
+              pointerEvents: "none",
+            }}
+          />
+        </div>
 
         <div style={{ position: "fixed", inset: 0, zIndex: 4, pointerEvents: "none" }}>
           <div
@@ -2163,19 +2177,6 @@ function ScanLoadingInner() {
               width: "0%",
               background: "#00C8FF",
               transition: "width 0.4s ease",
-            }}
-          />
-          <canvas
-            ref={pulseCanvasRef}
-            aria-hidden
-            style={{
-              position: "absolute",
-              top: -10,
-              left: 0,
-              width: "100%",
-              height: 20,
-              pointerEvents: "none",
-              zIndex: 1,
             }}
           />
           <div

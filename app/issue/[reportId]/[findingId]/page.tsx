@@ -1064,7 +1064,7 @@ export default function IssuePage() {
             {
               role: "assistant",
               content:
-                "Diagnostic expansion is temporarily unavailable. Ask a specific question about this finding and I will still work from the raw scan data.",
+                "I have full context on this finding. Ask me anything about the resolution, revenue impact, or how it compares to other findings.",
             },
           ]);
         } else {
@@ -1136,7 +1136,7 @@ export default function IssuePage() {
             {
               role: "assistant",
               content:
-                "Diagnostic expansion failed to load. Ask a specific question and I will respond from the captured finding fields.",
+                "I have full context on this finding. Ask me anything about the resolution, revenue impact, or how it compares to other findings.",
             },
           ]);
         }
@@ -1437,8 +1437,6 @@ export default function IssuePage() {
   const psychExplanation = psychColonIdx >= 0 ? psychRaw.slice(psychColonIdx + 1).trim() : "";
 
   const hasCollapsedContent =
-    !isPlaceholderContent(scopeOfImpactRaw) ||
-    !isPlaceholderContent(interactionEffectRaw) ||
     !isPlaceholderContent(originAnalysisFull) ||
     !isPlaceholderContent(compoundingRiskRaw);
 
@@ -2138,18 +2136,20 @@ export default function IssuePage() {
               }}
             />
           </blockquote>
-          <div
-            style={{
-              marginTop: 12,
-              fontFamily: "var(--font-jetbrains-mono), var(--font-space-mono), monospace",
-              fontSize: 10,
-              color: "#8899AA",
-              letterSpacing: "0.04em",
-            }}
-          >
-            Observed at:{" "}
-            {briefExpanded?.observedAt?.trim() || (finding.page_location?.trim() ?? "—")}
-          </div>
+          {(briefExpanded?.observedAt?.trim() || finding.page_location?.trim()) ? (
+            <div
+              style={{
+                marginTop: 12,
+                fontFamily: "var(--font-jetbrains-mono), var(--font-space-mono), monospace",
+                fontSize: 10,
+                color: "#8899AA",
+                letterSpacing: "0.04em",
+              }}
+            >
+              Observed at:{" "}
+              {briefExpanded?.observedAt?.trim() || finding.page_location?.trim()}
+            </div>
+          ) : null}
         </div>
 
         {/* DIAGNOSTIC ANALYSIS — combined prose */}
@@ -2160,23 +2160,25 @@ export default function IssuePage() {
             <BriefLoadingPulse />
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-              {!isPlaceholderContent(diagnosticSummaryBody) && (
-                <p style={{ margin: 0, maxWidth: 820, ...bodyCopy }}>{capToSentences(diagnosticSummaryBody, 3)}</p>
-              )}
-              {!isPlaceholderContent(behavioralMechanismRaw) && (
-                <p style={{ margin: 0, maxWidth: 820, ...bodyCopy }}>{capToSentences(behavioralMechanismRaw, 3)}</p>
+              {!isPlaceholderContent(diagnosticSummaryBody) &&
+                diagnosticSummaryBody.split('\n\n').filter(Boolean).map((para, i) => (
+                  <p key={`summary-${i}`} style={{ margin: 0, maxWidth: 820, ...bodyCopy }}>{para}</p>
+                ))
+              }
+              {!isPlaceholderContent(behavioralMechanismRaw) && behavioralMechanismRaw !== "Mechanism analysis pending." && (
+                <p style={{ margin: 0, maxWidth: 820, ...bodyCopy }}>{behavioralMechanismRaw}</p>
               )}
               {!isPlaceholderContent(conversionConsequenceRaw) && (
-                <p style={{ margin: 0, maxWidth: 820, ...bodyCopy }}>{capToSentences(conversionConsequenceRaw, 3)}</p>
+                <p style={{ margin: 0, maxWidth: 820, ...bodyCopy }}>{conversionConsequenceRaw}</p>
+              )}
+              {!isPlaceholderContent(scopeOfImpactRaw) && (
+                <p style={{ margin: 0, maxWidth: 820, ...bodyCopy }}>{scopeOfImpactRaw}</p>
+              )}
+              {!isPlaceholderContent(interactionEffectRaw) && (
+                <p style={{ margin: 0, maxWidth: 820, ...bodyCopy }}>{interactionEffectRaw}</p>
               )}
               {analysisExpanded && (
                 <>
-                  {!isPlaceholderContent(scopeOfImpactRaw) && (
-                    <p style={{ margin: 0, maxWidth: 820, ...bodyCopy }}>{scopeOfImpactRaw}</p>
-                  )}
-                  {!isPlaceholderContent(interactionEffectRaw) && (
-                    <p style={{ margin: 0, maxWidth: 820, ...bodyCopy }}>{interactionEffectRaw}</p>
-                  )}
                   {!isPlaceholderContent(originAnalysisFull) && (
                     <p style={{ margin: 0, maxWidth: 820, ...bodyCopy, whiteSpace: "pre-wrap" }}>
                       {originAnalysisFull}
@@ -2352,7 +2354,7 @@ export default function IssuePage() {
               {finding.howToFixIt.trim()}
             </p>
           ) : null}
-          {exampleFixItems.length > 0 ? (
+          {exampleFixItems.length > 0 && exampleFixRaw !== (finding.howToFixIt ?? "").trim() ? (
             <div style={{ marginBottom: 28 }}>
               <div
                 style={{
@@ -2444,7 +2446,7 @@ export default function IssuePage() {
                   {tier.sub}
                 </div>
                 <p style={{ margin: "0 0 12px 0", ...bodyCopy, lineHeight: 1.7, whiteSpace: "pre-wrap" }}>
-                  {tier.body || "—"}
+                  {tier.body || (hasBrief ? "Resolution steps not available. Rescan to generate." : null)}
                 </p>
                 <div
                   style={{

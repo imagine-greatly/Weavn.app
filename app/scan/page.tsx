@@ -113,6 +113,10 @@ function cubicEaseInOut(t: number): number {
   return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 }
 
+function easeInOutSine(t: number): number {
+  return -(Math.cos(Math.PI * t) - 1) / 2;
+}
+
 function getDomain(urlStr: string): string {
   try {
     const u = new URL(urlStr);
@@ -787,6 +791,9 @@ function ScanLoadingInner() {
     const initT = pickTarget();
     goSeek(initT.x, initT.y, 0.010, 700);
 
+    // brakeUntil: timestamp until which we apply extra damping (section boundary crossings)
+    let brakeUntil = 0;
+
     // ── RAF tick ──────────────────────────────────────────────────────────
     const tick = (now: number) => {
       if (beamRafHaltedRef.current) {
@@ -799,13 +806,15 @@ function ScanLoadingInner() {
       s.lastFrameTime = now;
 
       bsmTimer -= dt;
+      // 0.72 during boundary brake (deliberate pause), 0.88 normally (smooth, less jitter)
+      const damp = now < brakeUntil ? 0.72 : 0.88;
 
       switch (bsm) {
         case 'SEEK': {
           const dx = seekX - s.pos.x, dy = seekY - s.pos.y;
           s.velocity.x += dx * seekK;
           s.velocity.y += dy * seekK;
-          s.velocity.x *= 0.85; s.velocity.y *= 0.85;
+          s.velocity.x *= damp; s.velocity.y *= damp;
           s.pos.x += s.velocity.x; s.pos.y += s.velocity.y;
           if (bsmTimer <= 0 || Math.hypot(dx, dy) < 16) {
             if (tv() < 0.70) {
@@ -828,7 +837,7 @@ function ScanLoadingInner() {
                     + Math.sin(now * 0.0318) * 0.9;
           s.velocity.x += (dwX + jX - s.pos.x) * 0.020;
           s.velocity.y += (dwY + jY - s.pos.y) * 0.020;
-          s.velocity.x *= 0.85; s.velocity.y *= 0.85;
+          s.velocity.x *= damp; s.velocity.y *= damp;
           s.pos.x += s.velocity.x; s.pos.y += s.velocity.y;
           if (bsmTimer <= 0) {
             const tgt = pickTarget();
@@ -859,6 +868,7 @@ function ScanLoadingInner() {
         }
       }
       if (newSec !== activeSectionIdRef.current) {
+        brakeUntil = now + 100;
         const prev = activeSectionIdRef.current;
         activeSectionIdRef.current = newSec;
         if (prev && !completedSectionIdsRef.current.has(prev)) {
@@ -887,7 +897,7 @@ function ScanLoadingInner() {
     const el = pulseBarRef.current;
     if (!el) return;
 
-    const PULSE_W = 50;
+    const PULSE_W = 140;
     const CROSSING_MS = 1800;
     const startTime = performance.now();
     let rafId = 0;
@@ -905,9 +915,9 @@ function ScanLoadingInner() {
 
       const elapsed = now - startTime;
       const cycle = elapsed % (CROSSING_MS * 2);
-      // t: 0→1 (L→R) then 1→0 (R→L), instant reversal at each edge
+      // t: 0→1 (L→R) then 1→0 (R→L) — easeInOutSine for smooth reversal at edges
       const t = cycle < CROSSING_MS ? cycle / CROSSING_MS : 1 - (cycle - CROSSING_MS) / CROSSING_MS;
-      el.style.transform = `translateX(${cubicEaseInOut(t) * maxX}px)`;
+      el.style.transform = `translateX(${easeInOutSine(t) * maxX}px)`;
       rafId = requestAnimationFrame(tick);
     };
 
@@ -1216,8 +1226,8 @@ function ScanLoadingInner() {
             pointerEvents: "none",
             opacity: 0,
             willChange: "transform",
-            background: "#00C8FF",
-            boxShadow: "0 0 3px 1px rgba(0,200,255,0.45)",
+            background: "rgba(0,200,255,0.18)",
+            boxShadow: "0 0 2px 0px rgba(0,200,255,0.10)",
             overflow: "visible",
           }}
         >
@@ -1226,13 +1236,13 @@ function ScanLoadingInner() {
             aria-hidden
             style={{
               position: "absolute",
-              top: "-3px",
+              top: "-1px",
               left: 0,
-              width: "50px",
-              height: "7px",
-              background: "radial-gradient(ellipse at center, rgba(255,255,255,0.92) 0%, rgba(0,200,255,0.88) 40%, transparent 100%)",
-              boxShadow: "0 0 6px 2px rgba(0,200,255,0.9), 0 0 12px 3px rgba(0,200,255,0.4)",
-              borderRadius: "50%",
+              width: "140px",
+              height: "3px",
+              background: "linear-gradient(90deg, transparent 0%, rgba(0,200,255,0.7) 20%, rgba(255,255,255,0.95) 50%, rgba(0,200,255,0.7) 80%, transparent 100%)",
+              boxShadow: "0 0 4px 1px rgba(0,200,255,0.7), 0 0 8px 2px rgba(0,200,255,0.3)",
+              borderRadius: "2px",
               pointerEvents: "none",
               opacity: 0,
             }}

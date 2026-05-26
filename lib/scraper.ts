@@ -655,9 +655,10 @@ export async function scrapeSubpageSafe(url: string, complexity?: SiteComplexity
       return null;
     }
     const cleaned = cleanHtml(html);
+    const cap = complexity === 'simple' ? 20_000 : complexity === 'complex' ? 38_000 : 28_000
     const capped =
-      cleaned.length > 20_000
-        ? cleaned.slice(0, 17_000) + TRUNCATION_SEPARATOR + cleaned.slice(-3_000)
+      cleaned.length > cap
+        ? cleaned.slice(0, cap) + SUBPAGE_TRUNCATION_SIGNAL
         : cleaned;
     process.stderr.write(`[SCRAPER] subpage DONE | url=${url} chars=${capped.length}\n`);
     return { url, rawHtml: capped };
@@ -706,6 +707,7 @@ export function cleanHtml(html: string): string {
 
 // -- SMART TRUNCATION ---------------------------------------------------
 const TRUNCATION_SEPARATOR = '\n<!-- ... content truncated ... -->\n'
+const SUBPAGE_TRUNCATION_SIGNAL = '\n<!-- [WEBDOC: content truncated at scraper limit — page continues beyond this point] -->\n'
 
 export function applySmartTruncation(html: string): string {
   if (html.length <= 40_000) return html

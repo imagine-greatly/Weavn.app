@@ -148,6 +148,7 @@ function ScanLoadingInner() {
   const ringOuterRef = useRef<HTMLDivElement>(null);
   const scoreNumRef = useRef<HTMLDivElement>(null);
   const checksCounterRef = useRef<HTMLSpanElement>(null);
+  const pulseCanvasRef = useRef<HTMLCanvasElement>(null);
 
   const [elapsedMs, setElapsedMs] = useState(0);
   const [sectionVisualComplete, setSectionVisualComplete] = useState(false);
@@ -879,6 +880,58 @@ function ScanLoadingInner() {
     beamRafRef.current = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(beamRafRef.current);
   }, [materialized]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Bouncing oval pulse on the progress bar canvas
+  useEffect(() => {
+    if (!materialized) return;
+    const canvas = pulseCanvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const syncSize = () => {
+      canvas.width = canvas.offsetWidth;
+      canvas.height = 20;
+    };
+    syncSize();
+    window.addEventListener('resize', syncSize);
+
+    let x = 50;
+    let dir = 1;
+    let lastTime = performance.now();
+    let rafId = 0;
+
+    const tick = (now: number) => {
+      if (beamRafHaltedRef.current) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        return;
+      }
+      const dt = Math.min(50, now - lastTime) / 1000;
+      lastTime = now;
+
+      x += dir * 250 * dt;
+      if (x + 50 >= canvas.width) { x = canvas.width - 50; dir = -1; }
+      if (x - 50 <= 0) { x = 50; dir = 1; }
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.save();
+      ctx.shadowColor = '#00C8FF';
+      ctx.shadowBlur = 16;
+      ctx.fillStyle = '#00C8FF';
+      ctx.beginPath();
+      ctx.ellipse(x, canvas.height / 2, 50, 2, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+
+      rafId = requestAnimationFrame(tick);
+    };
+
+    rafId = requestAnimationFrame(tick);
+    return () => {
+      cancelAnimationFrame(rafId);
+      window.removeEventListener('resize', syncSize);
+    };
+  }, [materialized]);
 
   const getSectionLabelClass = (sectionId: string): string => {
     if (sectionId === activeSection) return "section-active";
@@ -2110,6 +2163,19 @@ function ScanLoadingInner() {
               width: "0%",
               background: "#00C8FF",
               transition: "width 0.4s ease",
+            }}
+          />
+          <canvas
+            ref={pulseCanvasRef}
+            aria-hidden
+            style={{
+              position: "absolute",
+              top: -10,
+              left: 0,
+              width: "100%",
+              height: 20,
+              pointerEvents: "none",
+              zIndex: 1,
             }}
           />
           <div

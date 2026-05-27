@@ -284,6 +284,10 @@ export async function POST(req: NextRequest) {
             .then(v => { collected.push({ status: 'fulfilled', value: v }); return v })
             .catch(e => { collected.push({ status: 'rejected', reason: e }); return null })
         )
+        process.stderr.write(
+          '[ROUTE] subpage race cap | complexity=' + complexity +
+          ' capMs=' + subpageCapMs + 'ms\n'
+        )
         await Promise.race([
           Promise.all(tasks),
           new Promise<void>(resolve => setTimeout(resolve, subpageCapMs)),
@@ -332,11 +336,17 @@ export async function POST(req: NextRequest) {
     if (complexity === 'medium') return 100_000
     return 80_000 // simple
   })()
-  const analyzeTimeoutMs = Math.max(
-    isMultiPage ? 110_000 : 65_000,
-    baseTimeout - elapsed
+  const calculatedTimeout = baseTimeout - elapsed
+  const floor = isMultiPage ? 110_000 : 65_000
+  const analyzeTimeoutMs = Math.max(floor, calculatedTimeout)
+  const timeoutSource = calculatedTimeout >= floor ? 'calculated' : 'floor'
+  process.stderr.write(
+    '[ROUTE] analyzeTimeoutMs=' + analyzeTimeoutMs +
+    ' source=' + timeoutSource +
+    ' complexity=' + complexity +
+    ' multipage=' + isMultiPage +
+    ' elapsed=' + elapsed + 'ms\n'
   )
-  console.log(`[ROUTE] analyzeTimeoutMs=${analyzeTimeoutMs} complexity=${complexity} multipage=${isMultiPage}`)
   const analyzeDeadline = new Promise<never>((_, reject) =>
     setTimeout(
       () => reject(new Error('[TIMEOUT] Analysis timed out')),

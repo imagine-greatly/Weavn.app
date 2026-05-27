@@ -200,7 +200,7 @@ async function fetchWithBrowserless(url: string): Promise<{ html: string; comple
   try {
     process.stderr.write('[SCRAPER] pre-attempt1\n')
     process.stderr.write('[SCRAPER] attempt1 sending request\n')
-    const res1 = await fetch(makeEndpoint(true), {
+    const res1 = await fetch(makeEndpoint(false), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body1),
@@ -227,7 +227,7 @@ async function fetchWithBrowserless(url: string): Promise<{ html: string; comple
       if (res1.status === 500) {
         console.log(`[SCRAPER] attempt1 500 retry | waiting 3s`)
         await new Promise(resolve => setTimeout(resolve, 3000))
-        const res1r = await fetch(makeEndpoint(true), {
+        const res1r = await fetch(makeEndpoint(false), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(body1),
@@ -688,7 +688,7 @@ async function fetchSubpageFast(url: string, abortMs: number, complexity?: SiteC
   const launchParam = encodeURIComponent(JSON.stringify({ ignoreHTTPSErrors: true }));
   const endpoint =
     `https://production-sfo.browserless.io/unblock` +
-    `?token=${apiKey}&launch=${launchParam}&proxy=residential`;
+    `?token=${apiKey}&launch=${launchParam}`;
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), abortMs);
   const subpageWait = complexity === 'simple' ? 1000 : complexity === 'complex' ? 2800 : 1800
@@ -850,4 +850,64 @@ export async function scrapeSite(inputUrl: string): Promise<CombinedExtraction> 
     process.stderr.write('[SCRAPER] FATAL scrapeSite: ' + (e instanceof Error ? e.stack : String(e)) + '\n')
     throw e
   }
+}
+
+export async function scrapePreview(url: string): Promise<{
+  rawHtml: string
+  complexity: SiteComplexity
+}> {
+  // Step 1 — plain HTTP fetch, zero Browserless credits
+  try {
+    const res = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'
+      },
+      signal: AbortSignal.timeout(8000)
+    })
+    if (res.ok) {
+      const html = await res.text()
+      const readable = readableTextLength(html)
+      const blocked = isBlockPage(html)
+      console.log(`[PREVIEW] plain fetch | chars=${html.length} readable=${readable} blocked=${blocked}`)
+      if (readable >= 500 && !blocked) {
+        const ratio = html.length > 0 ? readable / html.length : 0
+        const complexity: SiteComplexity = ratio > 0.4 ? 'simple' : ratio >= 0.15 ? 'medium' : 'complex'
+        return { rawHtml: cleanHtml(html).slice(0, 2000), complexity }
+      }
+    }
+  } catch {
+    console.log('[PREVIEW] plain fetch failed — falling back to Browserless')
+  }
+
+  // Step 2 — single Browserless request, no residential proxy
+  const apiKey = process.env.BROWSERLESS_API_KEY
+  if (!apiKey) return { rawHtml: '', complexity: 'medium' }
+
+  try {
+    const endpoint = `https://production-sfo.browserless.io/unblock?token=${apiKey}&launch=${encodeURIComponent(JSON.stringify({ ignoreHTTPSErrors: true }))}`
+    const res = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        url,
+        bestAttempt: true,
+        gotoOptions: { waitUntil: 'domcontentloaded', timeout: 12000 },
+        waitForTimeout: 1500
+      }),
+      signal: AbortSignal.timeout(20000)
+    })
+    if (res.ok) {
+      const data = await res.json()
+      const html = data.content ?? ''
+      console.log(`[PREVIEW] browserless fallback | chars=${html.length}`)
+      const cleaned = cleanHtml(html).slice(0, 2000)
+      const ratio = html.length > 0 ? readableTextLength(html) / html.length : 0
+      const complexity: SiteComplexity = ratio > 0.4 ? 'simple' : ratio >= 0.15 ? 'medium' : 'complex'
+      return { rawHtml: cleaned, complexity }
+    }
+  } catch {
+    console.log('[PREVIEW] browserless fallback failed')
+  }
+
+  return { rawHtml: '', complexity: 'medium' }
 }

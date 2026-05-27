@@ -1,7 +1,7 @@
 import { timingSafeEqual } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { scrapeSite } from "@/lib/scraper";
+import { scrapeSite, scrapePreview } from "@/lib/scraper";
 import { detectSiteType } from "@/lib/siteType";
 import { runPreviewAnalysis } from "@/lib/analyze";
 
@@ -120,7 +120,14 @@ export async function POST(req: NextRequest) {
 
   let extraction;
   try {
-    extraction = await scrapeSite(normalized);
+    const previewScrape = await scrapePreview(normalized)
+    extraction = {
+      ...extraction,
+      rawHtml: previewScrape.rawHtml,
+      complexity: previewScrape.complexity,
+      pagesAnalyzed: [normalized],
+      additionalPages: []
+    }
     console.log("[preview] scrape done, rawHtml length:", extraction.rawHtml?.length ?? 0);
   } catch (err) {
     const message = err instanceof Error ? err.message : "Failed to fetch the site.";
@@ -140,9 +147,6 @@ export async function POST(req: NextRequest) {
       { status: 422 }
     );
   }
-
-  // Cap HTML for preview scans to reduce token cost.
-  extraction.rawHtml = extraction.rawHtml.slice(0, PREVIEW_HTML_CAP);
 
   const site_type = detectSiteType(extraction);
 

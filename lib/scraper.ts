@@ -735,12 +735,32 @@ export function cleanHtml(html: string): string {
 const TRUNCATION_SEPARATOR = '\n<!-- ... content truncated ... -->\n'
 const SUBPAGE_TRUNCATION_SIGNAL = '\n<!-- [WEBDOC: content truncated at scraper limit — page continues beyond this point] -->\n'
 
-export function applySmartTruncation(html: string): string {
+export function applySmartTruncation(html: string, complexity?: SiteComplexity): string {
   if (html.length <= 40_000) return html
-  if (html.length <= 80_000) {
-    return html.slice(0, 30_000) + TRUNCATION_SEPARATOR + html.slice(-8_000)
-  }
-  return html.slice(0, 25_000) + TRUNCATION_SEPARATOR + html.slice(-8_000)
+
+  const viewportBoundary =
+    complexity === 'simple' ? 12_000 :
+    complexity === 'medium' ? 16_000 :
+    24_000  // complex
+
+  const headSize =
+    html.length <= 80_000 ? 45_000 :
+    html.length <= 120_000 ? 55_000 :
+    65_000
+
+  const headSlice = html.slice(0, headSize)
+
+  const VIEWPORT_MARKER = '\n<!-- [WEBDOC: estimated viewport boundary — content below this line is likely below the fold on desktop] -->\n'
+  const markerPos = headSlice.lastIndexOf('>', viewportBoundary - 1)
+  const markedHead = markerPos >= 0
+    ? headSlice.slice(0, markerPos + 1) + VIEWPORT_MARKER + headSlice.slice(markerPos + 1)
+    : headSlice
+
+  console.log(`[SCRAPER] viewport marker | complexity=${complexity ?? 'unknown'} boundary=${viewportBoundary}chars`)
+
+  const result = markedHead + TRUNCATION_SEPARATOR + html.slice(-8_000)
+  console.log(`[SCRAPER] truncation | cleaned=${html.length} → head+tail=${result.length}`)
+  return result
 }
 
 export async function scrapeSite(inputUrl: string): Promise<CombinedExtraction> {
@@ -765,7 +785,7 @@ export async function scrapeSite(inputUrl: string): Promise<CombinedExtraction> 
       `[SCRAPER] method:${scraped.method} raw:${scraped.rawHtml.length} clean:${cleaned.length}`
     )
 
-    const truncated = applySmartTruncation(cleaned)
+    const truncated = applySmartTruncation(cleaned, scraped.complexity)
     process.stderr.write('[SCRAPER] truncated html chars: ' + truncated.length + '\n')
 
     return {

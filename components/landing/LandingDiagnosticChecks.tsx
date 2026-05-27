@@ -133,6 +133,26 @@ export default function LandingDiagnosticChecks() {
             </Link>
           </div>
         </ScrollReveal>
+
+        <div className="mt-16 max-w-[680px]">
+          <p
+            className="font-mono text-[11px] uppercase tracking-[3px] mb-4"
+            style={{ color: "var(--cyan)" }}
+          >
+            FIRST IMPRESSION DIAGNOSTIC
+          </p>
+          <p
+            className="font-sans text-[17px] leading-relaxed"
+            style={{ color: "var(--text-secondary)" }}
+          >
+            Every scan begins where your visitors do. Webdoc analyzes your
+            above-fold experience first — hero messaging, primary CTA
+            placement, and trust architecture — because that&apos;s where
+            conversion decisions are made. Critical structural failures
+            anywhere on the page are always surfaced. But the first three
+            seconds are the verdict.
+          </p>
+        </div>
       </div>
     </section>
   );

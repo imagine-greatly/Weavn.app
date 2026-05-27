@@ -871,14 +871,16 @@ function ScanLoadingInner() {
         brakeUntil = now + 100;
         const prev = activeSectionIdRef.current;
         activeSectionIdRef.current = newSec;
-        if (prev && !completedSectionIdsRef.current.has(prev)) {
-          completedSectionIdsRef.current.add(prev);
+        if (prev) {
           const prevEl = document.querySelector(`[data-section="${prev}"]`);
-          prevEl?.classList.remove("beam-active");
+          prevEl?.classList.remove("beam-active", "active");
+          if (!completedSectionIdsRef.current.has(prev)) {
+            completedSectionIdsRef.current.add(prev);
+          }
         }
         if (newSec) {
           const newEl = document.querySelector(`[data-section="${newSec}"]`);
-          newEl?.classList.add("beam-active");
+          newEl?.classList.add("beam-active", "active");
         }
         setActiveSection(newSec);
         if (prev) setCompletedSections(Array.from(completedSectionIdsRef.current));
@@ -897,7 +899,7 @@ function ScanLoadingInner() {
     const el = pulseBarRef.current;
     if (!el) return;
 
-    const PULSE_W = 140;
+    const PULSE_W = 160;
     const CROSSING_MS = 1800;
     const startTime = performance.now();
     let rafId = 0;
@@ -1209,7 +1211,7 @@ function ScanLoadingInner() {
             pointerEvents: "none",
             opacity: 0,
             willChange: "transform",
-            background: "linear-gradient(90deg, transparent 0%, rgba(0,200,255,0.3) 15%, rgba(0,200,255,0.3) 85%, transparent 100%)",
+            background: "transparent",
           }}
         />
         {/* Laser line — full-width 1px rule that travels at the beam's Y center */}
@@ -1236,13 +1238,13 @@ function ScanLoadingInner() {
             aria-hidden
             style={{
               position: "absolute",
-              top: "-1px",
+              top: "-2px",
               left: 0,
-              width: "140px",
-              height: "3px",
-              background: "linear-gradient(90deg, transparent 0%, rgba(0,200,255,0.7) 20%, rgba(255,255,255,0.95) 50%, rgba(0,200,255,0.7) 80%, transparent 100%)",
-              boxShadow: "0 0 4px 1px rgba(0,200,255,0.7), 0 0 8px 2px rgba(0,200,255,0.3)",
-              borderRadius: "2px",
+              width: "160px",
+              height: "5px",
+              background: "radial-gradient(ellipse at center, rgba(220,240,255,0.95) 0%, rgba(0,200,255,0.78) 20%, rgba(0,200,255,0.22) 55%, transparent 100%)",
+              boxShadow: "0 0 8px 2px rgba(0,200,255,0.72), 0 0 18px 4px rgba(0,200,255,0.25), 0 8px 12px -3px rgba(0,200,255,0.10)",
+              borderRadius: "50%",
               pointerEvents: "none",
               opacity: 0,
             }}

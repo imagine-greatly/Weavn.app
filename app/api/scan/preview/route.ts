@@ -122,7 +122,6 @@ export async function POST(req: NextRequest) {
   try {
     const previewScrape = await scrapePreview(normalized)
     extraction = {
-      ...extraction,
       rawHtml: previewScrape.rawHtml,
       complexity: previewScrape.complexity,
       pagesAnalyzed: [normalized],

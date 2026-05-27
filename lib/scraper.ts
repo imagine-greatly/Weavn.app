@@ -142,7 +142,7 @@ function isBlockPage(html: string): boolean {
 // param as URL-encoded JSON, NOT in the request body. Putting it in the body
 // causes Browserless to return HTTP 400.
 //
-async function fetchWithBrowserless(url: string): Promise<{ html: string; complexity: SiteComplexity; readableRatio: number }> {
+async function fetchWithBrowserless(url: string): Promise<{ html: string; complexity: SiteComplexity; readableRatio: number; creditInfo: { attempts: number; proxyRequests: number; estUnits: number } }> {
   try {
   process.stderr.write(`[SCRAPER] function entered, url: ${url}\n`)
 
@@ -180,6 +180,8 @@ async function fetchWithBrowserless(url: string): Promise<{ html: string; comple
     }
   }
 
+  let _attempts = 0, _proxyRequests = 0, _estUnits = 0
+
   // Attempt 1 — fast path: domcontentloaded + 5 s settle, residential proxy
   const body1 = {
     url,
@@ -207,6 +209,8 @@ async function fetchWithBrowserless(url: string): Promise<{ html: string; comple
       signal: ctrl1.signal,
     })
     const a1FetchMs = Date.now() - a1Start
+    console.log(`[BROWSERLESS] request | type=attempt1 proxy=false status=${res1.status} units_est=15`)
+    _attempts++; _estUnits += 15
     // Read body ONCE — res.clone() + res.json() can race on some runtimes
     const rawText1 = await res1.text()
     rawText1Size = rawText1.length
@@ -233,6 +237,8 @@ async function fetchWithBrowserless(url: string): Promise<{ html: string; comple
           body: JSON.stringify(body1),
           signal: ctrl1.signal,
         })
+        console.log(`[BROWSERLESS] request | type=attempt1_retry proxy=false status=${res1r.status} units_est=15`)
+        _attempts++; _estUnits += 15
         const rawText1r = await res1r.text()
         rawText1Size = rawText1r.length
         console.log(`[SCRAPER] attempt1 retry response | status=${res1r.status} chars=${rawText1r.length}`)
@@ -274,7 +280,7 @@ async function fetchWithBrowserless(url: string): Promise<{ html: string; comple
   const len1Early = readableTextLength(html1 ?? '')
   if (html1 && len1Early >= 1500 && !isBlockPage(html1)) {
     console.log(`[SCRAPER] attempt1 ACCEPTED | readable=${len1Early} | total_elapsed=${Date.now() - a1Start}ms`)
-    return { html: html1, complexity, readableRatio }
+    return { html: html1, complexity, readableRatio, creditInfo: { attempts: _attempts, proxyRequests: _proxyRequests, estUnits: _estUnits } }
   }
 
   if (html1 && isBlockPage(html1)) {
@@ -308,6 +314,8 @@ async function fetchWithBrowserless(url: string): Promise<{ html: string; comple
       signal: ctrl2.signal,
     })
     const a2FetchMs = Date.now() - a2Start
+    console.log(`[BROWSERLESS] request | type=attempt2 proxy=true status=${res2.status} units_est=45`)
+    _attempts++; _proxyRequests++; _estUnits += 45
     const rawText2 = await res2.text()
     process.stderr.write('[SCRAPER] attempt2 response: ' + res2.status + ' chars: ' + rawText2.length + '\n')
     process.stderr.write('[SCRAPER] attempt2 body: ' + rawText2.slice(0, 300) + '\n')
@@ -332,6 +340,8 @@ async function fetchWithBrowserless(url: string): Promise<{ html: string; comple
           body: JSON.stringify(body2),
           signal: ctrl2.signal,
         })
+        console.log(`[BROWSERLESS] request | type=attempt2_retry proxy=true status=${res2r.status} units_est=45`)
+        _attempts++; _proxyRequests++; _estUnits += 45
         const rawText2r = await res2r.text()
         console.log(`[SCRAPER] attempt2 retry response | status=${res2r.status} chars=${rawText2r.length}`)
         if (res2r.ok) {
@@ -384,6 +394,8 @@ async function fetchWithBrowserless(url: string): Promise<{ html: string; comple
         body: JSON.stringify({ url, bestAttempt: true }),
         signal: ctrl3.signal,
       })
+      console.log(`[BROWSERLESS] request | type=attempt3 proxy=false status=${res3.status} units_est=15`)
+      _attempts++; _estUnits += 15
       const rawText3 = await res3.text()
       process.stderr.write('[SCRAPER] attempt3 response: ' + res3.status + ' chars: ' + rawText3.length + '\n')
       console.log(`[SCRAPER] attempt3 response | status=${res3.status} | elapsed=${Date.now() - a3Start}ms`)
@@ -395,7 +407,7 @@ async function fetchWithBrowserless(url: string): Promise<{ html: string; comple
         console.log(`[SCRAPER] attempt3 parsed | html_chars=${html3?.length ?? 0} readable=${len3}`)
         if (html3 && len3 >= 200) {
           console.log('[SCRAPER] attempt3 ACCEPTED')
-          return { html: html3, complexity, readableRatio }
+          return { html: html3, complexity, readableRatio, creditInfo: { attempts: _attempts, proxyRequests: _proxyRequests, estUnits: _estUnits } }
         }
       } else {
         console.log(`[SCRAPER] attempt3 FAILED | HTTP ${res3.status}`)
@@ -425,7 +437,7 @@ async function fetchWithBrowserless(url: string): Promise<{ html: string; comple
       readableRatio = newRatio
     }
   }
-  if (best && readableTextLength(best) >= 200) return { html: best, complexity, readableRatio }
+  if (best && readableTextLength(best) >= 200) return { html: best, complexity, readableRatio, creditInfo: { attempts: _attempts, proxyRequests: _proxyRequests, estUnits: _estUnits } }
 
   const bothBlocked = blocked1 && blocked2
   const noResponseAtAll = !html1 && !html2
@@ -614,6 +626,7 @@ async function fetchSubpageFast(url: string, abortMs: number, complexity?: SiteC
       }),
       signal: ctrl.signal,
     });
+    console.log(`[BROWSERLESS] request | type=subpage proxy=false status=${res.status} units_est=10`)
     if (!res.ok) return null;
     const text = await res.text();
     const json = JSON.parse(text) as Record<string, unknown>;
@@ -667,8 +680,9 @@ export async function scrapeUrl(inputUrl: string): Promise<ScrapeResult> {
   }
   process.stderr.write(`[SCRAPER] scrapeUrl domain=${domain}\n`)
 
-  const { html: rawHtml, complexity, readableRatio } = await fetchWithBrowserless(url)
+  const { html: rawHtml, complexity, readableRatio, creditInfo } = await fetchWithBrowserless(url)
   console.log(`[SCRAPER] ${domain} | method:browserless | html_len:${rawHtml.length}`)
+  console.log(`[BROWSERLESS] scan total | domain=${domain} attempts=${creditInfo.attempts} proxy_requests=${creditInfo.proxyRequests} est_units=${creditInfo.estUnits}`)
   return { rawHtml, method: 'browserless', domain, complexity, readableRatio }
 }
 

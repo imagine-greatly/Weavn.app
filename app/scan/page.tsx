@@ -153,6 +153,7 @@ function ScanLoadingInner() {
   const scoreNumRef = useRef<HTMLDivElement>(null);
   const checksCounterRef = useRef<HTMLSpanElement>(null);
   const pulseBarRef = useRef<HTMLDivElement>(null);
+  const pulseGlowRef = useRef<HTMLDivElement>(null);
 
   const [elapsedMs, setElapsedMs] = useState(0);
   const [sectionVisualComplete, setSectionVisualComplete] = useState(false);
@@ -899,7 +900,7 @@ function ScanLoadingInner() {
     const el = pulseBarRef.current;
     if (!el) return;
 
-    const PULSE_W = 200;
+    const PULSE_W = 150;
     const CROSSING_MS = 1800;
     const startTime = performance.now();
     let rafId = 0;
@@ -911,6 +912,7 @@ function ScanLoadingInner() {
     const tick = (now: number) => {
       if (beamRafHaltedRef.current) {
         el.style.opacity = '0';
+        if (pulseGlowRef.current) pulseGlowRef.current.style.opacity = '0';
         return;
       }
       el.style.opacity = '1';
@@ -919,7 +921,12 @@ function ScanLoadingInner() {
       const cycle = elapsed % (CROSSING_MS * 2);
       // t: 0→1 (L→R) then 1→0 (R→L) — easeInOutSine for smooth reversal at edges
       const t = cycle < CROSSING_MS ? cycle / CROSSING_MS : 1 - (cycle - CROSSING_MS) / CROSSING_MS;
-      el.style.transform = `translateX(${easeInOutSine(t) * maxX}px)`;
+      const tx = `translateX(${easeInOutSine(t) * maxX}px)`;
+      el.style.transform = tx;
+      if (pulseGlowRef.current) {
+        pulseGlowRef.current.style.transform = tx;
+        pulseGlowRef.current.style.opacity = '0.12';
+      }
       rafId = requestAnimationFrame(tick);
     };
 
@@ -1238,10 +1245,24 @@ function ScanLoadingInner() {
             aria-hidden
             style={{
               position: "absolute",
-              top: "-0.5px",
+              top: "-1px",
               left: 0,
-              width: "200px",
-              height: "2px",
+              width: "150px",
+              height: "3px",
+              background: "linear-gradient(90deg, rgba(0,200,255,0) 0%, rgba(0,200,255,0.9) 25%, rgba(0,220,255,1.0) 50%, rgba(0,200,255,0.9) 75%, rgba(0,200,255,0) 100%)",
+              pointerEvents: "none",
+              opacity: 0,
+            }}
+          />
+          <div
+            ref={pulseGlowRef}
+            aria-hidden
+            style={{
+              position: "absolute",
+              top: "-3.5px",
+              left: 0,
+              width: "150px",
+              height: "8px",
               background: "linear-gradient(90deg, rgba(0,200,255,0) 0%, rgba(0,200,255,0.9) 25%, rgba(0,220,255,1.0) 50%, rgba(0,200,255,0.9) 75%, rgba(0,200,255,0) 100%)",
               pointerEvents: "none",
               opacity: 0,

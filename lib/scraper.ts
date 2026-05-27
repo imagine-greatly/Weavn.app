@@ -506,179 +506,88 @@ export function extractInternalLinks(html: string, baseUrl: string): string[] {
   }
 }
 
-const SUBPAGE_BLOCKLIST = /\/(login|signin|logout|admin|dashboard|account|privacy|terms|policy|cookies|legal)(?:[-\/]|$)/i;
+const SUBPAGE_BLOCKLIST = /\/(login|signin|logout|admin|dashboard|account|privacy|terms|policy|cookies|legal|blog|gaming|game|games|careers|career|jobs|job|press|media|news|events|event|community|forum|forums|store|shop|cart|checkout|download|downloads|affiliate|referral|partner|partners|investor|investors|docs|documentation|support|help|status|changelog|updates|release|releases|sitemap|rss|feed|404|error)(?:[-\/]|$)/i;
 
-const SUBPAGE_PRIORITY: Record<string, RegExp[]> = {
+type SiteType = 'saas' | 'ecommerce' | 'service' | 'local' | 'content' | 'unknown'
+
+const CONVERSION_SCORES: Record<SiteType, Array<{ pattern: RegExp; score: number }>> = {
   saas: [
-    /\/pricing/i,
-    /\/features/i,
-    /\/plans?/i,
-    /\/solutions/i,
-    /\/platform/i,
-    /\/how-it-works/i,
-    /\/tour/i,
-    /\/demo/i,
-    /\/book-demo/i,
-    /\/get-started/i,
-    /\/(signup|register|trial)/i,
-    /\/use-cases/i,
-    /\/why-us/i,
-    /\/compare/i,
-    /\/about/i,
-    /\/reviews/i,
-    /\/testimonials/i,
-    /\/faqs?/i,
-    /\/press/i,
-    /\/media/i,
-    /\/help/i,
-    /\/why/i,
+    { pattern: /\/pricing|\/plans?/i, score: 100 },
+    { pattern: /\/features|\/platform/i, score: 90 },
+    { pattern: /\/signup|\/register|\/trial/i, score: 85 },
+    { pattern: /\/demo|\/book-demo/i, score: 80 },
+    { pattern: /\/solutions|\/use-cases/i, score: 75 },
+    { pattern: /\/how-it-works|\/tour/i, score: 70 },
+    { pattern: /\/testimonials|\/reviews/i, score: 65 },
+    { pattern: /\/compare|\/why-us/i, score: 60 },
+    { pattern: /\/about/i, score: 40 },
   ],
   ecommerce: [
-    /\/collections?\//i,
-    /\/products?\//i,
-    /\/collections\/?$/i,
-    /\/products\/?$/i,
-    /\/shop/i,
-    /\/sale/i,
-    /\/new-arrivals/i,
-    /\/bestsellers/i,
-    /\/all-products/i,
-    /\/catalog/i,
-    /\/store/i,
-    /\/about/i,
-    /\/reviews/i,
-    /\/testimonials/i,
-    /\/faqs?/i,
-    /\/press/i,
-    /\/media/i,
-    /\/help/i,
-    /\/why/i,
+    { pattern: /\/collections?|\/products?|\/shop/i, score: 100 },
+    { pattern: /\/bestsellers?|\/featured/i, score: 95 },
+    { pattern: /\/sale|\/deals/i, score: 90 },
+    { pattern: /\/about/i, score: 50 },
+    { pattern: /\/reviews|\/testimonials/i, score: 60 },
+    { pattern: /\/faq/i, score: 40 },
   ],
   service: [
-    /\/services?/i,
-    /\/membership/i,
-    /\/contact/i,
-    /\/booking/i,
-    /\/book-a-call/i,
-    /\/book/i,
-    /\/schedule/i,
-    /\/consultation/i,
-    /\/free-consultation/i,
-    /\/work-with-us/i,
-    /\/hire-us/i,
-    /\/portfolio/i,
-    /\/our-work/i,
-    /\/case-studies/i,
-    /\/results/i,
-    /\/team/i,
-    /\/our-team/i,
-    /\/process/i,
-    /\/approach/i,
-    /\/packages/i,
-    /\/about/i,
-    /\/reviews/i,
-    /\/testimonials/i,
-    /\/faqs?/i,
-    /\/press/i,
-    /\/media/i,
-    /\/help/i,
-    /\/why/i,
+    { pattern: /\/pricing|\/membership|\/plans?/i, score: 100 },
+    { pattern: /\/services|\/what-we-do/i, score: 90 },
+    { pattern: /\/about|\/team/i, score: 85 },
+    { pattern: /\/testimonials|\/reviews/i, score: 80 },
+    { pattern: /\/contact/i, score: 70 },
+    { pattern: /\/how-it-works/i, score: 65 },
+    { pattern: /\/faqs?/i, score: 50 },
   ],
   local: [
-    /\/services?/i,
-    /\/contact/i,
-    /\/menu/i,
-    /\/gallery/i,
-    /\/photos/i,
-    /\/rates/i,
-    /\/specials/i,
-    /\/reservations/i,
-    /\/about/i,
-    /\/reviews/i,
-    /\/testimonials/i,
-    /\/faqs?/i,
-    /\/press/i,
-    /\/media/i,
-    /\/help/i,
-    /\/why/i,
+    { pattern: /\/services|\/what-we-do/i, score: 100 },
+    { pattern: /\/about|\/team/i, score: 90 },
+    { pattern: /\/contact/i, score: 85 },
+    { pattern: /\/reviews|\/testimonials/i, score: 80 },
+    { pattern: /\/faqs?/i, score: 60 },
   ],
   content: [
-    /\/about/i,
-    /\/start/i,
-    /\/newsletter/i,
-    /\/blog\//i,
-    /\/reviews/i,
-    /\/testimonials/i,
-    /\/faqs?/i,
-    /\/press/i,
-    /\/media/i,
-    /\/help/i,
-    /\/why/i,
-  ],
-  general: [
-    /\/pricing/i,
-    /\/about/i,
-    /\/services/i,
-    /\/contact/i,
-    /\/reviews/i,
-    /\/testimonials/i,
-    /\/faqs?/i,
-    /\/press/i,
-    /\/media/i,
-    /\/help/i,
-    /\/why/i,
+    { pattern: /\/about/i, score: 100 },
+    { pattern: /\/subscribe|\/newsletter/i, score: 95 },
+    { pattern: /\/start|\/begin/i, score: 80 },
+    { pattern: /\/topics?|\/categories/i, score: 60 },
   ],
   unknown: [
-    /\/pricing/i,
-    /\/about/i,
-    /\/services/i,
-    /\/contact/i,
-    /\/reviews/i,
-    /\/testimonials/i,
-    /\/faqs?/i,
-    /\/press/i,
-    /\/media/i,
-    /\/help/i,
-    /\/why/i,
+    { pattern: /\/pricing|\/plans?/i, score: 100 },
+    { pattern: /\/about/i, score: 90 },
+    { pattern: /\/services|\/features/i, score: 85 },
+    { pattern: /\/contact/i, score: 70 },
+    { pattern: /\/testimonials|\/reviews/i, score: 65 },
   ],
-};
+}
 
 export function selectSubpageUrls(links: string[], siteType: string): string[] {
-  const patterns = SUBPAGE_PRIORITY[siteType] ?? SUBPAGE_PRIORITY.general;
-  const selected: string[] = [];
-  const usedPaths = new Set<string>();
+  const typeKey = (CONVERSION_SCORES[siteType as SiteType] ? siteType : 'unknown') as SiteType
+  const scoringRules = CONVERSION_SCORES[typeKey]
 
-  for (const pattern of patterns) {
-    if (selected.length >= 2) break;
-    for (const link of links) {
-      try {
-        const path = new URL(link).pathname;
-        if (SUBPAGE_BLOCKLIST.test(path)) continue;
-        if (usedPaths.has(path)) continue;
+  const scored: Array<{ url: string; score: number }> = []
+
+  for (const link of links) {
+    try {
+      const path = new URL(link).pathname
+      if (SUBPAGE_BLOCKLIST.test(path)) continue
+      let score = 0
+      for (const { pattern, score: s } of scoringRules) {
         if (pattern.test(path)) {
-          selected.push(link);
-          usedPaths.add(path);
-          break;
+          score = Math.max(score, s)
         }
-      } catch { /* skip */ }
-    }
+      }
+      scored.push({ url: link, score })
+    } catch { /* skip */ }
   }
 
-  // Fallback: take any non-blocklisted nav link
-  if (selected.length < 2) {
-    for (const link of links) {
-      if (selected.length >= 2) break;
-      try {
-        const path = new URL(link).pathname;
-        if (SUBPAGE_BLOCKLIST.test(path)) continue;
-        if (usedPaths.has(path)) continue;
-        selected.push(link);
-        usedPaths.add(path);
-      } catch { /* skip */ }
-    }
-  }
+  scored.sort((a, b) => b.score - a.score)
 
-  return selected;
+  const selected = scored.filter(s => s.score > 0).slice(0, 2)
+  for (const { url, score } of selected) {
+    console.log(`[SCRAPER] subpage selected | url=${url} score=${score} site_type=${siteType}`)
+  }
+  return selected.map(s => s.url)
 }
 
 // Single fast attempt for subpages — no retry, complexity-adaptive abort timeout

@@ -373,7 +373,7 @@ export default function LandingHero({ url, onUrlChange, autoFocus }: Props) {
           >
             Free account required{" "}
             <span style={{ color: "var(--border-default)" }}>·</span> No credit card{" "}
-            <span style={{ color: "var(--border-default)" }}>·</span> Under 2 minutes
+            <span style={{ color: "var(--border-default)" }}>·</span> Depth scales with your site
           </p>
         </ScrollReveal>
       </div>

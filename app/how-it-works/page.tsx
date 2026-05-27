@@ -79,7 +79,7 @@ function HowItWorksHero() {
               fontWeight: 800,
             }}
           >
-            URL to diagnostic report in under two minutes
+            URL to diagnostic report. Depth scales with your site's complexity.
             <span style={{ color: "var(--cyan)" }}>.</span>
           </h1>
         </ScrollReveal>
@@ -909,7 +909,7 @@ const FAQ_ITEMS: { q: string; a: string }[] = [
   },
   {
     q: "Scan duration",
-    a: "Typical completion is under two minutes. Pro scans cover the landing page and up to two additional subpages. Free scans cover the landing page only.",
+    a: "Scan duration scales with your site's complexity. Simple server-rendered sites complete in under 2 minutes. Complex JavaScript-heavy sites take longer — because they receive a more thorough analysis. Every scan covers your homepage plus up to two additional subpages.",
   },
   {
     q: "Competitor URLs",

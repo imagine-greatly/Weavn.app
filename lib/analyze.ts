@@ -49,13 +49,17 @@ Do not flag these as findings:
 - Navigation links that are standard site navigation —
   only flag navigation if it is structurally broken or
   missing entirely
-- Anchor elements with href='' or href='#' that appear inside
-  structured content cards (team member cards, provider cards,
-  portfolio items) where the card contains a name, title, and
-  description — these are CMS rendering artifacts where JavaScript
-  populates the link destination at runtime. Do not flag as broken
-  links. Only flag href='' as a finding if the entire element
-  has no visible content or if it is a primary CTA button.
+- Anchor elements with href='' or href='#' that appear
+  inside structured content cards — team member cards,
+  provider cards, portfolio items, bio cards — where the
+  card already displays the person's name, title, photo,
+  and description text. These are Webflow and CMS rendering
+  artifacts where JavaScript populates the link at runtime.
+  The content is fully visible without clicking the link.
+  Do not flag these as broken links, broken credential
+  verification, or trust failures. The finding only applies
+  if the card has NO visible content — name, title, or
+  description are absent entirely.
 - Countdown timers showing 00:00:00 or all-zero values —
   these are JavaScript-rendered elements that show zero in
   the static HTML before the script populates live values.
@@ -158,6 +162,36 @@ GOOD: "Nothing on This Page Gives a First-Time Visitor a Reason to Trust You"
 EVIDENCE (exitTrigger and evidence fields) — describes what exists and what the visitor experiences, observational, no interpretation yet:
 BAD: "Hero section lacks primary CTA above the fold on the majority of viewport sizes"
 GOOD: "The hero section contains no call to action. The first button on the page is 'Add' in the product grid, appearing after two full scroll lengths. Visitors with purchase intent have no forward path from the opening screen."
+
+TECHNICAL LANGUAGE BAN — applies to every output field
+including evidence, exitTrigger, implementation, and
+finding titles:
+
+Never use these in any output field:
+- HTML element names: H1, H2, H3, div, span, section,
+  nav, footer, header, anchor, href, class, id
+- CSS class names or selectors of any kind
+- Technical descriptors: DOM, element, tag, attribute,
+  selector, node, render, hydrate, inject
+- Developer terminology that a non-technical business
+  owner would not recognize
+
+Instead describe what the visitor sees and experiences:
+
+BAD: 'The H1 element reads The Healthcare Revolution'
+GOOD: 'The main headline reads The Healthcare Revolution'
+
+BAD: 'anchor elements with href="" in team_members-
+description-link class'
+GOOD: 'the Read More links on each team member card
+lead nowhere when clicked'
+
+BAD: 'The nav-webinar-content div renders above the fold'
+GOOD: 'A full-width event promotion banner appears above
+the membership offer'
+
+The evidence field describes observable visitor experience.
+It never describes HTML structure.
 
 IMPLEMENTATION — state WHAT to change and WHERE, specific enough that a developer acts without a follow-up question. Start with a verb. Max 55 words. Do not write the final copy — give the directive:
 BAD: "Implement above-fold CTA architecture to improve conversion path visibility"

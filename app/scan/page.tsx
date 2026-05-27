@@ -1238,12 +1238,11 @@ function ScanLoadingInner() {
             aria-hidden
             style={{
               position: "absolute",
-              top: "-21px",
+              top: "-0.5px",
               left: 0,
               width: "200px",
-              height: "44px",
-              background: "radial-gradient(ellipse at center, rgba(0,200,255,0.95) 0%, rgba(0,200,255,0.70) 8%, rgba(0,200,255,0.30) 25%, rgba(0,200,255,0.08) 50%, rgba(0,200,255,0.00) 100%)",
-              borderRadius: "50%",
+              height: "2px",
+              background: "linear-gradient(90deg, rgba(0,200,255,0) 0%, rgba(0,200,255,0.9) 25%, rgba(0,220,255,1.0) 50%, rgba(0,200,255,0.9) 75%, rgba(0,200,255,0) 100%)",
               pointerEvents: "none",
               opacity: 0,
             }}

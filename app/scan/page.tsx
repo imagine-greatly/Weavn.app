@@ -899,7 +899,7 @@ function ScanLoadingInner() {
     const el = pulseBarRef.current;
     if (!el) return;
 
-    const PULSE_W = 160;
+    const PULSE_W = 200;
     const CROSSING_MS = 1800;
     const startTime = performance.now();
     let rafId = 0;
@@ -1238,12 +1238,11 @@ function ScanLoadingInner() {
             aria-hidden
             style={{
               position: "absolute",
-              top: "-2px",
+              top: "-21px",
               left: 0,
-              width: "160px",
-              height: "5px",
-              background: "radial-gradient(ellipse at center, rgba(220,240,255,0.95) 0%, rgba(0,200,255,0.78) 20%, rgba(0,200,255,0.22) 55%, transparent 100%)",
-              boxShadow: "0 0 8px 2px rgba(0,200,255,0.72), 0 0 18px 4px rgba(0,200,255,0.25), 0 8px 12px -3px rgba(0,200,255,0.10)",
+              width: "200px",
+              height: "44px",
+              background: "radial-gradient(ellipse at center, rgba(0,200,255,0.95) 0%, rgba(0,200,255,0.70) 8%, rgba(0,200,255,0.30) 25%, rgba(0,200,255,0.08) 50%, rgba(0,200,255,0.00) 100%)",
               borderRadius: "50%",
               pointerEvents: "none",
               opacity: 0,

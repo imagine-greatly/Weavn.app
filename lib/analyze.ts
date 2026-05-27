@@ -648,13 +648,15 @@ export async function runAnalysis(
     timeout: 100_000,
   });
 
-  // Hard cap: never pass more than 40 000 chars of HTML into the analysis pipeline.
-  // scrapeSite.applySmartTruncation already caps at ~38 KB; this is a safety net in case
-  // a caller bypasses truncation.
+  // Hard cap: adaptive per complexity — safety net for callers that bypass scrapeSite truncation.
   let safeExtraction = extraction;
-  if (extraction.rawHtml.length > 40_000) {
-    process.stderr.write('[ANALYZE] HARD CAP applied: rawHtml ' + extraction.rawHtml.length + ' chars → 40000\n');
-    safeExtraction = { ...extraction, rawHtml: extraction.rawHtml.slice(0, 40_000) };
+  const hardCap =
+    extraction.complexity === 'simple' ? 45_000 :
+    extraction.complexity === 'medium' ? 60_000 :
+    75_000  // complex
+  if (extraction.rawHtml.length > hardCap) {
+    process.stderr.write('[ANALYZE] HARD CAP applied: rawHtml ' + extraction.rawHtml.length + ' chars → ' + hardCap + ' (complexity=' + (extraction.complexity ?? 'medium') + ')\n');
+    safeExtraction = { ...extraction, rawHtml: extraction.rawHtml.slice(0, hardCap) };
   }
   process.stderr.write('[ANALYZE] rawHtml entering pipeline: ' + safeExtraction.rawHtml.length + ' chars\n');
 

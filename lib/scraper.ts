@@ -224,7 +224,33 @@ async function fetchWithBrowserless(url: string): Promise<{ html: string; comple
       const _first_h1_a1 = _h1a1 ? _h1a1[1].replace(/<[^>]+>/g, '').trim().slice(0, 80) : 'none'
       console.log(`[SCRAPER] attempt1 first_h1="${_first_h1_a1}"`)
     } else {
-      console.log(`[SCRAPER] attempt1 FAILED | HTTP ${res1.status} | body: ${rawText1.slice(0, 300)} | elapsed=${a1FetchMs}ms`)
+      if (res1.status === 500) {
+        console.log(`[SCRAPER] attempt1 500 retry | waiting 3s`)
+        await new Promise(resolve => setTimeout(resolve, 3000))
+        const res1r = await fetch(makeEndpoint(true), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body1),
+          signal: ctrl1.signal,
+        })
+        const rawText1r = await res1r.text()
+        rawText1Size = rawText1r.length
+        console.log(`[SCRAPER] attempt1 retry response | status=${res1r.status} chars=${rawText1r.length}`)
+        if (res1r.ok) {
+          html1 = extractHtml(rawText1r)
+          const len = readableTextLength(html1 ?? '')
+          const blocked = html1 !== null && isBlockPage(html1)
+          console.log(`[SCRAPER] attempt1 retry parsed | html_chars=${html1?.length ?? 0} readable=${len} blocked=${blocked}`)
+        } else {
+          const errBody = typeof rawText1r === 'string' ? rawText1r : JSON.stringify(rawText1r)
+          console.log(`[SCRAPER] Browserless error body: ${errBody.slice(0, 500)}`)
+          console.log(`[SCRAPER] attempt1 FAILED after retry | HTTP ${res1r.status}`)
+        }
+      } else {
+        const errBody = typeof rawText1 === 'string' ? rawText1 : JSON.stringify(rawText1)
+        console.log(`[SCRAPER] Browserless error body: ${errBody.slice(0, 500)}`)
+        console.log(`[SCRAPER] attempt1 FAILED | HTTP ${res1.status} | elapsed=${a1FetchMs}ms`)
+      }
     }
   } catch (err) {
     const a1Elapsed = Date.now() - a1Start
@@ -297,7 +323,32 @@ async function fetchWithBrowserless(url: string): Promise<{ html: string; comple
       const _first_h1_a2 = _h1a2 ? _h1a2[1].replace(/<[^>]+>/g, '').trim().slice(0, 80) : 'none'
       console.log(`[SCRAPER] attempt2 first_h1="${_first_h1_a2}"`)
     } else {
-      console.log(`[SCRAPER] attempt2 FAILED | HTTP ${res2.status} | body: ${rawText2.slice(0, 300)} | elapsed=${a2FetchMs}ms`)
+      if (res2.status === 500) {
+        console.log(`[SCRAPER] attempt2 500 retry | waiting 3s`)
+        await new Promise(resolve => setTimeout(resolve, 3000))
+        const res2r = await fetch(makeEndpoint(true), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body2),
+          signal: ctrl2.signal,
+        })
+        const rawText2r = await res2r.text()
+        console.log(`[SCRAPER] attempt2 retry response | status=${res2r.status} chars=${rawText2r.length}`)
+        if (res2r.ok) {
+          html2 = extractHtml(rawText2r)
+          const len = readableTextLength(html2 ?? '')
+          const blocked = html2 !== null && isBlockPage(html2)
+          console.log(`[SCRAPER] attempt2 retry parsed | html_chars=${html2?.length ?? 0} readable=${len} blocked=${blocked}`)
+        } else {
+          const errBody = typeof rawText2r === 'string' ? rawText2r : JSON.stringify(rawText2r)
+          console.log(`[SCRAPER] Browserless error body: ${errBody.slice(0, 500)}`)
+          console.log(`[SCRAPER] attempt2 FAILED after retry | HTTP ${res2r.status}`)
+        }
+      } else {
+        const errBody = typeof rawText2 === 'string' ? rawText2 : JSON.stringify(rawText2)
+        console.log(`[SCRAPER] Browserless error body: ${errBody.slice(0, 500)}`)
+        console.log(`[SCRAPER] attempt2 FAILED | HTTP ${res2.status} | elapsed=${a2FetchMs}ms`)
+      }
     }
   } catch (err) {
     const a2Elapsed = Date.now() - a2Start
@@ -681,7 +732,8 @@ export async function scrapeSubpageSafe(url: string, complexity?: SiteComplexity
       return null;
     }
     const cleaned = cleanHtml(html);
-    const cap = complexity === 'simple' ? 20_000 : complexity === 'complex' ? 38_000 : 28_000
+    const cap = complexity === 'simple' ? 25_000 : complexity === 'complex' ? 50_000 : 35_000
+    process.stderr.write(`[SCRAPER] subpage cap | complexity=${complexity ?? 'unknown'} → capChars=${cap}\n`)
     const capped =
       cleaned.length > cap
         ? cleaned.slice(0, cap) + SUBPAGE_TRUNCATION_SIGNAL

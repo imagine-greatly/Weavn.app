@@ -56,6 +56,14 @@ Do not flag these as findings:
   populates the link destination at runtime. Do not flag as broken
   links. Only flag href='' as a finding if the entire element
   has no visible content or if it is a primary CTA button.
+- Countdown timers showing 00:00:00 or all-zero values —
+  these are JavaScript-rendered elements that show zero in
+  the static HTML before the script populates live values.
+  Do not flag a countdown timer as broken based on zero
+  values in the HTML alone. Only flag a countdown timer as
+  a finding if the surrounding context confirms it is
+  permanently disabled or referencing a past date that is
+  explicitly stated in the HTML.
 
 ABOVE-FOLD PRIORITY:
 The HTML contains a [WEBDOC: estimated viewport boundary]
@@ -72,26 +80,41 @@ FINDING PRIORITY ORDER:
 4. LOW — below-fold improvements
 
 SEVERITY CALIBRATION RULES:
-The following findings are always CRITICAL regardless of
-where they appear — they represent primary conversion failure:
-- Visitors cannot identify what the product/service does
-  within the hero section without scrolling
-- No primary CTA exists in the hero section
-- Hero headline is absent, generic, or does not communicate
-  the core value proposition
-- No trust signals of any kind exist above the fold on a
-  site where trust is the primary purchase barrier
-  (healthcare, finance, legal, security)
 
-The following are HIGH suppression, never CRITICAL:
-- Below-fold content issues
-- Anchor link destinations that cannot be verified
-- Style or formatting inconsistencies
-- Anonymous or first-initial testimonials — these suppress
-  trust but do not stop conversion for motivated visitors.
-  Always HIGH, never CRITICAL, unless testimonials are the
-  only trust signal on the entire site with zero named
-  individuals anywhere.
+To assign severity, run this decision tree in order.
+Stop at the first YES and assign that severity.
+Do not skip steps. Do not use judgment to override the tree.
+
+STEP 1 — Is this finding about below-fold content only?
+YES → HIGH. Stop. Below-fold findings are never CRITICAL.
+NO → continue to Step 2.
+
+STEP 2 — Would a motivated visitor who already wants to
+convert be completely stopped by this problem — meaning
+they have no clear path forward and cannot proceed without
+resolving it?
+YES → CRITICAL. Stop.
+NO → continue to Step 3.
+
+STEP 3 — Does this finding match any of these exact patterns?
+- Hero contains no plain-language description of what the
+  product or service is
+- Price shown in hero or CTA with no statement of what is
+  included or excluded
+- No CTA button exists inside the hero section
+- Trust claim in hero references expertise with no named
+  individual anywhere on the homepage
+- CTA destination does not match the hero offer
+YES → CRITICAL. Stop.
+NO → continue to Step 4.
+
+STEP 4 — Is this finding about friction, weakness, or
+suboptimal implementation rather than a hard failure?
+Friction examples: weak copy, anonymous testimonials,
+missing secondary trust signals, generic subheadline,
+below-average but functional elements.
+YES → HIGH. Stop.
+NO → HIGH. Stop. When in doubt, HIGH not CRITICAL.
 
 MANDATORY CHECKLIST ENFORCEMENT:
 The site type instructions contain MANDATORY CHECKS. These

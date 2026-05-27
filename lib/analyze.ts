@@ -704,9 +704,14 @@ export async function runAnalysis(
   timeoutMs?: number
 ): Promise<ReportPayload> {
   const resolvedModel = model ?? "claude-sonnet-4-6";
+  const clientTimeoutMs =
+    extraction.complexity === 'simple' ? 130_000 :
+    extraction.complexity === 'medium' ? 155_000 :
+    185_000 // complex
+  process.stderr.write('[ANALYZE] client timeout | complexity=' + (extraction.complexity ?? 'unknown') + ' timeoutMs=' + clientTimeoutMs + '\n')
   const client = new Anthropic({
     apiKey: process.env.ANTHROPIC_API_KEY,
-    timeout: 100_000,
+    timeout: clientTimeoutMs,
   });
 
   // Hard cap: adaptive per complexity — safety net for callers that bypass scrapeSite truncation.

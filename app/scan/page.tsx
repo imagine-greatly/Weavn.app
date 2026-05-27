@@ -460,7 +460,7 @@ function ScanLoadingInner() {
         setInvalidUrlMessage(null);
         abortControllerRef.current = new AbortController();
         const controller = abortControllerRef.current;
-        const timeoutMs = 125000;
+        const timeoutMs = 240000;
         const timeoutId = window.setTimeout(() => controller.abort(), timeoutMs);
         try {
           const res = await fetch("/api/scan", {

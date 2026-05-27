@@ -351,6 +351,28 @@ export default function ReportLeftPanel({
         ) : null}
       </div>
 
+      {pagesAnalyzed && pagesAnalyzed.length > 0 && (
+        <div className="mb-6" style={{ padding: "0 24px" }}>
+          <p
+            className="font-mono text-[10px] uppercase tracking-[2px] mb-2"
+            style={{ color: 'var(--text-muted)' }}
+          >
+            PAGES ANALYZED
+          </p>
+          {pagesAnalyzed.map((url: string) => (
+            <div key={url} className="flex items-center gap-2 mb-1">
+              <span style={{ color: 'var(--cyan)' }}>●</span>
+              <span
+                className="font-mono text-[11px]"
+                style={{ color: 'var(--text-secondary)' }}
+              >
+                {url.replace('https://', '').replace('http://', '')}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+
       {dimensionBars.length > 0 ? (
         <div
           className="report-left-dimensions shrink-0"

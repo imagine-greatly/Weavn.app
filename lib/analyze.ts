@@ -49,6 +49,13 @@ Do not flag these as findings:
 - Navigation links that are standard site navigation —
   only flag navigation if it is structurally broken or
   missing entirely
+- Anchor elements with href='' or href='#' that appear inside
+  structured content cards (team member cards, provider cards,
+  portfolio items) where the card contains a name, title, and
+  description — these are CMS rendering artifacts where JavaScript
+  populates the link destination at runtime. Do not flag as broken
+  links. Only flag href='' as a finding if the entire element
+  has no visible content or if it is a primary CTA button.
 
 ABOVE-FOLD PRIORITY:
 The HTML contains a [WEBDOC: estimated viewport boundary]
@@ -80,6 +87,11 @@ The following are HIGH suppression, never CRITICAL:
 - Below-fold content issues
 - Anchor link destinations that cannot be verified
 - Style or formatting inconsistencies
+- Anonymous or first-initial testimonials — these suppress
+  trust but do not stop conversion for motivated visitors.
+  Always HIGH, never CRITICAL, unless testimonials are the
+  only trust signal on the entire site with zero named
+  individuals anywhere.
 
 MANDATORY CHECKLIST ENFORCEMENT:
 The site type instructions contain MANDATORY CHECKS. These
@@ -178,8 +190,15 @@ if it fails:
    A price without scope creates expectation gaps that drive
    churn and refund requests.
 3. Are the practitioners, founders, or providers named with
-   full name and credentials somewhere prominent on the site?
-   Claims of expertise require named individuals to be credible.
+   full name and credentials on the homepage itself — not only
+   on an About or Team page? Trust claims in the hero ('Built
+   by Doctors', 'Expert team') require named individuals to be
+   visible on the same page as the claim, or directly adjacent
+   to the primary CTA. A named team that exists only on a
+   separate About page does not resolve an anonymous trust claim
+   on the homepage. Flag if named credentials are absent from
+   the homepage when a trust claim referencing expertise is
+   present.
 4. Do testimonials use full names — not first name and last
    initial? On high-trust service sites, anonymous attribution
    reads as fabricated to skeptical visitors.

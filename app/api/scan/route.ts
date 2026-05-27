@@ -168,8 +168,8 @@ export async function POST(req: NextRequest) {
   let deadlineTimerId: ReturnType<typeof setTimeout>;
   const deadline = new Promise<never>((_, reject) => {
     deadlineTimerId = setTimeout(
-      () => reject(new Error('[TIMEOUT] Scan exceeded 280 s deadline — exiting cleanly to flush logs')),
-      280_000
+      () => reject(new Error('[TIMEOUT] Scan exceeded 250 s deadline — exiting cleanly to flush logs')),
+      250_000
     );
   });
 
@@ -323,16 +323,20 @@ export async function POST(req: NextRequest) {
   const elapsed = Date.now() - scanStart
   const isMultiPage = (extraction.additionalPages?.length ?? 0) > 0
   const baseTimeout = (() => {
-    if (isMultiPage) return 120_000
-    if (complexity === 'complex') return 75_000
-    if (complexity === 'medium') return 68_000
-    return 65_000
+    if (isMultiPage) {
+      if (complexity === 'complex') return 160_000
+      if (complexity === 'medium') return 140_000
+      return 120_000 // simple
+    }
+    if (complexity === 'complex') return 120_000
+    if (complexity === 'medium') return 100_000
+    return 80_000 // simple
   })()
   const analyzeTimeoutMs = Math.max(
-    isMultiPage ? 85_000 : 55_000,
+    isMultiPage ? 110_000 : 65_000,
     baseTimeout - elapsed
   )
-  console.log(`[ROUTE] analyzeTimeoutMs=${analyzeTimeoutMs} complexity=${complexity} elapsed=${elapsed}ms`)
+  console.log(`[ROUTE] analyzeTimeoutMs=${analyzeTimeoutMs} complexity=${complexity} multipage=${isMultiPage}`)
   const analyzeDeadline = new Promise<never>((_, reject) =>
     setTimeout(
       () => reject(new Error('[TIMEOUT] Analysis timed out')),

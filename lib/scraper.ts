@@ -869,7 +869,7 @@ export async function scrapePreview(url: string): Promise<{
       const readable = readableTextLength(html)
       const blocked = isBlockPage(html)
       console.log(`[PREVIEW] plain fetch | chars=${html.length} readable=${readable} blocked=${blocked}`)
-      if (readable >= 500 && !blocked) {
+      if (readable >= 200 && !blocked) {
         const ratio = html.length > 0 ? readable / html.length : 0
         const complexity: SiteComplexity = ratio > 0.4 ? 'simple' : ratio >= 0.15 ? 'medium' : 'complex'
         return { rawHtml: cleanHtml(html).slice(0, 2000), complexity }

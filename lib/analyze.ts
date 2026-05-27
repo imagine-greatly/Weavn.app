@@ -18,7 +18,68 @@ import type {
   DimensionScoreRow,
 } from "./reportSchema";
 
-const SYSTEM_PROMPT_BASE = `You are a senior conversion intelligence analyst. You identify exactly why visitors are not converting on this site and what must change for them to convert. Be surgical and specific — quote actual text from the page, name exact elements by their visible label or position, and give precise directives. A founder must read each finding in 10 seconds and know exactly what to change. Never be generic.
+const SYSTEM_PROMPT_BASE = `You are receiving cleaned HTML directly from a fully-rendered website. Browserless rendered the page in a real Chrome browser — the HTML reflects what visitors actually see.
+
+Analyze the HTML to identify conversion problems. Extract:
+- Hero section: headline, subheadline, primary CTA button
+- Trust signals: testimonials, logos, reviews, social proof
+- Navigation structure
+- Pricing: tiers, prices, conversion CTAs
+- Forms and signup flows
+- Page structure and content hierarchy
+
+CRITICAL — CTA IDENTIFICATION RULES:
+The hero CTA is a button or link INSIDE the hero section —
+not in the navigation bar, not in the footer, not in a modal.
+Navigation links (Sign up, Log in, Contact, Get started) in
+the nav bar are NOT hero CTAs even if prominent.
+If no button exists inside the hero section, report CTA as
+ABSENT — do not substitute a nav link.
+Always specify exact location of every CTA:
+hero section / navigation / footer / pricing section / inline.
+
+CTA FALSE POSITIVE RULES:
+Do not flag these as findings:
+- CTA buttons or links with href='#' or href='#section-id'
+  anchor destinations — these are valid same-page navigation
+  and the destination cannot be verified from HTML alone
+- Links where the destination is an anchor on the same page
+  (href starting with #) — assume these are functional unless
+  there is direct evidence of a broken scroll target
+- Navigation links that are standard site navigation —
+  only flag navigation if it is structurally broken or
+  missing entirely
+
+ABOVE-FOLD PRIORITY:
+The HTML contains a [WEBDOC: estimated viewport boundary]
+comment. Content before this comment is what visitors see
+on load without scrolling — weight these findings highest.
+Critical structural failures anywhere on the page are always
+surfaced regardless of position: broken forms, missing H1,
+absent pricing CTA, non-functional navigation.
+
+FINDING PRIORITY ORDER:
+1. CRITICAL — broken or absent elements above the fold
+2. HIGH — weak conversion elements above the fold
+3. MEDIUM — below-fold content suppressing conversion
+4. LOW — below-fold improvements
+
+SEVERITY CALIBRATION RULES:
+The following findings are always CRITICAL regardless of
+where they appear — they represent primary conversion failure:
+- Visitors cannot identify what the product/service does
+  within the hero section without scrolling
+- No primary CTA exists in the hero section
+- Hero headline is absent, generic, or does not communicate
+  the core value proposition
+- No trust signals of any kind exist above the fold on a
+  site where trust is the primary purchase barrier
+  (healthcare, finance, legal, security)
+
+The following are HIGH suppression, never CRITICAL:
+- Below-fold content issues
+- Anchor link destinations that cannot be verified
+- Style or formatting inconsistencies
 
 VOICE AND TONE — READ BEFORE WRITING ANY OUTPUT:
 
@@ -651,9 +712,9 @@ export async function runAnalysis(
   // Hard cap: adaptive per complexity — safety net for callers that bypass scrapeSite truncation.
   let safeExtraction = extraction;
   const hardCap =
-    extraction.complexity === 'simple' ? 45_000 :
-    extraction.complexity === 'medium' ? 60_000 :
-    75_000  // complex
+    extraction.complexity === 'simple' ? 80_000 :
+    extraction.complexity === 'medium' ? 110_000 :
+    140_000  // complex
   if (extraction.rawHtml.length > hardCap) {
     process.stderr.write('[ANALYZE] HARD CAP applied: rawHtml ' + extraction.rawHtml.length + ' chars → ' + hardCap + ' (complexity=' + (extraction.complexity ?? 'medium') + ')\n');
     safeExtraction = { ...extraction, rawHtml: extraction.rawHtml.slice(0, hardCap) };
@@ -662,21 +723,35 @@ export async function runAnalysis(
 
   const systemPrompt = buildSystemPrompt(siteType);
 
-  process.stderr.write(`[ANALYZE] buildPageSummary START | rawHtml_len=${safeExtraction.rawHtml.length}\n`);
-  let summary: string;
-  try {
-    summary = buildPageSummary(safeExtraction);
-  } catch (e) {
-    process.stderr.write(`[ANALYZE] buildPageSummary THREW | ${e instanceof Error ? e.stack ?? e.message : String(e)}\n`);
-    throw e;
-  }
-  process.stderr.write(`[ANALYZE] buildPageSummary DONE | summary_len=${summary.length}\n`);
+  const complexity = safeExtraction.complexity ?? 'medium'
 
-  // Hard cap: if summary exceeds 20 000 chars something went wrong — truncate to protect Claude call.
-  const cappedSummary = summary.length > 20_000 ? summary.slice(0, 20_000) + "\n\n[summary truncated]" : summary;
-  if (summary.length > 20_000) {
-    process.stderr.write(`[ANALYZE] WARNING summary exceeded 20 000 chars (${summary.length}) — truncated\n`);
-  }
+  const totalCap =
+    complexity === 'simple' ? 130_000 :
+    complexity === 'medium' ? 145_000 :
+    175_000 // complex
+
+  const homepageSection =
+    `=== HOMEPAGE: ${safeExtraction.pagesAnalyzed[0]} ===\n` +
+    safeExtraction.rawHtml
+
+  const subpageSections = (safeExtraction.additionalPages ?? [])
+    .map(({ url, rawHtml }) =>
+      `=== ${guessPageLabel(url).toUpperCase()}: ${url} ===\n${rawHtml}`)
+    .join('\n\n')
+
+  const fullContent = subpageSections
+    ? homepageSection + '\n\n' + subpageSections
+    : homepageSection
+
+  const cappedSummary = fullContent.slice(0, totalCap)
+
+  process.stderr.write(
+    '[ANALYZE] direct HTML to claude | complexity=' + complexity +
+    ' homepage=' + safeExtraction.rawHtml.length +
+    ' subpages=' + (safeExtraction.additionalPages?.length ?? 0) +
+    ' totalCap=' + totalCap +
+    ' actual=' + cappedSummary.length + '\n'
+  )
 
   const isMultiPage = (safeExtraction.additionalPages?.length ?? 0) > 0;
   const pageCount = 1 + (safeExtraction.additionalPages?.length ?? 0);
@@ -689,12 +764,11 @@ export async function runAnalysis(
     : '';
 
   const userContent = isMultiPage
-    ? `Analyze structured data from ${pageCount} pages of a website. Produce 3-7 findings ranked by revenue impact across all pages. In the evidence field of each finding, name which page it came from.\n\n${cappedSummary}${failureNote}`
-    : `Analyze the following structured data extracted from a fully-rendered website page and return your JSON analysis:\n\n${cappedSummary}${failureNote}`;
+    ? `Analyze cleaned HTML from ${pageCount} pages of a website. Produce 3-7 findings ranked by revenue impact across all pages. In the evidence field of each finding, name which page it came from.\n\n${cappedSummary}${failureNote}`
+    : `Analyze the following cleaned HTML from a fully-rendered website page and return your JSON analysis:\n\n${cappedSummary}${failureNote}`;
   process.stderr.write(`[ANALYZE] userContent_len=${userContent.length} isMultiPage=${isMultiPage} failedPages=${failedPages.length}\n`);
   process.stderr.write('[ANALYZE] prompt chars: ' + userContent.length + '\n');
 
-  const complexity = safeExtraction.complexity ?? 'medium'
   const maxTokens = isMultiPage ? 5000 : complexity === 'simple' ? 3500 : 4200
 
   let attempt = 0;

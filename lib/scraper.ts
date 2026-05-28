@@ -799,7 +799,7 @@ export async function scrapePreview(url: string): Promise<{
       if (readable >= 200 && !blocked && bodyText.length >= 150) {
         const ratio = html.length > 0 ? readable / html.length : 0
         const complexity: SiteComplexity = ratio > 0.4 ? 'simple' : ratio >= 0.15 ? 'medium' : 'complex'
-        return { rawHtml: cleanHtml(html).slice(0, 2000), complexity }
+        return { rawHtml: cleanHtml(html).slice(0, 8000), complexity }
       }
     }
   } catch {
@@ -827,7 +827,7 @@ export async function scrapePreview(url: string): Promise<{
       const data = await res.json()
       const html = data.content ?? ''
       console.log(`[PREVIEW] browserless fallback | chars=${html.length}`)
-      const cleaned = cleanHtml(html).slice(0, 2000)
+      const cleaned = cleanHtml(html).slice(0, 8000)
       const ratio = html.length > 0 ? readableTextLength(html) / html.length : 0
       const complexity: SiteComplexity = ratio > 0.4 ? 'simple' : ratio >= 0.15 ? 'medium' : 'complex'
       return { rawHtml: cleaned, complexity }

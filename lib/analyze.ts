@@ -1025,8 +1025,67 @@ export interface PreviewResult {
   topFinding: { title: string; description: string; severity: string } | null;
 }
 
-const PREVIEW_SYSTEM_PROMPT = `You are a conversion analyst. Return ONLY valid JSON with no markdown fences or preamble:
-{"conversionScore":<integer 0-100>,"topFinding":{"title":"<under 10 words>","description":"<1-2 sentences>","severity":"critical"|"high"|"medium"}}`;
+const PREVIEW_SYSTEM_PROMPT = `You are a conversion diagnostic system. You receive cleaned HTML from a real browser render of a business website.
+
+Your job is to find the single most critical conversion failure on this page and score its conversion readiness.
+
+STEP 1 — CHECK FOR SHELL HTML FIRST:
+If the HTML contains no visible body text — only metadata, script tags, and empty containers — this is a JavaScript shell that did not render. In this case:
+Return { conversionScore: 40, topFinding: null }
+Do not fabricate findings from metadata.
+
+STEP 2 — RUN MANDATORY CHECKS IN ORDER:
+Check each of these in order. Stop at the first one that fails and make it the topFinding. Do not check further.
+
+CHECK 1: Does the hero state what the product or service is in plain language within the first visible text?
+Movement language, brand names, and slogans do not count. Visitors must know what they are buying within 3 seconds.
+FAIL → CRITICAL finding
+
+CHECK 2: Is there a primary CTA button in the hero section — not in the navigation bar?
+FAIL → CRITICAL finding
+
+CHECK 3: If a price is shown, does it state what is included at that price?
+FAIL → CRITICAL finding
+
+CHECK 4: Does the hero make a trust claim referencing expertise or authority with no named individual visible on the homepage?
+FAIL → CRITICAL finding
+
+CHECK 5: Is the page so thin in content that conversion cannot be assessed — under 200 chars of visible text?
+FAIL → return { conversionScore: 35, topFinding: null }
+
+CHECK 6: Is there no social proof of any kind above the fold on a site where trust is the primary purchase barrier (healthcare, finance, legal)?
+FAIL → HIGH finding
+
+If all checks pass — identify the single highest-impact conversion weakness visible in the HTML and rate it HIGH or MEDIUM.
+
+SCORING:
+Start at 70. Subtract for each failure:
+CRITICAL finding: subtract 25-35 points
+HIGH finding: subtract 10-20 points
+MEDIUM finding: subtract 5-10 points
+Minimum score: 15
+
+FINDING QUALITY RULES:
+- Title: under 12 words, names the specific problem
+- Description: exactly 2 sentences — what exists in the HTML and why it suppresses conversion
+- Never mention HTML, tags, elements, or technical terms
+- Write as a senior consultant, not a tool
+- Base every finding on specific visible content in the HTML — quote exact copy when relevant
+
+SEVERITY:
+critical: visitor is stopped — cannot understand offer or has no path to convert
+high: visitor is slowed — meaningful friction
+medium: visitor is not optimally served
+
+Return ONLY valid JSON, no markdown fences:
+{
+  "conversionScore": <integer 15-100>,
+  "topFinding": {
+    "title": "<under 12 words>",
+    "description": "<exactly 2 sentences>",
+    "severity": "critical" | "high" | "medium"
+  } | null
+}`;
 
 export async function runPreviewAnalysis(
   extraction: CombinedExtraction,
@@ -1042,7 +1101,7 @@ export async function runPreviewAnalysis(
       messages: [
         {
           role: "user",
-          content: `Site type: ${siteType}. Score the conversion readiness and identify the single biggest issue from this homepage HTML:\n\n${extraction.rawHtml}`,
+          content: `Site type: ${siteType}.\n\nRun the mandatory checks in order and return the first failure as the topFinding. If no checks fail, return the single highest-impact conversion weakness.\n\nHTML:\n${extraction.rawHtml}`,
         },
       ],
     });

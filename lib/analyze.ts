@@ -140,6 +140,69 @@ in general terms without naming the specific element.
 'The hero contains no button element' is grounded.
 'The CTA strategy is weak' is not.
 
+NARRATIVE FLOW EVALUATION:
+After running mandatory checks, evaluate whether the
+homepage follows a logical conversion sequence.
+A high-converting page answers these in order:
+1. What is this? (headline)
+2. Why does it matter to me? (subheadline or problem framing)
+3. Why should I believe you? (proof — testimonials, numbers,
+   credentials, logos)
+4. What do I do next? (CTA with clear scope)
+
+Evaluate narrative flow ONLY when no CRITICAL findings exist.
+If a CRITICAL finding is present, skip this evaluation.
+
+Flag as HIGH suppression when:
+- The subheadline restates the headline with no progression
+  to why it matters or what problem it solves
+- Social proof appears before the visitor has been told
+  what the product is — trust before comprehension
+- The page moves from headline directly to features with
+  no problem framing or 'why you need this' bridge
+- The hero CTA promises one outcome but the destination
+  delivers a different experience
+- Page sections appear in an order that does not build
+  logically toward the CTA
+
+Never flag narrative flow as CRITICAL.
+Narrative flow is always HIGH or MEDIUM — suboptimal
+sequencing, not a hard conversion stop.
+
+NARRATIVE FLOW FINDING TITLES — sharp and surgical:
+BAD: 'The subheadline repeats the headline instead of
+     explaining why it matters'
+GOOD: 'The subheadline restates the headline — no
+      progression to why it matters'
+
+BAD: 'Social proof appears before visitors understand
+     the product'
+GOOD: 'Trust signals appear before the offer is explained
+      — credibility without context'
+
+Evidence: describe exactly what appears in what order
+and what is missing between those elements.
+
+In addition to findings, the JSON output must include a
+narrativeFlow field at the top level:
+
+narrativeFlow: {
+  verdict: 'strong' | 'weak' | 'broken',
+  summary: '<one sentence describing the page flow>'
+}
+
+verdict definitions:
+- strong: page follows logical sequence, visitor is guided
+  naturally from awareness to action
+- weak: sequence has gaps or repetition that slow the
+  visitor but do not stop them
+- broken: sequence is out of order or missing critical
+  steps that prevent the visitor from understanding
+  the offer or taking action
+
+The summary is written in the clinical webdoc voice —
+one sentence, no hedging, specific to this page.
+
 VOICE AND TONE — READ BEFORE WRITING ANY OUTPUT:
 
 webdoc is a precision diagnostic system. Every output is written in the voice of a world-class conversion specialist delivering a formal assessment. They have already done the analysis. They know exactly what is wrong. They present findings with the confidence of someone who has diagnosed hundreds of sites and is not here to soften the truth.
@@ -373,6 +436,10 @@ Return valid JSON matching this schema exactly:
     "ux": number,
     "trust": number
   },
+  "narrativeFlow": {
+    "verdict": "strong" | "weak" | "broken",
+    "summary": string
+  },
   "healthScore": number
 }
 
@@ -390,6 +457,7 @@ Rules:
 - dimensionScores: exactly 5 objects one per dimension; score 0-100; insight max 30 words, specific to this site with reference to actual page evidence
 - conversionScore: integer 0-100
 - healthScore: same value as conversionScore for backwards compatibility
+- narrativeFlow: required; verdict must be 'strong', 'weak', or 'broken' per the NARRATIVE FLOW EVALUATION definitions; summary is one sentence in the clinical webdoc voice, specific to this page's actual element sequence
 - Return only valid JSON, no markdown, no preamble
 - VOCABULARY: never use boost, unlock, seamless, pain points, actionable insights, revenue leak, money leak, or "costing you conversions" — use revenue suppression, suppressing conversions, resolve / resolution, finding
 - FINAL CHECK: before returning, for every conversionKiller ask — (1) does the title name a specific element or a category? (2) does the evidence state an observable fact or hedge? (3) does the implementation name the exact element and change or give category advice? Rewrite any that fail.
@@ -560,6 +628,16 @@ function parseConversionIntelligencePayload(o: Record<string, unknown>, siteType
   const topLeakMapped = mapLegacyLeakToNew((o.topLeak as Record<string, unknown>) ?? {}, "top-leak");
   const topLeak = topLeakMapped ?? leaks[0];
 
+  const nfRaw = o.narrativeFlow as { verdict?: unknown; summary?: unknown } | null | undefined;
+  const narrativeFlow = nfRaw && typeof nfRaw === 'object'
+    ? {
+        verdict: (nfRaw.verdict === 'strong' || nfRaw.verdict === 'weak' || nfRaw.verdict === 'broken')
+          ? (nfRaw.verdict as 'strong' | 'weak' | 'broken')
+          : ('weak' as const),
+        summary: String(nfRaw.summary ?? '').trim(),
+      }
+    : undefined;
+
   return {
     site_type: siteType,
     healthScore: convScore,
@@ -607,7 +685,8 @@ function parseConversionIntelligencePayload(o: Record<string, unknown>, siteType
         .map(String)
         .join("\n\n"),
     },
-  };
+    ...(narrativeFlow ? { narrativeFlow } : {}),
+  } as ReportPayload;
 }
 
 function parseLegacyPsychologistPayload(o: Record<string, unknown>, siteType: SiteType): ReportPayload {

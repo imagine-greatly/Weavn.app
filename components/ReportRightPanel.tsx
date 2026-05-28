@@ -79,6 +79,7 @@ type ReportRightPanelProps = {
   growthBlueprint?: GrowthBlueprint;
   conversionTransformation?: ConversionTransformation;
   issueReportId?: string | null;
+  narrativeFlow?: { verdict: 'strong' | 'weak' | 'broken'; summary: string } | null;
 };
 
 const STAGGER_MS = 50;
@@ -837,6 +838,7 @@ export default function ReportRightPanel({
   growthBlueprint,
   conversionTransformation,
   issueReportId = null,
+  narrativeFlow,
 }: ReportRightPanelProps) {
   const findingsList = findingsProp ?? MOCK_FINDINGS;
   const moneyLeaksList =
@@ -1619,6 +1621,89 @@ export default function ReportRightPanel({
                 </div>
               )}
             </div>
+            {narrativeFlow?.summary ? (
+              <div style={{ marginTop: 28 }}>
+                <div
+                  style={{
+                    fontFamily: REPORT_MONO,
+                    fontSize: 9,
+                    letterSpacing: "0.14em",
+                    color: "#8899AA",
+                    marginBottom: 10,
+                    textTransform: "uppercase",
+                  }}
+                >
+                  NARRATIVE FLOW
+                </div>
+                <div
+                  style={{
+                    background: narrativeFlow.verdict === 'strong'
+                      ? "rgba(0,200,255,0.04)"
+                      : narrativeFlow.verdict === 'broken'
+                      ? "rgba(255,45,45,0.04)"
+                      : "rgba(255,179,0,0.04)",
+                    borderLeft: `2px solid ${
+                      narrativeFlow.verdict === 'strong'
+                        ? "#00C8FF"
+                        : narrativeFlow.verdict === 'broken'
+                        ? "#FF2D2D"
+                        : "#FFB300"
+                    }`,
+                    padding: "14px 18px",
+                  }}
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                      marginBottom: 8,
+                    }}
+                  >
+                    <span
+                      style={{
+                        width: 6,
+                        height: 6,
+                        borderRadius: "50%",
+                        flexShrink: 0,
+                        background: narrativeFlow.verdict === 'strong'
+                          ? "#00C8FF"
+                          : narrativeFlow.verdict === 'broken'
+                          ? "#FF2D2D"
+                          : "#FFB300",
+                      }}
+                      aria-hidden
+                    />
+                    <span
+                      style={{
+                        fontFamily: REPORT_MONO,
+                        fontSize: 9,
+                        letterSpacing: "0.14em",
+                        fontWeight: 600,
+                        color: narrativeFlow.verdict === 'strong'
+                          ? "#00C8FF"
+                          : narrativeFlow.verdict === 'broken'
+                          ? "#FF2D2D"
+                          : "#FFB300",
+                      }}
+                    >
+                      {narrativeFlow.verdict.toUpperCase()}
+                    </span>
+                  </div>
+                  <p
+                    style={{
+                      fontFamily: "var(--font-space-grotesk), sans-serif",
+                      fontSize: 14,
+                      color: "rgba(240,244,255,0.92)",
+                      lineHeight: 1.6,
+                      margin: 0,
+                    }}
+                  >
+                    {stripMarkdownForDisplay(narrativeFlow.summary)}
+                  </p>
+                </div>
+              </div>
+            ) : null}
           </section>
         ) : null}
 

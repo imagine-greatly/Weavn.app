@@ -823,6 +823,36 @@ export async function scrapePreview(url: string): Promise<{
       }),
       signal: AbortSignal.timeout(20000)
     })
+    if (res.status === 429) {
+      console.log('[PREVIEW] browserless 429 rate limit — waiting 3s and retrying once')
+      await new Promise(resolve => setTimeout(resolve, 3000))
+      // retry once
+      try {
+        const retry = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            url,
+            bestAttempt: true,
+            gotoOptions: { waitUntil: 'domcontentloaded', timeout: 12000 },
+            waitForTimeout: 1500
+          }),
+          signal: AbortSignal.timeout(20000)
+        })
+        if (retry.ok) {
+          const data = await retry.json()
+          const html = data.content ?? ''
+          console.log(`[PREVIEW] browserless retry success | chars=${html.length}`)
+          const cleaned = cleanHtml(html).slice(0, 8000)
+          const ratio = html.length > 0 ? readableTextLength(html) / html.length : 0
+          const complexity: SiteComplexity = ratio > 0.4 ? 'simple' : ratio >= 0.15 ? 'medium' : 'complex'
+          return { rawHtml: cleaned, complexity }
+        }
+      } catch {
+        console.log('[PREVIEW] browserless retry failed')
+      }
+      return { rawHtml: '', complexity: 'medium' }
+    }
     if (res.ok) {
       const data = await res.json()
       const html = data.content ?? ''

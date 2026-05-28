@@ -19,7 +19,7 @@ import { getDashboardMoneyLeaks } from "@/lib/dashboardMoneyLeaks";
 
 /** Until ReportLayout declares `isPro`, widen props here only. */
 const ReportLayoutWithPro = ReportLayout as ComponentType<
-  ComponentProps<typeof ReportLayout> & { isPro: boolean }
+  ComponentProps<typeof ReportLayout> & { isPro: boolean; narrativeFlow?: unknown }
 >;
 
 const STORAGE_KEY_PREFIX = "webdoc_report_";
@@ -599,6 +599,7 @@ export default function ReportDomainPage() {
         onRescan={handleRescan}
         shareToken={report.shareToken ?? null}
         issueReportId={storedReportId}
+        narrativeFlow={(report as any)?.narrativeFlow}
       />
     </div>
   );

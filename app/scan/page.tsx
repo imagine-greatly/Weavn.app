@@ -215,6 +215,7 @@ function ScanLoadingInner() {
   const scanStartedRef = useRef(false);
   const apiDoneRef = useRef(false);
   const scanStartTimeRef = useRef(0);
+  const estimatedTotalMsRef = useRef<number>(Number(searchParams.get("analyzeTimeoutMs")) || 90000);
 
   // beam spring physics (all in one ref, no re-renders)
   const beamStateRef = useRef<{
@@ -700,12 +701,17 @@ function ScanLoadingInner() {
       }
     }
 
-    // Counter: 0→200 over 85% of the estimated 90s scan duration (76,500ms),
-    // then holds at 200 until the scan completes. Never goes backwards, never exceeds 200.
     if (checksCounterRef.current) {
-      const elapsed = now - scanStartTimeRef.current;
-      const count = Math.min(200, Math.floor((Math.max(0, elapsed) / 76_500) * 201));
-      checksCounterRef.current.textContent = String(count);
+      if (scoreRevealRef.current) {
+        checksCounterRef.current.textContent = "200";
+      } else {
+        const elapsed = Math.max(0, now - scanStartTimeRef.current);
+        const progress = Math.min(1, elapsed / estimatedTotalMsRef.current);
+        const easedProgress = progress < 0.5
+          ? 2 * progress * progress
+          : 1 - Math.pow(-2 * progress + 2, 2) / 2;
+        checksCounterRef.current.textContent = String(Math.min(199, Math.floor(easedProgress * 200)));
+      }
     }
 
     rafScanRef.current = requestAnimationFrame(tickScan);

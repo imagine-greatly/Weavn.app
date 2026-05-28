@@ -94,7 +94,7 @@ export default async function AdminDailyPage() {
 
   // Plain-text copy for Claude
   const plainText = [
-    `WEBDOC.AI — DAILY DIGEST — ${formatDate(now)}`,
+    `WEBDOCAI — DAILY DIGEST — ${formatDate(now)}`,
     "",
     "VOLUME",
     `Total scans today: ${total}`,
@@ -146,7 +146,7 @@ export default async function AdminDailyPage() {
       {/* Header */}
       <div style={sectionStyle}>
         <div style={{ color: "#FFFFFF", fontSize: 16, fontWeight: 700, letterSpacing: "3px", marginBottom: 4 }}>
-          WEBDOC.AI — DAILY DIGEST
+          WEBDOCAI — DAILY DIGEST
         </div>
         <div style={{ color: "var(--cyan, #00C8FF)", fontSize: 12 }}>{formatDate(now)}</div>
       </div>

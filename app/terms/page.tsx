@@ -129,7 +129,7 @@ export default function TermsPage() {
         <div style={{ marginBottom: 40 }}>
           <P>
             These Terms of Service ("Terms") govern your access to and use of the WebDoc AI platform
-            ("WebDoc," "we," "us," or "our") at webdoc.ai. By creating an account or submitting any
+            ("WebDoc," "we," "us," or "our") at webdocai. By creating an account or submitting any
             URL for analysis, you agree to be bound by these Terms. If you do not agree, do not use
             WebDoc.
           </P>

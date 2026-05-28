@@ -114,7 +114,7 @@ export default async function AdminWeeklyPage() {
 
   // Plain-text copy for Claude
   const plainText = [
-    `WEBDOC.AI — WEEKLY DIGEST — week of ${formatDate(monday)}`,
+    `WEBDOCAI — WEEKLY DIGEST — week of ${formatDate(monday)}`,
     "",
     "VOLUME",
     `Total scans this week: ${total}`,
@@ -174,7 +174,7 @@ export default async function AdminWeeklyPage() {
       {/* Header */}
       <div style={sectionStyle}>
         <div style={{ color: "#FFFFFF", fontSize: 16, fontWeight: 700, letterSpacing: "3px", marginBottom: 4 }}>
-          WEBDOC.AI — WEEKLY DIGEST
+          WEBDOCAI — WEEKLY DIGEST
         </div>
         <div style={{ color: "var(--cyan, #00C8FF)", fontSize: 12 }}>
           Week of {formatDate(monday)} <span style={{ color: "#8899AA" }}>({weekLabel})</span>

@@ -262,7 +262,7 @@ function ProductDifference() {
           className="font-ui-label"
           style={{ color: "var(--text-muted)" }}
         >
-          WHY WEBDOC.AI IS DIFFERENT
+          WHY WEBDOCAI IS DIFFERENT
         </p>
         <ScrollReveal variant="headline">
           <h2
@@ -305,7 +305,7 @@ function ProductDifference() {
               }}
             >
               <p className="font-mono text-[11px]" style={{ color: "var(--cyan)" }}>
-                WEBDOC.AI
+                WEBDOCAI
               </p>
               <ul className="mt-4 space-y-2">
                 {WEBDOC_ITEMS.map((item) => (

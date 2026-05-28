@@ -129,7 +129,7 @@ export default function PrivacyPage() {
         <div style={{ marginBottom: 40 }}>
           <P>
             WebDoc AI ("WebDoc," "we," "us," or "our") operates the website diagnostic and conversion
-            intelligence platform at webdoc.ai. This Privacy Policy explains what information we
+            intelligence platform at webdocai. This Privacy Policy explains what information we
             collect, how we use it, and your rights with respect to that information. By using
             WebDoc you agree to the practices described here.
           </P>

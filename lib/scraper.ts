@@ -792,7 +792,11 @@ export async function scrapePreview(url: string): Promise<{
       const readable = readableTextLength(html)
       const blocked = isBlockPage(html)
       console.log(`[PREVIEW] plain fetch | chars=${html.length} readable=${readable} blocked=${blocked}`)
-      if (readable >= 200 && !blocked) {
+      // Extract body text only — ignore head/meta content
+      const bodyMatch = html.match(/<body[^>]*>([\s\S]*?)<\/body>/i)
+      const bodyText = bodyMatch ? bodyMatch[1].replace(/<[^>]+>/g, '').trim() : ''
+
+      if (readable >= 200 && !blocked && bodyText.length >= 150) {
         const ratio = html.length > 0 ? readable / html.length : 0
         const complexity: SiteComplexity = ratio > 0.4 ? 'simple' : ratio >= 0.15 ? 'medium' : 'complex'
         return { rawHtml: cleanHtml(html).slice(0, 2000), complexity }

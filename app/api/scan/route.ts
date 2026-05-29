@@ -52,12 +52,12 @@ export async function POST(req: NextRequest) {
     internalKey.length === expectedKey.length &&
     timingSafeEqual(Buffer.from(internalKey), Buffer.from(expectedKey));
 
-  let userId: string;
+  let userId: string | null;
   let withCookies: (res: NextResponse) => NextResponse;
 
   if (internalBypass) {
     console.log("[scan] internal key auth - bypass active");
-    userId = "internal";
+    userId = null;
     withCookies = (res) => res;
   } else {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -175,6 +175,8 @@ export async function POST(req: NextRequest) {
 
   // 1. Scrape: homepage + up to 4 internal pages
   let extraction;
+  let scrapeError: Error | null = null;
+  const isRetry = false;
   const scrapeStart = Date.now()
   process.stderr.write(`[ROUTE] SCRAPE START | url=${normalized}\n`)
   console.log(`[scan] SCRAPE START | url=${normalized}`)
@@ -197,6 +199,25 @@ export async function POST(req: NextRequest) {
     process.stderr.write(`[ROUTE] SCRAPE ERROR | elapsed=${scrapeElapsed}ms isBlocked=${isBlocked} message=${message}\n`)
     console.error(`[scan] SCRAPE ERROR | domain=${domain} elapsed=${scrapeElapsed}ms | isBlocked=${isBlocked} | message=${message}`)
     console.error(`[scan] SCRAPE ERROR stack:`, err instanceof Error ? (err.stack ?? err.message) : err)
+    scrapeError = err instanceof Error ? err : new Error(message);
+  }
+
+  if (scrapeError && !isRetry) {
+    console.log('[ROUTE] scrape failed — waiting 8s and retrying once')
+    await new Promise(resolve => setTimeout(resolve, 8000))
+    // retry the scrape once
+    try {
+      extraction = await Promise.race([scrapeSite(normalized), deadline])
+      scrapeError = null
+    } catch (retryErr) {
+      console.log('[ROUTE] scrape retry also failed')
+    }
+  }
+
+  if (scrapeError) {
+    const message = scrapeError.message;
+    const isBlocked =
+      /block|forbidden|403|401|access denied|scraping|cannot fetch/i.test(message);
     console.log(`[scan] returning 422 | domain=${domain}`)
     return withCookies(
       NextResponse.json(

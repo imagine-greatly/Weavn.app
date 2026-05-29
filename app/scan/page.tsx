@@ -167,6 +167,7 @@ function ScanLoadingInner() {
   const [scanFailure, setScanFailure] = useState<
     null | { kind: "severe" | "client"; message?: string }
   >(null);
+  const [scanRetrying, setScanRetrying] = useState(false);
   const [invalidUrlMessage, setInvalidUrlMessage] = useState<string | null>(null);
   const [statusBarOverride, setStatusBarOverride] = useState<string | null>(null);
   const [scanUserAborted, setScanUserAborted] = useState(false);
@@ -203,6 +204,7 @@ function ScanLoadingInner() {
   const abortControllerRef = useRef<AbortController | null>(null);
   const beamRafHaltedRef = useRef(false);
   const cancelRequestedRef = useRef(false);
+  const hasRetriedRef = useRef(false);
   const isRescanRef = useRef(false);
 
   const beamActiveRef = useRef(false);
@@ -513,6 +515,18 @@ function ScanLoadingInner() {
           if (aborted && cancelRequestedRef.current) {
             cancelRequestedRef.current = false;
             return;
+          }
+          // Auto-retry once on scraper/Browserless failure
+          // Only retry if this is the first attempt
+          if (!hasRetriedRef.current && !cancelRequestedRef.current) {
+            hasRetriedRef.current = true
+            console.log('[SCAN] auto-retrying after failure...')
+            // Show a softer message during retry
+            setScanRetrying(true)
+            await new Promise(resolve => setTimeout(resolve, 8000))
+            setScanRetrying(false)
+            runFetch()
+            return
           }
           apiFailedRef.current = true;
           apiDoneRef.current = true;
@@ -2483,6 +2497,31 @@ function ScanLoadingInner() {
             </div>
           </div>
         </div>
+
+        {scanRetrying && (
+          <div
+            style={{
+              position: "fixed",
+              inset: 0,
+              zIndex: 400,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              pointerEvents: "none",
+            }}
+          >
+            <span
+              style={{
+                fontFamily: MONO,
+                fontSize: 11,
+                letterSpacing: "0.12em",
+                color: "rgba(0,200,255,0.45)",
+              }}
+            >
+              Taking longer than expected — retrying...
+            </span>
+          </div>
+        )}
 
         {(errorMsg || scanFailure) && (
           <div

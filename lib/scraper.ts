@@ -899,6 +899,12 @@ export async function scrapePreview(url: string): Promise<{
       if (readable >= 200 && !blocked && bodyText.length >= 150) {
         const ratio = html.length > 0 ? readable / html.length : 0
         const complexity: SiteComplexity = ratio > 0.4 ? 'simple' : ratio >= 0.15 ? 'medium' : 'complex'
+        process.stderr.write(
+          '[PREVIEW] plain HTTP accepted | ' +
+          'chars=' + html.length +
+          ' body=' + bodyText.length +
+          ' readable=' + readable + '\n'
+        )
         return { rawHtml: cleanHtml(html).slice(0, 8000), complexity }
       }
     }
@@ -946,6 +952,10 @@ export async function scrapePreview(url: string): Promise<{
           const cleaned = cleanHtml(html).slice(0, 8000)
           const ratio = html.length > 0 ? readableTextLength(html) / html.length : 0
           const complexity: SiteComplexity = ratio > 0.4 ? 'simple' : ratio >= 0.15 ? 'medium' : 'complex'
+          process.stderr.write(
+            '[PREVIEW] browserless accepted | ' +
+            'chars=' + html.length + '\n'
+          )
           return { rawHtml: cleaned, complexity }
         }
       } catch {
@@ -960,11 +970,16 @@ export async function scrapePreview(url: string): Promise<{
       const cleaned = cleanHtml(html).slice(0, 8000)
       const ratio = html.length > 0 ? readableTextLength(html) / html.length : 0
       const complexity: SiteComplexity = ratio > 0.4 ? 'simple' : ratio >= 0.15 ? 'medium' : 'complex'
+      process.stderr.write(
+        '[PREVIEW] browserless accepted | ' +
+        'chars=' + html.length + '\n'
+      )
       return { rawHtml: cleaned, complexity }
     }
   } catch {
     console.log('[PREVIEW] browserless fallback failed')
   }
 
+  process.stderr.write('[PREVIEW] scrape failed — returning empty\n')
   return { rawHtml: '', complexity: 'medium' }
 }

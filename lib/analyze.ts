@@ -1197,6 +1197,13 @@ export async function runPreviewAnalysis(
     const block = message.content.find((c) => c.type === "text");
     if (!block || block.type !== "text") throw new Error("No text response from model.");
 
+    process.stderr.write(
+      '[PREVIEW] haiku raw response | len=' +
+      block.text.length +
+      ' preview=' +
+      block.text.slice(0, 200) + '\n'
+    )
+
     // Extract just the JSON object — ignore any text before
     // or after it that Haiku adds despite instructions
     const jsonMatch = block.text.match(/\{[\s\S]*\}/)
@@ -1209,6 +1216,13 @@ export async function runPreviewAnalysis(
 
     try {
       const parsed = JSON.parse(raw) as Record<string, unknown>;
+      process.stderr.write(
+        '[PREVIEW] parsed result | score=' +
+        parsed.conversionScore +
+        ' topFinding=' +
+        (parsed.topFinding ? String((parsed.topFinding as Record<string, unknown>).title ?? '') : 'null') +
+        '\n'
+      )
       const score = Math.min(100, Math.max(0, Math.round(Number(parsed.conversionScore ?? 50))));
       const tf = parsed.topFinding as Record<string, unknown> | undefined;
       return {

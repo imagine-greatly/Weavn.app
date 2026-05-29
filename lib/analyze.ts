@@ -355,18 +355,27 @@ if it fails:
 5. Is there a clear value proposition for subscribing?
 6. Is content freshness or publication date visible?`,
 
-  unknown: `Apply general conversion psychology. Every finding
-must relate to why visitors might leave or fail to convert.
+  unknown: `Apply universal conversion principles. This site did
+not match a specific category strongly enough to
+classify — diagnose it on fundamentals that apply to
+every site regardless of type.
 
-MANDATORY CHECKS — evaluate every one, surface as a finding
-if it fails:
-1. Does the hero explain what this site, product, or service
-   is in one plain sentence?
-2. Is there a primary CTA in the hero?
-3. Is pricing or the next step visible without scrolling?
-4. Is there at least one trust signal above the fold?
-5. Is the target audience clear from the hero?
-6. Is there a way to contact or reach the business?`,
+MANDATORY CHECKS — evaluate every one, surface as a
+finding if it fails:
+1. Does the hero explain what this site offers in one
+   plain sentence — not a tagline, a brand name, or
+   a movement phrase?
+2. Is there a primary CTA button in the hero section
+   — not in the navigation bar?
+3. Is pricing or the clearest next step visible
+   without scrolling?
+4. Is there at least one trust signal above the fold
+   — testimonial, credential, review count, or logo?
+5. Is the target audience clear from the hero — does
+   a first-time visitor know immediately if this is
+   for them?
+6. Is there a clear way to contact or reach the
+   business — phone, email, form, or chat visible?`,
 };
 
 function buildSystemPrompt(siteType: SiteType): string {

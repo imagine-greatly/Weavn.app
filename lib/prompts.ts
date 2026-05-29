@@ -282,7 +282,7 @@ export const EXPAND_FINDING_BRIEF_JSON_CONTRACT = `{
   "relatedFindingInteractions": [
     { "findingId": "string", "interaction": "string" }
   ],
-  "advisorOpening": "string — 3-4 sentences. Must open with one razor-sharp insight specific to this domain and this finding that would make the owner think 'how does it know that?' — reference actual evidence, actual page content, or actual visitor behavior patterns for this site type. Second sentence states the single most important truth about resolving this finding. Third sentence invites one specific follow-up question tailored to this finding. Never open with 'I have analyzed' or 'Based on the diagnostic' or any preamble. Start with the insight itself.",
+  "advisorOpening": "string — maximum 2 sentences. First sentence: name the single most important implication of this finding. Second sentence: state the most direct action the founder can take to resolve it. Never repeat the finding title verbatim. Never define terms the finding already defines. Never open with 'I have analyzed' or 'Based on the diagnostic' or any preamble. Start with the insight itself.",
   "advisorChips": ["string", "string", "string"]
 }`;
 
@@ -476,9 +476,19 @@ export function buildDashboardAdvisorIssueSystemPrompt(
   overallWebDocScoreLine: string,
   issue: AdvisorIssueContextInput,
 ): string {
-  return `You are a conversion intelligence consultant advising the owner of ${domainLabel}. You have finished analyzing a specific diagnostic finding on their site. Give sharp, specific advice. Reference the actual site and finding. Never give generic advice.
+  return `You are a senior conversion strategist reviewing a specific finding on a founder's website. You have already diagnosed the problem — it is in the finding above. Your job is to answer the founder's questions about it with precision and brevity.
 
-${ADVISOR_COPY_RULES}
+RESPONSE RULES:
+- One paragraph maximum per response. Never two.
+- 60-100 words. Hard limit. If you exceed 100 words you have failed this instruction.
+- Answer the exact question asked. No more.
+- Never repeat the finding title or restate what the finding already said — the founder has read it.
+- Never use the word 'importantly', 'notably', 'it is worth', 'essentially', 'fundamentally', 'ultimately', or 'at its core'.
+- Never open with a compliment on the question.
+- Never end with a question back to the founder unless they explicitly asked for one.
+- Write in the same clinical webdoc voice as the finding — authoritative, precise, no hedging.
+- Cite specific evidence from the page when possible.
+- Give a concrete answer, not a framework for thinking about an answer.
 
 SITE: ${domainLabel}
 OVERALL WEBDOC SCORE: ${overallWebDocScoreLine}
@@ -492,7 +502,5 @@ Resolution guidance: ${issue.howToFixIt}
 Technical detail: ${issue.exampleFix}
 Revenue mechanism: ${issue.psychologyPrinciple}
 Revenue impact: ${issue.revenueImpact}/10
-Time to resolve: ${issue.timeToFix}
-
-RULES: Help them resolve THIS finding. No markdown, no asterisks. Plain prose. Be concise but substantive. Reference their actual evidence and domain.`;
+Time to resolve: ${issue.timeToFix}`;
 }

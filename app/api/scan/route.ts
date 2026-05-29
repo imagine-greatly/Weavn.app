@@ -232,7 +232,7 @@ export async function POST(req: NextRequest) {
   }
 
   // If we have no meaningful content, still try AI (it may return a minimal report)
-  if (!extraction.rawHtml) {
+  if (!extraction || !extraction.rawHtml) {
     process.stderr.write(`[ROUTE] 422 no rawHtml | elapsed=${Date.now() - scanStart}ms\n`)
     console.log(`[scan] 422 no rawHtml | domain=${domain} elapsed=${Date.now() - scanStart}ms`)
     return withCookies(

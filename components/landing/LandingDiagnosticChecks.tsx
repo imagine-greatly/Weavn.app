@@ -70,17 +70,6 @@ const DIMENSIONS = [
       "Text contrast ratio insufficient",
     ],
   },
-  {
-    name: "Narrative Flow",
-    count: 18,
-    checks: [
-      "Subheadline restates headline with no progression",
-      "Trust signals appear before the offer is explained",
-      "No problem framing between headline and features",
-      "CTA destination doesn't match the hero offer",
-      "Page sections don't build logically toward the CTA",
-    ],
-  },
 ];
 
 type Dimension = (typeof DIMENSIONS)[0];

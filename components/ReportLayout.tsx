@@ -382,6 +382,7 @@ export type ReportLayoutProps = {
   /** Stored on report row — used to copy `/share/{token}` link. */
   shareToken?: string | null;
   issueReportId?: string | null;
+  narrativeFlow?: { verdict: 'strong' | 'weak' | 'broken'; summary: string } | null;
 };
 
 export default function ReportLayout({
@@ -400,6 +401,7 @@ export default function ReportLayout({
   readOnlyLeftPanel = false,
   shareToken = null,
   issueReportId = null,
+  narrativeFlow,
 }: ReportLayoutProps) {
   const rightPanelRef = useRef<HTMLDivElement>(null);
   const sectionRefs = useRef<Record<string, HTMLElement | null>>({});
@@ -793,6 +795,7 @@ export default function ReportLayout({
           growthBlueprint={growthBlueprint ?? undefined}
           conversionTransformation={payload?.conversionTransformation}
           issueReportId={issueReportId}
+          narrativeFlow={narrativeFlow}
         />
       </div>
     </div>

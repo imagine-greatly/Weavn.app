@@ -515,6 +515,14 @@ function ProcessSteps() {
     <section className="relative w-full overflow-hidden py-[80px] px-6">
       <div ref={wrapRef} className="relative mx-auto max-w-[min(1100px,calc(100vw-48px))]">
         {spine && spine.height > 0 ? <ProcessTimelineSpine spine={spine} animId={animId} /> : null}
+        <ScrollReveal variant="card">
+          <p
+            className="mb-14 font-sans text-[15px] leading-relaxed"
+            style={{ color: "var(--text-secondary)" }}
+          >
+            Webdoc is calibrated for early-stage and growth-stage sites — founder-built products, service businesses, and SaaS companies finding their conversion footing. These are the sites where structural conversion problems live and where the diagnostic has the most impact.
+          </p>
+        </ScrollReveal>
         {STEPS.map((step, index) => (
           <div key={step.num}>
             <div
@@ -591,14 +599,6 @@ function ProcessSteps() {
             ) : null}
           </div>
         ))}
-        <ScrollReveal variant="card">
-          <p
-            className="mt-12 font-sans text-[15px] leading-relaxed"
-            style={{ color: "var(--text-secondary)" }}
-          >
-            Webdoc is calibrated for early-stage and growth-stage sites — founder-built products, service businesses, and SaaS companies under 200 employees. These are the sites where conversion problems are structural and fixable. Enterprise sites with dedicated growth and engineering teams are outside our current scope.
-          </p>
-        </ScrollReveal>
       </div>
     </section>
   );

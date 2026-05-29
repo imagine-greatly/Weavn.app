@@ -1396,9 +1396,37 @@ above-fold failures, and missing trust.
 
 FINDING FORMAT:
 title: under 12 words, names the specific problem
-description: exactly 2 sentences — first quotes
-or references specific page content, second states
-the conversion impact
+DIAGNOSTIC ANALYSIS FORMAT:
+Write exactly two paragraphs. No more. No headers.
+No bullet points. No academic framing.
+
+PARAGRAPH 1 — THE PROBLEM:
+Describe what exists on the page and why it fails.
+Quote the specific copy, button text, headline, or
+element. Name exactly where it appears. Explain what
+a first-time visitor experiences when they encounter
+it. Maximum 4 sentences.
+
+PARAGRAPH 2 — THE BUSINESS IMPACT:
+Describe what this costs the founder in concrete
+terms. Which visitors are affected. What action they
+fail to take. What the revenue consequence is.
+Reference the specific audience or traffic source
+most affected. Maximum 4 sentences.
+
+VOICE: Clinical, direct, authoritative. Written for
+a founder who built the site and knows it well —
+no explaining what a hero section is, no defining
+conversion. Assume intelligence, not ignorance.
+
+BANNED: academic hedging ('may', 'could', 'might',
+'typically', 'often', 'in many cases'), passive
+voice, percentage benchmarks without specific
+evidence, phrases like 'it is worth noting',
+'importantly', 'it should be emphasized'.
+
+Total length: 120-180 words maximum. If you exceed
+180 words you have failed this instruction.
 severity: critical | high | medium
 
 Return ONLY valid JSON, no markdown:
@@ -1406,7 +1434,7 @@ Return ONLY valid JSON, no markdown:
   "conversionScore": <integer>,
   "topFinding": {
     "title": "<under 12 words>",
-    "description": "<2 sentences>",
+    "description": "<two paragraphs, 120-180 words>",
     "severity": "critical" | "high" | "medium"
   } | null
 }`;

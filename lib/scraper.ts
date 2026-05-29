@@ -604,14 +604,39 @@ const CONVERSION_SCORES: Record<SiteType, Array<{ pattern: RegExp; score: number
   ],
 }
 
-export function selectSubpageUrls(links: string[], siteType: string): string[] {
+export function selectSubpageUrls(links: string[], siteType: string, homeUrl?: string): string[] {
   const typeKey = (CONVERSION_SCORES[siteType as SiteType] ? siteType : 'unknown') as SiteType
   const scoringRules = CONVERSION_SCORES[typeKey]
+
+  // CHANGE 2: Single-page site detection — no path-based internal links found.
+  // extractInternalLinks already strips pure anchor hrefs (#section) and root
+  // paths (/), so an empty links array means every href on the page was either
+  // an anchor, external, or the homepage itself — classic single-page site signal.
+  if (links.length === 0) {
+    process.stderr.write('[SCRAPER] single-page site detected — skipping subpage selection\n')
+    return []
+  }
+
+  // Normalize homepage URL for comparison (strip fragment and trailing slash)
+  const normalizedHome = homeUrl ? homeUrl.split('#')[0].replace(/\/$/, '') : ''
 
   const scored: Array<{ url: string; score: number }> = []
 
   for (const link of links) {
     try {
+      // CHANGE 1a: Exclude URLs that still carry a # fragment
+      if (link.includes('#')) {
+        console.log(`[SCRAPER] subpage excluded | reason=anchor url=${link}`)
+        continue
+      }
+      // CHANGE 1b: Exclude URLs identical to the homepage or differing only by trailing slash
+      if (normalizedHome) {
+        const normalizedLink = link.replace(/\/$/, '')
+        if (normalizedLink === normalizedHome) {
+          console.log(`[SCRAPER] subpage excluded | reason=anchor url=${link}`)
+          continue
+        }
+      }
       const path = new URL(link).pathname
       if (SUBPAGE_BLOCKLIST.test(path) || SUBPAGE_DETAIL_BLOCKLIST.some(re => re.test(path))) continue
       let score = 0
@@ -622,6 +647,13 @@ export function selectSubpageUrls(links: string[], siteType: string): string[] {
       }
       scored.push({ url: link, score })
     } catch { /* skip */ }
+  }
+
+  // CHANGE 2: Secondary single-page signal — links existed but all were filtered
+  // (anchor-only variants, homepage duplicates, or all blocklisted).
+  if (scored.length === 0) {
+    process.stderr.write('[SCRAPER] single-page site detected — skipping subpage selection\n')
+    return []
   }
 
   scored.sort((a, b) => b.score - a.score)

@@ -74,11 +74,9 @@ const DIMENSIONS = [
     name: "Narrative Flow",
     count: 18,
     checks: [
-      "Subheadline restates headline with no progression",
-      "Trust signals appear before the offer is explained",
-      "No problem framing between headline and features",
-      "CTA destination doesn't match the hero offer",
-      "Page sections don't build logically toward the CTA",
+      "Every scan evaluates whether the page guides visitors through a logical sequence from awareness to action.",
+      "A site can pass every individual check and still lose the conversion because the sections appear in the wrong order.",
+      "Webdoc diagnoses both the individual elements and the sequence that connects them.",
     ],
   },
 ];
@@ -129,7 +127,7 @@ export default function LandingDiagnosticChecks() {
           {DIMENSIONS.map((dim, i) => (
             <div key={dim.name} className={i === DIMENSIONS.length - 1 ? "sm:col-span-2 lg:col-span-3" : undefined}>
               <ScrollReveal variant="card" index={i}>
-                <DimensionCard dimension={dim} />
+                <DimensionCard dimension={dim} prose={i === DIMENSIONS.length - 1} />
               </ScrollReveal>
             </div>
           ))}
@@ -171,10 +169,10 @@ export default function LandingDiagnosticChecks() {
   );
 }
 
-function DimensionCard({ dimension }: { dimension: Dimension }) {
+function DimensionCard({ dimension, prose }: { dimension: Dimension; prose?: boolean }) {
   return (
     <div
-      className="relative overflow-hidden rounded-sm border p-6 transition-[border-color,box-shadow] duration-200"
+      className={`relative overflow-hidden rounded-sm border p-6 transition-[border-color,box-shadow] duration-200${prose ? " text-center" : ""}`}
       style={{
         background: "var(--bg-card)",
         borderColor: "var(--border-default)",
@@ -216,20 +214,34 @@ function DimensionCard({ dimension }: { dimension: Dimension }) {
         {dimension.name}
       </h3>
 
-      <ul className="mt-4 space-y-2">
-        {dimension.checks.map((check) => (
-          <li
-            key={check}
-            className="flex items-start gap-2 font-mono text-[11px] leading-snug"
-            style={{ color: "var(--text-muted)" }}
-          >
-            <span className="mt-0.5 shrink-0" style={{ color: "rgba(0,200,255,0.35)" }}>
-              ›
-            </span>
-            {check}
-          </li>
-        ))}
-      </ul>
+      {prose ? (
+        <div className="mt-4 space-y-3">
+          {dimension.checks.map((check) => (
+            <p
+              key={check}
+              className="font-sans text-[15px] leading-relaxed"
+              style={{ color: "var(--text-secondary)" }}
+            >
+              {check}
+            </p>
+          ))}
+        </div>
+      ) : (
+        <ul className="mt-4 space-y-2">
+          {dimension.checks.map((check) => (
+            <li
+              key={check}
+              className="flex items-start gap-2 font-mono text-[11px] leading-snug"
+              style={{ color: "var(--text-muted)" }}
+            >
+              <span className="mt-0.5 shrink-0" style={{ color: "rgba(0,200,255,0.35)" }}>
+                ›
+              </span>
+              {check}
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }

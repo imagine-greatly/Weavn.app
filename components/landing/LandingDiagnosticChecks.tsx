@@ -72,7 +72,7 @@ const DIMENSIONS = [
   },
   {
     name: "Narrative Flow",
-    count: 18,
+    count: 10,
     checks: [
       "Every scan evaluates whether the page guides visitors through a logical sequence from awareness to action.",
       "A site can pass every individual check and still lose the conversion because the sections appear in the wrong order.",

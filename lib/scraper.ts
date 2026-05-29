@@ -518,7 +518,15 @@ export function extractInternalLinks(html: string, baseUrl: string): string[] {
   }
 }
 
-const SUBPAGE_BLOCKLIST = /\/(login|signin|logout|admin|dashboard|account|privacy|terms|policy|cookies|legal|blog|gaming|game|games|careers|career|jobs|job|press|media|news|events|event|community|forum|forums|store|shop|cart|checkout|download|downloads|affiliate|referral|partner|partners|investor|investors|docs|documentation|support|help|status|changelog|updates|release|releases|sitemap|rss|feed|404|error)(?:[-\/]|$)/i;
+const SUBPAGE_BLOCKLIST = /\/(login|signin|logout|admin|dashboard|account|privacy|terms|policy|cookies|legal|gaming|game|games|careers|career|jobs|job|press|media|news|events|event|community|forum|forums|store|shop|cart|checkout|download|downloads|affiliate|referral|partner|partners|investor|investors|docs|documentation|support|help|status|changelog|updates|release|releases|sitemap|rss|feed|404|error)(?:[-\/]|$)/i;
+
+const SUBPAGE_DETAIL_BLOCKLIST: RegExp[] = [
+  /\/solutions\/[^\/]+$/i,
+  /\/use-cases\/[^\/]+$/i,
+  /\/customers\/[^\/]+$/i,
+  /\/blog\/[^\/]+$/i,
+  /\/docs\/[^\/]+/i,
+];
 
 type SiteType = 'saas' | 'ecommerce' | 'service' | 'local' | 'content' | 'unknown'
 
@@ -582,7 +590,7 @@ export function selectSubpageUrls(links: string[], siteType: string): string[] {
   for (const link of links) {
     try {
       const path = new URL(link).pathname
-      if (SUBPAGE_BLOCKLIST.test(path)) continue
+      if (SUBPAGE_BLOCKLIST.test(path) || SUBPAGE_DETAIL_BLOCKLIST.some(re => re.test(path))) continue
       let score = 0
       for (const { pattern, score: s } of scoringRules) {
         if (pattern.test(path)) {

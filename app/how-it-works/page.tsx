@@ -715,10 +715,10 @@ const DIMENSION_CATEGORIES: { name: string; categories: string[] }[] = [
 ];
 
 const SEVERITY_DOT: Record<string, { background: string }> = {
-  Critical: { background: "rgba(0,200,255,1)" },
-  High:     { background: "rgba(0,200,255,0.45)" },
-  Medium:   { background: "rgba(0,200,255,0.18)" },
-  Low:      { background: "rgba(0,200,255,0.07)" },
+  Critical: { background: "rgba(255,45,45,1)" },
+  High:     { background: "rgba(255,179,0,1)" },
+  Medium:   { background: "rgba(0,200,255,0.6)" },
+  Low:      { background: "rgba(0,200,255,0.2)" },
 };
 
 function CompleteDiagnosticDatabase() {

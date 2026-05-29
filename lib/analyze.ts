@@ -260,7 +260,194 @@ IMPLEMENTATION — state WHAT to change and WHERE, specific enough that a develo
 BAD: "Implement above-fold CTA architecture to improve conversion path visibility"
 GOOD: "Add a single primary CTA button inside the hero section — destination: the main product or signup page. The current hero has no button element. Place it directly below the headline as the visually dominant interactive element on the first screen."
 BAD: "Improve trust signaling across key conversion touchpoints"
-GOOD: "Add total orders shipped, your strongest customer review with a real name, and your return policy directly in the hero section — all three are absent above the fold. Insert as three short lines below the primary CTA."`;
+GOOD: "Add total orders shipped, your strongest customer review with a real name, and your return policy directly in the hero section — all three are absent above the fold. Insert as three short lines below the primary CTA."
+
+SCORING SYSTEM — REPLACE EXISTING SCORING SECTION:
+
+The conversionScore is a precise integer reflecting
+exactly what percentage of motivated visitors this
+site successfully converts into the next step.
+
+FORBIDDEN NUMBERS — never use these, they indicate
+anchoring not precision:
+10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 62,
+65, 70, 75, 80, 85, 90
+
+STEP 1 — DETERMINE THE BAND:
+
+BROKEN (12–40): One or more hard conversion stops,
+or the core offer cannot be understood within 3
+seconds by a cold visitor.
+
+Hard stops that guarantee this band:
+- Form submit button disabled or broken
+- Pricing page exists but shows no pricing
+- Signup page is a blank loading screen
+- Hero has no text explaining what the product is
+- Page returns error or empty content
+
+WEAK (41–57): Fundamental conversion failures that
+stop a significant portion of motivated visitors.
+The offer is understandable but the path to convert
+is broken, hidden, or untrustworthy.
+
+Common signals:
+- No hero CTA button (CTA only in nav)
+- Hero headline is a tagline or movement phrase
+- Zero named social proof on a trust-critical site
+- CTA routes to wrong destination
+- Price shown with no scope or inclusion statement
+- FAQ contradicts pricing page
+
+AVERAGE (58–73): Site communicates the offer but
+has meaningful gaps that slow motivated visitors.
+Nothing is broken but friction is real.
+
+Common signals:
+- Hero CTA present but copy is weak
+- Subheadline restates headline with no progression
+- Social proof exists but is anonymous only
+- Pricing visible but differentiator unstated
+- Trust signals below fold only
+
+STRONG (74–87): One or two meaningful friction
+points but no fundamental conversion failures.
+A motivated visitor can understand and convert —
+they are just not optimally guided.
+
+Common signals:
+- CTA present and clear but not above fold
+- Good trust signals but no named testimonials
+- Pricing visible but not in hero
+- Narrative flow has minor gaps
+
+EXCEPTIONAL (88–91): Extremely rare. Hero is clear,
+CTA is prominent and above fold, trust is established
+with named proof, pricing is visible or one click
+away, narrative flows from awareness to action.
+Reserve for sites that genuinely excel at conversion.
+
+STEP 2 — POSITION WITHIN THE BAND:
+
+Start at the TOP of the band. Move DOWN.
+
+FINDING COUNT PENALTY:
+First finding: included in band determination
+Each additional finding beyond the first: -2 points
+
+ABOVE-FOLD SEVERITY PENALTY:
+Each CRITICAL finding above the fold: -4 points
+Each HIGH finding above the fold: -2 points
+Below-fold or subpage findings: no additional penalty
+
+HARD STOP FLOOR:
+If any of these exist, score cannot exceed the
+bottom third of the band:
+- Disabled or broken form element
+- Page that returns no content for its stated purpose
+- CTA routing to a dead end or wrong destination
+- Signup flow that cannot be completed
+
+TRUST ABSENCE PENALTY:
+Zero named social proof on trust-critical site
+(healthcare, finance, legal, enterprise SaaS): -4
+Zero named social proof on any site: -2
+Anonymous aggregate proof only (no names): -1
+
+PARTIAL CREDIT — move UP within band:
+Strong technical foundation (clean meta, fast load
+signals, proper OG tags): +2
+Audience clearly stated somewhere on page: +1
+Pricing visible even if not in hero: +2
+Free tier explicitly stated in hero: +2
+Named testimonials present even if below fold: +2
+Clear differentiator from alternatives stated: +1
+
+STEP 3 — ANTI-COLLISION CHECK:
+
+After calculating your score ask:
+- Does this number reflect something specific about
+  this exact site?
+- Would a site with different failures score
+  differently?
+- Is this score a forbidden number?
+
+If the score is a forbidden number, move ±1-3 points
+to the nearest non-forbidden integer that still
+accurately reflects the site.
+
+If two sites would score identically despite having
+different failure patterns, adjust the lower-quality
+site down by 2-4 points.
+
+STEP 4 — FINAL VALIDATION:
+
+Before writing the score ask these questions:
+1. Is it a forbidden number? → adjust
+2. Does it land in the right band for the severity
+   of findings? → adjust if not
+3. Does it reflect the specific combination of
+   failures on THIS site, not a generic site with
+   similar severity? → adjust if not
+4. Would a founder looking at this score immediately
+   understand the urgency level correctly?
+   - Under 45: urgent, multiple fundamental failures
+   - 45-60: serious, meaningful conversion barriers
+   - 61-74: moderate, friction but functional
+   - 75+: solid, optimization not emergency
+
+EXAMPLE CALCULATIONS:
+
+EXAMPLE A — bridgemind.ai type site:
+Band: WEAK (41-57) — hero CTA routes to wrong
+destination, submit button disabled
+Start: 57
+5 findings beyond first: -10 → 47
+2 CRITICALs above fold: -8 → 39
+Hard stop (disabled button): floor to bottom
+third of band (41-47) → 43
+Zero named social proof: -2 → 41
+Strong technical foundation: +2 → 43
+Final: 43
+
+EXAMPLE B — tokenwisehq type site:
+Band: WEAK (41-57) — pricing page is empty stub
+Start: 57
+5 findings beyond first: -10 → 47
+1 CRITICAL above fold: -4 → 43
+Hard stop (pricing page dead end): floor to
+bottom third (41-47) → 43
+Anonymous proof only: -1 → 42
+Good technical foundation: +2 → 44
+Audience stated in FAQ: +1 → 45
+Free tier stated: +1 → 46
+Final: 46
+
+EXAMPLE C — struere.dev type site:
+Band: WEAK (41-57) — hero CTA routes to founder
+call not trial
+Start: 57
+6 findings beyond first: -12 → 45
+1 CRITICAL above fold: -4 → 41
+Zero named social proof, dev infrastructure: -4
+→ floor to 12 minimum...
+Actually: hard stop (CTA destination mismatch):
+floor to bottom third (41-47) → 43
+Zero named proof on infrastructure SaaS: -4 → 39
+Floor applied: 41
+Strong technical signals: +2 → 43
+Final: 43
+
+EXAMPLE D — well-built site, minor friction:
+Band: AVERAGE (58-73)
+Start: 73
+3 findings beyond first: -6 → 67
+2 HIGHs above fold: -4 → 63
+Named social proof present: 0 penalty
+Pricing visible: +2 → 65
+Clear differentiator: +1 → 66
+Anti-collision check: 65 is forbidden → use 66
+Final: 66`;
 
 const SITE_TYPE_INSTRUCTIONS: Record<SiteType, string> = {
   ecommerce: `The goal of this site is transactions. Every

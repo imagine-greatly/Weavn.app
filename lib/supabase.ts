@@ -136,13 +136,10 @@ function rowToStoredReport(row: ReportRowRaw): StoredReportRow {
 export async function saveReport(
   domain: string,
   analysis: ReportPayload,
-  userId: string,
+  userId: string | null,
   options?: { source?: string | null; scan_type?: string | null }
 ): Promise<string> {
-  const uid = typeof userId === "string" ? userId.trim() : "";
-  if (!uid) {
-    throw new Error("userId is required to save a report");
-  }
+  const uid = typeof userId === "string" && userId.trim() ? userId.trim() : null;
 
   const supabase = getClient();
   const normalizedDomain = domain.toLowerCase().trim();
@@ -163,7 +160,7 @@ export async function saveReport(
     domain: normalizedDomain,
     analysis: { ...analysis, shareToken: share_token },
     overview_copy: overviewCopy,
-    user_id: uid,
+    user_id: uid ?? null,
     share_token,
     money_leaks:
       analysis.moneyLeaks ??

@@ -591,6 +591,14 @@ function ProcessSteps() {
             ) : null}
           </div>
         ))}
+        <ScrollReveal variant="card">
+          <p
+            className="mt-12 font-sans text-[15px] leading-relaxed"
+            style={{ color: "var(--text-secondary)" }}
+          >
+            Webdoc is calibrated for early-stage and growth-stage sites — founder-built products, service businesses, and SaaS companies under 200 employees. These are the sites where conversion problems are structural and fixable. Enterprise sites with dedicated growth and engineering teams are outside our current scope.
+          </p>
+        </ScrollReveal>
       </div>
     </section>
   );

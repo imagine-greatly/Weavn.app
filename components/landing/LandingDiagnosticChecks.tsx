@@ -70,6 +70,17 @@ const DIMENSIONS = [
       "Text contrast ratio insufficient",
     ],
   },
+  {
+    name: "Narrative Flow",
+    count: 18,
+    checks: [
+      "Subheadline restates headline with no progression",
+      "Trust signals appear before the offer is explained",
+      "No problem framing between headline and features",
+      "CTA destination doesn't match the hero offer",
+      "Page sections don't build logically toward the CTA",
+    ],
+  },
 ];
 
 type Dimension = (typeof DIMENSIONS)[0];
@@ -116,32 +127,13 @@ export default function LandingDiagnosticChecks() {
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {DIMENSIONS.map((dim, i) => (
-            <ScrollReveal key={dim.name} variant="card" index={i}>
-              <DimensionCard dimension={dim} />
-            </ScrollReveal>
+            <div key={dim.name} className={i === DIMENSIONS.length - 1 ? "sm:col-span-2 lg:col-span-3" : undefined}>
+              <ScrollReveal variant="card" index={i}>
+                <DimensionCard dimension={dim} />
+              </ScrollReveal>
+            </div>
           ))}
         </div>
-
-        <ScrollReveal variant="card">
-          <div className="mt-12 max-w-[680px]">
-            <p
-              className="font-mono text-[11px] uppercase tracking-[3px] mb-4"
-              style={{ color: "var(--cyan)" }}
-            >
-              NARRATIVE INTELLIGENCE
-            </p>
-            <p
-              className="font-sans text-[17px] leading-relaxed"
-              style={{ color: "var(--text-secondary)" }}
-            >
-              Every scan evaluates narrative flow — whether the page guides
-              visitors through a logical sequence from awareness to action. A
-              site can pass every individual check and still lose the conversion
-              because the sections appear in the wrong order. Webdoc diagnoses
-              both.
-            </p>
-          </div>
-        </ScrollReveal>
 
         <ScrollReveal variant="card">
           <div className="mt-12 text-center">

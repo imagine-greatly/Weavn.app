@@ -708,6 +708,10 @@ const DIMENSION_CATEGORIES: { name: string; categories: string[] }[] = [
     name: "Vertical & Universal Signals",
     categories: ["Universal & Cross-Vertical", "SaaS-Specific", "E-commerce Specific", "Agency & Service", "Conversion Path Expansion"],
   },
+  {
+    name: "Narrative Flow",
+    categories: ["Narrative Flow"],
+  },
 ];
 
 const SEVERITY_DOT: Record<string, { background: string }> = {

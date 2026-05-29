@@ -134,6 +134,27 @@ export default function LandingDiagnosticChecks() {
         </div>
 
         <ScrollReveal variant="card">
+          <div className="mt-12 max-w-[680px]">
+            <p
+              className="font-mono text-[11px] uppercase tracking-[3px] mb-4"
+              style={{ color: "var(--cyan)" }}
+            >
+              NARRATIVE INTELLIGENCE
+            </p>
+            <p
+              className="font-sans text-[17px] leading-relaxed"
+              style={{ color: "var(--text-secondary)" }}
+            >
+              Every scan evaluates narrative flow — whether the page guides
+              visitors through a logical sequence from awareness to action. A
+              site can pass every individual check and still lose the conversion
+              because the sections appear in the wrong order. Webdoc diagnoses
+              both.
+            </p>
+          </div>
+        </ScrollReveal>
+
+        <ScrollReveal variant="card">
           <div className="mt-12 text-center">
             <Link
               href="/how-it-works"

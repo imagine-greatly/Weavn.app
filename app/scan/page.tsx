@@ -516,15 +516,10 @@ function ScanLoadingInner() {
             cancelRequestedRef.current = false;
             return;
           }
-          // Auto-retry once on scraper/Browserless failure
-          // Only retry if this is the first attempt
-          if (!hasRetriedRef.current && !cancelRequestedRef.current) {
+          if (!hasRetriedRef.current &&
+              !cancelRequestedRef.current) {
             hasRetriedRef.current = true
-            console.log('[SCAN] auto-retrying after failure...')
-            // Show a softer message during retry
-            setScanRetrying(true)
-            await new Promise(resolve => setTimeout(resolve, 8000))
-            setScanRetrying(false)
+            await new Promise(r => setTimeout(r, 10000))
             runFetch()
             return
           }

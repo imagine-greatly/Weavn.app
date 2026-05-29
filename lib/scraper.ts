@@ -718,31 +718,68 @@ export function cleanHtml(html: string): string {
 const TRUNCATION_SEPARATOR = '\n<!-- ... content truncated ... -->\n'
 const SUBPAGE_TRUNCATION_SIGNAL = '\n<!-- [WEBDOC: content truncated at scraper limit — page continues beyond this point] -->\n'
 
-export function applySmartTruncation(html: string, complexity?: SiteComplexity): string {
+export function applySmartTruncation(
+  html: string,
+  complexity?: SiteComplexity
+): string {
   if (html.length <= 40_000) return html
 
-  const viewportBoundary =
-    complexity === 'simple' ? 12_000 :
-    complexity === 'medium' ? 16_000 :
-    24_000  // complex
+  if (html.length <= 80_000) {
+    const result = html.slice(0, 45_000) +
+      TRUNCATION_SEPARATOR +
+      html.slice(-8_000)
+    console.log(`[SCRAPER] truncation small | ${html.length} → ${result.length}`)
+    return result
+  }
 
-  const headSize =
-    html.length <= 80_000 ? 45_000 :
-    html.length <= 120_000 ? 55_000 :
-    65_000
+  // For large files — find content-dense sections
+  // Split into chunks and score each by readable text density
+  const CHUNK_SIZE = 8_000
+  const chunks: { text: string; start: number; density: number }[] = []
 
-  const headSlice = html.slice(0, headSize)
+  for (let i = 0; i < html.length; i += CHUNK_SIZE) {
+    const chunk = html.slice(i, i + CHUNK_SIZE)
+    const readable = chunk.replace(/<[^>]+>/g, ' ')
+      .replace(/\s+/g, ' ').trim()
+    const density = readable.length / chunk.length
+    chunks.push({ text: chunk, start: i, density })
+  }
 
-  const VIEWPORT_MARKER = '\n<!-- [WEBDOC: estimated viewport boundary — content below this line is likely below the fold on desktop] -->\n'
-  const markerPos = headSlice.lastIndexOf('>', viewportBoundary - 1)
-  const markedHead = markerPos >= 0
-    ? headSlice.slice(0, markerPos + 1) + VIEWPORT_MARKER + headSlice.slice(markerPos + 1)
-    : headSlice
+  // Always include first 5 chunks (above fold — hero, nav, CTA)
+  const aboveFold = chunks.slice(0, 5)
 
-  console.log(`[SCRAPER] viewport marker | complexity=${complexity ?? 'unknown'} boundary=${viewportBoundary}chars`)
+  // Score remaining chunks by density — take top 4
+  // This captures features, pricing, testimonials
+  const remaining = chunks.slice(5)
+  const topChunks = remaining
+    .sort((a, b) => b.density - a.density)
+    .slice(0, 4)
+    .sort((a, b) => a.start - b.start) // restore document order
 
-  const result = markedHead + TRUNCATION_SEPARATOR + html.slice(-8_000)
-  console.log(`[SCRAPER] truncation | cleaned=${html.length} → head+tail=${result.length}`)
+  // Always include last 1 chunk (footer — final CTA, trust)
+  const footer = chunks.slice(-1)
+
+  // Combine: above fold + high density mid sections + footer
+  const selected = [
+    ...aboveFold,
+    ...topChunks,
+    ...footer,
+  ]
+
+  // Deduplicate by start position
+  const seen = new Set<number>()
+  const deduped = selected.filter(c => {
+    if (seen.has(c.start)) return false
+    seen.add(c.start)
+    return true
+  }).sort((a, b) => a.start - b.start)
+
+  const result = deduped.map(c => c.text).join(TRUNCATION_SEPARATOR)
+  console.log(
+    `[SCRAPER] truncation density | cleaned=${html.length}` +
+    ` chunks_selected=${deduped.length}` +
+    ` total=${result.length}`
+  )
   return result
 }
 

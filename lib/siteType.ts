@@ -57,6 +57,9 @@ const SAAS = {
     "integration",
     "api",
     "webhook",
+    "deploy",
+    "api key",
+    "changelog",
     "automation",
     "workflow",
     "sync",
@@ -71,6 +74,11 @@ const SAAS = {
   ],
   paths: [/\/pricing\/?/i, /\/features\/?/i, /\/integrations?\/?/i],
 };
+
+const SAAS_HIGH_SIGNAL = new Set([
+  "dashboard", "api key", "webhook", "deploy",
+  "free trial", "workspace", "changelog",
+]);
 
 const SERVICE = {
   phrases: [
@@ -120,12 +128,8 @@ const LOCAL = {
     "our location",
     "get directions",
     "find us",
-    "hours",
-    "open",
-    "closed",
     "walk-in",
     "appointment",
-    "location",
     "restaurant",
     "cafe",
     "salon",
@@ -140,7 +144,6 @@ const LOCAL = {
     "vet",
     "barbershop",
     "dine",
-    "menu",
     "reserve a table",
     "open daily",
     "open monday",
@@ -206,7 +209,7 @@ function scoreType(
     }
     case "saas": {
       for (const p of SAAS.phrases) {
-        if (text.includes(p)) score += 2;
+        if (text.includes(p)) score += SAAS_HIGH_SIGNAL.has(p) ? 5 : 2;
       }
       for (const re of SAAS.paths) {
         if (re.test(hrefs)) score += 2;
@@ -268,64 +271,48 @@ export function detectSiteType(extraction: CombinedExtraction): SiteType {
   const { text, hrefs } = collectHomepageText(extraction);
   if (!text.trim()) return "unknown";
 
-  let best: SiteType = "unknown";
-  let bestScore = 0;
-
+  // Build score for every type
+  const scores = {} as Record<SiteType, number>;
   for (const type of SITE_TYPES) {
-    const s = scoreType(type, text, hrefs);
-    if (s > bestScore) {
-      bestScore = s;
-      best = type;
-    }
+    scores[type] = scoreType(type, text, hrefs);
   }
 
   // Content: boost when blog/articles/guides dominate and no strong product CTAs
-  const contentScore = scoreType("content", text, hrefs);
-  const ecomScore = scoreType("ecommerce", text, hrefs);
-  const saasScore = scoreType("saas", text, hrefs);
-  const serviceScore = scoreType("service", text, hrefs);
   if (
-    contentScore >= 2 &&
-    ecomScore < 2 &&
-    saasScore < 2 &&
-    serviceScore < 2 &&
-    contentScore >= bestScore
+    scores.content >= 2 &&
+    scores.ecommerce < 2 &&
+    scores.saas < 2 &&
+    scores.service < 2
   ) {
-    best = "content";
-    bestScore = contentScore;
+    const maxOther = Math.max(scores.ecommerce, scores.saas, scores.service, scores.local);
+    if (scores.content >= maxOther) {
+      scores.content = maxOther + 1;
+    }
   }
 
-  // ── Force rules: unconditional classification when signal clusters are definitive ──────────
-
-  // Force ecommerce: purchase-intent signals + price on page
-  if (
-    (text.includes("add to cart") || text.includes("buy now") || text.includes("shop now")) &&
-    ECOMMERCE.pricePattern.test(text)
-  ) {
-    return "ecommerce";
+  // Strong SaaS signals invalidate local classification
+  const strongSaasSignals = [
+    'dashboard', 'api key', 'webhook', 'deploy',
+    'integration', 'workspace', 'changelog',
+    'free trial', 'start for free', 'sign up free',
+    'cli', 'sdk', 'repository', 'pull request'
+  ]
+  const hasSaasSignal = strongSaasSignals.some(s => text.includes(s))
+  if (hasSaasSignal) {
+    scores.local = Math.min(scores.local, scores.saas - 1)
   }
 
-  // Force service: medical/health vertical + booking signal
-  if (
-    (text.includes("medical") || text.includes("healthcare") || text.includes("clinic") ||
-     text.includes("dental") || text.includes("therapy")) &&
-    (text.includes("book") || text.includes("schedule") || text.includes("appointment"))
-  ) {
-    return "service";
+  // Strong ecommerce signals invalidate service
+  const hasCartSignal = /add to cart|buy now|checkout/i.test(text)
+  if (hasCartSignal) {
+    scores.service = Math.min(scores.service, scores.ecommerce - 1)
   }
 
-  // Force local: address + phone + hours
-  if (LOCAL.addressLike.test(text) && SERVICE.phonePattern.test(text) && /\bhours\b/.test(text)) {
-    return "local";
-  }
+  // Pick highest scorer
+  const winner = (Object.entries(scores) as [SiteType, number][]).reduce((a, b) =>
+    a[1] >= b[1] ? a : b)[0]
 
-  // Force saas: platform signals (ecommerce force already returned before reaching here)
-  if (
-    text.includes("dashboard") || text.includes("workspace") ||
-    text.includes("per user") || text.includes("api key") || text.includes("webhook")
-  ) {
-    return "saas";
-  }
-
-  return bestScore > 0 ? best : "unknown";
+  // Confidence threshold — don't guess on weak signals
+  const winnerScore = scores[winner]
+  return winnerScore >= 3 ? winner : 'unknown'
 }

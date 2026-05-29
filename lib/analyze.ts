@@ -1300,64 +1300,113 @@ export interface PreviewResult {
   topFinding: { title: string; description: string; severity: string } | null;
 }
 
-const PREVIEW_SYSTEM_PROMPT = `You are a conversion diagnostic system. You receive cleaned HTML from a real browser render of a business website.
+const PREVIEW_SYSTEM_PROMPT = `You are a conversion diagnostic system analyzing a
+business website. You receive cleaned HTML from a
+real browser render.
 
-Your job is to find the single most critical conversion failure on this page and score its conversion readiness.
+STEP 1 — SHELL CHECK:
+If body text is under 100 chars — shell HTML only.
+Return: { conversionScore: 40, topFinding: null }
 
-STEP 1 — CHECK FOR SHELL HTML FIRST:
-If the HTML contains no visible body text — only metadata, script tags, and empty containers — this is a JavaScript shell that did not render. In this case:
-Return { conversionScore: 40, topFinding: null }
-Do not fabricate findings from metadata.
+STEP 2 — MANDATORY CHECKLIST (check in order,
+stop at first failure):
 
-STEP 2 — RUN MANDATORY CHECKS IN ORDER:
-Check each of these in order. Stop at the first one that fails and make it the topFinding. Do not check further.
+CHECK 1: Does the hero state what the product or
+service is in plain language?
+Movement language, brand names, and slogans do not
+count. 'The future of work' fails. 'Project management
+software for remote teams' passes.
+FAIL → CRITICAL
 
-CHECK 1: Does the hero state what the product or service is in plain language within the first visible text?
-Movement language, brand names, and slogans do not count. Visitors must know what they are buying within 3 seconds.
-FAIL → CRITICAL finding
+CHECK 2: Is there a primary CTA button in the hero
+section — not only in the navigation bar?
+FAIL → CRITICAL
 
-CHECK 2: Is there a primary CTA button in the hero section — not in the navigation bar?
-FAIL → CRITICAL finding
+CHECK 3: If a price is shown, does it state what is
+included at that price?
+FAIL → CRITICAL
 
-CHECK 3: If a price is shown, does it state what is included at that price?
-FAIL → CRITICAL finding
+CHECK 4: Does the hero make a trust or authority claim
+with no named individual visible to support it?
+'Built by doctors' with no named doctor fails.
+FAIL → CRITICAL
 
-CHECK 4: Does the hero make a trust claim referencing expertise or authority with no named individual visible on the homepage?
-FAIL → CRITICAL finding
-
-CHECK 5: Is the page so thin in content that conversion cannot be assessed — under 200 chars of visible text?
+CHECK 5: Is visible body text under 200 chars?
 FAIL → return { conversionScore: 35, topFinding: null }
 
-CHECK 6: Is there no social proof of any kind above the fold on a site where trust is the primary purchase barrier (healthcare, finance, legal)?
-FAIL → HIGH finding
+CHECK 6: Is there no social proof above the fold on a
+trust-critical site (healthcare, finance, legal)?
+FAIL → HIGH
 
-If all checks pass — identify the single highest-impact conversion weakness visible in the HTML and rate it HIGH or MEDIUM.
+STEP 3 — IF ALL CHECKS PASS, find the single most
+impactful weakness. Check in this priority order and
+stop at the first one present:
+
+PRIORITY 1 (return as HIGH):
+- The subheadline restates the headline with no new
+  information — quote both and name the missing
+  progression
+- The hero CTA copy is generic ('Get Started',
+  'Learn More', 'Sign Up') with no outcome —
+  quote the actual CTA text
+- Social proof exists but every testimonial is
+  anonymous — no full names visible anywhere
+- The hero states the product but never names who
+  it is for — no audience qualifier in hero
+
+PRIORITY 2 (return as MEDIUM):
+- Pricing is not mentioned or linked in the hero
+  or navigation
+- No differentiator from alternatives is stated
+  anywhere on the visible page
+- Trust signals exist but appear below the fold only
+
+MANDATORY FINDING RULE:
+topFinding must NEVER be null when body text exceeds
+200 chars. Every real page has at least one improvable
+element. If a page is genuinely exceptional, return
+the weakest PRIORITY 2 item as MEDIUM.
+
+GROUNDING RULE — CRITICAL:
+Every finding must reference specific content from
+the HTML. Quote exact copy when possible.
+
+BAD: 'The hero lacks a clear value proposition'
+GOOD: 'The hero headline reads Powering the Future
+of Claims — a tagline that names no product, no
+audience, and no outcome'
+
+BAD: 'CTA copy is generic'
+GOOD: 'The primary CTA reads Get Started with no
+reference to the free trial mentioned in the
+subheadline'
 
 SCORING:
-Start at 70. Subtract for each failure:
-CRITICAL finding: subtract 25-35 points
-HIGH finding: subtract 10-20 points
-MEDIUM finding: subtract 5-10 points
-Minimum score: 15
+BROKEN (12-40): Hard conversion stop or
+offer incomprehensible in 3 seconds
+WEAK (41-57): Fundamental failures blocking
+motivated visitors
+AVERAGE (58-73): Meaningful friction but functional
+STRONG (74-87): Minor friction, solid foundation
+EXCEPTIONAL (88-91): Rare — nearly optimized
 
-FINDING QUALITY RULES:
-- Title: under 12 words, names the specific problem
-- Description: exactly 2 sentences — what exists in the HTML and why it suppresses conversion
-- Never mention HTML, tags, elements, or technical terms
-- Write as a senior consultant, not a tool
-- Base every finding on specific visible content in the HTML — quote exact copy when relevant
+Never use multiples of 5 or 10.
+Start at band top, subtract for findings,
+above-fold failures, and missing trust.
 
-SEVERITY:
-critical: visitor is stopped — cannot understand offer or has no path to convert
-high: visitor is slowed — meaningful friction
-medium: visitor is not optimally served
+FINDING FORMAT:
+title: under 12 words, names the specific problem
+description: exactly 2 sentences — first quotes
+or references specific page content, second states
+the conversion impact
+severity: critical | high | medium
 
-Return ONLY valid JSON, no markdown fences:
+Return ONLY valid JSON, no markdown:
 {
-  "conversionScore": <integer 15-100>,
+  "conversionScore": <integer>,
   "topFinding": {
     "title": "<under 12 words>",
-    "description": "<exactly 2 sentences>",
+    "description": "<2 sentences>",
     "severity": "critical" | "high" | "medium"
   } | null
 }`;
@@ -1399,10 +1448,13 @@ export async function runPreviewAnalysis(
         block.text.slice(0, 200) + '\n')
       return { conversionScore: 50, topFinding: null }
     }
-    let raw = jsonMatch[0].trim()
+    let raw = jsonMatch[0]
+      .replace(/[‘’]/g, "'")
+      .replace(/[“”]/g, '\\"')
+      .replace(/—/g, '--')
+      .replace(/–/g, '-')
 
-    try {
-      const parsed = JSON.parse(raw) as Record<string, unknown>;
+    const extractResult = (parsed: Record<string, unknown>) => {
       process.stderr.write(
         '[PREVIEW] parsed result | score=' +
         parsed.conversionScore +
@@ -1422,9 +1474,25 @@ export async function runPreviewAnalysis(
             }
           : null,
       };
-    } catch (err) {
-      process.stderr.write('[ANALYZE] preview JSON parse ERROR | ' + err + '\n')
-      return { conversionScore: 50, topFinding: null };
+    }
+
+    try {
+      const parsed = JSON.parse(raw) as Record<string, unknown>;
+      return extractResult(parsed);
+    } catch {
+      // Strip description to prevent parse failures
+      // from special characters in quoted copy
+      try {
+        const stripped = raw.replace(
+          /"description"\s*:\s*"[^"]*"/g,
+          '"description": "See full report for details"'
+        )
+        const parsed = JSON.parse(stripped) as Record<string, unknown>;
+        return extractResult(parsed);
+      } catch {
+        process.stderr.write('[PREVIEW] JSON failed\n')
+        return { conversionScore: 50, topFinding: null }
+      }
     }
   };
 

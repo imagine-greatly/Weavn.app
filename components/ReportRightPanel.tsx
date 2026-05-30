@@ -1398,15 +1398,8 @@ export default function ReportRightPanel({
               CONVERSION TRANSFORMATION
             </div>
             <div style={{ position: "relative" }}>
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "1fr 1px 1fr",
-                  alignItems: "start",
-                }}
-              >
-                {/* Left column — CURRENT */}
-                <div style={{ paddingRight: 24 }}>
+              <div>
+                <div>
                   <div
                     style={{
                       fontFamily: REPORT_MONO,
@@ -1466,85 +1459,6 @@ export default function ReportRightPanel({
                     CTA
                   </div>
                   {renderTransformationCurrentCta(transformationCopy.currentCta)}
-                </div>
-
-                {/* Divider */}
-                <div
-                  style={{
-                    background: "rgba(255,255,255,0.1)",
-                    alignSelf: "stretch",
-                  }}
-                  aria-hidden
-                />
-
-                {/* Right column — OPTIMIZED */}
-                <div style={{ paddingLeft: 24 }}>
-                  <div
-                    style={{
-                      fontFamily: REPORT_MONO,
-                      fontSize: 9,
-                      letterSpacing: "0.1em",
-                      color: "#00E676",
-                      marginBottom: 20,
-                      textTransform: "uppercase",
-                    }}
-                  >
-                    OPTIMIZED
-                  </div>
-                  <div
-                    style={{
-                      fontFamily: REPORT_MONO,
-                      fontSize: 9,
-                      letterSpacing: "0.08em",
-                      color: "#8899AA",
-                      marginBottom: 6,
-                      textTransform: "uppercase",
-                    }}
-                  >
-                    HEADLINE
-                  </div>
-                  <OptimizedCopyLines
-                    lines={transformationCopy.optHeadlineLines}
-                    fontSize={20}
-                    fontWeight={400}
-                    isCta={false}
-                  />
-                  <div
-                    style={{
-                      fontFamily: REPORT_MONO,
-                      fontSize: 9,
-                      letterSpacing: "0.08em",
-                      color: "#8899AA",
-                      marginBottom: 6,
-                      textTransform: "uppercase",
-                    }}
-                  >
-                    SUBHEADLINE
-                  </div>
-                  <OptimizedCopyLines
-                    lines={transformationCopy.optSubLines}
-                    fontSize={15}
-                    fontWeight={400}
-                    isCta={false}
-                  />
-                  <div
-                    style={{
-                      fontFamily: REPORT_MONO,
-                      fontSize: 9,
-                      letterSpacing: "0.08em",
-                      color: "#8899AA",
-                      marginBottom: 6,
-                      textTransform: "uppercase",
-                    }}
-                  >
-                    CTA
-                  </div>
-                  <OptimizedCopyLines
-                    lines={transformationCopy.optCtaLines}
-                    fontSize={15}
-                    fontWeight={400}
-                    isCta
-                  />
                 </div>
               </div>
               {(trustArchitectureText || pageFlowText) && (

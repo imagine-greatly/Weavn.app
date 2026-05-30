@@ -587,12 +587,6 @@ Return valid JSON matching this schema exactly:
     "currentHeadline": string,
     "currentSubheadline": string,
     "currentCta": string,
-    "rewrittenHeadline": string,
-    "rewrittenSubheadline": string,
-    "rewrittenCta": string,
-    "rewrittenHeadlineAlternatives": string[],
-    "rewrittenSubheadlineAlternatives": string[],
-    "rewrittenCtaAlternatives": string[],
     "trustArchitecture": string,
     "pageFlowNote": string
   },

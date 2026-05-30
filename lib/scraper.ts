@@ -777,64 +777,112 @@ export function applySmartTruncation(
   html: string,
   complexity?: SiteComplexity
 ): string {
-  if (html.length <= 40_000) return html
 
-  if (html.length <= 80_000) {
-    const result = html.slice(0, 45_000) +
+  if (html.length <= 30_000) return html
+
+  if (html.length <= 60_000) {
+    const result = html.slice(0, 50_000) +
       TRUNCATION_SEPARATOR +
       html.slice(-8_000)
-    console.log(`[SCRAPER] truncation small | ${html.length} → ${result.length}`)
+    process.stderr.write(
+      '[SCRAPER] truncation small | ' +
+      html.length + ' → ' + result.length + '\n'
+    )
     return result
   }
 
-  // For large files — find content-dense sections
-  // Split into chunks and score each by readable text density
-  const CHUNK_SIZE = 8_000
-  const chunks: { text: string; start: number; density: number }[] = []
+  // Large file — semantic density sampling
+  const CHUNK_SIZE = 6_000
+  const chunks: {
+    text: string
+    start: number
+    density: number
+    hasPricingSignal: boolean
+    hasTrustSignal: boolean
+  }[] = []
+
+  // Conversion-critical keyword signals
+  const PRICING_SIGNALS = /pric|free|trial|plan|per month|\/mo|cost|\$[0-9]|discount|offer/i
+  const TRUST_SIGNALS = /testimonial|review|customer|client|case study|said|quote|★|rating|trusted|guarantee/i
 
   for (let i = 0; i < html.length; i += CHUNK_SIZE) {
     const chunk = html.slice(i, i + CHUNK_SIZE)
-    const readable = chunk.replace(/<[^>]+>/g, ' ')
-      .replace(/\s+/g, ' ').trim()
-    const density = readable.length / chunk.length
-    chunks.push({ text: chunk, start: i, density })
+    const readable = chunk
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim()
+    chunks.push({
+      text: chunk,
+      start: i,
+      density: readable.length / chunk.length,
+      hasPricingSignal: PRICING_SIGNALS.test(readable),
+      hasTrustSignal: TRUST_SIGNALS.test(readable)
+    })
   }
 
-  // Always include first 5 chunks (above fold — hero, nav, CTA)
-  const aboveFold = chunks.slice(0, 5)
+  // Always include first 5 chunks — above fold
+  const aboveFold = chunks.slice(0, 5) // 30k chars
 
-  // Score remaining chunks by density — take top 4
-  // This captures features, pricing, testimonials
+  // From remaining chunks, select by priority:
+  // 1. Chunks with pricing signals (always include, max 2)
+  // 2. Chunks with trust signals (always include, max 2)
+  // 3. Top density chunks to fill remaining budget
   const remaining = chunks.slice(5)
-  const topChunks = remaining
-    .sort((a, b) => b.density - a.density)
-    .slice(0, 4)
-    .sort((a, b) => a.start - b.start) // restore document order
 
-  // Always include last 1 chunk (footer — final CTA, trust)
+  const pricingChunks = remaining
+    .filter(c => c.hasPricingSignal)
+    .slice(0, 2)
+
+  const trustChunks = remaining
+    .filter(c => c.hasTrustSignal && !pricingChunks.includes(c))
+    .slice(0, 2)
+
+  const alreadySelected = new Set([
+    ...pricingChunks.map(c => c.start),
+    ...trustChunks.map(c => c.start)
+  ])
+
+  // Fill remaining budget with top density chunks
+  // Target total: ~100k chars
+  // Already have: 30k (above fold) + up to 24k (pricing+trust)
+  // Remaining budget: ~46k = ~7 more chunks
+  const densityChunks = remaining
+    .filter(c => !alreadySelected.has(c.start))
+    .sort((a, b) => b.density - a.density)
+    .slice(0, 7)
+
+  // Always include last chunk — footer/final CTA
   const footer = chunks.slice(-1)
 
-  // Combine: above fold + high density mid sections + footer
+  // Combine and deduplicate by start position
+  const seen = new Set<number>()
   const selected = [
     ...aboveFold,
-    ...topChunks,
-    ...footer,
+    ...pricingChunks,
+    ...trustChunks,
+    ...densityChunks,
+    ...footer
   ]
+    .filter(c => {
+      if (seen.has(c.start)) return false
+      seen.add(c.start)
+      return true
+    })
+    .sort((a, b) => a.start - b.start)
 
-  // Deduplicate by start position
-  const seen = new Set<number>()
-  const deduped = selected.filter(c => {
-    if (seen.has(c.start)) return false
-    seen.add(c.start)
-    return true
-  }).sort((a, b) => a.start - b.start)
+  const result = selected
+    .map(c => c.text)
+    .join(TRUNCATION_SEPARATOR)
 
-  const result = deduped.map(c => c.text).join(TRUNCATION_SEPARATOR)
-  console.log(
-    `[SCRAPER] truncation density | cleaned=${html.length}` +
-    ` chunks_selected=${deduped.length}` +
-    ` total=${result.length}`
+  process.stderr.write(
+    '[SCRAPER] truncation semantic | ' +
+    'cleaned=' + html.length +
+    ' pricing_chunks=' + pricingChunks.length +
+    ' trust_chunks=' + trustChunks.length +
+    ' density_chunks=' + densityChunks.length +
+    ' total=' + result.length + '\n'
   )
+
   return result
 }
 

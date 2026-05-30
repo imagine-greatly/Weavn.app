@@ -431,6 +431,38 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  // Email notification — non-blocking, must not delay the scan response
+  if (userId) {
+    try {
+      const supabaseAdmin = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!
+      )
+      const { data: userData } = await supabaseAdmin.auth.admin.getUserById(userId)
+      const userEmail = userData?.user?.email
+      if (userEmail) {
+        const { Resend } = await import('resend')
+        const resend = new Resend(process.env.RESEND_API_KEY)
+        await resend.emails.send({
+          from: 'webdoc.ai <insights@webdocai.com>',
+          to: userEmail,
+          subject: `Your webdoc.ai report for ${domain} is ready`,
+          html: `
+      <div style="font-family: monospace; background: #080C14; color: #F0F4FF; padding: 40px; max-width: 600px;">
+        <p style="color: #00C8FF; font-size: 12px; letter-spacing: 2px; text-transform: uppercase; margin: 0 0 24px;">WEBDOC.AI</p>
+        <p style="font-size: 16px; margin: 0 0 16px;">Your diagnostic report for <strong>${domain}</strong> is complete.</p>
+        <p style="color: #8899AA; font-size: 14px; margin: 0 0 32px;">The full breakdown — findings ranked by revenue impact, implementation directives, and growth blueprint — is ready to view.</p>
+        <a href="https://webdocai.com/report/${domain}" style="display: inline-block; background: #00C8FF; color: #080C14; font-family: monospace; font-size: 12px; letter-spacing: 2px; text-transform: uppercase; padding: 14px 28px; text-decoration: none;">VIEW REPORT →</a>
+      </div>
+    `
+        })
+        console.log(`[ROUTE] email sent | domain=${domain} to=${userEmail}`)
+      }
+    } catch (emailErr) {
+      console.log(`[ROUTE] email failed | error=${emailErr instanceof Error ? emailErr.message : String(emailErr)}`)
+    }
+  }
+
   console.log(`[scan] COMPLETE | domain=${domain} reportId=${reportId} total_elapsed=${Date.now() - scanStart}ms`)
 
   // Fire-and-forget: pre-generate AI advisor briefs for all findings in the background.

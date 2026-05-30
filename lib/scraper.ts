@@ -675,7 +675,7 @@ async function fetchSubpageFast(url: string, abortMs: number, complexity?: SiteC
     `?token=${apiKey}&launch=${launchParam}`;
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), abortMs);
-  const subpageWait = complexity === 'simple' ? 600 : complexity === 'complex' ? 1500 : 1000
+  const subpageWait = complexity === 'simple' ? 700 : complexity === 'complex' ? 1600 : 1100
   process.stderr.write(`[SCRAPER] subpage adaptive wait | complexity=${complexity ?? 'unknown'} → waitMs=${subpageWait}ms\n`)
   try {
     const res = await fetch(endpoint, {

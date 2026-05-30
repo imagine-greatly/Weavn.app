@@ -168,8 +168,8 @@ export async function POST(req: NextRequest) {
   let deadlineTimerId: ReturnType<typeof setTimeout>;
   const deadline = new Promise<never>((_, reject) => {
     deadlineTimerId = setTimeout(
-      () => reject(new Error('[TIMEOUT] Scan exceeded 175 s deadline — exiting cleanly to flush logs')),
-      175_000
+      () => reject(new Error('[TIMEOUT] Scan exceeded 240 s deadline — exiting cleanly to flush logs')),
+      240_000
     );
   });
 
@@ -359,18 +359,24 @@ export async function POST(req: NextRequest) {
   })()
   const calculatedTimeout = baseTimeout - elapsed
   const floor = isMultiPage ? 110_000 : 65_000
-  const uncappedTimeout = Math.max(floor, calculatedTimeout)
-  const analyzeTimeoutMs = Math.min(110_000, uncappedTimeout)
-  if (uncappedTimeout > 110_000) {
-    process.stderr.write('[ROUTE] analyzeTimeoutMs capped at 110s ceiling\n')
-  }
-  const timeoutSource = calculatedTimeout >= floor ? 'calculated' : 'floor'
+
+  const ceiling = isMultiPage
+    ? (complexity === 'complex' ? 140_000
+       : complexity === 'medium' ? 115_000
+       : 85_000)
+    : (complexity === 'complex' ? 120_000
+       : complexity === 'medium' ? 95_000
+       : 72_000)
+
+  const analyzeTimeoutMs = Math.min(
+    ceiling,
+    Math.max(floor, calculatedTimeout)
+  )
   process.stderr.write(
     '[ROUTE] analyzeTimeoutMs=' + analyzeTimeoutMs +
-    ' source=' + timeoutSource +
+    ' ceiling=' + ceiling +
     ' complexity=' + complexity +
-    ' multipage=' + isMultiPage +
-    ' elapsed=' + elapsed + 'ms\n'
+    ' multipage=' + isMultiPage + '\n'
   )
   const analyzeDeadline = new Promise<never>((_, reject) =>
     setTimeout(

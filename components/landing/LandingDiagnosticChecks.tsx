@@ -137,9 +137,19 @@ export default function LandingDiagnosticChecks() {
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {DIMENSIONS.map((dim, i) => (
+          {DIMENSIONS.slice(0, 6).map((dim, i) => (
             <div key={dim.name}>
               <ScrollReveal variant="card" index={i}>
+                <DimensionCard dimension={dim} />
+              </ScrollReveal>
+            </div>
+          ))}
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2 mt-4">
+          {DIMENSIONS.slice(6).map((dim, i) => (
+            <div key={dim.name}>
+              <ScrollReveal variant="card" index={6 + i}>
                 <DimensionCard dimension={dim} />
               </ScrollReveal>
             </div>

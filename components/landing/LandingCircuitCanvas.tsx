@@ -11,7 +11,7 @@ type TraceLine = {
   startTime: number;
 };
 
-const MAX_LINES = 12;
+const MAX_LINES = 15;
 const LINE_COLOR = "rgba(0,200,255,0.035)";
 const DOT_FILL = "rgba(0,200,255,0.1)";
 const DOT_RADIUS = 1.5;
@@ -143,7 +143,7 @@ export default function LandingCircuitCanvas({ overlay }: Props) {
     const w0 = window.innerWidth;
     const h0 = window.innerHeight;
     let nextSpawnAt = performance.now() + randomInRange(0, 2500);
-    for (let s = 0; s < 6 && linesRef.current.length < MAX_LINES; s++) {
+    for (let s = 0; s < 8 && linesRef.current.length < MAX_LINES; s++) {
       const points = buildManhattanPath(w0, h0);
       const totalLen = polylineLength(points);
       if (totalLen >= 80) {
@@ -180,7 +180,7 @@ export default function LandingCircuitCanvas({ overlay }: Props) {
 
       if (linesRef.current.length < MAX_LINES && now >= nextSpawnAt) {
         spawnLine(w, h);
-        nextSpawnAt = now + randomInRange(3000, 4000);
+        nextSpawnAt = now + randomInRange(2300, 3100);
       }
 
       const beforeCount = linesRef.current.length;

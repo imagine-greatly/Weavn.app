@@ -383,7 +383,7 @@ const STEPS = [
     explanationTitle: "Two hundred checks across six revenue dimensions",
     explanationBody:
       "Two hundred checks run across Conversion Architecture, Trust Signals, Message Clarity, Traffic Readiness, Technical Foundation, and Vertical Signals in parallel. Each check binds to a cited principle and produces machine-readable evidence from your DOM.",
-    tag: "200 CHECKS · 6 REVENUE DIMENSIONS",
+    tag: "210 CHECKS · 8 REVENUE DIMENSIONS",
   },
   {
     num: 4,
@@ -757,7 +757,7 @@ function CompleteDiagnosticDatabase() {
               fontWeight: 800,
             }}
           >
-            All 200 checks, every scan
+            All 210 checks, every scan
             <span style={{ color: "var(--cyan)" }}>.</span>
           </h2>
         </ScrollReveal>
@@ -889,7 +889,7 @@ function CompleteDiagnosticDatabase() {
               className="font-sans font-extrabold"
               style={{ color: "var(--cyan)", fontSize: 22, letterSpacing: "-0.8px" }}
             >
-              200
+              210
             </span>
             <span className="font-mono text-[11px] uppercase tracking-[2px]" style={{ color: "var(--text-muted)" }}>
               checks · every scan · no sampling

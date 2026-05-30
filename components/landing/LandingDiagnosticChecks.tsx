@@ -6,7 +6,7 @@ import { ScrollReveal } from "@/components/ScrollReveal";
 const DIMENSIONS = [
   {
     name: "Conversion Architecture",
-    count: 34,
+    count: 35,
     checks: [
       "Hero CTA absent above the fold",
       "CTA button has low visual contrast",
@@ -61,13 +61,24 @@ const DIMENSIONS = [
   },
   {
     name: "Technical Foundation",
-    count: 34,
+    count: 33,
     checks: [
       "Hero content not visible above fold on mobile",
       "Page weight suggests slow load time",
       "No clear path from landing page to purchase",
       "CTA not visible above fold on mobile",
       "Text contrast ratio insufficient",
+    ],
+  },
+  {
+    name: "Vertical & Universal Signals",
+    count: 34,
+    checks: [
+      "SaaS-specific free trial and onboarding path",
+      "Ecommerce product page conversion elements",
+      "Agency and service credentialing standards",
+      "Universal trust signals across all site types",
+      "Conversion path expansion and re-engagement",
     ],
   },
   {
@@ -109,7 +120,7 @@ export default function LandingDiagnosticChecks() {
                 fontWeight: 800,
               }}
             >
-              200 diagnostic checks
+              210 diagnostic checks
               <span style={{ color: "var(--cyan)" }}>.</span>
             </h2>
           </ScrollReveal>
@@ -118,7 +129,7 @@ export default function LandingDiagnosticChecks() {
               className="mx-auto mt-5 max-w-[540px] font-sans text-[17px] leading-relaxed"
               style={{ color: "var(--text-secondary)" }}
             >
-              Every scan runs all 200 checks across six revenue dimensions. No sampling, no shortcuts.
+              Every scan runs all 210 checks across six revenue dimensions. No sampling, no shortcuts.
             </p>
           </ScrollReveal>
         </div>
@@ -140,7 +151,7 @@ export default function LandingDiagnosticChecks() {
               className="font-mono text-[12px] uppercase tracking-[2px] transition-colors duration-200 hover:text-white"
               style={{ color: "var(--cyan)" }}
             >
-              SEE ALL 200 CHECKS →
+              SEE ALL 210 CHECKS →
             </Link>
           </div>
         </ScrollReveal>

@@ -1370,15 +1370,64 @@ of these, rewrite or skip it:
 in the provided HTML', 'may not', 'appears to',
 'seems to', 'typically', 'usually'
 
-SCORING:
+SCORING — use the same calibration as a full
+conversion audit:
+
+BANDS:
 BROKEN (12-40): Hard stop or offer incomprehensible
-WEAK (41-57): Fundamental failures present
+WEAK (41-57): Fundamental failures blocking visitors
 AVERAGE (58-73): Friction but functional
-STRONG (74-87): Minor friction only
+STRONG (74-87): Minor friction, solid foundation
 EXCEPTIONAL (88-91): Nearly optimized, very rare
 
-Never use multiples of 5 or 10.
-Calculate from band top downward.
+START at 100. Subtract for each failure found.
+
+DEDUCTIONS:
+CRITICAL finding above fold: -28 to -32 points
+CRITICAL finding below fold: -20 to -24 points
+HIGH finding above fold: -12 to -16 points
+HIGH finding below fold: -8 to -12 points
+MEDIUM finding: -4 to -6 points
+
+ADDITIONAL DEDUCTIONS (apply independently):
+Zero named social proof anywhere on page: -6
+Anonymous social proof only (no names): -3
+No pricing or free tier mentioned in hero or nav: -5
+No audience qualifier in hero: -4
+CTA copy is generic with no outcome: -5
+Subheadline restates headline: -4
+No differentiator from alternatives: -3
+
+CALIBRATION REALITY CHECK:
+Most real founder sites score 38-62.
+A site scoring above 68 in preview genuinely has:
+- Clear plain-language hero headline
+- Named CTA button in hero section
+- Named social proof visible
+- Pricing or free tier mentioned
+- Audience qualifier present
+If you are scoring a site above 68 and it lacks
+any of these, recalibrate down.
+
+A site scoring above 74 is exceptional and rare.
+Reserve 74+ for sites that clearly nail all five
+of the above criteria with strong execution.
+
+FORBIDDEN NUMBERS: 40, 45, 50, 55, 60, 65, 70,
+75, 80 — these indicate anchoring not precision.
+Use specific integers that reflect the exact
+combination of failures found.
+
+ANTI-ANCHORING RULE:
+The mandatory checklist has 6 checks. If all 6
+pass, the score does NOT default to 70. Apply
+the additional deductions above — most sites
+that pass the 6 mandatory checks still have
+3-4 additional deductions that push the score
+into the 52-66 range.
+
+70 is not a default. 70 means a site is
+genuinely above average with minor friction only.
 
 FINDING FORMAT:
 title: under 12 words, names the specific problem

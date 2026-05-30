@@ -262,56 +262,35 @@ Return ONLY valid JSON matching the exact shape requested in the user message. N
 
 /** JSON contract for /api/expand-finding (issue detail page). */
 export const EXPAND_FINDING_BRIEF_JSON_CONTRACT = `{
-  "diagnosticSummary": "string — 2-3 sentences maximum. Attending-physician style. Reference the actual domain and quoted evidence. Never more than 3 sentences.",
-  "observedAt": "string — one line, e.g. Hero section — above fold, primary viewport",
-  "diagnosisAnalysis": {
-    "behavioralMechanism": "string — 2-3 sentences maximum. What the visitor experiences and why it causes hesitation or exit. Specific to this domain and evidence. Never more than 3 sentences.",
-    "behavioralMechanismVerdict": "string — exactly 1 sentence, 10-15 words max. A sharp plain-English verdict a consultant would say out loud about what the visitor experiences. No jargon. Example: 'Visitors cannot tell what makes this brand different from Amazon, so they leave.'",
-    "conversionConsequence": "string — 2-3 sentences maximum. What conversion action breaks and what the visitor does instead. Quantify with labeled benchmarks where possible. Never more than 3 sentences.",
-    "conversionConsequenceVerdict": "string — exactly 1 sentence, 10-15 words max. What conversion action breaks, stated as a plain fact. Example: 'Most first-time visitors exit before reaching any product page.'",
-    "scopeOfImpact": "string — 2-3 sentences maximum. Which visitor segments are affected and on which devices. Never more than 3 sentences.",
-    "scopeOfImpactVerdict": "string — exactly 1 sentence, 10-15 words max. Who is affected and how broadly. Example: 'Every visitor on every device hits this barrier on first load.'",
-    "interactionEffect": "string — 2-3 sentences maximum. How this finding compounds with other findings on this report. Name specific finding titles. Never more than 3 sentences.",
-    "interactionEffectVerdict": "string — exactly 1 sentence, 10-15 words max. How this compounds with other findings. Example: 'Combined with weak trust signals, this doubles the exit rate.'"
-  },
-  // diagnosisAnalysis total length: Write exactly two paragraphs totaling 120-180 words. Paragraph 1: what exists and why it fails — quote specific copy, name where it appears, describe the visitor experience. Maximum 4 sentences. Paragraph 2: business impact — which visitors are affected, what action they fail to take, what it costs. Maximum 4 sentences. No headers. No bullets. No hedging language.
+  "diagnosticAnalysis": "string — exactly two paragraphs, 120-180 words total. Paragraph 1: quote the specific copy or element, name where it appears, describe exactly what the visitor experiences. Paragraph 2: which visitors are affected, what action they fail to take, what it costs the business. No headers. No bullets. No hedging. No academic language.",
+
   "revenueImpact": {
-    "impactRatingDisplay": "string — exactly one of: CRITICAL SUPPRESSION | HIGH SUPPRESSION | MEDIUM SUPPRESSION | LOW SUPPRESSION (match severity)",
-    "narrative": "string — paragraph: why this rating; cite evidence",
-    "modeling": "string — 2-3 sentences maximum. Estimate lost conversions using stated assumptions labeled as estimates or benchmarks. Never more than 3 sentences.",
-    "costOfInaction": "string — one clinical line on compounding cost of delay",
-    "revenueImpactVerdict": "string — exactly 1 sentence, 10-15 words max. The revenue consequence stated as a clinical fact with a number where possible. Example: 'Estimated $950-1,170 in monthly revenue suppression at current traffic levels.'"
+    "impactRatingDisplay": "string — exactly one of: CRITICAL SUPPRESSION | HIGH SUPPRESSION | MEDIUM SUPPRESSION | LOW SUPPRESSION",
+    "costOfInaction": "string — one clinical sentence on the cost of not fixing this. Maximum 15 words.",
+    "thisSiteLabel": "string — short label for underperforming bar (e.g. 'Current state')",
+    "benchmarkLabel": "string — short label for benchmark bar (e.g. 'Industry standard')"
   },
-  "originAnalysis": "string — 2-3 sentences maximum. Analytical origins of this flaw type. Not accusatory. Never more than 3 sentences.",
-  "originAnalysisVerdict": "string — exactly 1 sentence, 10-15 words max. Root cause in plain English. Example: 'This flaw typically emerges when internal teams prioritize brand voice over visitor clarity.'",
-  "benchmark": {
-    "statement": "string — 1-2 sentences maximum. How top sites in this category handle this element.",
-    "thisSiteLabel": "string — short qualitative label for underperforming bar",
-    "benchmarkLabel": "string — short qualitative label for benchmark bar"
-  },
+
   "resolution": {
     "immediate": {
-      "steps": "string",
-      "timeEstimate": "string",
-      "projectedImpact": "string — one sentence. What measurable improvement resolving this tier alone is projected to achieve. Use conservative category benchmarks labeled as estimates. Example: 'Estimated 15-25% reduction in hero-section bounce rate based on pet retail benchmarks.'"
+      "steps": "string — what to change and exactly where. Specific enough to act on today. Maximum 3 sentences.",
+      "timeEstimate": "string — e.g. '30 minutes'",
+      "projectedImpact": "string — one conservative sentence on measurable improvement."
     },
     "proper": {
-      "steps": "string",
-      "timeEstimate": "string",
-      "projectedImpact": "string — one sentence. Cumulative improvement from proper implementation. Example: 'Estimated 25-40% conversion lift on direct and paid traffic based on messaging clarity benchmarks.'"
+      "steps": "string — the complete fix with context. Maximum 3 sentences.",
+      "timeEstimate": "string — e.g. '1-2 days'",
+      "projectedImpact": "string — one sentence."
     },
     "advanced": {
-      "steps": "string",
-      "timeEstimate": "string",
-      "projectedImpact": "string — one sentence. Full potential impact at scale. Example: 'Estimated 40-60% conversion improvement with dynamic personalization at scale.'"
+      "steps": "string — the strategic version of this fix. Maximum 3 sentences.",
+      "timeEstimate": "string — e.g. '1-2 weeks'",
+      "projectedImpact": "string — one sentence."
     }
   },
-  "compoundingRisk": "string — 2-3 sentences maximum. Urgency without marketing language. Never more than 3 sentences.",
-  "compoundingRiskVerdict": "string — exactly 1 sentence, 10-15 words max. The urgency stated plainly. Example: 'Every month this stays unresolved, paid traffic ROI compounds downward.'",
-  "relatedFindingInteractions": [
-    { "findingId": "string", "interaction": "string" }
-  ],
-  "advisorOpening": "string — maximum 2 sentences. First sentence: name the single most important implication of this finding. Second sentence: state the most direct action the founder can take to resolve it. Never repeat the finding title verbatim. Never define terms the finding already defines. Never open with 'I have analyzed' or 'Based on the diagnostic' or any preamble. Start with the insight itself.",
+
+  "advisorOpening": "string — exactly 2 sentences. Sentence 1: the single most important implication of this finding stated as fact. Sentence 2: the most direct action to resolve it. Never repeat the finding title. Never define terms.",
+
   "advisorChips": ["string", "string", "string"]
 }`;
 
@@ -336,41 +315,18 @@ export type ExpandFindingBriefFindingInput = {
 
 /** Parsed `/api/expand-finding` payload for the issue detail page. */
 export interface FindingBriefExpansion {
-  diagnosticSummary: string;
-  diagnosticSummaryVerdict?: string;
-  observedAt: string;
-  diagnosisAnalysis: {
-    behavioralMechanism: string;
-    conversionConsequence: string;
-    scopeOfImpact: string;
-    interactionEffect: string;
-    behavioralMechanismVerdict?: string;
-    conversionConsequenceVerdict?: string;
-    scopeOfImpactVerdict?: string;
-    interactionEffectVerdict?: string;
-  };
+  diagnosticAnalysis: string;
   revenueImpact: {
     impactRatingDisplay: string;
-    narrative: string;
-    modeling: string;
     costOfInaction: string;
-    revenueImpactVerdict?: string;
-  };
-  originAnalysis: string;
-  originAnalysisVerdict?: string;
-  benchmark: {
-    statement: string;
     thisSiteLabel: string;
     benchmarkLabel: string;
   };
   resolution: {
-    immediate: { steps: string; timeEstimate: string };
-    proper: { steps: string; timeEstimate: string };
-    advanced: { steps: string; timeEstimate: string };
+    immediate: { steps: string; timeEstimate: string; projectedImpact?: string };
+    proper: { steps: string; timeEstimate: string; projectedImpact?: string };
+    advanced: { steps: string; timeEstimate: string; projectedImpact?: string };
   };
-  compoundingRisk: string;
-  compoundingRiskVerdict?: string;
-  relatedFindingInteractions: { findingId: string; interaction: string }[];
   advisorOpening: string;
   advisorChips: string[];
 }
@@ -391,7 +347,7 @@ export function buildExpandFindingBriefUserMessage(input: {
               `- id=${r.findingId} | category=${r.category} | title=${r.title}`,
           )
           .join("\n")
-      : "(none — return relatedFindingInteractions as [])";
+      : "(none)";
 
   const siteTypeLine = input.siteType ? `\nSite type: ${input.siteType}` : "";
   const pageSummaryBlock = input.pageSummary
@@ -413,19 +369,15 @@ Technical / example (raw): ${input.finding.exampleFix}
 Revenue mechanism (raw): ${input.finding.psychologyPrinciple}
 Revenue impact score (0–10 scale if present): ${typeof input.finding.revenueImpact === "number" ? input.finding.revenueImpact : "(unknown)"}
 
-OTHER FINDINGS ON THE SAME REPORT (for interaction paragraphs and relatedFindingInteractions only)
+OTHER FINDINGS IN THE SAME CATEGORY (for context only)
 ${rel}
 
 TASK
 Produce the full clinical brief as JSON. Ground every analysis paragraph in the PAGE CONTEXT above — reference actual headlines, CTAs, copy, and page structure. Do not produce generic CRO advice. Every sentence must be specific to this domain and this evidence.
 
 Rules:
-- diagnosticSummary: attending-physician style; reference the actual domain and quoted or paraphrased evidence.
-- observedAt: if you lack a precise DOM path, infer the best plain-English location from evidence and category (never invent a URL path).
-- diagnosisAnalysis: four separate prose strings; no bullets; no inner headings.
+- diagnosticAnalysis: exactly two paragraphs, 120-180 words total. Quote actual page evidence in paragraph 1. Name specific affected audience in paragraph 2. No hedging, no bullets, no headers.
 - revenueImpact.impactRatingDisplay must align with severity (Critical→CRITICAL SUPPRESSION, High/HIGH IMPACT→HIGH SUPPRESSION, etc.).
-- revenueImpact.modeling: use phrases like "assuming mid-traffic B2B marketplace benchmarks" when hard data is missing.
-- relatedFindingInteractions: one object per related finding id listed above; findingId must match exactly; if no related list, return [].
 - advisorChips: exactly 3 strings, each a short question specific to THIS finding (not generic "How do I resolve this?").
 - advisorOpening: must not echo the title alone as the whole message.
 

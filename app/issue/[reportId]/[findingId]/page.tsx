@@ -696,7 +696,6 @@ export default function IssuePage() {
   ]);
   const [resolveBusy, setResolveBusy] = useState(false);
   const [resolvedLocal, setResolvedLocal] = useState(false);
-  const [analysisExpanded, setAnalysisExpanded] = useState(false);
   useEffect(() => {
     if (!reportId) return;
     let cancelled = false;
@@ -773,7 +772,7 @@ export default function IssuePage() {
               const cachedRaw = localStorage.getItem(bk);
               if (cachedRaw) {
                 const cachedBrief = JSON.parse(cachedRaw) as FindingBriefExpansion;
-                if (typeof cachedBrief?.diagnosticSummary === "string") {
+                if (typeof cachedBrief?.diagnosticAnalysis === "string") {
                   setBriefExpanded(cachedBrief);
                   setAdvisorChips(advisorChipsFromExpansion(cachedBrief));
                   const open = typeof cachedBrief.advisorOpening === "string" ? cachedBrief.advisorOpening.trim() : "";
@@ -1057,7 +1056,7 @@ export default function IssuePage() {
         if (
           !res.ok ||
           payloadRaw.error ||
-          typeof payloadRaw.diagnosticSummary !== "string"
+          typeof payloadRaw.diagnosticAnalysis !== "string"
         ) {
           setBriefExpanded(null);
           setMessages([
@@ -1340,46 +1339,15 @@ export default function IssuePage() {
   }
 
   const hasBrief = Boolean(briefExpanded);
-  const diagnosticSummaryBody =
-    briefExpanded?.diagnosticSummary?.trim() ||
+  const diagnosticAnalysisRaw =
+    briefExpanded?.diagnosticAnalysis?.trim() ||
     (typeof finding.whyItMatters === "string" ? finding.whyItMatters.trim() : "") ||
     (finding.whatWeFound ?? "").trim() ||
     "—";
   const evidenceQuote = finding.whatWeFound ?? "";
-  const originAnalysisDisplay = firstParagraphOrigin(briefExpanded?.originAnalysis);
-  const originFullText = String(briefExpanded?.originAnalysis ?? "").trim();
-
-  const benchmarkStatementRaw = String(
-    briefExpanded?.benchmark?.statement ?? "",
-  ).trim();
-
-  const revenueModelingRaw = String(
-    briefExpanded?.revenueImpact?.modeling ?? "",
-  ).trim();
-  const revenueNarrativeRaw = String(
-    briefExpanded?.revenueImpact?.narrative ?? "",
-  ).trim();
   const costOfInactionLine =
     briefExpanded?.revenueImpact?.costOfInaction?.trim() ||
     "Every month this finding remains unresolved, suppression compounds with visitor data establishing negative recall patterns.";
-
-  const behavioralMechanismRaw = String(
-    briefExpanded?.diagnosisAnalysis?.behavioralMechanism ?? "",
-  ).trim();
-  const conversionConsequenceRaw = String(
-    briefExpanded?.diagnosisAnalysis?.conversionConsequence ?? "",
-  ).trim();
-  const scopeOfImpactRaw = String(
-    briefExpanded?.diagnosisAnalysis?.scopeOfImpact ?? "",
-  ).trim();
-  const interactionEffectRaw = String(
-    briefExpanded?.diagnosisAnalysis?.interactionEffect ?? "",
-  ).trim();
-
-  const originAnalysisFull =
-    originFullText ||
-    (isPlaceholderContent(originAnalysisDisplay) ? "—" : originAnalysisDisplay);
-  const compoundingRiskRaw = String(briefExpanded?.compoundingRisk ?? "").trim();
 
   const resolutionProjectedImpact = (tier: "immediate" | "proper" | "advanced") => {
     const raw = (
@@ -1435,10 +1403,6 @@ export default function IssuePage() {
   const psychColonIdx = psychRaw.indexOf(":");
   const psychName = psychColonIdx >= 0 ? psychRaw.slice(0, psychColonIdx).trim() : psychRaw;
   const psychExplanation = psychColonIdx >= 0 ? psychRaw.slice(psychColonIdx + 1).trim() : "";
-
-  const hasCollapsedContent =
-    !isPlaceholderContent(originAnalysisFull) ||
-    !isPlaceholderContent(compoundingRiskRaw);
 
   const exampleFixRaw = (finding.exampleFix ?? "").trim();
   const exampleFixItems = (() => {
@@ -2136,7 +2100,7 @@ export default function IssuePage() {
               }}
             />
           </blockquote>
-          {(briefExpanded?.observedAt?.trim() || finding.page_location?.trim()) ? (
+          {finding.page_location?.trim() ? (
             <div
               style={{
                 marginTop: 12,
@@ -2147,7 +2111,7 @@ export default function IssuePage() {
               }}
             >
               Observed at:{" "}
-              {briefExpanded?.observedAt?.trim() || finding.page_location?.trim()}
+              {finding.page_location.trim()}
             </div>
           ) : null}
         </div>
@@ -2160,37 +2124,11 @@ export default function IssuePage() {
             <BriefLoadingPulse />
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-              {!isPlaceholderContent(diagnosticSummaryBody) &&
-                diagnosticSummaryBody.split('\n\n').filter(Boolean).map((para, i) => (
-                  <p key={`summary-${i}`} style={{ margin: 0, maxWidth: 820, ...bodyCopy }}>{para}</p>
+              {!isPlaceholderContent(diagnosticAnalysisRaw) &&
+                diagnosticAnalysisRaw.split('\n\n').filter(Boolean).map((para, i) => (
+                  <p key={`analysis-${i}`} style={{ margin: 0, maxWidth: 820, ...bodyCopy }}>{para}</p>
                 ))
               }
-              {!isPlaceholderContent(behavioralMechanismRaw) && behavioralMechanismRaw !== "Mechanism analysis pending." && (
-                <p style={{ margin: 0, maxWidth: 820, ...bodyCopy }}>{behavioralMechanismRaw}</p>
-              )}
-              {!isPlaceholderContent(conversionConsequenceRaw) && (
-                <p style={{ margin: 0, maxWidth: 820, ...bodyCopy }}>{conversionConsequenceRaw}</p>
-              )}
-              {!isPlaceholderContent(scopeOfImpactRaw) && (
-                <p style={{ margin: 0, maxWidth: 820, ...bodyCopy }}>{scopeOfImpactRaw}</p>
-              )}
-              {!isPlaceholderContent(interactionEffectRaw) && (
-                <p style={{ margin: 0, maxWidth: 820, ...bodyCopy }}>{interactionEffectRaw}</p>
-              )}
-              {analysisExpanded && (
-                <>
-                  {!isPlaceholderContent(originAnalysisFull) && (
-                    <p style={{ margin: 0, maxWidth: 820, ...bodyCopy, whiteSpace: "pre-wrap" }}>
-                      {originAnalysisFull}
-                    </p>
-                  )}
-                  {!isPlaceholderContent(compoundingRiskRaw) && (
-                    <p style={{ margin: 0, maxWidth: 820, ...bodyCopy, whiteSpace: "pre-wrap" }}>
-                      {compoundingRiskRaw}
-                    </p>
-                  )}
-                </>
-              )}
               {psychRaw ? (
                 <div style={{ borderTop: "1px solid #1A2035", paddingTop: 20 }}>
                   <div
@@ -2218,26 +2156,6 @@ export default function IssuePage() {
                   </p>
                 </div>
               ) : null}
-              {hasCollapsedContent ? (
-                <button
-                  type="button"
-                  onClick={() => setAnalysisExpanded((v) => !v)}
-                  style={{
-                    alignSelf: "flex-start",
-                    background: "transparent",
-                    border: "none",
-                    cursor: "pointer",
-                    fontFamily: "var(--font-space-mono), ui-monospace, monospace",
-                    fontSize: 11,
-                    color: "#00C8FF",
-                    letterSpacing: "0.08em",
-                    textTransform: "uppercase",
-                    padding: 0,
-                  }}
-                >
-                  {analysisExpanded ? "COLLAPSE ANALYSIS ↑" : "VIEW FULL ANALYSIS →"}
-                </button>
-              ) : null}
             </div>
           )}
         </div>
@@ -2261,16 +2179,7 @@ export default function IssuePage() {
 
           {expandLoading && !hasBrief ? (
             <SectionSkeleton widthPct="68%" />
-          ) : (
-            <>
-              {!isPlaceholderContent(revenueModelingRaw) && (
-                <p style={{ margin: "0 0 16px 0", maxWidth: 820, ...bodyCopy }}>{revenueModelingRaw}</p>
-              )}
-              {revenueNarrativeRaw ? (
-                <p style={{ margin: "0 0 16px 0", ...bodyCopy }}>{revenueNarrativeRaw}</p>
-              ) : null}
-            </>
-          )}
+          ) : null}
 
           <p
             style={{
@@ -2289,13 +2198,13 @@ export default function IssuePage() {
             {[
               {
                 label: "This site:",
-                desc: briefExpanded?.benchmark?.thisSiteLabel || "Current experience vs. category norm",
+                desc: briefExpanded?.revenueImpact?.thisSiteLabel || "Current experience vs. category norm",
                 w: "32%",
                 c: sevColor,
               },
               {
                 label: "High-converting benchmark:",
-                desc: briefExpanded?.benchmark?.benchmarkLabel || "Category-leading clarity pattern",
+                desc: briefExpanded?.revenueImpact?.benchmarkLabel || "Category-leading clarity pattern",
                 w: "82%",
                 c: "#00E676",
               },
@@ -2513,10 +2422,6 @@ export default function IssuePage() {
               <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
                 {relatedFindings.map((l) => {
                   const kid = leakKey(l);
-                  const inter =
-                    briefExpanded?.relatedFindingInteractions?.find(
-                      (x) => x.findingId === kid,
-                    )?.interaction ?? "";
                   return (
                     <Link
                       key={kid}
@@ -2561,19 +2466,6 @@ export default function IssuePage() {
                       >
                         {l.title}
                       </div>
-                      {inter ? (
-                        <div
-                          style={{
-                            marginTop: 10,
-                            fontFamily: "var(--font-jetbrains-mono), var(--font-space-mono), monospace",
-                            fontSize: 13,
-                            color: "rgba(136,153,170,0.85)",
-                            lineHeight: 1.5,
-                          }}
-                        >
-                          Interaction: {inter}
-                        </div>
-                      ) : null}
                     </Link>
                   );
                 })}

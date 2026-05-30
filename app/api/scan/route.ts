@@ -168,8 +168,8 @@ export async function POST(req: NextRequest) {
   let deadlineTimerId: ReturnType<typeof setTimeout>;
   const deadline = new Promise<never>((_, reject) => {
     deadlineTimerId = setTimeout(
-      () => reject(new Error('[TIMEOUT] Scan exceeded 250 s deadline — exiting cleanly to flush logs')),
-      250_000
+      () => reject(new Error('[TIMEOUT] Scan exceeded 175 s deadline — exiting cleanly to flush logs')),
+      175_000
     );
   });
 
@@ -298,7 +298,7 @@ export async function POST(req: NextRequest) {
       process.stderr.write(`[ROUTE] subpages selected=${JSON.stringify(subpageUrls)}\n`);
 
       if (subpageUrls.length > 0) {
-        const subpageCapMs = complexity === 'simple' ? 16_000 : complexity === 'complex' ? 28_000 : 22_000
+        const subpageCapMs = complexity === 'simple' ? 12_000 : complexity === 'complex' ? 20_000 : 16_000
         const collected: PromiseSettledResult<{ url: string; rawHtml: string } | null>[] = []
         const tasks = subpageUrls.map(u =>
           scrapeSubpageSafe(u, complexity)
@@ -359,7 +359,11 @@ export async function POST(req: NextRequest) {
   })()
   const calculatedTimeout = baseTimeout - elapsed
   const floor = isMultiPage ? 110_000 : 65_000
-  const analyzeTimeoutMs = Math.max(floor, calculatedTimeout)
+  const uncappedTimeout = Math.max(floor, calculatedTimeout)
+  const analyzeTimeoutMs = Math.min(110_000, uncappedTimeout)
+  if (uncappedTimeout > 110_000) {
+    process.stderr.write('[ROUTE] analyzeTimeoutMs capped at 110s ceiling\n')
+  }
   const timeoutSource = calculatedTimeout >= floor ? 'calculated' : 'floor'
   process.stderr.write(
     '[ROUTE] analyzeTimeoutMs=' + analyzeTimeoutMs +

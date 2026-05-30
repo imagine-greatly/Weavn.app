@@ -274,6 +274,7 @@ export const EXPAND_FINDING_BRIEF_JSON_CONTRACT = `{
     "interactionEffect": "string — 2-3 sentences maximum. How this finding compounds with other findings on this report. Name specific finding titles. Never more than 3 sentences.",
     "interactionEffectVerdict": "string — exactly 1 sentence, 10-15 words max. How this compounds with other findings. Example: 'Combined with weak trust signals, this doubles the exit rate.'"
   },
+  // diagnosisAnalysis total length: Write exactly two paragraphs totaling 120-180 words. Paragraph 1: what exists and why it fails — quote specific copy, name where it appears, describe the visitor experience. Maximum 4 sentences. Paragraph 2: business impact — which visitors are affected, what action they fail to take, what it costs. Maximum 4 sentences. No headers. No bullets. No hedging language.
   "revenueImpact": {
     "impactRatingDisplay": "string — exactly one of: CRITICAL SUPPRESSION | HIGH SUPPRESSION | MEDIUM SUPPRESSION | LOW SUPPRESSION (match severity)",
     "narrative": "string — paragraph: why this rating; cite evidence",

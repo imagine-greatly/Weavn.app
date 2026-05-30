@@ -92,7 +92,7 @@ export async function expandFindingBriefWithAnthropic(
   try {
     const msg = await anthropic.messages.create({
       model: "claude-sonnet-4-6",
-      max_tokens: 3000,
+      max_tokens: 1200,
       system: [{ type: "text", text: EXPAND_FINDING_BRIEF_SYSTEM_PROMPT, cache_control: { type: "ephemeral" } }],
       messages: [{ role: "user", content: userMessage }],
     });

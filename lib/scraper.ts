@@ -879,6 +879,36 @@ export async function scrapePreview(url: string): Promise<{
   rawHtml: string
   complexity: SiteComplexity
 }> {
+  function previewSample(html: string): string {
+    if (html.length <= 12000) return html
+
+    // Always take first 12k — above fold guaranteed
+    const head = html.slice(0, 12000)
+
+    // Find top 2 content-dense 4k chunks from remainder
+    const CHUNK = 4000
+    const chunks: { text: string; density: number }[] = []
+    for (let i = 12000; i < html.length; i += CHUNK) {
+      const chunk = html.slice(i, i + CHUNK)
+      const readable = chunk
+        .replace(/<[^>]+>/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim()
+      chunks.push({
+        text: chunk,
+        density: readable.length / chunk.length
+      })
+    }
+
+    const top2 = chunks
+      .sort((a, b) => b.density - a.density)
+      .slice(0, 2)
+      .map(c => c.text)
+      .join('\n<!-- section -->\n')
+
+    return head + '\n<!-- section -->\n' + top2
+  }
+
   // Step 1 — plain HTTP fetch, zero Browserless credits
   try {
     const res = await fetch(url, {
@@ -905,7 +935,7 @@ export async function scrapePreview(url: string): Promise<{
           ' body=' + bodyText.length +
           ' readable=' + readable + '\n'
         )
-        return { rawHtml: cleanHtml(html).slice(0, 8000), complexity }
+        return { rawHtml: previewSample(cleanHtml(html)), complexity }
       }
     }
   } catch {
@@ -949,7 +979,7 @@ export async function scrapePreview(url: string): Promise<{
           const data = await retry.json()
           const html = data.content ?? ''
           console.log(`[PREVIEW] browserless retry success | chars=${html.length}`)
-          const cleaned = cleanHtml(html).slice(0, 8000)
+          const cleaned = previewSample(cleanHtml(html))
           const ratio = html.length > 0 ? readableTextLength(html) / html.length : 0
           const complexity: SiteComplexity = ratio > 0.4 ? 'simple' : ratio >= 0.15 ? 'medium' : 'complex'
           process.stderr.write(
@@ -967,7 +997,7 @@ export async function scrapePreview(url: string): Promise<{
       const data = await res.json()
       const html = data.content ?? ''
       console.log(`[PREVIEW] browserless fallback | chars=${html.length}`)
-      const cleaned = cleanHtml(html).slice(0, 8000)
+      const cleaned = previewSample(cleanHtml(html))
       const ratio = html.length > 0 ? readableTextLength(html) / html.length : 0
       const complexity: SiteComplexity = ratio > 0.4 ? 'simple' : ratio >= 0.15 ? 'medium' : 'complex'
       process.stderr.write(

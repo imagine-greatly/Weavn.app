@@ -85,9 +85,11 @@ const DIMENSIONS = [
     name: "Narrative Flow",
     count: 10,
     checks: [
-      "Every scan evaluates whether the page guides visitors through a logical sequence from awareness to action.",
-      "A site can pass every individual check and still lose the conversion because the sections appear in the wrong order.",
-      "Webdoc diagnoses both the individual elements and the sequence that connects them.",
+      "Subheadline restates headline with no progression",
+      "Social proof appears before offer is explained",
+      "No problem framing between headline and features",
+      "CTA destination mismatches the hero promise",
+      "Page sections don't build logically toward CTA",
     ],
   },
 ];
@@ -136,9 +138,9 @@ export default function LandingDiagnosticChecks() {
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {DIMENSIONS.map((dim, i) => (
-            <div key={dim.name} className={i === DIMENSIONS.length - 1 ? "sm:col-span-2 lg:col-span-3" : undefined}>
+            <div key={dim.name}>
               <ScrollReveal variant="card" index={i}>
-                <DimensionCard dimension={dim} prose={i === DIMENSIONS.length - 1} />
+                <DimensionCard dimension={dim} />
               </ScrollReveal>
             </div>
           ))}
@@ -180,10 +182,10 @@ export default function LandingDiagnosticChecks() {
   );
 }
 
-function DimensionCard({ dimension, prose }: { dimension: Dimension; prose?: boolean }) {
+function DimensionCard({ dimension }: { dimension: Dimension }) {
   return (
     <div
-      className={`relative overflow-hidden rounded-sm border p-6 transition-[border-color,box-shadow] duration-200${prose ? " text-center" : ""}`}
+      className="relative overflow-hidden rounded-sm border p-6 transition-[border-color,box-shadow] duration-200"
       style={{
         background: "var(--bg-card)",
         borderColor: "var(--border-default)",
@@ -225,34 +227,20 @@ function DimensionCard({ dimension, prose }: { dimension: Dimension; prose?: boo
         {dimension.name}
       </h3>
 
-      {prose ? (
-        <div className="mt-4 space-y-3">
-          {dimension.checks.map((check) => (
-            <p
-              key={check}
-              className="font-sans text-[15px] leading-relaxed"
-              style={{ color: "var(--text-secondary)" }}
-            >
-              {check}
-            </p>
-          ))}
-        </div>
-      ) : (
-        <ul className="mt-4 space-y-2">
-          {dimension.checks.map((check) => (
-            <li
-              key={check}
-              className="flex items-start gap-2 font-mono text-[11px] leading-snug"
-              style={{ color: "var(--text-muted)" }}
-            >
-              <span className="mt-0.5 shrink-0" style={{ color: "rgba(0,200,255,0.35)" }}>
-                ›
-              </span>
-              {check}
-            </li>
-          ))}
-        </ul>
-      )}
+      <ul className="mt-4 space-y-2">
+        {dimension.checks.map((check) => (
+          <li
+            key={check}
+            className="flex items-start gap-2 font-mono text-[11px] leading-snug"
+            style={{ color: "var(--text-muted)" }}
+          >
+            <span className="mt-0.5 shrink-0" style={{ color: "rgba(0,200,255,0.35)" }}>
+              ›
+            </span>
+            {check}
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

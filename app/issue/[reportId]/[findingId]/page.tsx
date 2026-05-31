@@ -1822,257 +1822,6 @@ export default function IssuePage() {
           </div>
         </div>
 
-        {/* AI ADVISOR */}
-        <div
-          style={{
-            position: "relative",
-            background: "rgba(5,8,16,0.98)",
-            border: "1px solid rgba(0,200,255,0.2)",
-            borderRadius: 12,
-            display: "flex",
-            flexDirection: "column",
-            minHeight: 520,
-            overflow: "hidden",
-            boxShadow: "var(--cyan-glow-active)",
-            marginBottom: 48,
-          }}
-        >
-          <div
-            style={{
-              position: "absolute",
-              top: 0,
-              left: 0,
-              right: 0,
-              height: 1,
-              background: "linear-gradient(90deg, transparent, rgba(0,200,255,0.6), transparent)",
-              pointerEvents: "none",
-              zIndex: 1,
-            }}
-            aria-hidden
-          />
-
-          <div
-            style={{
-              padding: "18px 24px",
-              borderBottom: "1px solid rgba(0,200,255,0.1)",
-              background: "rgba(7,12,20,0.98)",
-              flexShrink: 0,
-            }}
-          >
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10, flexWrap: "wrap" }}>
-              <span
-                style={{
-                  width: 7,
-                  height: 7,
-                  borderRadius: "50%",
-                  background: "var(--cyan)",
-                  animation: "livePulse 2s infinite",
-                  boxShadow: "0 0 8px rgba(0,200,255,0.6)",
-                  flexShrink: 0,
-                }}
-              />
-              <span
-                style={{
-                  fontFamily: "var(--font-jetbrains-mono), var(--font-space-mono), monospace",
-                  fontWeight: 700,
-                  fontSize: 11,
-                  letterSpacing: "3px",
-                  color: "var(--cyan)",
-                }}
-              >
-                AI ADVISOR
-              </span>
-              <span
-                style={{
-                  fontFamily: "var(--font-jetbrains-mono), var(--font-space-mono), monospace",
-                  fontSize: 9,
-                  color: "var(--text-muted)",
-                }}
-              >
-                · on this issue
-              </span>
-            </div>
-          </div>
-
-          <div
-            style={{
-              flex: 1,
-              minHeight: 320,
-              overflowY: "auto",
-              padding: "20px 24px",
-              scrollbarWidth: "thin",
-              scrollbarColor: "rgba(0,200,255,0.15) transparent",
-              display: "flex",
-              flexDirection: "column",
-              gap: 2,
-            }}
-          >
-            {messages.length === 0 ? (
-              <div
-                className="animate-pulse"
-                style={{
-                  fontFamily: "Inter, ui-sans-serif, system-ui, sans-serif",
-                  fontSize: 14,
-                  fontWeight: 300,
-                  color: "var(--text-muted)",
-                  lineHeight: 1.65,
-                  padding: "12px 16px",
-                }}
-              >
-                Preparing personalized advice…
-              </div>
-            ) : null}
-            {messages.map((m, i) => (
-              <div
-                key={i}
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: m.role === "user" ? "flex-end" : "flex-start",
-                  marginBottom: 14,
-                }}
-              >
-                <div
-                  style={{
-                    fontFamily: "var(--font-jetbrains-mono), var(--font-space-mono), monospace",
-                    fontSize: 8,
-                    letterSpacing: "1.5px",
-                    color: m.role === "user" ? "rgba(0,200,255,0.5)" : "rgba(255,255,255,0.2)",
-                    marginBottom: 4,
-                    textTransform: "uppercase",
-                  }}
-                >
-                  {m.role === "user" ? "YOU" : "ADVISOR"}
-                </div>
-                <div
-                  style={{
-                    maxWidth: "min(920px, 100%)",
-                    width: m.role === "assistant" ? "100%" : undefined,
-                    padding: "12px 16px",
-                    borderRadius: m.role === "user" ? "12px 12px 2px 12px" : "2px 12px 12px 12px",
-                    background: m.role === "user" ? "rgba(0,200,255,0.1)" : "rgba(17,20,40,0.8)",
-                    border: m.role === "user" ? "1px solid rgba(0,200,255,0.2)" : "1px solid var(--border-default)",
-                    fontFamily: "Inter, ui-sans-serif, system-ui, sans-serif",
-                    fontSize: 15,
-                    fontWeight: 400,
-                    color: m.role === "user" ? "var(--cyan)" : "#FFFFFF",
-                    lineHeight: 1.7,
-                    whiteSpace: "pre-wrap",
-                    wordBreak: "break-word",
-                  }}
-                >
-                  {m.content}
-                  {streaming && i === messages.length - 1 && m.role === "assistant" && (
-                    <span style={{ animation: "blink 1s step-start infinite", marginLeft: 2 }}>▍</span>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {messages.length === 1 && messages[0]?.role === "assistant" && !streaming && (
-            <div style={{ padding: "0 24px 12px", display: "flex", gap: 8, flexWrap: "wrap" }}>
-              {advisorChips.map((c, chipIdx) => (
-                <button
-                  key={`${chipIdx}-${c}`}
-                  type="button"
-                  onClick={() => void send(c)}
-                  style={{
-                    background: "transparent",
-                    border: "1px solid var(--border-default)",
-                    borderRadius: 6,
-                    padding: "6px 12px",
-                    cursor: "pointer",
-                    fontFamily: "var(--font-jetbrains-mono), var(--font-space-mono), monospace",
-                    fontSize: 9,
-                    color: "var(--text-muted)",
-                    transition: "all 150ms ease",
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.borderColor = "rgba(0,200,255,0.3)";
-                    e.currentTarget.style.color = "var(--cyan)";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.borderColor = "var(--border-default)";
-                    e.currentTarget.style.color = "var(--text-muted)";
-                  }}
-                >
-                  {c}
-                </button>
-              ))}
-            </div>
-          )}
-
-          <div
-            style={{
-              padding: "16px 24px 24px",
-              borderTop: "1px solid rgba(0,200,255,0.08)",
-              background: "rgba(5,8,16,0.6)",
-              flexShrink: 0,
-            }}
-          >
-            <textarea
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="Ask the diagnostic advisor..."
-              autoComplete="off"
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault();
-                  void send(input);
-                }
-              }}
-              rows={3}
-              style={{
-                width: "100%",
-                boxSizing: "border-box",
-                minHeight: 88,
-                maxHeight: 200,
-                resize: "vertical",
-                background: "rgba(17,20,40,0.8)",
-                border: "1px solid var(--border-default)",
-                borderRadius: 8,
-                padding: "12px 16px",
-                fontFamily: "Inter, ui-sans-serif, system-ui, sans-serif",
-                fontSize: 14,
-                color: "var(--text-primary)",
-                outline: "none",
-                lineHeight: 1.5,
-                marginBottom: 12,
-              }}
-              onFocus={(e) => {
-                e.currentTarget.style.borderColor = "rgba(0,200,255,0.35)";
-                e.currentTarget.style.boxShadow = "0 0 40px rgba(0,180,255,0.06)";
-              }}
-              onBlur={(e) => {
-                e.currentTarget.style.borderColor = "var(--border-default)";
-                e.currentTarget.style.boxShadow = "none";
-              }}
-            />
-            <button
-              type="button"
-              onClick={() => void send(input)}
-              disabled={streaming || !input.trim()}
-              style={{
-                width: "100%",
-                height: 44,
-                borderRadius: 8,
-                background: input.trim() && !streaming ? "var(--cyan)" : "var(--bg-elevated)",
-                border: "none",
-                cursor: input.trim() && !streaming ? "pointer" : "not-allowed",
-                color: input.trim() && !streaming ? "#050810" : "var(--text-muted)",
-                fontFamily: "var(--font-jetbrains-mono), var(--font-space-mono), monospace",
-                fontSize: 11,
-                letterSpacing: "2px",
-                fontWeight: 700,
-                transition: "all 150ms ease",
-              }}
-            >
-              SEND
-            </button>
-          </div>
-        </div>
-
         {/* EVIDENCE */}
         <SectionDivider />
         <div>
@@ -2411,6 +2160,258 @@ export default function IssuePage() {
           >
             {resolvedLocal ? "Finding marked as resolved" : "Mark finding as resolved"}
           </button>
+        </div>
+
+        {/* AI ADVISOR */}
+        <SectionDivider />
+        <div
+          style={{
+            position: "relative",
+            background: "rgba(5,8,16,0.98)",
+            border: "1px solid rgba(0,200,255,0.2)",
+            borderRadius: 12,
+            display: "flex",
+            flexDirection: "column",
+            minHeight: 520,
+            overflow: "hidden",
+            boxShadow: "var(--cyan-glow-active)",
+            marginBottom: 48,
+          }}
+        >
+          <div
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              height: 1,
+              background: "linear-gradient(90deg, transparent, rgba(0,200,255,0.6), transparent)",
+              pointerEvents: "none",
+              zIndex: 1,
+            }}
+            aria-hidden
+          />
+
+          <div
+            style={{
+              padding: "18px 24px",
+              borderBottom: "1px solid rgba(0,200,255,0.1)",
+              background: "rgba(7,12,20,0.98)",
+              flexShrink: 0,
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10, flexWrap: "wrap" }}>
+              <span
+                style={{
+                  width: 7,
+                  height: 7,
+                  borderRadius: "50%",
+                  background: "var(--cyan)",
+                  animation: "livePulse 2s infinite",
+                  boxShadow: "0 0 8px rgba(0,200,255,0.6)",
+                  flexShrink: 0,
+                }}
+              />
+              <span
+                style={{
+                  fontFamily: "var(--font-jetbrains-mono), var(--font-space-mono), monospace",
+                  fontWeight: 700,
+                  fontSize: 11,
+                  letterSpacing: "3px",
+                  color: "var(--cyan)",
+                }}
+              >
+                AI ADVISOR
+              </span>
+              <span
+                style={{
+                  fontFamily: "var(--font-jetbrains-mono), var(--font-space-mono), monospace",
+                  fontSize: 9,
+                  color: "var(--text-muted)",
+                }}
+              >
+                · on this issue
+              </span>
+            </div>
+          </div>
+
+          <div
+            style={{
+              flex: 1,
+              minHeight: 320,
+              overflowY: "auto",
+              padding: "20px 24px",
+              scrollbarWidth: "thin",
+              scrollbarColor: "rgba(0,200,255,0.15) transparent",
+              display: "flex",
+              flexDirection: "column",
+              gap: 2,
+            }}
+          >
+            {messages.length === 0 ? (
+              <div
+                className="animate-pulse"
+                style={{
+                  fontFamily: "Inter, ui-sans-serif, system-ui, sans-serif",
+                  fontSize: 14,
+                  fontWeight: 300,
+                  color: "var(--text-muted)",
+                  lineHeight: 1.65,
+                  padding: "12px 16px",
+                }}
+              >
+                Preparing personalized advice…
+              </div>
+            ) : null}
+            {messages.map((m, i) => (
+              <div
+                key={i}
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: m.role === "user" ? "flex-end" : "flex-start",
+                  marginBottom: 14,
+                }}
+              >
+                <div
+                  style={{
+                    fontFamily: "var(--font-jetbrains-mono), var(--font-space-mono), monospace",
+                    fontSize: 8,
+                    letterSpacing: "1.5px",
+                    color: m.role === "user" ? "rgba(0,200,255,0.5)" : "rgba(255,255,255,0.2)",
+                    marginBottom: 4,
+                    textTransform: "uppercase",
+                  }}
+                >
+                  {m.role === "user" ? "YOU" : "ADVISOR"}
+                </div>
+                <div
+                  style={{
+                    maxWidth: "min(920px, 100%)",
+                    width: m.role === "assistant" ? "100%" : undefined,
+                    padding: "12px 16px",
+                    borderRadius: m.role === "user" ? "12px 12px 2px 12px" : "2px 12px 12px 12px",
+                    background: m.role === "user" ? "rgba(0,200,255,0.1)" : "rgba(17,20,40,0.8)",
+                    border: m.role === "user" ? "1px solid rgba(0,200,255,0.2)" : "1px solid var(--border-default)",
+                    fontFamily: "Inter, ui-sans-serif, system-ui, sans-serif",
+                    fontSize: 15,
+                    fontWeight: 400,
+                    color: m.role === "user" ? "var(--cyan)" : "#FFFFFF",
+                    lineHeight: 1.7,
+                    whiteSpace: "pre-wrap",
+                    wordBreak: "break-word",
+                  }}
+                >
+                  {m.content}
+                  {streaming && i === messages.length - 1 && m.role === "assistant" && (
+                    <span style={{ animation: "blink 1s step-start infinite", marginLeft: 2 }}>▍</span>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {messages.length === 1 && messages[0]?.role === "assistant" && !streaming && (
+            <div style={{ padding: "0 24px 12px", display: "flex", gap: 8, flexWrap: "wrap" }}>
+              {advisorChips.map((c, chipIdx) => (
+                <button
+                  key={`${chipIdx}-${c}`}
+                  type="button"
+                  onClick={() => void send(c)}
+                  style={{
+                    background: "transparent",
+                    border: "1px solid var(--border-default)",
+                    borderRadius: 6,
+                    padding: "6px 12px",
+                    cursor: "pointer",
+                    fontFamily: "var(--font-jetbrains-mono), var(--font-space-mono), monospace",
+                    fontSize: 9,
+                    color: "var(--text-muted)",
+                    transition: "all 150ms ease",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderColor = "rgba(0,200,255,0.3)";
+                    e.currentTarget.style.color = "var(--cyan)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.borderColor = "var(--border-default)";
+                    e.currentTarget.style.color = "var(--text-muted)";
+                  }}
+                >
+                  {c}
+                </button>
+              ))}
+            </div>
+          )}
+
+          <div
+            style={{
+              padding: "16px 24px 24px",
+              borderTop: "1px solid rgba(0,200,255,0.08)",
+              background: "rgba(5,8,16,0.6)",
+              flexShrink: 0,
+            }}
+          >
+            <textarea
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="Ask the diagnostic advisor..."
+              autoComplete="off"
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  void send(input);
+                }
+              }}
+              rows={3}
+              style={{
+                width: "100%",
+                boxSizing: "border-box",
+                minHeight: 88,
+                maxHeight: 200,
+                resize: "vertical",
+                background: "rgba(17,20,40,0.8)",
+                border: "1px solid var(--border-default)",
+                borderRadius: 8,
+                padding: "12px 16px",
+                fontFamily: "Inter, ui-sans-serif, system-ui, sans-serif",
+                fontSize: 14,
+                color: "var(--text-primary)",
+                outline: "none",
+                lineHeight: 1.5,
+                marginBottom: 12,
+              }}
+              onFocus={(e) => {
+                e.currentTarget.style.borderColor = "rgba(0,200,255,0.35)";
+                e.currentTarget.style.boxShadow = "0 0 40px rgba(0,180,255,0.06)";
+              }}
+              onBlur={(e) => {
+                e.currentTarget.style.borderColor = "var(--border-default)";
+                e.currentTarget.style.boxShadow = "none";
+              }}
+            />
+            <button
+              type="button"
+              onClick={() => void send(input)}
+              disabled={streaming || !input.trim()}
+              style={{
+                width: "100%",
+                height: 44,
+                borderRadius: 8,
+                background: input.trim() && !streaming ? "var(--cyan)" : "var(--bg-elevated)",
+                border: "none",
+                cursor: input.trim() && !streaming ? "pointer" : "not-allowed",
+                color: input.trim() && !streaming ? "#050810" : "var(--text-muted)",
+                fontFamily: "var(--font-jetbrains-mono), var(--font-space-mono), monospace",
+                fontSize: 11,
+                letterSpacing: "2px",
+                fontWeight: 700,
+                transition: "all 150ms ease",
+              }}
+            >
+              SEND
+            </button>
+          </div>
         </div>
 
         {/* RELATED FINDINGS */}

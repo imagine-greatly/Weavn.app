@@ -380,29 +380,35 @@ async function fetchWithBrowserless(url: string): Promise<{ html: string; comple
   // If both proxy attempts returned zero content (both 4xx/5xx or network error),
   // try once more without proxy — some Browserless plans don't include residential,
   // and some sites actively block residential IPs.
+  let html3: string | null = null
   if (!html1 && !html2) {
-    process.stderr.write(`[SCRAPER] attempt3 START (no proxy) | url=${url}\n`)
+    process.stderr.write(`[SCRAPER] attempt3 stealth | url=${url} proxy=true\n`)
     const ctrl3 = new AbortController()
-    const t3 = setTimeout(() => ctrl3.abort(), 15000)
+    const t3 = setTimeout(() => ctrl3.abort(), 35000)
     const a3Start = Date.now()
 
     try {
       process.stderr.write('[SCRAPER] attempt3 sending request\n')
-      const res3 = await fetch(makeEndpoint(false), {
+      const res3 = await fetch(makeEndpoint(true), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url, bestAttempt: true }),
+        body: JSON.stringify({
+          url,
+          bestAttempt: true,
+          gotoOptions: { waitUntil: 'networkidle2', timeout: 25000 },
+          waitForTimeout: 3000
+        }),
         signal: ctrl3.signal,
       })
-      console.log(`[BROWSERLESS] request | type=attempt3 proxy=false status=${res3.status} units_est=15`)
-      _attempts++; _estUnits += 15
+      console.log(`[BROWSERLESS] request | type=attempt3 proxy=true status=${res3.status} units_est=45`)
+      _attempts++; _proxyRequests++; _estUnits += 45
       const rawText3 = await res3.text()
       process.stderr.write('[SCRAPER] attempt3 response: ' + res3.status + ' chars: ' + rawText3.length + '\n')
       console.log(`[SCRAPER] attempt3 response | status=${res3.status} | elapsed=${Date.now() - a3Start}ms`)
       console.log(`[SCRAPER] attempt3 raw body first500: ${rawText3.slice(0, 500)}`)
 
       if (res3.ok) {
-        const html3 = extractHtml(rawText3)
+        html3 = extractHtml(rawText3)
         const len3 = readableTextLength(html3 ?? '')
         console.log(`[SCRAPER] attempt3 parsed | html_chars=${html3?.length ?? 0} readable=${len3}`)
         if (html3 && len3 >= 200) {
@@ -414,7 +420,7 @@ async function fetchWithBrowserless(url: string): Promise<{ html: string; comple
       }
     } catch (err) {
       const isAbort = err instanceof Error && err.name === 'AbortError'
-      console.log(`[SCRAPER] attempt3 ERROR | ${isAbort ? 'ABORTED by 15s timeout' : 'threw exception'}`)
+      console.log(`[SCRAPER] attempt3 ERROR | ${isAbort ? 'ABORTED by 35s timeout' : 'threw exception'}`)
       console.log('[SCRAPER] attempt3 exception:', err instanceof Error ? err.message : err)
     } finally {
       clearTimeout(t3)
@@ -438,6 +444,43 @@ async function fetchWithBrowserless(url: string): Promise<{ html: string; comple
     }
   }
   if (best && readableTextLength(best) >= 200) return { html: best, complexity, readableRatio, creditInfo: { attempts: _attempts, proxyRequests: _proxyRequests, estUnits: _estUnits } }
+
+  // Sequence-level retry for heavily protected sites
+  if (!html1 && !html2 && (!html3 || html3.length < 10000)) {
+    process.stderr.write('[SCRAPER] all attempts blocked — waiting 15s for sequence retry\n')
+    await new Promise(r => setTimeout(r, 15000))
+
+    // One more attempt with stealth
+    try {
+      const stealthRes = await fetch(makeEndpoint(true), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          url,
+          bestAttempt: true,
+          gotoOptions: { waitUntil: 'networkidle2', timeout: 25000 },
+          waitForTimeout: 4000
+        }),
+        signal: AbortSignal.timeout(35000)
+      })
+      if (stealthRes.ok) {
+        const data = await stealthRes.json()
+        const stealthHtml = data.content ?? ''
+        if (stealthHtml.length > 10000) {
+          process.stderr.write('[SCRAPER] sequence retry stealth success | chars=' + stealthHtml.length + '\n')
+          // process as html3
+          html3 = stealthHtml
+        }
+      }
+    } catch {
+      process.stderr.write('[SCRAPER] sequence retry also failed\n')
+    }
+  }
+
+  if (html3 && readableTextLength(html3) >= 200) {
+    console.log('[SCRAPER] sequence retry ACCEPTED')
+    return { html: html3, complexity, readableRatio, creditInfo: { attempts: _attempts, proxyRequests: _proxyRequests, estUnits: _estUnits } }
+  }
 
   const bothBlocked = blocked1 && blocked2
   const noResponseAtAll = !html1 && !html2

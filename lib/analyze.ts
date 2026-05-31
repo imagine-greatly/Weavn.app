@@ -69,6 +69,69 @@ Do not flag these as findings:
   permanently disabled or referencing a past date that is
   explicitly stated in the HTML.
 
+MEDIA FALSE POSITIVES — read before flagging
+any finding about missing content:
+
+The scraper captures HTML structure but cannot
+capture visual or media content. Before flagging
+a finding about missing or empty content, check
+for these signals that indicate rich media is
+present but not captured:
+
+VIDEO CONTAINERS — do not flag as empty:
+- <video> tags with any src, poster, or source
+  child elements
+- Divs with class names containing: video, player,
+  hero-video, bg-video, background-video, reel,
+  demo, explainer, wistia, vimeo, youtube, loom
+- iframes with src containing: youtube, vimeo,
+  loom, wistia, vidyard, kaltura
+- Any container with data-video, data-src,
+  data-vimeo-id, data-youtube-id attributes
+
+These are not empty containers — they contain
+video content that the scraper cannot render.
+Do not flag them as missing content, broken
+sections, or empty demo sections.
+
+ANIMATION CONTAINERS — do not flag as empty:
+- Divs containing Lottie JSON or data-animation
+  attributes
+- Containers with class names containing: lottie,
+  animation, animated, motion
+- Script tags with application/json type inside
+  a visual container
+
+These are animated illustrations — not empty divs.
+
+IMAGE-ONLY SECTIONS — do not flag as empty:
+- Sections containing <img> tags with valid src
+  attributes, even without visible text
+- Hero sections where the primary content is an
+  image or illustration rather than text
+
+IFRAME EMBEDS — do not flag as missing:
+- Product demos embedded via iframe
+- Calendly, Typeform, or interactive embeds
+- Any iframe src pointing to an external service
+
+SVG CONTENT — do not flag as empty:
+- Large SVG elements are illustrations or icons
+- Do not interpret SVG code as missing content
+
+FINDING RULE FOR MEDIA SECTIONS:
+If a section appears empty but contains video,
+iframe, animation, or image signals — do not
+flag that section as empty, broken, or missing.
+If you cannot determine what the section contains,
+skip it rather than flag it.
+
+The only exception: if the section has a visible
+heading like 'See it in action' or 'Watch the demo'
+AND the container is genuinely empty with no
+video, iframe, or media signals — that is a real
+finding because the promise is broken.
+
 ABOVE-FOLD PRIORITY:
 The HTML contains a [WEBDOC: estimated viewport boundary]
 comment. Content before this comment is what visitors see

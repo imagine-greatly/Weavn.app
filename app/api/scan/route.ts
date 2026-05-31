@@ -13,6 +13,7 @@ import { detectSiteType } from "@/lib/siteType";
 import { runAnalysis, buildPageSummary } from "@/lib/analyze";
 import { saveReport } from "@/lib/supabase";
 import { generateAndPersistAllFindingBriefs } from "@/lib/findingExtendedAnalysis";
+import { Resend } from "resend";
 
 
 function mergeCookies(from: NextResponse, to: NextResponse) {
@@ -353,18 +354,18 @@ export async function POST(req: NextRequest) {
       if (complexity === 'medium') return 140_000
       return 120_000 // simple
     }
-    if (complexity === 'complex') return 120_000
-    if (complexity === 'medium') return 100_000
-    return 80_000 // simple
+    if (complexity === 'complex') return 200_000
+    if (complexity === 'medium') return 130_000
+    return 90_000 // simple
   })()
   const calculatedTimeout = baseTimeout - elapsed
-  const floor = isMultiPage ? 110_000 : 65_000
+  const floor = isMultiPage ? 110_000 : 80_000
 
   const ceiling = isMultiPage
     ? (complexity === 'complex' ? 140_000
        : complexity === 'medium' ? 115_000
        : 85_000)
-    : (complexity === 'complex' ? 120_000
+    : (complexity === 'complex' ? 150_000
        : complexity === 'medium' ? 95_000
        : 72_000)
 
@@ -441,7 +442,6 @@ export async function POST(req: NextRequest) {
       const { data: userData } = await supabaseAdmin.auth.admin.getUserById(userId)
       const userEmail = userData?.user?.email
       if (userEmail) {
-        const { Resend } = await import('resend')
         const resend = new Resend(process.env.RESEND_API_KEY)
         await resend.emails.send({
           from: 'webdoc.ai <insights@webdocai.com>',

@@ -217,7 +217,7 @@ function ScanLoadingInner() {
   const scanStartedRef = useRef(false);
   const apiDoneRef = useRef(false);
   const scanStartTimeRef = useRef(0);
-  const estimatedTotalMsRef = useRef<number>(Number(searchParams.get("analyzeTimeoutMs")) || 90000);
+  const estimatedTotalMsRef = useRef<number>(Number(searchParams.get("analyzeTimeoutMs")) || 150000);
 
   // beam spring physics (all in one ref, no re-renders)
   const beamStateRef = useRef<{

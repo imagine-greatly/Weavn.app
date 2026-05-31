@@ -73,11 +73,11 @@ function parseFindingBriefPayload(parsed: Record<string, unknown>): FindingBrief
       },
       revenueImpact: {
         impactRatingDisplay: impactRating,
-        narrative: asStr(ri.narrative),
-        modeling: asStr(ri.modeling),
         costOfInaction:
           asStr(ri.costOfInaction) ||
           "Every month this finding remains unresolved, suppression compounds as visitor behavior adapts to the friction.",
+        thisSiteLabel: asStr(ri.thisSiteLabel) || "This site",
+        benchmarkLabel: asStr(ri.benchmarkLabel) || "Category benchmark",
       },
       originAnalysis: asStr(parsed.originAnalysis),
       benchmark: {

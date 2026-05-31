@@ -80,9 +80,11 @@ export async function POST(req: NextRequest) {
   }
 
   let url: string;
+  let source: string | null = null;
   try {
     const body = await req.json();
     url = typeof body?.url === "string" ? body.url : "";
+    source = typeof body?.source === "string" ? body.source : null;
     console.log("[preview] request received for:", body.url);
   } catch {
     return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
@@ -150,6 +152,24 @@ export async function POST(req: NextRequest) {
   const site_type = detectSiteType(extraction);
 
   const { conversionScore, topFinding } = await runPreviewAnalysis(extraction, site_type);
+
+  try {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (supabaseUrl && serviceKey) {
+      const supabase = createClient(supabaseUrl, serviceKey);
+      await supabase.from("reports").insert({
+        domain,
+        health_score: conversionScore,
+        source: source ?? null,
+        scan_type: "preview",
+        analysis: { topFinding },
+        user_id: null,
+      });
+    }
+  } catch (err) {
+    console.warn("[preview] failed to persist preview result:", err);
+  }
 
   return NextResponse.json({ domain, conversionScore, topFinding });
 }

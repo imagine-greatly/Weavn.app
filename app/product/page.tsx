@@ -174,7 +174,7 @@ function ProductProblem() {
               </ScrollReveal>
               <ScrollReveal variant="card" index={2}>
                 <p>
-                  WebDoc maps that gap with 200 checks across six revenue dimensions, cites evidence from your pages, and outputs resolutions ranked by revenue impact.
+                  WebDoc maps that gap with 210 checks across eight revenue dimensions, cites evidence from your pages, and outputs resolutions ranked by revenue impact.
                 </p>
               </ScrollReveal>
             </div>

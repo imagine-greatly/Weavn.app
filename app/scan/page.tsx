@@ -135,7 +135,6 @@ function ScanLoadingInner() {
     searchParams.get("rescan") === "true" ||
     (typeof window !== "undefined" &&
       new URLSearchParams(window.location.search).get("rescan") === "true");
-  console.log('[scan] isRescanActive:', isRescanActive, 'url param:', urlParam, 'full search params:', searchParams.toString());
   useEffect(() => {
     if (!urlParam) return;
     const t = window.setTimeout(() => setResolvedUrl(urlParam), 300);
@@ -383,7 +382,6 @@ function ScanLoadingInner() {
         window.setTimeout(() => setSubLabelVis(true), 2000);
         window.setTimeout(() => {
           if (domainRef.current) {
-            console.log("[scan] complete → /report/" + domainRef.current);
             router.replace("/report/" + domainRef.current);
           }
         }, 4200);
@@ -436,7 +434,6 @@ function ScanLoadingInner() {
     // more renders; window.location.search is always live and correct at this moment.
     const isRescan = new URLSearchParams(window.location.search).get("rescan") === "true";
     isRescanRef.current = isRescan;
-    console.log("[scan] starting pipeline", { url: resolvedUrl, rescan: isRescan });
     let normalized = resolvedUrl;
     if (!/^https?:\/\//i.test(normalized)) normalized = `https://${normalized}`;
     let domain = "";
@@ -712,14 +709,11 @@ function ScanLoadingInner() {
 
     if (checksCounterRef.current) {
       if (scoreRevealRef.current) {
-        checksCounterRef.current.textContent = "200";
+        checksCounterRef.current.textContent = "210";
       } else {
         const elapsed = Math.max(0, now - scanStartTimeRef.current);
-        const progress = Math.min(1, elapsed / estimatedTotalMsRef.current);
-        const easedProgress = progress < 0.5
-          ? 2 * progress * progress
-          : 1 - Math.pow(-2 * progress + 2, 2) / 2;
-        checksCounterRef.current.textContent = String(Math.min(199, Math.floor(easedProgress * 200)));
+        const expectedMs = 130000;
+        checksCounterRef.current.textContent = String(Math.min(209, Math.floor((elapsed / expectedMs) * 209)));
       }
     }
 
@@ -2278,7 +2272,7 @@ function ScanLoadingInner() {
                   0
                 </span>
                 <span style={{ color: "rgba(0,200,255,0.3)" }}> / </span>
-                <span style={{ color: "rgba(0,200,255,0.4)" }}>200</span>
+                <span style={{ color: "rgba(0,200,255,0.4)" }}>210</span>
               </span>
             </div>
             <div style={{ flex: 1, textAlign: "right" }}>
@@ -2547,94 +2541,132 @@ function ScanLoadingInner() {
                   "0 0 0 1px rgba(0,200,255,0.06), 0 24px 64px rgba(0,0,0,0.55)",
               }}
             >
-              <h2
-                style={{
-                  fontFamily: ORBIT,
-                  fontSize: 14,
-                  fontWeight: 700,
-                  letterSpacing: "0.14em",
-                  color: CY,
-                  margin: 0,
-                  marginBottom: 14,
-                  textTransform: "uppercase",
-                }}
-              >
-                {errorMsg ? "INVALID URL" : "SCAN INTERRUPTED"}
-              </h2>
-              <p
-                style={{
-                  fontFamily: MONO,
-                  fontSize: 12,
-                  lineHeight: 1.55,
-                  color: "rgba(240,244,255,0.45)",
-                  margin: 0,
-                  marginBottom: 24,
-                }}
-              >
-                {errorMsg
-                  ? errorMsg
-                  : scanFailure?.kind === "client"
-                    ? scanFailure.message ??
-                      "We couldn't complete this scan. Try again or use a different URL."
-                    : "We encountered an issue analyzing this site. This sometimes happens with heavily protected sites."}
-              </p>
-              <div
-                style={{
-                  display: "flex",
-                  flexWrap: "wrap",
-                  gap: 12,
-                  justifyContent: "center",
-                }}
-              >
-                <button
-                  type="button"
-                  onClick={() => {
-                    const u = normalizedUrlRef.current;
-                    if (u) {
-                      const path = `/scan?url=${encodeURIComponent(u)}&rescan=true`;
-                      console.log("[scan-nav] window.location.href (retry)", path);
-                      window.location.href = path;
-                    } else {
-                      window.location.reload();
-                    }
-                  }}
-                  style={{
-                    fontFamily: MONO,
-                    fontSize: 10,
-                    letterSpacing: "0.12em",
-                    fontWeight: 700,
-                    color: "#050810",
-                    background: CY,
-                    border: `1px solid ${CY}`,
-                    padding: "10px 18px",
-                    borderRadius: 6,
-                    cursor: "pointer",
-                    boxShadow: "0 0 20px rgba(0,200,255,0.25)",
-                  }}
-                >
-                  TRY AGAIN
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    router.push("/");
-                  }}
-                  style={{
-                    fontFamily: MONO,
-                    fontSize: 10,
-                    letterSpacing: "0.12em",
-                    fontWeight: 600,
-                    color: "rgba(0,200,255,0.9)",
-                    background: "transparent",
-                    border: "1px solid rgba(0,200,255,0.35)",
-                    padding: "10px 18px",
-                    borderRadius: 6,
-                    cursor: "pointer",
-                  }}
-                >
-                  SCAN DIFFERENT SITE
-                </button>
-              </div>
+              {(() => {
+                const isFreeTierLimit =
+                  !errorMsg &&
+                  scanFailure?.kind === "client" &&
+                  /limit|upgrade|free.tier|scan.limit/i.test(scanFailure.message ?? "");
+                return (
+                  <>
+                    <h2
+                      style={{
+                        fontFamily: ORBIT,
+                        fontSize: 14,
+                        fontWeight: 700,
+                        letterSpacing: "0.14em",
+                        color: CY,
+                        margin: 0,
+                        marginBottom: 14,
+                        textTransform: "uppercase",
+                      }}
+                    >
+                      {errorMsg
+                        ? "INVALID URL"
+                        : isFreeTierLimit
+                          ? "FREE SCAN USED"
+                          : "SCAN INTERRUPTED"}
+                    </h2>
+                    <p
+                      style={{
+                        fontFamily: MONO,
+                        fontSize: 12,
+                        lineHeight: 1.55,
+                        color: "rgba(240,244,255,0.45)",
+                        margin: 0,
+                        marginBottom: 24,
+                      }}
+                    >
+                      {errorMsg
+                        ? errorMsg
+                        : isFreeTierLimit
+                          ? "You've used your complimentary diagnostic scan. Upgrade to Pro for unlimited scans, 3 pages per scan, and full findings."
+                          : scanFailure?.kind === "client"
+                            ? scanFailure.message ??
+                              "We couldn't complete this scan. Try again or use a different URL."
+                            : "We encountered an issue analyzing this site. This sometimes happens with heavily protected sites."}
+                    </p>
+                    <div
+                      style={{
+                        display: "flex",
+                        flexWrap: "wrap",
+                        gap: 12,
+                        justifyContent: "center",
+                      }}
+                    >
+                      {isFreeTierLimit ? (
+                        <a
+                          href="/pricing"
+                          style={{
+                            fontFamily: MONO,
+                            fontSize: 10,
+                            letterSpacing: "0.12em",
+                            fontWeight: 700,
+                            color: "#050810",
+                            background: CY,
+                            border: `1px solid ${CY}`,
+                            padding: "10px 18px",
+                            borderRadius: 6,
+                            cursor: "pointer",
+                            boxShadow: "0 0 20px rgba(0,200,255,0.25)",
+                            textDecoration: "none",
+                            display: "inline-block",
+                          }}
+                        >
+                          Upgrade to Pro →
+                        </a>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const u = normalizedUrlRef.current;
+                            if (u) {
+                              const path = `/scan?url=${encodeURIComponent(u)}&rescan=true`;
+                              window.location.href = path;
+                            } else {
+                              window.location.reload();
+                            }
+                          }}
+                          style={{
+                            fontFamily: MONO,
+                            fontSize: 10,
+                            letterSpacing: "0.12em",
+                            fontWeight: 700,
+                            color: "#050810",
+                            background: CY,
+                            border: `1px solid ${CY}`,
+                            padding: "10px 18px",
+                            borderRadius: 6,
+                            cursor: "pointer",
+                            boxShadow: "0 0 20px rgba(0,200,255,0.25)",
+                          }}
+                        >
+                          TRY AGAIN
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          router.push("/");
+                        }}
+                        style={{
+                          fontFamily: MONO,
+                          fontSize: 10,
+                          letterSpacing: "0.12em",
+                          fontWeight: 600,
+                          color: "rgba(0,200,255,0.9)",
+                          background: "transparent",
+                          border: "1px solid rgba(0,200,255,0.35)",
+                          padding: "10px 18px",
+                          borderRadius: 6,
+                          cursor: "pointer",
+                        }}
+                      >
+                        SCAN DIFFERENT SITE
+                      </button>
+                    </div>
+                  </>
+                );
+              })()}
             </div>
           </div>
         )}
@@ -2728,7 +2760,7 @@ function ScanLoadingInner() {
                   transition: "opacity 0.4s ease",
                 }}
               >
-                200 DIAGNOSTIC CHECKS QUEUED
+                210 DIAGNOSTIC CHECKS QUEUED
               </div>
             </div>
           </div>

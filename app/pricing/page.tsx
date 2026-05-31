@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { getSupabaseBrowserClient } from "@/lib/supabaseBrowser";
 import {
   PricingTickerTransition,
   MistTransitionDown,
@@ -113,7 +114,7 @@ function PricingHero() {
 // ─── Pricing cards ───────────────────────────────────────────────────────
 const FREE_FEATURES = [
   { text: "One complimentary diagnostic scan", check: true },
-  { text: "WebDoc Score and three diagnostic findings per scan", check: true },
+  { text: "WebDoc Score and 2 diagnostic findings per scan", check: true },
   { text: "Complete finding set (Pro)", check: false },
   { text: "Hero diagnostic rewrite (Pro)", check: false },
   { text: "Resolution summary block (Pro)", check: false },
@@ -494,11 +495,17 @@ function PricingCards() {
             <div className="mt-8 w-full min-w-0 overflow-visible">
               <a
                 href="/api/stripe/checkout"
-                onClick={(e) => {
+                onClick={async (e) => {
                   e.preventDefault();
+                  const supabase = getSupabaseBrowserClient();
+                  const { data: { session } } = await supabase.auth.getSession();
+                  const token = session?.access_token;
                   fetch("/api/stripe/checkout", {
                     method: "POST",
-                    headers: { "Content-Type": "application/json" },
+                    headers: {
+                      "Content-Type": "application/json",
+                      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+                    },
                     body: JSON.stringify({ plan: "pro" }),
                   })
                     .then((r) => r.json())

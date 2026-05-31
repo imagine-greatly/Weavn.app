@@ -1,4 +1,4 @@
-// DIAGNOSTIC_CHECKS: 200 checks across 25 categories
+// DIAGNOSTIC_CHECKS: 210 checks across 26 categories
 export interface DiagnosticCheck {
   id: string;
   category: string;

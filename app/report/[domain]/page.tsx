@@ -220,7 +220,6 @@ export default function ReportDomainPage() {
           const p = String(profileJson.plan ?? "").trim();
           setIsPro(computeIsPro(p, profileJson.is_pro));
           cachePlan(p || (profileJson.is_pro ? "pro" : "free"));
-          console.log("[report] user isPro:", computeIsPro(p, profileJson.is_pro));
         }).catch(() => {});
 
         const { data: sessionData } = await supabase.auth.getSession();
@@ -331,7 +330,6 @@ export default function ReportDomainPage() {
       if (!fid) return;
       const t = setTimeout(() => {
         if (ac.signal.aborted || prefetchedFindings.current.has(fid)) return;
-        console.log('[REPORT] Prefetching brief for finding:', fid);
         try {
           if (localStorage.getItem(`webdoc_brief_${storedReportId}_${fid}`)) {
             prefetchedFindings.current.set(fid, true);
@@ -365,7 +363,6 @@ export default function ReportDomainPage() {
           .then((data: unknown) => {
             if (!ac.signal.aborted && data) {
               prefetchedFindings.current.set(fid, data);
-              console.log('[REPORT] Brief cached for finding:', fid);
               try {
                 localStorage.setItem(`webdoc_brief_${storedReportId}_${fid}`, JSON.stringify(data));
               } catch {
@@ -464,7 +461,6 @@ export default function ReportDomainPage() {
     if (!target) return;
     const scanUrl = `https://${target}`;
     const path = `/scan?url=${encodeURIComponent(scanUrl)}&rescan=true`;
-    console.log("[scan-nav] router.push", path);
     router.push(path);
   };
 

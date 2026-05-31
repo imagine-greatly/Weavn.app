@@ -1,8 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { displayScoreColor } from "@/lib/displayScoreColor";
 import ConversionScoreGauge from "@/components/ConversionScoreGauge";
+
+function dimensionBarColor(score: number): string {
+  const s = Math.max(0, Math.min(100, Number(score) || 0));
+  if (s <= 44) return "#FF2D2D";
+  if (s <= 64) return "#FFB300";
+  return "#00C8FF";
+}
 
 /**
  * Report left panel — mission control: site identity, score ring, issue counts, categories, tabs.
@@ -164,7 +170,7 @@ function DiagnosticCoverage({ pagesAnalyzed, totalChecked }: { pagesAnalyzed: st
       })}
       <div style={{ height: 1, background: "rgba(0,200,255,0.1)", marginTop: 8, marginBottom: 8 }} />
       <div style={{ fontFamily: MONO, fontSize: 8, color: "rgba(0,200,255,0.4)", letterSpacing: "0.1em", opacity: showSummary ? 1 : 0, transition: "opacity 200ms ease" }}>
-        {pagesAnalyzed.length} {pagesAnalyzed.length === 1 ? "PAGE" : "PAGES"} · {totalChecked ?? 166} CHECKS ANALYZED
+        {pagesAnalyzed.length} {pagesAnalyzed.length === 1 ? "PAGE" : "PAGES"} · {totalChecked ?? 210} CHECKS ANALYZED
       </div>
     </div>
   );
@@ -351,28 +357,6 @@ export default function ReportLeftPanel({
         ) : null}
       </div>
 
-      {pagesAnalyzed && pagesAnalyzed.length > 0 && (
-        <div className="mb-6" style={{ padding: "0 24px" }}>
-          <p
-            className="font-mono text-[10px] uppercase tracking-[2px] mb-2"
-            style={{ color: 'var(--text-muted)' }}
-          >
-            PAGES ANALYZED
-          </p>
-          {pagesAnalyzed.map((url: string) => (
-            <div key={url} className="flex items-center gap-2 mb-1">
-              <span style={{ color: 'var(--cyan)' }}>●</span>
-              <span
-                className="font-mono text-[11px]"
-                style={{ color: 'var(--text-secondary)' }}
-              >
-                {url.replace('https://', '').replace('http://', '')}
-              </span>
-            </div>
-          ))}
-        </div>
-      )}
-
       {dimensionBars.length > 0 ? (
         <div
           className="report-left-dimensions shrink-0"
@@ -395,7 +379,7 @@ export default function ReportLeftPanel({
           </div>
           {dimensionBars.map((bar, i) => {
             const sc = Math.max(0, Math.min(100, Math.round(bar.score)));
-            const barColor = displayScoreColor(sc);
+            const barColor = dimensionBarColor(sc);
             return (
               <div key={`${bar.label}-${i}`} style={{ marginBottom: 10 }}>
                 <div

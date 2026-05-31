@@ -1051,7 +1051,10 @@ export default function ReportRightPanel({
   async function handleShareReport() {
     if (typeof window === "undefined") return;
     try {
-      await navigator.clipboard.writeText(window.location.href);
+      const shareUrl = shareToken
+        ? window.location.origin + "/share/" + shareToken
+        : window.location.href;
+      await navigator.clipboard.writeText(shareUrl);
       setLinkCopiedFade(false);
       setLinkCopied(true);
     } catch {
@@ -1297,7 +1300,6 @@ export default function ReportRightPanel({
                 type="button"
                 className="report-header-action-btn"
                 onClick={() => {
-                  console.log(`[report] export PDF triggered for domain: ${domain}`);
                   window.print();
                 }}
                 style={{

@@ -380,7 +380,7 @@ const STEPS = [
     num: 3,
     title: "WebDoc performs surgical site scan",
     visual: <Step3Visual />,
-    explanationTitle: "Two hundred checks across six revenue dimensions",
+    explanationTitle: "210 checks across eight revenue dimensions",
     explanationBody:
       "Two hundred checks run across Conversion Architecture, Trust Signals, Message Clarity, Traffic Readiness, Technical Foundation, and Vertical Signals in parallel. Each check binds to a cited principle and produces machine-readable evidence from your DOM.",
     tag: "210 CHECKS · 8 REVENUE DIMENSIONS",

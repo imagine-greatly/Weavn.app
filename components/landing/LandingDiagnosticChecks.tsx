@@ -131,7 +131,7 @@ export default function LandingDiagnosticChecks() {
               className="mx-auto mt-5 max-w-[540px] font-sans text-[17px] leading-relaxed"
               style={{ color: "var(--text-secondary)" }}
             >
-              Every scan runs all 210 checks across six revenue dimensions. No sampling, no shortcuts.
+              Every scan runs all 210 checks across eight revenue dimensions. No sampling, no shortcuts.
             </p>
           </ScrollReveal>
         </div>

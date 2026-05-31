@@ -110,7 +110,7 @@ const STEPS = [
   {
     n: "02",
     title: "200 diagnostic checks execute",
-    body: "The diagnostic engine scores messaging clarity, CTA architecture, trust signal density, authority signals, psychological triggers, and technical conversion patterns against your site class. 200 checks. 60 seconds. No shortcuts.",
+    body: "The diagnostic engine scores messaging clarity, CTA architecture, trust signal density, authority signals, psychological triggers, and technical conversion patterns against your site class. 210 checks. No shortcuts.",
     tag: "200 DIAGNOSTIC CHECKS",
   },
   {

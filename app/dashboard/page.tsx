@@ -400,9 +400,6 @@ export default function DashboardPage() {
       const profileData = profileRes.ok
         ? ((await profileRes.json()) as { plan?: string; first_name?: string | null; is_pro?: boolean })
         : null;
-      console.log("[PROFILE] response status:", profileRes.status);
-      console.log("[PROFILE] profileData:", profileData);
-      console.log("[PROFILE] plan value:", profileData?.plan);
       const profile = profileData;
 
       const urlUpgraded = window.location.search.includes("upgraded=true");
@@ -706,7 +703,6 @@ export default function DashboardPage() {
       return;
     }
     const path = `/scan?url=${encodeURIComponent(currentSiteUrl)}&rescan=true`;
-    console.log("[scan-nav] router.push", path);
     router.push(path);
   }
 
@@ -1022,7 +1018,7 @@ export default function DashboardPage() {
             </div>
           </div>
           <div style={{ fontFamily: SM, fontSize: 9, color: "rgba(255,255,255,0.25)" }}>
-            PAGES ANALYZED · {pagesAnalyzed ?? "—"} · CHECKS RUN · 166
+            PAGES ANALYZED · {pagesAnalyzed ?? "—"} · CHECKS RUN · 210
           </div>
         </div>
       </div>
@@ -1071,7 +1067,6 @@ export default function DashboardPage() {
                   return;
                 }
                 const path = `/scan?url=${encodeURIComponent(normalized)}`;
-                console.log("[scan-nav] router.push", path);
                 router.push(path);
               }}
               style={{ maxWidth: 560 }}
@@ -1498,7 +1493,6 @@ export default function DashboardPage() {
                 setShowScanInput(false);
                 setNewScanUrl("");
                 const path = `/scan?url=${encodeURIComponent(url)}`;
-                console.log("[scan-nav] router.push", path);
                 router.push(path);
               }}
               style={{ display: "flex", gap: 8 }}

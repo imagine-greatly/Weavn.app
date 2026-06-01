@@ -2,6 +2,7 @@
  * Scan-time batch generation of per-finding extended analysis, persisted on reports.extended_analysis.
  */
 
+import Anthropic from "@anthropic-ai/sdk";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import type { Leak, ReportPayload } from "@/lib/reportSchema";
 import { getDashboardMoneyLeaks } from "@/lib/dashboardMoneyLeaks";
@@ -14,6 +15,11 @@ import type {
   ExpandFindingBriefFindingInput,
   ExpandFindingBriefRelated,
 } from "@/lib/prompts";
+import {
+  EXPAND_FINDING_BRIEF_SYSTEM_PROMPT,
+  EXPAND_FINDING_BRIEF_JSON_CONTRACT,
+} from "@/lib/prompts";
+import { parseFindingBriefPayload } from "@/lib/expandFindingBriefParser";
 
 export function leakKey(l: Leak): string {
   return String(l.id ?? l.title);
@@ -299,10 +305,145 @@ export async function generateRemainingExtendedAnalysisForReport(
 }
 
 /**
- * Pre-generates AI advisor briefs for all 5 dashboard-ranked findings in parallel,
- * then writes them to both reports.extended_analysis and reports.finding_briefs so
- * the expand-finding API's cache check finds the data immediately.
- * Intended as a fire-and-forget background task after scan; logs errors without throwing.
+ * Makes ONE Anthropic call for all 5 findings and returns a keyed map of expansions.
+ * Returns an empty map on failure; the caller handles logging and fallback.
+ */
+async function generateAllFindingBriefsMaster(
+  reportId: string,
+  domain: string,
+  payload: ReportPayload,
+  pageSummary?: string
+): Promise<Record<string, FindingBriefExpansion>> {
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) return {};
+
+  const allLeaks = resolveLeaksForReportPayload(payload);
+  const leaks = allLeaks.slice(0, 5);
+  if (leaks.length === 0) return {};
+
+  const overallScore = payload.healthScore ?? payload.growthScore ?? 0;
+  const siteType = payload.site_type;
+
+  const findingsBlock = leaks
+    .map((finding, i) => {
+      const f = leakToFindingInput(finding);
+      const rel = relatedForLeak(finding, allLeaks);
+      const relStr =
+        rel.length > 0
+          ? rel.map((r) => `  - id=${r.findingId} | category=${r.category} | title=${r.title}`).join("\n")
+          : "  (none)";
+      return `FINDING [${i + 1}]
+Title: ${f.title}
+Severity: ${f.severity}
+Category: ${f.category}
+Page location hint: ${f.page_location?.trim() || "(none)"}
+Raw evidence: ${f.whatWeFound}
+Why it matters: ${f.whyItMatters}
+Resolution guidance: ${f.howToFixIt}
+Technical/example: ${f.exampleFix}
+Revenue mechanism: ${f.psychologyPrinciple}
+Revenue impact score: ${typeof f.revenueImpact === "number" ? f.revenueImpact : "(unknown)"}
+Related findings in same category:
+${relStr}`;
+    })
+    .join("\n\n");
+
+  const siteTypeLine = siteType ? `\nSite type: ${siteType}` : "";
+  const pageSummaryBlock = pageSummary
+    ? `\nPAGE CONTEXT (structured summary of the scanned page — use this to ground every analysis paragraph in real page evidence, not generic CRO advice)\n${pageSummary.slice(0, 4000)}\n`
+    : "";
+
+  const userMessage = `Domain: ${domain || "unknown"}
+Overall diagnostic score: ${overallScore}/100${siteTypeLine}${pageSummaryBlock}
+
+You are analyzing ${leaks.length} findings for this site. Return a JSON ARRAY of exactly ${leaks.length} objects, one per finding, in the same input order.
+
+${findingsBlock}
+
+TASK
+For each finding above, produce a full clinical brief grounded in the PAGE CONTEXT. Reference actual headlines, CTAs, copy, and page structure. No generic CRO advice — every sentence must be specific to this domain and this evidence.
+
+Rules for each array element:
+- diagnosticAnalysis: exactly two paragraphs, 120-180 words total. Quote actual page evidence in paragraph 1. Name specific affected audience in paragraph 2. No hedging, no bullets, no headers.
+- revenueImpact.impactRatingDisplay must align with severity (Critical→CRITICAL SUPPRESSION, High/HIGH IMPACT→HIGH SUPPRESSION, etc.).
+- advisorChips: exactly 3 strings, each a short question specific to THAT finding (not generic).
+- advisorOpening: must not echo the title alone as the whole message.
+
+Return ONLY a JSON array of ${leaks.length} objects (no markdown fences, no preamble). Array index 0 = FINDING [1], index 1 = FINDING [2], etc. Each element must match this exact shape:
+${EXPAND_FINDING_BRIEF_JSON_CONTRACT}`;
+
+  const systemPromptText =
+    EXPAND_FINDING_BRIEF_SYSTEM_PROMPT +
+    "\n\nNOTE: You will receive multiple findings in one request. Return a JSON array where each element is a complete brief matching the shape requested in the user message, in the same order as the input findings.";
+
+  const anthropic = new Anthropic({ apiKey, timeout: 120_000 });
+  let rawText = "";
+  try {
+    const msg = await anthropic.messages.create({
+      model: "claude-sonnet-4-6",
+      max_tokens: 7000,
+      system: [{ type: "text", text: systemPromptText, cache_control: { type: "ephemeral" } }],
+      messages: [{ role: "user", content: userMessage }],
+    });
+    const textBlock = msg.content.find((b) => b.type === "text");
+    rawText = textBlock && textBlock.type === "text" ? textBlock.text : "";
+    console.log(
+      `[extended-analysis] master brief done | stop_reason=${msg.stop_reason} output_tokens=${msg.usage?.output_tokens} report=${reportId}`
+    );
+  } catch (err) {
+    console.error(
+      "[extended-analysis] master brief API error",
+      err instanceof Error ? err.message : String(err)
+    );
+    throw err;
+  }
+
+  const map: Record<string, FindingBriefExpansion> = {};
+  try {
+    const trimmed = rawText.trim();
+    const fenced = trimmed.match(/^```(?:json)?\s*([\s\S]*?)```$/m);
+    const jsonStr = fenced?.[1]?.trim() ?? trimmed;
+    const arrStart = jsonStr.indexOf("[");
+    const arrEnd = jsonStr.lastIndexOf("]");
+    const arrStr =
+      arrStart >= 0 && arrEnd > arrStart ? jsonStr.slice(arrStart, arrEnd + 1) : jsonStr;
+    const parsed = JSON.parse(arrStr);
+    if (!Array.isArray(parsed)) {
+      console.error("[extended-analysis] master brief response is not a JSON array");
+      return {};
+    }
+    for (let i = 0; i < leaks.length; i++) {
+      const item = parsed[i];
+      if (!item) {
+        console.warn(`[extended-analysis] master brief missing item at index ${i}`);
+        continue;
+      }
+      const expansion = parseFindingBriefPayload(item as Record<string, unknown>);
+      if (expansion) {
+        map[leakKey(leaks[i])] = expansion;
+      } else {
+        console.warn(`[extended-analysis] master brief parse failed for finding index ${i}`);
+      }
+    }
+  } catch (err) {
+    console.error(
+      "[extended-analysis] master brief JSON parse error",
+      err instanceof Error ? err.message : String(err),
+      rawText.slice(0, 500)
+    );
+    return {};
+  }
+
+  return map;
+}
+
+/**
+ * Pre-generates AI advisor briefs for all 5 dashboard-ranked findings in a single
+ * Anthropic call, then writes them to both reports.extended_analysis and
+ * reports.finding_briefs so the expand-finding API's cache check finds the data
+ * immediately. Intended as a fire-and-forget background task after scan; logs errors
+ * without throwing. Falls back gracefully — the frontend calls /api/expand-finding
+ * per-finding if a brief is missing.
  */
 export async function generateAndPersistAllFindingBriefs(
   reportId: string,
@@ -321,38 +462,17 @@ export async function generateAndPersistAllFindingBriefs(
     return;
   }
 
-  const allLeaks = resolveLeaksForReportPayload(payload);
-  const leaks = allLeaks.slice(0, 5);
+  const leaks = resolveLeaksForReportPayload(payload).slice(0, 5);
   if (leaks.length === 0) return;
 
-  const overallScore = payload.healthScore ?? payload.growthScore ?? 0;
-  console.log(`[extended-analysis] generating briefs for ${leaks.length} findings | report=${reportId}`);
+  console.log(`[extended-analysis] generating briefs for ${leaks.length} findings via master call | report=${reportId}`);
 
-  const results = await Promise.allSettled(
-    leaks.map(async (finding): Promise<[string, FindingBriefExpansion]> => {
-      const key = leakKey(finding);
-      const body: ExpandFindingBriefRequestBody = {
-        domain,
-        overallScore,
-        finding: leakToFindingInput(finding),
-        relatedFindings: relatedForLeak(finding, allLeaks),
-        pageSummary,
-        siteType: payload.site_type,
-      };
-      const expansion = await expandFindingBriefWithAnthropic(body);
-      if (!expansion) throw new Error(`null expansion for ${key}`);
-      return [key, expansion];
-    })
-  );
-
-  const map: Record<string, FindingBriefExpansion> = {};
-  for (const result of results) {
-    if (result.status === "fulfilled") {
-      const [key, expansion] = result.value;
-      map[key] = expansion;
-    } else {
-      console.warn("[extended-analysis] brief generation failed:", result.reason);
-    }
+  let map: Record<string, FindingBriefExpansion>;
+  try {
+    map = await generateAllFindingBriefsMaster(reportId, domain, payload, pageSummary);
+  } catch (err) {
+    console.warn("[extended-analysis] master brief generation failed:", err instanceof Error ? err.message : err);
+    return;
   }
 
   if (Object.keys(map).length === 0) {

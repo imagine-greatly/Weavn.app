@@ -3,11 +3,7 @@
     "app/api/scan/route.ts": {
       "maxDuration": 120
     },
-    "app/api/analyze/route.ts": {
-      "memory": 1024,
-      "maxDuration": 60
-    },
-    "app/api/expand-finding/route.ts": {
+"app/api/expand-finding/route.ts": {
       "maxDuration": 60
     }
   }

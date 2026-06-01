@@ -27,7 +27,7 @@ function asObj(v: unknown): Record<string, unknown> {
     : {};
 }
 
-function parseFindingBriefPayload(parsed: Record<string, unknown>): FindingBriefExpansion | null {
+export function parseFindingBriefPayload(parsed: Record<string, unknown>): FindingBriefExpansion | null {
   try {
     const diagnosticAnalysis = asStr(parsed.diagnosticAnalysis);
     if (!diagnosticAnalysis) return null;

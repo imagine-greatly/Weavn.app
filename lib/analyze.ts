@@ -1311,6 +1311,13 @@ export async function runAnalysis(
     const cacheHit = cacheRead > 0;
     process.stderr.write(`[ANALYZE] claude DONE | attempt=${attempt} stop_reason=${message.stop_reason} input_tokens=${message.usage?.input_tokens} output_tokens=${message.usage?.output_tokens}\n`);
     process.stderr.write(`[ANALYZE] CACHE | hit=${cacheHit} cache_read=${cacheRead} cache_write=${cacheWrite}\n`);
+    const inputNoCacheTokens = (message.usage?.input_tokens ?? 0) - cacheRead - cacheWrite;
+    const estimatedUsd =
+      (inputNoCacheTokens / 1_000_000 * 3) +
+      (cacheWrite / 1_000_000 * 3.75) +
+      (cacheRead / 1_000_000 * 0.30) +
+      ((message.usage?.output_tokens ?? 0) / 1_000_000 * 15);
+    process.stderr.write(`[ANALYZE] SCAN COST | model=sonnet input_no_cache=${inputNoCacheTokens} cache_write=${cacheWrite} cache_read=${cacheRead} output=${message.usage?.output_tokens ?? 0} estimated_usd=$${estimatedUsd.toFixed(4)}\n`);
 
     if (message.stop_reason === "max_tokens") {
       const err = new Error("Analysis response truncated: max_tokens ceiling reached. Retrying would yield the same result.");

@@ -58,7 +58,7 @@ function BandDivider() {
 
 export default function LandingFindingDetail() {
   return (
-    <section style={{ padding: "80px 24px 0" }}>
+    <section style={{ padding: "120px 24px 0" }}>
       <div style={{ maxWidth: 860, margin: "0 auto" }}>
 
         {/* Section label */}
@@ -77,8 +77,9 @@ export default function LandingFindingDetail() {
 
         {/* Specimen card */}
         <div
+          className="ml-[8%]"
           style={{
-            background: "#0A0F1E",
+            background: "transparent",
             border: "1px solid #1A2035",
             borderLeft: "4px solid #FF2D2D",
             borderRadius: "0 8px 8px 0",
@@ -88,6 +89,18 @@ export default function LandingFindingDetail() {
 
           {/* ── Card header ── */}
           <div style={{ padding: "28px 32px 24px" }}>
+            <p
+              style={{
+                fontFamily: MONO,
+                fontSize: 11,
+                color: "#8899AA",
+                letterSpacing: "0.12em",
+                textTransform: "uppercase",
+                margin: "0 0 16px 0",
+              }}
+            >
+              · SAAS-STARTUP.COM · FINDING 01 OF 14 · CRITICAL
+            </p>
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
               <span
                 style={{
@@ -251,7 +264,7 @@ export default function LandingFindingDetail() {
                 <div
                   key={tier.label}
                   style={{
-                    background: "#070C18",
+                    background: "transparent",
                     border: "1px solid #1A2035",
                     borderRadius: 6,
                     padding: "10px 22px",
@@ -324,7 +337,7 @@ export default function LandingFindingDetail() {
               {/* Message bubble */}
               <div
                 style={{
-                  background: "#070C18",
+                  background: "transparent",
                   border: "1px solid #1A2035",
                   borderRadius: "2px 10px 10px 10px",
                   padding: "14px 18px",
@@ -376,7 +389,7 @@ export default function LandingFindingDetail() {
                   left: 0,
                   right: 0,
                   height: 64,
-                  background: "linear-gradient(to bottom, transparent, #0A0F1E)",
+                  background: "linear-gradient(to bottom, transparent, #050810)",
                   pointerEvents: "none",
                 }}
               />

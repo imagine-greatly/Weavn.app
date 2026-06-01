@@ -539,11 +539,9 @@ function revenueBarStats(band: string): { thisSite: string; benchmark: string } 
 }
 
 function impactSuppressionHeadline(
-  brief: FindingBriefExpansion | null,
+  _brief: FindingBriefExpansion | null,
   finding: Leak,
 ): string {
-  const fromAi = brief?.revenueImpact?.impactRatingDisplay?.trim();
-  if (fromAi) return fromAi;
   const band = revenueSuppressionBand(finding);
   if (band === "Critical") return "CRITICAL SUPPRESSION";
   if (band === "High") return "HIGH SUPPRESSION";

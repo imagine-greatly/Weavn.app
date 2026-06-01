@@ -485,7 +485,7 @@ export async function POST(req: NextRequest) {
           to: userEmail,
           subject: `Your webdocai diagnostic is ready — ${domain}`,
           html: `
-<div style="background:#080C14;padding:0;margin:0;font-family:'Courier New',monospace;">
+<div style="background:#080C14;padding:32px 0;margin:0;font-family:'Space Mono','Courier New',monospace;">
 <div style="max-width:600px;margin:0 auto;background:#080C14;">
 
   <!-- Header -->
@@ -501,7 +501,7 @@ export async function POST(req: NextRequest) {
 
     <p style="color:rgba(136,153,170,0.7);font-size:10px;letter-spacing:0.2em;text-transform:uppercase;margin:0 0 20px;">DIAGNOSTIC REPORT · COMPLETE</p>
 
-    <h1 style="color:#F0F4FF;font-size:22px;font-weight:600;margin:0 0 8px;line-height:1.3;font-family:'Courier New',monospace;">Your diagnostic report<br>is ready.</h1>
+    <h1 style="color:#F0F4FF;font-size:22px;font-weight:600;margin:0 0 8px;line-height:1.3;font-family:'Space Mono','Courier New',monospace;">Your diagnostic report<br>is ready.</h1>
 
     <!-- Domain + Score block -->
     <div style="margin:24px 0;padding:20px;border:1px solid rgba(0,200,255,0.15);border-left:3px solid #00C8FF;border-radius:0 4px 4px 0;">
@@ -555,7 +555,7 @@ export async function POST(req: NextRequest) {
     <p style="color:rgba(136,153,170,0.55);font-size:12px;line-height:1.8;margin:0 0 28px;">webdocai ran 210 diagnostic checks across 8 revenue dimensions on <strong style="color:#F0F4FF;">${domain}</strong>. Full findings ranked by revenue impact, exact resolutions, and your growth blueprint are ready to view.</p>
 
     <!-- CTA -->
-    <a href="https://webdocai.com/report/${domain}" style="display:inline-block;border:1px solid #00C8FF;color:#00C8FF;font-family:'Courier New',monospace;font-size:11px;letter-spacing:0.2em;text-transform:uppercase;padding:14px 32px;text-decoration:none;">VIEW YOUR REPORT →</a>
+    <a href="https://webdocai.com/report/${domain}" style="display:inline-block;border:1px solid #00C8FF;color:#00C8FF;font-family:'Space Mono','Courier New',monospace;font-size:11px;letter-spacing:0.2em;text-transform:uppercase;padding:14px 32px;text-decoration:none;">VIEW YOUR REPORT →</a>
 
   </div>
 

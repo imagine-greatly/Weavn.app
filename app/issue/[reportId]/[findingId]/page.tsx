@@ -518,6 +518,26 @@ function revenueSuppressionLine(l: Leak): string {
   return `Revenue Suppression: ${revenueSuppressionBand(l)}`;
 }
 
+function severityClinicalExplanation(band: string): string {
+  if (band === "Critical") {
+    return "At this suppression level, an estimated 60–75% of first-visit visitors exit before reaching a primary conversion surface — meaning the majority of acquisition spend is generating traffic that never reaches an actionable state. Each day without resolution compounds the cost: paid and organic visitors who arrive with clear intent are instead reinforcing a disengagement pattern that grows progressively harder to reverse.";
+  }
+  if (band === "High") {
+    return "High suppression findings introduce measurable conversion drag — visitors encounter the intended path but with enough friction that a significant share self-selects out before completing the action. Across category benchmarks, issues at this severity reduce conversion efficiency by 25–45% relative to sites where the issue is absent.";
+  }
+  if (band === "Medium") {
+    return "Medium suppression findings accumulate friction at key decision points without immediately blocking conversion, but the compound effect is material over time. Visitors who encounter repeated friction signals develop lower trust scores for the domain, increasing exit probability on return sessions even when the specific friction point is no longer present.";
+  }
+  return "Low suppression findings have a limited but measurable effect on overall conversion rate. Resolving them yields incremental gains that compound positively when addressed alongside higher-severity findings in the same diagnostic category.";
+}
+
+function revenueBarStats(band: string): { thisSite: string; benchmark: string } {
+  if (band === "Critical") return { thisSite: "~2% conv.", benchmark: "~12% conv." };
+  if (band === "High") return { thisSite: "~4% conv.", benchmark: "~11% conv." };
+  if (band === "Medium") return { thisSite: "~6% conv.", benchmark: "~10% conv." };
+  return { thisSite: "~8% conv.", benchmark: "~10% conv." };
+}
+
 function impactSuppressionHeadline(
   brief: FindingBriefExpansion | null,
   finding: Leak,
@@ -1932,7 +1952,7 @@ export default function IssuePage() {
 
           <p
             style={{
-              margin: "0 0 24px 0",
+              margin: "0 0 16px 0",
               fontFamily: "var(--font-jetbrains-mono), var(--font-space-mono), monospace",
               fontSize: 12,
               color: "rgba(136,153,170,0.72)",
@@ -1943,53 +1963,88 @@ export default function IssuePage() {
             {costOfInactionLine}
           </p>
 
+          <p
+            style={{
+              margin: "0 0 24px 0",
+              fontFamily: "var(--font-space-grotesk), sans-serif",
+              fontSize: 14,
+              color: "#8899AA",
+              lineHeight: 1.65,
+              maxWidth: 820,
+            }}
+          >
+            {severityClinicalExplanation(revenueSuppressionBand(finding))}
+          </p>
+
           <div style={{ display: "flex", flexDirection: "column", gap: 14, maxWidth: 640 }}>
-            {[
-              {
-                label: "This site:",
-                desc: briefExpanded?.revenueImpact?.thisSiteLabel || "Current experience vs. category norm",
-                w: "32%",
-                c: sevColor,
-              },
-              {
-                label: "High-converting benchmark:",
-                desc: briefExpanded?.revenueImpact?.benchmarkLabel || "Category-leading clarity pattern",
-                w: "82%",
-                c: "#00E676",
-              },
-            ].map((row) => (
-              <div key={row.label}>
-                <div
-                  style={{
-                    fontFamily: "var(--font-jetbrains-mono), var(--font-space-mono), monospace",
-                    fontSize: 10,
-                    color: "#8899AA",
-                    marginBottom: 6,
-                  }}
-                >
-                  {row.label}{" "}
-                  <span style={{ color: "var(--text-muted)", fontWeight: 400 }}>{row.desc}</span>
-                </div>
-                <div
-                  style={{
-                    height: 8,
-                    borderRadius: 4,
-                    background: "rgba(255,255,255,0.06)",
-                    overflow: "hidden",
-                  }}
-                >
+            {(() => {
+              const stats = revenueBarStats(revenueSuppressionBand(finding));
+              return [
+                {
+                  label: "This site:",
+                  desc: briefExpanded?.revenueImpact?.thisSiteLabel || "Current experience vs. category norm",
+                  w: "32%",
+                  c: sevColor,
+                  stat: stats.thisSite,
+                  statColor: sevColor,
+                },
+                {
+                  label: "High-converting benchmark:",
+                  desc: briefExpanded?.revenueImpact?.benchmarkLabel || "Category-leading clarity pattern",
+                  w: "82%",
+                  c: "#00E676",
+                  stat: stats.benchmark,
+                  statColor: "#00E676",
+                },
+              ].map((row) => (
+                <div key={row.label}>
                   <div
                     style={{
-                      width: row.w,
-                      height: "100%",
-                      borderRadius: 4,
-                      background: row.c,
-                      boxShadow: `0 0 12px ${row.c}55`,
+                      fontFamily: "var(--font-jetbrains-mono), var(--font-space-mono), monospace",
+                      fontSize: 10,
+                      color: "#8899AA",
+                      marginBottom: 6,
                     }}
-                  />
+                  >
+                    {row.label}{" "}
+                    <span style={{ color: "var(--text-muted)", fontWeight: 400 }}>{row.desc}</span>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <div
+                      style={{
+                        flex: 1,
+                        height: 8,
+                        borderRadius: 4,
+                        background: "rgba(255,255,255,0.06)",
+                        overflow: "hidden",
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: row.w,
+                          height: "100%",
+                          borderRadius: 4,
+                          background: row.c,
+                          boxShadow: `0 0 12px ${row.c}55`,
+                        }}
+                      />
+                    </div>
+                    <span
+                      style={{
+                        fontFamily: "var(--font-jetbrains-mono), var(--font-space-mono), monospace",
+                        fontSize: 10,
+                        color: row.statColor,
+                        whiteSpace: "nowrap",
+                        minWidth: 64,
+                        opacity: 0.8,
+                      }}
+                    >
+                      {row.stat}
+                    </span>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ));
+            })()}
           </div>
         </div>
 

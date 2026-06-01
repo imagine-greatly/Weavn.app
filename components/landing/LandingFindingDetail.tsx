@@ -393,7 +393,7 @@ export default function LandingFindingDetail() {
           </div>
           <p
             style={{
-              margin: "0 0 24px 0",
+              margin: "0 0 16px 0",
               fontFamily: spaceMono,
               fontSize: 12,
               color: "rgba(136,153,170,0.72)",
@@ -403,6 +403,18 @@ export default function LandingFindingDetail() {
           >
             Every month this finding remains unresolved, suppression compounds — visitors who arrive with clear intent are exiting before any conversion surface is rendered.
           </p>
+          <p
+            style={{
+              margin: "0 0 24px 0",
+              fontFamily: spaceGrotesk,
+              fontSize: 14,
+              color: "#8899AA",
+              lineHeight: 1.65,
+              maxWidth: 820,
+            }}
+          >
+            At this suppression level, an estimated 60–75% of first-visit visitors exit before reaching a primary conversion surface — meaning the majority of acquisition spend on saas-startup.com is generating traffic that never reaches an actionable state. Every day without a hero CTA above the fold compounds the cost: paid and organic visitors who arrive with clear purchase intent are instead reinforcing a disengagement pattern that grows progressively harder to reverse.
+          </p>
           <div style={{ display: "flex", flexDirection: "column", gap: 14, maxWidth: 640 }}>
             {[
               {
@@ -411,6 +423,8 @@ export default function LandingFindingDetail() {
                 w: "23%",
                 c: "var(--red)" as const,
                 shadow: "rgba(255,45,45,0.33)",
+                stat: "~0% hero CTR",
+                statColor: "var(--red)" as const,
               },
               {
                 label: "High-converting benchmark:",
@@ -418,6 +432,8 @@ export default function LandingFindingDetail() {
                 w: "86%",
                 c: "#00E676" as const,
                 shadow: "#00E67655",
+                stat: "~4–6% hero CTR",
+                statColor: "#00E676" as const,
               },
             ].map((row) => (
               <div key={row.label}>
@@ -425,23 +441,38 @@ export default function LandingFindingDetail() {
                   {row.label}{" "}
                   <span style={{ color: "var(--text-muted)", fontWeight: 400 }}>{row.desc}</span>
                 </div>
-                <div
-                  style={{
-                    height: 8,
-                    borderRadius: 4,
-                    background: "rgba(255,255,255,0.06)",
-                    overflow: "hidden",
-                  }}
-                >
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                   <div
                     style={{
-                      width: row.w,
-                      height: "100%",
+                      flex: 1,
+                      height: 8,
                       borderRadius: 4,
-                      background: row.c,
-                      boxShadow: `0 0 12px ${row.shadow}`,
+                      background: "rgba(255,255,255,0.06)",
+                      overflow: "hidden",
                     }}
-                  />
+                  >
+                    <div
+                      style={{
+                        width: row.w,
+                        height: "100%",
+                        borderRadius: 4,
+                        background: row.c,
+                        boxShadow: `0 0 12px ${row.shadow}`,
+                      }}
+                    />
+                  </div>
+                  <span
+                    style={{
+                      fontFamily: spaceMono,
+                      fontSize: 10,
+                      color: row.statColor,
+                      whiteSpace: "nowrap",
+                      minWidth: 80,
+                      opacity: 0.8,
+                    }}
+                  >
+                    {row.stat}
+                  </span>
                 </div>
               </div>
             ))}

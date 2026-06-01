@@ -44,16 +44,12 @@ function BandLabel({ children }: { children: React.ReactNode }) {
         color: "#00C8FF",
         letterSpacing: "0.15em",
         textTransform: "uppercase",
-        margin: "0 0 12px 0",
+        margin: "0 0 14px 0",
       }}
     >
       {children}
     </p>
   );
-}
-
-function BandDivider() {
-  return <div style={{ height: 1, background: "#1A2035" }} />;
 }
 
 export default function LandingFindingDetail() {
@@ -75,121 +71,100 @@ export default function LandingFindingDetail() {
           Every finding delivers evidence, revenue impact, and an exact resolution protocol.
         </p>
 
-        {/* Specimen card */}
-        <div
-          className="ml-[8%]"
-          style={{
-            background: "transparent",
-            border: "1px solid #1A2035",
-            borderLeft: "4px solid #FF2D2D",
-            borderRadius: "0 8px 8px 0",
-            overflow: "hidden",
-          }}
-        >
+        {/* Open document — offset right */}
+        <div className="ml-[8%]" style={{ maxWidth: 720 }}>
 
-          {/* ── Card header ── */}
-          <div style={{ padding: "28px 32px 24px" }}>
+          {/* Anchor line */}
+          <p
+            style={{
+              fontFamily: MONO,
+              fontSize: 11,
+              color: "#8899AA",
+              letterSpacing: "0.12em",
+              textTransform: "uppercase",
+              margin: "0 0 16px 0",
+            }}
+          >
+            · SAAS-STARTUP.COM · FINDING 01 OF 14 · CRITICAL
+          </p>
+
+          {/* Badge row */}
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
+            <span
+              style={{
+                fontFamily: MONO,
+                fontSize: 9,
+                fontWeight: 700,
+                letterSpacing: "0.1em",
+                background: "#FF2D2D",
+                color: "#FFFFFF",
+                padding: "3px 8px",
+                borderRadius: 2,
+              }}
+            >
+              CRITICAL
+            </span>
+            <span
+              style={{
+                fontFamily: MONO,
+                fontSize: 9,
+                color: "#8899AA",
+                border: "1px solid #1A2035",
+                padding: "3px 8px",
+                borderRadius: 2,
+              }}
+            >
+              cta-architecture
+            </span>
+          </div>
+
+          {/* Title */}
+          <h3
+            style={{
+              fontFamily: GROTESK,
+              fontWeight: 700,
+              fontSize: 38,
+              color: "#FFFFFF",
+              lineHeight: 1.15,
+              letterSpacing: "-0.5px",
+              margin: "0 0 12px 0",
+            }}
+          >
+            No hero CTA visible above the fold
+          </h3>
+
+          {/* Revenue suppression */}
+          <p
+            style={{
+              fontFamily: MONO,
+              fontSize: 14,
+              color: "#FF2D2D",
+              margin: 0,
+            }}
+          >
+            Revenue Suppression: Critical
+          </p>
+
+          {/* ── EVIDENCE ── */}
+          <div style={{ marginTop: 48 }}>
+            <BandLabel>EVIDENCE</BandLabel>
             <p
               style={{
                 fontFamily: MONO,
-                fontSize: 11,
+                fontSize: 13,
+                fontStyle: "italic",
                 color: "#8899AA",
-                letterSpacing: "0.12em",
-                textTransform: "uppercase",
-                margin: "0 0 16px 0",
-              }}
-            >
-              · SAAS-STARTUP.COM · FINDING 01 OF 14 · CRITICAL
-            </p>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
-              <span
-                style={{
-                  fontFamily: MONO,
-                  fontSize: 9,
-                  fontWeight: 700,
-                  letterSpacing: "0.1em",
-                  background: "#FF2D2D",
-                  color: "#FFFFFF",
-                  padding: "3px 8px",
-                  borderRadius: 2,
-                }}
-              >
-                CRITICAL
-              </span>
-              <span
-                style={{
-                  fontFamily: MONO,
-                  fontSize: 9,
-                  color: "#8899AA",
-                  border: "1px solid #1A2035",
-                  padding: "3px 8px",
-                  borderRadius: 2,
-                }}
-              >
-                cta-architecture
-              </span>
-            </div>
-
-            <h3
-              style={{
-                fontFamily: GROTESK,
-                fontWeight: 700,
-                fontSize: 22,
-                color: "#FFFFFF",
-                lineHeight: 1.25,
-                letterSpacing: "-0.3px",
-                margin: "0 0 10px 0",
-              }}
-            >
-              No hero CTA visible above the fold
-            </h3>
-
-            <p
-              style={{
-                fontFamily: GROTESK,
-                fontSize: 14,
-                fontWeight: 500,
-                color: "#FF2D2D",
+                lineHeight: 1.65,
                 margin: 0,
               }}
             >
-              Revenue Suppression: Critical
+              &ldquo;Hero section contains headline and subtext only. No button element exists
+              within the first viewport on desktop (1080px) or mobile (844px).&rdquo;
             </p>
           </div>
 
-          <BandDivider />
-
-          {/* ── Band 1: Evidence ── */}
-          <div style={{ padding: "20px 32px" }}>
-            <BandLabel>EVIDENCE</BandLabel>
-            <div
-              style={{
-                background: "#070C18",
-                borderLeft: "2px solid rgba(0,200,255,0.35)",
-                padding: "12px 16px",
-                borderRadius: "0 4px 4px 0",
-              }}
-            >
-              <p
-                style={{
-                  fontFamily: MONO,
-                  fontSize: 12,
-                  fontStyle: "italic",
-                  color: "#8899AA",
-                  lineHeight: 1.6,
-                  margin: 0,
-                }}
-              >
-                &ldquo;Hero section contains headline and subtext only. No button element exists
-                within the first viewport on desktop (1080px) or mobile (844px).&rdquo;
-              </p>
-            </div>
-          </div>
-
-          <BandDivider />
-
-          {/* ── Band 2: Revenue Impact ── */}
-          <div style={{ padding: "20px 32px" }}>
+          {/* ── REVENUE IMPACT ── */}
+          <div style={{ marginTop: 48 }}>
             <BandLabel>REVENUE IMPACT</BandLabel>
             <p
               style={{
@@ -198,22 +173,15 @@ export default function LandingFindingDetail() {
                 fontWeight: 700,
                 letterSpacing: "0.06em",
                 color: "#FF2D2D",
-                margin: "0 0 14px 0",
+                margin: "0 0 18px 0",
               }}
             >
               CRITICAL SUPPRESSION
             </p>
-            <div style={{ display: "flex", flexDirection: "column", gap: 10, maxWidth: 540 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 12, maxWidth: 540 }}>
               {BARS.map((row) => (
                 <div key={row.label}>
-                  <p
-                    style={{
-                      fontFamily: MONO,
-                      fontSize: 9,
-                      color: "#8899AA",
-                      margin: "0 0 5px 0",
-                    }}
-                  >
+                  <p style={{ fontFamily: MONO, fontSize: 9, color: "#8899AA", margin: "0 0 6px 0" }}>
                     {row.label}
                   </p>
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -254,43 +222,16 @@ export default function LandingFindingDetail() {
             </div>
           </div>
 
-          <BandDivider />
-
-          {/* ── Band 3: Resolution Protocol ── */}
-          <div style={{ padding: "20px 32px" }}>
+          {/* ── RESOLUTION PROTOCOL ── */}
+          <div style={{ marginTop: 48 }}>
             <BandLabel>RESOLUTION PROTOCOL</BandLabel>
-            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+            <div style={{ display: "flex", gap: 32, flexWrap: "wrap" }}>
               {TIERS.map((tier) => (
-                <div
-                  key={tier.label}
-                  style={{
-                    background: "transparent",
-                    border: "1px solid #1A2035",
-                    borderRadius: 6,
-                    padding: "10px 22px",
-                    textAlign: "center",
-                    minWidth: 110,
-                  }}
-                >
-                  <p
-                    style={{
-                      fontFamily: GROTESK,
-                      fontSize: 13,
-                      fontWeight: 600,
-                      color: "#00C8FF",
-                      margin: "0 0 4px 0",
-                    }}
-                  >
+                <div key={tier.label} style={{ border: "1px solid #1A2035", borderRadius: 6, padding: "10px 22px", textAlign: "center", minWidth: 110 }}>
+                  <p style={{ fontFamily: GROTESK, fontSize: 13, fontWeight: 600, color: "#00C8FF", margin: "0 0 4px 0" }}>
                     {tier.label}
                   </p>
-                  <p
-                    style={{
-                      fontFamily: MONO,
-                      fontSize: 9,
-                      color: "#8899AA",
-                      margin: 0,
-                    }}
-                  >
+                  <p style={{ fontFamily: MONO, fontSize: 9, color: "#8899AA", margin: 0 }}>
                     {tier.time}
                   </p>
                 </div>
@@ -298,13 +239,10 @@ export default function LandingFindingDetail() {
             </div>
           </div>
 
-          <BandDivider />
-
-          {/* ── AI Advisor teaser ── */}
-          <div style={{ padding: "24px 32px 32px" }}>
-
+          {/* ── AI ADVISOR ── */}
+          <div style={{ marginTop: 48 }}>
             {/* Advisor label */}
-            <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 14 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 16 }}>
               <span
                 aria-hidden
                 style={{
@@ -316,15 +254,7 @@ export default function LandingFindingDetail() {
                   flexShrink: 0,
                 }}
               />
-              <span
-                style={{
-                  fontFamily: MONO,
-                  fontWeight: 700,
-                  fontSize: 11,
-                  letterSpacing: "3px",
-                  color: "var(--cyan)",
-                }}
-              >
+              <span style={{ fontFamily: MONO, fontWeight: 700, fontSize: 11, letterSpacing: "3px", color: "var(--cyan)" }}>
                 AI ADVISOR
               </span>
               <span style={{ fontFamily: MONO, fontSize: 9, color: "#8899AA" }}>
@@ -332,96 +262,69 @@ export default function LandingFindingDetail() {
               </span>
             </div>
 
-            {/* Advisor content with bottom fade */}
-            <div style={{ position: "relative" }}>
-              {/* Message bubble */}
-              <div
-                style={{
-                  background: "transparent",
-                  border: "1px solid #1A2035",
-                  borderRadius: "2px 10px 10px 10px",
-                  padding: "14px 18px",
-                  marginBottom: 12,
-                }}
-              >
-                <p
+            {/* Message — open, no box */}
+            <p
+              style={{
+                fontFamily: "Inter, ui-sans-serif, system-ui, sans-serif",
+                fontSize: 15,
+                fontWeight: 400,
+                color: "#FFFFFF",
+                lineHeight: 1.7,
+                margin: "0 0 16px 0",
+              }}
+            >
+              This is your fastest revenue recovery. The CTA exists — it just needs to move
+              800px up the page. No redesign required. Tell me your stack and I&apos;ll give
+              you the exact element to move.
+            </p>
+
+            {/* Prompt chips */}
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              {CHIPS.map((chip) => (
+                <span
+                  key={chip}
                   style={{
-                    fontFamily: "Inter, ui-sans-serif, system-ui, sans-serif",
-                    fontSize: 14,
-                    fontWeight: 400,
-                    color: "#FFFFFF",
-                    lineHeight: 1.65,
-                    margin: 0,
+                    fontFamily: MONO,
+                    fontSize: 9,
+                    color: "#8899AA",
+                    border: "1px solid #1A2035",
+                    borderRadius: 6,
+                    padding: "5px 10px",
+                    whiteSpace: "nowrap",
                   }}
                 >
-                  This is your fastest revenue recovery. The CTA exists — it just needs to move
-                  800px up the page. No redesign required. Tell me your stack and I&apos;ll give
-                  you the exact element to move.
-                </p>
-              </div>
-
-              {/* Prompt chips */}
-              <div style={{ display: "flex", gap: 8, flexWrap: "wrap", paddingBottom: 16 }}>
-                {CHIPS.map((chip) => (
-                  <span
-                    key={chip}
-                    style={{
-                      fontFamily: MONO,
-                      fontSize: 9,
-                      color: "#8899AA",
-                      border: "1px solid #1A2035",
-                      borderRadius: 6,
-                      padding: "5px 10px",
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    {chip}
-                  </span>
-                ))}
-              </div>
-
-              {/* Bottom fade over advisor content */}
-              <div
-                aria-hidden
-                style={{
-                  position: "absolute",
-                  bottom: 0,
-                  left: 0,
-                  right: 0,
-                  height: 64,
-                  background: "linear-gradient(to bottom, transparent, #050810)",
-                  pointerEvents: "none",
-                }}
-              />
+                  {chip}
+                </span>
+              ))}
             </div>
-
-            {/* CTA */}
-            <div style={{ textAlign: "center", marginTop: 8 }}>
-              <Link
-                href="/auth?mode=signup"
-                className="inline-block font-mono text-[12px] uppercase transition-[background,border-color] duration-150"
-                style={{
-                  color: "#00C8FF",
-                  background: "transparent",
-                  border: "1px solid rgba(0,200,255,0.4)",
-                  padding: "10px 28px",
-                  borderRadius: 4,
-                  textDecoration: "none",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = "rgba(0,200,255,0.08)";
-                  e.currentTarget.style.borderColor = "rgba(0,200,255,0.7)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = "transparent";
-                  e.currentTarget.style.borderColor = "rgba(0,200,255,0.4)";
-                }}
-              >
-                VIEW FULL DIAGNOSTIC →
-              </Link>
-            </div>
-
           </div>
+
+          {/* ── CTA ── */}
+          <div style={{ marginTop: 48, textAlign: "center" }}>
+            <Link
+              href="/auth?mode=signup"
+              className="inline-block font-mono text-[12px] uppercase transition-[background,border-color] duration-150"
+              style={{
+                color: "#00C8FF",
+                background: "transparent",
+                border: "1px solid rgba(0,200,255,0.4)",
+                padding: "10px 28px",
+                borderRadius: 4,
+                textDecoration: "none",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = "rgba(0,200,255,0.08)";
+                e.currentTarget.style.borderColor = "rgba(0,200,255,0.7)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = "transparent";
+                e.currentTarget.style.borderColor = "rgba(0,200,255,0.4)";
+              }}
+            >
+              VIEW FULL DIAGNOSTIC →
+            </Link>
+          </div>
+
         </div>
       </div>
     </section>

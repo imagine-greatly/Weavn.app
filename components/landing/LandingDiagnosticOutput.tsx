@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import ConversionScoreGauge from "@/components/ConversionScoreGauge";
 import { ReportFindingPreview } from "@/components/ReportRightPanel";
 import type { FindingData } from "@/components/FindingCard";
@@ -246,7 +247,7 @@ export default function LandingDiagnosticOutput() {
                 position: "relative",
                 width: 120,
                 height: 120,
-                overflow: "hidden",
+                overflow: "visible",
                 display: "inline-block",
               }}
             >
@@ -360,34 +361,28 @@ export default function LandingDiagnosticOutput() {
               gap: 12,
             }}
           >
-            <a
+            <Link
               href="/auth?mode=signup"
+              className="inline-block font-mono text-[12px] uppercase transition-[background,border-color] duration-150"
+              style={{
+                color: "#00C8FF",
+                background: "transparent",
+                border: "1px solid rgba(0,200,255,0.4)",
+                padding: "10px 24px",
+                borderRadius: 4,
+                textDecoration: "none",
+              }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.boxShadow = "0 0 30px rgba(0,200,255,0.5)";
-                e.currentTarget.style.filter = "brightness(1.08)";
+                e.currentTarget.style.background = "rgba(0,200,255,0.08)";
+                e.currentTarget.style.borderColor = "rgba(0,200,255,0.7)";
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.boxShadow = "none";
-                e.currentTarget.style.filter = "none";
-              }}
-              style={{
-                display: "inline-block",
-                background: "#00C8FF",
-                color: "#050810",
-                fontFamily: REPORT_MONO,
-                fontWeight: 700,
-                fontSize: 12,
-                letterSpacing: "2px",
-                textTransform: "uppercase",
-                padding: "13px 32px",
-                borderRadius: 2,
-                textDecoration: "none",
-                cursor: "pointer",
-                transition: "box-shadow 150ms ease, filter 150ms ease",
+                e.currentTarget.style.background = "transparent";
+                e.currentTarget.style.borderColor = "rgba(0,200,255,0.4)";
               }}
             >
               RUN FREE SCAN →
-            </a>
+            </Link>
             <p
               style={{
                 fontFamily: REPORT_MONO,

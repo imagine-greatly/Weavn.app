@@ -11,6 +11,8 @@ import LandingThreeNumbers from "@/components/landing/LandingThreeNumbers";
 import LandingDashboardDemo from "@/components/landing/LandingDashboardDemo";
 import LandingGrowthBlueprint from "@/components/landing/LandingGrowthBlueprint";
 import LandingDiagnosticChecks from "@/components/landing/LandingDiagnosticChecks";
+import LandingDiagnosticOutput from "@/components/landing/LandingDiagnosticOutput";
+import LandingFindingDetail from "@/components/landing/LandingFindingDetail";
 import { MistTransitionDown, MistTransitionUp } from "@/components/PageTransitions";
 
 const LANDING_BG_BASE = "#050810";
@@ -33,6 +35,8 @@ export default function LandingPage() {
       <div className="relative z-10">
         <LandingHero url={url} onUrlChange={setUrl} autoFocus={!scanFocus} />
         <LandingDiagnosticChecks />
+        <LandingDiagnosticOutput />
+        <LandingFindingDetail />
         <LandingThreeNumbers />
         <MistTransitionDown />
         <LandingHowItWorks />

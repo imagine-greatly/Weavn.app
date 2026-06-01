@@ -54,7 +54,7 @@ export default function IssueDrawer({ issue, open, onClose }: IssueDrawerProps) 
             <header className="mb-6 flex items-start justify-between gap-4">
               <div className="space-y-2">
                 <span
-                  className={`inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-medium capitalize ${SEVERITY_STYLES[issue.severity]}`}
+                  className={`inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-medium capitalize ${SEVERITY_STYLES[issue.severity as keyof typeof SEVERITY_STYLES]}`}
                 >
                   {issue.severity}
                 </span>

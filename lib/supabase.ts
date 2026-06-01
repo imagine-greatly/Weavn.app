@@ -374,38 +374,3 @@ export async function getLatestReportPayloadByDomain(
   return ((data as { payload?: unknown } | null)?.payload ?? null) as unknown | null;
 }
 
-export async function listReportsForUser(
-  supabase: SupabaseClient,
-  userId: string
-): Promise<Array<{ id: string; domain: string; created_at: string; analysis?: JsonLike }>> {
-  const { data } = await supabase
-    .from("reports")
-    .select("id, domain, created_at, analysis")
-    .eq("user_id", userId)
-    .order("created_at", { ascending: false });
-  return (data ?? []) as Array<{
-    id: string;
-    domain: string;
-    created_at: string;
-    analysis?: JsonLike;
-  }>;
-}
-
-export async function insertReportAnalysis(
-  supabase: SupabaseClient,
-  payload: { domain: string; user_id: string; analysis?: JsonLike; payload?: JsonLike }
-): Promise<void> {
-  await supabase.from("reports").insert(payload);
-}
-
-export async function deleteReportsByDomain(
-  supabase: SupabaseClient,
-  domain: string,
-  userId: string
-): Promise<void> {
-  await supabase
-    .from("reports")
-    .delete()
-    .eq("domain", domain)
-    .eq("user_id", userId);
-}

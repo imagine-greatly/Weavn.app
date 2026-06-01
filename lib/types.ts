@@ -1,8 +1,6 @@
-export type Severity = "critical" | "warning" | "improve";
-
 export interface AuditIssue {
   id: string;
-  severity: Severity;
+  severity: string;
   title: string;
   description: string;
   whyItMatters: string;

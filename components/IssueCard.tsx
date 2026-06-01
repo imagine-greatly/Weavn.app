@@ -27,7 +27,7 @@ export default function IssueCard({ issue, onClick, index = 0 }: IssueCardProps)
     >
       <div className="mb-3 flex items-center justify-between">
         <span
-          className={`rounded-md border px-2.5 py-0.5 text-xs font-medium capitalize ${SEVERITY_STYLES[issue.severity]}`}
+          className={`rounded-md border px-2.5 py-0.5 text-xs font-medium capitalize ${SEVERITY_STYLES[issue.severity as keyof typeof SEVERITY_STYLES]}`}
         >
           {issue.severity}
         </span>

@@ -2,13 +2,15 @@
 
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { useRouter } from "next/navigation";
+import dynamic from "next/dynamic";
 import { getSupabaseBrowserClient } from "@/lib/supabaseBrowser";
 import type { DimensionScoreRow, Leak, ReportPayload } from "@/lib/reportSchema";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import ScoreHistoryChart from "@/components/dashboard/ScoreHistoryChart";
 import { getDashboardMoneyLeaks } from "@/lib/dashboardMoneyLeaks";
-import AdvisorChat from "@/components/dashboard/AdvisorChat";
 import PageLoadSkeleton from "@/components/PageLoadSkeleton";
+
+const AdvisorChat = dynamic(() => import("@/components/dashboard/AdvisorChat"), { ssr: false });
 import { getBlockedMessage, isBlockedDomain } from "@/lib/scanGuard";
 import { convertLeaksToFindingData } from "@/lib/convertLeakToFindingData";
 import { ReportFindingPreview } from "@/components/ReportRightPanel";
@@ -30,8 +32,6 @@ type StoredReportRow = {
   dimension_scores?: DimensionScoreRow[] | null;
   health_score?: number | null;
   money_leaks?: unknown;
-  quick_wins?: unknown;
-  growth_roadmap?: unknown;
   verdict?: unknown;
   primary_findings?: unknown;
   biggest_opportunity?: string | null;
@@ -148,8 +148,6 @@ function normalizeStoredReportRows(
       money_leaks: colMoney,
       primary_findings: colPrimary,
       health_score: typeof row.health_score === "number" ? row.health_score : null,
-      quick_wins: row.quick_wins ?? null,
-      growth_roadmap: row.growth_roadmap ?? null,
       verdict: row.verdict ?? null,
       biggest_opportunity:
         row.biggest_opportunity != null ? String(row.biggest_opportunity) : null,
@@ -336,12 +334,6 @@ export default function DashboardPage() {
       setLoading(true);
       const supabase = getSupabaseBrowserClient();
 
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        window.location.href = "/auth";
-        return;
-      }
-
       const { data } = await supabase.auth.getUser();
       if (cancelled) return;
       const user = data?.user;
@@ -381,7 +373,7 @@ export default function DashboardPage() {
         supabase
           .from("reports")
           .select(
-            "id, domain, created_at, analysis, dimension_scores, money_leaks, quick_wins, growth_roadmap, verdict, biggest_opportunity, estimated_impact, health_score, critical_count, high_count, total_failed, total_passed, share_token, score_delta, previous_score"
+            "id, domain, created_at, analysis, dimension_scores, money_leaks, verdict, biggest_opportunity, estimated_impact, health_score, critical_count, high_count, total_failed, total_passed, share_token, score_delta, previous_score"
           )
           .eq("user_id", user.id)
           .order("created_at", { ascending: false }),
@@ -638,7 +630,7 @@ export default function DashboardPage() {
             if (!ac.signal.aborted && data) prefetchedFindings.current.set(fid, data);
           })
           .catch(() => { /* ignore prefetch failures */ });
-      }, 800 + i * 300);
+      }, 3000 + i * 300);
       timers.push(t);
     });
 
@@ -664,10 +656,24 @@ export default function DashboardPage() {
   }, [activeLatest]);
 
   const domainScores = useMemo(() => {
+    const norm = (s: string) => s.trim().toLowerCase().replace(/^www\./i, "");
+    const hasDim = (r: StoredReportRow) =>
+      Array.isArray(r.analysis?.dimensionScores) &&
+      r.analysis.dimensionScores.some((sc) => Number(sc?.score ?? 0) > 0);
+    // Build normalized-domain → best report map once (O(m))
+    const byDomain = new Map<string, StoredReportRow>();
+    for (const r of reports ?? []) {
+      const key = norm(r.domain);
+      const cur = byDomain.get(key);
+      if (!cur) { byDomain.set(key, r); continue; }
+      const rH = hasDim(r) ? 1 : 0, cH = hasDim(cur) ? 1 : 0;
+      if (rH > cH || (rH === cH && new Date(r.created_at) > new Date(cur.created_at))) {
+        byDomain.set(key, r);
+      }
+    }
     const m: Record<string, number> = {};
     for (const d of domains) {
-      const dr = reportsMatchingSelectedDomain(reports ?? [], d);
-      m[d] = dr[0]?.analysis?.healthScore ?? 0;
+      m[d] = byDomain.get(norm(d))?.analysis?.healthScore ?? 0;
     }
     return m;
   }, [domains, reports]);

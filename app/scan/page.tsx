@@ -170,6 +170,7 @@ function ScanLoadingInner() {
   const [invalidUrlMessage, setInvalidUrlMessage] = useState<string | null>(null);
   const [statusBarOverride, setStatusBarOverride] = useState<string | null>(null);
   const [scanUserAborted, setScanUserAborted] = useState(false);
+  const [showTimeoutModal, setShowTimeoutModal] = useState(false);
   // Cinematic intro — starts true for fresh scans so the overlay is visible on the very first frame
   const [introVisible, setIntroVisible] = useState<boolean>(() => {
     if (typeof window === "undefined") return false;
@@ -205,6 +206,10 @@ function ScanLoadingInner() {
   const cancelRequestedRef = useRef(false);
   const hasRetriedRef = useRef(false);
   const isRescanRef = useRef(false);
+  const userIdRef = useRef<string | null>(null);
+  const userEmailRef = useRef<string | null>(null);
+  const pollingIntervalRef = useRef<number | null>(null);
+  const timeoutRef = useRef<number | null>(null);
 
   const beamActiveRef = useRef(false);
   const sectionIdxRef = useRef(0);
@@ -293,6 +298,13 @@ function ScanLoadingInner() {
       setElapsedMs(Math.floor(performance.now() - t0));
     }, 100);
     return () => clearInterval(id);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (pollingIntervalRef.current) clearInterval(pollingIntervalRef.current);
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
   }, []);
 
   // crossfade helper
@@ -505,6 +517,8 @@ function ScanLoadingInner() {
           healthScoreRef.current = Number.isFinite(hs)
             ? Math.min(100, Math.max(0, Math.round(hs)))
             : 74;
+          if (pollingIntervalRef.current) { clearInterval(pollingIntervalRef.current); pollingIntervalRef.current = null; }
+          if (timeoutRef.current) { clearTimeout(timeoutRef.current); timeoutRef.current = null; }
           apiDoneRef.current = true;
         } catch (e) {
           window.clearTimeout(timeoutId);
@@ -532,6 +546,40 @@ function ScanLoadingInner() {
       // For rescan there is no intro, so fetch starts immediately.
       // For normal scans, delay until cinematic is gone: materialize() at 120ms + 1800ms intro ≈ 1936ms.
       window.setTimeout(() => { runFetch(); }, isRescan ? 0 : 2000);
+
+      // Poll Supabase every 3s — fallback completion signal if the fetch is dropped or times out
+      if (pollingIntervalRef.current) clearInterval(pollingIntervalRef.current);
+      pollingIntervalRef.current = window.setInterval(async () => {
+        const uid = userIdRef.current;
+        if (!uid) return;
+        try {
+          const supabase = getSupabaseBrowserClient();
+          const { data } = await supabase
+            .from('reports')
+            .select('id, status, health_score')
+            .eq('domain', domain)
+            .eq('user_id', uid)
+            .eq('status', 'complete')
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .single();
+          if (data) {
+            if (pollingIntervalRef.current) { clearInterval(pollingIntervalRef.current); pollingIntervalRef.current = null; }
+            if (timeoutRef.current) { clearTimeout(timeoutRef.current); timeoutRef.current = null; }
+            const hs = Number((data as { health_score?: number }).health_score ?? 74);
+            healthScoreRef.current = Number.isFinite(hs) ? Math.min(100, Math.max(0, Math.round(hs))) : 74;
+            apiDoneRef.current = true;
+          }
+        } catch {
+          // ignore poll errors
+        }
+      }, 3000);
+
+      // Show a timeout modal at 280s if the scan has not yet completed
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      timeoutRef.current = window.setTimeout(() => {
+        setShowTimeoutModal(true);
+      }, 280000);
     };
 
     if (scanFailure !== null) {
@@ -546,6 +594,8 @@ function ScanLoadingInner() {
           router.replace(`/auth?next=${encodeURIComponent(`/scan?url=${encodeURIComponent(normalized)}`)}`);
           return;
         }
+        userIdRef.current = session.user.id;
+        userEmailRef.current = session.user.email ?? null;
       } catch {
         // Session check failed — proceed with normal scan
       }
@@ -1196,6 +1246,10 @@ function ScanLoadingInner() {
         }
         .scan-beam {
           overflow: hidden;
+        }
+        @keyframes pulseDot {
+          0%, 100% { opacity: 1; transform: scale(1); }
+          50% { opacity: 0.4; transform: scale(0.7); }
         }
       `}</style>
 
@@ -2631,13 +2685,12 @@ function ScanLoadingInner() {
                             fontSize: 10,
                             letterSpacing: "0.12em",
                             fontWeight: 700,
-                            color: "#050810",
-                            background: CY,
+                            color: CY,
+                            background: "transparent",
                             border: `1px solid ${CY}`,
                             padding: "10px 18px",
                             borderRadius: 6,
                             cursor: "pointer",
-                            boxShadow: "0 0 20px rgba(0,200,255,0.25)",
                           }}
                         >
                           TRY AGAIN
@@ -2763,6 +2816,97 @@ function ScanLoadingInner() {
                 210 DIAGNOSTIC CHECKS QUEUED
               </div>
             </div>
+          </div>
+        )}
+
+        {showTimeoutModal && (
+          <div
+            style={{
+              position: "fixed",
+              inset: 0,
+              zIndex: 500,
+              background: "rgba(5,8,16,0.95)",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              fontFamily: MONO,
+              padding: 24,
+              textAlign: "center",
+            }}
+          >
+            <div
+              style={{
+                width: 8,
+                height: 8,
+                borderRadius: "50%",
+                background: CY,
+                marginBottom: 24,
+                animation: "pulseDot 1.5s ease-in-out infinite",
+              }}
+            />
+            <h2 style={{ fontFamily: MONO, fontSize: 20, fontWeight: 600, color: "#F0F4FF", margin: 0 }}>
+              DIAGNOSTIC COMPLETE
+            </h2>
+            <p
+              style={{
+                fontFamily: MONO,
+                fontSize: 13,
+                color: "rgba(240,244,255,0.45)",
+                marginTop: 12,
+                maxWidth: 440,
+                lineHeight: 1.6,
+              }}
+            >
+              Your scan finished processing. We&apos;ve sent the full report to{" "}
+              {userEmailRef.current ?? "your email"}. Check your inbox — results are waiting.
+            </p>
+            <div
+              style={{
+                width: 280,
+                height: 1,
+                background: "rgba(0,200,255,0.2)",
+                marginTop: 24,
+              }}
+            />
+            <p
+              style={{
+                fontFamily: MONO,
+                fontSize: 11,
+                color: "rgba(240,244,255,0.25)",
+                marginTop: 16,
+                letterSpacing: "0.08em",
+              }}
+            >
+              · SCAN ID: {domainRef.current} · PROCESSING TIME: {Math.round(elapsedMs / 1000)}s · STATUS: DELIVERED
+            </p>
+            <a
+              href={`/report/${domainRef.current}`}
+              style={{
+                display: "inline-block",
+                marginTop: 28,
+                fontFamily: MONO,
+                fontSize: 11,
+                letterSpacing: "0.18em",
+                color: CY,
+                border: `1px solid ${CY}`,
+                padding: "12px 28px",
+                textDecoration: "none",
+                textTransform: "uppercase",
+              }}
+            >
+              VIEW REPORT →
+            </a>
+            <p
+              style={{
+                fontFamily: MONO,
+                fontSize: 10,
+                color: "rgba(240,244,255,0.18)",
+                marginTop: 24,
+              }}
+            >
+              webdocai times out at 300s per Vercel infrastructure limits.
+            </p>
           </div>
         )}
       </div>

@@ -222,26 +222,19 @@ export default function ReportDomainPage() {
           cachePlan(p || (profileJson.is_pro ? "pro" : "free"));
         }).catch(() => {});
 
-        const { data: sessionData } = await supabase.auth.getSession();
-        if (cancelled) return;
-        const sessionUserId = sessionData.session?.user?.id ?? null;
-
-        const [authResult, reportResult] = await Promise.all([
+        const [userResult, reportResult] = await Promise.all([
           supabase.auth.getUser(),
-          sessionUserId
-            ? supabase
-                .from("reports")
-                .select("id, analysis, overview_copy, extended_analysis, finding_briefs")
-                .eq("domain", domain.toLowerCase().trim())
-                .eq("user_id", sessionUserId)
-                .order("created_at", { ascending: false })
-                .limit(1)
-                .single()
-            : Promise.resolve(null),
+          supabase
+            .from("reports")
+            .select("id, analysis, overview_copy, extended_analysis, finding_briefs")
+            .eq("domain", domain.toLowerCase().trim())
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .single(),
         ]);
         if (cancelled) return;
 
-        const userData = authResult.data.user;
+        const userData = userResult.data.user;
         if (userData) {
           setUser({ id: userData.id });
         } else {
@@ -371,7 +364,7 @@ export default function ReportDomainPage() {
             }
           })
           .catch(() => { /* ignore prefetch failures */ });
-      }, 800 + i * 300);
+      }, 3000 + i * 300);
       timers.push(t);
     });
 

@@ -137,7 +137,7 @@ export async function saveReport(
   domain: string,
   analysis: ReportPayload,
   userId: string | null,
-  options?: { source?: string | null; scan_type?: string | null }
+  options?: { source?: string | null; scan_type?: string | null; reportId?: string | null }
 ): Promise<string> {
   const uid = typeof userId === "string" && userId.trim() ? userId.trim() : null;
 
@@ -188,7 +188,36 @@ export async function saveReport(
     dimension_scores: analysis.dimensionScores ?? null,
     source: options?.source ?? null,
     scan_type: options?.scan_type ?? 'full',
+    status: 'complete',
   };
+
+  if (options?.reportId) {
+    let upData: { id: string } | null = null;
+    let upError: { message?: string } | null = null;
+    try {
+      const r = await supabase.from("reports").update(row).eq("id", options.reportId).select("id").single();
+      upData = r.data as { id: string } | null;
+      upError = r.error;
+    } catch (err) {
+      console.warn("[DB] reports update threw (saveReport):", err);
+      upError = { message: err instanceof Error ? err.message : String(err) };
+    }
+    if (!upError && upData?.id) return upData.id;
+    if (upError && isMissingReportColumnError(upError)) {
+      console.warn("[DB] Failed to update with optional columns, retrying stripped:", upError.message);
+      const { data: d2, error: e2 } = await supabase
+        .from("reports")
+        .update(stripReportOptionalJsonbColumns(row))
+        .eq("id", options.reportId)
+        .select("id")
+        .single();
+      if (e2) throw new Error(e2.message);
+      if (!(d2 as { id?: string } | null)?.id) throw new Error("Failed to update report.");
+      return (d2 as { id: string }).id;
+    }
+    if (upError) throw new Error(upError.message ?? "Failed to update report.");
+    throw new Error("Failed to update report.");
+  }
 
   let data: { id: string } | null = null;
   let error: { message?: string } | null = null;

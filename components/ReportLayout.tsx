@@ -1,11 +1,13 @@
 "use client";
 
 import { useCallback, useMemo, useRef, useState } from "react";
+import dynamic from "next/dynamic";
 import ReportLeftPanel, {
   type CategoryScore,
   type ReportNavSectionId,
 } from "@/components/ReportLeftPanel";
-import ReportRightPanel from "@/components/ReportRightPanel";
+
+const ReportRightPanel = dynamic(() => import("@/components/ReportRightPanel"), { ssr: false });
 import type { ConversionKiller, Leak, ReportPayload } from "@/lib/reportSchema";
 import type { FindingData } from "@/components/FindingCard";
 import type { HeroRewriteData } from "@/components/HeroRewriteModule";

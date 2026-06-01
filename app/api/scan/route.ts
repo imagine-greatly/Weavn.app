@@ -4,7 +4,7 @@
  * Returns: { domain, reportId, payload } or { error }
  */
 
-import { timingSafeEqual } from "crypto";
+import { timingSafeEqual, randomUUID } from "crypto";
 import { createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
@@ -22,7 +22,7 @@ function mergeCookies(from: NextResponse, to: NextResponse) {
   });
 }
 
-export const maxDuration = 300;
+export const maxDuration = 800;
 
 function normalizeUrl(input: string): string {
   const trimmed = input.trim();
@@ -161,6 +161,42 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  // Service role client — used for pending row management and email throughout the scan
+  const supabaseAdmin = (
+    process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY
+  ) ? createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY) : null;
+
+  // Insert a pending row immediately so the client can poll for completion status
+  let pendingReportId: string | null = null;
+  if (supabaseAdmin) {
+    try {
+      const { data: pendingData } = await supabaseAdmin
+        .from('reports')
+        .insert({
+          domain,
+          user_id: userId,
+          status: 'pending',
+          health_score: 0,
+          verdict: 'pending',
+          analysis: {},
+          share_token: randomUUID(),
+        })
+        .select('id')
+        .single();
+      pendingReportId = (pendingData as { id?: string } | null)?.id ?? null;
+      console.log(`[scan] PENDING ROW | domain=${domain} pendingReportId=${pendingReportId}`);
+    } catch (err) {
+      console.log(`[scan] PENDING ROW FAILED (non-fatal) | ${err instanceof Error ? err.message : String(err)}`);
+    }
+  }
+
+  const markFailed = async () => {
+    if (!pendingReportId || !supabaseAdmin) return;
+    try {
+      await supabaseAdmin.from('reports').update({ status: 'failed' }).eq('id', pendingReportId);
+    } catch {}
+  };
+
   const scanStart = Date.now()
   console.log(`[scan] START | url=${normalized} domain=${domain} userId=${userId}`)
 
@@ -220,6 +256,7 @@ export async function POST(req: NextRequest) {
     const isBlocked =
       /block|forbidden|403|401|access denied|scraping|cannot fetch/i.test(message);
     console.log(`[scan] returning 422 | domain=${domain}`)
+    await markFailed();
     return withCookies(
       NextResponse.json(
         {
@@ -236,6 +273,7 @@ export async function POST(req: NextRequest) {
   if (!extraction || !extraction.rawHtml) {
     process.stderr.write(`[ROUTE] 422 no rawHtml | elapsed=${Date.now() - scanStart}ms\n`)
     console.log(`[scan] 422 no rawHtml | domain=${domain} elapsed=${Date.now() - scanStart}ms`)
+    await markFailed();
     return withCookies(
       NextResponse.json(
         {
@@ -399,6 +437,7 @@ export async function POST(req: NextRequest) {
     process.stderr.write(`[ROUTE] runAnalysis ERROR | elapsed=${Date.now() - analyzeStart}ms | ${err instanceof Error ? (err.stack ?? err.message) : String(err)}\n`)
     console.error(`[scan] ANALYZE ERROR | domain=${domain} elapsed=${Date.now() - analyzeStart}ms | ${err instanceof Error ? (err.stack ?? err.message) : err}`)
     const message = err instanceof Error ? err.message : "Analysis failed.";
+    await markFailed();
     return withCookies(NextResponse.json({ error: message }, { status: 500 }));
   }
 
@@ -409,7 +448,7 @@ export async function POST(req: NextRequest) {
   console.log(`[scan] SAVE START | domain=${domain}`)
   try {
     reportId = await Promise.race([
-      saveReport(domain, payload, userId, { source: reqSource, scan_type: reqScanType }),
+      saveReport(domain, payload, userId, { source: reqSource, scan_type: reqScanType, reportId: pendingReportId }),
       new Promise<never>((_, reject) =>
         setTimeout(() => reject(new Error('[ROUTE] saveReport TIMEOUT')), 10_000)
       ),
@@ -423,6 +462,7 @@ export async function POST(req: NextRequest) {
       process.stderr.write(`[ROUTE] saveReport ERROR | elapsed=${Date.now() - saveStart}ms | ${err instanceof Error ? (err.stack ?? err.message) : String(err)}\n`)
       console.error(`[scan] SAVE ERROR | domain=${domain} elapsed=${Date.now() - saveStart}ms | ${err instanceof Error ? (err.stack ?? err.message) : err}`)
       const message = err instanceof Error ? err.message : "Failed to save report.";
+      await markFailed();
       return withCookies(
         NextResponse.json(
           { error: message, code: "SCAN_SAVE_FAILED" },
@@ -433,33 +473,110 @@ export async function POST(req: NextRequest) {
   }
 
   // Email notification — non-blocking, must not delay the scan response
-  if (userId) {
+  if (userId && supabaseAdmin) {
     try {
-      const supabaseAdmin = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!
-      )
-      const { data: userData } = await supabaseAdmin.auth.admin.getUserById(userId)
-      const userEmail = userData?.user?.email
+      const { data: userData } = await supabaseAdmin.auth.admin.getUserById(userId);
+      const userEmail = userData?.user?.email;
       if (userEmail) {
-        const resend = new Resend(process.env.RESEND_API_KEY)
+        const criticalCount = typeof payload.criticalCount === 'number' ? payload.criticalCount : 0;
+        const resend = new Resend(process.env.RESEND_API_KEY);
         await resend.emails.send({
-          from: 'webdoc.ai <insights@webdocai.com>',
+          from: 'devon@webdocai.com',
           to: userEmail,
-          subject: `Your webdoc.ai report for ${domain} is ready`,
+          subject: `Your webdocai diagnostic is ready — ${domain}`,
           html: `
-      <div style="font-family: monospace; background: #080C14; color: #F0F4FF; padding: 40px; max-width: 600px;">
-        <p style="color: #00C8FF; font-size: 12px; letter-spacing: 2px; text-transform: uppercase; margin: 0 0 24px;">WEBDOC.AI</p>
-        <p style="font-size: 16px; margin: 0 0 16px;">Your diagnostic report for <strong>${domain}</strong> is complete.</p>
-        <p style="color: #8899AA; font-size: 14px; margin: 0 0 32px;">The full breakdown — findings ranked by revenue impact, implementation directives, and growth blueprint — is ready to view.</p>
-        <a href="https://webdocai.com/report/${domain}" style="display: inline-block; background: #00C8FF; color: #080C14; font-family: monospace; font-size: 12px; letter-spacing: 2px; text-transform: uppercase; padding: 14px 28px; text-decoration: none;">VIEW REPORT →</a>
-      </div>
-    `
-        })
-        console.log(`[ROUTE] email sent | domain=${domain} to=${userEmail}`)
+<div style="background:#080C14;padding:0;margin:0;font-family:'Courier New',monospace;">
+<div style="max-width:600px;margin:0 auto;background:#080C14;">
+
+  <!-- Header -->
+  <div style="padding:32px 40px 24px;border-bottom:1px solid rgba(0,200,255,0.15);">
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div style="width:18px;height:18px;border:2px solid #00C8FF;position:relative;flex-shrink:0;"></div>
+      <span style="color:#00C8FF;font-size:13px;letter-spacing:0.18em;font-weight:600;">webdocai</span>
+    </div>
+  </div>
+
+  <!-- Body -->
+  <div style="padding:40px;">
+
+    <p style="color:rgba(136,153,170,0.7);font-size:10px;letter-spacing:0.2em;text-transform:uppercase;margin:0 0 20px;">DIAGNOSTIC REPORT · COMPLETE</p>
+
+    <h1 style="color:#F0F4FF;font-size:22px;font-weight:600;margin:0 0 8px;line-height:1.3;font-family:'Courier New',monospace;">Your diagnostic report<br>is ready.</h1>
+
+    <!-- Domain + Score block -->
+    <div style="margin:24px 0;padding:20px;border:1px solid rgba(0,200,255,0.15);border-left:3px solid #00C8FF;border-radius:0 4px 4px 0;">
+      <table style="width:100%;border-collapse:collapse;">
+        <tr>
+          <td style="vertical-align:top;">
+            <p style="color:rgba(136,153,170,0.6);font-size:10px;letter-spacing:0.15em;margin:0 0 6px;">DOMAIN SCANNED</p>
+            <p style="color:#F0F4FF;font-size:14px;margin:0;">${domain}</p>
+          </td>
+          <td style="vertical-align:top;text-align:right;">
+            <p style="color:rgba(136,153,170,0.6);font-size:10px;letter-spacing:0.15em;margin:0 0 4px;">WEBDOC SCORE</p>
+            <p style="color:#FF2D2D;font-size:32px;font-weight:700;margin:0;line-height:1;">${payload.healthScore ?? 0}<span style="font-size:14px;color:rgba(136,153,170,0.5);">/100</span></p>
+            <p style="color:#FF2D2D;font-size:9px;letter-spacing:0.15em;margin:4px 0 0;">${(payload.healthScore ?? 0) >= 70 ? 'NEEDS WORK' : (payload.healthScore ?? 0) >= 50 ? 'AT RISK' : 'CRITICAL RISK'}</p>
+          </td>
+        </tr>
+      </table>
+    </div>
+
+    <!-- Stats grid -->
+    <table style="width:100%;border-collapse:collapse;margin:0 0 24px;">
+      <tr>
+        <td style="width:33%;padding-right:8px;">
+          <div style="padding:14px;border:1px solid rgba(255,45,45,0.3);border-radius:4px;text-align:center;">
+            <p style="color:#FF2D2D;font-size:22px;font-weight:700;margin:0;">${criticalCount}</p>
+            <p style="color:rgba(136,153,170,0.5);font-size:9px;letter-spacing:0.12em;margin:4px 0 0;">CRITICAL</p>
+          </div>
+        </td>
+        <td style="width:33%;padding:0 4px;">
+          <div style="padding:14px;border:1px solid rgba(255,140,0,0.3);border-radius:4px;text-align:center;">
+            <p style="color:#FF8C00;font-size:22px;font-weight:700;margin:0;">${typeof payload.highCount === 'number' ? payload.highCount : 0}</p>
+            <p style="color:rgba(136,153,170,0.5);font-size:9px;letter-spacing:0.12em;margin:4px 0 0;">HIGH</p>
+          </div>
+        </td>
+        <td style="width:33%;padding-left:8px;">
+          <div style="padding:14px;border:1px solid rgba(0,200,255,0.2);border-radius:4px;text-align:center;">
+            <p style="color:#00C8FF;font-size:22px;font-weight:700;margin:0;">210</p>
+            <p style="color:rgba(136,153,170,0.5);font-size:9px;letter-spacing:0.12em;margin:4px 0 0;">CHECKS RUN</p>
+          </div>
+        </td>
+      </tr>
+    </table>
+
+    <!-- Top finding teaser -->
+    ${payload.primaryFindings?.[0] ? `
+    <div style="margin:0 0 24px;padding:16px;border:1px solid rgba(255,45,45,0.2);border-left:3px solid #FF2D2D;border-radius:0 4px 4px 0;">
+      <p style="color:rgba(136,153,170,0.5);font-size:9px;letter-spacing:0.15em;margin:0 0 8px;">TOP FINDING · CRITICAL</p>
+      <p style="color:#F0F4FF;font-size:13px;margin:0;line-height:1.6;">${payload.primaryFindings[0].title ?? ''}</p>
+    </div>
+    ` : ''}
+
+    <p style="color:rgba(136,153,170,0.55);font-size:12px;line-height:1.8;margin:0 0 28px;">webdocai ran 210 diagnostic checks across 8 revenue dimensions on <strong style="color:#F0F4FF;">${domain}</strong>. Full findings ranked by revenue impact, exact resolutions, and your growth blueprint are ready to view.</p>
+
+    <!-- CTA -->
+    <a href="https://webdocai.com/report/${domain}" style="display:inline-block;border:1px solid #00C8FF;color:#00C8FF;font-family:'Courier New',monospace;font-size:11px;letter-spacing:0.2em;text-transform:uppercase;padding:14px 32px;text-decoration:none;">VIEW YOUR REPORT →</a>
+
+  </div>
+
+  <!-- Footer -->
+  <div style="padding:20px 40px;border-top:1px solid rgba(0,200,255,0.1);">
+    <table style="width:100%;border-collapse:collapse;">
+      <tr>
+        <td style="color:rgba(136,153,170,0.35);font-size:10px;letter-spacing:0.1em;">webdocai · Conversion Intelligence</td>
+        <td style="text-align:right;color:rgba(136,153,170,0.35);font-size:10px;">devon@webdocai.com</td>
+      </tr>
+    </table>
+  </div>
+
+</div>
+</div>
+`,
+        });
+        console.log(`[ROUTE] email sent | domain=${domain} to=${userEmail}`);
       }
     } catch (emailErr) {
-      console.log(`[ROUTE] email failed | error=${emailErr instanceof Error ? emailErr.message : String(emailErr)}`)
+      console.log(`[ROUTE] email failed | error=${emailErr instanceof Error ? emailErr.message : String(emailErr)}`);
     }
   }
 

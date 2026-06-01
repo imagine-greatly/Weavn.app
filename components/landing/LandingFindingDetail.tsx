@@ -14,17 +14,17 @@ const CHIPS = [
 ] as const;
 
 const TIERS = [
-  { label: "Immediate", time: "30–60 min" },
-  { label: "Proper",    time: "2–3 days"  },
-  { label: "Advanced",  time: "1–2 weeks" },
+  { label: "Immediate", time: "30–60 min", desc: "Move CTA into hero. No developer needed." },
+  { label: "Proper",    time: "2–3 days",  desc: "Restructure hero with Problem → Value → CTA sequence." },
+  { label: "Advanced",  time: "1–2 weeks", desc: "Multivariate CTA test across hero configurations." },
 ] as const;
 
 export default function LandingFindingDetail() {
   return (
     <section
       style={{
-        paddingTop: 100,
-        paddingBottom: 100,
+        paddingTop: 140,
+        paddingBottom: 140,
         paddingLeft: "5%",
         paddingRight: "5%",
         maxWidth: "90vw",
@@ -263,6 +263,40 @@ export default function LandingFindingDetail() {
           {/* Red rule */}
           <div style={{ width: 40, height: 1, background: "#FF2D2D", margin: "16px auto 0" }} />
 
+          {/* Revenue Impact Bars */}
+          <p style={{
+            fontFamily: MONO,
+            fontSize: 9,
+            color: "#00C8FF",
+            letterSpacing: "0.15em",
+            textTransform: "uppercase",
+            margin: "16px 0 0 0",
+          }}>
+            REVENUE IMPACT
+          </p>
+
+          <div style={{ marginTop: 10, textAlign: "left" }}>
+            <div style={{ display: "flex", justifyContent: "space-between" }}>
+              <span style={{ fontFamily: MONO, fontSize: 11, color: "#8899AA" }}>This site:</span>
+              <span style={{ fontFamily: MONO, fontSize: 11, color: "#8899AA" }}>No hero CTA</span>
+            </div>
+            <div style={{ width: "100%", height: 6, background: "#1A2035", borderRadius: 2, marginTop: 6 }}>
+              <div style={{ width: "20%", height: "100%", background: "#FF2D2D", borderRadius: 2 }} />
+            </div>
+            <p style={{ fontFamily: MONO, fontSize: 9, color: "#8899AA", textAlign: "right", margin: "4px 0 0 0" }}>~0% hero CTR</p>
+          </div>
+
+          <div style={{ marginTop: 12, textAlign: "left" }}>
+            <div style={{ display: "flex", justifyContent: "space-between" }}>
+              <span style={{ fontFamily: MONO, fontSize: 11, color: "#8899AA" }}>High-converting benchmark:</span>
+              <span style={{ fontFamily: MONO, fontSize: 11, color: "#8899AA" }}>Primary + secondary hero CTA</span>
+            </div>
+            <div style={{ width: "100%", height: 6, background: "#1A2035", borderRadius: 2, marginTop: 6 }}>
+              <div style={{ width: "80%", height: "100%", background: "#00FF88", borderRadius: 2 }} />
+            </div>
+            <p style={{ fontFamily: MONO, fontSize: 9, color: "#8899AA", textAlign: "right", margin: "4px 0 0 0" }}>~4-6% hero CTR</p>
+          </div>
+
           {/* Resolution protocol */}
           <p style={{
             fontFamily: MONO,
@@ -275,22 +309,25 @@ export default function LandingFindingDetail() {
             RESOLUTION PROTOCOL
           </p>
 
-          <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 10 }}>
+          <div style={{ display: "flex", flexDirection: "column", marginTop: 10 }}>
             {TIERS.map((tier) => (
               <div
                 key={tier.label}
                 style={{
-                  background: "transparent",
+                  width: "100%",
+                  padding: "12px 16px",
                   border: "1px solid #1A2035",
-                  padding: "10px 16px",
                   borderRadius: 4,
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
+                  background: "transparent",
+                  marginTop: 8,
+                  textAlign: "left",
                 }}
               >
-                <span style={{ fontFamily: MONO, fontSize: 11, color: "#00C8FF" }}>{tier.label}</span>
-                <span style={{ fontFamily: MONO, fontSize: 10, color: "#8899AA" }}>{tier.time}</span>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span style={{ fontFamily: MONO, fontSize: 11, color: "#00C8FF" }}>{tier.label}</span>
+                  <span style={{ fontFamily: MONO, fontSize: 10, color: "#8899AA" }}>{tier.time}</span>
+                </div>
+                <p style={{ fontFamily: MONO, fontSize: 11, color: "#8899AA", margin: "6px 0 0 0", lineHeight: 1.5 }}>{tier.desc}</p>
               </div>
             ))}
           </div>

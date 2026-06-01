@@ -25,8 +25,9 @@ export default function LandingFindingDetail() {
       style={{
         paddingTop: 100,
         paddingBottom: 100,
-        paddingLeft: "12%",
-        maxWidth: 900,
+        paddingLeft: "5%",
+        paddingRight: "5%",
+        maxWidth: "90vw",
       }}
     >
 
@@ -60,14 +61,14 @@ export default function LandingFindingDetail() {
       {/* ── TWO COLUMNS ── */}
       <div
         className="flex flex-col md:flex-row"
-        style={{ gap: 56, marginTop: 32, alignItems: "flex-start" }}
+        style={{ gap: 72, marginTop: 32, alignItems: "flex-start", width: "100%" }}
       >
 
         {/* ── LEFT COLUMN ── */}
         <div
           className="order-2 md:order-1"
           style={{
-            flex: 52,
+            flex: 1,
             borderLeft: "4px solid #FF2D2D",
             paddingLeft: 20,
             minWidth: 0,
@@ -102,18 +103,18 @@ export default function LandingFindingDetail() {
           {/* Title */}
           <h3 style={{
             fontFamily: GROTESK,
-            fontWeight: 600,
-            fontSize: 22,
+            fontWeight: 700,
+            fontSize: 26,
             color: "#FFFFFF",
             lineHeight: 1.3,
             letterSpacing: "-0.2px",
-            margin: "8px 0 0 0",
+            margin: "12px 0 0 0",
           }}>
             No hero CTA visible above the fold
           </h3>
 
           {/* Revenue suppression line */}
-          <p style={{ fontFamily: MONO, fontSize: 11, color: "#FF2D2D", margin: "6px 0 0 0" }}>
+          <p style={{ fontFamily: MONO, fontSize: 11, color: "#FF2D2D", margin: "8px 0 0 0" }}>
             Revenue Suppression: Critical
           </p>
 
@@ -127,13 +128,13 @@ export default function LandingFindingDetail() {
             color: "#00C8FF",
             letterSpacing: "0.15em",
             textTransform: "uppercase",
-            margin: "20px 0 0 0",
+            margin: "28px 0 0 0",
           }}>
             DIAGNOSTIC ANALYSIS
           </p>
 
           {/* Para 1 */}
-          <p style={{ fontFamily: MONO, fontSize: 13, color: "#CCDDEE", lineHeight: 1.8, margin: "12px 0 0 0" }}>
+          <p style={{ fontFamily: GROTESK, fontSize: 15, color: "#CCDDEE", lineHeight: 1.85, margin: "12px 0 0 0" }}>
             Visitors arriving on saas-startup.com complete an unconscious orientation scan
             within the first 2–4 seconds. During this window the brain is pattern-matching
             the page against known conversion contexts. When no action surface is present
@@ -142,7 +143,7 @@ export default function LandingFindingDetail() {
           </p>
 
           {/* Para 2 */}
-          <p style={{ fontFamily: MONO, fontSize: 13, color: "#CCDDEE", lineHeight: 1.8, margin: "12px 0 0 0" }}>
+          <p style={{ fontFamily: GROTESK, fontSize: 15, color: "#CCDDEE", lineHeight: 1.85, margin: "20px 0 0 0" }}>
             This is not a visibility problem. The CTA exists on the page. It is a sequencing
             failure: the offer is being made after the decision window has already closed for
             a large share of traffic. Mobile visitors — who represent 61% of SaaS trial
@@ -199,7 +200,7 @@ export default function LandingFindingDetail() {
           </p>
 
           {/* Prompt chips */}
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 12 }}>
+          <div style={{ display: "flex", flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 12 }}>
             {CHIPS.map((chip) => (
               <span
                 key={chip}
@@ -207,7 +208,6 @@ export default function LandingFindingDetail() {
                   fontFamily: MONO,
                   fontSize: 10,
                   color: "#8899AA",
-                  border: "1px solid #1A2035",
                   borderRadius: 6,
                   padding: "5px 10px",
                   whiteSpace: "nowrap",
@@ -222,7 +222,7 @@ export default function LandingFindingDetail() {
         {/* ── RIGHT COLUMN ── */}
         <div
           className="order-1 md:order-2 md:sticky"
-          style={{ flex: 44, top: 80, textAlign: "center", minWidth: 0 }}
+          style={{ flex: "0 0 420px", top: 80, textAlign: "center", minWidth: "420px" }}
         >
 
           {/* The number */}

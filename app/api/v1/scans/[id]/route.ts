@@ -116,7 +116,7 @@ export async function GET(
 
   const { data, error } = await supabase
     .from("reports")
-    .select("id, domain, health_score, created_at, analysis")
+    .select("id, domain, health_score, created_at, analysis, status")
     .eq("id", id)
     .eq("api_key_id", apiKey.id)  // enforces ownership — wrong key → no row → 404
     .single();
@@ -131,9 +131,18 @@ export async function GET(
     health_score: number | null;
     created_at: string;
     analysis: ReportPayload;
+    status: string | null;
   };
 
   const row = data as ReportRow;
+
+  if (row.status === "pending") {
+    return NextResponse.json({ scan_id: row.id, status: "pending", message: "Scan in progress" }, { status: 202 });
+  }
+  if (row.status === "failed") {
+    return NextResponse.json({ scan_id: row.id, status: "failed", error: "Scan failed" }, { status: 200 });
+  }
+
   const payload = row.analysis;
 
   const findings = mapFindings(

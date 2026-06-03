@@ -8,9 +8,9 @@ function getServiceClient() {
   return createClient(url, key);
 }
 
-// Fire-and-forget: report one api_scan unit to Stripe metered billing.
-// Looks up stripe_customer_id from profiles via api_keys → user_id join.
-export function reportUsageToStripe(apiKeyId: string): void {
+// Fire-and-forget: report api_scan units to Stripe metered billing.
+// costCents: number of cents for this scan (e.g. 0.15 → 15). Defaults to 1 unit.
+export function reportUsageToStripe(apiKeyId: string, costCents = 1): void {
   void (async () => {
     try {
       const stripeKey = process.env.STRIPE_SECRET_KEY;
@@ -40,7 +40,7 @@ export function reportUsageToStripe(apiKeyId: string): void {
       const stripe = new Stripe(stripeKey, { apiVersion: "2025-04-30.basil" });
       await stripe.billing.meterEvents.create({
         event_name: "api_scan",
-        payload: { stripe_customer_id: customerId, value: "1" },
+        payload: { stripe_customer_id: customerId, value: String(Math.max(1, costCents)) },
       });
     } catch (err) {
       console.error("[usageTracking] reportUsageToStripe failed:", err);
@@ -55,6 +55,9 @@ export async function logScanUsage(
     score: number | null;
     responseTimeMs: number;
     status: "success" | "error";
+    pageCount?: number;
+    costUsd?: number;
+    cached?: boolean;
   }
 ): Promise<void> {
   try {
@@ -65,6 +68,9 @@ export async function logScanUsage(
       score: data.score,
       response_time_ms: data.responseTimeMs,
       status: data.status,
+      page_count: data.pageCount ?? 1,
+      cost_usd: data.costUsd ?? 0,
+      cached: data.cached ?? false,
     });
     await supabase.rpc("increment_scans_used", { key_id: apiKeyId }).then(() => {}).catch(() => {
       // Fallback: manual increment if RPC not available
@@ -81,8 +87,10 @@ export async function logScanUsage(
             .eq("id", apiKeyId);
         });
     });
-    // Report to Stripe metered billing (fire and forget)
-    if (data.status === "success") reportUsageToStripe(apiKeyId);
+    // Report to Stripe metered billing (fire and forget) — value in cents
+    if (data.status === "success" && !data.cached) {
+      reportUsageToStripe(apiKeyId, Math.max(1, Math.round((data.costUsd ?? 0.15) * 100)));
+    }
   } catch (err) {
     console.error("[usageTracking] logScanUsage failed:", err);
   }

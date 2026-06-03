@@ -2,42 +2,43 @@
  * POST /api/v1/scan — public API endpoint for conversion audits.
  * Auth: Bearer token validated against api_keys table.
  * Returns structured findings, copy rewrites, and growth blueprint.
+ *
+ * NOTE: async=true background scans run within the Vercel Pro 300s
+ * function timeout. True long-running jobs should use a queue in V2.
  */
 
 import { randomUUID } from "crypto";
+import Anthropic from "@anthropic-ai/sdk";
 import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 import { scrapeSite } from "@/lib/scraper";
 import { detectSiteType } from "@/lib/siteType";
-import { runAnalysis, buildPageSummary } from "@/lib/analyze";
 import { extractPageData } from "@/lib/analyzePipeline";
 import { saveReport } from "@/lib/supabase";
-import { generateAndPersistAllFindingBriefs } from "@/lib/findingExtendedAnalysis";
 import { validateApiKey } from "@/lib/apiAuth";
 import { logScanUsage, checkScanAllowed } from "@/lib/usageTracking";
 import { dispatchWebhook } from "@/lib/webhooks";
-import type { Leak, DimensionScoreRow, ConversionTransformation, HeroRewrite, GrowthBlueprint, ReportPayload } from "@/lib/reportSchema";
+import { fetchAndFingerprint, fingerprintsMatch } from "@/lib/fingerprint";
+import { buildApiPrompt } from "@/lib/apiPrompt";
+import { getBenchmark, updateBenchmark } from "@/lib/benchmarks";
+import { calculateScanCost } from "@/lib/scanCost";
 import type { ApiKeyRecord } from "@/lib/apiAuth";
 
 export const maxDuration = 300;
 
 const SCAN_LIMIT = 1000;
+const BASE_URL = "https://webdocai.com";
+const ALL_FIELDS = ["summary", "findings", "copy_rewrites", "growth_blueprint", "benchmark"];
+
+// ── helpers ──────────────────────────────────────────────────────────────────
 
 function nextMonthUnix(): number {
   const now = new Date();
-  return Math.floor(
-    Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1) / 1000
-  );
+  return Math.floor(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1) / 1000);
 }
 
 function rlHeaders(apiKey: ApiKeyRecord | null): Record<string, string> {
-  if (!apiKey) {
-    return {
-      "X-RateLimit-Limit": "0",
-      "X-RateLimit-Remaining": "0",
-      "X-RateLimit-Reset": String(nextMonthUnix()),
-    };
-  }
+  if (!apiKey) return { "X-RateLimit-Limit": "0", "X-RateLimit-Remaining": "0", "X-RateLimit-Reset": String(nextMonthUnix()) };
   return {
     "X-RateLimit-Limit": String(SCAN_LIMIT),
     "X-RateLimit-Remaining": String(Math.max(0, SCAN_LIMIT - apiKey.scans_used)),
@@ -46,97 +47,304 @@ function rlHeaders(apiKey: ApiKeyRecord | null): Record<string, string> {
 }
 
 function normalizeUrl(input: string): string {
-  const trimmed = input.trim();
-  if (!trimmed) return "";
-  if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) return trimmed;
-  return `https://${trimmed}`;
+  const t = input.trim();
+  if (!t) return "";
+  return t.startsWith("http://") || t.startsWith("https://") ? t : `https://${t}`;
 }
 
 function getDomain(urlStr: string): string {
-  try {
-    const u = new URL(urlStr);
-    return u.hostname.replace(/^www\./, "").toLowerCase();
-  } catch {
-    return "";
-  }
+  try { return new URL(urlStr).hostname.replace(/^www\./, "").toLowerCase(); } catch { return ""; }
 }
 
 function scoreToVerdict(score: number): string {
   if (score >= 80) return "Excellent";
-  if (score >= 60) return "Good";
-  if (score >= 40) return "Needs Work";
+  if (score >= 65) return "Good";
+  if (score >= 45) return "Needs Work";
   return "Critical";
 }
 
-const DIMENSION_KEY_MAP: Record<string, string> = {
-  "Conversion Architecture": "conversion_architecture",
-  "Trust Signals": "trust_signals",
-  "Message Clarity": "message_clarity",
-  "Traffic Readiness": "traffic_readiness",
-  "Technical Foundation": "technical_foundation",
-};
+// ── scan executor (shared by sync path and async IIFE) ───────────────────────
 
-function mapDimensions(scores: DimensionScoreRow[] | undefined): Record<string, number> {
-  const out: Record<string, number> = {
-    conversion_architecture: 0,
-    trust_signals: 0,
-    message_clarity: 0,
-    traffic_readiness: 0,
-    technical_foundation: 0,
+interface ScanParams {
+  normalizedUrl: string;
+  domain: string;
+  apiKeyId: string;
+  pendingReportId: string | null;
+  effectiveFields: string[];
+  findingLimit: number;
+  findingDepth: "brief" | "full";
+  previousScore: number | null;
+  cachedFingerprint: string | null;
+  scanStart: number;
+  supabaseAdmin: ReturnType<typeof createClient>;
+}
+
+interface ScanResult {
+  reportId: string;
+  score: number;
+  verdict: string;
+  scannedAt: string;
+  pagesScanned: number;
+  dimensions: Record<string, number>;
+  summary?: string;
+  findings?: unknown[];
+  copyRewrites?: Record<string, string | undefined>;
+  growthBlueprint?: unknown[];
+  benchmark?: Record<string, number> | null;
+  wordCount: number;
+  ctaCount: number;
+  techStack: string[];
+  complexity: string;
+  siteType: string;
+  durationMs: number;
+  tokensUsed?: number;
+  newFingerprint: string | null;
+  costUsd: number;
+  pageCount: number;
+}
+
+async function executeScan(p: ScanParams): Promise<ScanResult> {
+  const {
+    normalizedUrl, domain, apiKeyId, pendingReportId,
+    effectiveFields, findingLimit, findingDepth,
+    previousScore, cachedFingerprint, scanStart, supabaseAdmin,
+  } = p;
+
+  const markFailed = async () => {
+    if (!pendingReportId) return;
+    try { await supabaseAdmin.from("reports").update({ status: "failed" }).eq("id", pendingReportId); } catch {}
   };
-  if (!scores) return out;
-  for (const row of scores) {
-    const key = DIMENSION_KEY_MAP[row.label];
-    if (key) out[key] = typeof row.score === "number" ? row.score : 0;
-  }
-  return out;
-}
 
-function mapFindings(leaks: Leak[] | undefined) {
-  if (!leaks?.length) return [];
-  return leaks.slice(0, 20).map((leak, i) => ({
-    id: `finding_${String(i + 1).padStart(3, "0")}`,
-    title: leak.title ?? "",
-    severity: leak.severity ?? "warning",
-    dimension: leak.category ?? "",
-    impact: leak.impactStatement ?? leak.whyItMatters ?? "",
-    explanation: leak.whatWeFound ?? "",
-    recommendation: leak.howToFixIt ?? "",
-    ...(leak.exampleFix ? { rewritten_copy: leak.exampleFix } : {}),
-    confidence: leak.severity === "critical" ? "high" : leak.severity === "warning" ? "medium" : "low",
-  }));
-}
+  const globalDeadline = new Promise<never>((_, reject) =>
+    setTimeout(() => reject(new Error("[TIMEOUT] Scan exceeded 240s deadline")), 240_000)
+  );
 
-function mapGrowthBlueprint(blueprint: GrowthBlueprint | undefined) {
-  if (!blueprint) return [];
-  const items: Array<{ priority: number; action: string; effort: string; impact: string; timeframe: string }> = [];
-  let priority = 1;
-  const lift = blueprint.projectedLift ?? "";
-  for (const action of (blueprint.weekOne ?? [])) {
-    items.push({ priority: priority++, action, effort: "High", impact: lift, timeframe: "Week 1" });
+  // Scrape
+  let extraction: Awaited<ReturnType<typeof scrapeSite>> | undefined;
+  let scrapeError: Error | null = null;
+  try {
+    extraction = await Promise.race([scrapeSite(normalizedUrl), globalDeadline]);
+  } catch (err) {
+    scrapeError = err instanceof Error ? err : new Error("Failed to fetch the site.");
   }
-  for (const action of (blueprint.weekTwoToFour ?? [])) {
-    items.push({ priority: priority++, action, effort: "Medium", impact: lift, timeframe: "Weeks 2-4" });
+  if (scrapeError) {
+    await new Promise(r => setTimeout(r, 8_000));
+    try {
+      extraction = await Promise.race([scrapeSite(normalizedUrl), globalDeadline]);
+      scrapeError = null;
+    } catch (err) {
+      scrapeError = err instanceof Error ? err : new Error("Failed to fetch the site.");
+    }
   }
-  if (blueprint.monthTwo) {
-    items.push({ priority: priority++, action: blueprint.monthTwo, effort: "Low", impact: lift, timeframe: "Month 2" });
+  if (scrapeError || !extraction?.rawHtml) {
+    await markFailed();
+    void logScanUsage(apiKeyId, { url: normalizedUrl, score: null, responseTimeMs: Date.now() - scanStart, status: "error" });
+    throw new Error("Could not extract content from this URL");
   }
-  return items;
-}
 
-function buildCopyRewrites(ct: ConversionTransformation | undefined, hr: HeroRewrite | undefined) {
+  // Detect site type and extract metadata
+  const site_type = detectSiteType(extraction);
+  let wordCount = 0, ctaCount = 0, techStack: string[] = [];
+  try {
+    const pageData = extractPageData(extraction.rawHtml, normalizedUrl, "homepage");
+    wordCount = pageData.wordCount;
+    ctaCount = pageData.ctaCount;
+    techStack = pageData.structured_data ?? [];
+  } catch { /* best-effort */ }
+
+  // Adaptive timeout
+  const elapsed = Date.now() - scanStart;
+  const complexity = extraction.complexity ?? "medium";
+  const isMultiPage = (extraction.additionalPages?.length ?? 0) > 0;
+  const baseTimeout = isMultiPage
+    ? (complexity === "complex" ? 160_000 : complexity === "medium" ? 140_000 : 120_000)
+    : (complexity === "complex" ? 200_000 : complexity === "medium" ? 130_000 : 90_000);
+  const floor = isMultiPage ? 110_000 : 80_000;
+  const ceiling = isMultiPage
+    ? (complexity === "complex" ? 140_000 : complexity === "medium" ? 115_000 : 85_000)
+    : (complexity === "complex" ? 150_000 : complexity === "medium" ? 95_000 : 72_000);
+  const analyzeTimeoutMs = Math.min(ceiling, Math.max(floor, baseTimeout - elapsed));
+
+  // Build prompt
+  const pageCount = 1 + (extraction.additionalPages?.length ?? 0);
+  const { systemPrompt } = buildApiPrompt({
+    fields: effectiveFields,
+    findingLimit,
+    findingDepth,
+    siteType: site_type,
+    pageCount,
+  });
+
+  // Build user content (raw HTML, same approach as lib/analyze.ts)
+  const hardCap = complexity === "simple" ? 40_000 : complexity === "medium" ? 55_000 : 70_000;
+  const safeHtml = extraction.rawHtml.slice(0, hardCap);
+  const homepageSection = `=== HOMEPAGE: ${normalizedUrl} ===\n${safeHtml}`;
+  const subpageSections = (extraction.additionalPages ?? [])
+    .map(({ url, rawHtml }) => `=== SUBPAGE: ${url} ===\n${rawHtml.slice(0, 20_000)}`)
+    .join("\n\n");
+  const userContent = subpageSections
+    ? `Analyze ${pageCount} pages. Return JSON analysis.\n\n${homepageSection}\n\n${subpageSections}`
+    : `Analyze the following website HTML and return JSON analysis:\n\n${homepageSection}`;
+
+  // Direct Anthropic call
+  const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY, timeout: analyzeTimeoutMs });
+  const analyzeDeadline = new Promise<never>((_, reject) =>
+    setTimeout(() => reject(new Error("[TIMEOUT] Analysis timed out")), analyzeTimeoutMs)
+  );
+
+  let rawJson: string;
+  let tokensUsed: number | undefined;
+  try {
+    const message = await Promise.race([
+      client.messages.create({
+        model: "claude-sonnet-4-6",
+        max_tokens: isMultiPage ? 8000 : 5000,
+        temperature: 0,
+        system: [{ type: "text", text: systemPrompt, cache_control: { type: "ephemeral" } }],
+        messages: [{ role: "user", content: userContent }],
+      }),
+      analyzeDeadline,
+    ]);
+    tokensUsed = (message.usage?.input_tokens ?? 0) + (message.usage?.output_tokens ?? 0);
+    const block = message.content.find(c => c.type === "text");
+    if (!block || block.type !== "text") throw new Error("No text content from model.");
+    rawJson = block.text.replace(/^```(?:json)?\s*\n?/m, "").replace(/\n?```\s*$/m, "").trim();
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : "Analysis failed.";
+    console.error(`[API v1] ANALYZE ERROR | domain=${domain} | ${msg}`);
+    await markFailed();
+    void logScanUsage(apiKeyId, { url: normalizedUrl, score: null, responseTimeMs: Date.now() - scanStart, status: "error" });
+    throw new Error(`Scan failed: ${msg}`);
+  }
+
+  // Parse response
+  type ApiResponse = {
+    score: number;
+    verdict: string;
+    dimensions: Record<string, number>;
+    summary?: string;
+    findings?: unknown[];
+    copy_rewrites?: Record<string, string | undefined>;
+    growth_blueprint?: unknown[];
+  };
+  let parsed: ApiResponse;
+  try {
+    parsed = JSON.parse(rawJson) as ApiResponse;
+  } catch {
+    await markFailed();
+    void logScanUsage(apiKeyId, { url: normalizedUrl, score: null, responseTimeMs: Date.now() - scanStart, status: "error" });
+    throw new Error("Scan failed: invalid JSON response from model.");
+  }
+
+  const score = Math.min(100, Math.max(0, Math.round(parsed.score ?? 50)));
+  const verdict = scoreToVerdict(score);
+
+  // Save report — store a minimal ReportPayload-compatible object
+  const reportPayload = {
+    site_type,
+    healthScore: score,
+    conversionScore: score,
+    growthScore: score,
+    pagesAnalyzed: extraction.pagesAnalyzed,
+    diagnosticBrief: parsed.summary ?? "",
+    intelligenceBrief: parsed.summary ?? "",
+    dimensionScores: parsed.dimensions
+      ? Object.entries(parsed.dimensions).map(([label, s], i) => ({
+          id: `dim-${i}`,
+          label: Object.keys({ conversion_architecture: "Conversion Architecture", trust_signals: "Trust Signals", message_clarity: "Message Clarity", traffic_readiness: "Traffic Readiness", technical_foundation: "Technical Foundation" }).find(k => k === label) ?? label,
+          description: "",
+          score: typeof s === "number" ? s : 0,
+          failCount: 0,
+          totalCount: 1,
+          status: (typeof s === "number" && s >= 80 ? "strong" : s >= 60 ? "fair" : s >= 40 ? "weak" : "critical") as "strong" | "fair" | "weak" | "critical",
+        }))
+      : [],
+    leaks: [],
+    categoryScores: { psychology: 50, messaging: 50, conversion: score, seo: 50, ux: 50, trust: 50 },
+    topLeak: undefined,
+    heroRewrite: { currentHeadline: "", currentSubheadline: "", currentCta: "", suggestedHeadline: parsed.copy_rewrites?.headline ?? "", suggestedSubheadline: parsed.copy_rewrites?.subheadline ?? "", suggestedCta: parsed.copy_rewrites?.cta ?? "", psychologistsNote: "" },
+    growthBlueprint: { weekOne: [], weekTwoToFour: [], monthTwo: "", projectedLift: "" },
+    growthStrategy: { biggestOpportunity: "", trafficOpportunity: "", conversionOpportunity: "", trustOpportunity: "", quickWins: [], thirtyDayPlan: "" },
+  };
+
+  let reportId = "";
+  try {
+    reportId = await Promise.race([
+      saveReport(domain, reportPayload as any, null, { source: "api", scan_type: "full", reportId: pendingReportId }),
+      new Promise<never>((_, reject) => setTimeout(() => reject(new Error("saveReport timeout")), 10_000)),
+    ]);
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : "Failed to save report.";
+    await markFailed();
+    void logScanUsage(apiKeyId, { url: normalizedUrl, score: null, responseTimeMs: Date.now() - scanStart, status: "error" });
+    throw new Error(`Scan failed: ${msg}`);
+  }
+
+  // Tag report with api_key + fingerprint (fire and forget)
+  const newFingerprint = cachedFingerprint ?? await fetchAndFingerprint(normalizedUrl);
+  const scoreDelta = previousScore !== null ? score - previousScore : undefined;
+  supabaseAdmin.from("reports").update({
+    api_key_id: apiKeyId,
+    ...(newFingerprint ? { content_fingerprint: newFingerprint } : {}),
+    ...(previousScore !== null ? { previous_score: previousScore, score_delta: scoreDelta } : {}),
+  }).eq("id", reportId).then(() => {}).catch(() => {});
+
+  // Post-scan hooks
+  const durationMs = Date.now() - scanStart;
+  const costUsd = calculateScanCost({ pageCount, cached: false });
+  void logScanUsage(apiKeyId, { url: normalizedUrl, score, responseTimeMs: durationMs, status: "success", pageCount, costUsd, cached: false });
+  updateBenchmark(site_type, score);
+
+  // Benchmark
+  const benchmark = await getBenchmark(site_type, score).catch(() => null);
+
+  // Build dimension map
+  const dimMap: Record<string, string> = {
+    conversion_architecture: "Conversion Architecture",
+    trust_signals: "Trust Signals",
+    message_clarity: "Message Clarity",
+    traffic_readiness: "Traffic Readiness",
+    technical_foundation: "Technical Foundation",
+  };
+  const dimensions: Record<string, number> = { conversion_architecture: 0, trust_signals: 0, message_clarity: 0, traffic_readiness: 0, technical_foundation: 0 };
+  if (parsed.dimensions) {
+    for (const [k, v] of Object.entries(parsed.dimensions)) {
+      if (k in dimensions) dimensions[k] = typeof v === "number" ? v : 0;
+    }
+  }
+
   return {
-    headline: ct?.rewrittenHeadline ?? hr?.suggestedHeadline ?? undefined,
-    subheadline: ct?.rewrittenSubheadline ?? hr?.suggestedSubheadline ?? undefined,
-    cta: ct?.rewrittenCta ?? hr?.suggestedCta ?? undefined,
+    reportId,
+    score,
+    verdict,
+    scannedAt: new Date().toISOString(),
+    pagesScanned: extraction.pagesAnalyzed.length,
+    dimensions,
+    summary: parsed.summary,
+    findings: parsed.findings ? (parsed.findings as unknown[]).slice(0, findingLimit) : undefined,
+    copyRewrites: parsed.copy_rewrites,
+    growthBlueprint: parsed.growth_blueprint,
+    benchmark,
+    wordCount,
+    ctaCount,
+    techStack,
+    complexity,
+    siteType: site_type,
+    durationMs,
+    tokensUsed,
+    newFingerprint,
+    costUsd,
+    pageCount,
   };
 }
+
+// ── route handler ─────────────────────────────────────────────────────────────
 
 export async function POST(req: NextRequest) {
   const scanStart = Date.now();
   console.log("[API v1] scan started", new Date().toISOString());
 
-  // 1. Authenticate
+  // 1. Auth
   const apiKey = await validateApiKey(req);
   if (!apiKey) {
     return NextResponse.json({ error: "Invalid API key" }, { status: 401, headers: rlHeaders(null) });
@@ -148,23 +356,32 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Scan limit reached" }, { status: 403, headers: rlHeaders(apiKey) });
   }
 
-  // 3. Parse request body
+  // 3. Parse body
   let normalizedUrl: string;
   let pages: number;
+  let fields: string[];
+  let findingLimit: number;
+  let findingDepth: "brief" | "full";
+  let asyncMode: boolean;
+  let callbackUrl: string | null;
+
   try {
     const body = await req.json();
     const rawUrl = typeof body?.url === "string" ? body.url : "";
     if (!rawUrl) return NextResponse.json({ error: "url is required" }, { status: 400, headers: rlHeaders(apiKey) });
     normalizedUrl = normalizeUrl(rawUrl);
-    const rawPages = typeof body?.pages === "number" ? body.pages : 1;
-    pages = Math.max(1, Math.min(5, rawPages));
+    pages = Math.max(1, Math.min(5, typeof body?.pages === "number" ? body.pages : 1));
+    fields = Array.isArray(body?.fields) ? (body.fields as string[]).filter((f: string) => ALL_FIELDS.includes(f)) : [];
+    findingLimit = Math.min(20, Math.max(1, typeof body?.finding_limit === "number" ? body.finding_limit : 10));
+    const rawDepth = typeof body?.finding_depth === "string" ? body.finding_depth : "full";
+    findingDepth = rawDepth === "brief" ? "brief" : "full";
+    asyncMode = body?.async === true;
+    callbackUrl = typeof body?.callback_url === "string" ? body.callback_url : null;
   } catch {
     return NextResponse.json({ error: "url is required" }, { status: 400, headers: rlHeaders(apiKey) });
   }
 
-  if (!normalizedUrl) {
-    return NextResponse.json({ error: "url is required" }, { status: 400, headers: rlHeaders(apiKey) });
-  }
+  if (!normalizedUrl) return NextResponse.json({ error: "url is required" }, { status: 400, headers: rlHeaders(apiKey) });
   try { new URL(normalizedUrl); } catch {
     return NextResponse.json({ error: "url is required" }, { status: 400, headers: rlHeaders(apiKey) });
   }
@@ -174,22 +391,23 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "url is required" }, { status: 400, headers: rlHeaders(apiKey) });
   }
 
-  // Normalize URL for cache key: lowercase, strip trailing slash
   const cacheUrl = normalizedUrl.toLowerCase().replace(/\/+$/, "");
+  const effectiveFields = fields.length === 0 ? ALL_FIELDS : fields;
+  const wantsField = (f: string) => effectiveFields.includes(f);
 
-  console.log(`[API v1] START | url=${normalizedUrl} domain=${domain} pages=${pages}`);
+  console.log(`[API v1] START | url=${normalizedUrl} domain=${domain} async=${asyncMode}`);
 
   const supabaseAdmin = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
 
-  // Cache check: return a stored result if the same key scanned this domain within 60 minutes.
-  // Cache hits skip billing (no logScanUsage) and webhook dispatch.
+  // ── Cache check with fingerprint ─────────────────────────────────────────
+
   const sixtyMinutesAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
   const { data: cachedRow } = await supabaseAdmin
     .from("reports")
-    .select("id, domain, analysis, created_at")
+    .select("id, domain, analysis, created_at, health_score, content_fingerprint")
     .eq("api_key_id", apiKey.id)
     .eq("domain", domain)
     .neq("status", "error")
@@ -200,214 +418,214 @@ export async function POST(req: NextRequest) {
     .limit(1)
     .maybeSingle();
 
-  if (cachedRow?.analysis) {
-    console.log(`[API v1] CACHE HIT | domain=${domain} cachedId=${cachedRow.id}`);
-    const cp = cachedRow.analysis as ReportPayload;
-    return NextResponse.json({
-      id: cachedRow.id,
-      url: cacheUrl,
-      score: cp.healthScore,
-      verdict: scoreToVerdict(cp.healthScore),
-      scanned_at: cachedRow.created_at,
-      pages_scanned: Array.isArray(cp.pagesAnalyzed) ? cp.pagesAnalyzed.length : 1,
-      dimensions: mapDimensions(cp.dimensionScores),
-      summary: cp.diagnosticBrief ?? cp.intelligenceBrief ?? (cp.executiveSummary as { diagnosis?: string } | undefined)?.diagnosis ?? "",
-      findings: mapFindings(cp.moneyLeaks ?? cp.primaryFindings ?? cp.priorityFindings ?? cp.leaks),
-      copy_rewrites: buildCopyRewrites(cp.conversionTransformation, cp.heroRewrite),
-      growth_blueprint: mapGrowthBlueprint(cp.growthBlueprint),
-      metadata: { word_count: 0, cta_count: 0, tech_stack: [] },
-    }, { headers: { ...rlHeaders(apiKey), "X-Cache": "HIT" } });
+  type CachedRow = { id: string; domain: string; analysis: Record<string, unknown>; created_at: string; health_score: number | null; content_fingerprint: string | null };
+
+  let previousScore: number | null = null;
+  let cachedFingerprintForScan: string | null = null;
+
+  if (cachedRow) {
+    const cr = cachedRow as CachedRow;
+    const liveFingerprint = await fetchAndFingerprint(normalizedUrl);
+
+    // Branch A: fetch failed → return cache
+    if (liveFingerprint === null) {
+      console.log(`[API v1] CACHE HIT origin-unavailable | domain=${domain}`);
+      return buildCacheResponse(cr, cacheUrl, apiKey, "HIT", "origin-unavailable", wantsField, effectiveFields, findingLimit);
+    }
+
+    // Branch B: fingerprint matches → return cache
+    if (fingerprintsMatch(liveFingerprint, cr.content_fingerprint)) {
+      console.log(`[API v1] CACHE HIT content-unchanged | domain=${domain}`);
+      return buildCacheResponse(cr, cacheUrl, apiKey, "HIT", "content-unchanged", wantsField, effectiveFields, findingLimit);
+    }
+
+    // Branch C: fingerprint changed → full scan, capture previous score
+    console.log(`[API v1] CACHE MISS content-changed | domain=${domain}`);
+    previousScore = cr.health_score ?? null;
+    cachedFingerprintForScan = liveFingerprint; // reuse below
   }
 
-  // Insert pending row so status is trackable
+  // ── Insert pending record ────────────────────────────────────────────────
+
   let pendingReportId: string | null = null;
   try {
-    const { data } = await supabaseAdmin
-      .from("reports")
-      .insert({
-        domain,
-        user_id: null,
-        status: "pending",
-        health_score: 0,
-        verdict: "pending",
-        analysis: {},
-        share_token: randomUUID(),
-      })
-      .select("id")
-      .single();
+    const { data } = await supabaseAdmin.from("reports").insert({
+      domain,
+      user_id: null,
+      status: "pending",
+      health_score: 0,
+      verdict: "pending",
+      analysis: {},
+      share_token: randomUUID(),
+      api_key_id: apiKey.id,
+    }).select("id").single();
     pendingReportId = (data as { id?: string } | null)?.id ?? null;
   } catch { /* non-fatal */ }
 
-  const markFailed = async () => {
-    if (!pendingReportId) return;
-    try { await supabaseAdmin.from("reports").update({ status: "failed" }).eq("id", pendingReportId); } catch {}
-  };
+  // ── Async mode ───────────────────────────────────────────────────────────
 
-  // Global deadline — cleared after analysis succeeds so saveReport can always complete
-  let deadlineTimerId: ReturnType<typeof setTimeout>;
-  const globalDeadline = new Promise<never>((_, reject) => {
-    deadlineTimerId = setTimeout(
-      () => reject(new Error("[TIMEOUT] Scan exceeded 240s deadline")),
-      240_000
-    );
-  });
+  if (asyncMode) {
+    const scanId = pendingReportId ?? randomUUID();
+    const pollUrl = `${BASE_URL}/api/v1/scans/${scanId}`;
 
-  // 4. Scrape (identical pipeline to app/api/scan/route.ts)
-  let extraction: Awaited<ReturnType<typeof scrapeSite>> | undefined;
-  let scrapeError: Error | null = null;
+    // Detached background scan — runs within Vercel function timeout (300s Pro)
+    void (async () => {
+      try {
+        const result = await executeScan({
+          normalizedUrl, domain, apiKeyId: apiKey.id, pendingReportId: scanId,
+          effectiveFields, findingLimit, findingDepth,
+          previousScore, cachedFingerprint: cachedFingerprintForScan,
+          scanStart, supabaseAdmin,
+        });
+        dispatchWebhook(apiKey.id, {
+          event: "scan.completed",
+          scan_id: result.reportId,
+          url: normalizedUrl,
+          score: result.score,
+          data: { domain, verdict: result.verdict, score: result.score },
+        });
+        if (callbackUrl) {
+          void fetch(callbackUrl, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ scan_id: result.reportId, status: "complete", score: result.score }) }).catch(() => {});
+        }
+      } catch (err) {
+        console.error("[API v1] async scan failed:", err instanceof Error ? err.message : err);
+        dispatchWebhook(apiKey.id, {
+          event: "scan.failed",
+          scan_id: scanId,
+          url: normalizedUrl,
+          score: null,
+          data: { domain, error: err instanceof Error ? err.message : "Scan failed" },
+        });
+        if (callbackUrl) {
+          void fetch(callbackUrl, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ scan_id: scanId, status: "failed" }) }).catch(() => {});
+        }
+      }
+    })();
 
+    return NextResponse.json({
+      scan_id: scanId,
+      status: "pending",
+      poll_url: pollUrl,
+      webhook_url: callbackUrl,
+    }, { status: 202, headers: rlHeaders(apiKey) });
+  }
+
+  // ── Sync mode ─────────────────────────────────────────────────────────────
+
+  let result: ScanResult;
   try {
-    extraction = await Promise.race([scrapeSite(normalizedUrl), globalDeadline]);
+    result = await executeScan({
+      normalizedUrl, domain, apiKeyId: apiKey.id, pendingReportId,
+      effectiveFields, findingLimit, findingDepth,
+      previousScore, cachedFingerprint: cachedFingerprintForScan,
+      scanStart, supabaseAdmin,
+    });
   } catch (err) {
-    scrapeError = err instanceof Error ? err : new Error("Failed to fetch the site.");
-  }
-
-  // Single retry on scrape failure, matching reference route behaviour
-  if (scrapeError) {
-    console.log("[API v1] scrape failed — waiting 8s and retrying once");
-    await new Promise(r => setTimeout(r, 8_000));
-    try {
-      extraction = await Promise.race([scrapeSite(normalizedUrl), globalDeadline]);
-      scrapeError = null;
-    } catch (retryErr) {
-      scrapeError = retryErr instanceof Error ? retryErr : new Error("Failed to fetch the site.");
+    const message = err instanceof Error ? err.message : "Scan failed.";
+    if (message.includes("Could not extract")) {
+      return NextResponse.json({ error: message }, { status: 422, headers: rlHeaders(apiKey) });
     }
-  }
-
-  if (scrapeError || !extraction?.rawHtml) {
-    await markFailed();
-    void logScanUsage(apiKey.id, { url: normalizedUrl, score: null, responseTimeMs: Date.now() - scanStart, status: "error" });
-    return NextResponse.json({ error: "Could not extract content from this URL" }, { status: 422, headers: rlHeaders(apiKey) });
-  }
-
-  // 5. Detect site type
-  const site_type = detectSiteType(extraction);
-  console.log(`[API v1] SITE_TYPE | domain=${domain} site_type=${site_type}`);
-
-  // 6. Extract page metadata (word count, CTA count, structured data)
-  let wordCount = 0;
-  let ctaCount = 0;
-  let techStack: string[] = [];
-  try {
-    const pageData = extractPageData(extraction.rawHtml, normalizedUrl, "homepage");
-    wordCount = pageData.wordCount;
-    ctaCount = pageData.ctaCount;
-    techStack = pageData.structured_data ?? [];
-  } catch { /* non-fatal — metadata is best-effort */ }
-
-  // 7. Adaptive analysis timeout (identical to reference route)
-  const elapsed = Date.now() - scanStart;
-  const complexity = extraction.complexity ?? "medium";
-  const isMultiPage = (extraction.additionalPages?.length ?? 0) > 0;
-
-  const baseTimeout = (() => {
-    if (isMultiPage) {
-      if (complexity === "complex") return 160_000;
-      if (complexity === "medium") return 140_000;
-      return 120_000;
-    }
-    if (complexity === "complex") return 200_000;
-    if (complexity === "medium") return 130_000;
-    return 90_000;
-  })();
-
-  const floor = isMultiPage ? 110_000 : 80_000;
-  const ceiling = isMultiPage
-    ? (complexity === "complex" ? 140_000 : complexity === "medium" ? 115_000 : 85_000)
-    : (complexity === "complex" ? 150_000 : complexity === "medium" ? 95_000 : 72_000);
-
-  const analyzeTimeoutMs = Math.min(ceiling, Math.max(floor, baseTimeout - elapsed));
-  const analyzeDeadline = new Promise<never>((_, reject) =>
-    setTimeout(() => reject(new Error("[TIMEOUT] Analysis timed out")), analyzeTimeoutMs)
-  );
-
-  console.log(`[API v1] ANALYZE START | domain=${domain} complexity=${complexity} analyzeTimeoutMs=${analyzeTimeoutMs}`);
-
-  // 8. Claude analysis — claude-sonnet-4-6 (plan="pro" ensures full model)
-  let payload: Awaited<ReturnType<typeof runAnalysis>>;
-  try {
-    payload = await Promise.race([runAnalysis(extraction, site_type, "pro", undefined), analyzeDeadline]);
-    clearTimeout(deadlineTimerId!);
-  } catch (err) {
-    const message = err instanceof Error ? err.message : "Analysis failed.";
-    console.error(`[API v1] ANALYZE ERROR | domain=${domain} | ${message}`);
-    await markFailed();
-    void logScanUsage(apiKey.id, { url: normalizedUrl, score: null, responseTimeMs: Date.now() - scanStart, status: "error" });
     return NextResponse.json({ error: "Scan failed", message }, { status: 500, headers: rlHeaders(apiKey) });
   }
 
-  console.log(`[API v1] ANALYZE DONE | domain=${domain} score=${payload.healthScore}`);
-
-  // 9. Save to reports table (source="api")
-  let reportId = "";
-  try {
-    reportId = await Promise.race([
-      saveReport(domain, payload, null, { source: "api", scan_type: "full", reportId: pendingReportId }),
-      new Promise<never>((_, reject) => setTimeout(() => reject(new Error("[API v1] saveReport timeout")), 10_000)),
-    ]);
-  } catch (err) {
-    const message = err instanceof Error ? err.message : "Failed to save report.";
-    console.error(`[API v1] SAVE ERROR | domain=${domain} | ${message}`);
-    await markFailed();
-    void logScanUsage(apiKey.id, { url: normalizedUrl, score: null, responseTimeMs: Date.now() - scanStart, status: "error" });
-    return NextResponse.json({ error: "Scan failed", message }, { status: 500, headers: rlHeaders(apiKey) });
-  }
-
-  console.log(`[API v1] SAVE DONE | domain=${domain} reportId=${reportId}`);
-
-  // Tag report with API key so GET /v1/scans can filter by owner (fire and forget)
-  supabaseAdmin
-    .from("reports")
-    .update({ api_key_id: apiKey.id })
-    .eq("id", reportId)
-    .then(() => {})
-    .catch(() => {});
-
-  // 10. Post-scan hooks (fire and forget)
-  const responseTimeMs = Date.now() - scanStart;
-  void logScanUsage(apiKey.id, {
-    url: normalizedUrl,
-    score: payload.healthScore,
-    responseTimeMs,
-    status: "success",
-  });
   dispatchWebhook(apiKey.id, {
     event: "scan.completed",
-    scan_id: reportId,
+    scan_id: result.reportId,
     url: normalizedUrl,
-    score: payload.healthScore,
-    data: { domain, verdict: scoreToVerdict(payload.healthScore) },
+    score: result.score,
+    data: { domain, verdict: result.verdict },
   });
 
-  // Fire-and-forget brief generation (same as reference route)
-  const pageSummaryForBriefs = buildPageSummary(extraction);
-  void generateAndPersistAllFindingBriefs(reportId, domain, payload, pageSummaryForBriefs).catch((err) => {
-    console.log("[API v1] background brief generation failed:", err instanceof Error ? err.message : err);
-  });
+  console.log(`[API v1] COMPLETE | domain=${domain} reportId=${result.reportId} elapsed=${result.durationMs}ms`);
 
-  console.log(`[API v1] COMPLETE | domain=${domain} reportId=${reportId} elapsed=${responseTimeMs}ms`);
+  const scanMeta: Record<string, unknown> = {
+    complexity: result.complexity,
+    duration_ms: result.durationMs,
+    cached: false,
+    cache_reason: cachedRow ? "content-changed" : undefined,
+    fingerprint_changed: cachedRow ? true : undefined,
+    previous_score: previousScore ?? undefined,
+    score_delta: previousScore !== null ? result.score - previousScore : undefined,
+    finding_limit: findingLimit,
+    finding_depth: findingDepth,
+    site_type: result.siteType,
+    cost_usd: result.costUsd,
+    tokens_used: result.tokensUsed,
+  };
 
-  // 11. Shape and return response
-  const findings = mapFindings(
-    payload.moneyLeaks ?? payload.primaryFindings ?? payload.priorityFindings ?? payload.leaks
-  );
+  const response: Record<string, unknown> = {
+    id: result.reportId,
+    url: cacheUrl,
+    score: result.score,
+    verdict: result.verdict,
+    scanned_at: result.scannedAt,
+    pages_scanned: result.pagesScanned,
+    dimensions: result.dimensions,
+    metadata: { word_count: result.wordCount, cta_count: result.ctaCount, tech_stack: result.techStack },
+    scan_meta: scanMeta,
+  };
 
-  return NextResponse.json({
-    id: reportId,
-    url: normalizedUrl,
-    score: payload.healthScore,
-    verdict: scoreToVerdict(payload.healthScore),
-    scanned_at: new Date().toISOString(),
-    pages_scanned: extraction.pagesAnalyzed.length,
-    dimensions: mapDimensions(payload.dimensionScores),
-    summary: payload.diagnosticBrief ?? payload.intelligenceBrief ?? payload.executiveSummary?.diagnosis ?? "",
-    findings,
-    copy_rewrites: buildCopyRewrites(payload.conversionTransformation, payload.heroRewrite),
-    growth_blueprint: mapGrowthBlueprint(payload.growthBlueprint),
-    metadata: {
-      word_count: wordCount,
-      cta_count: ctaCount,
-      tech_stack: techStack,
+  if (wantsField("summary")) response.summary = result.summary ?? "";
+  if (wantsField("findings")) response.findings = result.findings ?? [];
+  if (wantsField("copy_rewrites")) response.copy_rewrites = result.copyRewrites ?? {};
+  if (wantsField("growth_blueprint")) response.growth_blueprint = result.growthBlueprint ?? [];
+  if (wantsField("benchmark") && result.benchmark) response.benchmark = result.benchmark;
+
+  return NextResponse.json(response, { headers: { ...rlHeaders(apiKey), "X-Cache": "MISS", "X-Cache-Reason": cachedRow ? "content-changed" : "no-cache" } });
+}
+
+// ── Cache response builder ────────────────────────────────────────────────────
+
+function buildCacheResponse(
+  cr: { id: string; domain: string; analysis: Record<string, unknown>; created_at: string; health_score: number | null },
+  cacheUrl: string,
+  apiKey: ApiKeyRecord,
+  cacheStatus: string,
+  cacheReason: string,
+  wantsField: (f: string) => boolean,
+  effectiveFields: string[],
+  findingLimit: number,
+): NextResponse {
+  const score = cr.health_score ?? 0;
+  const response: Record<string, unknown> = {
+    id: cr.id,
+    url: cacheUrl,
+    score,
+    verdict: scoreToVerdict(score),
+    scanned_at: cr.created_at,
+    pages_scanned: 1,
+    dimensions: { conversion_architecture: 0, trust_signals: 0, message_clarity: 0, traffic_readiness: 0, technical_foundation: 0 },
+    metadata: { word_count: 0, cta_count: 0, tech_stack: [] as string[] },
+    scan_meta: {
+      cached: true,
+      cache_reason: cacheReason,
+      last_scan: cr.created_at,
     },
-  }, { headers: { ...rlHeaders(apiKey), "X-Cache": "MISS" } });
+  };
+
+  const ap = cr.analysis as Record<string, unknown>;
+  if (wantsField("summary")) response.summary = String(ap.diagnosticBrief ?? ap.intelligenceBrief ?? "");
+  if (wantsField("findings")) {
+    const leaks = (ap.leaks as unknown[] | undefined) ?? [];
+    response.findings = leaks.slice(0, findingLimit).map((l: unknown, i: number) => {
+      const leak = l as Record<string, unknown>;
+      return {
+        id: `finding_${String(i + 1).padStart(3, "0")}`,
+        title: leak.title ?? "",
+        severity: leak.severity ?? "warning",
+        dimension: leak.category ?? "",
+        explanation: leak.whatWeFound ?? "",
+        confidence: leak.severity === "critical" ? "high" : "medium",
+      };
+    });
+  }
+  if (wantsField("copy_rewrites")) response.copy_rewrites = {};
+  if (wantsField("growth_blueprint")) response.growth_blueprint = [];
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  void effectiveFields;
+
+  return NextResponse.json(response, {
+    headers: { ...rlHeaders(apiKey), "X-Cache": cacheStatus, "X-Cache-Reason": cacheReason },
+  });
 }

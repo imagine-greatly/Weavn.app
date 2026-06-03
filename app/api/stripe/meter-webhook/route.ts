@@ -24,15 +24,16 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Webhook not configured" }, { status: 503 });
   }
 
-  const stripe = new Stripe(stripeKey, { apiVersion: "2025-04-30.basil" });
+  const stripe = new Stripe(stripeKey, { apiVersion: "2026-02-25.clover" });
 
   // Read raw body for signature verification
   const body = await req.text();
   const sig = req.headers.get("stripe-signature") ?? "";
 
-  let event: Stripe.Event;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let event: any;
   try {
-    event = stripe.webhooks.constructEvent(body, sig, webhookSecret);
+    event = stripe.webhooks.constructEvent(body, sig, webhookSecret) as any;
   } catch (err) {
     const message = err instanceof Error ? err.message : "Signature verification failed";
     console.error("[meter-webhook] Signature verification failed:", message);

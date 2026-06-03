@@ -37,7 +37,7 @@ export function reportUsageToStripe(apiKeyId: string, costCents = 1): void {
       const customerId = (profile as { stripe_customer_id?: string | null } | null)?.stripe_customer_id;
       if (!customerId) return;
 
-      const stripe = new Stripe(stripeKey, { apiVersion: "2025-04-30.basil" });
+      const stripe = new Stripe(stripeKey, { apiVersion: "2026-02-25.clover" });
       await stripe.billing.meterEvents.create({
         event_name: "api_scan",
         payload: { stripe_customer_id: customerId, value: String(Math.max(1, costCents)) },
@@ -72,7 +72,7 @@ export async function logScanUsage(
       cost_usd: data.costUsd ?? 0,
       cached: data.cached ?? false,
     });
-    await supabase.rpc("increment_scans_used", { key_id: apiKeyId }).then(() => {}).catch(() => {
+    await supabase.rpc("increment_scans_used", { key_id: apiKeyId }).then(() => {}, () => {
       // Fallback: manual increment if RPC not available
       return supabase
         .from("api_keys")

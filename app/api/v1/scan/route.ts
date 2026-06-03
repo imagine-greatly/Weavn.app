@@ -76,7 +76,8 @@ interface ScanParams {
   previousScore: number | null;
   cachedFingerprint: string | null;
   scanStart: number;
-  supabaseAdmin: ReturnType<typeof createClient>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  supabaseAdmin: any;
 }
 
 interface ScanResult {
@@ -112,7 +113,7 @@ async function executeScan(p: ScanParams): Promise<ScanResult> {
 
   const markFailed = async () => {
     if (!pendingReportId) return;
-    try { await supabaseAdmin.from("reports").update({ status: "failed" }).eq("id", pendingReportId); } catch {}
+    try { await supabaseAdmin.from("reports").update({ status: "failed" } as any).eq("id", pendingReportId); } catch {}
   };
 
   const globalDeadline = new Promise<never>((_, reject) =>
@@ -287,7 +288,7 @@ async function executeScan(p: ScanParams): Promise<ScanResult> {
     api_key_id: apiKeyId,
     ...(newFingerprint ? { content_fingerprint: newFingerprint } : {}),
     ...(previousScore !== null ? { previous_score: previousScore, score_delta: scoreDelta } : {}),
-  }).eq("id", reportId).then(() => {}).catch(() => {});
+  } as any).eq("id", reportId).then(() => {}, () => {});
 
   // Post-scan hooks
   const durationMs = Date.now() - scanStart;

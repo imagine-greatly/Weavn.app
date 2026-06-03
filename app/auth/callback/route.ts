@@ -48,8 +48,8 @@ export async function GET(request: NextRequest) {
   // Checks for an existing active key first so returning users are never duplicated.
   const { data: { user } } = await supabase.auth.getUser();
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (user?.id && url && serviceKey) {
-    const service = createClient(url, serviceKey);
+  if (user?.id && supabaseUrl && serviceKey) {
+    const service = createClient(supabaseUrl, serviceKey);
     service
       .from("api_keys")
       .select("id")
@@ -68,8 +68,7 @@ export async function GET(request: NextRequest) {
             active: true,
           });
         }
-      })
-      .catch(() => {});
+      }, () => {});
   }
 
   await new Promise(resolve => setTimeout(resolve, 500));

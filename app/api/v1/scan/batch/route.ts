@@ -50,7 +50,8 @@ interface BatchScanOptions {
   effectiveFields: string[];
   findingLimit: number;
   findingDepth: "brief" | "full";
-  supabaseAdmin: ReturnType<typeof createClient>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  supabaseAdmin: any;
   pendingId?: string;
 }
 
@@ -104,7 +105,7 @@ async function runOneScan(opts: BatchScanOptions): Promise<Record<string, unknow
 
   const markFailed = async () => {
     if (!pendingId) return;
-    try { await supabaseAdmin.from("reports").update({ status: "failed" }).eq("id", pendingId); } catch {}
+    try { await supabaseAdmin.from("reports").update({ status: "failed" } as any).eq("id", pendingId); } catch {}
   };
 
   // Scrape
@@ -187,7 +188,7 @@ async function runOneScan(opts: BatchScanOptions): Promise<Record<string, unknow
     api_key_id: apiKey.id,
     ...(newFingerprint ? { content_fingerprint: newFingerprint } : {}),
     ...(previousScore !== null ? { previous_score: previousScore, score_delta: score - previousScore } : {}),
-  }).eq("id", reportId).then(() => {}).catch(() => {});
+  } as any).eq("id", reportId).then(() => {}, () => {});
 
   const durationMs = Date.now() - scanStart;
   const costUsd = calculateScanCost({ pageCount, cached: false });
@@ -244,7 +245,7 @@ export async function POST(req: NextRequest) {
     for (const url of urls) {
       const normalizedUrl = normalizeUrl(url);
       const domain = getDomain(normalizedUrl);
-      let scanId = randomUUID();
+      let scanId: string = randomUUID();
       try {
         const { data } = await supabaseAdmin.from("reports").insert({
           domain, user_id: null, status: "pending", health_score: 0, verdict: "pending", analysis: {}, share_token: randomUUID(), api_key_id: apiKey.id,

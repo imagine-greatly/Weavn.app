@@ -48,8 +48,7 @@ export async function validateApiKey(req: NextRequest): Promise<ApiKeyRecord | n
     .from("api_keys")
     .update({ last_used_at: new Date().toISOString() })
     .eq("id", (data as ApiKeyRecord).id)
-    .then(() => {})
-    .catch((err: unknown) => console.error("[apiAuth] last_used_at update failed:", err));
+    .then(() => {}, (err: unknown) => console.error("[apiAuth] last_used_at update failed:", err));
 
   return data as ApiKeyRecord;
 }

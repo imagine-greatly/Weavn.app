@@ -1,5 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
+import { createClient } from "@supabase/supabase-js";
 import { type NextRequest, NextResponse } from "next/server";
+import { generateApiKey } from "@/lib/apiAuth";
 
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
@@ -41,6 +43,35 @@ export async function GET(request: NextRequest) {
   if (error) {
     return NextResponse.redirect(new URL("/auth?error=oauth_failed", requestUrl.origin));
   }
+
+  // Fire-and-forget: provision API key for new users via OAuth or email confirmation.
+  // Checks for an existing active key first so returning users are never duplicated.
+  const { data: { user } } = await supabase.auth.getUser();
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (user?.id && url && serviceKey) {
+    const service = createClient(url, serviceKey);
+    service
+      .from("api_keys")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("active", true)
+      .limit(1)
+      .then(({ data: existing }) => {
+        if (!existing?.length) {
+          const apiKey = generateApiKey();
+          return service.from("api_keys").insert({
+            user_id: user.id,
+            key_hash: apiKey.hash,
+            key_prefix: apiKey.prefix,
+            name: "Default",
+            plan: "payg",
+            active: true,
+          });
+        }
+      })
+      .catch(() => {});
+  }
+
   await new Promise(resolve => setTimeout(resolve, 500));
 
   // After successful session exchange, check for a pending scan URL stored in a cookie

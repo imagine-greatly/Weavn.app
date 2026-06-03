@@ -16,7 +16,7 @@ const CENTER_LINKS = [
   { label: "PRODUCT", href: "/product" },
   { label: "HOW IT WORKS", href: "/how-it-works" },
   { label: "PRICING", href: "/pricing" },
-  { label: "DOCS", href: "/docs" },
+  { label: "DOCS", href: "/docs/api" },
 ];
 
 export default function Navbar() {
@@ -123,7 +123,7 @@ export default function Navbar() {
     setShowNameModal(false);
   }
 
-  if (pathname === "/scan") return null;
+  if (pathname === "/scan" || pathname.startsWith("/reports/")) return null;
 
   return (
     <>

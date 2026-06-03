@@ -284,6 +284,10 @@ function AuthPageContent() {
       if (pending) await savePendingReportIfAny(userId);
       const hasSession = Boolean(data?.session);
       if (hasSession) {
+        // Fire-and-forget: provision API key for the new user.
+        // Next.js route handlers run to completion server-side even after navigation,
+        // so this will finish even though we redirect 800ms later.
+        fetch("/api/developer/generate-key", { method: "POST", credentials: "include" }).catch(() => {});
         setTimeout(() => {
           const next = searchParams.get("next");
           if (next) {

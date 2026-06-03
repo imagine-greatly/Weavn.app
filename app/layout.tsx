@@ -36,11 +36,17 @@ const jetbrainsMono = JetBrains_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "WebDoc AI — Conversion Intelligence",
-    template: "%s — WebDoc AI",
+    default: "WebDoc — Website Intelligence API",
+    template: "%s — WebDoc",
   },
   description:
-    "Revenue diagnostics for your site. Detect structural and behavioral suppression patterns, then rank resolutions by revenue impact.",
+    "Send a URL. Get a complete conversion audit in 90 seconds. Structured JSON. REST API for developers, agencies, and AI agents.",
+  openGraph: {
+    title: "WebDoc — Website Intelligence API",
+    description:
+      "Send a URL. Get a complete conversion audit in 90 seconds. Structured JSON. REST API for developers, agencies, and AI agents.",
+    url: "https://webdocai.com",
+  },
 };
 
 export default function RootLayout({

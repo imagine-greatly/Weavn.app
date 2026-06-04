@@ -1,1548 +1,632 @@
-"use client";
+'use client'
 
-import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
-import { useRouter } from "next/navigation";
-import dynamic from "next/dynamic";
-import { getSupabaseBrowserClient } from "@/lib/supabaseBrowser";
-import type { DimensionScoreRow, Leak, ReportPayload } from "@/lib/reportSchema";
-import { ScrollReveal } from "@/components/ScrollReveal";
-import ScoreHistoryChart from "@/components/dashboard/ScoreHistoryChart";
-import { getDashboardMoneyLeaks } from "@/lib/dashboardMoneyLeaks";
-import PageLoadSkeleton from "@/components/PageLoadSkeleton";
+import { useState } from 'react'
+import Link from 'next/link'
+import ScoreRing from '@/components/ui/ScoreRing'
+import Label from '@/components/ui/Label'
 
-const AdvisorChat = dynamic(() => import("@/components/dashboard/AdvisorChat"), { ssr: false });
-import { getBlockedMessage, isBlockedDomain } from "@/lib/scanGuard";
-import { convertLeaksToFindingData } from "@/lib/convertLeakToFindingData";
-import { ReportFindingPreview } from "@/components/ReportRightPanel";
-import { displayScoreColor } from "@/lib/displayScoreColor";
-import ConversionScoreGauge from "@/components/ConversionScoreGauge";
+// ── Types ─────────────────────────────────────────────────────────────────────
 
-const SM = "var(--font-space-mono), var(--font-jetbrains-mono), monospace";
-const SG = "var(--font-space-grotesk), sans-serif";
-const ORB = "var(--font-orbitron), sans-serif";
-const DASHBOARD_REPORTS_CACHE_PREFIX = "webdoc_dashboard_reports_";
-const DASHBOARD_REPORTS_CACHE_TS_PREFIX = "webdoc_dashboard_reports_ts_";
-const DASHBOARD_REPORTS_CACHE_TTL_MS = 300_000;
+type DashTabId = 'clients' | 'reports' | 'scheduled' | 'settings'
 
-type StoredReportRow = {
-  id: string;
-  domain: string;
-  created_at: string;
-  analysis: ReportPayload;
-  dimension_scores?: DimensionScoreRow[] | null;
-  health_score?: number | null;
-  money_leaks?: unknown;
-  verdict?: unknown;
-  primary_findings?: unknown;
-  biggest_opportunity?: string | null;
-  estimated_impact?: string | null;
-  critical_count?: number | null;
-  high_count?: number | null;
-  total_failed?: number | null;
-  total_passed?: number | null;
-  share_token?: string | null;
-  score_delta?: number | null;
-  previous_score?: number | null;
-};
-
-function formatRelativeScanTime(iso: string): string {
-  const t = new Date(iso).getTime();
-  const now = Date.now();
-  const diffMs = Math.max(0, now - t);
-  const diffM = Math.floor(diffMs / 60000);
-  if (diffM < 1) return "just now";
-  if (diffM < 60) return `${diffM}m ago`;
-  const diffH = Math.floor(diffM / 60);
-  if (diffH < 48) return `${diffH}h ago`;
-  const diffDays = Math.floor(diffH / 24);
-  if (diffDays === 1) return "1 day ago";
-  if (diffDays < 14) return `${diffDays} days ago`;
-  const diffWeeks = Math.floor(diffDays / 7);
-  if (diffWeeks <= 4) return `${diffWeeks} weeks ago`;
-  return `${Math.floor(diffDays / 30)} months ago`;
+interface Client {
+  name: string
+  domain: string
+  score: number
+  delta: number | null
+  lastScan: string
+  nextScan: string
+  frequency: 'Weekly' | 'Monthly' | 'Off'
 }
 
-function distinctDomains(reports: StoredReportRow[]): string[] {
-  return Array.from(new Set(reports.map((r) => r.domain))).filter(Boolean);
+// ── Static data ───────────────────────────────────────────────────────────────
+
+const CLIENTS: Client[] = [
+  { name: 'Acme SaaS',      domain: 'acme-saas.com',     score: 61, delta: 8,    lastScan: 'Jun 1, 2026',  nextScan: 'Jun 10, 2026', frequency: 'Weekly'  },
+  { name: 'TechFlow',       domain: 'techflow.io',        score: 74, delta: 3,    lastScan: 'Jun 1, 2026',  nextScan: 'Jun 10, 2026', frequency: 'Weekly'  },
+  { name: 'Buildspace',     domain: 'buildspace.so',      score: 48, delta: -3,   lastScan: 'Jun 1, 2026',  nextScan: 'Jul 1, 2026',  frequency: 'Monthly' },
+  { name: 'Lemon Squeezy',  domain: 'lemonsqueezy.com',   score: 82, delta: 11,   lastScan: 'Jun 1, 2026',  nextScan: 'Jun 10, 2026', frequency: 'Weekly'  },
+  { name: 'Pika',           domain: 'pika.art',           score: 55, delta: null, lastScan: 'May 20, 2026', nextScan: '—',            frequency: 'Off'     },
+  { name: 'Loops',          domain: 'loops.so',           score: 79, delta: 5,    lastScan: 'Jun 1, 2026',  nextScan: 'Jun 10, 2026', frequency: 'Weekly'  },
+  { name: 'Tally',          domain: 'tally.so',           score: 66, delta: -2,   lastScan: 'Jun 1, 2026',  nextScan: 'Jul 1, 2026',  frequency: 'Monthly' },
+  { name: 'Mintlify',       domain: 'mintlify.com',       score: 91, delta: 4,    lastScan: 'Jun 1, 2026',  nextScan: 'Jun 10, 2026', frequency: 'Weekly'  },
+]
+
+const REPORT_ROWS = [
+  { client: 'Acme SaaS',     url: 'webdocai.com/r/a3x9', generated: 'Jun 3, 2026',  views: 14 },
+  { client: 'TechFlow',      url: 'webdocai.com/r/b7k2', generated: 'Jun 1, 2026',  views: 7  },
+  { client: 'Buildspace',    url: 'webdocai.com/r/c5m8', generated: 'May 28, 2026', views: 23 },
+  { client: 'Lemon Squeezy', url: 'webdocai.com/r/d2n1', generated: 'May 25, 2026', views: 31 },
+  { client: 'Loops',         url: 'webdocai.com/r/e9p4', generated: 'May 20, 2026', views: 5  },
+  { client: 'Mintlify',      url: 'webdocai.com/r/f4q7', generated: 'May 15, 2026', views: 41 },
+]
+
+const TAB_TITLES: Record<DashTabId, string> = {
+  clients:   'Clients',
+  reports:   'Reports',
+  scheduled: 'Scheduled',
+  settings:  'Settings',
 }
 
-function splitFirstNSentences(text: string, n: number): { head: string; tail: string } {
-  const t = text.replace(/\r\n/g, "\n").trim();
-  if (!t) return { head: "", tail: "" };
-  const parts = t.split(/(?<=[.!?])\s+/).filter((s) => s.trim().length > 0);
-  if (parts.length <= n) return { head: t, tail: "" };
-  return { head: parts.slice(0, n).join(" "), tail: parts.slice(n).join(" ") };
+const SPARKLINE_PTS = [53, 55, 58, 53, 61, 61]
+const SPARK_DATES   = ['Apr 1', 'Apr 15', 'May 1', 'May 15', 'Jun 1', 'Jun 3']
+
+function sparkPoints(data: number[]): string {
+  const W = 200, H = 48, PAD = 4
+  const min = Math.min(...data), max = Math.max(...data)
+  const range = max - min || 1
+  return data
+    .map((v, i) => {
+      const x = (i / (data.length - 1)) * W
+      const y = PAD + ((max - v) / range) * (H - PAD * 2)
+      return `${x.toFixed(1)},${y.toFixed(1)}`
+    })
+    .join(' ')
 }
 
-function domainKeysMatch(stored: string, selected: string): boolean {
-  if (stored === selected) return true;
-  const norm = (s: string) =>
-    s.trim().toLowerCase().replace(/^www\./i, "");
-  return norm(stored) === norm(selected);
+// ── Toggle component ──────────────────────────────────────────────────────────
+
+function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      onClick={() => onChange(!checked)}
+      className={`relative inline-flex flex-shrink-0 cursor-pointer border-0 transition-colors duration-150 ${
+        checked ? 'bg-cyan-DEFAULT' : 'bg-background-border'
+      }`}
+      style={{ width: 40, height: 20 }}
+    >
+      <span
+        className="absolute top-0.5 bg-background-base transition-transform duration-150"
+        style={{ width: 16, height: 16, transform: checked ? 'translateX(22px)' : 'translateX(2px)' }}
+      />
+    </button>
+  )
 }
 
-function reportsMatchingSelectedDomain(
-  allReports: StoredReportRow[],
-  selectedDomain: string
-): StoredReportRow[] {
-  const sel = selectedDomain.trim();
-  if (!sel) return [];
-  const pool = allReports.filter((r) => domainKeysMatch(r.domain, sel));
-  const hasDimensionData = (r: StoredReportRow): boolean =>
-    Array.isArray(r.analysis?.dimensionScores) &&
-    r.analysis.dimensionScores.some((d) => Number(d?.score ?? 0) > 0);
-  return [...pool].sort((a, b) => {
-    const aHas = hasDimensionData(a) ? 1 : 0;
-    const bHas = hasDimensionData(b) ? 1 : 0;
-    if (bHas !== aHas) return bHas - aHas;
-    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-  });
+// ── Sidebar icons ─────────────────────────────────────────────────────────────
+
+function IconClients() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+      <circle cx="6" cy="5" r="2.5" />
+      <path d="M1 14c0-3 2-4 5-4s5 1 5 4" />
+      <path d="M11 7c1.5 0 3 .8 3 3" />
+      <circle cx="11" cy="4.5" r="2" />
+    </svg>
+  )
 }
 
-function normalizeStoredReportRows(
-  reportRows: unknown[] | null | undefined
-): StoredReportRow[] {
-  return (reportRows ?? []).map((rowUnknown) => {
-    const row = rowUnknown as Record<string, unknown>;
-    const analysis = (row.analysis ?? {}) as ReportPayload;
-    const fromCol = row.dimension_scores;
-    const mergedScores =
-      Array.isArray(analysis.dimensionScores) && analysis.dimensionScores.length > 0
-        ? analysis.dimensionScores
-        : Array.isArray(fromCol)
-          ? (fromCol as DimensionScoreRow[])
-          : undefined;
-
-    const colMoney = row.money_leaks;
-    const colPrimary = row.primary_findings;
-    const moneyFromAnalysis =
-      Array.isArray(analysis.moneyLeaks) && analysis.moneyLeaks.length > 0
-        ? analysis.moneyLeaks
-        : undefined;
-    const primaryFromAnalysis =
-      Array.isArray(analysis.primaryFindings) && analysis.primaryFindings.length > 0
-        ? analysis.primaryFindings
-        : Array.isArray(analysis.priorityFindings) && analysis.priorityFindings.length > 0
-          ? analysis.priorityFindings
-          : undefined;
-    const moneyMerged =
-      moneyFromAnalysis ??
-      (Array.isArray(colMoney) && colMoney.length > 0 ? (colMoney as Leak[]) : undefined);
-    const primaryMerged =
-      primaryFromAnalysis ??
-      (Array.isArray(colPrimary) && colPrimary.length > 0
-        ? (colPrimary as Leak[])
-        : undefined);
-
-    return {
-      id: String(row.id),
-      domain: String(row.domain ?? ""),
-      created_at: String(row.created_at ?? ""),
-      analysis: {
-        ...analysis,
-        dimensionScores: mergedScores,
-        ...(moneyMerged ? { moneyLeaks: moneyMerged } : {}),
-        ...(primaryMerged && !moneyMerged ? { primaryFindings: primaryMerged } : {}),
-      },
-      dimension_scores: mergedScores ?? null,
-      money_leaks: colMoney,
-      primary_findings: colPrimary,
-      health_score: typeof row.health_score === "number" ? row.health_score : null,
-      verdict: row.verdict ?? null,
-      biggest_opportunity:
-        row.biggest_opportunity != null ? String(row.biggest_opportunity) : null,
-      estimated_impact:
-        row.estimated_impact != null ? String(row.estimated_impact) : null,
-      critical_count: typeof row.critical_count === "number" ? row.critical_count : null,
-      high_count: typeof row.high_count === "number" ? row.high_count : null,
-      total_failed: typeof row.total_failed === "number" ? row.total_failed : null,
-      total_passed: typeof row.total_passed === "number" ? row.total_passed : null,
-      share_token: row.share_token != null ? String(row.share_token) : null,
-      score_delta: typeof row.score_delta === "number" ? row.score_delta : null,
-      previous_score: typeof row.previous_score === "number" ? row.previous_score : null,
-    };
-  });
+function IconReports() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+      <rect x="2" y="2" width="12" height="12" />
+      <line x1="5" y1="6"  x2="11" y2="6"  />
+      <line x1="5" y1="9"  x2="11" y2="9"  />
+      <line x1="5" y1="12" x2="8"  y2="12" />
+    </svg>
+  )
 }
 
-function normalizeScanUrlForGuard(raw: string): string {
-  const t = raw.trim();
-  if (!t) return "";
-  return t.startsWith("http") ? t : `https://${t}`;
+function IconScheduled() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+      <rect x="2" y="3" width="12" height="11" />
+      <line x1="5" y1="1" x2="5" y2="5"  />
+      <line x1="11" y1="1" x2="11" y2="5" />
+      <line x1="2" y1="7" x2="14" y2="7"  />
+    </svg>
+  )
 }
 
-function scoreColor(score: number): string {
-  return displayScoreColor(score);
+function IconSettings() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+      <circle cx="8" cy="8" r="2.5" />
+      <path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.05 3.05l1.41 1.41M11.54 11.54l1.41 1.41M11.54 4.46l1.41-1.41M3.05 12.95l1.41-1.41" />
+    </svg>
+  )
 }
 
-const DASH_STRIPE_CTA: CSSProperties = {
-  display: "inline-flex",
-  alignItems: "center",
-  justifyContent: "center",
-  background: "transparent",
-  border: "1px solid #00C8FF",
-  color: "#00C8FF",
-  fontFamily: SM,
-  fontSize: 12,
-  fontWeight: 700,
-  letterSpacing: "0.08em",
-  textTransform: "uppercase",
-  minHeight: 44,
-  padding: "0 32px",
-  borderRadius: 2,
-  cursor: "pointer",
-  boxSizing: "border-box",
-  textDecoration: "none",
-};
+// ── Clients Tab ───────────────────────────────────────────────────────────────
 
-const dashStripeCtaHoverHandlers = {
-  onMouseEnter: (e: { currentTarget: HTMLButtonElement }) => {
-    e.currentTarget.style.background = "rgba(0,200,255,0.08)";
-  },
-  onMouseLeave: (e: { currentTarget: HTMLButtonElement }) => {
-    e.currentTarget.style.background = "transparent";
-  },
-} as const;
+function ClientsTab({
+  onSelectClient,
+}: {
+  onSelectClient: (c: Client) => void
+}) {
+  const [search, setSearch] = useState('')
+  const [filter, setFilter] = useState('all')
 
-function EnterpriseBlockModal({
+  const filtered = CLIENTS
+    .filter(c =>
+      !search ||
+      c.name.toLowerCase().includes(search.toLowerCase()) ||
+      c.domain.toLowerCase().includes(search.toLowerCase())
+    )
+    .filter(c => {
+      if (filter === 'improving') return c.delta !== null && c.delta > 0
+      if (filter === 'declining') return c.delta !== null && c.delta < 0
+      if (filter === 'not-scanned') return false
+      return true
+    })
+
+  return (
+    <div className="px-8 py-8">
+      {/* Filter bar */}
+      <div className="flex gap-3 mb-6">
+        <input
+          type="text"
+          placeholder="Search clients..."
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          className="flex-1 bg-background-subtle border border-background-border font-mono text-sm text-text-primary px-4 py-2.5 placeholder:text-text-tertiary outline-none"
+        />
+        <select
+          value={filter}
+          onChange={e => setFilter(e.target.value)}
+          className="bg-background-subtle border border-background-border font-mono text-sm text-text-primary px-4 py-2.5 outline-none cursor-pointer"
+        >
+          <option value="all">All clients</option>
+          <option value="improving">Improving</option>
+          <option value="declining">Declining</option>
+          <option value="not-scanned">Not scanned</option>
+        </select>
+      </div>
+
+      {/* Client grid */}
+      <div className="grid grid-cols-2 gap-px bg-background-border">
+        {filtered.map(client => (
+          <div
+            key={client.domain}
+            onClick={() => onSelectClient(client)}
+            className="bg-background-raised p-6 hover:bg-background-interactive transition-colors duration-200 cursor-pointer"
+          >
+            {/* Top row */}
+            <div className="flex justify-between items-start">
+              <div className="min-w-0 pr-4">
+                <div className="font-body text-sm font-semibold text-text-primary">{client.name}</div>
+                <div className="font-mono text-xs text-text-tertiary mt-0.5">{client.domain}</div>
+              </div>
+              <ScoreRing score={client.score} size="sm" animated={false} />
+            </div>
+
+            {/* Delta */}
+            <div className="flex items-center gap-2 mt-4">
+              {client.delta === null ? (
+                <span className="font-mono text-xs text-text-tertiary">No change</span>
+              ) : client.delta > 0 ? (
+                <span className="font-mono text-xs px-2 py-0.5 bg-score-high/10 text-score-high">
+                  ↑ {client.delta} since last scan
+                </span>
+              ) : (
+                <span className="font-mono text-xs px-2 py-0.5 bg-severity-critical/10 text-severity-critical">
+                  ↓ {Math.abs(client.delta)} since last scan
+                </span>
+              )}
+            </div>
+
+            <div className="font-mono text-xs text-text-tertiary mt-2">Last scan: {client.lastScan}</div>
+            <div className="font-mono text-xs text-text-tertiary">Next: {client.nextScan} ({client.frequency.toLowerCase()})</div>
+
+            {/* Actions */}
+            <div className="flex gap-2 mt-4 pt-4 border-t border-background-border">
+              <button
+                onClick={e => { e.stopPropagation() }}
+                className="border border-background-border font-body text-xs text-text-secondary px-3 py-1.5 hover:text-text-primary transition-colors duration-150 bg-transparent cursor-pointer"
+              >
+                View report
+              </button>
+              <button
+                onClick={e => { e.stopPropagation() }}
+                className="border border-cyan-DEFAULT font-body text-xs text-cyan-DEFAULT px-3 py-1.5 bg-transparent cursor-pointer hover:bg-cyan-glow transition-colors duration-150"
+              >
+                Generate link →
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ── Client Drawer ─────────────────────────────────────────────────────────────
+
+function ClientDrawer({
+  client,
   open,
   onClose,
-  onPrimary,
-  onSecondary,
 }: {
-  open: boolean;
-  onClose: () => void;
-  onPrimary: () => void;
-  onSecondary: () => void;
+  client: Client | null
+  open: boolean
+  onClose: () => void
 }) {
-  if (!open) return null;
-  const copy = getBlockedMessage();
-  const BR = 18;
-  return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="dashboard-enterprise-block-title"
-      style={{
-        position: "fixed",
-        inset: 0,
-        zIndex: 200000,
-        background: "rgba(5,8,16,0.82)",
-        backdropFilter: "blur(8px)",
-        WebkitBackdropFilter: "blur(8px)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: 24,
-      }}
-      onClick={onClose}
-    >
-      <div
-        onClick={(e) => e.stopPropagation()}
-        style={{
-          position: "relative",
-          width: "100%",
-          maxWidth: 520,
-          background: "#0A0F1E",
-          border: "1px solid #1A2035",
-          borderRadius: 2,
-          padding: "36px 32px 32px",
-          boxSizing: "border-box",
-        }}
-      >
-        <div aria-hidden style={{ position: "absolute", width: BR, height: BR, top: 14, left: 14, borderTop: "2px solid rgba(0,200,255,0.35)", borderLeft: "2px solid rgba(0,200,255,0.35)" }} />
-        <div aria-hidden style={{ position: "absolute", width: BR, height: BR, top: 14, right: 14, borderTop: "2px solid rgba(0,200,255,0.35)", borderRight: "2px solid rgba(0,200,255,0.35)" }} />
-        <div aria-hidden style={{ position: "absolute", width: BR, height: BR, bottom: 14, left: 14, borderBottom: "2px solid rgba(0,200,255,0.35)", borderLeft: "2px solid rgba(0,200,255,0.35)" }} />
-        <div aria-hidden style={{ position: "absolute", width: BR, height: BR, bottom: 14, right: 14, borderBottom: "2px solid rgba(0,200,255,0.35)", borderRight: "2px solid rgba(0,200,255,0.35)" }} />
-        <h2
-          id="dashboard-enterprise-block-title"
-          className="font-sans font-extrabold"
-          style={{ color: "#FFFFFF", fontSize: 22, letterSpacing: "-0.5px", lineHeight: 1.15, margin: "0 0 16px 0", paddingRight: 8 }}
-        >
-          {copy.headline}
-        </h2>
-        <div style={{ fontFamily: SM, fontSize: 12, color: "#8899AA", lineHeight: 1.65, whiteSpace: "pre-line", marginBottom: 28 }}>
-          {copy.body}
-        </div>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
-          <button
-            type="button"
-            onClick={onPrimary}
-            className="font-mono text-[12px] font-bold uppercase tracking-wide"
-            style={{ flex: "1 1 200px", padding: "12px 20px", background: "#00C8FF", color: "#050810", border: "1px solid #00C8FF", cursor: "pointer", borderRadius: 2 }}
-          >
-            {copy.ctaPrimary}
-          </button>
-          <button
-            type="button"
-            onClick={onSecondary}
-            className="font-mono text-[11px] font-semibold uppercase tracking-wide"
-            style={{ flex: "1 1 180px", padding: "12px 16px", background: "transparent", color: "rgba(0,200,255,0.85)", border: "1px solid rgba(0,200,255,0.35)", cursor: "pointer", borderRadius: 2 }}
-          >
-            {copy.ctaSecondary}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
+  const [linkGenerated, setLinkGenerated] = useState(false)
+  const pts = sparkPoints(SPARKLINE_PTS)
 
-export default function DashboardPage() {
-  const router = useRouter();
-  const [authUserId, setAuthUserId] = useState<string | null>(null);
-  const [email, setEmail] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [plan, setPlan] = useState<string>(
-    typeof window !== "undefined" &&
-      window.location.search.includes("upgraded=true")
-      ? "pro"
-      : "loading"
-  );
-  const [reportsReady, setReportsReady] = useState(false);
-
-  const [reports, setReports] = useState<StoredReportRow[] | null>(null);
-  const [advisorResetSignal, setAdvisorResetSignal] = useState(0);
-
-  const [emptyScanUrl, setEmptyScanUrl] = useState("");
-  const [activeDomain, setActiveDomain] = useState<string>("");
-  const [showScanInput, setShowScanInput] = useState(false);
-  const [newScanUrl, setNewScanUrl] = useState("");
-  const [showNewUserOverlay, setShowNewUserOverlay] = useState(false);
-  const [newUserScanUrl, setNewUserScanUrl] = useState("");
-  const [newUserSubmitting, setNewUserSubmitting] = useState(false);
-  const [firstScanFieldFocused, setFirstScanFieldFocused] = useState(false);
-  const [firstScanCtaHover, setFirstScanCtaHover] = useState(false);
-  const [emptyScanFieldFocused, setEmptyScanFieldFocused] = useState(false);
-  const firstScanFieldRef = useRef<HTMLDivElement>(null);
-  const initialLoadCompleteRef = useRef(false);
-  const [enterpriseBlockOpen, setEnterpriseBlockOpen] = useState(false);
-  const [enterpriseBlockHighlight, setEnterpriseBlockHighlight] = useState<"empty" | "modal" | null>(null);
-  const [deletingDomain, setDeletingDomain] = useState<string | null>(null);
-  const [deleteErrorDomain, setDeleteErrorDomain] = useState<string | null>(null);
-
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      setLoading(false);
-      setPlan((prev) => prev === "loading" ? "free" : prev);
-    }, 5000);
-    return () => clearTimeout(timeout);
-  }, []);
-
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      if (initialLoadCompleteRef.current) return;
-      setLoading(true);
-      const supabase = getSupabaseBrowserClient();
-
-      const { data } = await supabase.auth.getUser();
-      if (cancelled) return;
-      const user = data?.user;
-      if (!user) {
-        window.location.href = "/auth";
-        return;
-      }
-      setAuthUserId(user.id);
-      setEmail(user.email ?? null);
-      setLoading(false);
-
-      const cacheKey = `${DASHBOARD_REPORTS_CACHE_PREFIX}${user.id}`;
-      const cacheTsKey = `${DASHBOARD_REPORTS_CACHE_TS_PREFIX}${user.id}`;
-      try {
-        const rawTs = localStorage.getItem(cacheTsKey);
-        const valid =
-          rawTs != null &&
-          Number.isFinite(Number(rawTs)) &&
-          Date.now() - Number(rawTs) < DASHBOARD_REPORTS_CACHE_TTL_MS;
-        if (valid) {
-          const rawCached = localStorage.getItem(cacheKey);
-          if (rawCached) {
-            const parsed = JSON.parse(rawCached) as unknown[] | null | undefined;
-            const normalizedCached = normalizeStoredReportRows(parsed);
-            if (normalizedCached.length > 0) {
-              setReports(normalizedCached);
-              setReportsReady(true);
-            }
-          }
-        }
-      } catch {
-        // ignore cache read failures
-      }
-
-      const [profileRes, reportsResult, profileFlagsResult, hiddenResult] = await Promise.all([
-        fetch("/api/profile", { method: "GET", credentials: "include" }),
-        supabase
-          .from("reports")
-          .select(
-            "id, domain, created_at, analysis, dimension_scores, money_leaks, verdict, biggest_opportunity, estimated_impact, health_score, critical_count, high_count, total_failed, total_passed, share_token, score_delta, previous_score"
-          )
-          .eq("user_id", user.id)
-          .order("created_at", { ascending: false }),
-        supabase
-          .from("profiles")
-          .select("has_run_first_scan")
-          .eq("user_id", user.id)
-          .single(),
-        supabase
-          .from("user_hidden_reports")
-          .select("domain")
-          .eq("user_id", user.id),
-      ]);
-      if (cancelled) return;
-
-      const profileData = profileRes.ok
-        ? ((await profileRes.json()) as { plan?: string; first_name?: string | null; is_pro?: boolean })
-        : null;
-      const profile = profileData;
-
-      const urlUpgraded = window.location.search.includes("upgraded=true");
-      const rawPlan = String(profile?.plan ?? "free").trim();
-      const proFromRow =
-        profile?.is_pro === true ||
-        rawPlan === "pro" ||
-        rawPlan === "Pro" ||
-        rawPlan.toLowerCase() === "pro";
-      setPlan(urlUpgraded ? "pro" : proFromRow ? "pro" : rawPlan || "free");
-
-      const hiddenDomains = new Set(
-        ((hiddenResult.data ?? []) as { domain: string }[]).map((r) =>
-          r.domain.toLowerCase().trim()
-        )
-      );
-      const fetchedReports = normalizeStoredReportRows(reportsResult.data ?? []).filter(
-        (r) => !hiddenDomains.has(r.domain.toLowerCase().trim())
-      );
-      setReports(fetchedReports);
-      try {
-        localStorage.setItem(cacheKey, JSON.stringify(fetchedReports));
-        localStorage.setItem(cacheTsKey, Date.now().toString());
-      } catch {
-        // ignore cache write failures
-      }
-
-      const hasRunFirstScan = Boolean((profileFlagsResult.data as { has_run_first_scan?: boolean } | null)?.has_run_first_scan);
-      if (fetchedReports.length === 0 && !hasRunFirstScan) {
-        let scanDest = "/scan";
-        if (typeof document !== "undefined") {
-          const cookieMatch = document.cookie.match(/(?:^|;\s*)pendingUrl=([^;]*)/);
-          if (cookieMatch) {
-            const raw = decodeURIComponent(cookieMatch[1]);
-            document.cookie = "pendingUrl=;path=/;max-age=0";
-            const normalized = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
-            scanDest = `/scan?url=${encodeURIComponent(normalized)}`;
-          } else if (typeof sessionStorage !== "undefined") {
-            const raw = sessionStorage.getItem("pendingUrl");
-            if (raw) {
-              sessionStorage.removeItem("pendingUrl");
-              const normalized = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
-              scanDest = `/scan?url=${encodeURIComponent(normalized)}`;
-            }
-          }
-        }
-        window.location.replace(scanDest);
-        return;
-      }
-
-      initialLoadCompleteRef.current = true;
-      setReportsReady(true);
-    })();
-    return () => { cancelled = true; };
-  }, []);
-
-  const domains = useMemo(() => distinctDomains(reports ?? []), [reports]);
-
-  const rawPlanLower = String(plan).trim().toLowerCase();
-  const isProPlan = rawPlanLower === "pro" || rawPlanLower === "agency";
-  const restrictionsActive = reportsReady && !loading && plan !== "loading" && !isProPlan;
-
-  useEffect(() => {
-    if (domains.length > 0 && !activeDomain) {
-      setActiveDomain(domains[0]);
+  const sparkCoords = SPARKLINE_PTS.map((v, i) => {
+    const W = 200, H = 48, PAD = 4
+    const min = Math.min(...SPARKLINE_PTS), max = Math.max(...SPARKLINE_PTS)
+    const range = max - min || 1
+    return {
+      x: parseFloat(((i / (SPARKLINE_PTS.length - 1)) * W).toFixed(1)),
+      y: parseFloat((PAD + ((max - v) / range) * (H - PAD * 2)).toFixed(1)),
     }
-  }, [domains, activeDomain]);
+  })
 
-  useEffect(() => {
-    if (!showScanInput) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setShowScanInput(false);
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [showScanInput]);
-
-  useEffect(() => {
-    const isDashboardScanBarForm = (form: HTMLFormElement) =>
-      form.classList.contains("hero-bar-focus-within") &&
-      Boolean(form.closest(".dashboard-page-root"));
-
-    const onSubmitCapture = (ev: Event) => {
-      if (!(ev instanceof SubmitEvent)) return;
-      const form = ev.target;
-      if (!(form instanceof HTMLFormElement) || !isDashboardScanBarForm(form)) return;
-      const inp =
-        form.querySelector<HTMLInputElement>("input[type=\"text\"]") ??
-        form.querySelector<HTMLInputElement>("input:not([type])");
-      const raw = inp?.value ?? "";
-      const normalized = normalizeScanUrlForGuard(raw);
-      if (!normalized) return;
-      try { new URL(normalized); } catch { return; }
-      if (!isBlockedDomain(normalized)) return;
-      ev.preventDefault();
-      ev.stopPropagation();
-      setEnterpriseBlockHighlight("empty");
-      setEnterpriseBlockOpen(true);
-    };
-
-    const onFocusOutCapture = (ev: Event) => {
-      if (!(ev instanceof FocusEvent)) return;
-      const t = ev.target;
-      if (!(t instanceof HTMLInputElement)) return;
-      const form = t.closest("form");
-      if (!(form instanceof HTMLFormElement) || !isDashboardScanBarForm(form)) return;
-      const raw = t.value ?? "";
-      if (!raw.trim()) return;
-      const normalized = normalizeScanUrlForGuard(raw);
-      try { new URL(normalized); } catch { return; }
-      if (isBlockedDomain(normalized)) {
-        setEnterpriseBlockHighlight("empty");
-        setEnterpriseBlockOpen(true);
-      }
-    };
-
-    document.addEventListener("submit", onSubmitCapture, true);
-    document.addEventListener("focusout", onFocusOutCapture, true);
-    return () => {
-      document.removeEventListener("submit", onSubmitCapture, true);
-      document.removeEventListener("focusout", onFocusOutCapture, true);
-    };
-  }, []);
-
-  const prefetchedFindings = useRef<Map<string, unknown>>(new Map());
-
-  const effectiveDomain = activeDomain || domains[0] || "";
-
-  const activeDomainReports = effectiveDomain
-    ? reportsMatchingSelectedDomain(reports ?? [], effectiveDomain)
-    : [];
-
-  const reportsForEffectiveDomain = effectiveDomain
-    ? activeDomainReports
-    : (reports ?? []);
-
-  const activeLatest = activeDomainReports[0];
-  const activePrevious = activeDomainReports[1] ?? null;
-
-  const activeScore = activeLatest?.analysis?.healthScore ?? 0;
-  const activePrevScore = activePrevious?.analysis?.healthScore ?? null;
-
-  const activeMoneyLeaks = useMemo(
-    () => getDashboardMoneyLeaks(activeLatest?.analysis),
-    [activeLatest]
-  );
-
-  const activeMoneyLeaksTotal = activeMoneyLeaks.length;
-
-  const totalFindingsDetected =
-    typeof activeLatest?.analysis?.totalFailed === "number"
-      ? activeLatest.analysis.totalFailed
-      : Array.isArray(activeLatest?.analysis?.allFailedLeaks)
-        ? activeLatest.analysis.allFailedLeaks!.length
-        : null;
-
-  const activeDimensionScores = useMemo(() => {
-    const fromAnalysis = activeLatest?.analysis?.dimensionScores;
-    const fromCol = activeLatest?.dimension_scores;
-    if (Array.isArray(fromAnalysis) && fromAnalysis.length > 0) return fromAnalysis;
-    if (Array.isArray(fromCol) && fromCol.length > 0) return fromCol as DimensionScoreRow[];
-    if (fromCol && !Array.isArray(fromCol) && typeof fromCol === "object") {
-      const raw = fromCol as unknown as Record<string, unknown>;
-      const normalized: DimensionScoreRow[] = [
-        { id: "capture", label: "Conversion Architecture", description: "", score: Number(raw.conversion_architecture ?? raw.architecture ?? 0) || 0, failCount: 0, totalCount: 1, status: "critical" },
-        { id: "trust", label: "Trust Signals", description: "", score: Number(raw.trust_signals ?? raw.trust ?? 0) || 0, failCount: 0, totalCount: 1, status: "critical" },
-        { id: "position", label: "Message Clarity", description: "", score: Number(raw.message_clarity ?? raw.clarity ?? 0) || 0, failCount: 0, totalCount: 1, status: "critical" },
-        { id: "visibility", label: "Traffic Readiness", description: "", score: Number(raw.traffic_readiness ?? raw.traffic ?? 0) || 0, failCount: 0, totalCount: 1, status: "critical" },
-        { id: "infrastructure", label: "Technical Foundation", description: "", score: Number(raw.technical_foundation ?? raw.foundation ?? 0) || 0, failCount: 0, totalCount: 1, status: "critical" },
-      ];
-      return normalized.map<DimensionScoreRow>((row) => {
-        const s = Math.max(0, Math.min(100, Math.round(Number(row.score) || 0)));
-        return { ...row, score: s, status: s >= 75 ? "strong" : s >= 50 ? "fair" : s >= 30 ? "weak" : "critical" };
-      });
-    }
-    return undefined;
-  }, [activeLatest]);
-
-  const sortedPriorityLeaks = useMemo(
-    () => [...activeMoneyLeaks].sort((a, b) => (b.revenueImpact ?? 0) - (a.revenueImpact ?? 0)),
-    [activeMoneyLeaks]
-  );
-
-  // Background prefetch: warm DB cache for top 10 findings so issue pages load instantly
-  useEffect(() => {
-    const reportId = activeLatest?.id;
-    if (!reportId || !sortedPriorityLeaks.length) return;
-    const ac = new AbortController();
-    const timers: ReturnType<typeof setTimeout>[] = [];
-
-    // Route bundle prefetch for top 5 (JS chunk)
-    sortedPriorityLeaks.slice(0, 5).forEach((finding) => {
-      const fid = String(finding.id ?? "").trim() || String(finding.title ?? "").trim();
-      if (fid) router.prefetch(`/issue/${encodeURIComponent(reportId)}/${encodeURIComponent(fid)}`);
-    });
-
-    // Critical-first ordering for data prefetch
-    const ordered = [...sortedPriorityLeaks.slice(0, 10)].sort((a, b) => {
-      const aC = (a.severity === "critical" || a.rubricSeverity === "Critical") ? 0 : 1;
-      const bC = (b.severity === "critical" || b.rubricSeverity === "Critical") ? 0 : 1;
-      return aC - bC;
-    });
-
-    const overallScore = activeScore;
-    const reportDomain = activeLatest?.domain ?? "";
-    ordered.forEach((finding, i) => {
-      const fid = String(finding.id ?? "").trim() || String(finding.title ?? "").trim();
-      if (!fid) return;
-      const t = setTimeout(() => {
-        if (ac.signal.aborted || prefetchedFindings.current.has(fid)) return;
-        void fetch("/api/expand-finding", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          signal: ac.signal,
-          body: JSON.stringify({
-            report_id: reportId,
-            finding_id: fid,
-            domain: reportDomain,
-            overallScore,
-            finding: {
-              title: finding.title,
-              severity: String(finding.rubricSeverity ?? finding.severity ?? ""),
-              category: finding.category ?? "",
-              whatWeFound: finding.whatWeFound ?? "",
-              whyItMatters: finding.whyItMatters ?? "",
-              howToFixIt: finding.howToFixIt ?? "",
-              exampleFix: finding.exampleFix ?? "",
-              psychologyPrinciple: finding.psychologyPrinciple ?? "",
-              revenueImpact: finding.revenueImpact,
-              page_location: finding.page_location,
-            },
-          }),
-        })
-          .then((res) => (res.ok ? res.json() : null))
-          .then((data: unknown) => {
-            if (!ac.signal.aborted && data) prefetchedFindings.current.set(fid, data);
-          })
-          .catch(() => { /* ignore prefetch failures */ });
-      }, 3000 + i * 300);
-      timers.push(t);
-    });
-
-    return () => {
-      ac.abort();
-      timers.forEach(clearTimeout);
-    };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeLatest?.id]);
-
-  const dashboardFindingRows = useMemo(
-    () => convertLeaksToFindingData(activeMoneyLeaks),
-    [activeMoneyLeaks]
-  );
-
-  const diagnosticVerdictText = useMemo(() => {
-    const a = activeLatest?.analysis;
-    if (!a) return "";
-    const ib = typeof a.intelligenceBrief === "string" ? a.intelligenceBrief.trim() : "";
-    if (ib) return ib;
-    const v = a.overviewCopy?.verdict?.trim();
-    return v ?? "";
-  }, [activeLatest]);
-
-  const domainScores = useMemo(() => {
-    const norm = (s: string) => s.trim().toLowerCase().replace(/^www\./i, "");
-    const hasDim = (r: StoredReportRow) =>
-      Array.isArray(r.analysis?.dimensionScores) &&
-      r.analysis.dimensionScores.some((sc) => Number(sc?.score ?? 0) > 0);
-    // Build normalized-domain → best report map once (O(m))
-    const byDomain = new Map<string, StoredReportRow>();
-    for (const r of reports ?? []) {
-      const key = norm(r.domain);
-      const cur = byDomain.get(key);
-      if (!cur) { byDomain.set(key, r); continue; }
-      const rH = hasDim(r) ? 1 : 0, cH = hasDim(cur) ? 1 : 0;
-      if (rH > cH || (rH === cH && new Date(r.created_at) > new Date(cur.created_at))) {
-        byDomain.set(key, r);
-      }
-    }
-    const m: Record<string, number> = {};
-    for (const d of domains) {
-      m[d] = byDomain.get(norm(d))?.analysis?.healthScore ?? 0;
-    }
-    return m;
-  }, [domains, reports]);
-
-  const dashboardScoreDelta =
-    activePrevious !== null && activePrevScore !== null
-      ? activeScore - activePrevScore
-      : undefined;
-
-  async function handleNewUserScanSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    const raw = newUserScanUrl.trim();
-    if (!raw) return;
-    setNewUserSubmitting(true);
-    const url = raw.startsWith("http") ? raw : `https://${raw}`;
-    if (authUserId) {
-      const supabase = getSupabaseBrowserClient();
-      await supabase
-        .from("profiles")
-        .upsert({ user_id: authUserId, has_run_first_scan: true }, { onConflict: "user_id" });
-    }
-    setShowNewUserOverlay(false);
-    router.push(`/scan?url=${encodeURIComponent(url)}`);
-  }
-
-  function handleRescan(domain: string) {
-    const currentSiteUrl = String(domain ?? "").trim().startsWith("http")
-      ? String(domain ?? "").trim()
-      : `https://${String(domain ?? "").trim()}`;
-    if (isBlockedDomain(currentSiteUrl)) {
-      setEnterpriseBlockHighlight(null);
-      setEnterpriseBlockOpen(true);
-      return;
-    }
-    const path = `/scan?url=${encodeURIComponent(currentSiteUrl)}&rescan=true`;
-    router.push(path);
-  }
-
-  async function handleDeleteSite(domain: string) {
-    if (!authUserId) return;
-    const normalizedDomain = domain.toLowerCase().trim();
-    setDeletingDomain(domain);
-    setDeleteErrorDomain(null);
-    try {
-      const supabase = getSupabaseBrowserClient();
-      const { error } = await supabase
-        .from("user_hidden_reports")
-        .upsert(
-          { user_id: authUserId, domain: normalizedDomain, hidden_at: new Date().toISOString() },
-          { onConflict: "user_id,domain" }
-        );
-      if (error) {
-        console.error("[DASHBOARD] Hide failed:", error);
-        setDeleteErrorDomain(domain);
-        return;
-      }
-      try {
-        localStorage.removeItem(`${DASHBOARD_REPORTS_CACHE_PREFIX}${authUserId}`);
-        localStorage.removeItem(`${DASHBOARD_REPORTS_CACHE_TS_PREFIX}${authUserId}`);
-      } catch { /* ignore */ }
-      const updatedReports = (reports ?? []).filter((r) => !domainKeysMatch(r.domain, normalizedDomain));
-      setReports(updatedReports);
-      setActiveDomain(distinctDomains(updatedReports)[0] ?? "");
-    } catch (err) {
-      console.error("[DASHBOARD] Hide failed:", err);
-      setDeleteErrorDomain(domain);
-    } finally {
-      setDeletingDomain(null);
-    }
-  }
-
-  const handleUpgrade = async () => {
-    try {
-      const supabase = getSupabaseBrowserClient();
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        window.location.href = "/auth?mode=signup";
-        return;
-      }
-      const res = await fetch("/api/stripe/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
-      });
-      const contentType = res.headers.get("content-type");
-      if (!contentType?.includes("application/json")) throw new Error("Server error");
-      const data = await res.json();
-      if (data.url) window.location.href = data.url;
-    } catch (err) {
-      console.error("Upgrade error:", err);
-    }
-  };
-
-  if (loading) {
-    return <PageLoadSkeleton bars={5} maxWidth={480} />;
-  }
-
-  const pagesAnalyzed =
-    typeof activeLatest?.total_passed === "number" && typeof activeLatest?.total_failed === "number"
-      ? activeLatest.total_passed + activeLatest.total_failed
-      : null;
-
-  const headerCriticalCount =
-    typeof activeLatest?.critical_count === "number" ? activeLatest.critical_count : 0;
-  const headerHighCount =
-    typeof activeLatest?.high_count === "number" ? activeLatest.high_count : 0;
-  const headerTotalFindings = totalFindingsDetected ?? activeMoneyLeaksTotal;
+  const SCAN_HISTORY = [
+    { date: 'Jun 3, 2026', score: 61, findings: 23 },
+    { date: 'May 27, 2026', score: 53, findings: 27 },
+    { date: 'May 13, 2026', score: 58, findings: 19 },
+    { date: 'Apr 29, 2026', score: 55, findings: 22 },
+  ]
 
   return (
-    <div
-      className="dashboard-page-root"
-      style={{
-        minHeight: "100vh",
-        background: "#050810",
-      }}
-    >
-      <style>{`
-        @media (max-width: 768px) {
-          .dashboard-score-header {
-            padding: 16px 20px !important;
-            gap: 12px !important;
-            flex-direction: column !important;
-            align-items: stretch !important;
-          }
-          .dashboard-header-site {
-            width: 100% !important;
-            order: 1;
-          }
-          .dashboard-header-divider {
-            display: none !important;
-          }
-          .dashboard-header-gauge {
-            width: 100% !important;
-            order: 2;
-            align-items: center !important;
-          }
-          .dashboard-header-right {
-            width: 100% !important;
-            order: 3;
-            gap: 12px !important;
-          }
-          .dashboard-header-stats {
-            width: 100% !important;
-            gap: 8px !important;
-          }
-          .dashboard-stat-pill {
-            flex: 1 1 0 !important;
-            min-width: 0 !important;
-            padding: 8px 10px !important;
-          }
-          .dashboard-stat-value {
-            font-size: 15px !important;
-          }
-          .dashboard-stat-label {
-            font-size: 8px !important;
-          }
-          .dashboard-header-actions {
-            width: 100% !important;
-            margin-left: 0 !important;
-            display: flex !important;
-            flex-direction: column-reverse !important;
-            gap: 8px !important;
-          }
-          .dashboard-header-actions a,
-          .dashboard-header-actions button {
-            width: 100% !important;
-            min-height: 44px !important;
-            justify-content: center !important;
-          }
-          .dashboard-site-select {
-            max-width: 100% !important;
-            width: 100% !important;
-          }
-          .dashboard-main-content {
-            padding: 20px 16px !important;
-          }
-          .dashboard-finding-skeleton {
-            padding: 16px !important;
-          }
-        }
-      `}</style>
-      {/* Ambient blobs */}
-      <div aria-hidden style={{ position: "fixed", width: 500, height: 400, left: "4%", top: "20%", borderRadius: "50%", background: "rgba(0,150,255,0.04)", filter: "blur(80px)", animation: "heroNeuralDrift 16s ease-in-out infinite", pointerEvents: "none", zIndex: 0 }} />
-      <div aria-hidden style={{ position: "fixed", width: 400, height: 500, right: "6%", bottom: "10%", borderRadius: "50%", background: "rgba(0,100,200,0.018)", filter: "blur(100px)", animation: "heroNeuralDrift 22s ease-in-out infinite reverse", pointerEvents: "none", zIndex: 0 }} />
-      <div aria-hidden style={{ position: "fixed", top: "4rem", left: 0, right: 0, height: 1, background: "linear-gradient(90deg, transparent 0%, rgba(0,200,255,0.08) 15%, rgba(0,200,255,0.3) 40%, rgba(0,200,255,0.4) 50%, rgba(0,200,255,0.3) 60%, rgba(0,200,255,0.08) 85%, transparent 100%)", boxShadow: "0 0 8px rgba(0,200,255,0.2)", pointerEvents: "none", zIndex: 1 }} />
+    <>
+      {/* Overlay */}
+      {open && (
+        <div
+          className="fixed inset-0 bg-black/40 z-40"
+          onClick={onClose}
+        />
+      )}
 
-      {/* ── SCORE HEADER BAR ─────────────────────────────────────────────────── */}
+      {/* Drawer */}
       <div
-        className="dashboard-score-header"
-        style={{
-          background: "rgba(5,8,16,0.95)",
-          borderBottom: "1px solid rgba(0,200,255,0.08)",
-          padding: "20px 40px",
-          display: "flex",
-          alignItems: "center",
-          gap: 24,
-          position: "relative",
-          zIndex: 2,
-          flexWrap: "wrap",
-        }}
+        className={`fixed right-0 top-0 h-full w-[520px] bg-background-raised border-l border-background-border z-50 overflow-y-auto transition-transform duration-[250ms] ease-out ${
+          open ? 'translate-x-0' : 'translate-x-full'
+        }`}
       >
-        {/* Left cluster — site selector */}
-        <div className="dashboard-header-site" style={{ display: "flex", flexDirection: "column", gap: 4, minWidth: 0, flexShrink: 0 }}>
-          <div style={{ fontFamily: SM, fontSize: 9, color: "rgba(0,200,255,0.5)", letterSpacing: "0.15em", textTransform: "uppercase" }}>
-            ACTIVE DIAGNOSTIC
-          </div>
-          <div
-            style={{
-              background: "rgba(5,8,16,0.6)",
-              border: "1px solid rgba(0,200,255,0.15)",
-              borderRadius: 2,
-              padding: "5px 10px",
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-            }}
-          >
-            {domains.length > 1 ? (
-              <select
-                className="dashboard-site-select"
-                value={effectiveDomain}
-                onChange={(e) => setActiveDomain(e.target.value)}
-                style={{
-                  background: "transparent",
-                  border: "none",
-                  color: "#FFFFFF",
-                  fontFamily: SM,
-                  fontSize: 13,
-                  cursor: "pointer",
-                  outline: "none",
-                  maxWidth: 220,
-                }}
-              >
-                {domains.map((d) => (
-                  <option key={d} value={d} style={{ background: "#050810" }}>{d}</option>
-                ))}
-              </select>
-            ) : (
-              <div style={{ fontFamily: SM, fontSize: 13, color: "#FFFFFF" }}>
-                {effectiveDomain || "—"}
+        {!client ? null : (
+          <div className="p-8">
+            {/* Header */}
+            <div className="flex justify-between items-start mb-8 relative">
+              <div>
+                <div className="font-display font-extrabold text-2xl text-text-primary">{client.name}</div>
+                <div className="font-mono text-xs text-text-tertiary mt-1">{client.domain}</div>
               </div>
-            )}
-            {effectiveDomain ? (
+              <div className="flex flex-col items-center gap-1">
+                <ScoreRing score={client.score} size="lg" animated={true} />
+              </div>
               <button
-                type="button"
-                title="Delete all scans for this site"
-                disabled={deletingDomain === effectiveDomain}
-                onClick={() => void handleDeleteSite(effectiveDomain)}
-                style={{
-                  background: "transparent",
-                  border: "1px solid rgba(255,45,45,0.25)",
-                  color: "rgba(255,80,80,0.55)",
-                  fontFamily: SM,
-                  fontSize: 9,
-                  letterSpacing: "0.08em",
-                  padding: "2px 7px",
-                  borderRadius: 2,
-                  cursor: deletingDomain === effectiveDomain ? "not-allowed" : "pointer",
-                  flexShrink: 0,
-                  opacity: deletingDomain === effectiveDomain ? 0.5 : 1,
-                  transition: "border-color 150ms, color 150ms",
-                }}
-                onMouseEnter={(e) => {
-                  if (deletingDomain !== effectiveDomain) {
-                    e.currentTarget.style.borderColor = "rgba(255,45,45,0.6)";
-                    e.currentTarget.style.color = "#FF4444";
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.borderColor = "rgba(255,45,45,0.25)";
-                  e.currentTarget.style.color = "rgba(255,80,80,0.55)";
-                }}
+                onClick={onClose}
+                className="absolute top-0 right-0 text-text-tertiary hover:text-text-primary transition-colors duration-150 bg-transparent border-0 cursor-pointer text-lg leading-none"
               >
-                {deletingDomain === effectiveDomain ? "..." : "×"}
+                ✕
               </button>
-            ) : null}
-          </div>
-          <div style={{ fontFamily: SM, fontSize: 9, color: deleteErrorDomain === effectiveDomain ? "#FF4444" : "rgba(255,255,255,0.3)" }}>
-            {deleteErrorDomain === effectiveDomain
-              ? "DELETE FAILED · TRY AGAIN"
-              : `LAST SCANNED · ${activeLatest ? formatRelativeScanTime(activeLatest.created_at) : "—"}`}
-          </div>
-          <button
-            type="button"
-            onClick={() => setShowScanInput(true)}
-            style={{ alignSelf: "flex-start", background: "transparent", border: "1px solid rgba(0,200,255,0.35)", color: "#00C8FF", fontFamily: SM, fontSize: 9, fontWeight: 700, padding: "4px 10px", borderRadius: 2, cursor: "pointer", letterSpacing: "2px", textTransform: "uppercase", transition: "all 0.15s ease" }}
-            onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(0,200,255,0.04)"; e.currentTarget.style.borderColor = "#00C8FF"; e.currentTarget.style.boxShadow = "0 0 14px rgba(0,200,255,0.2)"; }}
-            onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = "rgba(0,200,255,0.35)"; e.currentTarget.style.boxShadow = "none"; }}
-          >
-            + SCAN NEW SITE
-          </button>
-        </div>
-
-        {/* Divider */}
-        <div className="dashboard-header-divider" style={{ width: 1, height: 60, background: "rgba(0,200,255,0.08)", flexShrink: 0 }} />
-
-        {/* Center cluster — score gauge */}
-        {activeLatest ? (
-          <div className="dashboard-header-gauge" style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 4, flexShrink: 0, height: 130, overflow: "visible" }}>
-            <div style={{ width: 130, height: 130, overflow: "visible", display: "flex", alignItems: "center", justifyContent: "center", transform: "scale(0.65)", transformOrigin: "center center", textAlign: "center" }}>
-              <ConversionScoreGauge
-                score={activeScore}
-                showDelta={false}
-                showLastScanned={false}
-              />
-            </div>
-          </div>
-        ) : null}
-
-        {/* Divider */}
-        <div className="dashboard-header-divider" style={{ width: 1, height: 60, background: "rgba(0,200,255,0.08)", flexShrink: 0 }} />
-
-        {/* Right cluster — stats + actions */}
-        <div className="dashboard-header-right" style={{ display: "flex", flexDirection: "column", gap: 10, flex: 1, minWidth: 0 }}>
-          <div className="dashboard-header-stats" style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-            {/* Stat pills */}
-            <div className="dashboard-stat-pill" style={{ border: "1px solid rgba(255,45,45,0.3)", background: "rgba(255,45,45,0.08)", borderRadius: 4, padding: "8px 16px", display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
-              <span className="dashboard-stat-value" style={{ fontFamily: ORB, fontWeight: 700, fontSize: 18, color: "#FF2D2D", lineHeight: 1 }}>{headerCriticalCount}</span>
-              <span className="dashboard-stat-label" style={{ fontFamily: SM, fontSize: 9, color: "#FF2D2D", letterSpacing: "0.08em", textTransform: "uppercase" }}>CRITICAL</span>
-            </div>
-            <div className="dashboard-stat-pill" style={{ border: "1px solid rgba(255,107,0,0.3)", background: "rgba(255,107,0,0.08)", borderRadius: 4, padding: "8px 16px", display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
-              <span className="dashboard-stat-value" style={{ fontFamily: ORB, fontWeight: 700, fontSize: 18, color: "#FF6B00", lineHeight: 1 }}>{headerHighCount}</span>
-              <span className="dashboard-stat-label" style={{ fontFamily: SM, fontSize: 9, color: "#FF6B00", letterSpacing: "0.08em", textTransform: "uppercase" }}>HIGH IMPACT</span>
-            </div>
-            <div className="dashboard-stat-pill" style={{ border: "1px solid rgba(0,200,255,0.3)", background: "rgba(0,200,255,0.08)", borderRadius: 4, padding: "8px 16px", display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
-              <span className="dashboard-stat-value" style={{ fontFamily: ORB, fontWeight: 700, fontSize: 18, color: "rgba(0,200,255,0.6)", lineHeight: 1 }}>{headerTotalFindings}</span>
-              <span className="dashboard-stat-label" style={{ fontFamily: SM, fontSize: 9, color: "rgba(0,200,255,0.6)", letterSpacing: "0.08em", textTransform: "uppercase" }}>MORE FINDINGS</span>
             </div>
 
-            {/* Action buttons */}
-            <div className="dashboard-header-actions" style={{ display: "flex", gap: 8, marginLeft: "auto" }}>
-              {isProPlan && effectiveDomain ? (
-                <button
-                  type="button"
-                  onClick={() => void handleRescan(effectiveDomain)}
-                  style={{ background: "transparent", border: "1px solid rgba(0,200,255,0.2)", color: "rgba(0,200,255,0.6)", fontFamily: SM, fontSize: 9, padding: "8px 16px", borderRadius: 4, cursor: "pointer", letterSpacing: "0.1em" }}
-                  onMouseEnter={(e) => { e.currentTarget.style.borderColor = "rgba(0,200,255,0.4)"; e.currentTarget.style.color = "#00C8FF"; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.borderColor = "rgba(0,200,255,0.2)"; e.currentTarget.style.color = "rgba(0,200,255,0.6)"; }}
-                >
-                  ↻ RESCAN
-                </button>
-              ) : null}
-              <a
-                href={effectiveDomain ? `/report/${encodeURIComponent(effectiveDomain)}` : "#"}
-                style={{ display: "inline-flex", alignItems: "center", background: "transparent", border: "1px solid #00C8FF", color: "#00C8FF", fontFamily: SM, fontSize: 11, padding: "8px 16px", borderRadius: 4, cursor: "pointer", letterSpacing: "0.06em", textDecoration: "none" }}
-              >
-                VIEW FULL REPORT →
-              </a>
-            </div>
-          </div>
-          <div style={{ fontFamily: SM, fontSize: 9, color: "rgba(255,255,255,0.25)" }}>
-            PAGES ANALYZED · {pagesAnalyzed ?? "—"} · CHECKS RUN · 210
-          </div>
-        </div>
-      </div>
-
-      {/* ── MAIN CONTENT ─────────────────────────────────────────────────────── */}
-      <main
-        className="dashboard-main-content"
-        style={{
-          padding: "32px 40px",
-          maxWidth: 860,
-          margin: "0 auto",
-          boxSizing: "border-box",
-          position: "relative",
-          zIndex: 2,
-        }}
-      >
-        {/* Empty state — only render when fetch is confirmed complete and returned empty */}
-        {reports !== null && reports.length === 0 ? (
-          <div
-            style={{
-              marginBottom: 32,
-              padding: "24px 28px",
-              border: "1px solid rgba(0,200,255,0.12)",
-              borderRadius: 4,
-              background: "rgba(0,200,255,0.03)",
-              boxShadow: "0 0 40px rgba(0,180,255,0.06)",
-            }}
-          >
-            <div style={{ fontFamily: SM, fontSize: 9, letterSpacing: "0.2em", color: "rgba(0,200,255,0.85)", textTransform: "uppercase", marginBottom: 10 }}>
-              ● YOUR DASHBOARD
-            </div>
-            <p style={{ fontFamily: SM, fontSize: 11, color: "rgba(240,244,255,0.55)", lineHeight: 1.6, margin: "0 0 20px 0", maxWidth: 560 }}>
-              No saved conversion intelligence reports yet. Completed scans show up here with your
-              conversion score, top exit triggers, and history. Enter a URL to run one.
-            </p>
-            <style>{`.empty-scan-input::placeholder { color: rgba(255,255,255,0.25); opacity: 1; }`}</style>
-            <form
-              className="hero-bar-focus-within"
-              onSubmit={(e) => {
-                e.preventDefault();
-                const normalized = normalizeScanUrlForGuard(emptyScanUrl);
-                if (!normalized) return;
-                if (isBlockedDomain(normalized)) {
-                  setEnterpriseBlockHighlight("empty");
-                  setEnterpriseBlockOpen(true);
-                  return;
-                }
-                const path = `/scan?url=${encodeURIComponent(normalized)}`;
-                router.push(path);
-              }}
-              style={{ maxWidth: 560 }}
-            >
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  height: 52,
-                  background: "rgba(10,13,26,0.95)",
-                  border: `1px solid ${emptyScanFieldFocused ? "rgba(0,200,255,0.4)" : "rgba(0,200,255,0.2)"}`,
-                  borderRadius: 4,
-                  padding: "0 6px 0 0",
-                  boxShadow: enterpriseBlockHighlight === "empty"
-                    ? "0 0 0 2px rgba(0,200,255,0.45)"
-                    : emptyScanFieldFocused
-                      ? "0 0 0 1px rgba(0,200,255,0.15), 0 0 20px rgba(0,200,255,0.08)"
-                      : "none",
-                  transition: "border-color 150ms ease, box-shadow 150ms ease",
-                  boxSizing: "border-box",
-                }}
-              >
-                <span
-                  style={{ fontFamily: SM, fontSize: 13, color: "#00C8FF", opacity: 0.5, paddingLeft: 16, flexShrink: 0, userSelect: "none" }}
-                  aria-hidden
-                >
-                  &gt;_
-                </span>
-                <input
-                  type="text"
-                  className="empty-scan-input"
-                  value={emptyScanUrl}
-                  onChange={(e) => setEmptyScanUrl(e.target.value)}
-                  onFocus={() => setEmptyScanFieldFocused(true)}
-                  onBlur={() => setEmptyScanFieldFocused(false)}
-                  placeholder="yourwebsite.com"
-                  style={{
-                    flex: 1,
-                    minWidth: 0,
-                    height: "100%",
-                    background: "transparent",
-                    border: "none",
-                    outline: "none",
-                    color: "#FFFFFF",
-                    fontFamily: SM,
-                    fontSize: 13,
-                    padding: "0 12px",
-                  }}
+            {/* Score history sparkline */}
+            <div className="mb-8">
+              <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mb-4">SCORE HISTORY</div>
+              <svg width="200" height="48" viewBox="0 0 200 48" className="overflow-visible">
+                <polyline
+                  points={pts}
+                  fill="none"
+                  stroke="#00C8FF"
+                  strokeWidth="1.5"
+                  strokeLinejoin="round"
+                  strokeLinecap="round"
                 />
-                <button
-                  type="submit"
-                  style={{
-                    flexShrink: 0,
-                    height: 40,
-                    margin: "6px 0 6px 0",
-                    padding: "0 18px",
-                    border: "none",
-                    borderRadius: 3,
-                    cursor: "pointer",
-                    background: "#00C8FF",
-                    color: "#050810",
-                    fontFamily: SM,
-                    fontSize: 11,
-                    fontWeight: 700,
-                    letterSpacing: "0.08em",
-                    textTransform: "uppercase" as const,
-                  }}
-                  onMouseEnter={(e) => { e.currentTarget.style.background = "#33D6FF"; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.background = "#00C8FF"; }}
-                >
-                  RUN CONVERSION INTELLIGENCE →
-                </button>
-              </div>
-            </form>
-          </div>
-        ) : null}
-
-        <div style={{ display: "flex", flexDirection: "column", gap: 48 }}>
-
-          {/* 1. INTELLIGENCE BRIEF */}
-          <div>
-            <div style={{ fontFamily: SM, fontSize: 10, color: "#00C8FF", letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: 12 }}>
-              ● INTELLIGENCE BRIEF
-            </div>
-            <div
-              style={{
-                background: "rgba(0,200,255,0.03)",
-                borderLeft: "3px solid rgba(0,200,255,0.5)",
-                padding: "20px 24px",
-                borderRadius: "0 4px 4px 0",
-              }}
-            >
-              {diagnosticVerdictText ? (
-                restrictionsActive ? (
-                  (() => {
-                    const { head, tail } = splitFirstNSentences(diagnosticVerdictText, 2);
-                    return (
-                      <>
-                        <p style={{ fontFamily: SG, fontSize: 15, color: "#E0E6FF", lineHeight: 1.75, margin: 0 }}>{head}</p>
-                        {tail ? (
-                          <div style={{ position: "relative", marginTop: 10 }}>
-                            <p style={{ fontFamily: SG, fontSize: 15, color: "#E0E6FF", lineHeight: 1.75, margin: 0, filter: "blur(4px)", opacity: 0.6, pointerEvents: "none", userSelect: "none" }}>
-                              {tail}
-                            </p>
-                            <div style={{ marginTop: 12, padding: "10px 16px", background: "rgba(8,13,24,0.9)", borderTop: "1px solid #1A2035" }}>
-                              <p style={{ margin: 0, fontFamily: SM, fontSize: 11, color: "#8899AA" }}>
-                                Full diagnostic brief requires Pro access.
-                              </p>
-                              <button
-                                type="button"
-                                onClick={() => void handleUpgrade()}
-                                style={{ ...DASH_STRIPE_CTA, marginTop: 12 }}
-                                {...dashStripeCtaHoverHandlers}
-                              >
-                                Upgrade to Pro →
-                              </button>
-                            </div>
-                          </div>
-                        ) : null}
-                      </>
-                    );
-                  })()
-                ) : (
-                  <p style={{ fontFamily: SG, fontSize: 15, color: "#E0E6FF", lineHeight: 1.75, margin: 0 }}>
-                    {diagnosticVerdictText}
-                  </p>
-                )
-              ) : (
-                <p style={{ fontFamily: SG, fontSize: 15, color: "rgba(255,255,255,0.3)", margin: 0, lineHeight: 1.75 }}>
-                  Run your first scan — we&apos;ll tell you exactly what your site is doing to visitors.
-                </p>
-              )}
-            </div>
-          </div>
-
-          {/* 2. PRIORITY FINDINGS */}
-          <div>
-            <div style={{ fontFamily: SM, fontSize: 10, color: "#00C8FF", letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: 4 }}>
-              ● PRIORITY FINDINGS
-            </div>
-            <p style={{ fontFamily: SM, fontSize: 9, color: "#8899AA", margin: "0 0 16px 0", letterSpacing: "0.06em" }}>
-              Ranked by impact — fix these first
-            </p>
-
-            {reportsReady ? (
-              activeLatest && sortedPriorityLeaks.length > 0 ? (
-                restrictionsActive ? (
-                  <>
-                    {dashboardFindingRows.slice(0, 2).map((row, i) => (
-                      <ReportFindingPreview
-                        key={row.id}
-                        finding={row}
-                        index={i + 1}
-                        issueReportId={activeLatest.id}
-                      />
-                    ))}
-                    {dashboardFindingRows.length > 2 ? (
-                      <div
-                        style={{
-                          background: "#0A0F1E",
-                          border: "1px solid #1A2035",
-                          borderLeft: "3px solid #00C8FF",
-                          padding: "24px 28px",
-                          borderRadius: 4,
-                          marginTop: 12,
-                        }}
-                      >
-                        <div style={{ fontFamily: SM, fontSize: 10, color: "#00C8FF", letterSpacing: "0.15em", textTransform: "uppercase" }}>
-                          DIAGNOSTIC ACCESS REQUIRED
-                        </div>
-                        <h3 style={{ margin: "8px 0 0 0", fontFamily: SG, fontWeight: 700, fontSize: 22, color: "#FFFFFF", lineHeight: 1.2 }}>
-                          {(totalFindingsDetected ?? activeMoneyLeaksTotal)} findings are suppressing your conversions.
-                        </h3>
-                        <p style={{ margin: "8px 0 0 0", fontFamily: SM, fontSize: 13, color: "#8899AA", lineHeight: 1.7 }}>
-                          Upgrade to Pro to access all diagnostic findings, revenue impact analysis, exact resolutions, and AI advisor access — ranked by revenue impact.
-                        </p>
-                        <button
-                          type="button"
-                          onClick={() => router.push("/pricing")}
-                          style={{ display: "block", width: "100%", marginTop: 16, height: 44, background: "transparent", border: "1px solid #00C8FF", color: "#00C8FF", fontFamily: SM, fontSize: 13, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", cursor: "pointer", borderRadius: 2 }}
-                        >
-                          UPGRADE TO PRO DIAGNOSTIC
-                        </button>
-                        <p style={{ margin: "8px 0 0 0", textAlign: "center", fontFamily: SM, fontSize: 11, color: "#8899AA" }}>
-                          Free plan includes 2 diagnostic findings per scan.
-                        </p>
-                      </div>
-                    ) : null}
-                  </>
-                ) : (
-                  <>
-                    {dashboardFindingRows.slice(0, 3).map((row, i) => (
-                      <ReportFindingPreview
-                        key={row.id}
-                        finding={row}
-                        index={i + 1}
-                        issueReportId={activeLatest.id}
-                      />
-                    ))}
-                    {activeMoneyLeaksTotal > 0 ? (
-                      <div style={{ marginTop: 12 }}>
-                        <a
-                          href={effectiveDomain ? `/report/${encodeURIComponent(effectiveDomain)}` : "#"}
-                          style={{ fontFamily: SM, fontSize: 11, color: "#00C8FF", textDecoration: "none" }}
-                        >
-                          → View all {totalFindingsDetected ?? activeMoneyLeaksTotal} findings in full report
-                        </a>
-                      </div>
-                    ) : null}
-                  </>
-                )
-              ) : activeLatest && sortedPriorityLeaks.length === 0 ? (
-                <p style={{ fontFamily: SG, fontSize: 14, color: "rgba(255,255,255,0.3)", margin: 0, lineHeight: 1.5 }}>
-                  Your top exit triggers appear after your first scan.
-                </p>
-              ) : !activeLatest && (reports ?? []).length === 0 ? (
-                <p style={{ fontFamily: SG, fontSize: 14, color: "rgba(255,255,255,0.3)", margin: 0 }}>
-                  Priority findings from your scans will list here.
-                </p>
-              ) : null
-            ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                {[0, 1, 2].map((i) => (
-                  <div
-                    className="dashboard-finding-skeleton"
-                    key={i}
-                    style={{
-                      background: "#0A0F1E",
-                      border: "1px solid #1A2035",
-                      borderLeft: "3px solid rgba(0,200,255,0.2)",
-                      borderRadius: 4,
-                      padding: "20px 24px",
-                    }}
-                  >
-                    <div style={{ width: "100%", maxWidth: 520, display: "flex", flexDirection: "column", gap: 12 }}>
-                      <div className="dashboard-reports-skeleton-bar" style={{ width: "72%", animationDelay: `${i * 0.15}s` }} />
-                      <div className="dashboard-reports-skeleton-bar" style={{ width: "92%", animationDelay: `${i * 0.15 + 0.05}s` }} />
-                      <div className="dashboard-reports-skeleton-bar" style={{ width: "64%", animationDelay: `${i * 0.15 + 0.1}s` }} />
-                    </div>
-                  </div>
+                {sparkCoords.map((p, i) => (
+                  <circle key={i} cx={p.x} cy={p.y} r="3" fill="#00C8FF" />
+                ))}
+              </svg>
+              <div className="flex justify-between mt-2" style={{ width: 200 }}>
+                {SPARK_DATES.map(d => (
+                  <span key={d} className="font-mono text-[9px] text-text-tertiary">{d}</span>
                 ))}
               </div>
-            )}
-          </div>
-
-          {/* 3. CONVERSION HEALTH */}
-          {activeDimensionScores && activeDimensionScores.length > 0 ? (
-            <div>
-              <div style={{ fontFamily: SM, fontSize: 10, color: "#00C8FF", letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: 12 }}>
-                ● CONVERSION HEALTH
-              </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                {activeDimensionScores.map((dim) => {
-                  const dColor = scoreColor(dim.score);
-                  return (
-                    <div key={dim.id}>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 4 }}>
-                        <span style={{ fontFamily: SG, color: "#E0E6FF", fontSize: 12 }}>{dim.label}</span>
-                        <span style={{ fontFamily: SM, color: dColor, fontSize: 12, flexShrink: 0, marginLeft: 8 }}>{dim.score}</span>
-                      </div>
-                      <div style={{ height: 3, background: "rgba(255,255,255,0.08)", borderRadius: 2, marginBottom: 4, overflow: "hidden" }}>
-                        <div style={{ width: `${dim.score}%`, height: "100%", background: dColor, borderRadius: 2 }} />
-                      </div>
-                      {dim.description ? (
-                        <div style={{ fontFamily: SM, color: "#8899AA", fontSize: 9, fontStyle: "italic" }}>{dim.description}</div>
-                      ) : null}
-                    </div>
-                  );
-                })}
-              </div>
             </div>
-          ) : null}
 
-          {/* 4. AI ADVISOR */}
-          <AdvisorChat
-            reports={reportsForEffectiveDomain}
-            userId={authUserId}
-            resetSignal={advisorResetSignal}
-            activeDomain={activeLatest?.domain ?? effectiveDomain}
-            planLocked={restrictionsActive}
-            onUpgrade={() => void handleUpgrade()}
-          />
-
-          {/* 5. SCORE HISTORY */}
-          <div>
-            <div style={{ fontFamily: SM, fontSize: 10, color: "#00C8FF", letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: 12 }}>
-              ● SCORE HISTORY
-            </div>
-            <div style={{ position: "relative", border: "1px solid rgba(0,200,255,0.08)", borderRadius: 4, background: "rgba(240,244,255,0.02)", padding: "16px 18px 12px" }}>
-              <ScoreHistoryChart
-                activeDomainReports={activeDomainReports}
-                currentScore={activeScore}
-                axisCaption={`Fix the top 3 above to reach ${Math.min(100, activeScore + 15)}+`}
-              />
-              {activeDomainReports.length > 0 && (
-                <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 3, borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: 8 }}>
-                  {[...activeDomainReports]
-                    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-                    .slice(0, 5)
-                    .map((r) => {
-                      const pages = Array.isArray(r.analysis?.pagesAnalyzed) ? r.analysis.pagesAnalyzed : [];
-                      const pageCount = pages.length > 0 ? pages.length : 1;
-                      return (
-                        <div key={r.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                          <span style={{ fontFamily: SM, fontSize: 9, color: "rgba(255,255,255,0.28)" }}>
-                            {new Date(r.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
-                          </span>
-                          <div style={{ display: "flex", gap: 4 }}>
-                            {[0, 1, 2].map((i) => (
-                              <span key={i} style={{ fontSize: 8, color: pageCount > i ? "#00C8FF" : "rgba(255,255,255,0.12)", lineHeight: 1 }}>
-                                {pageCount > i ? "●" : "○"}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      );
-                    })}
+            {/* Scan history */}
+            <div className="mb-8">
+              <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mb-3">SCAN HISTORY</div>
+              {SCAN_HISTORY.map((s, i) => (
+                <div key={i} className="flex items-center gap-4 py-3 border-b border-background-border last:border-0">
+                  <span className="font-mono text-xs text-text-tertiary w-24 flex-shrink-0">{s.date}</span>
+                  <ScoreRing score={s.score} size="sm" animated={false} />
+                  <span className="font-mono text-xs text-text-secondary">{s.findings} findings</span>
+                  <Link href="/report" className="font-body text-xs text-cyan-DEFAULT ml-auto no-underline hover:opacity-80">
+                    View →
+                  </Link>
                 </div>
-              )}
+              ))}
             </div>
-            {restrictionsActive ? (
-              <p style={{ margin: "10px 0 0 0", fontFamily: SM, fontSize: 11, color: "#8899AA" }}>
-                Rescan to track score improvement —{" "}
-                <a href="/pricing" style={{ color: "#00C8FF", textDecoration: "none", fontFamily: SM, fontSize: 11 }}>
-                  requires Pro diagnostic access →
-                </a>
-              </p>
-            ) : null}
-          </div>
 
-        </div>
-      </main>
-
-      {/* ── NEW USER OVERLAY ─────────────────────────────────────────────────── */}
-      {showNewUserOverlay && (
-        <div style={{ position: "fixed", inset: 0, zIndex: 50000, background: "rgba(5,8,16,0.96)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" }}>
-          <style>{`.first-scan-overlay-input::placeholder { color: #8899AA; opacity: 1; }`}</style>
-          <div aria-hidden style={{ position: "absolute", inset: 0, pointerEvents: "none", background: "radial-gradient(ellipse 60% 50% at 50% 50%, rgba(0,200,255,0.04) 0%, transparent 70%)" }} />
-          <span aria-hidden style={{ position: "fixed", top: 0, left: 0, width: 20, height: 20, borderTop: "2px solid rgba(0,200,255,0.2)", borderLeft: "2px solid rgba(0,200,255,0.2)", pointerEvents: "none", zIndex: 50001 }} />
-          <span aria-hidden style={{ position: "fixed", top: 0, right: 0, width: 20, height: 20, borderTop: "2px solid rgba(0,200,255,0.2)", borderRight: "2px solid rgba(0,200,255,0.2)", pointerEvents: "none", zIndex: 50001 }} />
-          <span aria-hidden style={{ position: "fixed", bottom: 0, left: 0, width: 20, height: 20, borderBottom: "2px solid rgba(0,200,255,0.2)", borderLeft: "2px solid rgba(0,200,255,0.2)", pointerEvents: "none", zIndex: 50001 }} />
-          <span aria-hidden style={{ position: "fixed", bottom: 0, right: 0, width: 20, height: 20, borderBottom: "2px solid rgba(0,200,255,0.2)", borderRight: "2px solid rgba(0,200,255,0.2)", pointerEvents: "none", zIndex: 50001 }} />
-          <div style={{ position: "relative", zIndex: 50002, minHeight: "100%", display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
-            <div style={{ width: "100%", maxWidth: 520, display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center" }}>
-              <span style={{ fontFamily: SM, fontSize: 11, color: "#00C8FF", letterSpacing: "0.15em", textTransform: "uppercase" as const, marginBottom: 20 }}>
-                CONVERSION INTELLIGENCE
-              </span>
-              <h2 style={{ fontFamily: SG, fontWeight: 800, fontSize: 48, color: "#FFFFFF", margin: 0, lineHeight: 1.05, letterSpacing: "-1.5px", marginBottom: 16 }}>
-                Run your first diagnostic.
-              </h2>
-              <p style={{ fontFamily: "Inter, ui-sans-serif, system-ui, sans-serif", fontSize: 16, color: "#8899AA", lineHeight: 1.7, maxWidth: 440, margin: "0 0 36px 0" }}>
-                Enter your website URL. WebDoc performs surgical diagnostic analysis and identifies every flaw suppressing your conversions.
-              </p>
-              <form onSubmit={(e) => void handleNewUserScanSubmit(e)} style={{ width: "100%", maxWidth: 520, margin: 0 }}>
-                <div
-                  ref={firstScanFieldRef}
-                  onFocus={() => setFirstScanFieldFocused(true)}
-                  onBlur={(e) => {
-                    const next = e.relatedTarget as Node | null;
-                    if (!firstScanFieldRef.current || !next || !firstScanFieldRef.current.contains(next)) {
-                      setFirstScanFieldFocused(false);
-                    }
-                  }}
-                  style={{ display: "flex", alignItems: "center", height: 56, boxSizing: "border-box", background: "rgba(10,13,26,0.95)", border: `1px solid ${firstScanFieldFocused ? "rgba(0,200,255,0.4)" : "#1A2035"}`, borderRadius: 6, padding: "0 6px 0 0", boxShadow: firstScanFieldFocused ? "0 0 0 1px rgba(0,200,255,0.15)" : "none", transition: "border-color 150ms ease, box-shadow 150ms ease" }}
-                >
-                  <span style={{ fontFamily: SM, fontSize: 13, color: "#00C8FF", opacity: 0.5, paddingLeft: 18, flexShrink: 0, userSelect: "none" }} aria-hidden>&gt;_</span>
-                  <input
-                    autoFocus
-                    className="first-scan-overlay-input"
-                    type="text"
-                    value={newUserScanUrl}
-                    onChange={(e) => setNewUserScanUrl(e.target.value)}
-                    placeholder="yourwebsite.com"
-                    style={{ flex: 1, minWidth: 0, height: "100%", background: "transparent", border: "none", outline: "none", color: "#FFFFFF", fontFamily: SM, fontSize: 14, padding: "0 14px" }}
-                  />
+            {/* White-label report */}
+            <div className="bg-background-subtle border border-background-border p-5">
+              <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mb-3">WHITE-LABEL REPORT</div>
+              {linkGenerated ? (
+                <div>
+                  <div className="flex items-center gap-3">
+                    <div className="font-mono text-xs text-text-secondary bg-background-base border border-background-border px-4 py-3 flex-1 min-w-0 truncate">
+                      webdocai.com/r/{client.domain.split('.')[0].slice(0, 4)}x9
+                    </div>
+                    <button className="border border-background-border font-body text-xs text-text-secondary px-3 py-3 bg-transparent cursor-pointer hover:text-text-primary transition-colors duration-150 flex-shrink-0">
+                      Copy
+                    </button>
+                  </div>
                   <button
-                    type="submit"
-                    disabled={newUserSubmitting}
-                    onMouseEnter={() => setFirstScanCtaHover(true)}
-                    onMouseLeave={() => setFirstScanCtaHover(false)}
-                    style={{ flexShrink: 0, height: 44, margin: "6px 6px 6px 0", padding: "0 20px", border: "none", borderRadius: 4, cursor: newUserSubmitting ? "not-allowed" : "pointer", background: firstScanCtaHover && !newUserSubmitting ? "#33D6FF" : "#00C8FF", color: "#050810", fontFamily: SM, fontSize: 13, letterSpacing: "0.06em", textTransform: "uppercase" as const, opacity: newUserSubmitting ? 0.85 : 1, transition: "background 150ms ease, opacity 150ms ease" }}
+                    onClick={() => setLinkGenerated(false)}
+                    className="font-body text-xs text-text-tertiary mt-3 bg-transparent border-0 cursor-pointer hover:text-text-primary transition-colors duration-150"
                   >
-                    {newUserSubmitting ? "INITIATING..." : "RUN DIAGNOSTIC →"}
+                    Regenerate
                   </button>
                 </div>
-                <p style={{ margin: "14px 0 0 0", fontFamily: SM, fontSize: 11, color: "#8899AA", textAlign: "center" }}>
-                  Guest diagnostic available · No account required · Under 2 minutes
-                </p>
-              </form>
+              ) : (
+                <button
+                  onClick={() => setLinkGenerated(true)}
+                  className="w-full bg-cyan-DEFAULT text-text-inverse font-body font-semibold text-sm py-2.5 border-0 cursor-pointer hover:opacity-90 transition-opacity duration-150"
+                >
+                  Generate link →
+                </button>
+              )}
             </div>
           </div>
+        )}
+      </div>
+    </>
+  )
+}
+
+// ── Reports Tab ───────────────────────────────────────────────────────────────
+
+function ReportsTab() {
+  return (
+    <div className="px-8 py-8">
+      <div className="bg-background-raised border border-background-border">
+        <div className="grid grid-cols-[2fr_2fr_1fr_80px_120px] px-6 py-3 border-b border-background-border">
+          {['CLIENT', 'REPORT URL', 'GENERATED', 'VIEWS', 'ACTIONS'].map(h => (
+            <div key={h} className="font-mono text-xs text-text-tertiary uppercase tracking-widest">{h}</div>
+          ))}
         </div>
-      )}
-
-      <EnterpriseBlockModal
-        open={enterpriseBlockOpen}
-        onClose={() => { setEnterpriseBlockOpen(false); setEnterpriseBlockHighlight(null); }}
-        onPrimary={() => { setEnterpriseBlockOpen(false); setEnterpriseBlockHighlight(null); setEmptyScanUrl(""); setNewScanUrl(""); }}
-        onSecondary={() => { setEnterpriseBlockOpen(false); setEnterpriseBlockHighlight(null); window.open("mailto:devon@webdocai.com", "_blank", "noopener,noreferrer"); }}
-      />
-
-      {/* ── NEW SITE SCAN MODAL ───────────────────────────────────────────────── */}
-      {showScanInput && (
-        <div
-          style={{ position: "fixed", inset: 0, background: "rgba(5,8,16,0.85)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000 }}
-          onClick={(e) => { if (e.target === e.currentTarget) setShowScanInput(false); }}
-        >
+        {REPORT_ROWS.map((row, i) => (
           <div
-            style={{ background: "#050810", border: "1px solid rgba(0,200,255,0.2)", padding: 32, width: "100%", maxWidth: 520, display: "flex", flexDirection: "column", gap: 16 }}
-            onClick={(e) => e.stopPropagation()}
+            key={i}
+            className="grid grid-cols-[2fr_2fr_1fr_80px_120px] items-center px-6 py-4 border-b border-background-border last:border-0 hover:bg-background-interactive transition-colors duration-150"
           >
-            <div style={{ fontFamily: SM, fontSize: 10, color: "rgba(0,200,255,0.6)", letterSpacing: "0.25em" }}>● NEW CONVERSION INTELLIGENCE REPORT</div>
-            <div style={{ fontFamily: SM, fontSize: 13, color: "#F0F4FF" }}>Enter the website URL to diagnose</div>
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                if (!newScanUrl.trim()) return;
-                const url = newScanUrl.trim().startsWith("http") ? newScanUrl.trim() : `https://${newScanUrl.trim()}`;
-                if (isBlockedDomain(url)) {
-                  setEnterpriseBlockHighlight("modal");
-                  setEnterpriseBlockOpen(true);
-                  return;
-                }
-                setShowScanInput(false);
-                setNewScanUrl("");
-                const path = `/scan?url=${encodeURIComponent(url)}`;
-                router.push(path);
-              }}
-              style={{ display: "flex", gap: 8 }}
-            >
-              <input
-                autoFocus
-                value={newScanUrl}
-                onChange={(e) => setNewScanUrl(e.target.value)}
-                onBlur={() => {
-                  if (!newScanUrl.trim()) return;
-                  const url = newScanUrl.trim().startsWith("http") ? newScanUrl.trim() : `https://${newScanUrl.trim()}`;
-                  try { new URL(url); } catch { return; }
-                  if (isBlockedDomain(url)) { setEnterpriseBlockHighlight("modal"); setEnterpriseBlockOpen(true); }
-                }}
-                placeholder="https://yourwebsite.com"
-                style={{ flex: 1, background: "rgba(0,200,255,0.04)", border: "1px solid rgba(0,200,255,0.2)", color: "#F0F4FF", fontFamily: SM, fontSize: 12, padding: "10px 14px", outline: "none", boxShadow: enterpriseBlockHighlight === "modal" ? "0 0 0 2px rgba(0,200,255,0.45)" : undefined }}
-              />
-              <button
-                type="submit"
-                style={{ background: "transparent", color: "#00C8FF", border: "1px solid #00C8FF", fontFamily: SM, fontSize: 10, fontWeight: 700, letterSpacing: "0.15em", padding: "10px 20px", cursor: "pointer", textTransform: "uppercase", whiteSpace: "nowrap" }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(0,200,255,0.1)"; }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
-              >
-                RUN CONVERSION INTELLIGENCE →
+            <div className="font-mono text-xs text-text-secondary">{row.client}</div>
+            <div className="font-mono text-xs text-text-tertiary truncate pr-4">{row.url}</div>
+            <div className="font-mono text-xs text-text-tertiary">{row.generated}</div>
+            <div className="font-mono text-xs text-text-secondary">{row.views}</div>
+            <div className="flex gap-3">
+              <button className="font-body text-xs text-cyan-DEFAULT bg-transparent border-0 cursor-pointer hover:opacity-80 transition-opacity duration-150">
+                Copy
               </button>
-            </form>
-            <div
-              role="button"
-              tabIndex={0}
-              onClick={() => setShowScanInput(false)}
-              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") setShowScanInput(false); }}
-              style={{ fontFamily: SM, fontSize: 9, color: "rgba(240,244,255,0.3)", cursor: "pointer", letterSpacing: "0.1em", textAlign: "center" }}
-            >
-              ESC TO CANCEL
+              <button className="font-body text-xs text-text-tertiary bg-transparent border-0 cursor-pointer hover:text-text-secondary transition-colors duration-150">
+                Regenerate
+              </button>
             </div>
           </div>
-        </div>
-      )}
-
-      {/* Corner brackets */}
-      <div aria-hidden style={{ position: "fixed", top: "4rem", left: 0, width: 24, height: 24, borderTop: "1px solid rgba(0,200,255,0.2)", borderLeft: "1px solid rgba(0,200,255,0.2)", pointerEvents: "none", zIndex: 100 }} />
-      <div aria-hidden style={{ position: "fixed", top: "4rem", right: 0, width: 24, height: 24, borderTop: "1px solid rgba(0,200,255,0.2)", borderRight: "1px solid rgba(0,200,255,0.2)", pointerEvents: "none", zIndex: 100 }} />
-      <div aria-hidden style={{ position: "fixed", bottom: 0, left: 0, width: 24, height: 24, borderBottom: "1px solid rgba(0,200,255,0.2)", borderLeft: "1px solid rgba(0,200,255,0.2)", pointerEvents: "none", zIndex: 100 }} />
-      <div aria-hidden style={{ position: "fixed", bottom: 0, right: 0, width: 24, height: 24, borderBottom: "1px solid rgba(0,200,255,0.2)", borderRight: "1px solid rgba(0,200,255,0.2)", pointerEvents: "none", zIndex: 100 }} />
+        ))}
+      </div>
     </div>
-  );
+  )
+}
+
+// ── Scheduled Tab ─────────────────────────────────────────────────────────────
+
+function ScheduledTab() {
+  const [enabled, setEnabled] = useState<Record<string, boolean>>(
+    Object.fromEntries(CLIENTS.map(c => [c.domain, c.frequency !== 'Off']))
+  )
+
+  return (
+    <div className="px-8 py-8">
+      <div className="bg-background-raised border border-background-border">
+        <div className="grid grid-cols-[2fr_1fr_1.5fr_1fr_80px] px-6 py-3 border-b border-background-border">
+          {['CLIENT DOMAIN', 'FREQUENCY', 'NEXT SCAN', 'LAST SCORE', 'ON'].map(h => (
+            <div key={h} className="font-mono text-xs text-text-tertiary uppercase tracking-widest">{h}</div>
+          ))}
+        </div>
+        {CLIENTS.map((client, i) => (
+          <div
+            key={i}
+            className="grid grid-cols-[2fr_1fr_1.5fr_1fr_80px] items-center px-6 py-4 border-b border-background-border last:border-0"
+          >
+            <div className="font-mono text-xs text-text-secondary">{client.domain}</div>
+            <div className="font-mono text-xs text-text-tertiary">{client.frequency}</div>
+            <div className={`font-mono text-xs ${client.frequency === 'Off' ? 'text-text-tertiary' : 'text-text-secondary'}`}>
+              {client.nextScan}
+            </div>
+            <div className="flex items-center">
+              <ScoreRing score={client.score} size="sm" animated={false} />
+            </div>
+            <Toggle
+              checked={!!enabled[client.domain]}
+              onChange={v => setEnabled(prev => ({ ...prev, [client.domain]: v }))}
+            />
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ── Settings Tab ──────────────────────────────────────────────────────────────
+
+function SettingsTab() {
+  const [agencyName, setAgencyName] = useState('My Agency')
+  const [email, setEmail]           = useState('hello@myagency.com')
+  const [whiteLabelOn, setWhiteLabelOn] = useState(true)
+
+  const inputCls = 'w-full bg-background-subtle border border-background-border font-body text-sm text-text-primary px-4 py-2.5 outline-none placeholder:text-text-tertiary'
+
+  return (
+    <div className="px-8 py-8">
+
+      {/* Agency details */}
+      <div className="bg-background-raised border border-background-border p-6 mb-px">
+        <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mb-4">AGENCY DETAILS</div>
+        <div className="flex flex-col gap-3 max-w-md">
+          <input
+            type="text"
+            placeholder="Agency name"
+            value={agencyName}
+            onChange={e => setAgencyName(e.target.value)}
+            className={inputCls}
+          />
+          <input
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={e => setEmail(e.target.value)}
+            className={inputCls}
+          />
+          <button className="bg-cyan-DEFAULT text-text-inverse font-body font-semibold text-sm px-5 py-2.5 border-0 cursor-pointer hover:opacity-90 transition-opacity duration-150 self-start mt-2">
+            Save
+          </button>
+        </div>
+      </div>
+
+      {/* White-label */}
+      <div className="bg-background-raised border border-background-border p-6 mb-px">
+        <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mb-4">WHITE-LABEL</div>
+        <label className="flex items-center gap-3 cursor-pointer mb-6">
+          <input
+            type="checkbox"
+            checked={whiteLabelOn}
+            onChange={e => setWhiteLabelOn(e.target.checked)}
+            className="w-4 h-4"
+          />
+          <span className="font-body text-sm text-text-secondary">
+            Remove webdoc.ai branding from reports
+          </span>
+        </label>
+        <div className="border-2 border-dashed border-background-border p-8 text-center cursor-pointer hover:border-text-tertiary transition-colors duration-150">
+          <p className="font-body text-sm text-text-tertiary">
+            Drop logo here or click to upload. PNG or SVG, min 200px wide.
+          </p>
+        </div>
+      </div>
+
+      {/* Billing */}
+      <div className="bg-background-raised border border-background-border p-6 mb-px">
+        <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mb-4">BILLING</div>
+        <div className="flex flex-col gap-2 mb-6">
+          <div className="flex gap-8">
+            <span className="font-mono text-xs text-text-tertiary">Current plan</span>
+            <span className="font-mono text-xs text-text-secondary">Agency — $99/month</span>
+          </div>
+          <div className="flex gap-8">
+            <span className="font-mono text-xs text-text-tertiary">Next billing</span>
+            <span className="font-mono text-xs text-text-secondary">Jul 1, 2026</span>
+          </div>
+          <div className="flex gap-8">
+            <span className="font-mono text-xs text-text-tertiary">Scans</span>
+            <span className="font-mono text-xs text-text-secondary">34 of 50 used</span>
+          </div>
+        </div>
+        <div className="flex gap-6 items-center">
+          <Link href="/billing" className="font-body text-sm text-cyan-DEFAULT no-underline hover:opacity-80 transition-opacity duration-150">
+            Manage billing →
+          </Link>
+          <button className="font-body text-xs text-severity-critical bg-transparent border-0 cursor-pointer hover:underline">
+            Cancel plan
+          </button>
+        </div>
+      </div>
+
+    </div>
+  )
+}
+
+// ── Sidebar nav items ─────────────────────────────────────────────────────────
+
+const DASH_NAV: Array<{ id: DashTabId; label: string; icon: React.ReactNode }> = [
+  { id: 'clients',   label: 'Clients',   icon: <IconClients />   },
+  { id: 'reports',   label: 'Reports',   icon: <IconReports />   },
+  { id: 'scheduled', label: 'Scheduled', icon: <IconScheduled /> },
+  { id: 'settings',  label: 'Settings',  icon: <IconSettings />  },
+]
+
+// ── Main export ───────────────────────────────────────────────────────────────
+
+export default function DashboardPage() {
+  const [activeTab, setActiveTab]   = useState<DashTabId>('clients')
+  const [selectedClient, setSelectedClient] = useState<Client | null>(null)
+  const [drawerOpen, setDrawerOpen] = useState(false)
+
+  function openDrawer(client: Client) {
+    setSelectedClient(client)
+    setDrawerOpen(true)
+  }
+
+  function closeDrawer() {
+    setDrawerOpen(false)
+  }
+
+  return (
+    <div className="flex h-screen overflow-hidden bg-background-base">
+
+      {/* ── Sidebar ──────────────────────────────────────────────────────── */}
+      <aside className="w-[240px] flex-shrink-0 bg-background-raised border-r border-background-border flex flex-col h-full">
+
+        <div className="px-6 py-5 border-b border-background-border">
+          <Link href="/" className="font-display font-extrabold text-sm text-text-primary no-underline">
+            webdoc<span className="text-cyan-DEFAULT">.ai</span>
+          </Link>
+        </div>
+
+        <nav className="flex-1 py-4">
+          {DASH_NAV.map(item => (
+            <button
+              key={item.id}
+              onClick={() => setActiveTab(item.id)}
+              className={`w-full flex items-center gap-3 px-6 py-2.5 font-body text-sm cursor-pointer transition-colors duration-150 bg-transparent text-left border-0 border-l-2 ${
+                activeTab === item.id
+                  ? 'bg-background-interactive text-text-primary border-cyan-DEFAULT'
+                  : 'text-text-secondary hover:text-text-primary hover:bg-background-interactive border-transparent'
+              }`}
+            >
+              {item.icon}
+              {item.label}
+            </button>
+          ))}
+        </nav>
+
+        {/* Plan block */}
+        <div className="px-6 py-5 border-t border-background-border">
+          <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mb-2">AGENCY PLAN</div>
+          <div className="font-display font-extrabold text-2xl text-text-primary">$99<span className="font-body text-sm font-normal text-text-tertiary">/mo</span></div>
+          <div className="font-mono text-xs text-text-tertiary mt-1">50 scans · 34 used</div>
+          <div className="relative w-full h-px bg-background-border mt-3">
+            <div className="absolute top-0 left-0 h-full bg-cyan-DEFAULT" style={{ width: '68%' }} />
+          </div>
+        </div>
+
+      </aside>
+
+      {/* ── Right Panel ──────────────────────────────────────────────────── */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+
+        {/* Top bar */}
+        <div className="flex-shrink-0 bg-background-base border-b border-background-border px-8 py-4 flex justify-between items-center z-10">
+          <span className="font-display font-extrabold text-lg text-text-primary">
+            {TAB_TITLES[activeTab]}
+          </span>
+          <button className="bg-cyan-DEFAULT text-text-inverse font-body font-semibold text-xs px-4 py-2 border-0 cursor-pointer hover:opacity-90 transition-opacity duration-150">
+            Add client →
+          </button>
+        </div>
+
+        {/* Tab content */}
+        <div className="flex-1 overflow-y-auto bg-background-base">
+          {activeTab === 'clients'   && <ClientsTab onSelectClient={openDrawer} />}
+          {activeTab === 'reports'   && <ReportsTab />}
+          {activeTab === 'scheduled' && <ScheduledTab />}
+          {activeTab === 'settings'  && <SettingsTab />}
+        </div>
+
+      </div>
+
+      {/* ── Client Drawer ────────────────────────────────────────────────── */}
+      <ClientDrawer client={selectedClient} open={drawerOpen} onClose={closeDrawer} />
+
+    </div>
+  )
 }

@@ -826,159 +826,237 @@ function PlanBullet() {
 
 function PricingSection() {
   return (
-    <section className="border-t border-background-border py-24 max-w-7xl mx-auto px-8">
-      <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mb-3">PRICING</div>
-      <h2 className="font-display font-bold text-4xl text-text-primary tracking-tight mb-4">
-        Start free. Scale when ready.
-      </h2>
-      <p className="font-body text-sm text-text-tertiary mb-16">
-        No contracts. Cancel anytime. API access is separate — pay per scan, no monthly fee.
-      </p>
+    <section className="border-t border-background-border py-24">
+      <div className="max-w-7xl mx-auto px-8">
 
-      {/* Plan cards */}
-      <div className="grid grid-cols-4 gap-px bg-background-border">
+        {/* ── Dashboard Sub-Section ── */}
+        <div id="dashboard-pricing">
+          <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mb-3">FOR TEAMS &amp; AGENCIES</div>
+          <h2 className="font-display font-bold text-4xl text-text-primary tracking-tight mb-4">
+            Start free. Scale when ready.
+          </h2>
+          <p className="font-body text-sm text-text-tertiary mb-16">No contracts. Cancel anytime.</p>
 
-        {/* FREE */}
-        <div className="bg-background-raised p-8">
-          <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mb-4">FREE</div>
-          <div className="font-display font-bold text-5xl text-text-primary mb-1">$0</div>
-          <div className="font-body text-sm text-text-tertiary mb-8">no account required</div>
-          <ul className="list-none p-0 m-0">
-            {['1 free scan', 'Full conversion score', 'Top 3 findings', 'Benchmark position'].map(f => (
-              <li key={f} className="flex items-start mb-2">
-                <PlanBullet />
-                <span className="font-body text-xs text-text-secondary">{f}</span>
-              </li>
-            ))}
-          </ul>
-          <Link
-            href="/playground"
-            className="block text-center w-full border border-background-border text-text-secondary font-mono text-xs tracking-widest py-3 mt-8 no-underline hover:border-text-tertiary transition-colors"
-          >
-            TRY FREE →
-          </Link>
-        </div>
+          <div className="grid grid-cols-4 gap-px bg-background-border mb-px">
 
-        {/* STARTER */}
-        <div className="bg-background-raised p-8">
-          <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mb-4">STARTER</div>
-          <div className="font-display font-bold text-5xl text-text-primary mb-1">$49</div>
-          <div className="font-body text-sm text-text-tertiary mb-8">/ month</div>
-          <ul className="list-none p-0 m-0">
-            {['20 scans / month', 'Auto competitor analysis', 'Score trending over time', 'Full findings — all issues ranked', 'Single user'].map(f => (
-              <li key={f} className="flex items-start mb-2">
-                <PlanBullet />
-                <span className="font-body text-xs text-text-secondary">{f}</span>
-              </li>
-            ))}
-          </ul>
-          <Link
-            href="/signup"
-            className="block text-center w-full border border-background-border text-text-secondary font-mono text-xs tracking-widest py-3 mt-8 no-underline hover:border-text-tertiary transition-colors"
-          >
-            START TRIAL →
-          </Link>
-        </div>
+            {/* FREE */}
+            <div className="bg-background-raised p-8">
+              <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mb-4">FREE</div>
+              <div className="font-display font-bold text-5xl text-text-primary mb-1">$0</div>
+              <div className="font-body text-sm text-text-tertiary mb-8">no account required</div>
+              <ul className="list-none p-0 m-0">
+                {['1 scan included', 'Full conversion score', 'Top 3 findings', 'Benchmark position'].map(f => (
+                  <li key={f} className="flex items-start mb-2">
+                    <PlanBullet />
+                    <span className="font-body text-xs text-text-secondary">{f}</span>
+                  </li>
+                ))}
+              </ul>
+              <Link
+                href="/playground"
+                className="block text-center w-full border border-background-border text-text-secondary font-mono text-xs tracking-widest py-3 mt-8 no-underline hover:border-text-tertiary transition-colors"
+              >
+                TRY FREE →
+              </Link>
+            </div>
 
-        {/* AGENCY */}
-        <div className="bg-background-raised p-8 relative">
-          <div className="absolute top-0 right-0 bg-cyan-DEFAULT text-text-inverse font-mono text-xs px-3 py-1">
-            POPULAR
+            {/* STARTER */}
+            <div className="bg-background-raised p-8">
+              <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mb-4">STARTER</div>
+              <div className="font-display font-bold text-5xl text-text-primary mb-1">$49</div>
+              <div className="font-body text-sm text-text-tertiary mb-8">/ month</div>
+              <ul className="list-none p-0 m-0">
+                {['20 scans / month', 'Auto competitor analysis', 'Score trending over time', 'Full findings ranked', 'Single user'].map(f => (
+                  <li key={f} className="flex items-start mb-2">
+                    <PlanBullet />
+                    <span className="font-body text-xs text-text-secondary">{f}</span>
+                  </li>
+                ))}
+              </ul>
+              <Link
+                href="/signup?plan=starter"
+                className="block text-center w-full border border-background-border text-text-secondary font-mono text-xs tracking-widest py-3 mt-8 no-underline hover:border-text-tertiary transition-colors"
+              >
+                START TRIAL →
+              </Link>
+            </div>
+
+            {/* AGENCY — featured */}
+            <div className="bg-background-raised p-8 relative">
+              <div className="absolute top-0 right-0 bg-cyan-DEFAULT text-text-inverse font-mono text-xs px-3 py-1">POPULAR</div>
+              <div className="font-mono text-xs text-cyan-DEFAULT uppercase tracking-widest mb-4">AGENCY</div>
+              <div className="font-display font-bold text-5xl text-text-primary mb-1">$149</div>
+              <div className="font-body text-sm text-text-tertiary mb-8">/ month</div>
+              <ul className="list-none p-0 m-0">
+                {['100 scans / month', 'Unlimited client workspaces', 'White-label report links', 'Multi-page scanning (3 pages)', 'PDF export with your logo', '3 team seats'].map(f => (
+                  <li key={f} className="flex items-start mb-2">
+                    <PlanBullet />
+                    <span className="font-body text-xs text-text-secondary">{f}</span>
+                  </li>
+                ))}
+              </ul>
+              <Link
+                href="/signup?plan=agency"
+                className="block text-center w-full bg-cyan-DEFAULT text-text-inverse font-mono text-xs font-bold tracking-widest py-3 mt-8 no-underline"
+              >
+                START TRIAL →
+              </Link>
+            </div>
+
+            {/* ENTERPRISE */}
+            <div className="bg-background-raised p-8">
+              <div className="font-mono text-xs text-cyan-DEFAULT uppercase tracking-widest mb-4">ENTERPRISE</div>
+              <div className="font-display font-bold text-5xl text-text-primary mb-1">$499</div>
+              <div className="font-body text-sm text-text-tertiary mb-8">/ month</div>
+              <ul className="list-none p-0 m-0">
+                {['500 scans / month', 'Everything in Agency', '10 team seats', 'White-label subdomain', 'Scan scheduling + alerts', 'Slack notifications'].map(f => (
+                  <li key={f} className="flex items-start mb-2">
+                    <PlanBullet />
+                    <span className="font-body text-xs text-text-secondary">{f}</span>
+                  </li>
+                ))}
+              </ul>
+              <Link
+                href="/signup?plan=enterprise"
+                className="block text-center w-full border border-cyan-DEFAULT text-cyan-DEFAULT font-mono text-xs font-bold tracking-widest py-3 mt-8 no-underline hover:bg-cyan-dim transition-colors"
+              >
+                START TRIAL →
+              </Link>
+            </div>
+
           </div>
-          <div className="font-mono text-xs text-cyan-DEFAULT uppercase tracking-widest mb-4">AGENCY</div>
-          <div className="font-display font-bold text-5xl text-text-primary mb-1">$149</div>
-          <div className="font-body text-sm text-text-tertiary mb-8">/ month</div>
-          <ul className="list-none p-0 m-0">
-            {['100 scans / month', 'Unlimited client workspaces', 'White-label report links', 'Multi-page scanning (3 pages)', 'PDF export with your logo', '3 team seats'].map(f => (
-              <li key={f} className="flex items-start mb-2">
-                <PlanBullet />
-                <span className="font-body text-xs text-text-secondary">{f}</span>
-              </li>
-            ))}
-          </ul>
-          <Link
-            href="/signup"
-            className="block text-center w-full bg-cyan-DEFAULT text-text-inverse font-mono text-xs font-bold tracking-widest py-3 mt-8 no-underline"
-          >
-            START TRIAL →
-          </Link>
+
+          {/* Bridge → API pricing */}
+          <div className="text-right mt-4">
+            <span className="font-body text-xs text-text-tertiary">Building on the API? </span>
+            <a href="#api-pricing" className="font-body text-xs text-cyan-DEFAULT no-underline hover:opacity-80">See developer pricing →</a>
+          </div>
         </div>
 
-        {/* ENTERPRISE */}
-        <div className="bg-background-raised p-8">
-          <div className="font-mono text-xs text-cyan-DEFAULT uppercase tracking-widest mb-4">ENTERPRISE</div>
-          <div className="font-display font-bold text-5xl text-text-primary mb-1">$499</div>
-          <div className="font-body text-sm text-text-tertiary mb-8">/ month</div>
-          <ul className="list-none p-0 m-0">
-            {['500 scans / month', 'Everything in Agency', '10 team seats', 'White-label subdomain', 'Scan scheduling + score alerts', 'Slack notifications'].map(f => (
-              <li key={f} className="flex items-start mb-2">
-                <PlanBullet />
-                <span className="font-body text-xs text-text-secondary">{f}</span>
-              </li>
-            ))}
-          </ul>
-          <Link
-            href="/signup"
-            className="block text-center w-full border border-cyan-DEFAULT text-cyan-DEFAULT font-mono text-xs font-bold tracking-widest py-3 mt-8 no-underline hover:bg-cyan-dim transition-colors"
-          >
-            START TRIAL →
-          </Link>
-        </div>
-
-      </div>
-
-      {/* API band */}
-      <div className="mt-px bg-background-raised border border-background-border px-8 py-8 flex items-center justify-between">
-        <div>
-          <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mb-2">API ACCESS</div>
-          <div className="font-display font-bold text-3xl text-text-primary mb-1">$0.17 / scan</div>
-          <div className="font-body text-xs text-text-tertiary mb-4">
-            Pay as you go. No monthly fee. No minimum. Cache hits never billed.
-          </div>
-          <div className="flex gap-8 mt-2">
-            {[
-              { label: '500+/mo', price: '$0.15' },
-              { label: '2,000+/mo', price: '$0.13' },
-              { label: '10,000+/mo', price: 'Custom' },
-            ].map(tier => (
-              <div key={tier.label} className="font-mono text-xs text-text-tertiary">
-                <span className="text-text-secondary">{tier.price}</span>
-                {' '}
-                <span>{tier.label}</span>
-              </div>
-            ))}
-          </div>
-          <p className="font-body text-xs text-text-tertiary mt-3">
-            Need score + findings only? Brief scans from $0.09 —{' '}
-            <Link href="/pricing" className="text-cyan-DEFAULT no-underline hover:opacity-80">
-              see full pricing
-            </Link>
-            .
+        {/* ── API Sub-Section ── */}
+        <div id="api-pricing" className="mt-24 pt-16 border-t border-background-border">
+          <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mb-3">FOR DEVELOPERS</div>
+          <h2 className="font-display font-bold text-4xl text-text-primary tracking-tight mb-4">
+            Infrastructure pricing.<br />Pay for what you use.
+          </h2>
+          <p className="font-body text-sm text-text-tertiary mb-16">
+            Monthly plans with included scans.<br />Overage billed per scan.<br />Cache hits never billed.
           </p>
-        </div>
-        <div className="flex flex-col gap-3 flex-shrink-0">
-          <Link
-            href="/signup"
-            className="bg-cyan-DEFAULT text-text-inverse font-mono text-xs tracking-widest px-6 py-3 no-underline text-center"
-          >
-            GET API KEY →
-          </Link>
-          <Link
-            href="/docs/api"
-            className="border border-background-border text-text-secondary font-mono text-xs tracking-widest px-6 py-3 no-underline text-center hover:border-text-tertiary transition-colors"
-          >
-            VIEW DOCS →
-          </Link>
-        </div>
-      </div>
 
-      {/* Enterprise plus note */}
-      <p className="text-center mt-10 font-body text-sm text-text-tertiary">
-        Need 50+ clients, reseller access, or embedding webdoc in your own product?{' '}
-        <Link href="mailto:devon@webdocai.com" className="text-cyan-DEFAULT no-underline hover:opacity-80">
-          Let&apos;s talk →
-        </Link>
-      </p>
+          <div className="grid grid-cols-4 gap-px bg-background-border mb-px">
+
+            {/* PLAYGROUND */}
+            <div className="bg-background-raised p-8">
+              <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mb-4">PLAYGROUND</div>
+              <div className="font-display font-bold text-5xl text-text-primary mb-1">Free</div>
+              <div className="font-body text-sm text-text-tertiary mb-8">25 scans to start</div>
+              <ul className="list-none p-0 m-0">
+                {['25 scans, no card required', 'Full API response', 'Then $0.25 / scan pay-as-you-go', 'No commitment'].map(f => (
+                  <li key={f} className="flex items-start mb-2">
+                    <PlanBullet />
+                    <span className="font-body text-xs text-text-secondary">{f}</span>
+                  </li>
+                ))}
+              </ul>
+              <Link
+                href="/signup?plan=playground"
+                className="block text-center w-full border border-background-border text-text-secondary font-mono text-xs tracking-widest py-3 mt-8 no-underline hover:border-text-tertiary transition-colors"
+              >
+                GET API KEY →
+              </Link>
+            </div>
+
+            {/* DEV */}
+            <div className="bg-background-raised p-8">
+              <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mb-4">DEV</div>
+              <div className="font-display font-bold text-5xl text-text-primary mb-1">$29</div>
+              <div className="font-body text-sm text-text-tertiary mb-8">/ month</div>
+              <ul className="list-none p-0 m-0">
+                {['300 scans / month', '$0.19 / scan overage', 'Full scan access', 'Webhooks included'].map(f => (
+                  <li key={f} className="flex items-start mb-2">
+                    <PlanBullet />
+                    <span className="font-body text-xs text-text-secondary">{f}</span>
+                  </li>
+                ))}
+              </ul>
+              <Link
+                href="/signup?plan=dev"
+                className="block text-center w-full border border-background-border text-text-secondary font-mono text-xs tracking-widest py-3 mt-8 no-underline hover:border-text-tertiary transition-colors"
+              >
+                GET STARTED →
+              </Link>
+            </div>
+
+            {/* BUILDER — featured */}
+            <div className="bg-background-raised p-8 relative">
+              <div className="absolute top-0 right-0 bg-cyan-DEFAULT text-text-inverse font-mono text-xs px-3 py-1">POPULAR</div>
+              <div className="font-mono text-xs text-cyan-DEFAULT uppercase tracking-widest mb-4">BUILDER</div>
+              <div className="font-display font-bold text-5xl text-text-primary mb-1">$99</div>
+              <div className="font-body text-sm text-text-tertiary mb-8">/ month</div>
+              <ul className="list-none p-0 m-0">
+                {['1,000 scans / month', '$0.17 / scan overage', 'Full + brief scan access', 'Async mode', 'Batch endpoint (10 URLs)'].map(f => (
+                  <li key={f} className="flex items-start mb-2">
+                    <PlanBullet />
+                    <span className="font-body text-xs text-text-secondary">{f}</span>
+                  </li>
+                ))}
+              </ul>
+              <Link
+                href="/signup?plan=builder"
+                className="block text-center w-full bg-cyan-DEFAULT text-text-inverse font-mono text-xs font-bold tracking-widest py-3 mt-8 no-underline"
+              >
+                GET STARTED →
+              </Link>
+            </div>
+
+            {/* SCALE */}
+            <div className="bg-background-raised p-8">
+              <div className="font-mono text-xs text-cyan-DEFAULT uppercase tracking-widest mb-4">SCALE</div>
+              <div className="font-display font-bold text-5xl text-text-primary mb-1">$249</div>
+              <div className="font-body text-sm text-text-tertiary mb-8">/ month</div>
+              <ul className="list-none p-0 m-0">
+                {['3,000 scans / month', '$0.15 / scan overage', 'Everything in Builder', 'Priority processing'].map(f => (
+                  <li key={f} className="flex items-start mb-2">
+                    <PlanBullet />
+                    <span className="font-body text-xs text-text-secondary">{f}</span>
+                  </li>
+                ))}
+              </ul>
+              <Link
+                href="/signup?plan=scale"
+                className="block text-center w-full border border-cyan-DEFAULT text-cyan-DEFAULT font-mono text-xs font-bold tracking-widest py-3 mt-8 no-underline hover:bg-cyan-dim transition-colors"
+              >
+                GET STARTED →
+              </Link>
+            </div>
+
+          </div>
+
+          {/* Enterprise API band */}
+          <div className="mt-px bg-background-raised border border-background-border px-8 py-6 flex items-center justify-between">
+            <div>
+              <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mb-1">API ENTERPRISE</div>
+              <div className="font-display font-bold text-xl text-text-primary">10,000+ scans / month</div>
+              <div className="font-body text-xs text-text-tertiary mt-1">
+                Custom contract. Floor $0.11/scan. SLA, dedicated support, platform embedding.
+              </div>
+            </div>
+            <Link
+              href="mailto:devon@webdocai.com"
+              className="border border-background-border text-text-secondary font-mono text-xs tracking-widest px-6 py-3 no-underline hover:border-text-tertiary transition-colors"
+            >
+              TALK TO US →
+            </Link>
+          </div>
+
+          {/* Bridge → dashboard pricing */}
+          <div className="text-right mt-4">
+            <span className="font-body text-xs text-text-tertiary">Need a dashboard UI? </span>
+            <a href="#dashboard-pricing" className="font-body text-xs text-cyan-DEFAULT no-underline hover:opacity-80">See team pricing →</a>
+          </div>
+        </div>
+
+      </div>
     </section>
   )
 }

@@ -1,595 +1,330 @@
-"use client";
+import Link from 'next/link'
+import Label from '@/components/ui/Label'
+import ScoreRingClient from './ScoreRingClient'
 
-import {
-  useEffect,
-  useRef,
-  useState,
-  type ComponentProps,
-  type ComponentType,
-} from "react";
-import { useParams } from "next/navigation";
-import ReportLayout from "@/components/ReportLayout";
-import UpgradeButton from "@/components/UpgradeButton";
-import type { ReportPayload } from "@/lib/reportSchema";
-import { mapAnalyzeToReport } from "@/lib/mapAnalyzeToReport";
-import { mergeStoredReportBody } from "@/lib/mergeStoredReport";
-import { getSupabaseBrowserClient } from "@/lib/supabaseBrowser";
-import { useRouter } from "next/navigation";
-import { getDashboardMoneyLeaks } from "@/lib/dashboardMoneyLeaks";
+// ── Hardcoded data — wired in technical chat ──────────────────────────────────
 
-/** Until ReportLayout declares `isPro`, widen props here only. */
-const ReportLayoutWithPro = ReportLayout as ComponentType<
-  ComponentProps<typeof ReportLayout> & { isPro: boolean; narrativeFlow?: unknown }
->;
+const SCORE = 61
+const INDUSTRY_AVG = 54
+const TOP_QUARTILE = 78
 
-const STORAGE_KEY_PREFIX = "webdoc_report_";
-const STORAGE_META_KEY_PREFIX = "webdoc_report_meta_";
-const PLAN_CACHE_KEY = "webdoc_plan";
-const PLAN_CACHE_TS_KEY = "webdoc_plan_ts";
-const PLAN_CACHE_TTL = 300_000; // 5 minutes
+const FINDINGS = [
+  {
+    priority: 1,
+    severity: 'critical' as const,
+    title: 'Hero headline is feature-led, not outcome-led',
+    detail: 'Current headline names a feature ("Manage Your Projects"). Visitors need to know what changes for them — outcomes, not inputs.',
+    fix: 'Rewrite to: "Ship projects on time, every time." — outcome-led, present tense.',
+    lift: '12–18% lift',
+  },
+  {
+    priority: 2,
+    severity: 'high' as const,
+    title: 'No above-fold proof — testimonials buried at 2,400px',
+    detail: 'Trust signals exist but appear below three full viewport scrolls. Most visitors leave before they get there.',
+    fix: 'Surface one logo strip or testimonial within 600px of page top.',
+    lift: '8–11% lift',
+  },
+  {
+    priority: 3,
+    severity: 'high' as const,
+    title: 'Dual CTAs create decision paralysis',
+    detail: 'Two equal-weight CTA buttons in the hero split intent and reduce each click.',
+    fix: 'Demote secondary CTA to a text link. One primary action per section.',
+    lift: '6–9% lift',
+  },
+  {
+    priority: 4,
+    severity: 'medium' as const,
+    title: 'Pricing page is missing comparison anchoring',
+    detail: 'No tier comparison means visitors cannot self-select. Most leave to find it elsewhere.',
+    fix: 'Add a 2-column comparison with the most common objection addressed per tier.',
+    lift: '4–7% lift',
+  },
+  {
+    priority: 5,
+    severity: 'medium' as const,
+    title: 'CTA is not visible on first scroll on mobile',
+    detail: 'At 390px viewport the primary button is below fold on first paint.',
+    fix: 'Move CTA above the product screenshot or add a sticky mobile CTA bar.',
+    lift: '3–6% lift',
+  },
+]
 
-function loadReportIdFromStorage(domain: string): string | null {
-  if (typeof window === "undefined") return null;
-  try {
-    const metaRaw = localStorage.getItem(`${STORAGE_META_KEY_PREFIX}${domain}`);
-    if (metaRaw) {
-      const meta = JSON.parse(metaRaw) as Record<string, unknown>;
-      if (typeof meta.id === "string" && meta.id) return meta.id;
-    }
-    const raw = localStorage.getItem(`${STORAGE_KEY_PREFIX}${domain}`);
-    if (!raw) return null;
-    const data = JSON.parse(raw) as Record<string, unknown>;
-    return typeof data.id === "string" && data.id ? data.id : null;
-  } catch {
-    return null;
-  }
+const SEV_BADGE: Record<string, string> = {
+  critical: 'bg-severity-critical/10 text-severity-critical',
+  high: 'bg-severity-high/10 text-severity-high',
+  medium: 'bg-severity-medium/10 text-severity-medium',
 }
 
-function loadReportFromStorage(domain: string): ReportPayload | null {
-  if (typeof window === "undefined") return null;
-  try {
-    const key = `${STORAGE_KEY_PREFIX}${domain}`;
-    const raw = localStorage.getItem(key);
-    if (!raw) return null;
-    const data = JSON.parse(raw) as Record<string, unknown>;
-    const mapped = mapAnalyzeToReport(data as Parameters<typeof mapAnalyzeToReport>[0]);
-    if (typeof data.shareToken === "string" && data.shareToken) {
-      mapped.shareToken = data.shareToken;
-    }
-    return mapped;
-  } catch {
-    return null;
-  }
+const SEV_BORDER: Record<string, string> = {
+  critical: 'border-l-severity-critical',
+  high: 'border-l-severity-high',
+  medium: 'border-l-severity-medium',
 }
 
-function getCachedPlan(): string | null {
-  try {
-    const plan = localStorage.getItem(PLAN_CACHE_KEY);
-    const ts = localStorage.getItem(PLAN_CACHE_TS_KEY);
-    if (plan && ts && Date.now() - parseInt(ts, 10) < PLAN_CACHE_TTL) return plan;
-  } catch { /* ignore */ }
-  return null;
-}
+// ── Sub-components ────────────────────────────────────────────────────────────
 
-function cachePlan(plan: string): void {
-  try {
-    localStorage.setItem(PLAN_CACHE_KEY, plan);
-    localStorage.setItem(PLAN_CACHE_TS_KEY, Date.now().toString());
-  } catch { /* ignore */ }
-}
-
-function computeIsPro(plan: string | null, is_pro?: boolean): boolean {
-  if (is_pro === true) return true;
-  const p = String(plan ?? "").trim().toLowerCase();
-  return p === "pro" || p === "agency"; // agency treated as pro
-}
-
-function ReportSkeleton() {
+function FindingCard({ f }: { f: typeof FINDINGS[number] }) {
   return (
-    <div style={{ maxWidth: 900, margin: "0 auto", padding: "48px 24px" }}>
-      <style>{`
-        @keyframes skelPulse { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
-        .skel-bar { background: #1A2035; border-radius: 2px; animation: skelPulse 1.6s ease-in-out infinite; }
-      `}</style>
-
-      {/* Score gauge placeholder */}
-      <div style={{ display: "flex", gap: 24, marginBottom: 40, alignItems: "flex-start" }}>
-        <div className="skel-bar" style={{ width: 100, height: 100, borderRadius: 50 }} />
-        <div style={{ flex: 1 }}>
-          <div className="skel-bar" style={{ height: 14, width: "40%", marginBottom: 12 }} />
-          <div className="skel-bar" style={{ height: 14, width: "60%", marginBottom: 12 }} />
-          <div className="skel-bar" style={{ height: 14, width: "35%" }} />
-        </div>
+    <div className={`bg-background-raised border border-background-border border-l-4 ${SEV_BORDER[f.severity]} p-6 mb-4`}>
+      <div className="flex items-center gap-3 mb-3">
+        <span className="font-mono text-xs text-text-tertiary">{String(f.priority).padStart(2, '0')}</span>
+        <span className={`font-mono text-xs px-2 py-0.5 uppercase ${SEV_BADGE[f.severity]}`}>{f.severity}</span>
+        <span className="ml-auto font-mono text-xs text-score-mid">{f.lift}</span>
       </div>
-
-      {/* Intelligence brief placeholder */}
-      <div style={{ background: "#0A0F1E", border: "1px solid #1A2035", borderRadius: 4, padding: "20px 24px", marginBottom: 28 }}>
-        <div className="skel-bar" style={{ height: 14, width: "25%", marginBottom: 16 }} />
-        <div className="skel-bar" style={{ height: 14, width: "100%", marginBottom: 10 }} />
-        <div className="skel-bar" style={{ height: 14, width: "90%", marginBottom: 10 }} />
-        <div className="skel-bar" style={{ height: 14, width: "75%" }} />
+      <div className="font-body font-semibold text-sm text-text-primary mb-3">{f.title}</div>
+      <div className="font-body text-xs text-text-secondary leading-relaxed mb-4">{f.detail}</div>
+      <div className="border-l-2 border-cyan-DEFAULT pl-3 py-2 bg-background-subtle">
+        <div className="font-mono text-xs text-text-tertiary mb-1">FIX</div>
+        <div className="font-body text-xs text-text-primary">{f.fix}</div>
       </div>
-
-      {/* Finding card placeholders */}
-      {[0, 1, 2].map((i) => (
-        <div
-          key={i}
-          style={{
-            background: "#0A0F1E",
-            border: "1px solid #1A2035",
-            borderLeft: "3px solid #1A2035",
-            borderRadius: 4,
-            padding: "20px 24px",
-            marginBottom: 12,
-          }}
-        >
-          <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
-            <div className="skel-bar" style={{ height: 12, width: 24 }} />
-            <div className="skel-bar" style={{ height: 12, width: 64 }} />
-            <div className="skel-bar" style={{ height: 12, width: 56 }} />
-          </div>
-          <div className="skel-bar" style={{ height: 14, width: "55%", marginBottom: 12 }} />
-          <div className="skel-bar" style={{ height: 14, width: "80%", marginBottom: 8 }} />
-          <div className="skel-bar" style={{ height: 14, width: "65%" }} />
-        </div>
-      ))}
     </div>
-  );
+  )
 }
 
-export default function ReportDomainPage() {
-  const params = useParams();
-  const domain = typeof params.domain === "string" ? decodeURIComponent(params.domain) : "";
-  const [report, setReport] = useState<ReportPayload | null>(null);
-  const [storedReportId, setStoredReportId] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [user, setUser] = useState<{ id: string } | null>(null);
-  const [isPro, setIsPro] = useState(false);
-  const router = useRouter();
+// ── Page ──────────────────────────────────────────────────────────────────────
 
-  // Upgrade param — sync, no network
-  useEffect(() => {
-    if (window.location.search.includes("upgraded=true")) {
-      setIsPro(true);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (!domain) {
-      setLoading(false);
-      setError("Missing domain.");
-      return;
-    }
-
-    let cancelled = false;
-
-    // Sync localStorage check — resolves instantly, no network needed
-    const fromStorage = loadReportFromStorage(domain);
-    if (fromStorage) {
-      setReport(fromStorage);
-      setStoredReportId(loadReportIdFromStorage(domain));
-      setLoading(false);
-      // Auth + profile run in background to hydrate banners after report renders
-      void (async () => {
-        const supabase = getSupabaseBrowserClient();
-        const cachedPlan = getCachedPlan();
-        if (cachedPlan !== null) setIsPro(computeIsPro(cachedPlan));
-
-        // Both start immediately, run in parallel
-        const authPromise = supabase.auth.getUser();
-        const profilePromise = cachedPlan !== null
-          ? Promise.resolve(null)
-          : fetch("/api/profile", { method: "GET", credentials: "include" })
-              .then(r => r.ok ? r.json() : null)
-              .catch(() => null);
-
-        profilePromise.then(profileJson => {
-          if (cancelled || !profileJson) return;
-          const p = String(profileJson.plan ?? "").trim();
-          setIsPro(computeIsPro(p, profileJson.is_pro));
-          cachePlan(p || (profileJson.is_pro ? "pro" : "free"));
-        }).catch(() => {});
-
-        const { data: authData } = await authPromise;
-        if (cancelled) return;
-        if (authData.user) setUser({ id: authData.user.id });
-      })();
-      return () => { cancelled = true; };
-    }
-
-    // No localStorage — fetch report and auth in parallel
-    (async () => {
-      try {
-        const supabase = getSupabaseBrowserClient();
-        const cachedPlan = getCachedPlan();
-
-        // Apply cached plan immediately — zero network cost
-        if (cachedPlan !== null) setIsPro(computeIsPro(cachedPlan));
-
-        // /api/profile fires here and runs in background.
-        // It NEVER blocks the report fetch — it resolves independently.
-        const profilePromise = cachedPlan !== null
-          ? Promise.resolve(null)
-          : fetch("/api/profile", { method: "GET", credentials: "include" })
-              .then(r => r.ok ? r.json() : null)
-              .catch(() => null);
-
-        profilePromise.then(profileJson => {
-          if (cancelled || !profileJson) return;
-          const p = String(profileJson.plan ?? "").trim();
-          setIsPro(computeIsPro(p, profileJson.is_pro));
-          cachePlan(p || (profileJson.is_pro ? "pro" : "free"));
-        }).catch(() => {});
-
-        const [userResult, reportResult] = await Promise.all([
-          supabase.auth.getUser(),
-          supabase
-            .from("reports")
-            .select("id, analysis, overview_copy, extended_analysis, finding_briefs")
-            .eq("domain", domain.toLowerCase().trim())
-            .order("created_at", { ascending: false })
-            .limit(1)
-            .single(),
-        ]);
-        if (cancelled) return;
-
-        const userData = userResult.data.user;
-        if (userData) {
-          setUser({ id: userData.id });
-        } else {
-          setUser(null);
-        }
-
-        if (userData) {
-          const reportRow = (reportResult && "data" in reportResult
-            ? reportResult.data
-            : null) as {
-            id?: string;
-            analysis?: unknown;
-            payload?: unknown;
-            overview_copy?: unknown;
-            extended_analysis?: unknown;
-            finding_briefs?: unknown;
-          } | null;
-          setStoredReportId(
-            typeof reportRow?.id === "string" && reportRow.id ? reportRow.id : null
-          );
-          const merged = mergeStoredReportBody(
-            reportRow?.analysis,
-            undefined,
-            reportRow?.overview_copy
-          );
-          if (!merged) throw new Error("No report found.");
-          setReport(mapAnalyzeToReport(merged));
-          try {
-            localStorage.setItem(`${STORAGE_META_KEY_PREFIX}${domain}`, JSON.stringify({
-              id: reportRow?.id ?? "",
-              extended_analysis: reportRow?.extended_analysis ?? null,
-              finding_briefs: reportRow?.finding_briefs ?? null,
-              cachedAt: Date.now(),
-            }));
-          } catch { /* ignore */ }
-        } else {
-          const res = await fetch(`/api/report/${encodeURIComponent(domain)}`);
-          if (!res.ok) {
-            const data = await res.json().catch(() => ({}));
-            throw new Error(data.error ?? "Report not found.");
-          }
-          const data = await res.json();
-          if (cancelled) return;
-          const payload = data.payload != null ? data.payload : data;
-          setStoredReportId(typeof data.id === "string" && data.id ? data.id : null);
-          setReport(mapAnalyzeToReport(payload));
-        }
-      } catch {
-        if (!cancelled) {
-          setStoredReportId(null);
-          setError("Report not found. Scan this site to generate a report.");
-        }
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    })();
-
-    return () => { cancelled = true; };
-  }, [domain]);
-
-  // Background prefetch: warm DB cache for top 10 findings so issue pages load instantly
-  const prefetchedFindings = useRef<Map<string, unknown>>(new Map());
-  useEffect(() => {
-    if (!storedReportId || !report) return;
-    const leaks = getDashboardMoneyLeaks(report);
-    if (!leaks.length) return;
-
-    const sorted = [...leaks].sort((a, b) => (b.revenueImpact ?? 0) - (a.revenueImpact ?? 0));
-    const ac = new AbortController();
-    const timers: ReturnType<typeof setTimeout>[] = [];
-
-    sorted.slice(0, 5).forEach((finding) => {
-      const fid = String(finding.id ?? "").trim() || String(finding.title ?? "").trim();
-      if (fid) router.prefetch(`/issue/${encodeURIComponent(storedReportId)}/${encodeURIComponent(fid)}`);
-    });
-
-    const ordered = [...sorted].sort((a, b) => {
-      const aC = (a.severity === "critical" || a.rubricSeverity === "Critical") ? 0 : 1;
-      const bC = (b.severity === "critical" || b.rubricSeverity === "Critical") ? 0 : 1;
-      return aC - bC;
-    });
-
-    const overallScore = report.healthScore ?? 0;
-    ordered.forEach((finding, i) => {
-      const fid = String(finding.id ?? "").trim() || String(finding.title ?? "").trim();
-      if (!fid) return;
-      const t = setTimeout(() => {
-        if (ac.signal.aborted || prefetchedFindings.current.has(fid)) return;
-        try {
-          if (localStorage.getItem(`webdoc_brief_${storedReportId}_${fid}`)) {
-            prefetchedFindings.current.set(fid, true);
-            return;
-          }
-        } catch { /* ignore */ }
-        void fetch("/api/expand-finding", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          signal: ac.signal,
-          body: JSON.stringify({
-            report_id: storedReportId,
-            finding_id: fid,
-            domain,
-            overallScore,
-            finding: {
-              title: finding.title,
-              severity: String(finding.rubricSeverity ?? finding.severity ?? ""),
-              category: finding.category ?? "",
-              whatWeFound: finding.whatWeFound ?? "",
-              whyItMatters: finding.whyItMatters ?? "",
-              howToFixIt: finding.howToFixIt ?? "",
-              exampleFix: finding.exampleFix ?? "",
-              psychologyPrinciple: finding.psychologyPrinciple ?? "",
-              revenueImpact: finding.revenueImpact,
-              page_location: finding.page_location,
-            },
-          }),
-        })
-          .then((res) => (res.ok ? res.json() : null))
-          .then((data: unknown) => {
-            if (!ac.signal.aborted && data) {
-              prefetchedFindings.current.set(fid, data);
-              try {
-                localStorage.setItem(`webdoc_brief_${storedReportId}_${fid}`, JSON.stringify(data));
-              } catch {
-                // ignore local brief cache failures
-              }
-            }
-          })
-          .catch(() => { /* ignore prefetch failures */ });
-      }, 3000 + i * 300);
-      timers.push(t);
-    });
-
-    return () => {
-      ac.abort();
-      timers.forEach(clearTimeout);
-    };
-  }, [storedReportId, report, domain, router]);
-
-  if (loading) {
-    return (
-      <div style={{ background: "var(--bg-base)", minHeight: "calc(100svh - 4rem)" }}>
-        <ReportSkeleton />
-      </div>
-    );
-  }
-
-  if (error || !report) {
-    return (
-      <div
-        className="flex min-h-[calc(100svh-4rem)] flex-col items-center justify-center px-6"
-        style={{
-          background: "var(--bg-base)",
-          borderTop: "1px solid rgba(0,200,255,0.08)",
-        }}
-      >
-        <div
-          className="max-w-md text-center"
-          style={{
-            border: "1px solid rgba(0,200,255,0.18)",
-            borderRadius: 12,
-            padding: "28px 32px",
-            background: "rgba(5,8,16,0.75)",
-            boxShadow: "0 0 60px rgba(0,0,0,0.4), inset 0 0 40px rgba(0,200,255,0.03)",
-          }}
-        >
-          <h1
-            className="font-mono"
-            style={{
-              fontFamily: "var(--font-orbitron), sans-serif",
-              fontSize: 16,
-              letterSpacing: "0.12em",
-              color: "rgba(0,200,255,0.95)",
-              margin: 0,
-              marginBottom: 12,
-              fontWeight: 700,
-            }}
-          >
-            Report Not Found
-          </h1>
-          <p
-            className="font-mono text-sm"
-            style={{
-              fontFamily: "var(--font-jetbrains-mono), var(--font-space-mono), monospace",
-              color: "rgba(240,244,255,0.45)",
-              lineHeight: 1.5,
-              margin: 0,
-              marginBottom: 20,
-            }}
-          >
-            {error ??
-              "We could not load a report for this domain. Run a scan to generate one."}
-          </p>
-          <a
-            href="/"
-            className="font-mono inline-block"
-            style={{
-              fontFamily: "var(--font-jetbrains-mono), var(--font-space-mono), monospace",
-              fontSize: 11,
-              letterSpacing: "0.1em",
-              color: "rgba(0,200,255,0.95)",
-              textDecoration: "none",
-              borderBottom: "1px solid rgba(0,200,255,0.35)",
-              paddingBottom: 2,
-            }}
-          >
-            Run New Scan →
-          </a>
-        </div>
-      </div>
-    );
-  }
-
-  const showSaveBanner = Boolean(report && !user);
-  const handleRescan = () => {
-    const target = domain.trim();
-    if (!target) return;
-    const scanUrl = `https://${target}`;
-    const path = `/scan?url=${encodeURIComponent(scanUrl)}&rescan=true`;
-    router.push(path);
-  };
+export default async function ReportPage({ params }: { params: Promise<{ domain: string }> }) {
+  const { domain } = await params
 
   return (
-    <div>
-      {showSaveBanner && (
-        <div
-          className="report-banner-stack"
-          style={{
-            position: "sticky",
-            top: 64,
-            zIndex: 50,
-            background: "rgba(0,200,255,0.06)",
-            borderBottom: "1px solid rgba(0,200,255,0.2)",
-            padding: "14px 32px",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            gap: 16,
-          }}
-        >
-          <div>
-            <div className="font-body" style={{ fontFamily: "var(--font-space-grotesk), sans-serif", fontWeight: 500, color: "var(--text-primary)", fontSize: 15 }}>
-              Save this report and track your score over time
-            </div>
-            <div className="font-mono" style={{ color: "var(--text-muted)", fontSize: 11, marginTop: 2 }}>
-              Free account · No credit card · Under 2 minutes
-            </div>
-          </div>
+    <main className="bg-background-base min-h-screen">
+      <div className="max-w-[900px] mx-auto px-8 py-16">
 
-          <div className="report-banner-actions" style={{ display: "flex", alignItems: "center" }}>
-            <button
-              type="button"
-              onClick={() => {
-                if (!report) return;
-                try {
-                  localStorage.setItem("pending_report", JSON.stringify({ domain, payload: report }));
-                } catch {
-                  // ignore
-                }
-                router.push("/auth?tab=create");
-              }}
-              style={{
-                background: "var(--cyan)",
-                color: "#050810",
-                fontFamily: "var(--font-jetbrains-mono), var(--font-space-mono), monospace",
-                fontWeight: 700,
-                fontSize: 12,
-                letterSpacing: "2px",
-                textTransform: "uppercase",
-                padding: "10px 20px",
-                borderRadius: 2,
-                cursor: "pointer",
-                border: "none",
-                height: 40,
-                whiteSpace: "nowrap",
-                transition: "all 0.15s ease",
-              }}
-              onMouseEnter={(e) => { e.currentTarget.style.boxShadow = "0 0 30px rgba(0,200,255,0.6)"; e.currentTarget.style.filter = "brightness(1.1)"; }}
-              onMouseLeave={(e) => { e.currentTarget.style.boxShadow = "none"; e.currentTarget.style.filter = "none"; }}
-            >
-              CREATE FREE ACCOUNT →
-            </button>
-            <button
-              type="button"
-              onClick={() => router.push("/auth?tab=signin")}
-              style={{
-                marginLeft: 12,
-                background: "transparent",
-                color: "var(--text-muted)",
-                fontFamily: "var(--font-jetbrains-mono), var(--font-space-mono), monospace",
-                fontSize: 11,
-                cursor: "pointer",
-                border: "none",
-                padding: "10px 8px",
-                whiteSpace: "nowrap",
-              }}
-            >
-              Sign in
-            </button>
+        {/* Header */}
+        <div className="flex justify-between items-start mb-12">
+          <div>
+            <Label>CONVERSION AUDIT</Label>
+            <h1 className="font-display font-bold text-4xl text-text-primary tracking-tight mt-3">
+              {domain}
+            </h1>
+            <p className="font-mono text-xs text-text-tertiary mt-2">
+              Analyzed today · 260+ checks across 9 dimensions
+            </p>
+          </div>
+          <div className="text-center flex-shrink-0">
+            <ScoreRingClient size="lg" animated={true} score={SCORE} />
+            <div className="font-mono text-xs text-text-tertiary mt-2">CONVERSION SCORE</div>
           </div>
         </div>
-      )}
 
-      {user && !isPro && (
-        <div
-          className="report-banner-stack"
-          style={{
-            background:
-              "linear-gradient(135deg, rgba(0,200,255,0.06) 0%, rgba(0,200,255,0.02) 100%)",
-            borderBottom: "1px solid rgba(0,200,255,0.15)",
-            padding: "14px 32px",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            gap: 16,
-          }}
-        >
-          <div>
-            <div
-              style={{
-                fontFamily: "var(--font-space-grotesk), sans-serif",
-                fontWeight: 600,
-                color: "var(--text-primary)",
-                fontSize: 14,
-                marginBottom: 2,
-              }}
-            >
-              You&apos;re viewing a free report
+        {/* Benchmark band */}
+        <div className="bg-background-raised border border-background-border p-6 mb-10">
+          <div className="grid grid-cols-3 gap-px bg-background-border">
+            <div className="bg-background-raised px-6 py-4">
+              <div className="font-display font-bold text-3xl text-text-secondary">{INDUSTRY_AVG}</div>
+              <div className="font-mono text-xs text-text-tertiary mt-1 uppercase tracking-widest">INDUSTRY AVERAGE</div>
+              <div className="font-mono text-xs text-text-tertiary">B2B SaaS</div>
             </div>
-            <div
-              style={{
-                fontFamily: "var(--font-jetbrains-mono), var(--font-space-mono), monospace",
-                color: "var(--text-muted)",
-                fontSize: 11,
-              }}
-            >
-              Upgrade to Pro for the full finding set, unlimited scans, and the AI
-              advisor
+            <div className="bg-background-raised px-6 py-4">
+              <div className="font-display font-bold text-3xl text-score-mid">{SCORE}</div>
+              <div className="font-mono text-xs text-text-tertiary mt-1 uppercase tracking-widest">YOUR SCORE</div>
+              <div className="font-mono text-xs text-score-mid">63rd percentile</div>
+            </div>
+            <div className="bg-background-raised px-6 py-4">
+              <div className="font-display font-bold text-3xl text-text-secondary">{TOP_QUARTILE}</div>
+              <div className="font-mono text-xs text-text-tertiary mt-1 uppercase tracking-widest">TOP QUARTILE</div>
             </div>
           </div>
-          <div className="report-banner-actions w-full md:w-auto">
-            <UpgradeButton label="UPGRADE TO PRO — $50/mo →" className="w-full md:w-auto" />
+
+          {/* Position bar */}
+          <div className="mt-5 w-full">
+            <div className="relative h-6">
+              <span
+                className="absolute font-mono text-xs text-score-mid"
+                style={{ left: `${SCORE}%`, transform: 'translateX(-50%)' }}
+              >
+                You
+              </span>
+            </div>
+            <div className="relative w-full h-px bg-background-border">
+              {/* Industry avg marker */}
+              <div
+                className="absolute bg-text-tertiary"
+                style={{ left: `${INDUSTRY_AVG}%`, top: -5, width: 2, height: 10 }}
+              />
+              {/* Your score marker — taller */}
+              <div
+                className="absolute bg-score-mid"
+                style={{ left: `${SCORE}%`, top: -7, width: 2, height: 14 }}
+              />
+              {/* Top quartile marker */}
+              <div
+                className="absolute bg-text-tertiary"
+                style={{ left: `${TOP_QUARTILE}%`, top: -5, width: 2, height: 10 }}
+              />
+            </div>
           </div>
         </div>
-      )}
 
-      <ReportLayoutWithPro
-        domain={domain}
-        payload={report}
-        isPro={isPro}
-        onRescan={handleRescan}
-        shareToken={report.shareToken ?? null}
-        issueReportId={storedReportId}
-        narrativeFlow={(report as any)?.narrativeFlow}
-      />
-    </div>
-  );
+        {/* Score trending teaser */}
+        <div className="bg-background-raised border border-background-border p-6 mb-10">
+          <div className="flex justify-between items-center">
+            <div>
+              <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mb-2">SCORE HISTORY</div>
+              <div className="font-body text-sm text-text-secondary">
+                Track your score over time to measure improvement.
+              </div>
+            </div>
+            <div className="flex-shrink-0 ml-8">
+              <div className="relative" style={{ width: 160, height: 52 }}>
+                <svg width={160} height={40} viewBox="0 0 160 40">
+                  <line
+                    x1={0} y1={28} x2={140} y2={28}
+                    stroke="#111827" strokeWidth={1} strokeDasharray="4 4"
+                  />
+                  <circle cx={140} cy={28} r={4} fill="#F5A623" />
+                </svg>
+                <span
+                  className="font-mono text-xs text-text-tertiary absolute"
+                  style={{ left: 132, top: 38 }}
+                >
+                  today
+                </span>
+              </div>
+            </div>
+          </div>
+          <div className="mt-5 pt-5 border-t border-background-border">
+            <span className="font-body text-xs text-text-tertiary">
+              Scan monthly to track your trajectory.{' '}
+            </span>
+            <Link href="/pricing" className="font-body text-xs text-cyan-DEFAULT no-underline cursor-pointer">
+              Starter plan from $49/month →
+            </Link>
+          </div>
+        </div>
+
+        {/* Findings */}
+        <Label>FINDINGS</Label>
+        <h2 className="font-display font-bold text-2xl text-text-primary mb-2">
+          23 issues ranked by revenue impact.
+        </h2>
+        <p className="font-body text-sm text-text-secondary mb-8">
+          Findings are specific to your page content — not generic advice.
+        </p>
+
+        {FINDINGS.map(f => <FindingCard key={f.priority} f={f} />)}
+
+        {/* Locked findings */}
+        <div className="relative bg-background-raised border border-background-border p-8 text-center overflow-hidden mb-16">
+          {/* Blurred fake rows */}
+          <div className="blur-sm opacity-20 select-none pointer-events-none">
+            {[
+              { n: '06', sev: 'medium', title: 'Form friction exceeds 4-field threshold on signup page' },
+              { n: '07', sev: 'high', title: 'Pricing page lacks feature comparison table' },
+              { n: '08', sev: 'medium', title: 'Missing urgency signals in checkout flow' },
+            ].map(row => (
+              <div key={row.n} className="bg-background-subtle border border-background-border p-4 mb-2 text-left">
+                <div className="flex items-center gap-3 mb-2">
+                  <span className="font-mono text-xs text-text-tertiary">{row.n}</span>
+                  <span className="font-mono text-xs text-severity-high uppercase">{row.sev}</span>
+                </div>
+                <div className="font-body text-sm text-text-primary">{row.title}</div>
+              </div>
+            ))}
+          </div>
+          {/* Lock overlay */}
+          <div className="absolute inset-0 flex flex-col items-center justify-center p-8 bg-background-raised/80">
+            <div className="font-display font-bold text-xl text-text-primary mb-2">18 more findings</div>
+            <div className="font-body text-sm text-text-secondary mb-6 max-w-sm">
+              Unlock all findings, the full fix for each, and AI-rewritten copy with a Starter account.
+            </div>
+            <Link
+              href="/signup?plan=starter"
+              className="bg-cyan-DEFAULT text-text-inverse font-body font-bold text-sm px-8 py-3 no-underline"
+            >
+              Start free trial — $49/month →
+            </Link>
+            <span className="font-mono text-xs text-text-tertiary mt-3 block">
+              14-day free trial. No credit card required.
+            </span>
+          </div>
+        </div>
+
+        {/* AI-Rewritten Copy */}
+        <Label>AI-REWRITTEN COPY</Label>
+        <h2 className="font-display font-bold text-2xl text-text-primary mb-8">Drop-in replacements.</h2>
+
+        {/* Headline — full reveal */}
+        <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mb-3">HEADLINE</div>
+        <div className="grid grid-cols-2 gap-px bg-background-border mb-6">
+          <div className="bg-background-raised p-6">
+            <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mb-3">CURRENT</div>
+            <div className="font-body text-sm text-text-secondary leading-relaxed">Manage Your Projects Smarter</div>
+          </div>
+          <div className="bg-background-raised p-6 border-l-2 border-cyan-DEFAULT">
+            <div className="font-mono text-xs text-cyan-DEFAULT uppercase tracking-widest mb-3">REWRITTEN</div>
+            <div className="font-body text-sm text-text-primary leading-relaxed">Ship projects on time, every time.</div>
+          </div>
+        </div>
+
+        {/* Subheadline + CTA — locked */}
+        <div className="relative overflow-hidden">
+          <div className="blur-sm opacity-20 select-none pointer-events-none">
+            <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mb-3">SUBHEADLINE</div>
+            <div className="grid grid-cols-2 gap-px bg-background-border mb-6">
+              <div className="bg-background-raised p-6">
+                <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mb-3">CURRENT</div>
+                <div className="font-body text-sm text-text-secondary">The only tool your team needs to stay on track.</div>
+              </div>
+              <div className="bg-background-raised p-6 border-l-2 border-cyan-DEFAULT">
+                <div className="font-mono text-xs text-cyan-DEFAULT uppercase tracking-widest mb-3">REWRITTEN</div>
+                <div className="font-body text-sm text-text-primary">The project management layer your team actually uses.</div>
+              </div>
+            </div>
+            <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mb-3">PRIMARY CTA</div>
+            <div className="grid grid-cols-2 gap-px bg-background-border">
+              <div className="bg-background-raised p-6">
+                <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mb-3">CURRENT</div>
+                <div className="font-body text-sm text-text-secondary">Get started</div>
+              </div>
+              <div className="bg-background-raised p-6 border-l-2 border-cyan-DEFAULT">
+                <div className="font-mono text-xs text-cyan-DEFAULT uppercase tracking-widest mb-3">REWRITTEN</div>
+                <div className="font-body text-sm text-text-primary">Start free — no credit card</div>
+              </div>
+            </div>
+          </div>
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-background-base/80">
+            <div className="font-display font-bold text-lg text-text-primary mb-2 text-center">Unlock full copy rewrites</div>
+            <div className="font-body text-sm text-text-secondary mb-4 text-center max-w-xs">
+              Unlock subheadline and CTA rewrites with Starter.
+            </div>
+            <Link
+              href="/signup?plan=starter"
+              className="font-body text-sm text-cyan-DEFAULT no-underline"
+            >
+              Start free trial →
+            </Link>
+          </div>
+        </div>
+
+      </div>
+
+      {/* Bottom CTA band — full width */}
+      <div className="w-full bg-background-raised border-t border-background-border py-12 px-8 text-center">
+        <h2 className="font-display font-bold text-3xl text-text-primary mb-3">Want to fix this?</h2>
+        <p className="font-body text-base text-text-secondary mb-8 max-w-md mx-auto">
+          Starter plan gives you all findings, monthly rescans, competitor comparison, and score trending. Cancel anytime.
+        </p>
+        <div className="flex gap-4 justify-center">
+          <Link
+            href="/signup?plan=starter"
+            className="bg-cyan-DEFAULT text-text-inverse font-body font-bold text-sm px-8 py-3 no-underline"
+          >
+            Start 14-day trial →
+          </Link>
+          <Link
+            href="/pricing"
+            className="border border-background-border text-text-secondary font-body text-sm px-8 py-3 no-underline hover:border-text-tertiary hover:text-text-primary transition-colors"
+          >
+            See all plans →
+          </Link>
+        </div>
+        <p className="font-mono text-xs text-text-tertiary mt-4">
+          Or get API access at $0.15/scan — no monthly fee
+        </p>
+      </div>
+    </main>
+  )
 }

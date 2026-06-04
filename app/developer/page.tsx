@@ -1,7 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { getSupabaseBrowserClient } from '@/lib/supabaseBrowser'
 import ScoreRing from '@/components/ui/ScoreRing'
 import Label from '@/components/ui/Label'
 
@@ -26,31 +28,66 @@ interface WebhookLog {
   date: string
 }
 
-// ── Static data ───────────────────────────────────────────────────────────────
+interface UsageRow {
+  id: string
+  url: string
+  score: number | null
+  status: string
+  created_at: string
+  response_time_ms: number | null
+  cost_usd: number | null
+}
 
-const ALL_SCANS: ScanRow[] = [
-  { domain: 'acme-saas.com',  score: 61, findings: 23, time: '2m ago',  severity: 'critical' },
-  { domain: 'stripe.com',     score: 78, findings: 11, time: '14m ago', severity: 'high'     },
-  { domain: 'notion.so',      score: 71, findings: 15, time: '1h ago',  severity: 'high'     },
-  { domain: 'linear.app',     score: 83, findings: 8,  time: '3h ago',  severity: 'medium'   },
-  { domain: 'vercel.com',     score: 76, findings: 12, time: '5h ago',  severity: 'high'     },
-  { domain: 'framer.com',     score: 69, findings: 17, time: '8h ago',  severity: 'critical' },
-  { domain: 'webflow.com',    score: 74, findings: 14, time: '1d ago',  severity: 'high'     },
-  { domain: 'ghost.org',      score: 88, findings: 6,  time: '2d ago',  severity: 'low'      },
-  { domain: 'figma.com',      score: 55, findings: 19, time: '3d ago',  severity: 'high'     },
-  { domain: 'loom.com',       score: 44, findings: 25, time: '4d ago',  severity: 'critical' },
-  { domain: 'basecamp.com',   score: 92, findings: 4,  time: '5d ago',  severity: 'low'      },
-  { domain: 'intercom.com',   score: 67, findings: 16, time: '6d ago',  severity: 'medium'   },
-]
+interface WebhookRow {
+  id: string
+  url: string | null
+  event: string | null
+  created_at: string
+  status: string | number | null
+}
 
-const WEBHOOK_LOG: WebhookLog[] = [
-  { status: 200, event: 'scan.completed', url: 'https://your-app.com/webhook', time: '34ms', date: '2m ago'  },
-  { status: 200, event: 'scan.completed', url: 'https://your-app.com/webhook', time: '41ms', date: '14m ago' },
-  { status: 200, event: 'scan.completed', url: 'https://your-app.com/webhook', time: '28ms', date: '1h ago'  },
-  { status: 500, event: 'scan.completed', url: 'https://your-app.com/webhook', time: '—',    date: '3h ago'  },
-  { status: 200, event: 'scan.completed', url: 'https://your-app.com/webhook', time: '37ms', date: '5h ago'  },
-  { status: 200, event: 'scan.failed',    url: 'https://your-app.com/webhook', time: '29ms', date: '8h ago'  },
-]
+// ── Plan limits ───────────────────────────────────────────────────────────────
+
+const PLAN_LIMITS: Record<string, number> = {
+  playground: 25,
+  dev: 300,
+  builder: 1000,
+  scale: 3000,
+  enterprise: 999999,
+  payg: 999999,
+}
+
+// ── Data helpers ──────────────────────────────────────────────────────────────
+
+function domainFromUrl(url: string): string {
+  try { return new URL(url).hostname.replace(/^www\./, '') } catch { return url }
+}
+
+function relativeTime(iso: string): string {
+  const diff = Date.now() - new Date(iso).getTime()
+  const m = Math.floor(diff / 60000)
+  if (m < 1) return 'just now'
+  if (m < 60) return `${m}m ago`
+  const h = Math.floor(m / 60)
+  if (h < 24) return `${h}h ago`
+  return `${Math.floor(h / 24)}d ago`
+}
+
+function scoreToSeverity(score: number): Severity {
+  if (score < 40) return 'critical'
+  if (score < 60) return 'high'
+  if (score < 75) return 'medium'
+  return 'low'
+}
+
+function webhookStatusCode(raw: string | number | null): number {
+  if (typeof raw === 'number') return raw
+  if (raw === 'success' || raw === 'delivered' || raw === '200') return 200
+  if (raw === 'failed' || raw === 'error' || raw === '500') return 500
+  return 200
+}
+
+// ── Static constants ──────────────────────────────────────────────────────────
 
 const TAB_TITLES: Record<TabId, string> = {
   overview: 'Overview',
@@ -139,7 +176,15 @@ function MethodBadge({ method }: { method: 'POST' | 'GET' }) {
 
 // ── Overview Tab ──────────────────────────────────────────────────────────────
 
-function OverviewTab() {
+interface OverviewTabProps {
+  scansUsed: number
+  spend: number
+  avgScore: number
+  keyPrefix: string | null
+  scanRows: ScanRow[]
+}
+
+function OverviewTab({ scansUsed, spend, avgScore, keyPrefix, scanRows }: OverviewTabProps) {
   const [copied, setCopied] = useState(false)
 
   function handleCopy() {
@@ -153,15 +198,15 @@ function OverviewTab() {
       {/* Stat row */}
       <div className="grid grid-cols-3 gap-px bg-background-border mb-px">
         <div className="bg-background-raised p-6">
-          <div className="font-display font-extrabold text-4xl text-text-primary">34</div>
+          <div className="font-display font-extrabold text-4xl text-text-primary">{scansUsed}</div>
           <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mt-1">SCANS THIS MONTH</div>
         </div>
         <div className="bg-background-raised p-6">
-          <div className="font-display font-extrabold text-4xl text-text-primary">$5.10</div>
+          <div className="font-display font-extrabold text-4xl text-text-primary">${spend.toFixed(2)}</div>
           <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mt-1">SPENT THIS MONTH</div>
         </div>
         <div className="bg-background-raised p-6">
-          <div className="font-display font-extrabold text-4xl text-score-mid">61</div>
+          <div className="font-display font-extrabold text-4xl text-score-mid">{avgScore}</div>
           <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mt-1">AVERAGE SCORE</div>
         </div>
       </div>
@@ -171,7 +216,7 @@ function OverviewTab() {
         <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mb-4">API KEY</div>
         <div className="flex items-center gap-3">
           <div className="font-mono text-sm text-text-secondary bg-background-subtle border border-background-border px-4 py-2.5 flex-1 min-w-0 truncate">
-            wdoc_live_••••••••••••••••••••••••••
+            {keyPrefix ?? 'wdoc_live_'}••••••••••••••••••••••••••
           </div>
           <button
             onClick={handleCopy}
@@ -196,7 +241,10 @@ function OverviewTab() {
             View all →
           </span>
         </div>
-        {ALL_SCANS.slice(0, 8).map((row, i) => (
+        {scanRows.length === 0 && (
+          <div className="px-6 py-8 font-mono text-sm text-text-tertiary">No scans yet.</div>
+        )}
+        {scanRows.slice(0, 8).map((row, i) => (
           <div
             key={i}
             className="flex items-center gap-4 px-6 py-4 border-b border-background-border last:border-0 hover:bg-background-interactive transition-colors duration-150 cursor-pointer"
@@ -218,12 +266,12 @@ function OverviewTab() {
 
 // ── Scans Tab ─────────────────────────────────────────────────────────────────
 
-function ScansTab() {
+function ScansTab({ scanRows }: { scanRows: ScanRow[] }) {
   const [search, setSearch]           = useState('')
   const [scoreFilter, setScoreFilter] = useState('all')
   const [sort, setSort]               = useState('newest')
 
-  const filtered = ALL_SCANS
+  const filtered = scanRows
     .filter(s => !search || s.domain.toLowerCase().includes(search.toLowerCase()))
     .filter(s => {
       if (scoreFilter === '70+')   return s.score >= 70
@@ -304,8 +352,20 @@ function ScansTab() {
 
 // ── API Keys Tab ──────────────────────────────────────────────────────────────
 
-function ApiKeysTab() {
+interface ApiKeysTabProps {
+  keyPrefix: string | null
+  onRevoke: () => Promise<void>
+}
+
+function ApiKeysTab({ keyPrefix, onRevoke }: ApiKeysTabProps) {
   const [spendLimit, setSpendLimit] = useState('')
+  const [revoking, setRevoking] = useState(false)
+
+  async function handleRevoke() {
+    setRevoking(true)
+    await onRevoke()
+    setRevoking(false)
+  }
 
   return (
     <div className="px-8 py-8">
@@ -313,13 +373,17 @@ function ApiKeysTab() {
       <div className="bg-background-raised border border-background-border p-6 mb-6">
         <div className="flex justify-between items-start">
           <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mb-2">PRODUCTION KEY</div>
-          <button className="font-body text-xs text-severity-critical hover:underline cursor-pointer bg-transparent border-0">
-            Revoke
+          <button
+            onClick={handleRevoke}
+            disabled={revoking || !keyPrefix}
+            className="font-body text-xs text-severity-critical hover:underline cursor-pointer bg-transparent border-0 disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            {revoking ? 'Revoking...' : 'Revoke'}
           </button>
         </div>
 
         <div className="font-mono text-sm text-text-secondary bg-background-subtle border border-background-border px-4 py-3 w-full mt-3">
-          wdoc_live_••••••••••••••••••••••••••
+          {keyPrefix ? `${keyPrefix}••••••••••••••••••••••` : '— no active key —'}
         </div>
 
         <div className="flex gap-6 mt-4">
@@ -356,7 +420,7 @@ function ApiKeysTab() {
 
 // ── Webhooks Tab ──────────────────────────────────────────────────────────────
 
-function WebhooksTab() {
+function WebhooksTab({ webhookLog }: { webhookLog: WebhookLog[] }) {
   const [webhookUrl, setWebhookUrl]       = useState('')
   const [scanCompleted, setScanCompleted] = useState(true)
   const [scanFailed, setScanFailed]       = useState(false)
@@ -402,7 +466,10 @@ function WebhooksTab() {
         <div className="px-6 py-4 border-b border-background-border">
           <span className="font-mono text-xs text-text-tertiary uppercase tracking-widest">DELIVERY LOG</span>
         </div>
-        {WEBHOOK_LOG.map((log, i) => (
+        {webhookLog.length === 0 && (
+          <div className="px-6 py-8 font-mono text-sm text-text-tertiary">No deliveries yet.</div>
+        )}
+        {webhookLog.map((log, i) => (
           <div key={i} className="flex items-center gap-4 px-6 py-4 border-b border-background-border last:border-0">
             <span
               className={`font-mono text-xs px-2 py-0.5 flex-shrink-0 ${
@@ -531,7 +598,107 @@ const NAV_ITEMS: Array<{ id: TabId; label: string; icon: React.ReactNode }> = [
 ]
 
 export default function DeveloperPortal() {
+  const router = useRouter()
   const [activeTab, setActiveTab] = useState<TabId>('overview')
+
+  // Live data
+  const [loading, setLoading]         = useState(true)
+  const [scansUsed, setScansUsed]     = useState(0)
+  const [keyPrefix, setKeyPrefix]     = useState<string | null>(null)
+  const [plan, setPlan]               = useState('playground')
+  const [rawUsage, setRawUsage]       = useState<UsageRow[]>([])
+  const [rawWebhooks, setRawWebhooks] = useState<WebhookRow[]>([])
+
+  useEffect(() => {
+    async function load() {
+      const supabase = getSupabaseBrowserClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) { router.push('/auth'); return }
+
+      const { data: keyRow } = await supabase
+        .from('api_keys')
+        .select('id, scans_used, plan, key_prefix')
+        .eq('user_id', user.id)
+        .eq('active', true)
+        .limit(1)
+        .maybeSingle()
+
+      if (keyRow) {
+        const kr = keyRow as { id: string; scans_used: number; plan: string; key_prefix: string }
+        setScansUsed(kr.scans_used ?? 0)
+        setPlan(kr.plan ?? 'playground')
+        setKeyPrefix(kr.key_prefix ?? null)
+
+        const { data: usage } = await supabase
+          .from('api_usage')
+          .select('id, url, score, status, created_at, response_time_ms, cost_usd')
+          .eq('api_key_id', kr.id)
+          .order('created_at', { ascending: false })
+          .limit(50)
+
+        setRawUsage((usage ?? []) as UsageRow[])
+
+        try {
+          const { data: wh, error: whErr } = await supabase
+            .from('webhook_deliveries')
+            .select('id, url, event, created_at, status')
+            .eq('api_key_id', kr.id)
+            .order('created_at', { ascending: false })
+            .limit(20)
+          if (!whErr) setRawWebhooks((wh ?? []) as WebhookRow[])
+        } catch {
+          // webhook_deliveries table may not exist yet
+        }
+      }
+
+      setLoading(false)
+    }
+    load()
+  }, [router])
+
+  // Derived values
+  const spend = rawUsage.reduce((sum, r) => sum + (r.cost_usd ?? 0), 0)
+  const avgScore = (() => {
+    const scored = rawUsage.filter(r => r.score !== null)
+    if (!scored.length) return 0
+    return Math.round(scored.reduce((sum, r) => sum + (r.score ?? 0), 0) / scored.length)
+  })()
+  const planLimit = PLAN_LIMITS[plan] ?? 999999
+  const usagePct  = planLimit < 999999 ? Math.min(100, (scansUsed / planLimit) * 100) : 5
+  const usageLabel = planLimit >= 999999 ? 'of unlimited' : `of ${planLimit}`
+
+  const scanRows: ScanRow[] = rawUsage.map(r => ({
+    domain:   domainFromUrl(r.url ?? ''),
+    score:    r.score ?? 0,
+    findings: 0,
+    time:     relativeTime(r.created_at),
+    severity: scoreToSeverity(r.score ?? 0),
+  }))
+
+  const webhookLogMapped: WebhookLog[] = rawWebhooks.map(r => ({
+    status: webhookStatusCode(r.status),
+    event:  r.event ?? 'scan.completed',
+    url:    r.url ?? '',
+    time:   '—',
+    date:   relativeTime(r.created_at),
+  }))
+
+  async function handleRevoke() {
+    await fetch('/api/developer/revoke-key', { method: 'POST', credentials: 'include' })
+    setKeyPrefix(null)
+    setScansUsed(0)
+    setPlan('playground')
+    setRawUsage([])
+    setRawWebhooks([])
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-background-base">
+        <span className="font-mono text-sm" style={{ color: '#00C8FF' }}>Loading...</span>
+      </div>
+    )
+  }
 
   return (
     <div className="flex h-screen overflow-hidden bg-background-base">
@@ -567,10 +734,10 @@ export default function DeveloperPortal() {
         {/* Usage block */}
         <div className="px-6 py-5 border-t border-background-border">
           <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mb-3">THIS MONTH</div>
-          <div className="font-display font-extrabold text-2xl text-text-primary">34</div>
-          <div className="font-mono text-xs text-text-tertiary">of unlimited · $5.10 spent</div>
+          <div className="font-display font-extrabold text-2xl text-text-primary">{scansUsed}</div>
+          <div className="font-mono text-xs text-text-tertiary">{usageLabel} · ${spend.toFixed(2)} spent</div>
           <div className="relative w-full h-px bg-background-border mt-3">
-            <div className="absolute top-0 left-0 h-full bg-cyan-DEFAULT" style={{ width: '10%' }} />
+            <div className="absolute top-0 left-0 h-full bg-cyan-DEFAULT" style={{ width: `${usagePct}%` }} />
           </div>
         </div>
 
@@ -594,10 +761,20 @@ export default function DeveloperPortal() {
 
         {/* Tab content */}
         <div className="flex-1 overflow-y-auto bg-background-base">
-          {activeTab === 'overview' && <OverviewTab />}
-          {activeTab === 'scans'    && <ScansTab />}
-          {activeTab === 'apikeys'  && <ApiKeysTab />}
-          {activeTab === 'webhooks' && <WebhooksTab />}
+          {activeTab === 'overview' && (
+            <OverviewTab
+              scansUsed={scansUsed}
+              spend={spend}
+              avgScore={avgScore}
+              keyPrefix={keyPrefix}
+              scanRows={scanRows}
+            />
+          )}
+          {activeTab === 'scans'    && <ScansTab scanRows={scanRows} />}
+          {activeTab === 'apikeys'  && (
+            <ApiKeysTab keyPrefix={keyPrefix} onRevoke={handleRevoke} />
+          )}
+          {activeTab === 'webhooks' && <WebhooksTab webhookLog={webhookLogMapped} />}
           {activeTab === 'docs'     && <DocsTab />}
         </div>
 

@@ -716,13 +716,15 @@ export default function ApiDocsPage() {
           <section id="errors" style={SB}>
             <Label>OVERVIEW</Label>
             <H2>Errors</H2>
-            <Body mb={24}>webdoc uses standard HTTP status codes.</Body>
+            <Body mb={24}>webdoc uses standard HTTP status codes. Error responses include a machine-readable <code style={{ fontFamily: MONO, fontSize: 12 }}>code</code> field for programmatic handling.</Body>
             <ErrTable rows={[
               { code: '400', meaning: 'Bad request — missing or invalid URL' },
               { code: '401', meaning: 'Unauthorized — invalid or missing API key' },
               { code: '402', meaning: 'Insufficient credits — top up required' },
+              { code: '422', meaning: 'BOT_BLOCKED — URL is protected by bot detection (e.g. Cloudflare Enterprise) that prevents automated access. Try a different URL.' },
+              { code: '422', meaning: 'EXTRACTION_FAILED — Could not extract content from this URL. The page may require authentication or be otherwise inaccessible.' },
               { code: '429', meaning: 'Rate limited — slow down requests' },
-              { code: '500', meaning: 'Server error — retry with backoff' },
+              { code: '500', meaning: 'SCAN_FAILED — Internal scan error. Retry with exponential backoff.' },
             ]} />
           </section>
 

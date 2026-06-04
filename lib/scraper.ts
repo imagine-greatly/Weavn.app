@@ -486,10 +486,7 @@ async function fetchWithBrowserless(url: string): Promise<{ html: string; comple
   const noResponseAtAll = !html1 && !html2
 
   if (bothBlocked) {
-    throw new Error(
-      `This site's bot protection blocked the scanner (attempt1=${len1}, attempt2=${len2}). ` +
-      `Retrying in a few minutes usually works.`
-    )
+    throw new Error("BOT_BLOCKED")
   }
   if (noResponseAtAll) {
     throw new Error(

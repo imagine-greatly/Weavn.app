@@ -263,6 +263,7 @@ async function executeScan(p: ScanParams): Promise<ScanResult> {
         }))
       : [],
     leaks: [],
+    api_findings: parsed.findings ? (parsed.findings as unknown[]).slice(0, findingLimit) : [],
     categoryScores: { psychology: 50, messaging: 50, conversion: score, seo: 50, ux: 50, trust: 50 },
     topLeak: undefined,
     heroRewrite: { currentHeadline: "", currentSubheadline: "", currentCta: "", suggestedHeadline: parsed.copy_rewrites?.headline ?? "", suggestedSubheadline: parsed.copy_rewrites?.subheadline ?? "", suggestedCta: parsed.copy_rewrites?.cta ?? "", psychologistsNote: "" },
@@ -568,16 +569,27 @@ export async function POST(req: NextRequest) {
           void fetch(callbackUrl, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ scan_id: result.reportId, status: "complete", score: result.score }) }).catch(() => {});
         }
       } catch (err) {
-        console.error("[API v1] async scan failed:", err instanceof Error ? err.message : err);
+        const errMsg = err instanceof Error ? err.message : "Scan failed";
+        const isBlocked = errMsg === "BOT_BLOCKED" || errMsg.includes("BOT_BLOCKED");
+        console.error("[API v1] async scan failed:", errMsg);
         dispatchWebhook(apiKey.id, {
           event: "scan.failed",
           scan_id: scanId,
           url: normalizedUrl,
           score: null,
-          data: { domain, error: err instanceof Error ? err.message : "Scan failed" },
+          data: {
+            domain,
+            error: isBlocked ? "bot_blocked" : errMsg,
+            blocked: isBlocked,
+            code: isBlocked ? "BOT_BLOCKED" : "SCAN_FAILED",
+          },
         });
         if (callbackUrl) {
-          void fetch(callbackUrl, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ scan_id: scanId, status: "failed" }) }).catch(() => {});
+          void fetch(callbackUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ scan_id: scanId, status: "failed", blocked: isBlocked }),
+          }).catch(() => {});
         }
       }
     })();
@@ -602,10 +614,28 @@ export async function POST(req: NextRequest) {
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Scan failed.";
-    if (message.includes("Could not extract")) {
-      return NextResponse.json({ error: message }, { status: 422, headers: rlHeaders(apiKey) });
+    if (message === "BOT_BLOCKED" || message.includes("BOT_BLOCKED")) {
+      return NextResponse.json({
+        error: "bot_blocked",
+        message: "This URL uses bot protection (e.g. Cloudflare Enterprise) that prevents automated access. Try a different URL.",
+        blocked: true,
+        code: "BOT_BLOCKED",
+      }, { status: 422, headers: rlHeaders(apiKey) });
     }
-    return NextResponse.json({ error: "Scan failed", message }, { status: 500, headers: rlHeaders(apiKey) });
+    if (message.includes("Could not extract")) {
+      return NextResponse.json({
+        error: "extraction_failed",
+        message: "Could not extract content from this URL.",
+        blocked: false,
+        code: "EXTRACTION_FAILED",
+      }, { status: 422, headers: rlHeaders(apiKey) });
+    }
+    return NextResponse.json({
+      error: "scan_failed",
+      message,
+      blocked: false,
+      code: "SCAN_FAILED",
+    }, { status: 500, headers: rlHeaders(apiKey) });
   }
 
   dispatchWebhook(apiKey.id, {
@@ -651,6 +681,15 @@ export async function POST(req: NextRequest) {
   if (wantsField("growth_blueprint")) response.growth_blueprint = result.growthBlueprint ?? [];
   if (wantsField("benchmark") && result.benchmark) response.benchmark = result.benchmark;
   if (wantsField("benchmark") && result.dimensionBenchmarks) response.dimension_benchmarks = result.dimensionBenchmarks;
+
+  // Attach shareable report URL using the share_token set during pending insert
+  const { data: tokenRow } = await supabaseAdmin
+    .from("reports")
+    .select("share_token")
+    .eq("id", result.reportId)
+    .maybeSingle();
+  const shareToken = (tokenRow as { share_token?: string | null } | null)?.share_token;
+  if (shareToken) response.report_url = `${BASE_URL}/reports/${shareToken}`;
 
   return NextResponse.json(response, { headers: { ...rlHeaders(apiKey), "X-Cache": "MISS", "X-Cache-Reason": cachedRow ? "content-changed" : "no-cache" } });
 }

@@ -1,4 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 
 const MONO = '"JetBrains Mono", "Space Mono", ui-monospace, monospace';
 
@@ -29,6 +32,8 @@ type ReportRow = {
   health_score: number | null;
   source: string | null;
   analysis: {
+    leaks?: Array<{ title?: string }>;
+    api_findings?: Array<{ title?: string }>;
     findings?: Array<{ title?: string }>;
     conversionKillers?: Array<{ title?: string }>;
   } | null;
@@ -36,6 +41,21 @@ type ReportRow = {
 };
 
 export default async function AdminDailyPage() {
+  // Auth guard — email-based check, no full admin system needed
+  const cookieStore = await cookies();
+  const supabaseAuth = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() { return cookieStore.getAll(); },
+        setAll() {},
+      },
+    }
+  );
+  const { data: { user } } = await supabaseAuth.auth.getUser();
+  if (user?.email !== process.env.ADMIN_EMAIL) redirect("/auth");
+
   const supabase = getSupabase();
   const { start, end, now } = todayRange();
 
@@ -83,7 +103,11 @@ export default async function AdminDailyPage() {
   const findingCounts: Record<string, number> = {};
   for (const r of reports) {
     const findings: Array<{ title?: string }> =
-      r.analysis?.findings ?? r.analysis?.conversionKillers ?? [];
+      r.analysis?.leaks ??
+      r.analysis?.api_findings ??
+      r.analysis?.findings ??
+      r.analysis?.conversionKillers ??
+      [];
     for (const f of findings) {
       if (f.title) findingCounts[f.title] = (findingCounts[f.title] ?? 0) + 1;
     }

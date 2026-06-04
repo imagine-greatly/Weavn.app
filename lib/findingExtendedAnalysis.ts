@@ -318,7 +318,7 @@ ${EXPAND_FINDING_BRIEF_JSON_CONTRACT}`;
   try {
     const msg = await anthropic.messages.create({
       model: "claude-sonnet-4-6",
-      max_tokens: 7000,
+      max_tokens: 4500,
       system: [{ type: "text", text: systemPromptText, cache_control: { type: "ephemeral" } }],
       messages: [{ role: "user", content: userMessage }],
     });

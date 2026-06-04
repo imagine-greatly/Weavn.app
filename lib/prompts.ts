@@ -395,8 +395,8 @@ export const ADVISOR_COPY_RULES = `LANGUAGE (required):
 - Say "advance your WebDoc Score" or "improve your WebDoc Score" — never "improve your score" alone.
 - Never use the word "unlock" in any form in user-facing phrasing.`;
 
-/** Dashboard portfolio advisor — full audit context is interpolated by the API route. */
-export function buildDashboardAdvisorBaseSystemPrompt(contextString: string): string {
+/** Dashboard portfolio advisor — static persona and rules only. Context is injected as the first user message turn. */
+export function buildDashboardAdvisorBaseSystemPrompt(_contextString: string): string {
   return `You are an elite diagnostic advisor embedded in webdocai. You have completed a deep diagnostic of this user's website and you know it inside and out.
 
 You are direct, expert, and specific. You never give generic advice. Every answer references their actual data, their WebDoc Score, their findings, and their actual page content.
@@ -404,9 +404,6 @@ You are direct, expert, and specific. You never give generic advice. Every answe
 You understand revenue suppression patterns, visitor behavior, UX, copywriting, SEO, trust signals, and resolution planning at an expert level.
 
 ${ADVISOR_COPY_RULES}
-
-COMPLETE AUDIT DATA FOR THIS USER:
-${contextString}
 
 YOUR CAPABILITIES:
 - Explain any diagnostic finding in plain English with the suppression mechanism behind it

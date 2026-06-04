@@ -191,12 +191,23 @@ export async function POST(req: NextRequest) {
     ? buildDashboardAdvisorIssueSystemPrompt(domainLabel, healthScoreForIssue, issueContext)
     : baseSystemPrompt;
 
+  const contextMessage = {
+    role: "user" as const,
+    content: `Here is the diagnostic context for this session:\n\n${contextString}`
+  }
+  const contextAck = {
+    role: "assistant" as const,
+    content: "Understood. I have reviewed the diagnostic data and am ready to advise."
+  }
+
   // messages.stream() enables token-by-token streaming (Anthropic SDK equivalent of stream: true).
   const stream = await anthropic.messages.stream({
     model: "claude-sonnet-4-6",
     max_tokens: 400,
     system: [{ type: "text", text: systemPrompt, cache_control: { type: "ephemeral" } }],
     messages: [
+      contextMessage,
+      contextAck,
       ...conversationHistory.map((m) => ({
         role: m.role === "system" ? "user" : m.role,
         content: m.content,

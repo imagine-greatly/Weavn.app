@@ -1236,9 +1236,9 @@ export async function runAnalysis(
   // Hard cap: adaptive per complexity — safety net for callers that bypass scrapeSite truncation.
   let safeExtraction = extraction;
   const hardCap =
-    extraction.complexity === 'simple' ? 80_000 :
-    extraction.complexity === 'medium' ? 110_000 :
-    140_000  // complex
+    extraction.complexity === 'simple' ? 40_000 :
+    extraction.complexity === 'medium' ? 55_000 :
+    70_000  // complex
   if (extraction.rawHtml.length > hardCap) {
     process.stderr.write('[ANALYZE] HARD CAP applied: rawHtml ' + extraction.rawHtml.length + ' chars → ' + hardCap + ' (complexity=' + (extraction.complexity ?? 'medium') + ')\n');
     safeExtraction = { ...extraction, rawHtml: extraction.rawHtml.slice(0, hardCap) };
@@ -1250,9 +1250,9 @@ export async function runAnalysis(
   const complexity = safeExtraction.complexity ?? 'medium'
 
   const totalCap =
-    complexity === 'simple' ? 130_000 :
-    complexity === 'medium' ? 145_000 :
-    175_000 // complex
+    complexity === 'simple' ? 80_000 :
+    complexity === 'medium' ? 100_000 :
+    130_000 // complex
 
   const homepageSection =
     `=== HOMEPAGE: ${safeExtraction.pagesAnalyzed[0]} ===\n` +
@@ -1474,7 +1474,7 @@ export async function runPreviewAnalysis(
     const message = await client.messages.create({
       model: "claude-haiku-4-5-20251001",
       max_tokens: 1024,
-      system: PREVIEW_SYSTEM_PROMPT,
+      system: [{ type: "text", text: PREVIEW_SYSTEM_PROMPT, cache_control: { type: "ephemeral" } }],
       messages: [
         {
           role: "user",

@@ -62,6 +62,58 @@ export async function getBenchmark(
   }
 }
 
+type DimensionBenchmarkData = {
+  average: number;
+  p10: number;
+  p90: number;
+};
+
+const SAAS_DIMENSION_BENCHMARKS: Record<string, DimensionBenchmarkData> = {
+  conversion_architecture: { average: 58, p10: 35, p90: 78 },
+  trust_signals:           { average: 61, p10: 38, p90: 81 },
+  message_clarity:         { average: 55, p10: 32, p90: 76 },
+  traffic_readiness:       { average: 60, p10: 37, p90: 79 },
+  technical_foundation:    { average: 64, p10: 42, p90: 82 },
+  objection_handling:      { average: 48, p10: 25, p90: 72 },
+  offer_clarity:           { average: 52, p10: 28, p90: 74 },
+};
+
+const ECOMMERCE_DIMENSION_BENCHMARKS: Record<string, DimensionBenchmarkData> = {
+  conversion_architecture: { average: 55, p10: 32, p90: 75 },
+  trust_signals:           { average: 58, p10: 35, p90: 78 },
+  message_clarity:         { average: 51, p10: 28, p90: 72 },
+  traffic_readiness:       { average: 57, p10: 34, p90: 76 },
+  technical_foundation:    { average: 67, p10: 44, p90: 84 },
+  objection_handling:      { average: 45, p10: 22, p90: 69 },
+  offer_clarity:           { average: 54, p10: 30, p90: 75 },
+};
+
+export async function getDimensionBenchmarks(
+  siteType: string
+): Promise<Record<string, DimensionBenchmarkData> | null> {
+  try {
+    if (siteType === "ecommerce") return ECOMMERCE_DIMENSION_BENCHMARKS;
+    return SAAS_DIMENSION_BENCHMARKS;
+  } catch {
+    return null;
+  }
+}
+
+export function getPercentileLabel(
+  score: number,
+  p10: number,
+  p90: number,
+  average: number,
+  siteType?: string
+): string {
+  const context = siteType ? ` of ${siteType} sites` : "";
+  if (score <= p10) return `Bottom 10%${context}`;
+  if (score < average - 10) return "Below average";
+  if (score <= average + 10) return "Industry average";
+  if (score < p90) return "Above average";
+  return `Top 10%${context}`;
+}
+
 export function updateBenchmark(siteType: string, newScore: number): void {
   void (async () => {
     try {

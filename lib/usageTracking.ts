@@ -103,6 +103,36 @@ export async function checkScanAllowed(
   return { allowed: true };
 }
 
+export class InsufficientCreditsError extends Error {
+  constructor(message = "Insufficient credits") {
+    super(message);
+    this.name = "InsufficientCreditsError";
+  }
+}
+
+export async function deductCredits(userId: string, amount: number): Promise<void> {
+  const supabase = getServiceClient();
+
+  const { data: keyRow } = await supabase
+    .from("api_keys")
+    .select("id, scans_used")
+    .eq("user_id", userId)
+    .eq("active", true)
+    .limit(1)
+    .maybeSingle();
+
+  const row = keyRow as { id?: string; scans_used?: number } | null;
+  if (!row?.id) throw new InsufficientCreditsError("No active API key found for user");
+
+  const allowed = await checkScanAllowed(row.id);
+  if (!allowed.allowed) throw new InsufficientCreditsError(allowed.reason ?? "Insufficient credits");
+
+  await supabase
+    .from("api_keys")
+    .update({ scans_used: (row.scans_used ?? 0) + amount })
+    .eq("id", row.id);
+}
+
 export async function getScanCount(apiKeyId: string): Promise<number> {
   const supabase = getServiceClient();
   const { data, error } = await supabase

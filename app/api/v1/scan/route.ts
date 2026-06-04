@@ -16,11 +16,12 @@ import { detectSiteType } from "@/lib/siteType";
 import { extractPageData } from "@/lib/analyzePipeline";
 import { saveReport } from "@/lib/supabase";
 import { validateApiKey } from "@/lib/apiAuth";
-import { logScanUsage, checkScanAllowed } from "@/lib/usageTracking";
+import { logScanUsage, checkScanAllowed, deductCredits, InsufficientCreditsError } from "@/lib/usageTracking";
 import { dispatchWebhook } from "@/lib/webhooks";
+import { runMultiPageScan } from "@/lib/multiPageScan";
 import { fetchAndFingerprint, fingerprintsMatch } from "@/lib/fingerprint";
 import { buildApiPrompt } from "@/lib/apiPrompt";
-import { getBenchmark, updateBenchmark } from "@/lib/benchmarks";
+import { getBenchmark, updateBenchmark, getDimensionBenchmarks, getPercentileLabel } from "@/lib/benchmarks";
 import { calculateScanCost } from "@/lib/scanCost";
 import type { ApiKeyRecord } from "@/lib/apiAuth";
 
@@ -92,6 +93,7 @@ interface ScanResult {
   copyRewrites?: Record<string, string | undefined>;
   growthBlueprint?: unknown[];
   benchmark?: Record<string, number> | null;
+  dimensionBenchmarks?: Record<string, { score: number; average: number; percentile_label: string; p10: number; p90: number }> | null;
   wordCount: number;
   ctaCount: number;
   techStack: string[];
@@ -298,6 +300,7 @@ async function executeScan(p: ScanParams): Promise<ScanResult> {
 
   // Benchmark
   const benchmark = await getBenchmark(site_type, score).catch(() => null);
+  const rawDimBenchmarks = await getDimensionBenchmarks(site_type).catch(() => null);
 
   // Build dimension map
   const dimMap: Record<string, string> = {
@@ -306,13 +309,31 @@ async function executeScan(p: ScanParams): Promise<ScanResult> {
     message_clarity: "Message Clarity",
     traffic_readiness: "Traffic Readiness",
     technical_foundation: "Technical Foundation",
+    objection_handling: "Objection Handling",
+    offer_clarity: "Offer Clarity",
   };
-  const dimensions: Record<string, number> = { conversion_architecture: 0, trust_signals: 0, message_clarity: 0, traffic_readiness: 0, technical_foundation: 0 };
+  const dimensions: Record<string, number> = { conversion_architecture: 0, trust_signals: 0, message_clarity: 0, traffic_readiness: 0, technical_foundation: 0, objection_handling: 0, offer_clarity: 0 };
   if (parsed.dimensions) {
     for (const [k, v] of Object.entries(parsed.dimensions)) {
       if (k in dimensions) dimensions[k] = typeof v === "number" ? v : 0;
     }
   }
+
+  const dimensionBenchmarks = rawDimBenchmarks
+    ? Object.entries(dimensions).reduce<Record<string, { score: number; average: number; percentile_label: string; p10: number; p90: number }>>((acc, [key, dimScore]) => {
+        const bench = rawDimBenchmarks[key];
+        if (bench) {
+          acc[key] = {
+            score: dimScore,
+            average: bench.average,
+            percentile_label: getPercentileLabel(dimScore, bench.p10, bench.p90, bench.average, site_type),
+            p10: bench.p10,
+            p90: bench.p90,
+          };
+        }
+        return acc;
+      }, {})
+    : null;
 
   return {
     reportId,
@@ -326,6 +347,7 @@ async function executeScan(p: ScanParams): Promise<ScanResult> {
     copyRewrites: parsed.copy_rewrites,
     growthBlueprint: parsed.growth_blueprint,
     benchmark,
+    dimensionBenchmarks,
     wordCount,
     ctaCount,
     techStack,
@@ -365,6 +387,7 @@ export async function POST(req: NextRequest) {
   let findingDepth: "brief" | "full";
   let asyncMode: boolean;
   let callbackUrl: string | null;
+  let multiPagePaths: string[] | null = null;
 
   try {
     const body = await req.json();
@@ -378,6 +401,10 @@ export async function POST(req: NextRequest) {
     findingDepth = rawDepth === "brief" ? "brief" : "full";
     asyncMode = body?.async === true;
     callbackUrl = typeof body?.callback_url === "string" ? body.callback_url : null;
+    const rawPagesList = Array.isArray(body?.pages)
+      ? (body.pages as unknown[]).filter((p): p is string => typeof p === "string")
+      : null;
+    multiPagePaths = rawPagesList && rawPagesList.length > 0 ? rawPagesList : null;
   } catch {
     return NextResponse.json({ error: "url is required" }, { status: 400, headers: rlHeaders(apiKey) });
   }
@@ -396,7 +423,59 @@ export async function POST(req: NextRequest) {
   const effectiveFields = fields.length === 0 ? ALL_FIELDS : fields;
   const wantsField = (f: string) => effectiveFields.includes(f);
 
-  console.log(`[API v1] START | url=${normalizedUrl} domain=${domain} async=${asyncMode}`);
+  console.log(`[API v1] START | url=${normalizedUrl} domain=${domain} async=${asyncMode} multiPage=${multiPagePaths !== null}`);
+
+  // ── Multi-page mode ───────────────────────────────────────────────────────────
+
+  if (multiPagePaths !== null) {
+    if (multiPagePaths.length > 5) {
+      return NextResponse.json({ error: "pages must contain at most 5 entries" }, { status: 400, headers: rlHeaders(apiKey) });
+    }
+    for (const p of multiPagePaths) {
+      if (!p.startsWith("/")) {
+        return NextResponse.json({ error: `pages entries must start with / — invalid: "${p}"` }, { status: 400, headers: rlHeaders(apiKey) });
+      }
+    }
+
+    // Compute deduplicated URL count to reserve the right number of credits
+    const baseNorm = normalizedUrl.replace(/\/+$/, "");
+    const allRaw = [baseNorm, ...multiPagePaths.map(p => `${baseNorm}${p}`)];
+    const creditCount = Math.min(5, new Set(allRaw.map(u => u.toLowerCase().replace(/\/+$/, ""))).size);
+
+    try {
+      await deductCredits(apiKey.user_id, creditCount);
+    } catch (err) {
+      if (err instanceof InsufficientCreditsError) {
+        return NextResponse.json({ error: "Insufficient credits for multi-page scan" }, { status: 402, headers: rlHeaders(apiKey) });
+      }
+      return NextResponse.json({ error: "Failed to verify credits" }, { status: 500, headers: rlHeaders(apiKey) });
+    }
+
+    const scanId = randomUUID();
+    const pollUrl = `${BASE_URL}/api/v1/scans/${scanId}`;
+    const capturedPaths = multiPagePaths;
+
+    void (async () => {
+      try {
+        await runMultiPageScan(
+          normalizedUrl,
+          capturedPaths,
+          apiKey.user_id,
+          apiKey.id,
+          { effectiveFields, findingLimit, findingDepth, creditsAlreadyDeducted: true, parentScanId: scanId }
+        );
+      } catch (err) {
+        console.error("[API v1] multi-page scan failed:", err instanceof Error ? err.message : err);
+      }
+    })();
+
+    return NextResponse.json({
+      scan_id: scanId,
+      status: "pending",
+      poll_url: pollUrl,
+      type: "multi",
+    }, { status: 202, headers: rlHeaders(apiKey) });
+  }
 
   const supabaseAdmin = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -571,6 +650,7 @@ export async function POST(req: NextRequest) {
   if (wantsField("copy_rewrites")) response.copy_rewrites = result.copyRewrites ?? {};
   if (wantsField("growth_blueprint")) response.growth_blueprint = result.growthBlueprint ?? [];
   if (wantsField("benchmark") && result.benchmark) response.benchmark = result.benchmark;
+  if (wantsField("benchmark") && result.dimensionBenchmarks) response.dimension_benchmarks = result.dimensionBenchmarks;
 
   return NextResponse.json(response, { headers: { ...rlHeaders(apiKey), "X-Cache": "MISS", "X-Cache-Reason": cachedRow ? "content-changed" : "no-cache" } });
 }

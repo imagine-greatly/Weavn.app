@@ -708,6 +708,83 @@ function ThreeDoorsSection() {
   )
 }
 
+// ── Multi-Page Scans ──────────────────────────────────────────────────────────
+
+function MultiPageSection() {
+  return (
+    <section className="py-24 px-8 border-t border-background-border">
+      <div className="max-w-[1280px] mx-auto">
+        <Label>MULTI-PAGE SCANS</Label>
+        <h2 className="font-display font-extrabold text-4xl tracking-tight text-text-primary mt-3 mb-4">
+          Scan every page that matters.
+        </h2>
+        <p className="font-body text-lg text-text-secondary max-w-2xl mb-16">
+          Pass up to 5 URLs in one request. Each page scans in parallel, results return as a single structured payload.
+        </p>
+
+        {/* 3-step flow */}
+        <div className="grid grid-cols-3 gap-px bg-background-border mb-14">
+          <div className="bg-background-raised px-8 py-8">
+            <div className="font-mono text-xs text-cyan-DEFAULT uppercase tracking-widest mb-4">01 — REQUEST</div>
+            <div className="font-display font-bold text-base text-text-primary mb-3">POST base URL + page paths</div>
+            <div className="bg-background-subtle border border-background-border p-4 font-mono text-xs leading-relaxed">
+              <P c="{" />{'\n'}
+              {'  '}<K c='"url"' /><P c=': ' /><S c='"https://acme.com"' /><P c=',' />{'\n'}
+              {'  '}<K c='"pages"' /><P c=': [' />{'\n'}
+              {'    '}<S c='"/pricing"' /><P c=',' />{'\n'}
+              {'    '}<S c='"/about"' />{'\n'}
+              {'  '}<P c=']' />{'\n'}
+              <P c="}" />
+            </div>
+          </div>
+
+          <div className="bg-background-raised px-8 py-8 flex flex-col">
+            <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mb-4">02 — EXECUTION</div>
+            <div className="font-display font-bold text-base text-text-primary mb-3">Pages scan in parallel</div>
+            <div className="flex-1 flex flex-col justify-center gap-3">
+              {['acme.com', 'acme.com/pricing', 'acme.com/about'].map((url, i) => (
+                <div key={url} className="flex items-center gap-3">
+                  <span className="font-mono text-xs text-text-tertiary w-4">{i + 1}</span>
+                  <div className="flex-1 bg-background-subtle border border-background-border h-7 flex items-center px-3">
+                    <span className="font-mono text-xs text-text-secondary truncate">{url}</span>
+                  </div>
+                  <span className="w-1.5 h-1.5 rounded-full bg-score-high animate-pulse flex-shrink-0" />
+                </div>
+              ))}
+            </div>
+            <div className="font-mono text-xs text-text-tertiary mt-4">MULTI_PAGE_CONCURRENCY = 2</div>
+          </div>
+
+          <div className="bg-background-raised px-8 py-8">
+            <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mb-4">03 — RESULT</div>
+            <div className="font-display font-bold text-base text-text-primary mb-3">One JSON payload</div>
+            <div className="bg-background-subtle border border-background-border p-4 font-mono text-xs leading-relaxed">
+              <P c="{" />{'\n'}
+              {'  '}<K c='"type"' /><P c=': ' /><S c='"multi"' /><P c=',' />{'\n'}
+              {'  '}<K c='"aggregate_score"' /><P c=': ' /><N c='74' /><P c=',' />{'\n'}
+              {'  '}<K c='"scans"' /><P c=': [' />{'\n'}
+              {'    '}<P c='{ ' /><K c='"path"' /><P c=': ' /><S c='"/"' /><P c=', ' /><K c='"score"' /><P c=': ' /><N c='80' /><P c=' },' />{'\n'}
+              {'    '}<P c='{ ' /><K c='"path"' /><P c=': ' /><S c='"/pricing"' /><P c=', ' /><K c='"score"' /><P c=': ' /><N c='71' /><P c=' },' />{'\n'}
+              {'    '}<P c='{ ' /><K c='"path"' /><P c=': ' /><S c='"/about"' /><P c=', ' /><K c='"score"' /><P c=': ' /><N c='70' /><P c=' }' />{'\n'}
+              {'  '}<P c=']' />{'\n'}
+              <P c="}" />
+            </div>
+          </div>
+        </div>
+
+        {/* Caption row */}
+        <div className="flex items-center gap-2 mt-2">
+          <span className="font-mono text-sm text-text-tertiary">3 pages</span>
+          <span className="text-background-border">·</span>
+          <span className="font-mono text-sm text-text-tertiary">3 credits</span>
+          <span className="text-background-border">·</span>
+          <span className="font-mono text-sm text-text-tertiary">one webhook</span>
+        </div>
+      </div>
+    </section>
+  )
+}
+
 // ── Stats Band ────────────────────────────────────────────────────────────────
 
 function StatsBand() {
@@ -743,88 +820,108 @@ function StatsBand() {
 
 // ── Pricing ───────────────────────────────────────────────────────────────────
 
-const API_FEATURES = [
-  'POST /api/v1/scan',
-  'POST /api/v1/scan/batch (up to 10 URLs)',
-  'Async mode + webhooks',
-  'Dynamic field selection',
-  'Industry benchmarking included',
-  '260+ conversion checks per scan',
-]
-
-const DASH_FEATURES = [
-  'Everything in API',
-  'Client workspaces',
-  'White-label report links (no webdoc branding)',
-  'Scheduled scans — weekly or monthly',
-  'Score trending over time',
-  'PDF export with your logo',
-]
-
-function Bullet() {
-  return <span className="w-1 h-1 bg-cyan-DEFAULT flex-shrink-0 mt-1.5 inline-block" style={{ width: 4, height: 4 }} />
+function PlanBullet() {
+  return <span className="bg-score-high flex-shrink-0 mt-1 mr-2 inline-block" style={{ width: 4, height: 4 }} />
 }
 
 function PricingSection() {
+  const plans = [
+    {
+      label: 'FREE',
+      labelClass: 'text-text-tertiary',
+      price: '$0',
+      sub: 'no account required',
+      features: ['1 free scan', 'Full conversion score', 'Top 3 findings', 'Benchmark position'],
+      ctaHref: '/playground',
+      ctaLabel: 'Try free →',
+      ctaClass: 'border border-background-border text-text-secondary hover:border-text-tertiary transition-colors',
+      popular: false,
+    },
+    {
+      label: 'STARTER',
+      labelClass: 'text-text-tertiary',
+      price: '$49',
+      sub: '/ month',
+      features: ['20 scans / month', 'Auto competitor analysis', 'Score trending over time', 'Full findings — all issues', 'Single user'],
+      ctaHref: '/signup?plan=starter',
+      ctaLabel: 'Start trial →',
+      ctaClass: 'border border-background-border text-text-secondary hover:border-text-tertiary transition-colors',
+      popular: false,
+    },
+    {
+      label: 'AGENCY',
+      labelClass: 'text-cyan-DEFAULT',
+      price: '$149',
+      sub: '/ month',
+      features: ['100 scans / month', 'Unlimited client workspaces', 'White-label reports', 'Multi-page scanning', '3 team seats'],
+      ctaHref: '/signup?plan=agency',
+      ctaLabel: 'Start trial →',
+      ctaClass: 'bg-cyan-DEFAULT text-text-inverse font-bold',
+      popular: true,
+    },
+    {
+      label: 'ENTERPRISE',
+      labelClass: 'text-cyan-DEFAULT',
+      price: '$499',
+      sub: '/ month',
+      features: ['500 scans / month', 'Everything in Agency', '10 team seats', 'Custom benchmarking', 'White-label subdomain'],
+      ctaHref: '/signup?plan=enterprise',
+      ctaLabel: 'Start trial →',
+      ctaClass: 'border border-cyan-DEFAULT text-cyan-DEFAULT font-bold hover:bg-cyan-dim transition-colors',
+      popular: false,
+    },
+  ]
+
   return (
     <section className="py-24 px-8 border-t border-background-border">
       <div className="max-w-[1280px] mx-auto">
         <Label>PRICING</Label>
-        <h2 className="font-display font-extrabold text-4xl tracking-tight text-text-primary mt-3 mb-12">
-          Simple. No minimums.
+        <h2 className="font-display font-bold text-4xl text-text-primary tracking-tight mt-3 mb-4">
+          Start free. Scale when ready.
         </h2>
+        <p className="font-body text-lg text-text-secondary max-w-2xl mb-16">
+          No contracts. Cancel anytime. API access is separate — pay per scan, no monthly fee.
+        </p>
 
-        <div className="grid grid-cols-2 gap-px bg-background-border max-w-4xl">
-          {/* API plan */}
-          <div className="bg-background-raised p-12">
-            <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest">API ACCESS</div>
-            <div className="mt-4">
-              <span className="font-display font-extrabold text-6xl text-text-primary tracking-tight">$0.15</span>
-              <span className="font-body text-text-tertiary text-base ml-2">/ scan</span>
+        <div className="grid grid-cols-4 gap-px bg-background-border">
+          {plans.map(plan => (
+            <div key={plan.label} className="bg-background-raised p-8 relative">
+              {plan.popular && (
+                <div className="absolute top-0 right-0 font-mono text-xs bg-cyan-DEFAULT text-text-inverse px-2 py-1">
+                  POPULAR
+                </div>
+              )}
+              <div className={`font-mono text-xs uppercase tracking-widest mb-4 ${plan.labelClass}`}>{plan.label}</div>
+              <div className="font-display font-bold text-4xl text-text-primary mb-1">{plan.price}</div>
+              <div className="font-body text-sm text-text-tertiary mb-6">{plan.sub}</div>
+              <ul className="list-none p-0 m-0">
+                {plan.features.map(f => (
+                  <li key={f} className="flex items-start mb-2">
+                    <PlanBullet />
+                    <span className="font-body text-xs text-text-secondary">{f}</span>
+                  </li>
+                ))}
+              </ul>
+              <Link
+                href={plan.ctaHref}
+                className={`block text-center font-body text-sm py-3 mt-6 no-underline ${plan.ctaClass}`}
+              >
+                {plan.ctaLabel}
+              </Link>
             </div>
-            <div className="font-body text-sm text-text-tertiary mt-2 mb-10">Pay as you go. No monthly fee. No minimum.</div>
-            <ul className="list-none p-0 m-0 mb-0">
-              {API_FEATURES.map(f => (
-                <li key={f} className="flex items-start gap-3 mb-3">
-                  <Bullet />
-                  <span className="font-body text-sm text-text-secondary">{f}</span>
-                </li>
-              ))}
-            </ul>
-            <Link
-              href="/signup"
-              className="block text-center bg-cyan-DEFAULT text-text-inverse font-body font-bold text-sm py-3.5 mt-10 no-underline hover:opacity-90 transition-opacity duration-150"
-            >
-              Get API key — free to start →
-            </Link>
-          </div>
+          ))}
+        </div>
 
-          {/* Dashboard plan */}
-          <div className="bg-background-raised p-12 border-l-2 border-cyan-DEFAULT relative">
-            <div className="absolute top-4 right-4 bg-cyan-DEFAULT text-text-inverse font-mono text-xs px-2 py-1">
-              AGENCY
-            </div>
-            <div className="font-mono text-xs text-cyan-DEFAULT uppercase tracking-widest">DASHBOARD + API</div>
-            <div className="mt-4">
-              <span className="font-display font-extrabold text-6xl text-text-primary tracking-tight">$99</span>
-              <span className="font-body text-text-tertiary text-base ml-2">/ month</span>
-            </div>
-            <div className="font-body text-sm text-text-tertiary mt-2 mb-10">50 scans included. White-label reports.</div>
-            <ul className="list-none p-0 m-0 mb-0">
-              {DASH_FEATURES.map(f => (
-                <li key={f} className="flex items-start gap-3 mb-3">
-                  <Bullet />
-                  <span className="font-body text-sm text-text-secondary">{f}</span>
-                </li>
-              ))}
-            </ul>
-            <Link
-              href="/signup?plan=dashboard"
-              className="block text-center bg-transparent border border-cyan-DEFAULT text-cyan-DEFAULT font-body font-bold text-sm py-3.5 mt-10 no-underline hover:bg-cyan-glow transition-colors duration-150"
-            >
-              Start 14-day trial →
-            </Link>
+        {/* API band */}
+        <div className="mt-px bg-background-raised border border-background-border px-8 py-6 flex items-center justify-between">
+          <div>
+            <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mb-1">API ACCESS</div>
+            <div className="font-display font-bold text-xl text-text-primary">$0.15 / scan</div>
+            <div className="font-body text-xs text-text-tertiary mt-1">Pay as you go. No monthly fee. No minimum.</div>
           </div>
+          <Link href="/pricing" className="font-body text-sm text-cyan-DEFAULT hover:opacity-80 transition-opacity no-underline">
+            See full pricing details →
+          </Link>
         </div>
       </div>
     </section>
@@ -944,6 +1041,7 @@ export default function HomePage() {
       <HowItWorksSection />
       <EndpointsSection />
       <ThreeDoorsSection />
+      <MultiPageSection />
       <StatsBand />
       <PricingSection />
       <FaqSection />

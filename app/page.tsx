@@ -30,7 +30,7 @@ function NavBar() {
           webdoc<span className="text-cyan-DEFAULT">.ai</span>
         </Link>
         <div className="flex items-center gap-6">
-          {['Docs', 'Playground', 'Pricing', 'Changelog'].map(link => (
+          {['Docs', 'Pricing', 'Changelog'].map(link => (
             <Link
               key={link}
               href={`/${link.toLowerCase()}`}
@@ -42,8 +42,14 @@ function NavBar() {
         </div>
       </div>
       <div className="flex items-center gap-4">
-        <Link href="/signin" className="font-body text-sm text-text-secondary no-underline hover:text-text-primary transition-colors duration-150">
-          Sign in
+        <Link href="/playground" className="font-body text-sm text-text-secondary no-underline hover:text-text-primary transition-colors duration-150">
+          Scan my site
+        </Link>
+        <Link
+          href="/dashboard"
+          className="border border-background-border font-body text-sm text-text-secondary px-4 py-1.5 no-underline hover:text-text-primary hover:border-text-tertiary transition-colors duration-150"
+        >
+          Dashboard →
         </Link>
         <Link
           href="/signup"
@@ -445,6 +451,95 @@ function EndpointsSection() {
   )
 }
 
+// ── Three Doors ───────────────────────────────────────────────────────────────
+
+function ThreeDoorsSection() {
+  return (
+    <section className="py-24 px-8 border-t border-background-border">
+      <div className="max-w-[1280px] mx-auto">
+        <Label>ONE ENGINE. THREE WAYS IN.</Label>
+        <h2 className="font-display font-bold text-4xl text-text-primary tracking-tight mt-3 mb-4">
+          Same scan. Different interface.
+        </h2>
+        <p className="font-body text-lg text-text-secondary max-w-2xl mb-16">
+          Whether you&apos;re diagnosing your own site, managing client audits, or building conversion
+          intelligence into a product — it&apos;s the same engine underneath.
+        </p>
+
+        <div className="grid grid-cols-3 gap-px bg-background-border">
+
+          {/* Panel 1 — Founders */}
+          <div className="bg-background-raised p-10 hover:bg-background-interactive transition-colors duration-200 cursor-pointer">
+            <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mb-6">FOR FOUNDERS</div>
+            <h3 className="font-display font-bold text-2xl text-text-primary leading-snug mb-4">
+              Diagnose your site.
+            </h3>
+            <p className="font-body text-sm text-text-secondary leading-relaxed mb-8">
+              Paste your URL. Get a full conversion audit in 90 seconds — score, ranked findings,
+              AI-rewritten copy, and how you compare against 3 competitors in your category.
+              Free to start.
+            </p>
+            <div>
+              <Link
+                href="/playground"
+                className="font-body text-sm text-text-secondary border-b border-background-border pb-0.5 no-underline hover:text-text-primary hover:border-text-tertiary transition-colors duration-150"
+              >
+                Scan my site →
+              </Link>
+              <div className="font-mono text-xs text-text-tertiary mt-3">Free · No account required</div>
+            </div>
+          </div>
+
+          {/* Panel 2 — Agencies */}
+          <div className="bg-background-raised p-10 hover:bg-background-interactive transition-colors duration-200 cursor-pointer">
+            <div className="font-mono text-xs text-cyan-DEFAULT uppercase tracking-widest mb-6">FOR AGENCIES</div>
+            <h3 className="font-display font-bold text-2xl text-text-primary leading-snug mb-4">
+              Manage client audits.
+            </h3>
+            <p className="font-body text-sm text-text-secondary leading-relaxed mb-8">
+              Client workspaces, white-label report links, multi-page scanning, and competitor
+              benchmarking per client. Show up to every call with data, not opinions.
+            </p>
+            <div>
+              <Link
+                href="/pricing"
+                className="font-body text-sm text-cyan-DEFAULT border-b pb-0.5 no-underline transition-colors duration-150"
+                style={{ borderColor: 'rgba(0,200,255,0.3)' }}
+              >
+                See agency plan →
+              </Link>
+              <div className="font-mono text-xs text-text-tertiary mt-3">From $149/month · 14-day free trial</div>
+            </div>
+          </div>
+
+          {/* Panel 3 — Developers */}
+          <div className="bg-background-raised p-10 hover:bg-background-interactive transition-colors duration-200 cursor-pointer">
+            <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mb-6">FOR DEVELOPERS</div>
+            <h3 className="font-display font-bold text-2xl text-text-primary leading-snug mb-4">
+              Build with it.
+            </h3>
+            <p className="font-body text-sm text-text-secondary leading-relaxed mb-8">
+              POST a URL, get structured JSON back. Dynamic field selection, async mode,
+              batch endpoint, webhooks. Integrate conversion intelligence into your product
+              in an afternoon.
+            </p>
+            <div>
+              <Link
+                href="/signup"
+                className="font-body text-sm text-text-secondary border-b border-background-border pb-0.5 no-underline hover:text-text-primary transition-colors duration-150"
+              >
+                Get API key →
+              </Link>
+              <div className="font-mono text-xs text-text-tertiary mt-3">$0.15/scan · No monthly fee</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+  )
+}
+
 // ── Use Cases ─────────────────────────────────────────────────────────────────
 
 const USE_CASES = [
@@ -622,6 +717,7 @@ export default function HomePage() {
       <SignalBand />
       <ResponseSection />
       <EndpointsSection />
+      <ThreeDoorsSection />
       <UseCasesSection />
       <PricingSection />
       <FooterSection />

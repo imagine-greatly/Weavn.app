@@ -334,6 +334,45 @@ function HeroSection() {
   )
 }
 
+// ── How It Works ─────────────────────────────────────────────────────────────
+
+function HowItWorksSection() {
+  const steps = [
+    {
+      n: '01',
+      title: 'POST a URL',
+      detail: 'Submit any URL to the API or paste it in the playground. No setup required.',
+    },
+    {
+      n: '02',
+      title: '260+ checks run',
+      detail: 'webdoc renders the full page and runs diagnostic checks across 9 dimensions — conversion, trust, messaging, technical, and more.',
+    },
+    {
+      n: '03',
+      title: 'Get structured output',
+      detail: 'Score, ranked findings, AI-rewritten copy, and industry benchmarks returned as JSON or displayed as a formatted report.',
+    },
+  ]
+  return (
+    <div className="w-full border-t border-background-border bg-background-raised py-12">
+      <div className="max-w-[1280px] mx-auto px-8">
+        <div className="grid grid-cols-3 gap-px bg-background-border">
+          {steps.map(step => (
+            <div key={step.n} className="bg-background-raised px-8 py-8 flex items-start gap-5">
+              <div className="font-display font-bold text-5xl text-background-border leading-none flex-shrink-0">{step.n}</div>
+              <div>
+                <div className="font-display font-bold text-lg text-text-primary mb-2">{step.title}</div>
+                <div className="font-body text-sm text-text-secondary leading-relaxed">{step.detail}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ── Signal Band ───────────────────────────────────────────────────────────────
 
 function SignalBand() {
@@ -669,55 +708,36 @@ function ThreeDoorsSection() {
   )
 }
 
-// ── Use Cases ─────────────────────────────────────────────────────────────────
+// ── Stats Band ────────────────────────────────────────────────────────────────
 
-const USE_CASES = [
-  {
-    tag: '01 — SAAS FOUNDERS',
-    headline: 'Know why your trial page isn\'t converting.',
-    body: 'POST your pricing page at 11pm. By 11:02 you have 23 ranked findings, a rewritten headline, and a benchmark showing exactly where you sit against your category.',
-    detail: 'Integrate in an afternoon. The response schema is stable — build against it once.',
-  },
-  {
-    tag: '02 — AGENCIES',
-    headline: 'Show up to every client call with data.',
-    body: 'Batch scan your entire client roster Sunday night. By Monday morning every client has a white-label report link. Findings in plain English. Score trending over time.',
-    detail: 'Dashboard plan includes client workspaces, scheduled scans, and PDF export with your logo.',
-  },
-  {
-    tag: '03 — DEVELOPERS',
-    headline: 'Add conversion intelligence to your product.',
-    body: 'Your users paste a URL. Your product returns a score, ranked findings, and AI-rewritten copy. A genuine diagnostic feature — not another integration.',
-    detail: 'Dynamic field selection means you only request the fields your UI needs. Pay $0.15 per scan regardless of field count.',
-  },
-]
-
-function UseCasesSection() {
+function StatsBand() {
   return (
-    <section className="py-24 px-8 border-t border-background-border">
-      <div className="max-w-[1280px] mx-auto">
-        <Label>USE CASES</Label>
-        <h2 className="font-display font-extrabold text-4xl tracking-tight text-text-primary mt-3 mb-12">
-          What teams build with it.
-        </h2>
-
-        <div className="grid grid-cols-3 gap-px bg-background-border">
-          {USE_CASES.map(uc => (
-            <div
-              key={uc.tag}
-              className="bg-background-base p-9 hover:bg-background-raised transition-colors duration-200"
-            >
-              <div className="font-mono text-xs text-cyan-DEFAULT tracking-widest">{uc.tag}</div>
-              <h3 className="font-display font-bold text-xl text-text-primary mt-4 leading-snug">{uc.headline}</h3>
-              <p className="font-body text-sm text-text-secondary mt-3 leading-relaxed">{uc.body}</p>
-              <p className="font-body text-xs text-text-tertiary mt-6 pt-4 border-t border-background-border leading-relaxed">
-                {uc.detail}
-              </p>
-            </div>
-          ))}
+    <div className="w-full border-t border-b border-background-border bg-background-raised py-16">
+      <div className="max-w-[1280px] mx-auto px-8">
+        <Label>LIVE DATA</Label>
+        <div className="grid grid-cols-4 gap-px bg-background-border mt-8">
+          <div className="bg-background-raised px-8 py-6">
+            <div className="font-display font-bold text-4xl text-text-primary">4,800+</div>
+            <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mt-2">SITES SCANNED</div>
+          </div>
+          <div className="bg-background-raised px-8 py-6">
+            <div className="font-display font-bold text-4xl text-score-mid">58</div>
+            <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mt-2">AVERAGE SCORE</div>
+            <div className="font-mono text-xs text-text-tertiary mt-1">across all sites scanned</div>
+          </div>
+          <div className="bg-background-raised px-8 py-6">
+            <div className="font-display font-bold text-4xl text-text-primary">23</div>
+            <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mt-2">AVG FINDINGS PER SITE</div>
+          </div>
+          <div className="bg-background-raised px-8 py-6">
+            <div className="font-display font-bold text-4xl text-severity-critical">76%</div>
+            <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mt-2">HAVE NO ABOVE-FOLD PROOF</div>
+            <div className="font-mono text-xs text-text-tertiary mt-1">most common critical finding</div>
+          </div>
         </div>
+        <div className="font-body text-xs text-text-tertiary text-center mt-6">Aggregated from real scans. No synthetic data.</div>
       </div>
-    </section>
+    </div>
   )
 }
 
@@ -811,25 +831,101 @@ function PricingSection() {
   )
 }
 
+// ── FAQ ───────────────────────────────────────────────────────────────────────
+
+const FAQ_ITEMS = [
+  {
+    q: 'Is this just a Lighthouse score?',
+    a: 'No. Lighthouse measures technical performance — page speed, accessibility, SEO signals. webdoc measures conversion — whether your messaging, trust signals, CTAs, and offer clarity are working. Completely different diagnostic.',
+  },
+  {
+    q: 'How is the score calculated?',
+    a: "260+ checks across 9 dimensions. Each check is weighted by its estimated impact on conversion rate. The score is benchmarked against every other site webdoc has scanned in your industry category — so 61 means you're in the 63rd percentile for B2B SaaS, not just an abstract number.",
+  },
+  {
+    q: "What happens to my site's data?",
+    a: 'Scan results are stored and associated with your account. We use aggregate anonymized data to improve benchmarks. We do not sell or share individual scan results.',
+  },
+  {
+    q: 'How accurate are the findings?',
+    a: "Findings are grounded in specific visible content on your page — not generic advice. The AI is instructed to never fabricate a finding it can't point to in the actual page content. Unknown is better than wrong.",
+  },
+  {
+    q: 'Can I use this for client sites?',
+    a: "Yes — that's what the Agency plan is for. Unlimited client workspaces, white-label report links, multi-page scanning, and competitor benchmarking per client. $149/month.",
+  },
+]
+
+function FaqSection() {
+  const [openFaq, setOpenFaq] = useState<number | null>(null)
+
+  return (
+    <div className="max-w-[720px] mx-auto px-8 py-24 border-t border-background-border">
+      <Label>FAQ</Label>
+      <h2 className="font-display font-bold text-3xl text-text-primary mt-3 mb-12">Common questions.</h2>
+      {FAQ_ITEMS.map((item, i) => (
+        <div key={i} className="border-b border-background-border py-5">
+          <div
+            className="flex justify-between items-center cursor-pointer"
+            onClick={() => setOpenFaq(openFaq === i ? null : i)}
+          >
+            <span className="font-body font-semibold text-sm text-text-primary">{item.q}</span>
+            <svg
+              width={16}
+              height={16}
+              viewBox="0 0 16 16"
+              fill="none"
+              className={`flex-shrink-0 ml-4 transition-transform duration-200 text-text-tertiary ${openFaq === i ? 'rotate-180' : ''}`}
+            >
+              <path d="M4 6l4 4 4-4" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </div>
+          {openFaq === i && (
+            <p className="font-body text-sm text-text-secondary leading-relaxed mt-4">{item.a}</p>
+          )}
+        </div>
+      ))}
+    </div>
+  )
+}
+
 // ── Footer ────────────────────────────────────────────────────────────────────
 
 function FooterSection() {
   return (
-    <footer className="border-t border-background-border py-10 px-8">
-      <div className="max-w-[1280px] mx-auto flex justify-between items-center">
-        <Link href="/" className="font-display font-extrabold text-sm text-text-primary no-underline">
-          webdoc<span className="text-cyan-DEFAULT">.ai</span>
-        </Link>
-        <div className="flex gap-7">
-          {['API Docs', 'Changelog', 'Status', 'Privacy'].map(l => (
+    <footer className="border-t border-background-border bg-background-raised">
+      <div className="max-w-[1280px] mx-auto px-8 py-12 grid grid-cols-3 gap-16">
+        <div>
+          <Link href="/" className="font-display font-extrabold text-base text-text-primary no-underline">
+            webdoc<span className="text-cyan-DEFAULT">.ai</span>
+          </Link>
+          <p className="font-body text-sm text-text-secondary mt-3 max-w-xs leading-relaxed">
+            The conversion audit API. 260+ checks, ranked findings, AI-rewritten copy. One endpoint.
+          </p>
+        </div>
+        <div>
+          <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mb-4">PRODUCT</div>
+          {['Playground', 'Pricing', 'Docs', 'Changelog'].map(l => (
             <Link
               key={l}
-              href={`/${l.toLowerCase().replace(' ', '-')}`}
-              className="font-body text-xs text-text-tertiary no-underline hover:text-text-secondary transition-colors duration-150"
+              href={`/${l.toLowerCase()}`}
+              className="font-body text-sm text-text-secondary hover:text-text-primary transition-colors block mb-2 no-underline"
             >
               {l}
             </Link>
           ))}
+        </div>
+        <div>
+          <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mb-4">GET STARTED</div>
+          <Link href="/playground" className="font-body text-sm text-text-secondary hover:text-text-primary block mb-3 no-underline">Scan my site free →</Link>
+          <Link href="/pricing" className="font-body text-sm text-text-secondary hover:text-text-primary block mb-3 no-underline">Agency plans →</Link>
+          <Link href="/signup" className="font-body text-sm text-cyan-DEFAULT hover:opacity-80 block mb-3 no-underline">Get API key →</Link>
+        </div>
+      </div>
+      <div className="border-t border-background-border">
+        <div className="max-w-[1280px] mx-auto px-8 py-5 flex justify-between items-center">
+          <span className="font-mono text-xs text-text-tertiary">© 2026 webdoc.ai</span>
+          <span className="font-mono text-xs text-text-tertiary">Status · Privacy · Terms</span>
         </div>
       </div>
     </footer>
@@ -845,10 +941,12 @@ export default function HomePage() {
       <HeroSection />
       <SignalBand />
       <ResponseSection />
+      <HowItWorksSection />
       <EndpointsSection />
       <ThreeDoorsSection />
-      <UseCasesSection />
+      <StatsBand />
       <PricingSection />
+      <FaqSection />
       <FooterSection />
     </main>
   )

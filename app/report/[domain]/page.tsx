@@ -1,329 +1,343 @@
+'use client'
+
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import Label from '@/components/ui/Label'
-import ScoreRingClient from './ScoreRingClient'
+import { useParams, useRouter } from 'next/navigation'
+import ScoreRing from '@/components/ui/ScoreRing'
 
-// ── Hardcoded data — wired in technical chat ──────────────────────────────────
+// ── Types ─────────────────────────────────────────────────────────────────────
 
-const SCORE = 61
-const INDUSTRY_AVG = 54
-const TOP_QUARTILE = 78
+type Severity = 'critical' | 'high' | 'medium'
 
-const FINDINGS = [
-  {
-    priority: 1,
-    severity: 'critical' as const,
-    title: 'Hero headline is feature-led, not outcome-led',
-    detail: 'Current headline names a feature ("Manage Your Projects"). Visitors need to know what changes for them — outcomes, not inputs.',
-    fix: 'Rewrite to: "Ship projects on time, every time." — outcome-led, present tense.',
-    lift: '12–18% lift',
-  },
-  {
-    priority: 2,
-    severity: 'high' as const,
-    title: 'No above-fold proof — testimonials buried at 2,400px',
-    detail: 'Trust signals exist but appear below three full viewport scrolls. Most visitors leave before they get there.',
-    fix: 'Surface one logo strip or testimonial within 600px of page top.',
-    lift: '8–11% lift',
-  },
-  {
-    priority: 3,
-    severity: 'high' as const,
-    title: 'Dual CTAs create decision paralysis',
-    detail: 'Two equal-weight CTA buttons in the hero split intent and reduce each click.',
-    fix: 'Demote secondary CTA to a text link. One primary action per section.',
-    lift: '6–9% lift',
-  },
-  {
-    priority: 4,
-    severity: 'medium' as const,
-    title: 'Pricing page is missing comparison anchoring',
-    detail: 'No tier comparison means visitors cannot self-select. Most leave to find it elsewhere.',
-    fix: 'Add a 2-column comparison with the most common objection addressed per tier.',
-    lift: '4–7% lift',
-  },
-  {
-    priority: 5,
-    severity: 'medium' as const,
-    title: 'CTA is not visible on first scroll on mobile',
-    detail: 'At 390px viewport the primary button is below fold on first paint.',
-    fix: 'Move CTA above the product screenshot or add a sticky mobile CTA bar.',
-    lift: '3–6% lift',
-  },
-]
-
-const SEV_BADGE: Record<string, string> = {
-  critical: 'bg-severity-critical/10 text-severity-critical',
-  high: 'bg-severity-high/10 text-severity-high',
-  medium: 'bg-severity-medium/10 text-severity-medium',
+interface Finding {
+  id: string
+  title: string
+  severity: Severity
+  dimension: string
+  impact: string
+  explanation: string
+  recommendation: string
+  rewritten_copy: string | null
 }
 
-const SEV_BORDER: Record<string, string> = {
-  critical: 'border-l-severity-critical',
-  high: 'border-l-severity-high',
-  medium: 'border-l-severity-medium',
+interface ScanResult {
+  url: string
+  domain: string
+  score: number
+  site_type: string
+  benchmark: {
+    industry: string
+    percentile: number
+    average_score: number
+    top_quartile: number
+  }
+  dimensions: Record<string, number>
+  findings: Finding[]
+  copy_rewrites: {
+    headline: string
+    subheadline: string
+    cta: string
+  }
+  growth_blueprint: Array<{
+    priority: number
+    action: string
+    effort: string
+    impact: string
+    timeframe: string
+  }>
+  scan_meta: {
+    duration_ms: number
+    cost_usd: number
+    scanned_at: string
+  }
 }
 
-// ── Sub-components ────────────────────────────────────────────────────────────
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
-function FindingCard({ f }: { f: typeof FINDINGS[number] }) {
+function scoreInterpretation(score: number): string {
+  if (score < 40)  return 'Your site has severe conversion issues that are likely costing you the majority of potential signups.'
+  if (score < 60)  return 'Your site has significant conversion issues. Fixing the critical findings below could meaningfully increase signups.'
+  if (score < 75)  return 'Your site converts at a below-average rate. Several high-impact improvements are available.'
+  if (score < 90)  return 'Your site is above average but has room to improve. Focus on the high-impact findings below.'
+  return 'Your site is well-optimized. Minor improvements remain available.'
+}
+
+function barColor(score: number): string {
+  if (score >= 80) return '#22c55e'
+  if (score >= 65) return '#facc15'
+  if (score >= 50) return '#f59e0b'
+  return '#ef4444'
+}
+
+function formatDimension(key: string): string {
+  return key.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
+}
+
+function formatTimeframe(tf: string): string {
+  return tf.replace(/_/g, ' ')
+}
+
+// ── Severity badge ────────────────────────────────────────────────────────────
+
+const SEVERITY_STYLES: Record<Severity, string> = {
+  critical: 'text-red-400 border border-red-400/30',
+  high:     'text-amber-400 border border-amber-400/30',
+  medium:   'text-yellow-400 border border-yellow-400/30',
+}
+
+function SeverityBadge({ severity }: { severity: Severity }) {
   return (
-    <div className={`bg-background-raised border border-background-border border-l-4 ${SEV_BORDER[f.severity]} p-6 mb-4`}>
-      <div className="flex items-center gap-3 mb-3">
-        <span className="font-mono text-xs text-text-tertiary">{String(f.priority).padStart(2, '0')}</span>
-        <span className={`font-mono text-xs px-2 py-0.5 uppercase ${SEV_BADGE[f.severity]}`}>{f.severity}</span>
-        <span className="ml-auto font-mono text-xs text-score-mid">{f.lift}</span>
-      </div>
-      <div className="font-body font-semibold text-sm text-text-primary mb-3">{f.title}</div>
-      <div className="font-body text-xs text-text-secondary leading-relaxed mb-4">{f.detail}</div>
-      <div className="border-l-2 border-cyan-DEFAULT pl-3 py-2 bg-background-subtle">
-        <div className="font-mono text-xs text-text-tertiary mb-1">FIX</div>
-        <div className="font-body text-xs text-text-primary">{f.fix}</div>
-      </div>
-    </div>
+    <span className={`font-mono text-xs uppercase px-2 py-0.5 ${SEVERITY_STYLES[severity]}`}>
+      {severity}
+    </span>
   )
 }
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 
-export default async function ReportPage({ params }: { params: Promise<{ domain: string }> }) {
-  const { domain } = await params
+export default function ReportPage() {
+  const params = useParams<{ domain: string }>()
+  const router = useRouter()
+  const domain = decodeURIComponent(params?.domain ?? '')
+
+  const [scanData, setScanData] = useState<ScanResult | null>(null)
+  const [loaded, setLoaded]     = useState(false)
+  const [mounted, setMounted]   = useState(false)
+
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem('scan_result')
+      if (raw) setScanData(JSON.parse(raw) as ScanResult)
+    } catch {}
+    setLoaded(true)
+  }, [])
+
+  useEffect(() => {
+    if (!loaded) return
+    const t = setTimeout(() => setMounted(true), 80)
+    return () => clearTimeout(t)
+  }, [loaded])
+
+  // Scan not found
+  if (loaded && !scanData) {
+    return (
+      <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center">
+        <div className="text-center">
+          <p className="font-mono text-sm text-text-tertiary mb-4">No scan data found.</p>
+          <Link href="/scan" className="font-mono text-xs text-cyan-DEFAULT hover:underline">
+            ← Run a scan
+          </Link>
+        </div>
+      </div>
+    )
+  }
+
+  if (!loaded || !scanData) return null
+
+  const { score, benchmark, dimensions, findings, copy_rewrites, growth_blueprint } = scanData
+  const dimEntries = Object.entries(dimensions)
 
   return (
-    <main className="bg-background-base min-h-screen">
-      <div className="max-w-[900px] mx-auto px-8 py-16">
+    <main className="bg-background-base min-h-screen pb-24">
+      <div className="max-w-3xl mx-auto px-6 pt-12">
 
-        {/* Header */}
-        <div className="flex justify-between items-start mb-12">
+        {/* ── SECTION 1 — REPORT HEADER ─────────────────────────────────── */}
+
+        {/* Domain + scan time */}
+        <div className="font-mono text-xs text-text-tertiary mb-6">
+          {domain}&nbsp;&nbsp;·&nbsp;&nbsp;Scanned just now
+        </div>
+
+        {/* Score row */}
+        <div className="flex items-center justify-between mb-6">
           <div>
-            <Label>CONVERSION AUDIT</Label>
-            <h1 className="font-display font-bold text-4xl text-text-primary tracking-tight mt-3">
-              {domain}
-            </h1>
-            <p className="font-mono text-xs text-text-tertiary mt-2">
-              Analyzed today · 260+ checks across 9 dimensions
-            </p>
+            <div className="font-display font-bold text-8xl text-text-primary leading-none">
+              {score}
+            </div>
+            <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mt-2">
+              CONVERSION SCORE
+            </div>
           </div>
-          <div className="text-center flex-shrink-0">
-            <ScoreRingClient size="lg" animated={true} score={SCORE} />
-            <div className="font-mono text-xs text-text-tertiary mt-2">CONVERSION SCORE</div>
+          <div className="flex-shrink-0">
+            <ScoreRing score={score} size="lg" animated />
           </div>
+        </div>
+
+        {/* Interpretation */}
+        <div className="border-t border-background-border pt-6 mb-6">
+          <p className="font-body text-base text-text-secondary">
+            {scoreInterpretation(score)}
+          </p>
         </div>
 
         {/* Benchmark band */}
-        <div className="bg-background-raised border border-background-border p-6 mb-10">
-          <div className="grid grid-cols-3 gap-px bg-background-border">
-            <div className="bg-background-raised px-6 py-4">
-              <div className="font-display font-bold text-3xl text-text-secondary">{INDUSTRY_AVG}</div>
-              <div className="font-mono text-xs text-text-tertiary mt-1 uppercase tracking-widest">INDUSTRY AVERAGE</div>
-              <div className="font-mono text-xs text-text-tertiary">B2B SaaS</div>
-            </div>
-            <div className="bg-background-raised px-6 py-4">
-              <div className="font-display font-bold text-3xl text-score-mid">{SCORE}</div>
-              <div className="font-mono text-xs text-text-tertiary mt-1 uppercase tracking-widest">YOUR SCORE</div>
-              <div className="font-mono text-xs text-score-mid">63rd percentile</div>
-            </div>
-            <div className="bg-background-raised px-6 py-4">
-              <div className="font-display font-bold text-3xl text-text-secondary">{TOP_QUARTILE}</div>
-              <div className="font-mono text-xs text-text-tertiary mt-1 uppercase tracking-widest">TOP QUARTILE</div>
-            </div>
+        <div className="bg-background-raised border border-background-border p-4 flex items-center justify-between mb-12">
+          <div className="font-mono text-xs text-text-tertiary">
+            INDUSTRY BENCHMARK&nbsp;&nbsp;·&nbsp;&nbsp;{benchmark.industry.toUpperCase()}
           </div>
-
-          {/* Position bar */}
-          <div className="mt-5 w-full">
-            <div className="relative h-6">
-              <span
-                className="absolute font-mono text-xs text-score-mid"
-                style={{ left: `${SCORE}%`, transform: 'translateX(-50%)' }}
-              >
-                You
-              </span>
+          <div className="text-center">
+            <div className="font-display font-bold text-2xl text-text-primary leading-none">
+              {benchmark.percentile}th
             </div>
-            <div className="relative w-full h-px bg-background-border">
-              {/* Industry avg marker */}
-              <div
-                className="absolute bg-text-tertiary"
-                style={{ left: `${INDUSTRY_AVG}%`, top: -5, width: 2, height: 10 }}
-              />
-              {/* Your score marker — taller */}
-              <div
-                className="absolute bg-score-mid"
-                style={{ left: `${SCORE}%`, top: -7, width: 2, height: 14 }}
-              />
-              {/* Top quartile marker */}
-              <div
-                className="absolute bg-text-tertiary"
-                style={{ left: `${TOP_QUARTILE}%`, top: -5, width: 2, height: 10 }}
-              />
-            </div>
+            <div className="font-mono text-xs text-text-tertiary mt-0.5">percentile</div>
+          </div>
+          <div className="font-mono text-xs text-text-secondary text-right">
+            Avg: {benchmark.average_score}&nbsp;&nbsp;·&nbsp;&nbsp;Top quartile: {benchmark.top_quartile}
           </div>
         </div>
 
-        {/* Score trending teaser */}
-        <div className="bg-background-raised border border-background-border p-6 mb-10">
-          <div className="flex justify-between items-center">
-            <div>
-              <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mb-2">SCORE HISTORY</div>
-              <div className="font-body text-sm text-text-secondary">
-                Track your score over time to measure improvement.
-              </div>
+        {/* ── SECTION 2 — DIMENSIONS ─────────────────────────────────────── */}
+
+        <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mb-4 mt-12">
+          PERFORMANCE BY DIMENSION
+        </div>
+
+        {dimEntries.map(([key, val], i) => (
+          <div key={key} className="flex items-center gap-4 mb-3">
+            <div className="font-mono text-xs text-text-secondary w-48 flex-shrink-0">
+              {formatDimension(key)}
             </div>
-            <div className="flex-shrink-0 ml-8">
-              <div className="relative" style={{ width: 160, height: 52 }}>
-                <svg width={160} height={40} viewBox="0 0 160 40">
-                  <line
-                    x1={0} y1={28} x2={140} y2={28}
-                    stroke="#111827" strokeWidth={1} strokeDasharray="4 4"
-                  />
-                  <circle cx={140} cy={28} r={4} fill="#F5A623" />
-                </svg>
+            <div className="flex-1 h-1.5 bg-background-border rounded-full relative overflow-hidden">
+              <div
+                className="absolute inset-y-0 left-0 rounded-full"
+                style={{
+                  width:           mounted ? `${val}%` : '0%',
+                  backgroundColor: barColor(val),
+                  transition:      'width 700ms ease-out',
+                  transitionDelay: `${i * 100}ms`,
+                }}
+              />
+            </div>
+            <div className="font-mono text-xs text-text-primary w-8 text-right flex-shrink-0">
+              {val}
+            </div>
+          </div>
+        ))}
+
+        {/* ── SECTION 3 — FINDINGS ───────────────────────────────────────── */}
+
+        <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mb-4 mt-12">
+          {`FINDINGS  ·  ${findings.length} ISSUES`}
+        </div>
+
+        {findings.map(f => (
+          <div key={f.id} className="border border-background-border p-5 mb-3">
+            <div className="flex items-center justify-between mb-2">
+              <span className="font-mono text-xs text-text-tertiary">{f.id}</span>
+              <SeverityBadge severity={f.severity} />
+            </div>
+            <div className="font-body font-medium text-base text-text-primary mt-2 mb-3">
+              {f.title}
+            </div>
+            <div className="font-body text-sm text-text-secondary leading-relaxed mb-3">
+              {f.explanation}
+            </div>
+            <div className="border-l-2 border-cyan-DEFAULT/30 pl-3">
+              <span className="font-mono text-xs text-cyan-DEFAULT mr-1">FIX:</span>
+              <span className="font-body text-sm text-text-secondary">
+                {f.recommendation}
+              </span>
+            </div>
+            {f.rewritten_copy && (
+              <div className="mt-3 bg-background-raised p-3">
+                <div className="font-mono text-xs text-text-tertiary mb-1">AI REWRITE:</div>
+                <div className="font-body text-sm text-text-primary italic">
+                  {f.rewritten_copy}
+                </div>
+              </div>
+            )}
+          </div>
+        ))}
+
+        {/* ── SECTION 4 — COPY REWRITES ──────────────────────────────────── */}
+
+        <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mb-4 mt-12">
+          COPY REWRITES
+        </div>
+
+        {([
+          ['HEADLINE',    copy_rewrites.headline],
+          ['SUBHEADLINE', copy_rewrites.subheadline],
+          ['CTA',         copy_rewrites.cta],
+        ] as [string, string][]).map(([label, rewrite]) => (
+          <div key={label} className="border-b border-background-border py-4">
+            <div className="font-mono text-xs text-text-tertiary uppercase mb-2">{label}</div>
+            <div className="flex items-start gap-3">
+              <span className="font-body text-sm text-text-tertiary line-through opacity-60">
+                Original copy from your page
+              </span>
+              <span className="text-text-tertiary flex-shrink-0 mt-0.5">→</span>
+              <span className="font-body text-sm text-text-primary">{rewrite}</span>
+            </div>
+          </div>
+        ))}
+
+        {/* ── SECTION 5 — GROWTH BLUEPRINT ───────────────────────────────── */}
+
+        <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mb-4 mt-12">
+          GROWTH BLUEPRINT
+        </div>
+
+        {growth_blueprint.map((item, i) => (
+          <div key={item.priority} className="flex items-start gap-4 py-4 border-b border-background-border">
+            <div
+              className="font-display font-bold text-4xl flex-shrink-0 w-12 leading-none"
+              style={{ color: '#1a1f2e' }}
+            >
+              {item.priority}
+            </div>
+            <div className="flex-1">
+              <div className="font-body font-medium text-base text-text-primary mb-2">
+                {item.action}
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <span className="font-mono text-xs px-2 py-0.5 bg-background-raised text-text-tertiary">
+                  effort: {item.effort}
+                </span>
+                <span className="font-mono text-xs px-2 py-0.5 bg-background-raised text-text-tertiary">
+                  impact: {item.impact}
+                </span>
                 <span
-                  className="font-mono text-xs text-text-tertiary absolute"
-                  style={{ left: 132, top: 38 }}
+                  className={`font-mono text-xs px-2 py-0.5 bg-background-raised ${
+                    item.timeframe === 'today' ? 'text-cyan-DEFAULT' : 'text-text-tertiary'
+                  }`}
                 >
-                  today
+                  {formatTimeframe(item.timeframe)}
                 </span>
               </div>
             </div>
           </div>
-          <div className="mt-5 pt-5 border-t border-background-border">
-            <span className="font-body text-xs text-text-tertiary">
-              Scan monthly to track your trajectory.{' '}
-            </span>
-            <Link href="/pricing" className="font-body text-xs text-cyan-DEFAULT no-underline cursor-pointer">
-              Starter plan from $49/month →
-            </Link>
+        ))}
+
+        {/* ── SECTION 6 — UPGRADE HOOK ────────────────────────────────────── */}
+
+        <div className="mt-16 border border-background-border p-8 text-center">
+          <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mb-3">
+            TRACK YOUR PROGRESS
           </div>
-        </div>
-
-        {/* Findings */}
-        <Label>FINDINGS</Label>
-        <h2 className="font-display font-bold text-2xl text-text-primary mb-2">
-          23 issues ranked by revenue impact.
-        </h2>
-        <p className="font-body text-sm text-text-secondary mb-8">
-          Findings are specific to your page content — not generic advice.
-        </p>
-
-        {FINDINGS.map(f => <FindingCard key={f.priority} f={f} />)}
-
-        {/* Locked findings */}
-        <div className="relative bg-background-raised border border-background-border p-8 text-center overflow-hidden mb-16">
-          {/* Blurred fake rows */}
-          <div className="blur-sm opacity-20 select-none pointer-events-none">
-            {[
-              { n: '06', sev: 'medium', title: 'Form friction exceeds 4-field threshold on signup page' },
-              { n: '07', sev: 'high', title: 'Pricing page lacks feature comparison table' },
-              { n: '08', sev: 'medium', title: 'Missing urgency signals in checkout flow' },
-            ].map(row => (
-              <div key={row.n} className="bg-background-subtle border border-background-border p-4 mb-2 text-left">
-                <div className="flex items-center gap-3 mb-2">
-                  <span className="font-mono text-xs text-text-tertiary">{row.n}</span>
-                  <span className="font-mono text-xs text-severity-high uppercase">{row.sev}</span>
-                </div>
-                <div className="font-body text-sm text-text-primary">{row.title}</div>
-              </div>
-            ))}
-          </div>
-          {/* Lock overlay */}
-          <div className="absolute inset-0 flex flex-col items-center justify-center p-8 bg-background-raised/80">
-            <div className="font-display font-bold text-xl text-text-primary mb-2">18 more findings</div>
-            <div className="font-body text-sm text-text-secondary mb-6 max-w-sm">
-              Unlock all findings, the full fix for each, and AI-rewritten copy with a Starter account.
-            </div>
+          <h3 className="font-display font-bold text-2xl text-text-primary mb-3">
+            See if your fixes are working.
+          </h3>
+          <p className="font-body text-sm text-text-secondary mb-6 max-w-sm mx-auto">
+            Rescan your site after making changes. Track your score over time.
+            See which dimensions improve. $49/month — cancel anytime.
+          </p>
+          <div className="flex items-center justify-center gap-3 flex-wrap">
             <Link
               href="/signup?plan=starter"
-              className="bg-cyan-DEFAULT text-text-inverse font-body font-bold text-sm px-8 py-3 no-underline"
+              className="bg-cyan-DEFAULT text-background-base font-mono text-sm font-bold px-6 py-3 no-underline hover:opacity-90 transition-opacity"
             >
-              Start free trial — $49/month →
+              START TRACKING  →
             </Link>
-            <span className="font-mono text-xs text-text-tertiary mt-3 block">
-              14-day free trial. No credit card required.
-            </span>
-          </div>
-        </div>
-
-        {/* AI-Rewritten Copy */}
-        <Label>AI-REWRITTEN COPY</Label>
-        <h2 className="font-display font-bold text-2xl text-text-primary mb-8">Drop-in replacements.</h2>
-
-        {/* Headline — full reveal */}
-        <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mb-3">HEADLINE</div>
-        <div className="grid grid-cols-2 gap-px bg-background-border mb-6">
-          <div className="bg-background-raised p-6">
-            <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mb-3">CURRENT</div>
-            <div className="font-body text-sm text-text-secondary leading-relaxed">Manage Your Projects Smarter</div>
-          </div>
-          <div className="bg-background-raised p-6 border-l-2 border-cyan-DEFAULT">
-            <div className="font-mono text-xs text-cyan-DEFAULT uppercase tracking-widest mb-3">REWRITTEN</div>
-            <div className="font-body text-sm text-text-primary leading-relaxed">Ship projects on time, every time.</div>
-          </div>
-        </div>
-
-        {/* Subheadline + CTA — locked */}
-        <div className="relative overflow-hidden">
-          <div className="blur-sm opacity-20 select-none pointer-events-none">
-            <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mb-3">SUBHEADLINE</div>
-            <div className="grid grid-cols-2 gap-px bg-background-border mb-6">
-              <div className="bg-background-raised p-6">
-                <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mb-3">CURRENT</div>
-                <div className="font-body text-sm text-text-secondary">The only tool your team needs to stay on track.</div>
-              </div>
-              <div className="bg-background-raised p-6 border-l-2 border-cyan-DEFAULT">
-                <div className="font-mono text-xs text-cyan-DEFAULT uppercase tracking-widest mb-3">REWRITTEN</div>
-                <div className="font-body text-sm text-text-primary">The project management layer your team actually uses.</div>
-              </div>
-            </div>
-            <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mb-3">PRIMARY CTA</div>
-            <div className="grid grid-cols-2 gap-px bg-background-border">
-              <div className="bg-background-raised p-6">
-                <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mb-3">CURRENT</div>
-                <div className="font-body text-sm text-text-secondary">Get started</div>
-              </div>
-              <div className="bg-background-raised p-6 border-l-2 border-cyan-DEFAULT">
-                <div className="font-mono text-xs text-cyan-DEFAULT uppercase tracking-widest mb-3">REWRITTEN</div>
-                <div className="font-body text-sm text-text-primary">Start free — no credit card</div>
-              </div>
-            </div>
-          </div>
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-background-base/80">
-            <div className="font-display font-bold text-lg text-text-primary mb-2 text-center">Unlock full copy rewrites</div>
-            <div className="font-body text-sm text-text-secondary mb-4 text-center max-w-xs">
-              Unlock subheadline and CTA rewrites with Starter.
-            </div>
-            <Link
-              href="/signup?plan=starter"
-              className="font-body text-sm text-cyan-DEFAULT no-underline"
+            <button
+              onClick={() => router.push('/scan')}
+              className="border border-background-border text-text-secondary font-mono text-sm px-6 py-3 bg-transparent cursor-pointer hover:border-text-tertiary transition-colors"
             >
-              Start free trial →
-            </Link>
+              RESCAN FREE
+            </button>
           </div>
         </div>
 
-      </div>
-
-      {/* Bottom CTA band — full width */}
-      <div className="w-full bg-background-raised border-t border-background-border py-12 px-8 text-center">
-        <h2 className="font-display font-bold text-3xl text-text-primary mb-3">Want to fix this?</h2>
-        <p className="font-body text-base text-text-secondary mb-8 max-w-md mx-auto">
-          Starter plan gives you all findings, monthly rescans, competitor comparison, and score trending. Cancel anytime.
-        </p>
-        <div className="flex gap-4 justify-center">
-          <Link
-            href="/signup?plan=starter"
-            className="bg-cyan-DEFAULT text-text-inverse font-body font-bold text-sm px-8 py-3 no-underline"
-          >
-            Start 14-day trial →
-          </Link>
-          <Link
-            href="/pricing"
-            className="border border-background-border text-text-secondary font-body text-sm px-8 py-3 no-underline hover:border-text-tertiary hover:text-text-primary transition-colors"
-          >
-            See all plans →
-          </Link>
-        </div>
-        <p className="font-mono text-xs text-text-tertiary mt-4">
-          Or get API access at $0.15/scan — no monthly fee
-        </p>
       </div>
     </main>
   )

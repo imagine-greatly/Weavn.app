@@ -825,105 +825,160 @@ function PlanBullet() {
 }
 
 function PricingSection() {
-  const plans = [
-    {
-      label: 'FREE',
-      labelClass: 'text-text-tertiary',
-      price: '$0',
-      sub: 'no account required',
-      features: ['1 free scan', 'Full conversion score', 'Top 3 findings', 'Benchmark position'],
-      ctaHref: '/playground',
-      ctaLabel: 'Try free →',
-      ctaClass: 'border border-background-border text-text-secondary hover:border-text-tertiary transition-colors',
-      popular: false,
-    },
-    {
-      label: 'STARTER',
-      labelClass: 'text-text-tertiary',
-      price: '$49',
-      sub: '/ month',
-      features: ['20 scans / month', 'Auto competitor analysis', 'Score trending over time', 'Full findings — all issues', 'Single user'],
-      ctaHref: '/signup?plan=starter',
-      ctaLabel: 'Start trial →',
-      ctaClass: 'border border-background-border text-text-secondary hover:border-text-tertiary transition-colors',
-      popular: false,
-    },
-    {
-      label: 'AGENCY',
-      labelClass: 'text-cyan-DEFAULT',
-      price: '$149',
-      sub: '/ month',
-      features: ['100 scans / month', 'Unlimited client workspaces', 'White-label reports', 'Multi-page scanning', '3 team seats'],
-      ctaHref: '/signup?plan=agency',
-      ctaLabel: 'Start trial →',
-      ctaClass: 'bg-cyan-DEFAULT text-text-inverse font-bold',
-      popular: true,
-    },
-    {
-      label: 'ENTERPRISE',
-      labelClass: 'text-cyan-DEFAULT',
-      price: '$499',
-      sub: '/ month',
-      features: ['500 scans / month', 'Everything in Agency', '10 team seats', 'Custom benchmarking', 'White-label subdomain'],
-      ctaHref: '/signup?plan=enterprise',
-      ctaLabel: 'Start trial →',
-      ctaClass: 'border border-cyan-DEFAULT text-cyan-DEFAULT font-bold hover:bg-cyan-dim transition-colors',
-      popular: false,
-    },
-  ]
-
   return (
-    <section className="py-24 px-8 border-t border-background-border">
-      <div className="max-w-[1280px] mx-auto">
-        <Label>PRICING</Label>
-        <h2 className="font-display font-bold text-4xl text-text-primary tracking-tight mt-3 mb-4">
-          Start free. Scale when ready.
-        </h2>
-        <p className="font-body text-lg text-text-secondary max-w-2xl mb-16">
-          No contracts. Cancel anytime. API access is separate — pay per scan, no monthly fee.
-        </p>
+    <section className="border-t border-background-border py-24 max-w-7xl mx-auto px-8">
+      <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mb-3">PRICING</div>
+      <h2 className="font-display font-bold text-4xl text-text-primary tracking-tight mb-4">
+        Start free. Scale when ready.
+      </h2>
+      <p className="font-body text-sm text-text-tertiary mb-16">
+        No contracts. Cancel anytime. API access is separate — pay per scan, no monthly fee.
+      </p>
 
-        <div className="grid grid-cols-4 gap-px bg-background-border">
-          {plans.map(plan => (
-            <div key={plan.label} className="bg-background-raised p-8 relative">
-              {plan.popular && (
-                <div className="absolute top-0 right-0 font-mono text-xs bg-cyan-DEFAULT text-text-inverse px-2 py-1">
-                  POPULAR
-                </div>
-              )}
-              <div className={`font-mono text-xs uppercase tracking-widest mb-4 ${plan.labelClass}`}>{plan.label}</div>
-              <div className="font-display font-bold text-4xl text-text-primary mb-1">{plan.price}</div>
-              <div className="font-body text-sm text-text-tertiary mb-6">{plan.sub}</div>
-              <ul className="list-none p-0 m-0">
-                {plan.features.map(f => (
-                  <li key={f} className="flex items-start mb-2">
-                    <PlanBullet />
-                    <span className="font-body text-xs text-text-secondary">{f}</span>
-                  </li>
-                ))}
-              </ul>
-              <Link
-                href={plan.ctaHref}
-                className={`block text-center font-body text-sm py-3 mt-6 no-underline ${plan.ctaClass}`}
-              >
-                {plan.ctaLabel}
-              </Link>
-            </div>
-          ))}
+      {/* Plan cards */}
+      <div className="grid grid-cols-4 gap-px bg-background-border">
+
+        {/* FREE */}
+        <div className="bg-background-raised p-8">
+          <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mb-4">FREE</div>
+          <div className="font-display font-bold text-5xl text-text-primary mb-1">$0</div>
+          <div className="font-body text-sm text-text-tertiary mb-8">no account required</div>
+          <ul className="list-none p-0 m-0">
+            {['1 free scan', 'Full conversion score', 'Top 3 findings', 'Benchmark position'].map(f => (
+              <li key={f} className="flex items-start mb-2">
+                <PlanBullet />
+                <span className="font-body text-xs text-text-secondary">{f}</span>
+              </li>
+            ))}
+          </ul>
+          <Link
+            href="/playground"
+            className="block text-center w-full border border-background-border text-text-secondary font-mono text-xs tracking-widest py-3 mt-8 no-underline hover:border-text-tertiary transition-colors"
+          >
+            TRY FREE →
+          </Link>
         </div>
 
-        {/* API band */}
-        <div className="mt-px bg-background-raised border border-background-border px-8 py-6 flex items-center justify-between">
-          <div>
-            <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mb-1">API ACCESS</div>
-            <div className="font-display font-bold text-xl text-text-primary">$0.15 / scan</div>
-            <div className="font-body text-xs text-text-tertiary mt-1">Pay as you go. No monthly fee. No minimum.</div>
+        {/* STARTER */}
+        <div className="bg-background-raised p-8">
+          <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mb-4">STARTER</div>
+          <div className="font-display font-bold text-5xl text-text-primary mb-1">$49</div>
+          <div className="font-body text-sm text-text-tertiary mb-8">/ month</div>
+          <ul className="list-none p-0 m-0">
+            {['20 scans / month', 'Auto competitor analysis', 'Score trending over time', 'Full findings — all issues ranked', 'Single user'].map(f => (
+              <li key={f} className="flex items-start mb-2">
+                <PlanBullet />
+                <span className="font-body text-xs text-text-secondary">{f}</span>
+              </li>
+            ))}
+          </ul>
+          <Link
+            href="/signup"
+            className="block text-center w-full border border-background-border text-text-secondary font-mono text-xs tracking-widest py-3 mt-8 no-underline hover:border-text-tertiary transition-colors"
+          >
+            START TRIAL →
+          </Link>
+        </div>
+
+        {/* AGENCY */}
+        <div className="bg-background-raised p-8 relative">
+          <div className="absolute top-0 right-0 bg-cyan-DEFAULT text-text-inverse font-mono text-xs px-3 py-1">
+            POPULAR
           </div>
-          <Link href="/pricing" className="font-body text-sm text-cyan-DEFAULT hover:opacity-80 transition-opacity no-underline">
-            See full pricing details →
+          <div className="font-mono text-xs text-cyan-DEFAULT uppercase tracking-widest mb-4">AGENCY</div>
+          <div className="font-display font-bold text-5xl text-text-primary mb-1">$149</div>
+          <div className="font-body text-sm text-text-tertiary mb-8">/ month</div>
+          <ul className="list-none p-0 m-0">
+            {['100 scans / month', 'Unlimited client workspaces', 'White-label report links', 'Multi-page scanning (3 pages)', 'PDF export with your logo', '3 team seats'].map(f => (
+              <li key={f} className="flex items-start mb-2">
+                <PlanBullet />
+                <span className="font-body text-xs text-text-secondary">{f}</span>
+              </li>
+            ))}
+          </ul>
+          <Link
+            href="/signup"
+            className="block text-center w-full bg-cyan-DEFAULT text-text-inverse font-mono text-xs font-bold tracking-widest py-3 mt-8 no-underline"
+          >
+            START TRIAL →
+          </Link>
+        </div>
+
+        {/* ENTERPRISE */}
+        <div className="bg-background-raised p-8">
+          <div className="font-mono text-xs text-cyan-DEFAULT uppercase tracking-widest mb-4">ENTERPRISE</div>
+          <div className="font-display font-bold text-5xl text-text-primary mb-1">$499</div>
+          <div className="font-body text-sm text-text-tertiary mb-8">/ month</div>
+          <ul className="list-none p-0 m-0">
+            {['500 scans / month', 'Everything in Agency', '10 team seats', 'White-label subdomain', 'Scan scheduling + score alerts', 'Slack notifications'].map(f => (
+              <li key={f} className="flex items-start mb-2">
+                <PlanBullet />
+                <span className="font-body text-xs text-text-secondary">{f}</span>
+              </li>
+            ))}
+          </ul>
+          <Link
+            href="/signup"
+            className="block text-center w-full border border-cyan-DEFAULT text-cyan-DEFAULT font-mono text-xs font-bold tracking-widest py-3 mt-8 no-underline hover:bg-cyan-dim transition-colors"
+          >
+            START TRIAL →
+          </Link>
+        </div>
+
+      </div>
+
+      {/* API band */}
+      <div className="mt-px bg-background-raised border border-background-border px-8 py-8 flex items-center justify-between">
+        <div>
+          <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mb-2">API ACCESS</div>
+          <div className="font-display font-bold text-3xl text-text-primary mb-1">$0.17 / scan</div>
+          <div className="font-body text-xs text-text-tertiary mb-4">
+            Pay as you go. No monthly fee. No minimum. Cache hits never billed.
+          </div>
+          <div className="flex gap-8 mt-2">
+            {[
+              { label: '500+/mo', price: '$0.15' },
+              { label: '2,000+/mo', price: '$0.13' },
+              { label: '10,000+/mo', price: 'Custom' },
+            ].map(tier => (
+              <div key={tier.label} className="font-mono text-xs text-text-tertiary">
+                <span className="text-text-secondary">{tier.price}</span>
+                {' '}
+                <span>{tier.label}</span>
+              </div>
+            ))}
+          </div>
+          <p className="font-body text-xs text-text-tertiary mt-3">
+            Need score + findings only? Brief scans from $0.09 —{' '}
+            <Link href="/pricing" className="text-cyan-DEFAULT no-underline hover:opacity-80">
+              see full pricing
+            </Link>
+            .
+          </p>
+        </div>
+        <div className="flex flex-col gap-3 flex-shrink-0">
+          <Link
+            href="/signup"
+            className="bg-cyan-DEFAULT text-text-inverse font-mono text-xs tracking-widest px-6 py-3 no-underline text-center"
+          >
+            GET API KEY →
+          </Link>
+          <Link
+            href="/docs/api"
+            className="border border-background-border text-text-secondary font-mono text-xs tracking-widest px-6 py-3 no-underline text-center hover:border-text-tertiary transition-colors"
+          >
+            VIEW DOCS →
           </Link>
         </div>
       </div>
+
+      {/* Enterprise plus note */}
+      <p className="text-center mt-10 font-body text-sm text-text-tertiary">
+        Need 50+ clients, reseller access, or embedding webdoc in your own product?{' '}
+        <Link href="mailto:devon@webdocai.com" className="text-cyan-DEFAULT no-underline hover:opacity-80">
+          Let&apos;s talk →
+        </Link>
+      </p>
     </section>
   )
 }

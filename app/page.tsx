@@ -113,7 +113,30 @@ function HeroJson() {
 
 // ── Hero ─────────────────────────────────────────────────────────────────────
 
+type HeroTab = 'api' | 'report' | 'agency'
+
+const HERO_TABS: { id: HeroTab; label: string }[] = [
+  { id: 'api', label: 'API Response' },
+  { id: 'report', label: 'Scan Report' },
+  { id: 'agency', label: 'Agency View' },
+]
+
+const REPORT_FINDINGS = [
+  { severity: 'critical' as const, lift: '↑ 12–18% lift', title: 'Hero headline is feature-led, not outcome-led' },
+  { severity: 'high' as const, lift: '↑ 8–11% lift', title: 'No above-fold proof — first signal at 2,400px' },
+  { severity: 'high' as const, lift: '↑ 6–9% lift', title: 'Dual CTAs create decision paralysis' },
+]
+
+const AGENCY_CLIENTS = [
+  { domain: 'acme-saas.com', score: 61, delta: 8, positive: true },
+  { domain: 'techflow.io', score: 74, delta: 3, positive: true },
+  { domain: 'buildspace.so', score: 48, delta: 3, positive: false },
+  { domain: 'loops.so', score: 79, delta: 5, positive: true },
+]
+
 function HeroSection() {
+  const [activeHeroTab, setActiveHeroTab] = useState<HeroTab>('api')
+
   return (
     <section className="scanline-texture min-h-screen pt-[120px] pb-20 px-8">
       <div className="max-w-[1280px] mx-auto flex gap-16 items-start">
@@ -134,8 +157,30 @@ function HeroSection() {
 
           {/* Subheadline */}
           <p className="font-body text-lg text-text-secondary leading-relaxed max-w-md mt-5">
-            POST any URL. Get back a structured conversion audit — 260+ checks, ranked findings, AI-rewritten copy, and industry benchmarks. 90 seconds. $0.15/scan.
+            The conversion audit API. Founders use it to diagnose their site. Agencies use it to run client audits. Developers build it into their products. One scan engine — 260+ checks, ranked findings, AI-rewritten copy.
           </p>
+
+          {/* Audience pills */}
+          <div className="flex flex-wrap gap-2 mt-6">
+            <Link
+              href="/playground"
+              className="font-mono text-xs px-3 py-1.5 border border-background-border text-text-tertiary transition-colors duration-150 hover:border-text-tertiary hover:text-text-primary no-underline"
+            >
+              Diagnose my site →
+            </Link>
+            <Link
+              href="/pricing"
+              className="font-mono text-xs px-3 py-1.5 border border-background-border text-text-tertiary transition-colors duration-150 hover:border-text-tertiary hover:text-text-primary no-underline"
+            >
+              Manage client audits →
+            </Link>
+            <Link
+              href="/developer"
+              className="font-mono text-xs px-3 py-1.5 border border-cyan-DEFAULT text-cyan-DEFAULT bg-cyan-dim transition-colors duration-150 no-underline"
+            >
+              Build with the API →
+            </Link>
+          </div>
 
           {/* Curl block */}
           <div className="bg-background-subtle border border-background-border p-4 mt-8">
@@ -150,19 +195,25 @@ function HeroSection() {
             </pre>
           </div>
 
-          {/* CTA row */}
-          <div className="flex gap-3 mt-8">
+          {/* CTAs */}
+          <div className="flex flex-wrap gap-3 mt-8">
             <Link
-              href="/playground"
+              href="/signup"
               className="bg-cyan-DEFAULT text-text-inverse font-body font-bold text-sm px-6 py-3 no-underline hover:opacity-90 transition-opacity duration-150"
             >
-              Try in playground →
+              Get API key →
             </Link>
             <Link
-              href="/docs"
-              className="bg-transparent border border-background-border text-text-secondary font-body text-sm px-6 py-3 no-underline hover:border-text-tertiary transition-colors duration-150"
+              href="/playground"
+              className="border border-background-border text-text-secondary font-body text-sm px-6 py-3 no-underline hover:border-text-tertiary hover:text-text-primary transition-colors duration-150"
             >
-              Read the docs
+              Scan my site free →
+            </Link>
+            <Link
+              href="/pricing"
+              className="text-text-tertiary font-body text-sm hover:text-text-secondary transition-colors duration-150 underline underline-offset-4 decoration-background-border"
+            >
+              Agency plans →
             </Link>
           </div>
 
@@ -183,20 +234,98 @@ function HeroSection() {
 
         {/* Right column — terminal panel */}
         <div className="flex-[45] min-w-0 relative glow-cyan border border-background-border bg-background-raised">
+
+          {/* Tab bar */}
+          <div className="flex border-b border-background-border bg-background-subtle">
+            {HERO_TABS.map(tab => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveHeroTab(tab.id)}
+                className={`font-mono text-xs px-4 py-2.5 border-0 cursor-pointer transition-colors duration-150 ${
+                  activeHeroTab === tab.id
+                    ? 'border-b-2 border-cyan-DEFAULT text-cyan-DEFAULT bg-background-raised -mb-px'
+                    : 'text-text-tertiary hover:text-text-secondary bg-transparent'
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
           {/* Window chrome */}
           <div className="bg-background-subtle border-b border-background-border px-4 py-2.5 flex items-center gap-2">
             <span className="w-2 h-2 bg-severity-critical/30" />
             <span className="w-2 h-2 bg-severity-medium/30" />
             <span className="w-2 h-2 bg-score-high/30" />
-            <span className="font-mono text-xs text-text-tertiary ml-2">response.json</span>
+            <span className="font-mono text-xs text-text-tertiary ml-2">
+              {activeHeroTab === 'api' && 'response.json'}
+              {activeHeroTab === 'report' && 'report.html'}
+              {activeHeroTab === 'agency' && 'clients.dashboard'}
+            </span>
             <div className="ml-auto">
-              <ScoreRing score={61} size="sm" animated={true} />
+              {activeHeroTab === 'agency'
+                ? <span className="font-mono text-xs text-text-tertiary">8 clients</span>
+                : <ScoreRing score={61} size="sm" animated={activeHeroTab === 'api'} />
+              }
             </div>
           </div>
-          {/* JSON content */}
+
+          {/* Tab content */}
           <div className="p-5 overflow-auto max-h-[calc(100vh-220px)] relative">
-            <HeroJson />
-            <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-background-raised to-transparent pointer-events-none" />
+
+            {activeHeroTab === 'api' && (
+              <>
+                <HeroJson />
+                <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-background-raised to-transparent pointer-events-none" />
+              </>
+            )}
+
+            {activeHeroTab === 'report' && (
+              <div>
+                <div className="flex items-center gap-4 mb-5">
+                  <ScoreRing size="md" animated={false} score={61} />
+                  <div>
+                    <div className="font-display font-bold text-lg text-text-primary">acme-saas.com</div>
+                    <div className="font-mono text-xs text-text-tertiary mt-1">63rd percentile · B2B SaaS</div>
+                  </div>
+                </div>
+                {REPORT_FINDINGS.map((f, i) => (
+                  <div key={i} className="bg-background-subtle border border-background-border p-3 mb-2">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${f.severity === 'critical' ? 'bg-severity-critical' : 'bg-severity-high'}`} />
+                      <span className="font-mono text-xs text-text-tertiary">{f.severity}</span>
+                      <span className="ml-auto font-mono text-xs text-score-mid">{f.lift}</span>
+                    </div>
+                    <div className="font-body text-xs text-text-primary leading-snug">{f.title}</div>
+                  </div>
+                ))}
+                <div className="bg-background-subtle border-l-2 border-cyan-DEFAULT px-3 py-2 mt-3">
+                  <div className="font-mono text-xs text-text-tertiary mb-1">AI REWRITE</div>
+                  <div className="font-body text-xs text-text-primary">Ship projects on time, every time.</div>
+                </div>
+              </div>
+            )}
+
+            {activeHeroTab === 'agency' && (
+              <div>
+                {AGENCY_CLIENTS.map(c => (
+                  <div key={c.domain} className="flex items-center gap-3 py-3 border-b border-background-border last:border-0">
+                    <ScoreRing size="sm" animated={false} score={c.score} />
+                    <div className="flex-1">
+                      <div className="font-body text-xs text-text-primary">{c.domain}</div>
+                      <div className="font-mono text-xs text-text-tertiary mt-0.5">Last scan: 2 days ago</div>
+                    </div>
+                    <div className="ml-auto flex items-center gap-2">
+                      <span className={`font-mono text-xs px-1.5 py-0.5 ${c.positive ? 'bg-score-high/10 text-score-high' : 'bg-severity-critical/10 text-severity-critical'}`}>
+                        {c.positive ? `↑${c.delta}` : `↓${c.delta}`}
+                      </span>
+                      <span className="font-body text-xs text-cyan-DEFAULT">Report →</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
           </div>
         </div>
 

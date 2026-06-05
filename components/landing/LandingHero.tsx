@@ -173,7 +173,7 @@ export default function LandingHero({ url, onUrlChange, autoFocus }: Props) {
             <span className="live-pulse inline-block text-[8px]" style={{ color: "#00FF87" }}>
               ●
             </span>{" "}
-            SYSTEM ACTIVE · 200 DIAGNOSTIC CHECKS · MULTI-PAGE SCAN
+            SYSTEM ACTIVE · 264 DIAGNOSTIC CHECKS · MULTI-PAGE SCAN
           </p>
         </ScrollReveal>
 
@@ -199,7 +199,7 @@ export default function LandingHero({ url, onUrlChange, autoFocus }: Props) {
             className="hero-sub mx-auto mt-[22px] max-w-[440px] text-center font-sans text-[17px] font-light"
             style={{ color: "var(--text-secondary)", lineHeight: 1.8 }}
           >
-            webdocai runs 200 diagnostic checks on your site — identifying every conversion killer, ranked by revenue impact, with exact resolutions.
+            webdocai runs 264 diagnostic checks on your site — identifying every conversion killer, ranked by revenue impact, with exact resolutions.
           </p>
         </ScrollReveal>
 

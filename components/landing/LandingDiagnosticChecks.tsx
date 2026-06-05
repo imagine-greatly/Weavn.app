@@ -122,7 +122,7 @@ export default function LandingDiagnosticChecks() {
                 fontWeight: 800,
               }}
             >
-              210 diagnostic checks
+              264 diagnostic checks
               <span style={{ color: "var(--cyan)" }}>.</span>
             </h2>
           </ScrollReveal>
@@ -131,7 +131,7 @@ export default function LandingDiagnosticChecks() {
               className="mx-auto mt-5 max-w-[540px] font-sans text-[17px] leading-relaxed"
               style={{ color: "var(--text-secondary)" }}
             >
-              Every scan runs all 210 checks across eight revenue dimensions. No sampling, no shortcuts.
+              Every scan runs all 264 checks across 27 categories. No sampling, no shortcuts.
             </p>
           </ScrollReveal>
         </div>
@@ -163,7 +163,7 @@ export default function LandingDiagnosticChecks() {
               className="font-mono text-[12px] uppercase tracking-[2px] transition-colors duration-200 hover:text-white"
               style={{ color: "var(--cyan)" }}
             >
-              SEE ALL 210 CHECKS →
+              SEE ALL 264 CHECKS →
             </Link>
           </div>
         </ScrollReveal>

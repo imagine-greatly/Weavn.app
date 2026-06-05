@@ -1,5 +1,5 @@
 /** Rubric total — used for “of N checks” copy on dashboard. */
-export const RUBRIC_TOTAL_CHECKS = 166;
+export const RUBRIC_TOTAL_CHECKS = 264;
 
 /**
  * Health score color bands (DESIGN_SYSTEM / brand guide). No cyan on score readouts.

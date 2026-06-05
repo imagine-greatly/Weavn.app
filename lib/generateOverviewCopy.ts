@@ -80,7 +80,7 @@ ${topFindingsText}
 
 Hero headline found: ${heroHeadline ?? "Not detected"}
 Site type: ${siteType}
-Total failures: ${totalFailed} of 166 checks
+Total failures: ${totalFailed} of 264 checks
 Critical issues: ${criticalCount}
 
 Write these fields:

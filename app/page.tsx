@@ -157,7 +157,7 @@ function HeroSection() {
 
           {/* Subheadline */}
           <p className="font-body text-lg text-text-secondary leading-relaxed max-w-md mt-5">
-            The conversion audit API. Founders use it to diagnose their site. Agencies use it to run client audits. Developers build it into their products. One scan engine — 260+ checks, ranked findings, AI-rewritten copy.
+            The conversion audit API. Founders use it to diagnose their site. Agencies use it to run client audits. Developers build it into their products. One scan engine — 264 checks, ranked findings, AI-rewritten copy.
           </p>
 
           {/* Audience pills */}
@@ -220,7 +220,7 @@ function HeroSection() {
           {/* Stats row */}
           <div className="flex gap-8 mt-12 pt-8 border-t border-background-border">
             {[
-              { value: '210', label: 'checks per scan' },
+              { value: '264', label: 'checks per scan' },
               { value: '$0.15', label: 'per scan' },
               { value: '90s', label: 'median response' },
             ].map(stat => (
@@ -345,8 +345,8 @@ function HowItWorksSection() {
     },
     {
       n: '02',
-      title: '260+ checks run',
-      detail: 'webdoc renders the full page and runs diagnostic checks across 9 dimensions — conversion, trust, messaging, technical, and more.',
+      title: '264 checks run',
+      detail: 'webdoc renders the full page and runs 264 diagnostic checks across 27 categories — conversion, trust, messaging, technical, and more.',
     },
     {
       n: '03',
@@ -444,7 +444,7 @@ function ResponseSection() {
       <div className="max-w-[1280px] mx-auto">
         <Label>THE RESPONSE IS THE PRODUCT</Label>
         <h2 className="font-display font-extrabold text-4xl tracking-tight text-text-primary mt-3 mb-4">
-          260+ checks. One structured output.
+          264 checks. One structured output.
         </h2>
         <p className="font-body text-text-secondary text-lg max-w-2xl mb-16">
           Every scan returns the same predictable schema. Build against it once. Every URL you POST returns findings ranked by estimated revenue impact, benchmarked against your industry, with AI-rewritten copy attached.
@@ -1070,7 +1070,7 @@ const FAQ_ITEMS = [
   },
   {
     q: 'How is the score calculated?',
-    a: "260+ checks across 9 dimensions. Each check is weighted by its estimated impact on conversion rate. The score is benchmarked against every other site webdoc has scanned in your industry category — so 61 means you're in the 63rd percentile for B2B SaaS, not just an abstract number.",
+    a: "264 checks across 27 categories. Each check is weighted by its estimated impact on conversion rate. The score is benchmarked against every other site webdoc has scanned in your industry category — so 61 means you're in the 63rd percentile for B2B SaaS, not just an abstract number.",
   },
   {
     q: "What happens to my site's data?",
@@ -1130,7 +1130,7 @@ function FooterSection() {
             webdoc<span className="text-cyan-DEFAULT">.ai</span>
           </Link>
           <p className="font-body text-sm text-text-secondary mt-3 max-w-xs leading-relaxed">
-            The conversion audit API. 260+ checks, ranked findings, AI-rewritten copy. One endpoint.
+            The conversion audit API. 264 checks, ranked findings, AI-rewritten copy. One endpoint.
           </p>
         </div>
         <div>

@@ -157,7 +157,7 @@ function buildMockData(url: string, domain: string): ScanResult {
     ],
     copy_rewrites: {
       headline:    'Stop losing signups to a homepage nobody understands.',
-      subheadline: 'Get a clinical conversion audit of your site in 90 seconds. 260+ checks. Specific fixes.',
+      subheadline: 'Get a clinical conversion audit of your site in 90 seconds. 264 checks. Specific fixes.',
       cta:         'Scan my site free →',
     },
     growth_blueprint: [
@@ -257,7 +257,7 @@ export default function ScanPage() {
           </div>
 
           <div className="flex items-center justify-center gap-1.5 mt-4 font-mono text-xs text-text-tertiary">
-            <span>260+ checks</span>
+            <span>264 checks</span>
             <span className="opacity-40">·</span>
             <span>~90 seconds</span>
             <span className="opacity-40">·</span>

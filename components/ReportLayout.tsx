@@ -442,7 +442,7 @@ export default function ReportLayout({
       const warningCount = leaksForCounts.filter((l) => l?.severity === "warning").length;
       const rubric = payload.metadata?.rubric;
       const totalChecked =
-        rubric?.totalChecks ?? rubric?.totalChecked ?? payload.totalChecked ?? 166;
+        rubric?.totalChecks ?? rubric?.totalChecked ?? payload.totalChecked ?? 264;
       const totalFailed = rubric?.totalFails ?? payload.totalFailed ?? leaksForCounts.length;
       const totalPassed =
         typeof payload.totalPassed === "number"
@@ -450,7 +450,7 @@ export default function ReportLayout({
           : typeof rubric?.totalPassed === "number"
             ? rubric.totalPassed
             : Math.max(0, totalChecked - totalFailed);
-      const passingCount = Math.min(166, Math.max(0, Math.round(totalPassed)));
+      const passingCount = Math.min(264, Math.max(0, Math.round(totalPassed)));
       const highCountResolved =
         typeof payload.highCount === "number"
           ? payload.highCount

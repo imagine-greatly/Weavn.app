@@ -38,7 +38,7 @@ const FIELDS: FieldDef[] = [
 
 const SCAN_LINES = [
   '> Fetching page content...',
-  '> Running 260+ diagnostic checks...',
+  '> Running 264 diagnostic checks...',
   '> Generating findings...',
 ] as const
 

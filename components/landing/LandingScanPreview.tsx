@@ -274,7 +274,7 @@ function ScanPanel() {
         {/* Center: check count */}
         <div style={{ flex: 1, textAlign: "center" }}>
           <p className="font-mono text-[10px]" style={{ color: "#8899AA" }}>REVENUE CHECKS</p>
-          <p className="font-mono text-[18px]" style={{ color: "#00C8FF" }}>166 / 166</p>
+          <p className="font-mono text-[18px]" style={{ color: "#00C8FF" }}>264 / 264</p>
         </div>
         {/* Right: elapsed */}
         <div style={{ flex: 1, textAlign: "right" }}>
@@ -308,7 +308,7 @@ export default function LandingScanPreview() {
             className="mt-3 font-sans font-bold"
             style={{ fontSize: 48, lineHeight: 1.1, color: "var(--text-primary)", letterSpacing: "-1.5px" }}
           >
-            60 seconds. 166 checks.
+            60 seconds. 264 checks.
             <br />
             Surgical precision.
           </h2>
@@ -335,7 +335,7 @@ export default function LandingScanPreview() {
           style={{ gap: 48, maxWidth: 600 }}
         >
           {[
-            { num: "166", label: "DIAGNOSTIC CHECKS" },
+            { num: "264", label: "DIAGNOSTIC CHECKS" },
             { num: "60s", label: "AVERAGE SCAN TIME" },
             { num: "14", label: "AVG FINDINGS PER SCAN" },
           ].map((s) => (

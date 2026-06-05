@@ -170,7 +170,7 @@ function DiagnosticCoverage({ pagesAnalyzed, totalChecked }: { pagesAnalyzed: st
       })}
       <div style={{ height: 1, background: "rgba(0,200,255,0.1)", marginTop: 8, marginBottom: 8 }} />
       <div style={{ fontFamily: MONO, fontSize: 8, color: "rgba(0,200,255,0.4)", letterSpacing: "0.1em", opacity: showSummary ? 1 : 0, transition: "opacity 200ms ease" }}>
-        {pagesAnalyzed.length} {pagesAnalyzed.length === 1 ? "PAGE" : "PAGES"} · {totalChecked ?? 210} CHECKS ANALYZED
+        {pagesAnalyzed.length} {pagesAnalyzed.length === 1 ? "PAGE" : "PAGES"} · {totalChecked ?? 264} CHECKS ANALYZED
       </div>
     </div>
   );

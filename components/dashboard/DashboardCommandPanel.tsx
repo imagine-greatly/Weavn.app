@@ -28,7 +28,7 @@ type Props = {
   /** Additional findings beyond the priority queue (progressive disclosure). */
   lockedMoreFindingsCount: number;
   priorityFindingsShown: number;
-  /** Total rubric checks (e.g. 166) for footer copy. */
+  /** Total rubric checks (e.g. 264) for footer copy. */
   checksTotal: number;
   /** Kept for call-site compatibility; not shown in ZONE B after stat blocks. */
   moneyLeakTotal: number;

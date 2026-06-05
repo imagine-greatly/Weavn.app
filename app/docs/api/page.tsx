@@ -397,7 +397,7 @@ print(f"Avg: {b['industry_avg']}, Top 25%: {b['top_quartile']}")`,
     "subheadline": "See exactly which elements are losing you revenue.",
     "cta_primary": "Run free audit",
     "cta_secondary": "See sample report",
-    "value_prop": "210 checks. Benchmarks. Rewritten copy."
+    "value_prop": "264 checks. Benchmarks. Rewritten copy."
   }
 }`,
     node: `const { copy_rewrites } = await res.json()

@@ -139,7 +139,7 @@ export function buildApiPrompt(params: {
     parts.push(`  2. The implementation is genuinely above average for its category — not merely present.`);
     parts.push(`  3. The specific element is correctly placed (e.g. proof before CTA, guarantee near CTA) — not just anywhere on the page.`);
     parts.push(`  4. You can cite specific page evidence — quote the actual copy or name the precise element.`);
-    parts.push(`If fewer than 3 checks pass all 4 criteria, return an empty array [] rather than padding with mediocre entries.`);
+    parts.push(`Return every check that genuinely qualifies as a strength — whether that is 1, 2, 5, or zero. Do not suppress real strengths because the count is low. Do not pad to reach any minimum. If zero checks genuinely qualify under the four criteria, return an empty array.`);
   }
 
   if (wantsSummary) {

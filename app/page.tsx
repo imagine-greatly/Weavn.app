@@ -888,7 +888,7 @@ function PricingSection() {
               <div className="font-display font-bold text-5xl text-text-primary mb-1">$149</div>
               <div className="font-body text-sm text-text-tertiary mb-8">/ month</div>
               <ul className="list-none p-0 m-0">
-                {['100 scans / month', 'Unlimited client workspaces', 'White-label report links', 'Multi-page scanning (3 pages)', 'PDF export with your logo', '3 team seats'].map(f => (
+                {['100 scans / month', 'Unlimited client workspaces', 'White-label report links', 'Multi-page scanning (3 pages)', 'PDF export with your logo', '3 team seats', '100 bundled API calls'].map(f => (
                   <li key={f} className="flex items-start mb-2">
                     <PlanBullet />
                     <span className="font-body text-xs text-text-secondary">{f}</span>
@@ -926,134 +926,22 @@ function PricingSection() {
 
           </div>
 
-          {/* Bridge → API pricing */}
-          <div className="text-right mt-4">
-            <span className="font-body text-xs text-text-tertiary">Building on the API? </span>
-            <a href="#api-pricing" className="font-body text-xs text-cyan-DEFAULT no-underline hover:opacity-80">See developer pricing →</a>
-          </div>
         </div>
 
-        {/* ── API Sub-Section ── */}
-        <div id="api-pricing" className="mt-24 pt-16 border-t border-background-border">
-          <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mb-3">FOR DEVELOPERS</div>
-          <h2 className="font-display font-bold text-4xl text-text-primary tracking-tight mb-4">
-            Infrastructure pricing.<br />Pay for what you use.
-          </h2>
-          <p className="font-body text-sm text-text-tertiary mb-16">
-            Monthly plans with included scans.<br />Overage billed per scan.<br />Cache hits never billed.
-          </p>
-
-          <div className="grid grid-cols-4 gap-px bg-background-border mb-px">
-
-            {/* PLAYGROUND */}
-            <div className="bg-background-raised p-8">
-              <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mb-4">PLAYGROUND</div>
-              <div className="font-display font-bold text-5xl text-text-primary mb-1">Free</div>
-              <div className="font-body text-sm text-text-tertiary mb-8">25 scans to start</div>
-              <ul className="list-none p-0 m-0">
-                {['25 scans, no card required', 'Full API response', 'Then $0.25 / scan pay-as-you-go', 'No commitment'].map(f => (
-                  <li key={f} className="flex items-start mb-2">
-                    <PlanBullet />
-                    <span className="font-body text-xs text-text-secondary">{f}</span>
-                  </li>
-                ))}
-              </ul>
-              <Link
-                href="/signup?plan=playground"
-                className="block text-center w-full border border-background-border text-text-secondary font-mono text-xs tracking-widest py-3 mt-8 no-underline hover:border-text-tertiary transition-colors"
-              >
-                GET API KEY →
-              </Link>
-            </div>
-
-            {/* DEV */}
-            <div className="bg-background-raised p-8">
-              <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mb-4">DEV</div>
-              <div className="font-display font-bold text-5xl text-text-primary mb-1">$29</div>
-              <div className="font-body text-sm text-text-tertiary mb-8">/ month</div>
-              <ul className="list-none p-0 m-0">
-                {['300 scans / month', '$0.19 / scan overage', 'Full scan access', 'Webhooks included'].map(f => (
-                  <li key={f} className="flex items-start mb-2">
-                    <PlanBullet />
-                    <span className="font-body text-xs text-text-secondary">{f}</span>
-                  </li>
-                ))}
-              </ul>
-              <Link
-                href="/signup?plan=dev"
-                className="block text-center w-full border border-background-border text-text-secondary font-mono text-xs tracking-widest py-3 mt-8 no-underline hover:border-text-tertiary transition-colors"
-              >
-                GET STARTED →
-              </Link>
-            </div>
-
-            {/* BUILDER — featured */}
-            <div className="bg-background-raised p-8 relative">
-              <div className="absolute top-0 right-0 bg-cyan-DEFAULT text-text-inverse font-mono text-xs px-3 py-1">POPULAR</div>
-              <div className="font-mono text-xs text-cyan-DEFAULT uppercase tracking-widest mb-4">BUILDER</div>
-              <div className="font-display font-bold text-5xl text-text-primary mb-1">$99</div>
-              <div className="font-body text-sm text-text-tertiary mb-8">/ month</div>
-              <ul className="list-none p-0 m-0">
-                {['1,000 scans / month', '$0.17 / scan overage', 'Full + brief scan access', 'Async mode', 'Batch endpoint (10 URLs)'].map(f => (
-                  <li key={f} className="flex items-start mb-2">
-                    <PlanBullet />
-                    <span className="font-body text-xs text-text-secondary">{f}</span>
-                  </li>
-                ))}
-              </ul>
-              <Link
-                href="/signup?plan=builder"
-                className="block text-center w-full bg-cyan-DEFAULT text-text-inverse font-mono text-xs font-bold tracking-widest py-3 mt-8 no-underline"
-              >
-                GET STARTED →
-              </Link>
-            </div>
-
-            {/* SCALE */}
-            <div className="bg-background-raised p-8">
-              <div className="font-mono text-xs text-cyan-DEFAULT uppercase tracking-widest mb-4">SCALE</div>
-              <div className="font-display font-bold text-5xl text-text-primary mb-1">$249</div>
-              <div className="font-body text-sm text-text-tertiary mb-8">/ month</div>
-              <ul className="list-none p-0 m-0">
-                {['3,000 scans / month', '$0.15 / scan overage', 'Everything in Builder', 'Priority processing'].map(f => (
-                  <li key={f} className="flex items-start mb-2">
-                    <PlanBullet />
-                    <span className="font-body text-xs text-text-secondary">{f}</span>
-                  </li>
-                ))}
-              </ul>
-              <Link
-                href="/signup?plan=scale"
-                className="block text-center w-full border border-cyan-DEFAULT text-cyan-DEFAULT font-mono text-xs font-bold tracking-widest py-3 mt-8 no-underline hover:bg-cyan-dim transition-colors"
-              >
-                GET STARTED →
-              </Link>
-            </div>
-
+        {/* ── Developer routing band ── */}
+        <div className="mt-px bg-background-subtle border border-background-border px-8 py-8 flex items-center justify-between">
+          <div>
+            <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mb-2">FOR DEVELOPERS</div>
+            <h3 className="font-display font-bold text-2xl text-text-primary mb-2">Build with the API</h3>
+            <p className="font-body text-sm text-text-secondary mb-1">POST a URL. Get structured JSON. 264 checks.</p>
+            <p className="font-mono text-xs text-cyan-DEFAULT">From $0.15/scan · 25 free to start</p>
           </div>
-
-          {/* Enterprise API band */}
-          <div className="mt-px bg-background-raised border border-background-border px-8 py-6 flex items-center justify-between">
-            <div>
-              <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mb-1">API ENTERPRISE</div>
-              <div className="font-display font-bold text-xl text-text-primary">10,000+ scans / month</div>
-              <div className="font-body text-xs text-text-tertiary mt-1">
-                Custom contract. Floor $0.11/scan. SLA, dedicated support, platform embedding.
-              </div>
-            </div>
-            <Link
-              href="mailto:devon@webdocai.com"
-              className="border border-background-border text-text-secondary font-mono text-xs tracking-widest px-6 py-3 no-underline hover:border-text-tertiary transition-colors"
-            >
-              TALK TO US →
-            </Link>
-          </div>
-
-          {/* Bridge → dashboard pricing */}
-          <div className="text-right mt-4">
-            <span className="font-body text-xs text-text-tertiary">Need a dashboard UI? </span>
-            <a href="#dashboard-pricing" className="font-body text-xs text-cyan-DEFAULT no-underline hover:opacity-80">See team pricing →</a>
-          </div>
+          <Link
+            href="/developers#pricing"
+            className="border border-background-border text-text-secondary font-mono text-xs tracking-widest px-6 py-3 no-underline hover:border-text-tertiary transition-colors flex-shrink-0"
+          >
+            SEE DEVELOPER PRICING →
+          </Link>
         </div>
 
       </div>

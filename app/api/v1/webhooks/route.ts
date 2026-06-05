@@ -7,6 +7,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 import { validateApiKey } from "@/lib/apiAuth";
+import { apiError } from "@/lib/apiErrors";
 
 function getServiceClient() {
   return createClient(
@@ -28,7 +29,7 @@ function isValidHttpsUrl(input: string): boolean {
 export async function GET(req: NextRequest) {
   const apiKey = await validateApiKey(req);
   if (!apiKey) {
-    return NextResponse.json({ error: "Invalid API key" }, { status: 401 });
+    return apiError("AUTH_INVALID", "Invalid API key", 401);
   }
 
   const supabase = getServiceClient();
@@ -41,7 +42,7 @@ export async function GET(req: NextRequest) {
 
   if (error) {
     console.error("[API v1] GET /webhooks error:", error.message);
-    return NextResponse.json({ error: "Failed to fetch webhooks" }, { status: 500 });
+    return apiError("INTERNAL_ERROR", "Failed to fetch webhooks", 500);
   }
 
   return NextResponse.json({ webhooks: data ?? [] });
@@ -51,7 +52,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   const apiKey = await validateApiKey(req);
   if (!apiKey) {
-    return NextResponse.json({ error: "Invalid API key" }, { status: 401 });
+    return apiError("AUTH_INVALID", "Invalid API key", 401);
   }
 
   let webhookUrl: string;
@@ -59,14 +60,14 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     webhookUrl = typeof body?.url === "string" ? body.url.trim() : "";
   } catch {
-    return NextResponse.json({ error: "url is required" }, { status: 400 });
+    return apiError("INVALID_REQUEST", "url is required", 400);
   }
 
   if (!webhookUrl) {
-    return NextResponse.json({ error: "url is required" }, { status: 400 });
+    return apiError("INVALID_REQUEST", "url is required", 400);
   }
   if (!isValidHttpsUrl(webhookUrl)) {
-    return NextResponse.json({ error: "url must be a valid https URL" }, { status: 400 });
+    return apiError("INVALID_REQUEST", "url must be a valid https URL", 400);
   }
 
   const supabase = getServiceClient();
@@ -80,7 +81,7 @@ export async function POST(req: NextRequest) {
 
   if (error || !data) {
     console.error("[API v1] POST /webhooks error:", error?.message);
-    return NextResponse.json({ error: "Failed to register webhook" }, { status: 500 });
+    return apiError("INTERNAL_ERROR", "Failed to register webhook", 500);
   }
 
   return NextResponse.json(data, { status: 201 });
@@ -90,7 +91,7 @@ export async function POST(req: NextRequest) {
 export async function DELETE(req: NextRequest) {
   const apiKey = await validateApiKey(req);
   if (!apiKey) {
-    return NextResponse.json({ error: "Invalid API key" }, { status: 401 });
+    return apiError("AUTH_INVALID", "Invalid API key", 401);
   }
 
   let webhookId: string;
@@ -98,11 +99,11 @@ export async function DELETE(req: NextRequest) {
     const body = await req.json();
     webhookId = typeof body?.id === "string" ? body.id.trim() : "";
   } catch {
-    return NextResponse.json({ error: "id is required" }, { status: 400 });
+    return apiError("INVALID_REQUEST", "id is required", 400);
   }
 
   if (!webhookId) {
-    return NextResponse.json({ error: "id is required" }, { status: 400 });
+    return apiError("INVALID_REQUEST", "id is required", 400);
   }
 
   const supabase = getServiceClient();
@@ -116,7 +117,7 @@ export async function DELETE(req: NextRequest) {
 
   if (error) {
     console.error("[API v1] DELETE /webhooks error:", error.message);
-    return NextResponse.json({ error: "Failed to delete webhook" }, { status: 500 });
+    return apiError("INTERNAL_ERROR", "Failed to delete webhook", 500);
   }
 
   return NextResponse.json({ deleted: true });

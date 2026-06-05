@@ -19,7 +19,10 @@ const FULL_FINDING = `{
   "explanation": "string (max 30 words, grounded in specific page content)",
   "fix_steps": ["string (max 20 words)", "string (max 20 words)", "string (max 20 words)"],
   "rewritten_copy": "string (max 25 words, ready to paste)",
-  "confidence": "high" | "medium" | "low"
+  "confidence": "high" | "medium" | "low",
+  "fix_effort": "hours" | "days" | "weeks",
+  "impact_tier": "high" | "medium" | "low",
+  "priority_rank": "P1" | "P2" | "P3"
 }`;
 
 export function buildApiPrompt(params: {
@@ -43,6 +46,7 @@ export function buildApiPrompt(params: {
     `{`,
     `  "score": number,`,
     `  "verdict": "Excellent" | "Good" | "Needs Work" | "Critical",`,
+    `  "page_type": "homepage" | "pricing" | "product" | "about" | "landing",`,
     `  "dimensions": {`,
     `    "conversion_architecture": number,`,
     `    "trust_signals": number,`,
@@ -57,6 +61,13 @@ export function buildApiPrompt(params: {
   if (wantsFindings) {
     schemaLines.push(`  "findings": [`);
     schemaLines.push(`    ${findingShape}`);
+    schemaLines.push(`  ],`);
+    schemaLines.push(`  "strengths": [`);
+    schemaLines.push(`    {`);
+    schemaLines.push(`      "check_id": "string (e.g. TRUST_001)",`);
+    schemaLines.push(`      "label": "string (passLabel — max 6 words)",`);
+    schemaLines.push(`      "observation": "string (max 20 words — cite specific page evidence)"`);
+    schemaLines.push(`    }`);
     schemaLines.push(`  ],`);
   }
   if (wantsCopy) {
@@ -83,6 +94,16 @@ export function buildApiPrompt(params: {
   const parts: string[] = [
     `You are a conversion intelligence analyst examining fully-rendered HTML from a ${siteType} site (${pageDesc}).`,
     ``,
+    `STEP 1 — PAGE TYPE CLASSIFICATION:`,
+    `Identify the page type from the HTML. Choose one: homepage, pricing, product, about, landing.`,
+    `Set "page_type" in the response. Only evaluate checks whose pageType matches this page type or is "any".`,
+    `Skip checks scoped to other page types (e.g. skip product-page checks when analyzing a homepage).`,
+    ``,
+    `STEP 2 — SITE TYPE CONTEXT:`,
+    `This site has been detected as: ${siteType}.`,
+    `Apply checks scoped to this site type plus all "universal" checks.`,
+    `Skip checks marked for other site types (e.g. skip ecommerce-specific checks on a saas site).`,
+    ``,
     `SCORING:`,
     `- score 0-100. FORBIDDEN: 10,15,20,25,30,35,40,45,50,55,60,62,65,70,75,80,85,90.`,
     `- verdict: Excellent (80+), Good (65-79), Needs Work (45-64), Critical (below 45).`,
@@ -102,12 +123,23 @@ export function buildApiPrompt(params: {
 
   if (wantsFindings) {
     parts.push(``);
-    parts.push(`FINDINGS (return max ${findingLimit}, ranked by revenue impact):`);
+    parts.push(`FINDINGS (return max ${findingLimit}, sorted P1 first, then P2, then P3):`);
     parts.push(`- id format: "finding_001", "finding_002", etc.`);
+    parts.push(`- fix_effort: "hours" = under 4 hours dev work; "days" = 1–3 days; "weeks" = more than 3 days.`);
+    parts.push(`- impact_tier: "high" = 15%+ expected lift; "medium" = 5–15%; "low" = under 5%.`);
+    parts.push(`- priority_rank: P1 = high impact_tier + hours fix_effort; P2 = high + days OR medium + hours; P3 = everything else.`);
     if (findingDepth === "full") {
       parts.push(`- fix_steps: exactly 3 items, each actionable and specific to this page's actual content.`);
       parts.push(`- rewritten_copy: ready-to-paste replacement text only — no labels, no "Option A".`);
     }
+    parts.push(``);
+    parts.push(`STRENGTHS (return top 5 genuinely excellent implementations, or empty array [] if none qualify):`);
+    parts.push(`A strength entry is only valid when ALL 4 criteria are met:`);
+    parts.push(`  1. The check has a defined passLabel — only checks with explicit passLabels in the rubric are eligible.`);
+    parts.push(`  2. The implementation is genuinely above average for its category — not merely present.`);
+    parts.push(`  3. The specific element is correctly placed (e.g. proof before CTA, guarantee near CTA) — not just anywhere on the page.`);
+    parts.push(`  4. You can cite specific page evidence — quote the actual copy or name the precise element.`);
+    parts.push(`If fewer than 3 checks pass all 4 criteria, return an empty array [] rather than padding with mediocre entries.`);
   }
 
   if (wantsSummary) {

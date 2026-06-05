@@ -6,6 +6,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 import { validateApiKey } from "@/lib/apiAuth";
+import { apiError } from "@/lib/apiErrors";
 
 function getServiceClient() {
   return createClient(
@@ -24,7 +25,7 @@ function scoreToVerdict(score: number): string {
 export async function GET(req: NextRequest) {
   const apiKey = await validateApiKey(req);
   if (!apiKey) {
-    return NextResponse.json({ error: "Invalid API key" }, { status: 401 });
+    return apiError("AUTH_INVALID", "Invalid API key", 401);
   }
 
   const { searchParams } = new URL(req.url);
@@ -44,7 +45,7 @@ export async function GET(req: NextRequest) {
 
   if (error) {
     console.error("[API v1] GET /scans error:", error.message);
-    return NextResponse.json({ error: "Failed to fetch scans" }, { status: 500 });
+    return apiError("INTERNAL_ERROR", "Failed to fetch scans", 500);
   }
 
   type ReportRow = { id: string; domain: string; health_score: number | null; created_at: string };

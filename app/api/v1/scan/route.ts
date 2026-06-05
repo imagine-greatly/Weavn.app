@@ -21,7 +21,8 @@ import { dispatchWebhook } from "@/lib/webhooks";
 import { runMultiPageScan } from "@/lib/multiPageScan";
 import { fetchAndFingerprint, fingerprintsMatch } from "@/lib/fingerprint";
 import { buildApiPrompt } from "@/lib/apiPrompt";
-import { getBenchmark, updateBenchmark, getDimensionBenchmarks, getPercentileLabel } from "@/lib/benchmarks";
+import { getBenchmark, updateBenchmark, getDimensionBenchmarks, getPercentileLabel, getWeightProfile } from "@/lib/benchmarks";
+import { apiError } from "@/lib/apiErrors";
 import { calculateScanCost } from "@/lib/scanCost";
 import type { ApiKeyRecord } from "@/lib/apiAuth";
 
@@ -39,11 +40,12 @@ function nextMonthUnix(): number {
 }
 
 function rlHeaders(apiKey: ApiKeyRecord | null): Record<string, string> {
-  if (!apiKey) return { "X-RateLimit-Limit": "0", "X-RateLimit-Remaining": "0", "X-RateLimit-Reset": String(nextMonthUnix()) };
+  if (!apiKey) return { "X-RateLimit-Limit": "0", "X-RateLimit-Remaining": "0", "X-RateLimit-Reset": String(nextMonthUnix()), "X-RateLimit-Plan": "none" };
   return {
     "X-RateLimit-Limit": String(SCAN_LIMIT),
     "X-RateLimit-Remaining": String(Math.max(0, SCAN_LIMIT - apiKey.scans_used)),
     "X-RateLimit-Reset": String(nextMonthUnix()),
+    "X-RateLimit-Plan": apiKey.plan,
   };
 }
 
@@ -104,6 +106,10 @@ interface ScanResult {
   newFingerprint: string | null;
   costUsd: number;
   pageCount: number;
+  strengths?: unknown[];
+  page_type?: string;
+  findings_summary?: { total: number; p1: number; p2: number; p3: number; critical: number; high: number };
+  score_profile?: { weighted_score: number; profile_used: string; weights: Record<string, number> };
 }
 
 async function executeScan(p: ScanParams): Promise<ScanResult> {
@@ -229,6 +235,8 @@ async function executeScan(p: ScanParams): Promise<ScanResult> {
     findings?: unknown[];
     copy_rewrites?: Record<string, string | undefined>;
     growth_blueprint?: unknown[];
+    strengths?: unknown[];
+    page_type?: string;
   };
   let parsed: ApiResponse;
   try {
@@ -241,6 +249,8 @@ async function executeScan(p: ScanParams): Promise<ScanResult> {
 
   const score = Math.min(100, Math.max(0, Math.round(parsed.score ?? 50)));
   const verdict = scoreToVerdict(score);
+  const page_type = typeof parsed.page_type === "string" ? parsed.page_type : "homepage";
+  const strengths = Array.isArray(parsed.strengths) ? parsed.strengths : [];
 
   // Save report — store a minimal ReportPayload-compatible object
   const reportPayload = {
@@ -320,6 +330,26 @@ async function executeScan(p: ScanParams): Promise<ScanResult> {
     }
   }
 
+  const weights = getWeightProfile(site_type, complexity);
+  const weighted_score = Math.min(100, Math.max(0, Math.round(
+    Object.entries(dimensions).reduce((sum, [key, val]) => sum + (weights[key] ?? 0) * val, 0)
+  )));
+  const score_profile = {
+    weighted_score,
+    profile_used: `${site_type}_${complexity}`,
+    weights,
+  };
+
+  const findings_arr = parsed.findings ? (parsed.findings as unknown[]).slice(0, findingLimit) : [];
+  const findings_summary = {
+    total: findings_arr.length,
+    p1: findings_arr.filter((f) => (f as Record<string, unknown>).priority_rank === "P1").length,
+    p2: findings_arr.filter((f) => (f as Record<string, unknown>).priority_rank === "P2").length,
+    p3: findings_arr.filter((f) => (f as Record<string, unknown>).priority_rank === "P3").length,
+    critical: findings_arr.filter((f) => (f as Record<string, unknown>).severity === "critical").length,
+    high: findings_arr.filter((f) => (f as Record<string, unknown>).severity === "high").length,
+  };
+
   const dimensionBenchmarks = rawDimBenchmarks
     ? Object.entries(dimensions).reduce<Record<string, { score: number; average: number; percentile_label: string; p10: number; p90: number }>>((acc, [key, dimScore]) => {
         const bench = rawDimBenchmarks[key];
@@ -359,6 +389,10 @@ async function executeScan(p: ScanParams): Promise<ScanResult> {
     newFingerprint,
     costUsd,
     pageCount,
+    strengths,
+    page_type,
+    findings_summary,
+    score_profile,
   };
 }
 
@@ -371,13 +405,13 @@ export async function POST(req: NextRequest) {
   // 1. Auth
   const apiKey = await validateApiKey(req);
   if (!apiKey) {
-    return NextResponse.json({ error: "Invalid API key" }, { status: 401, headers: rlHeaders(null) });
+    return apiError("AUTH_INVALID", "Invalid API key", 401, rlHeaders(null));
   }
 
   // 2. Check scan allowed
   const allowedResult = await checkScanAllowed(apiKey.id);
   if (!allowedResult.allowed) {
-    return NextResponse.json({ error: "Scan limit reached" }, { status: 403, headers: rlHeaders(apiKey) });
+    return apiError("RATE_LIMIT_EXCEEDED", "Scan limit reached", 403, rlHeaders(apiKey));
   }
 
   // 3. Parse body
@@ -393,7 +427,7 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const rawUrl = typeof body?.url === "string" ? body.url : "";
-    if (!rawUrl) return NextResponse.json({ error: "url is required" }, { status: 400, headers: rlHeaders(apiKey) });
+    if (!rawUrl) return apiError("INVALID_URL", "url is required", 400, rlHeaders(apiKey));
     normalizedUrl = normalizeUrl(rawUrl);
     pages = Math.max(1, Math.min(5, typeof body?.pages === "number" ? body.pages : 1));
     fields = Array.isArray(body?.fields) ? (body.fields as string[]).filter((f: string) => ALL_FIELDS.includes(f)) : [];
@@ -407,17 +441,17 @@ export async function POST(req: NextRequest) {
       : null;
     multiPagePaths = rawPagesList && rawPagesList.length > 0 ? rawPagesList : null;
   } catch {
-    return NextResponse.json({ error: "url is required" }, { status: 400, headers: rlHeaders(apiKey) });
+    return apiError("INVALID_URL", "url is required", 400, rlHeaders(apiKey));
   }
 
-  if (!normalizedUrl) return NextResponse.json({ error: "url is required" }, { status: 400, headers: rlHeaders(apiKey) });
+  if (!normalizedUrl) return apiError("INVALID_URL", "url is required", 400, rlHeaders(apiKey));
   try { new URL(normalizedUrl); } catch {
-    return NextResponse.json({ error: "url is required" }, { status: 400, headers: rlHeaders(apiKey) });
+    return apiError("INVALID_URL", "url is required", 400, rlHeaders(apiKey));
   }
 
   const domain = getDomain(normalizedUrl);
   if (!domain || !domain.includes(".")) {
-    return NextResponse.json({ error: "url is required" }, { status: 400, headers: rlHeaders(apiKey) });
+    return apiError("INVALID_URL", "url is required", 400, rlHeaders(apiKey));
   }
 
   const cacheUrl = normalizedUrl.toLowerCase().replace(/\/+$/, "");
@@ -430,11 +464,11 @@ export async function POST(req: NextRequest) {
 
   if (multiPagePaths !== null) {
     if (multiPagePaths.length > 5) {
-      return NextResponse.json({ error: "pages must contain at most 5 entries" }, { status: 400, headers: rlHeaders(apiKey) });
+      return apiError("INVALID_REQUEST", "pages must contain at most 5 entries", 400, rlHeaders(apiKey));
     }
     for (const p of multiPagePaths) {
       if (!p.startsWith("/")) {
-        return NextResponse.json({ error: `pages entries must start with / — invalid: "${p}"` }, { status: 400, headers: rlHeaders(apiKey) });
+        return apiError("INVALID_REQUEST", `pages entries must start with / — invalid: "${p}"`, 400, rlHeaders(apiKey));
       }
     }
 
@@ -447,9 +481,9 @@ export async function POST(req: NextRequest) {
       await deductCredits(apiKey.user_id, creditCount);
     } catch (err) {
       if (err instanceof InsufficientCreditsError) {
-        return NextResponse.json({ error: "Insufficient credits for multi-page scan" }, { status: 402, headers: rlHeaders(apiKey) });
+        return apiError("INSUFFICIENT_CREDITS", "Insufficient credits for multi-page scan", 402, rlHeaders(apiKey));
       }
-      return NextResponse.json({ error: "Failed to verify credits" }, { status: 500, headers: rlHeaders(apiKey) });
+      return apiError("INTERNAL_ERROR", "Failed to verify credits", 500, rlHeaders(apiKey));
     }
 
     const scanId = randomUUID();
@@ -616,25 +650,19 @@ export async function POST(req: NextRequest) {
     const message = err instanceof Error ? err.message : "Scan failed.";
     if (message === "BOT_BLOCKED" || message.includes("BOT_BLOCKED")) {
       return NextResponse.json({
-        error: "bot_blocked",
-        message: "This URL uses bot protection (e.g. Cloudflare Enterprise) that prevents automated access. Try a different URL.",
+        error: { code: "BOT_BLOCKED", message: "This URL uses bot protection that prevents automated access. Try a different URL.", status: 422 },
         blocked: true,
-        code: "BOT_BLOCKED",
       }, { status: 422, headers: rlHeaders(apiKey) });
     }
     if (message.includes("Could not extract")) {
       return NextResponse.json({
-        error: "extraction_failed",
-        message: "Could not extract content from this URL.",
+        error: { code: "EXTRACTION_FAILED", message: "Could not extract content from this URL.", status: 422 },
         blocked: false,
-        code: "EXTRACTION_FAILED",
       }, { status: 422, headers: rlHeaders(apiKey) });
     }
     return NextResponse.json({
-      error: "scan_failed",
-      message,
+      error: { code: "SCAN_FAILED", message, status: 500 },
       blocked: false,
-      code: "SCAN_FAILED",
     }, { status: 500, headers: rlHeaders(apiKey) });
   }
 
@@ -675,8 +703,14 @@ export async function POST(req: NextRequest) {
     scan_meta: scanMeta,
   };
 
+  response.page_type = result.page_type ?? "homepage";
+  response.score_profile = result.score_profile;
+  response.findings_summary = result.findings_summary;
   if (wantsField("summary")) response.summary = result.summary ?? "";
-  if (wantsField("findings")) response.findings = result.findings ?? [];
+  if (wantsField("findings")) {
+    response.findings = result.findings ?? [];
+    response.strengths = result.strengths ?? [];
+  }
   if (wantsField("copy_rewrites")) response.copy_rewrites = result.copyRewrites ?? {};
   if (wantsField("growth_blueprint")) response.growth_blueprint = result.growthBlueprint ?? [];
   if (wantsField("benchmark") && result.benchmark) response.benchmark = result.benchmark;

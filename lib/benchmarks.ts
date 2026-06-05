@@ -114,6 +114,86 @@ export function getPercentileLabel(
   return `Top 10%${context}`;
 }
 
+export const DIMENSION_WEIGHTS: Record<string, Record<string, number>> = {
+  saas_transactional: {
+    conversion_architecture: 0.20,
+    trust_signals: 0.12,
+    message_clarity: 0.18,
+    traffic_readiness: 0.10,
+    technical_foundation: 0.10,
+    objection_handling: 0.15,
+    offer_clarity: 0.15,
+  },
+  saas_consultative: {
+    conversion_architecture: 0.15,
+    trust_signals: 0.20,
+    message_clarity: 0.15,
+    traffic_readiness: 0.10,
+    technical_foundation: 0.10,
+    objection_handling: 0.20,
+    offer_clarity: 0.10,
+  },
+  saas_enterprise: {
+    conversion_architecture: 0.12,
+    trust_signals: 0.22,
+    message_clarity: 0.13,
+    traffic_readiness: 0.10,
+    technical_foundation: 0.18,
+    objection_handling: 0.18,
+    offer_clarity: 0.07,
+  },
+  ecommerce_transactional: {
+    conversion_architecture: 0.22,
+    trust_signals: 0.18,
+    message_clarity: 0.15,
+    traffic_readiness: 0.10,
+    technical_foundation: 0.08,
+    objection_handling: 0.12,
+    offer_clarity: 0.15,
+  },
+  ecommerce_consultative: {
+    conversion_architecture: 0.15,
+    trust_signals: 0.22,
+    message_clarity: 0.18,
+    traffic_readiness: 0.10,
+    technical_foundation: 0.08,
+    objection_handling: 0.15,
+    offer_clarity: 0.12,
+  },
+  service_consultative: {
+    conversion_architecture: 0.13,
+    trust_signals: 0.25,
+    message_clarity: 0.20,
+    traffic_readiness: 0.10,
+    technical_foundation: 0.08,
+    objection_handling: 0.17,
+    offer_clarity: 0.07,
+  },
+  default: {
+    conversion_architecture: 0.15,
+    trust_signals: 0.15,
+    message_clarity: 0.15,
+    traffic_readiness: 0.15,
+    technical_foundation: 0.15,
+    objection_handling: 0.15,
+    offer_clarity: 0.10,
+  },
+};
+
+export function getWeightProfile(siteType: string, buyerComplexity: string): Record<string, number> {
+  if (siteType === "saas") {
+    if (buyerComplexity === "enterprise") return DIMENSION_WEIGHTS.saas_enterprise;
+    if (buyerComplexity === "consultative") return DIMENSION_WEIGHTS.saas_consultative;
+    return DIMENSION_WEIGHTS.saas_transactional;
+  }
+  if (siteType === "ecommerce") {
+    if (buyerComplexity === "consultative") return DIMENSION_WEIGHTS.ecommerce_consultative;
+    return DIMENSION_WEIGHTS.ecommerce_transactional;
+  }
+  if (siteType === "service") return DIMENSION_WEIGHTS.service_consultative;
+  return DIMENSION_WEIGHTS.default;
+}
+
 export function updateBenchmark(siteType: string, newScore: number): void {
   void (async () => {
     try {

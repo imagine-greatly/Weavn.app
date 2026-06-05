@@ -31,6 +31,6 @@ export const SCAN_STATUS_MESSAGES = [
   "Mapping revenue funnel architecture...",
   "Auditing social proof authenticity signals...",
   "Assessing SEO and metadata structure...",
-  "Cross-referencing 264 checkpoints against our revenue benchmarks...",
+  "Cross-referencing 282 checkpoints against our revenue benchmarks...",
   "Compiling Revenue Score...",
 ] as const;

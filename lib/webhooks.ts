@@ -38,6 +38,52 @@ export interface WebhookPayload {
   data: Record<string, unknown>;
 }
 
+const RETRY_DELAYS_MS = [0, 5 * 60 * 1000, 30 * 60 * 1000];
+
+async function deliverWithRetry(
+  row: WebhookRow,
+  body: string,
+  eventHeader: string
+): Promise<void> {
+  const signature = createHmac("sha256", row.secret).update(body).digest("hex");
+
+  for (let attempt = 0; attempt < RETRY_DELAYS_MS.length; attempt++) {
+    if (attempt > 0) {
+      await new Promise(r => setTimeout(r, RETRY_DELAYS_MS[attempt]));
+    }
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 10_000);
+
+    try {
+      const res = await fetch(row.url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-WebDoc-Event": eventHeader,
+          "X-WebDoc-Signature": signature,
+          "X-WebDoc-Attempt": String(attempt + 1),
+        },
+        body,
+        signal: controller.signal,
+      });
+      clearTimeout(timeout);
+
+      if (res.ok) return;
+
+      console.error(`[webhooks] attempt ${attempt + 1} failed for ${row.url}: HTTP ${res.status}`);
+    } catch (err) {
+      clearTimeout(timeout);
+      console.error(`[webhooks] attempt ${attempt + 1} error for ${row.url}:`, err instanceof Error ? err.message : err);
+    }
+  }
+
+  console.error(`[webhooks] all ${RETRY_DELAYS_MS.length} delivery attempts exhausted for ${row.url}`, {
+    webhookId: row.id,
+    event: eventHeader,
+  });
+}
+
 export function dispatchMultiPageWebhook(
   apiKeyId: string,
   payload: MultiPageWebhookPayload
@@ -55,29 +101,9 @@ export function dispatchMultiPageWebhook(
 
       const body = JSON.stringify(payload);
 
-      for (const row of rows as WebhookRow[]) {
-        const signature = createHmac("sha256", row.secret)
-          .update(body)
-          .digest("hex");
-
-        const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 10_000);
-
-        fetch(row.url, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-WebDoc-Event": "scan.completed",
-            "X-WebDoc-Signature": signature,
-          },
-          body,
-          signal: controller.signal,
-        })
-          .catch((err: unknown) =>
-            console.error(`[webhooks] multi-page delivery failed for ${row.url}:`, err)
-          )
-          .finally(() => clearTimeout(timeout));
-      }
+      await Promise.allSettled(
+        (rows as WebhookRow[]).map(row => deliverWithRetry(row, body, "scan.completed"))
+      );
     } catch (err) {
       console.error("[webhooks] dispatchMultiPageWebhook failed:", err);
     }
@@ -101,29 +127,9 @@ export function dispatchWebhook(
 
       const body = JSON.stringify(payload);
 
-      for (const row of rows as WebhookRow[]) {
-        const signature = createHmac("sha256", row.secret)
-          .update(body)
-          .digest("hex");
-
-        const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 10_000);
-
-        fetch(row.url, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-WebDoc-Event": payload.event,
-            "X-WebDoc-Signature": signature,
-          },
-          body,
-          signal: controller.signal,
-        })
-          .catch((err: unknown) =>
-            console.error(`[webhooks] delivery failed for ${row.url}:`, err)
-          )
-          .finally(() => clearTimeout(timeout));
-      }
+      await Promise.allSettled(
+        (rows as WebhookRow[]).map(row => deliverWithRetry(row, body, payload.event))
+      );
     } catch (err) {
       console.error("[webhooks] dispatchWebhook failed:", err);
     }

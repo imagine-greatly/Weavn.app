@@ -15,6 +15,7 @@ import { extractPageData } from "@/lib/analyzePipeline";
 import { saveReport } from "@/lib/supabase";
 import { validateApiKey } from "@/lib/apiAuth";
 import { logScanUsage, checkScanAllowed } from "@/lib/usageTracking";
+import { apiError } from "@/lib/apiErrors";
 import { dispatchWebhook } from "@/lib/webhooks";
 import { fetchAndFingerprint, fingerprintsMatch } from "@/lib/fingerprint";
 import { buildApiPrompt } from "@/lib/apiPrompt";
@@ -26,6 +27,22 @@ export const maxDuration = 300;
 
 const BASE_URL = "https://webdocai.com";
 const ALL_FIELDS = ["summary", "findings", "copy_rewrites", "growth_blueprint", "benchmark"];
+const SCAN_LIMIT = 1000;
+
+function nextMonthUnix(): number {
+  const now = new Date();
+  return Math.floor(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1) / 1000);
+}
+
+function rlHeaders(apiKey: ApiKeyRecord | null): Record<string, string> {
+  if (!apiKey) return { "X-RateLimit-Limit": "0", "X-RateLimit-Remaining": "0", "X-RateLimit-Reset": String(nextMonthUnix()), "X-RateLimit-Plan": "none" };
+  return {
+    "X-RateLimit-Limit": String(SCAN_LIMIT),
+    "X-RateLimit-Remaining": String(Math.max(0, SCAN_LIMIT - apiKey.scans_used)),
+    "X-RateLimit-Reset": String(nextMonthUnix()),
+    "X-RateLimit-Plan": apiKey.plan,
+  };
+}
 
 function normalizeUrl(input: string): string {
   const t = input.trim();
@@ -212,24 +229,24 @@ export async function POST(req: NextRequest) {
   const batchStart = Date.now();
 
   const apiKey = await validateApiKey(req);
-  if (!apiKey) return NextResponse.json({ error: "Invalid API key" }, { status: 401 });
+  if (!apiKey) return apiError("AUTH_INVALID", "Invalid API key", 401, rlHeaders(null));
 
   const allowed = await checkScanAllowed(apiKey.id);
-  if (!allowed.allowed) return NextResponse.json({ error: "Scan limit reached" }, { status: 403 });
+  if (!allowed.allowed) return apiError("RATE_LIMIT_EXCEEDED", "Scan limit reached", 403, rlHeaders(apiKey));
 
   let urls: string[], fields: string[], findingLimit: number, findingDepth: "brief" | "full", asyncMode: boolean;
   try {
     const body = await req.json();
     urls = Array.isArray(body?.urls) ? body.urls.filter((u: unknown) => typeof u === "string" && u.trim()) : [];
-    if (urls.length === 0) return NextResponse.json({ error: "urls is required and must not be empty" }, { status: 400 });
-    if (urls.length > 10) return NextResponse.json({ error: "Maximum 10 URLs per batch request" }, { status: 400 });
+    if (urls.length === 0) return apiError("INVALID_REQUEST", "urls is required and must not be empty", 400, rlHeaders(apiKey));
+    if (urls.length > 10) return apiError("INVALID_REQUEST", "Maximum 10 URLs per batch request", 400, rlHeaders(apiKey));
     fields = Array.isArray(body?.fields) ? body.fields.filter((f: string) => ALL_FIELDS.includes(f)) : [];
     findingLimit = Math.min(20, Math.max(1, typeof body?.finding_limit === "number" ? body.finding_limit : 10));
     const rawDepth = typeof body?.finding_depth === "string" ? body.finding_depth : "full";
     findingDepth = rawDepth === "brief" ? "brief" : "full";
     asyncMode = body?.async === true;
   } catch {
-    return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+    return apiError("INVALID_REQUEST", "Invalid request body", 400, rlHeaders(apiKey));
   }
 
   const effectiveFields = fields.length === 0 ? ALL_FIELDS : fields;
@@ -270,7 +287,7 @@ export async function POST(req: NextRequest) {
       ));
     })();
 
-    return NextResponse.json({ batch_id: batchId, scan_ids: scanIds, status: "pending", poll_urls: pollUrls }, { status: 202 });
+    return NextResponse.json({ batch_id: batchId, scan_ids: scanIds, status: "pending", poll_urls: pollUrls }, { status: 202, headers: rlHeaders(apiKey) });
   }
 
   // ── Sync batch mode ───────────────────────────────────────────────────────
@@ -298,5 +315,5 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({
     results,
     summary: { total: urls.length, succeeded, failed, duration_ms: Date.now() - batchStart },
-  });
+  }, { headers: rlHeaders(apiKey) });
 }

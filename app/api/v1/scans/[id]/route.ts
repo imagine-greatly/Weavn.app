@@ -7,6 +7,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 import { validateApiKey } from "@/lib/apiAuth";
+import { apiError } from "@/lib/apiErrors";
 import type {
   ReportPayload,
   Leak,
@@ -104,12 +105,12 @@ export async function GET(
 ) {
   const apiKey = await validateApiKey(req);
   if (!apiKey) {
-    return NextResponse.json({ error: "Invalid API key" }, { status: 401 });
+    return apiError("AUTH_INVALID", "Invalid API key", 401);
   }
 
   const { id } = await params;
   if (!id) {
-    return NextResponse.json({ error: "id is required" }, { status: 400 });
+    return apiError("INVALID_REQUEST", "id is required", 400);
   }
 
   const supabase = getServiceClient();
@@ -122,7 +123,7 @@ export async function GET(
     .single();
 
   if (error || !data) {
-    return NextResponse.json({ error: "Scan not found" }, { status: 404 });
+    return apiError("NOT_FOUND", "Scan not found", 404);
   }
 
   type ReportRow = {

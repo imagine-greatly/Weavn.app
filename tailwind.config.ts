@@ -25,7 +25,7 @@ const config: Config = {
         },
         text: {
           primary: '#F0F4FF',
-          secondary: '#4A5568',
+          secondary: '#8E8EA0',
           tertiary: '#2D3748',
           inverse: '#050810',
         },

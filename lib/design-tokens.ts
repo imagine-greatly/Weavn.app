@@ -33,7 +33,7 @@ export const TOKENS = {
     },
   },
   fontFamily: {
-    display: ['Syne', 'sans-serif'],
+    display: ['Space Grotesk', 'sans-serif'],
     body: ['IBM Plex Sans', 'sans-serif'],
     mono: ['IBM Plex Mono', 'monospace'],
   },

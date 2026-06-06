@@ -30,7 +30,7 @@ function NavBar() {
           webdoc<span className="text-cyan-DEFAULT">.ai</span>
         </Link>
         <div className="flex items-center gap-6">
-          {['Docs', 'Pricing', 'Changelog'].map(link => (
+          {['Pricing', 'Developers', 'Docs', 'Changelog'].map(link => (
             <Link
               key={link}
               href={`/${link.toLowerCase()}`}
@@ -157,7 +157,7 @@ function HeroSection() {
 
           {/* Subheadline */}
           <p className="font-body text-lg text-text-secondary leading-relaxed max-w-md mt-5">
-            The conversion audit API. Founders use it to diagnose their site. Agencies use it to run client audits. Developers build it into their products. One scan engine — 264 checks, ranked findings, AI-rewritten copy.
+            The conversion audit API. Founders use it to diagnose their site. Agencies use it to run client audits. Developers build it into their products. One scan engine — 307 checks, ranked findings, AI-rewritten copy.
           </p>
 
           {/* Audience pills */}
@@ -218,15 +218,24 @@ function HeroSection() {
           </div>
 
           {/* Stats row */}
-          <div className="flex gap-8 mt-12 pt-8 border-t border-background-border">
+          <div className="flex flex-row gap-8 mt-9 pt-6 border-t border-background-border overflow-x-auto scroll-track-hide-scrollbar">
             {[
-              { value: '264', label: 'checks per scan' },
-              { value: '$0.15', label: 'per scan' },
-              { value: '90s', label: 'median response' },
+              { value: '307', lines: ['CHECKS', 'PER SCAN'], color: null },
+              { value: '$0.15', lines: ['PER SCAN'], color: null },
+              { value: '~90s', lines: ['MEDIAN', 'RESPONSE'], color: null },
+              { value: '27', lines: ['CATEGORIES'], color: null },
+              { value: 'FREE', lines: ['CACHE HITS'], color: '#00E676' },
             ].map(stat => (
-              <div key={stat.label}>
-                <div className="font-display font-extrabold text-2xl text-text-primary tracking-tight">{stat.value}</div>
-                <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mt-1">{stat.label}</div>
+              <div key={stat.value} className="flex-shrink-0">
+                <div
+                  className={`font-score text-4xl${!stat.color ? ' text-text-primary' : ''}`}
+                  style={stat.color ? { color: stat.color } : undefined}
+                >
+                  {stat.value}
+                </div>
+                <div className="font-ui-label mt-1" style={{ color: '#3A3A52' }}>
+                  {stat.lines.map((line, i) => <div key={i}>{line}</div>)}
+                </div>
               </div>
             ))}
           </div>
@@ -345,8 +354,8 @@ function HowItWorksSection() {
     },
     {
       n: '02',
-      title: '264 checks run',
-      detail: 'webdoc renders the full page and runs 264 diagnostic checks across 27 categories — conversion, trust, messaging, technical, and more.',
+      title: '307 checks run',
+      detail: 'webdoc renders the full page, classifies the site type, and runs only the checks relevant to that vertical. SaaS sites get SaaS checks. Ecommerce sites get ecommerce checks. 27 diagnostic categories total.',
     },
     {
       n: '03',
@@ -444,7 +453,7 @@ function ResponseSection() {
       <div className="max-w-[1280px] mx-auto">
         <Label>THE RESPONSE IS THE PRODUCT</Label>
         <h2 className="font-display font-extrabold text-4xl tracking-tight text-text-primary mt-3 mb-4">
-          264 checks. One structured output.
+          307 checks. One structured output.
         </h2>
         <p className="font-body text-text-secondary text-lg max-w-2xl mb-16">
           Every scan returns the same predictable schema. Build against it once. Every URL you POST returns findings ranked by estimated revenue impact, benchmarked against your industry, with AI-rewritten copy attached.
@@ -474,6 +483,10 @@ function ResponseSection() {
               {
                 field: 'rewritten_copy',
                 note: 'AI-rewritten headline, subheadline, and primary CTA. Drop-in replacements, not suggestions.',
+              },
+              {
+                field: 'strengths[]',
+                note: 'What your site already does well. Top-performing checks returned alongside findings — agencies use this to open client conversations, not just present problems.',
               },
             ].map(a => (
               <div key={a.field} className="border-l-2 border-background-border pl-4 mb-8">
@@ -611,7 +624,13 @@ function EndpointsSection() {
           </div>
         </div>
 
-        <Link href="/docs" className="font-body text-sm text-cyan-DEFAULT mt-8 inline-block no-underline hover:opacity-80 transition-opacity duration-150">
+        <div className="font-mono text-sm text-text-tertiary mt-6">
+          Full OpenAPI spec at{' '}
+          <a href="/docs/api" className="text-cyan-DEFAULT hover:underline no-underline">
+            /docs/api →
+          </a>
+        </div>
+        <Link href="/docs" className="font-body text-sm text-cyan-DEFAULT mt-4 inline-block no-underline hover:opacity-80 transition-opacity duration-150">
           View full API reference →
         </Link>
       </div>
@@ -634,37 +653,37 @@ function ThreeDoorsSection() {
           intelligence into a product — it&apos;s the same engine underneath.
         </p>
 
-        <div className="grid grid-cols-3 gap-px bg-background-border">
+        <div className="grid grid-cols-3 gap-4">
 
           {/* Panel 1 — Founders */}
-          <div className="bg-background-raised p-10 hover:bg-background-interactive transition-colors duration-200 cursor-pointer">
+          <div className="bg-background-raised border border-background-border p-10 landing-card-electric cursor-pointer min-h-[400px] flex flex-col">
             <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mb-6">FOR FOUNDERS</div>
             <h3 className="font-display font-bold text-2xl text-text-primary leading-snug mb-4">
               Diagnose your site.
             </h3>
-            <p className="font-body text-sm text-text-secondary leading-relaxed mb-8">
+            <p className="font-body text-sm text-text-secondary leading-relaxed mb-8 flex-1">
               Paste your URL. Get a full conversion audit in 90 seconds — score, ranked findings,
               AI-rewritten copy, and how you compare against 3 competitors in your category.
               Free to start.
             </p>
             <div>
               <Link
-                href="/playground"
+                href="/scan"
                 className="font-body text-sm text-text-secondary border-b border-background-border pb-0.5 no-underline hover:text-text-primary hover:border-text-tertiary transition-colors duration-150"
               >
-                Scan my site →
+                Scan my site free →
               </Link>
               <div className="font-mono text-xs text-text-tertiary mt-3">Free · No account required</div>
             </div>
           </div>
 
           {/* Panel 2 — Agencies */}
-          <div className="bg-background-raised p-10 hover:bg-background-interactive transition-colors duration-200 cursor-pointer">
+          <div className="bg-background-raised border border-background-border p-10 landing-card-electric cursor-pointer min-h-[400px] flex flex-col">
             <div className="font-mono text-xs text-cyan-DEFAULT uppercase tracking-widest mb-6">FOR AGENCIES</div>
             <h3 className="font-display font-bold text-2xl text-text-primary leading-snug mb-4">
               Manage client audits.
             </h3>
-            <p className="font-body text-sm text-text-secondary leading-relaxed mb-8">
+            <p className="font-body text-sm text-text-secondary leading-relaxed mb-8 flex-1">
               Client workspaces, white-label report links, multi-page scanning, and competitor
               benchmarking per client. Show up to every call with data, not opinions.
             </p>
@@ -674,26 +693,26 @@ function ThreeDoorsSection() {
                 className="font-body text-sm text-cyan-DEFAULT border-b pb-0.5 no-underline transition-colors duration-150"
                 style={{ borderColor: 'rgba(0,200,255,0.3)' }}
               >
-                See agency plan →
+                See agency plans →
               </Link>
-              <div className="font-mono text-xs text-text-tertiary mt-3">From $149/month · 14-day free trial</div>
+              <div className="font-mono text-xs text-text-tertiary mt-3">From $149/mo · 14-day trial</div>
             </div>
           </div>
 
           {/* Panel 3 — Developers */}
-          <div className="bg-background-raised p-10 hover:bg-background-interactive transition-colors duration-200 cursor-pointer">
+          <div className="bg-background-raised border border-background-border p-10 landing-card-electric cursor-pointer min-h-[400px] flex flex-col">
             <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mb-6">FOR DEVELOPERS</div>
             <h3 className="font-display font-bold text-2xl text-text-primary leading-snug mb-4">
               Build with it.
             </h3>
-            <p className="font-body text-sm text-text-secondary leading-relaxed mb-8">
+            <p className="font-body text-sm text-text-secondary leading-relaxed mb-8 flex-1">
               POST a URL, get structured JSON back. Dynamic field selection, async mode,
               batch endpoint, webhooks. Integrate conversion intelligence into your product
               in an afternoon.
             </p>
             <div>
               <Link
-                href="/signup"
+                href="/developer"
                 className="font-body text-sm text-text-secondary border-b border-background-border pb-0.5 no-underline hover:text-text-primary transition-colors duration-150"
               >
                 Get API key →
@@ -933,7 +952,7 @@ function PricingSection() {
           <div>
             <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mb-2">FOR DEVELOPERS</div>
             <h3 className="font-display font-bold text-2xl text-text-primary mb-2">Build with the API</h3>
-            <p className="font-body text-sm text-text-secondary mb-1">POST a URL. Get structured JSON. 264 checks.</p>
+            <p className="font-body text-sm text-text-secondary mb-1">POST a URL. Get structured JSON. 307 checks.</p>
             <p className="font-mono text-xs text-cyan-DEFAULT">From $0.15/scan · 25 free to start</p>
           </div>
           <Link
@@ -949,6 +968,83 @@ function PricingSection() {
   )
 }
 
+// ── Conviction ────────────────────────────────────────────────────────────────
+
+function ConvictionSection() {
+  return (
+    <section className="bg-background-base py-20 border-t border-background-border">
+      <div className="max-w-[1280px] mx-auto px-8">
+        <div className="flex gap-16 items-start">
+          {/* Left — 60% */}
+          <div className="flex-[60] min-w-0">
+            <div className="section-label mb-5">THE NUMBERS</div>
+            <h2 className="section-headline text-4xl leading-tight mb-6">
+              Most sites score under 65.
+            </h2>
+            <p className="section-subhead max-w-xl">
+              The median score across scans we&apos;ve run is 61. The most common critical finding:
+              hero headline is feature-led, not outcome-led. The fastest fix: CTA microcopy
+              below the primary button. Average time to implement the top three findings: one afternoon.
+            </p>
+          </div>
+          {/* Right — 40% */}
+          <div className="flex-[40] min-w-0 flex flex-col">
+            <div className="bg-background-raised border border-background-border p-6">
+              <div className="font-score text-5xl" style={{ color: '#F5A623' }}>61</div>
+              <div className="font-ui-label mt-2" style={{ color: '#3A3A52' }}>MEDIAN SCORE</div>
+            </div>
+            <div className="bg-background-raised border border-background-border border-t-0 p-6">
+              <div className="font-score text-5xl" style={{ color: '#FF4444' }}>#1</div>
+              <div className="font-ui-label mt-2" style={{ color: '#3A3A52' }}>MOST COMMON FINDING</div>
+              <div className="font-mono text-sm text-text-secondary mt-2">Feature-led hero headline</div>
+            </div>
+            <div className="bg-background-raised border border-background-border border-t-0 p-6">
+              <div className="font-score text-5xl" style={{ color: '#00E676' }}>4hrs</div>
+              <div className="font-ui-label mt-2" style={{ color: '#3A3A52' }}>AVG TIME TO FIX TOP 3</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+// ── Final CTA ─────────────────────────────────────────────────────────────────
+
+function FinalCtaSection() {
+  return (
+    <section className="py-24 px-8 border-t border-background-border">
+      <div className="max-w-[640px] mx-auto text-center">
+        <h2 className="font-display font-extrabold text-4xl text-text-primary tracking-tight mb-4">
+          See your score in 90 seconds.
+        </h2>
+        <p className="font-body text-text-secondary mb-8">
+          Paste any URL. Get ranked findings, benchmarks, and AI-rewritten copy.
+        </p>
+        <div className="flex border border-background-border bg-background-raised">
+          <span className="font-mono text-xs text-text-tertiary px-4 flex items-center flex-shrink-0">https://</span>
+          <input
+            type="text"
+            placeholder="your-site.com"
+            className="flex-1 bg-transparent font-mono text-sm text-text-primary py-3 placeholder:text-text-tertiary focus:outline-none"
+            readOnly
+            onClick={() => { window.location.href = '/scan' }}
+          />
+          <Link
+            href="/scan"
+            className="bg-cyan-DEFAULT text-text-inverse font-mono text-xs font-bold px-6 py-3 no-underline hover:opacity-90 transition-opacity whitespace-nowrap tracking-widest"
+          >
+            SCAN FREE →
+          </Link>
+        </div>
+        <div className="font-ui-label mt-4" style={{ color: '#3A3A52' }}>
+          307 checks · ~90 seconds · no account required
+        </div>
+      </div>
+    </section>
+  )
+}
+
 // ── FAQ ───────────────────────────────────────────────────────────────────────
 
 const FAQ_ITEMS = [
@@ -958,7 +1054,7 @@ const FAQ_ITEMS = [
   },
   {
     q: 'How is the score calculated?',
-    a: "264 checks across 27 categories. Each check is weighted by its estimated impact on conversion rate. The score is benchmarked against every other site webdoc has scanned in your industry category — so 61 means you're in the 63rd percentile for B2B SaaS, not just an abstract number.",
+    a: "307 checks across 27 categories. Each check is weighted by its estimated impact on conversion rate. The score is benchmarked against every other site webdoc has scanned in your industry category — so 61 means you're in the 63rd percentile for B2B SaaS, not just an abstract number.",
   },
   {
     q: "What happens to my site's data?",
@@ -1012,13 +1108,13 @@ function FaqSection() {
 function FooterSection() {
   return (
     <footer className="border-t border-background-border bg-background-raised">
-      <div className="max-w-[1280px] mx-auto px-8 py-12 grid grid-cols-3 gap-16">
+      <div className="max-w-[1280px] mx-auto px-8 py-12 grid grid-cols-4 gap-8">
         <div>
           <Link href="/" className="font-display font-extrabold text-base text-text-primary no-underline">
             webdoc<span className="text-cyan-DEFAULT">.ai</span>
           </Link>
           <p className="font-body text-sm text-text-secondary mt-3 max-w-xs leading-relaxed">
-            The conversion audit API. 264 checks, ranked findings, AI-rewritten copy. One endpoint.
+            The conversion audit API. 307 checks, ranked findings, AI-rewritten copy. One endpoint.
           </p>
         </div>
         <div>
@@ -1039,10 +1135,29 @@ function FooterSection() {
           <Link href="/pricing" className="font-body text-sm text-text-secondary hover:text-text-primary block mb-3 no-underline">Agency plans →</Link>
           <Link href="/signup" className="font-body text-sm text-cyan-DEFAULT hover:opacity-80 block mb-3 no-underline">Get API key →</Link>
         </div>
+        <div>
+          <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mb-4">RESOURCES</div>
+          <Link href="/playground" className="font-body text-sm text-text-secondary hover:text-text-primary block mb-2 no-underline">API Playground →</Link>
+          <Link href="/docs/api" className="font-body text-sm text-text-secondary hover:text-text-primary block mb-2 no-underline">API Reference →</Link>
+          <Link href="/changelog" className="font-body text-sm text-text-secondary hover:text-text-primary block mb-2 no-underline">Changelog →</Link>
+          <a href="https://status.webdocai.com" className="font-body text-sm text-text-secondary hover:text-text-primary block mb-2 no-underline" target="_blank" rel="noopener noreferrer">Status →</a>
+        </div>
       </div>
       <div className="border-t border-background-border">
         <div className="max-w-[1280px] mx-auto px-8 py-5 flex justify-between items-center">
           <span className="font-mono text-xs text-text-tertiary">© 2026 webdoc.ai</span>
+          <span className="font-mono text-xs">
+            <span style={{ color: '#3A3A52' }}>Built in public by Devon Morrell · </span>
+            <a
+              href="https://x.com/devonmorrell"
+              className="no-underline hover:underline transition-colors duration-150"
+              style={{ color: '#3A3A52' }}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Follow the build →
+            </a>
+          </span>
           <span className="font-mono text-xs text-text-tertiary">Status · Privacy · Terms</span>
         </div>
       </div>
@@ -1066,6 +1181,8 @@ export default function HomePage() {
       <StatsBand />
       <PricingSection />
       <FaqSection />
+      <ConvictionSection />
+      <FinalCtaSection />
       <FooterSection />
     </main>
   )

@@ -3,267 +3,495 @@
 import { useState } from 'react'
 import Link from 'next/link'
 
-function Bullet() {
-  return (
-    <span
-      className="flex-shrink-0 bg-score-high mt-[5px] mr-2"
-      style={{ width: 4, height: 4, display: 'inline-block' }}
-    />
-  )
+// ── Types ─────────────────────────────────────────────────────────────────────
+
+type CellVal =
+  | { type: 'check' }
+  | { type: 'dash' }
+  | { type: 'text'; value: string }
+
+interface TableRow {
+  feature: string
+  free: CellVal
+  starter: CellVal
+  agency: CellVal
+  enterprise: CellVal
 }
 
-function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
-  return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={checked}
-      onClick={() => onChange(!checked)}
-      className={`w-12 h-6 rounded-full cursor-pointer relative transition-colors duration-200 border-0 flex-shrink-0 ${
-        checked ? 'bg-cyan-DEFAULT' : 'bg-background-border'
-      }`}
-    >
-      <span
-        className={`w-5 h-5 rounded-full bg-white absolute top-0.5 transition-transform duration-200 ${
-          checked ? 'translate-x-6' : 'translate-x-0.5'
-        }`}
-      />
-    </button>
-  )
+interface TableGroup {
+  label: string
+  rows: TableRow[]
 }
 
-function FeatureItem({ text }: { text: string }) {
-  return (
-    <li className="flex items-start mb-2.5">
-      <Bullet />
-      <span className="font-body text-xs text-text-secondary">{text}</span>
-    </li>
-  )
-}
+// ── Data ──────────────────────────────────────────────────────────────────────
 
 const FAQS = [
   {
     q: 'What counts as a scan?',
-    a: "Each URL submitted through the dashboard counts as one scan. If the same URL is submitted again within 24 hours and the page content hasn't changed, we return the cached result at no charge. You're never billed for the same unchanged page twice.",
+    a: 'Each URL you submit counts as one scan. Rescanning the same URL counts as a new scan. Cache hits within 24 hours of an identical scan are free and do not consume your monthly allowance.',
   },
   {
-    q: 'How does auto competitor analysis work?',
-    a: "On Starter we automatically identify three sites competing for your same customers based on your site category and content. You see how your conversion score compares across every dimension. Agency and above lets you select competitors manually per client.",
+    q: 'Can I upgrade or downgrade anytime?',
+    a: 'Yes. Plan changes take effect immediately. Upgrades are prorated. Downgrades take effect at the next billing cycle.',
   },
   {
-    q: 'What are the 100 bundled API calls on the Agency plan?',
-    a: "Agency plan customers get 100 API calls per month included — useful for automating scan intake, building light integrations, or exporting data programmatically. Heavy API users building pipelines or products should be on a dedicated API plan.",
-  },
-  {
-    q: 'Can I change plans anytime?',
-    a: "Yes. Upgrade immediately, downgrade at end of billing period. No cancellation fees ever.",
-  },
-  {
-    q: 'What happens if I exceed my scan limit?',
-    a: "We notify you at 80% and 100% of your limit. Overages bill automatically at your tier's overage rate. Upgrade anytime to increase your monthly allowance.",
+    q: 'What are the 100 bundled API calls on Agency?',
+    a: 'The Agency plan includes 100 API calls per month that can be used programmatically via the API — useful for automating client scans or integrating webdoc into your own workflow. Additional API calls beyond 100 are billed at $0.19/scan.',
   },
   {
     q: 'Is there a free trial on paid plans?',
-    a: "The Free dashboard tier gives you one full scan with no account required. Paid plans start immediately — cancel before your next billing date if it's not the right fit.",
+    a: 'Yes — Starter and Agency both include a 14-day free trial. No credit card required to start.',
+  },
+  {
+    q: 'How does white-labeling work?',
+    a: 'Agency plan generates shareable report links with your client\'s domain context and your branding. No "powered by webdoc" in client-facing views.',
+  },
+  {
+    q: 'What happens if I hit my scan limit?',
+    a: 'Scans stop until your next billing cycle resets your allowance. You can upgrade at any time to immediately unlock more scans.',
   },
 ]
 
+const TABLE_GROUPS: TableGroup[] = [
+  {
+    label: 'SCANNING',
+    rows: [
+      {
+        feature: 'Scans per month',
+        free: { type: 'text', value: '3' },
+        starter: { type: 'text', value: '50' },
+        agency: { type: 'text', value: '200' },
+        enterprise: { type: 'text', value: 'Unlimited' },
+      },
+      {
+        feature: 'Check depth',
+        free: { type: 'text', value: '307 checks' },
+        starter: { type: 'text', value: '307' },
+        agency: { type: 'text', value: '307' },
+        enterprise: { type: 'text', value: '307' },
+      },
+      {
+        feature: 'Site types',
+        free: { type: 'text', value: 'All' },
+        starter: { type: 'text', value: 'All' },
+        agency: { type: 'text', value: 'All' },
+        enterprise: { type: 'text', value: 'All' },
+      },
+    ],
+  },
+  {
+    label: 'REPORTS',
+    rows: [
+      {
+        feature: 'Report history',
+        free: { type: 'text', value: '7 days' },
+        starter: { type: 'text', value: '30 days' },
+        agency: { type: 'text', value: '90 days' },
+        enterprise: { type: 'text', value: '1 year' },
+      },
+      {
+        feature: 'White-label reports',
+        free: { type: 'dash' },
+        starter: { type: 'dash' },
+        agency: { type: 'check' },
+        enterprise: { type: 'check' },
+      },
+      {
+        feature: 'CSV export',
+        free: { type: 'dash' },
+        starter: { type: 'check' },
+        agency: { type: 'check' },
+        enterprise: { type: 'check' },
+      },
+      {
+        feature: 'PDF export',
+        free: { type: 'dash' },
+        starter: { type: 'dash' },
+        agency: { type: 'check' },
+        enterprise: { type: 'check' },
+      },
+    ],
+  },
+  {
+    label: 'AGENCY FEATURES',
+    rows: [
+      {
+        feature: 'Client workspaces',
+        free: { type: 'dash' },
+        starter: { type: 'dash' },
+        agency: { type: 'check' },
+        enterprise: { type: 'check' },
+      },
+      {
+        feature: 'Multi-page scanning',
+        free: { type: 'dash' },
+        starter: { type: 'dash' },
+        agency: { type: 'check' },
+        enterprise: { type: 'check' },
+      },
+      {
+        feature: 'API access (bundled)',
+        free: { type: 'dash' },
+        starter: { type: 'dash' },
+        agency: { type: 'text', value: '100 calls' },
+        enterprise: { type: 'text', value: 'Custom' },
+      },
+    ],
+  },
+  {
+    label: 'SUPPORT',
+    rows: [
+      {
+        feature: 'Support type',
+        free: { type: 'text', value: 'Community' },
+        starter: { type: 'text', value: 'Email' },
+        agency: { type: 'text', value: 'Priority' },
+        enterprise: { type: 'text', value: 'Dedicated' },
+      },
+      {
+        feature: 'SLA',
+        free: { type: 'dash' },
+        starter: { type: 'dash' },
+        agency: { type: 'check' },
+        enterprise: { type: 'text', value: 'Custom' },
+      },
+    ],
+  },
+]
+
+// ── Sub-components ────────────────────────────────────────────────────────────
+
+function Cell({ val }: { val: CellVal }): JSX.Element {
+  if (val.type === 'check') return <span style={{ color: '#00E676' }}>✓</span>
+  if (val.type === 'dash') return <span style={{ color: '#3A3A52' }}>—</span>
+  return <span className="text-text-secondary">{val.value}</span>
+}
+
+function Bullet({ text, cyan }: { text: string; cyan?: boolean }) {
+  return (
+    <li className="flex items-start gap-2.5 mb-2">
+      <span
+        className="flex-shrink-0 rounded-full mt-[7px]"
+        style={{ width: 4, height: 4, backgroundColor: cyan ? '#00C8FF' : '#3A3A52' }}
+      />
+      <span style={{ fontFamily: 'var(--font-stack-sans)', fontSize: 13, lineHeight: 1.65, color: '#8E8EA0' }}>
+        {text}
+      </span>
+    </li>
+  )
+}
+
+function InheritRow({ text }: { text: string }) {
+  return (
+    <li className="font-ui-label mb-3 mt-1" style={{ color: '#3A3A52', listStyle: 'none' }}>
+      {text}
+    </li>
+  )
+}
+
+// ── Page ──────────────────────────────────────────────────────────────────────
+
 export default function PricingPage() {
   const [isAnnual, setIsAnnual] = useState(false)
+  const [showTable, setShowTable] = useState(false)
   const [openFaq, setOpenFaq] = useState<number | null>(null)
 
-  const p = (monthly: number, annual: number) => isAnnual ? annual : monthly
+  const price = (monthly: number) => (isAnnual ? Math.round(monthly * 0.8) : monthly)
 
   return (
     <main className="bg-background-base min-h-screen">
 
-      {/* ── Hero ─────────────────────────────────────────────────────────────── */}
-      <div className="pt-24 pb-16 max-w-4xl mx-auto px-8 text-center">
-        <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mb-4">PRICING</div>
-        <h1 className="font-display font-bold text-5xl text-text-primary tracking-tight mb-6">
+      {/* ── 1. Hero band ─────────────────────────────────────────────────────── */}
+      <section className="pt-24 pb-16 max-w-4xl mx-auto px-8 text-center">
+        <div className="section-label mb-4">PLANS &amp; PRICING</div>
+        <h1
+          className="section-headline mb-4"
+          style={{ fontSize: 'clamp(36px, 5vw, 56px)', letterSpacing: '-1.5px' }}
+        >
           Start free. Scale when ready.
         </h1>
-        <p className="font-body text-xl text-text-secondary max-w-2xl mx-auto">
-          Dashboard plans for founders and agencies.<br />
-          Full conversion audits, client workspaces, and white-label reporting.
+        <p className="section-subhead max-w-2xl mx-auto mb-10">
+          Four plans for founders, growing teams, and agencies. No setup fees. Cancel anytime.
         </p>
-      </div>
 
-      {/* ── Pricing cards ────────────────────────────────────────────────────── */}
-      <div className="pb-24 border-t border-background-border">
-        <div className="max-w-7xl mx-auto px-8 pt-16">
-
-          {/* Monthly / Annual toggle */}
-          <div className="flex items-center gap-4 mb-16">
-            <span className="font-body text-sm text-text-secondary">Monthly</span>
-            <Toggle checked={isAnnual} onChange={setIsAnnual} />
-            <span className="flex items-center gap-1">
-              <span className="font-body text-sm text-text-secondary">Annual</span>
-              <span className="font-mono text-xs bg-cyan-dim text-cyan-DEFAULT px-2 py-0.5 ml-1">SAVE 20%</span>
-            </span>
-          </div>
-
-          <div className="grid grid-cols-4 gap-px bg-background-border">
-
-            {/* FREE */}
-            <div className="bg-background-raised p-8">
-              <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mb-4">FREE</div>
-              <div className="font-display font-bold text-5xl text-text-primary mb-1">$0</div>
-              <div className="font-body text-sm text-text-tertiary mb-8">no account required</div>
-              <ul className="list-none p-0 m-0">
-                {[
-                  '1 scan included',
-                  'Full conversion score 0–100',
-                  'Top 3 findings ranked by impact',
-                  'Industry benchmark position',
-                  'No account required',
-                ].map(f => <FeatureItem key={f} text={f} />)}
-              </ul>
-              <Link
-                href="/playground"
-                className="block text-center w-full border border-background-border text-text-secondary font-mono text-xs tracking-widest py-3 mt-8 no-underline hover:border-text-tertiary transition-colors"
-              >
-                TRY FREE →
-              </Link>
-            </div>
-
-            {/* STARTER */}
-            <div className="bg-background-raised p-8">
-              <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mb-4">STARTER</div>
-              <div className="font-display font-bold text-5xl text-text-primary mb-1">${p(49, 39)}</div>
-              <div className="font-body text-sm text-text-tertiary mb-8">/ month</div>
-              <ul className="list-none p-0 m-0">
-                {[
-                  '20 scans / month',
-                  'Single site monitoring',
-                  'Auto competitor analysis (3 competitors)',
-                  'Full findings ranked by impact',
-                  'Score trending over time',
-                  'Mobile conversion score',
-                  'Weekly email digest',
-                  'Single user',
-                ].map(f => <FeatureItem key={f} text={f} />)}
-              </ul>
-              <Link
-                href="/signup?plan=starter"
-                className="block text-center w-full border border-background-border text-text-secondary font-mono text-xs tracking-widest py-3 mt-8 no-underline hover:border-text-tertiary transition-colors"
-              >
-                START TRIAL →
-              </Link>
-            </div>
-
-            {/* AGENCY — featured */}
-            <div className="bg-background-raised p-8 relative">
-              <div className="absolute top-0 right-0 bg-cyan-DEFAULT text-text-inverse font-mono text-xs px-3 py-1">POPULAR</div>
-              <div className="font-mono text-xs text-cyan-DEFAULT uppercase tracking-widest mb-4">AGENCY</div>
-              <div className="font-display font-bold text-5xl text-text-primary mb-1">${p(149, 119)}</div>
-              <div className="font-body text-sm text-text-tertiary mb-8">/ month</div>
-              <ul className="list-none p-0 m-0">
-                {[
-                  '100 scans / month',
-                  'Unlimited client workspaces',
-                  'White-label report links',
-                  'Multi-page scanning (3 pages per job)',
-                  'Manual competitor selection per client',
-                  'Finding status tracking (open / fixed)',
-                  'Score trending per client',
-                  'PDF export with your logo',
-                  '3 team seats',
-                  '100 bundled API calls / month',
-                ].map(f => <FeatureItem key={f} text={f} />)}
-              </ul>
-              <Link
-                href="/signup?plan=agency"
-                className="block text-center w-full bg-cyan-DEFAULT text-text-inverse font-mono text-xs font-bold tracking-widest py-3 mt-8 no-underline"
-              >
-                START TRIAL →
-              </Link>
-            </div>
-
-            {/* ENTERPRISE */}
-            <div className="bg-background-raised p-8">
-              <div className="font-mono text-xs text-cyan-DEFAULT uppercase tracking-widest mb-4">ENTERPRISE</div>
-              <div className="font-display font-bold text-5xl text-text-primary mb-1">${p(499, 399)}</div>
-              <div className="font-body text-sm text-text-tertiary mb-8">/ month</div>
-              <ul className="list-none p-0 m-0">
-                {[
-                  '500 scans / month',
-                  'Everything in Agency',
-                  '10 team seats',
-                  'Custom benchmarking set',
-                  'Full white-label subdomain',
-                  'Scan scheduling across roster',
-                  'Score drop alerts',
-                  'Slack notifications',
-                  'Priority support',
-                  'Custom report CSS',
-                ].map(f => <FeatureItem key={f} text={f} />)}
-              </ul>
-              <Link
-                href="/signup?plan=enterprise"
-                className="block text-center w-full border border-cyan-DEFAULT text-cyan-DEFAULT font-mono text-xs font-bold tracking-widest py-3 mt-8 no-underline hover:bg-cyan-dim transition-colors"
-              >
-                START TRIAL →
-              </Link>
-            </div>
-
-          </div>
-
-          {/* Enterprise Plus band */}
-          <div className="mt-px bg-background-raised border border-background-border px-8 py-6 flex items-center justify-between">
-            <div>
-              <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mb-1">ENTERPRISE PLUS</div>
-              <div className="font-display font-bold text-xl text-text-primary">Book a call</div>
-              <p className="font-body text-sm text-text-secondary mt-1 max-w-lg">
-                50+ clients, reseller access, or embedding webdoc intelligence in your own product.
-                Custom contracts and dedicated support.
-              </p>
-            </div>
-            <Link
-              href="mailto:devon@webdocai.com"
-              className="bg-cyan-DEFAULT text-text-inverse font-mono text-xs tracking-widest px-6 py-3 no-underline flex-shrink-0"
+        {/* Monthly / Annual toggle pills */}
+        <div className="inline-flex items-center p-1 bg-background-raised border border-background-border">
+          <button
+            onClick={() => setIsAnnual(false)}
+            className={`font-ui-label px-5 py-2 border-0 cursor-pointer transition-colors duration-150 ${
+              !isAnnual
+                ? 'bg-background-interactive text-text-primary'
+                : 'bg-transparent text-text-secondary hover:text-text-primary'
+            }`}
+          >
+            Monthly
+          </button>
+          <button
+            onClick={() => setIsAnnual(true)}
+            className={`font-ui-label px-5 py-2 border-0 cursor-pointer transition-colors duration-150 flex items-center gap-2 ${
+              isAnnual
+                ? 'bg-background-interactive text-text-primary'
+                : 'bg-transparent text-text-secondary hover:text-text-primary'
+            }`}
+          >
+            Annual
+            <span
+              className="font-ui-label px-2 py-0.5"
+              style={{ fontSize: 9, backgroundColor: 'rgba(0,230,118,0.15)', color: '#00E676' }}
             >
-              LET&apos;S TALK →
+              SAVE 20%
+            </span>
+          </button>
+        </div>
+      </section>
+
+      {/* ── 2. Pricing cards ─────────────────────────────────────────────────── */}
+      <section className="max-w-7xl mx-auto px-8 pb-20">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+
+          {/* FREE */}
+          <div className="landing-card-electric border border-background-border bg-background-raised p-8 flex flex-col">
+            <div className="font-ui-label text-text-secondary mb-4">FREE</div>
+            <div className="font-score text-5xl text-text-primary mb-1">$0</div>
+            <div className="font-mono text-xs text-text-secondary mb-8">forever</div>
+            <ul className="list-none p-0 m-0 flex-1">
+              <Bullet text="3 scans per month" />
+              <Bullet text="Full 307-check audit" />
+              <Bullet text="Score + findings" />
+              <Bullet text="7-day report history" />
+              <Bullet text="Community support" />
+            </ul>
+            <Link
+              href="/scan"
+              className="block text-center font-ui-label text-text-secondary py-3 mt-8 no-underline hover:text-text-primary transition-colors duration-150"
+            >
+              Start free →
+            </Link>
+          </div>
+
+          {/* STARTER */}
+          <div className="landing-card-electric border border-background-border bg-background-raised p-8 flex flex-col">
+            <div className="font-ui-label text-text-secondary mb-4">STARTER</div>
+            <div className="font-score text-5xl text-text-primary mb-1">${price(49)}</div>
+            <div className="font-mono text-xs text-text-secondary mb-8">per month</div>
+            <ul className="list-none p-0 m-0 flex-1">
+              <InheritRow text="Everything in Free, plus:" />
+              <Bullet text="50 scans per month" />
+              <Bullet text="Priority processing" />
+              <Bullet text="30-day report history" />
+              <Bullet text="Email support" />
+              <Bullet text="CSV export" />
+            </ul>
+            <Link
+              href="/signup?plan=starter"
+              className="block text-center font-ui-label border border-[#00C8FF]/30 text-[#00C8FF] py-3 mt-8 no-underline hover:border-[#00C8FF]/60 transition-colors duration-150"
+            >
+              Start free trial →
+            </Link>
+          </div>
+
+          {/* AGENCY — elevated / recommended */}
+          <div className="landing-card-electric relative border border-[#00C8FF]/30 bg-background-interactive glow-ambient p-8 flex flex-col mt-3 lg:mt-0">
+            <div
+              className="absolute font-ui-label px-3 py-1 whitespace-nowrap"
+              style={{ top: -12, left: '50%', transform: 'translateX(-50%)', backgroundColor: '#00C8FF', color: '#050810' }}
+            >
+              MOST POPULAR
+            </div>
+            <div className="font-ui-label mb-4" style={{ color: '#00C8FF' }}>AGENCY</div>
+            <div className="font-score text-5xl text-text-primary mb-1">${price(149)}</div>
+            <div className="font-mono text-xs text-text-secondary mb-8">per month</div>
+            <ul className="list-none p-0 m-0 flex-1">
+              <InheritRow text="Everything in Starter, plus:" />
+              <Bullet text="200 scans per month" />
+              <Bullet text="White-label report links" />
+              <Bullet text="Client workspaces" />
+              <Bullet text="100 bundled API calls/month" cyan />
+              <Bullet text="Multi-page scanning" />
+              <Bullet text="Priority support + SLA" />
+            </ul>
+            <Link
+              href="/signup?plan=agency"
+              className="block text-center font-ui-label py-3 mt-8 no-underline hover:opacity-90 transition-opacity duration-150"
+              style={{ backgroundColor: '#00C8FF', color: '#050810' }}
+            >
+              Start free trial →
+            </Link>
+          </div>
+
+          {/* ENTERPRISE */}
+          <div className="landing-card-electric border border-background-border bg-background-raised p-8 flex flex-col">
+            <div className="font-ui-label text-text-secondary mb-4">ENTERPRISE</div>
+            <div className="font-score text-5xl text-text-primary mb-1">${price(499)}</div>
+            <div className="font-mono text-xs text-text-secondary mb-8">per month</div>
+            <ul className="list-none p-0 m-0 flex-1">
+              <InheritRow text="Everything in Agency, plus:" />
+              <Bullet text="Unlimited scans" />
+              <Bullet text="Custom integrations" />
+              <Bullet text="Dedicated account manager" />
+              <Bullet text="SSO + team management" />
+              <Bullet text="Custom SLA" />
+              <Bullet text="Invoice billing" />
+            </ul>
+            <Link
+              href="mailto:hello@webdocai.com"
+              className="block text-center font-ui-label text-text-secondary py-3 mt-8 no-underline hover:text-text-primary transition-colors duration-150"
+            >
+              Talk to us →
             </Link>
           </div>
 
         </div>
-      </div>
+      </section>
 
-      {/* ── FAQ ──────────────────────────────────────────────────────────────── */}
-      <div className="max-w-3xl mx-auto px-8 pb-32 border-t border-background-border pt-16">
-        <h2 className="font-display font-bold text-3xl text-text-primary mb-12">
-          Common questions
-        </h2>
+      {/* ── 3. API callout band ──────────────────────────────────────────────── */}
+      <section
+        className="border-t border-b bg-background-subtle py-8 px-8"
+        style={{ borderColor: 'var(--border-default)' }}
+      >
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div>
+            <p className="font-body text-text-secondary mb-1">Building with the API?</p>
+            <p className="font-mono text-sm" style={{ color: '#3A3A52' }}>
+              Plans from $0.15/scan — no monthly fee on Playground
+            </p>
+          </div>
+          <Link
+            href="/developers#pricing"
+            className="font-ui-label no-underline hover:opacity-80 transition-opacity flex-shrink-0"
+            style={{ color: '#00C8FF' }}
+          >
+            See developer pricing →
+          </Link>
+        </div>
+      </section>
+
+      {/* ── 4. Comparison table ──────────────────────────────────────────────── */}
+      <section className="max-w-7xl mx-auto px-8 py-12">
+        <button
+          onClick={() => setShowTable(v => !v)}
+          className="font-ui-label text-text-secondary cursor-pointer w-full text-center bg-transparent border-0 hover:text-text-primary transition-colors duration-150"
+        >
+          Compare all features {showTable ? '↑' : '↓'}
+        </button>
+
+        <div
+          style={{
+            overflow: 'hidden',
+            transition: 'max-height 0.4s ease',
+            maxHeight: showTable ? '2000px' : '0',
+          }}
+        >
+          <div className="mt-8 overflow-x-auto">
+            <table className="w-full min-w-[580px] border-collapse">
+              <thead>
+                <tr>
+                  <th className="text-left py-3 pr-4 w-[36%]" />
+                  {['FREE', 'STARTER', 'AGENCY', 'ENTERPRISE'].map(plan => (
+                    <th key={plan} className="font-ui-label text-text-secondary text-center py-3 px-4">
+                      {plan}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {TABLE_GROUPS.flatMap((group, gi) => [
+                  <tr key={`g-${gi}`}>
+                    <td colSpan={5} className="pt-8 pb-2">
+                      <span className="font-ui-label" style={{ color: '#3A3A52' }}>{group.label}</span>
+                    </td>
+                  </tr>,
+                  ...group.rows.map((row, ri) => (
+                    <tr
+                      key={`r-${gi}-${ri}`}
+                      style={{ backgroundColor: ri % 2 === 1 ? 'rgba(10,15,26,0.7)' : 'transparent' }}
+                    >
+                      <td
+                        className="font-body text-sm text-text-secondary py-3 pr-4 border-b"
+                        style={{ borderColor: 'var(--border-default)', fontSize: 13 }}
+                      >
+                        {row.feature}
+                      </td>
+                      <td
+                        className="text-center py-3 px-4 border-b font-body text-sm text-text-secondary"
+                        style={{ borderColor: 'var(--border-default)', fontSize: 13 }}
+                      >
+                        <Cell val={row.free} />
+                      </td>
+                      <td
+                        className="text-center py-3 px-4 border-b font-body text-sm text-text-secondary"
+                        style={{ borderColor: 'var(--border-default)', fontSize: 13 }}
+                      >
+                        <Cell val={row.starter} />
+                      </td>
+                      <td
+                        className="text-center py-3 px-4 border-b font-body text-sm text-text-secondary"
+                        style={{ borderColor: 'var(--border-default)', fontSize: 13 }}
+                      >
+                        <Cell val={row.agency} />
+                      </td>
+                      <td
+                        className="text-center py-3 px-4 border-b font-body text-sm text-text-secondary"
+                        style={{ borderColor: 'var(--border-default)', fontSize: 13 }}
+                      >
+                        <Cell val={row.enterprise} />
+                      </td>
+                    </tr>
+                  )),
+                ])}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      {/* ── 5. FAQ accordion ─────────────────────────────────────────────────── */}
+      <section className="max-w-3xl mx-auto px-8 pb-16">
+        <div className="section-label text-center mb-12">COMMON QUESTIONS</div>
 
         {FAQS.map((faq, i) => (
-          <div key={i} className="border-t border-background-border py-6">
+          <div key={i} className="border-b" style={{ borderColor: 'var(--border-default)' }}>
             <button
               onClick={() => setOpenFaq(openFaq === i ? null : i)}
-              className="w-full flex justify-between items-start cursor-pointer bg-transparent border-0 text-left gap-4"
+              className="w-full flex justify-between items-center py-4 cursor-pointer bg-transparent border-0 text-left gap-4"
             >
-              <span className="font-body font-semibold text-base text-text-primary mb-3">{faq.q}</span>
               <span
-                className="flex-shrink-0 text-text-tertiary transition-transform duration-200 mt-0.5"
-                style={{ transform: openFaq === i ? 'rotate(180deg)' : 'rotate(0deg)' }}
+                className="font-body font-semibold text-text-primary"
+                style={{ fontSize: 15, color: 'var(--text-primary)' }}
+              >
+                {faq.q}
+              </span>
+              <span
+                className="flex-shrink-0 text-text-secondary transition-transform duration-200"
+                style={{ display: 'inline-block', transform: openFaq === i ? 'rotate(180deg)' : 'rotate(0deg)' }}
               >
                 ▾
               </span>
             </button>
             {openFaq === i && (
-              <p className="font-body text-sm text-text-secondary leading-relaxed">{faq.a}</p>
+              <p className="font-body pb-4 leading-relaxed" style={{ fontSize: 14, color: '#8E8EA0' }}>
+                {faq.a}
+              </p>
             )}
           </div>
         ))}
+      </section>
 
-        <div className="border-t border-background-border pt-8 mt-4">
-          <p className="font-body text-sm text-text-tertiary">
-            Building on the API?{' '}
-            <Link href="/developers" className="text-cyan-DEFAULT no-underline hover:opacity-80">
-              See developer and API plans →
-            </Link>
-          </p>
-        </div>
+      {/* ── 6. Footer routing band ───────────────────────────────────────────── */}
+      <div
+        className="border-t py-6 text-center"
+        style={{ borderColor: 'var(--border-default)' }}
+      >
+        <p className="font-body text-sm" style={{ color: '#3A3A52' }}>
+          Need API access?{' '}
+          <Link
+            href="/developers#pricing"
+            className="no-underline hover:opacity-80 transition-opacity"
+            style={{ color: '#00C8FF' }}
+          >
+            See developer pricing →
+          </Link>
+        </p>
       </div>
 
     </main>

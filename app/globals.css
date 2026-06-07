@@ -1264,12 +1264,13 @@ svg path { fill: none !important; }
   height: 1px;
   background: linear-gradient(90deg,
     transparent 0%,
-    rgba(111,155,198,0.12) 20%,
-    rgba(111,155,198,0.2) 50%,
-    rgba(111,155,198,0.12) 80%,
+    rgba(111,155,198,0.08) 10%,
+    rgba(111,155,198,0.18) 50%,
+    rgba(111,155,198,0.08) 90%,
     transparent 100%
   );
   margin: 0;
+  width: 100%;
 }
 
 /* ── Live status dot ───────────────────────────────────────────────────────── */

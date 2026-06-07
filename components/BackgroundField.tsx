@@ -9,7 +9,7 @@ export default function BackgroundField() {
   const circuitGridDataUrl =
     "data:image/svg+xml," +
     encodeURIComponent(
-      `<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64"><defs><pattern id="g" width="64" height="64"><line x1="0" y1="0" x2="64" y2="0" stroke="rgba(111,155,198,0.06)" stroke-width="1"/><line x1="0" y1="0" x2="0" y2="64" stroke="rgba(111,155,198,0.06)" stroke-width="1"/><circle cx="0" cy="0" r="1.5" fill="rgba(111,155,198,0.10)"/></pattern></defs><rect width="64" height="64" fill="url(#g)"/></svg>`
+      `<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64"><defs><pattern id="g" width="64" height="64"><line x1="0" y1="0" x2="64" y2="0" stroke="rgba(111,155,198,0.09)" stroke-width="1"/><line x1="0" y1="0" x2="0" y2="64" stroke="rgba(111,155,198,0.09)" stroke-width="1"/><circle cx="0" cy="0" r="1.5" fill="rgba(111,155,198,0.16)"/></pattern></defs><rect width="64" height="64" fill="url(#g)"/></svg>`
     );
 
   return (

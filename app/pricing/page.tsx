@@ -259,19 +259,8 @@ export default function PricingPage() {
       <div className="section-separator" />
 
       {/* ── 2. Tier cards — mounted module bg #06090F ────────────────────────── */}
-      <section style={{ position: 'relative', overflow: 'hidden', background: '#06090F', borderTop: '0.5px solid rgba(255,255,255,0.08)' }}>
-        {/* Agency bloom behind 3rd card */}
-        <div
-          aria-hidden
-          style={{
-            position: 'absolute',
-            inset: 0,
-            pointerEvents: 'none',
-            zIndex: 0,
-            background: 'radial-gradient(ellipse 500px 700px at 55% 50%, rgba(0,196,140,0.06) 0%, transparent 60%)',
-          }}
-        />
-        <div style={{ position: 'relative', zIndex: 1, maxWidth: 1280, margin: '0 auto', padding: '64px 32px 80px' }}>
+      <section style={{ borderTop: '1px solid rgba(111,155,198,0.1)' }}>
+        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '64px 32px 80px' }}>
 
           {/* Solo / Teams group labels — desktop only */}
           <div className="hidden lg:grid lg:grid-cols-4 gap-4 mb-2">
@@ -292,7 +281,7 @@ export default function PricingPage() {
                 <div style={{ ...MONO, fontSize: 11, color: '#6E7587', marginBottom: 16 }}>for your first scan</div>
                 <div style={{ ...DISP, fontSize: 44, fontWeight: 700, color: '#E6E9EE', lineHeight: 1, marginBottom: 4 }}>$0</div>
                 <div style={{ ...SANS, fontSize: 14, color: '#8E8EA0', marginBottom: 8 }}>forever</div>
-                <div style={{ ...MONO, fontSize: 10, color: '#6E7587' }}>3 scans / month — no card</div>
+                <div style={{ ...MONO, fontSize: 11, color: '#00C48C' }}>3 scans · try the instrument</div>
               </div>
               <div style={{ height: '0.5px', background: 'rgba(255,255,255,0.07)' }} />
               <div style={{ padding: '16px 24px 24px', background: 'rgba(255,255,255,0.01)', flexGrow: 1 }}>
@@ -319,7 +308,7 @@ export default function PricingPage() {
                 <div style={{ ...MONO, fontSize: 11, color: '#6E7587', marginBottom: 16 }}>for founders running their own site</div>
                 <div style={{ ...DISP, fontSize: 44, fontWeight: 700, color: '#E6E9EE', lineHeight: 1, marginBottom: 4 }}>${price(49)}</div>
                 <div style={{ ...SANS, fontSize: 14, color: '#8E8EA0', marginBottom: 8 }}>per month</div>
-                <div style={{ ...MONO, fontSize: 10, color: '#6E7587' }}>≈ ${(price(49) / 50).toFixed(2)} / scan at 50 scans/mo</div>
+                <div style={{ ...MONO, fontSize: 11, color: '#6F9BC6' }}>$2.45/scan effective rate</div>
               </div>
               <div style={{ height: '0.5px', background: 'rgba(255,255,255,0.07)' }} />
               <div style={{ padding: '16px 24px 24px', background: 'rgba(255,255,255,0.01)', flexGrow: 1 }}>
@@ -347,7 +336,7 @@ export default function PricingPage() {
                 <div style={{ ...MONO, fontSize: 11, color: '#6E7587', marginBottom: 16 }}>for teams auditing client sites</div>
                 <div style={{ ...DISP, fontSize: 44, fontWeight: 700, color: '#E6E9EE', lineHeight: 1, marginBottom: 4 }}>${price(149)}</div>
                 <div style={{ ...SANS, fontSize: 14, color: '#8E8EA0', marginBottom: 8 }}>per month</div>
-                <div style={{ ...MONO, fontSize: 10, color: '#6E7587' }}>≈ ${(price(149) / 200).toFixed(2)} / scan at 200 scans/mo</div>
+                <div style={{ ...MONO, fontSize: 11, color: '#00C48C' }}>$1.49/scan + 100 API calls bundled</div>
               </div>
               <div style={{ height: '0.5px', background: 'rgba(0,196,140,0.2)' }} />
               <div style={{ padding: '16px 24px 24px', background: 'rgba(0,196,140,0.02)', flexGrow: 1 }}>
@@ -363,7 +352,7 @@ export default function PricingPage() {
               </div>
               <div style={{ height: '0.5px', background: 'rgba(0,196,140,0.2)' }} />
               <div style={{ padding: '16px 24px 24px' }}>
-                <Link href="/signup?plan=agency" style={{ display: 'block', textAlign: 'center', ...MONO, fontSize: 13, color: '#050810', backgroundColor: '#00C48C', padding: '12px 0', textDecoration: 'none', transition: 'opacity 0.15s' }}>
+                <Link href="/signup?plan=agency" style={{ display: 'block', textAlign: 'center', ...MONO, fontSize: 13, color: '#00C48C', border: '1px solid rgba(0,196,140,0.5)', background: 'rgba(0,196,140,0.06)', padding: '12px 0', textDecoration: 'none', transition: 'opacity 0.15s' }}>
                   START FREE TRIAL →
                 </Link>
               </div>
@@ -376,7 +365,7 @@ export default function PricingPage() {
                 <div style={{ ...MONO, fontSize: 11, color: '#6E7587', marginBottom: 16 }}>for agencies at scale</div>
                 <div style={{ ...DISP, fontSize: 44, fontWeight: 700, color: '#E6E9EE', lineHeight: 1, marginBottom: 4 }}>${price(499)}</div>
                 <div style={{ ...SANS, fontSize: 14, color: '#8E8EA0', marginBottom: 8 }}>per month</div>
-                <div style={{ ...MONO, fontSize: 10, color: '#6E7587' }}>volume pricing — contact us</div>
+                <div style={{ ...MONO, fontSize: 11, color: '#6E7587' }}>custom rate · dedicated support</div>
               </div>
               <div style={{ height: '0.5px', background: 'rgba(255,255,255,0.07)' }} />
               <div style={{ padding: '16px 24px 24px', background: 'rgba(255,255,255,0.01)', flexGrow: 1 }}>
@@ -404,7 +393,7 @@ export default function PricingPage() {
       <div className="section-separator" />
 
       {/* ── 3. API callout band — mounted module bg #080D18 ──────────────────── */}
-      <section style={{ background: '#080D18', borderTop: '0.5px solid rgba(111,155,198,0.15)', borderBottom: '0.5px solid rgba(255,255,255,0.05)', padding: '24px 48px' }}>
+      <section style={{ borderTop: '0.5px solid rgba(111,155,198,0.15)', borderBottom: '0.5px solid rgba(255,255,255,0.05)', padding: '24px 48px' }}>
         <div style={{ maxWidth: 1152, margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
           <div>
             <p style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#6F9BC6', margin: '0 0 4px' }}>
@@ -422,7 +411,7 @@ export default function PricingPage() {
       <div className="section-separator" />
 
       {/* ── 4. Comparison table — mounted module bg #06090F ──────────────────── */}
-      <section style={{ background: '#06090F' }}>
+      <section>
         <div style={{ maxWidth: 1280, margin: '0 auto', padding: '48px 32px' }}>
           <button
             onClick={() => setShowTable(v => !v)}

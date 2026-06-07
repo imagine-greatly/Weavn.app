@@ -65,9 +65,9 @@ const ANNOTATIONS: { field: string; desc: string }[] = [
 
 export default function ResponseAnnotatorSection() {
   return (
-    <section style={{ position: 'relative', overflow: 'hidden', padding: '96px 0', background: '#06090F', borderTop: '0.5px solid rgba(128,128,192,0.2)', borderBottom: '0.5px solid rgba(255,255,255,0.05)' }}>
+    <section style={{ position: 'relative', overflow: 'hidden', padding: '96px 0', background: '#07090F', borderTop: '0.5px solid rgba(128,128,192,0.2)', borderBottom: '0.5px solid rgba(255,255,255,0.05)' }}>
 
-      {/* Purple bloom — structured data intelligence emits purple */}
+      {/* Purple bloom — top-left for JSON panel, bottom-right for finding card */}
       <div
         aria-hidden
         style={{
@@ -75,7 +75,7 @@ export default function ResponseAnnotatorSection() {
           inset: 0,
           pointerEvents: 'none',
           zIndex: 0,
-          background: 'radial-gradient(ellipse 800px 1000px at 15% 50%, rgba(128,128,192,0.09) 0%, transparent 60%)',
+          background: 'radial-gradient(ellipse 900px 600px at 15% 30%, rgba(128,128,192,0.10) 0%, transparent 60%), radial-gradient(ellipse 600px 800px at 85% 70%, rgba(128,128,192,0.07) 0%, transparent 60%)',
         }}
       />
 
@@ -92,8 +92,11 @@ export default function ResponseAnnotatorSection() {
         </h2>
 
         {/* Sub */}
-        <p style={{ ...SANS, fontSize: 15, color: '#9398A8', maxWidth: 540, lineHeight: 1.65, margin: '0 0 28px' }}>
+        <p style={{ ...SANS, fontSize: 15, color: '#9398A8', maxWidth: 540, lineHeight: 1.65, margin: '0 0 10px' }}>
           Every scan returns the same predictable schema. Build against it once. Every URL you POST returns findings ranked by estimated revenue impact, benchmarked against your industry, with AI-rewritten copy attached.
+        </p>
+        <p style={{ ...MONO, fontSize: 12, color: '#6E7587', margin: '0 0 28px' }}>
+          Every finding includes evidence, fix, estimated lift, and drop-in replacement copy.
         </p>
 
         {/* Status line */}
@@ -151,6 +154,69 @@ export default function ResponseAnnotatorSection() {
                 </p>
               </div>
             ))}
+          </div>
+
+        </div>
+
+        {/* Internal section divider */}
+        <div style={{ height: 1, background: 'rgba(128,128,192,0.15)', margin: '48px 0' }} />
+
+        {/* Expanded finding card — one complete API finding, showing all output fields */}
+        <div style={{ background: '#0A0E18', borderTop: '1px solid rgba(255,255,255,0.12)', borderLeft: '1px solid rgba(255,255,255,0.08)', borderRight: '1px solid rgba(255,255,255,0.04)', borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+
+          {/* Header bar */}
+          <div style={{ padding: '14px 20px', borderBottom: '0.5px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+              <span style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.08em', background: 'rgba(232,99,95,0.13)', color: '#E8635F', padding: '3px 9px' }}>CRITICAL</span>
+              <span style={{ ...MONO, fontSize: 12, color: '#8080c0', marginLeft: 12 }}>value_proposition</span>
+              <span style={{ ...MONO, fontSize: 11, color: '#6E7587', marginLeft: 12 }}>priority: 1</span>
+            </div>
+            <span style={{ ...MONO, fontSize: 12, color: '#6F9BC6' }}>fix_effort: low</span>
+          </div>
+
+          {/* Finding title */}
+          <div style={{ ...DISP, fontWeight: 600, fontSize: 18, color: '#E6E9EE', padding: '16px 20px 0' }}>
+            Hero headline is feature-led, not outcome-led
+          </div>
+
+          {/* Evidence block */}
+          <div style={{ padding: '10px 20px 16px', borderBottom: '0.5px solid rgba(255,255,255,0.05)' }}>
+            <div style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#6E7587', marginBottom: 6 }}>EVIDENCE FROM PAGE</div>
+            <div style={{ ...MONO, fontSize: 12, color: '#9398A8', lineHeight: 1.6 }}>Current headline names a feature. Visitors need to know what changes for them, not what the product is called.</div>
+          </div>
+
+          {/* Fix block */}
+          <div style={{ padding: '14px 20px', borderBottom: '0.5px solid rgba(255,255,255,0.05)' }}>
+            <div style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#6E7587', marginBottom: 6 }}>RECOMMENDED FIX</div>
+            <div style={{ ...SANS, fontSize: 14, color: '#9398A8', lineHeight: 1.6 }}>Rewrite to outcome-led, present tense. Lead with what the customer achieves, not what the product does.</div>
+          </div>
+
+          {/* Metrics row */}
+          <div style={{ padding: '14px 20px', borderBottom: '0.5px solid rgba(255,255,255,0.05)', display: 'flex', gap: 32, flexWrap: 'wrap' }}>
+            {[
+              { label: 'estimated_lift', value: '+12–18% conversion', color: '#00C48C' },
+              { label: 'percentile',     value: '63rd of B2B SaaS',   color: '#6F9BC6' },
+              { label: 'industry_avg',   value: '54',                  color: '#6F9BC6' },
+              { label: 'severity',       value: 'critical',            color: '#E8635F' },
+            ].map(m => (
+              <div key={m.label}>
+                <div style={{ ...MONO, fontSize: 10, color: '#6E7587', marginBottom: 4 }}>{m.label}</div>
+                <div style={{ ...MONO, fontSize: 13, color: m.color }}>{m.value}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Rewritten copy block */}
+          <div style={{ padding: '14px 20px 20px' }}>
+            <div style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#6E7587', marginBottom: 10 }}>REWRITTEN COPY · included in response</div>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 8 }}>
+              <span style={{ ...MONO, fontSize: 11, color: '#6E7587', flexShrink: 0 }}>headline:</span>
+              <span style={{ ...SANS, fontSize: 14, color: '#00C48C' }}>Ship projects on time, every time.</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
+              <span style={{ ...MONO, fontSize: 11, color: '#6E7587', flexShrink: 0 }}>cta_primary:</span>
+              <span style={{ ...SANS, fontSize: 14, color: '#00C48C' }}>Start free — no credit card</span>
+            </div>
           </div>
 
         </div>

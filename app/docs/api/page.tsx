@@ -26,10 +26,13 @@ const NAV_GROUPS: { label: string; items: { id: string; label: string }[] }[] = 
     { id: 'rate-limits',    label: 'Rate limits'    },
   ]},
   { label: 'ENDPOINTS', items: [
-    { id: 'post-scan',       label: 'POST /scan'       },
-    { id: 'post-scan-batch', label: 'POST /scan/batch' },
-    { id: 'get-scans',       label: 'GET /scans'       },
-    { id: 'get-scans-id',    label: 'GET /scans/{id}'  },
+    { id: 'post-scan',          label: 'POST /scan'           },
+    { id: 'post-scan-batch',    label: 'POST /scan/batch'     },
+    { id: 'get-scans',          label: 'GET /scans'           },
+    { id: 'get-scans-id',       label: 'GET /scans/{id}'      },
+    { id: 'post-webhooks',      label: 'POST /webhooks'       },
+    { id: 'get-webhooks',       label: 'GET /webhooks'        },
+    { id: 'delete-webhooks-id', label: 'DELETE /webhooks/{id}'},
   ]},
   { label: 'WEBHOOKS', items: [
     { id: 'webhooks-overview', label: 'Overview'  },
@@ -38,12 +41,17 @@ const NAV_GROUPS: { label: string; items: { id: string; label: string }[] }[] = 
     { id: 'webhook-retries',   label: 'Retries'   },
   ]},
   { label: 'RESPONSE SCHEMA', items: [
-    { id: 'score-schema',      label: 'Score'          },
-    { id: 'findings-schema',   label: 'Findings'       },
-    { id: 'benchmark-schema',  label: 'Benchmark'      },
-    { id: 'copy-schema',       label: 'Rewritten copy' },
-    { id: 'dimensions-schema', label: 'Dimensions'     },
-    { id: 'metadata-schema',   label: 'Metadata'       },
+    { id: 'score-schema',                label: 'Score'                },
+    { id: 'page-type-schema',            label: 'Page type'            },
+    { id: 'score-profile-schema',        label: 'Score profile'        },
+    { id: 'findings-schema',             label: 'Findings'             },
+    { id: 'findings-summary-schema',     label: 'Findings summary'     },
+    { id: 'benchmark-schema',            label: 'Benchmark'            },
+    { id: 'strengths-schema',            label: 'Strengths'            },
+    { id: 'copy-schema',                 label: 'Rewritten copy'       },
+    { id: 'dimensions-schema',           label: 'Dimensions'           },
+    { id: 'dimension-benchmarks-schema', label: 'Dimension benchmarks' },
+    { id: 'metadata-schema',             label: 'Metadata'             },
   ]},
 ]
 
@@ -134,7 +142,8 @@ X-RateLimit-Reset: 1717200000
     "finding_depth": "full",
     "finding_limit": 10,
     "async": false,
-    "industry": "saas"
+    "pages": ["/pricing", "/about"],
+    "site_type": "saas"
   }'`,
     node: `const res = await fetch('https://webdocai.com/api/v1/scan', {
   method: 'POST',
@@ -147,7 +156,8 @@ X-RateLimit-Reset: 1717200000
     fields: ['score', 'findings', 'copy_rewrites'],
     finding_depth: 'full',
     finding_limit: 10,
-    industry: 'saas',
+    pages: ['/pricing', '/about'],
+    site_type: 'saas',
   }),
 })
 const { scan_id, score, findings } = await res.json()`,
@@ -161,7 +171,8 @@ res = requests.post(
     'fields': ['score', 'findings', 'copy_rewrites'],
     'finding_depth': 'full',
     'finding_limit': 10,
-    'industry': 'saas',
+    'pages': ['/pricing', '/about'],
+    'site_type': 'saas',
   }
 )
 data = res.json()`,
@@ -236,67 +247,129 @@ res = requests.get(
 )
 scan = res.json()`,
   },
+  'post-webhooks': {
+    curl: `curl -X POST https://webdocai.com/api/v1/webhooks \\
+  -H "Authorization: Bearer wdoc_live_••••" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "url": "https://yourapp.com/webhooks/webdoc",
+    "events": ["scan.completed", "scan.failed"]
+  }'`,
+    node: `const res = await fetch('https://webdocai.com/api/v1/webhooks', {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Bearer wdoc_live_••••',
+    'Content-Type': 'application/json',
+  },
+  body: JSON.stringify({
+    url: 'https://yourapp.com/webhooks/webdoc',
+    events: ['scan.completed', 'scan.failed'],
+  }),
+})
+const { webhook_id } = await res.json()`,
+    python: `res = requests.post(
+  'https://webdocai.com/api/v1/webhooks',
+  headers={'Authorization': 'Bearer wdoc_live_••••'},
+  json={
+    'url': 'https://yourapp.com/webhooks/webdoc',
+    'events': ['scan.completed', 'scan.failed'],
+  }
+)
+data = res.json()
+print(data['webhook_id'])`,
+  },
+  'get-webhooks': {
+    curl: `curl "https://webdocai.com/api/v1/webhooks" \\
+  -H "Authorization: Bearer wdoc_live_••••"`,
+    node: `const res = await fetch(
+  'https://webdocai.com/api/v1/webhooks',
+  { headers: { 'Authorization': 'Bearer wdoc_live_••••' } }
+)
+const { webhooks } = await res.json()`,
+    python: `res = requests.get(
+  'https://webdocai.com/api/v1/webhooks',
+  headers={'Authorization': 'Bearer wdoc_live_••••'}
+)
+data = res.json()`,
+  },
+  'delete-webhooks-id': {
+    curl: `curl -X DELETE \\
+  "https://webdocai.com/api/v1/webhooks/wh_abc123" \\
+  -H "Authorization: Bearer wdoc_live_••••"`,
+    node: `await fetch(
+  'https://webdocai.com/api/v1/webhooks/wh_abc123',
+  {
+    method: 'DELETE',
+    headers: { 'Authorization': 'Bearer wdoc_live_••••' },
+  }
+)`,
+    python: `requests.delete(
+  'https://webdocai.com/api/v1/webhooks/wh_abc123',
+  headers={'Authorization': 'Bearer wdoc_live_••••'}
+)`,
+  },
   'webhooks-overview': {
     curl: `# Webhook payload posted to your webhook_url
 {
-  "id": "evt_xyz789",
-  "type": "scan.completed",
-  "created": 1717200000,
-  "data": {
-    "scan_id": "wdsc_abc123",
-    "url": "https://yoursite.com",
-    "score": 62
-  }
+  "event": "scan.completed",
+  "scan_id": "scan_01abc123",
+  "url": "https://yoursite.com",
+  "score": 61,
+  "findings_count": 23,
+  "timestamp": "2026-06-07T00:00:00Z"
 }`,
     node: `app.post('/webhooks/webdoc', (req, res) => {
-  const { type, data } = req.body
-  if (type === 'scan.completed') {
-    console.log(data.scan_id, data.score)
+  const { event, scan_id, score } = req.body
+  if (event === 'scan.completed') {
+    console.log(scan_id, score)
   }
   res.status(200).send('ok')
 })`,
     python: `@app.route('/webhooks/webdoc', methods=['POST'])
 def handle_webhook():
     payload = request.get_json()
-    if payload['type'] == 'scan.completed':
-        print(payload['data']['score'])
+    if payload['event'] == 'scan.completed':
+        print(payload['scan_id'], payload['score'])
     return 'ok', 200`,
   },
   'webhook-events': {
     curl: `# scan.completed
 {
-  "type": "scan.completed",
-  "data": { "scan_id": "wdsc_abc123", "score": 62 }
+  "event": "scan.completed",
+  "scan_id": "scan_01abc123",
+  "url": "https://yoursite.com",
+  "score": 61,
+  "findings_count": 23,
+  "timestamp": "2026-06-07T00:00:00Z"
 }
 
 # scan.failed
 {
-  "type": "scan.failed",
-  "data": {
-    "scan_id": "wdsc_abc124",
-    "error": "Page failed to load after 3 attempts"
-  }
+  "event": "scan.failed",
+  "scan_id": "scan_01abc124",
+  "url": "https://yoursite.com",
+  "error": "Page failed to load after 3 attempts",
+  "timestamp": "2026-06-07T00:01:00Z"
 }`,
-    node: `switch (event.type) {
+    node: `switch (event.event) {
   case 'scan.completed':
-    await saveReport(event.data)
+    await saveReport(event)
     break
   case 'scan.failed':
-    await notifyTeam(event.data.error)
+    await notifyTeam(event.error)
     break
 }`,
     python: `handlers = {
     'scan.completed': save_report,
     'scan.failed': notify_team,
 }
-handler = handlers.get(payload['type'])
+handler = handlers.get(payload['event'])
 if handler:
-    handler(payload['data'])`,
+    handler(payload)`,
   },
   'webhook-delivery': {
-    curl: `# Signature headers on every delivery
-Webdoc-Signature: sha256=abc123...
-Webdoc-Timestamp: 1717200000
+    curl: `# Signature header on every delivery
+X-Webdoc-Signature: <HMAC-SHA256 hex of raw body>
 Content-Type: application/json`,
     node: `import crypto from 'crypto'
 
@@ -318,12 +391,12 @@ def verify(payload, sig, secret):
     return hmac.compare_digest(sig, expected)`,
   },
   'webhook-retries': {
-    curl: `# Retry schedule (exponential backoff)
+    curl: `# Retry schedule (3 attempts on failure)
 # Attempt 1: immediate
-# Attempt 2: 30s
-# Attempt 3: 5m
-# Attempt 4: 30m
-# Attempt 5: 2h`,
+# Attempt 2: 5 minutes after failure
+# Attempt 3: 30 minutes after failure
+# Each attempt has a 10-second timeout
+# After 3 failures — marked failed, no further retries`,
     node: `// Respond 200 immediately, process async
 app.post('/webhooks/webdoc', async (req, res) => {
   res.status(200).send('ok')
@@ -352,6 +425,26 @@ console.log(benchmark.percentile)     // 68`,
 print(data['score'])                   # 62
 print(data['benchmark']['percentile']) # 68`,
   },
+  'page-type-schema': {
+    curl: `{
+  "page_type": "homepage"
+}`,
+    node: `const { page_type } = await res.json()
+console.log(page_type) // "homepage"`,
+    python: `data = res.json()
+print(data['page_type'])  # "homepage"`,
+  },
+  'score-profile-schema': {
+    curl: `{
+  "score_profile": "saas_consultative"
+}`,
+    node: `const { score_profile } = await res.json()
+// format: [site_type]_[buyer_complexity]
+console.log(score_profile) // "saas_consultative"`,
+    python: `data = res.json()
+# format: [site_type]_[buyer_complexity]
+print(data['score_profile'])  # "saas_consultative"`,
+  },
   'findings-schema': {
     curl: `{
   "findings": [{
@@ -363,17 +456,37 @@ print(data['benchmark']['percentile']) # 68`,
     "detail": "Your headline focuses on features...",
     "fix": "Rewrite to lead with the outcome.",
     "estimated_lift": "+8-12 pts",
-    "confidence": 0.94
+    "confidence": 0.94,
+    "fix_effort": "hours",
+    "impact_tier": "high",
+    "priority_rank": "P1"
   }]
 }`,
     node: `const { findings } = await res.json()
 findings.forEach(f => {
   console.log(\`[\${f.severity}] \${f.title}\`)
-  console.log(\`Fix: \${f.fix}\`)
+  console.log(\`Rank: \${f.priority_rank} | Effort: \${f.fix_effort}\`)
 })`,
     python: `for f in data['findings']:
     print(f"[{f['severity']}] {f['title']}")
-    print(f"Fix: {f['fix']}")`,
+    print(f"Rank: {f['priority_rank']} | Effort: {f['fix_effort']}")`,
+  },
+  'findings-summary-schema': {
+    curl: `{
+  "findings_summary": {
+    "p1_count": 3,
+    "p2_count": 7,
+    "p3_count": 13,
+    "total": 23,
+    "critical": 2,
+    "high": 5
+  }
+}`,
+    node: `const { findings_summary } = await res.json()
+const { p1_count, p2_count, total } = findings_summary
+console.log(\`P1: \${p1_count}, Total: \${total}\`)`,
+    python: `fs = data['findings_summary']
+print(f"P1: {fs['p1_count']}, Total: {fs['total']}")`,
   },
   'benchmark-schema': {
     curl: `{
@@ -389,6 +502,23 @@ findings.forEach(f => {
 const { industry_avg, top_quartile, percentile } = benchmark`,
     python: `b = data['benchmark']
 print(f"Avg: {b['industry_avg']}, Top 25%: {b['top_quartile']}")`,
+  },
+  'strengths-schema': {
+    curl: `{
+  "strengths": [{
+    "check_id": "social_proof_logos",
+    "label": "Customer logo wall",
+    "observation": "Displays 12 recognizable brand logos above the fold with clear visual hierarchy."
+  }]
+}`,
+    node: `const { strengths } = await res.json()
+strengths.forEach(s => {
+  console.log(s.label)
+  console.log(s.observation)
+})`,
+    python: `for s in data['strengths']:
+    print(s['label'])
+    print(s['observation'])`,
   },
   'copy-schema': {
     curl: `{
@@ -426,6 +556,25 @@ Object.entries(dimensions).forEach(([dim, val]) => {
 })`,
     python: `for dim, val in data['dimensions'].items():
     print(f"{dim}: {val['score']}")`,
+  },
+  'dimension-benchmarks-schema': {
+    curl: `{
+  "dimension_benchmarks": {
+    "clarity": {
+      "score": 58,
+      "average": 52,
+      "percentile_label": "Industry average",
+      "p10": 28,
+      "p90": 81
+    }
+  }
+}`,
+    node: `const { dimension_benchmarks } = await res.json()
+Object.entries(dimension_benchmarks).forEach(([dim, val]) => {
+  console.log(\`\${dim}: \${val.percentile_label}\`)
+})`,
+    python: `for dim, val in data['dimension_benchmarks'].items():
+    print(dim, val['percentile_label'])`,
   },
   'metadata-schema': {
     curl: `{
@@ -571,7 +720,7 @@ function QueryTable({ rows }: { rows: QR[] }) {
 
 interface FR { name: string; type: string; description: string }
 function FieldTable({ rows }: { rows: FR[] }) {
-  const cols = '170px 90px 1fr'
+  const cols = '220px 90px 1fr'
   const hdrs = ['FIELD', 'TYPE', 'DESCRIPTION']
   return (
     <div style={{ border: `1px solid ${BD}`, background: BG_R }}>
@@ -743,13 +892,14 @@ export default function ApiDocsPage() {
               Submit a URL for a full conversion audit. Returns synchronously by default, or via webhook in async mode.
             </Body>
             <ParamTable rows={[
-              { param: 'url',           type: 'string',  required: 'required', description: 'The URL to scan. Must include protocol.' },
-              { param: 'fields',        type: 'array',   required: 'optional', description: 'Fields to include in response. Default: all.' },
-              { param: 'finding_depth', type: 'string',  required: 'optional', description: "'brief' or 'full'. Default: 'full'." },
-              { param: 'finding_limit', type: 'number',  required: 'optional', description: 'Max findings to return. Default: 10.' },
-              { param: 'async',         type: 'boolean', required: 'optional', description: 'Return immediately with scan_id. Default: false.' },
-              { param: 'webhook_url',   type: 'string',  required: 'optional', description: 'Required if async: true.' },
-              { param: 'industry',      type: 'string',  required: 'optional', description: 'Override auto-detected industry.' },
+              { param: 'url',           type: 'string',   required: 'required', description: 'The URL to scan. Must include protocol.' },
+              { param: 'fields',        type: 'array',    required: 'optional', description: 'Fields to include in response. Default: all.' },
+              { param: 'finding_depth', type: 'string',   required: 'optional', description: "'brief' or 'full'. Default: 'full'." },
+              { param: 'finding_limit', type: 'number',   required: 'optional', description: 'Max findings to return. Default: 10.' },
+              { param: 'async',         type: 'boolean',  required: 'optional', description: 'Return immediately with scan_id. Default: false.' },
+              { param: 'webhook_url',   type: 'string',   required: 'optional', description: 'Required if async: true.' },
+              { param: 'pages',         type: 'string[]', required: 'optional', description: 'Additional page paths to scan beyond the base URL. Max 5 paths. Forces async mode. Each page consumes one scan credit. Example: ["/pricing", "/about"]' },
+              { param: 'site_type',     type: 'string',   required: 'optional', description: "Override automatic site type classification. One of: 'saas' | 'ecommerce' | 'service' | 'b2b' | 'creator' | 'local'. If omitted, the scanner classifies the site automatically before running checks." },
             ]} />
           </section>
 
@@ -789,6 +939,33 @@ export default function ApiDocsPage() {
             ]} />
           </section>
 
+          <section id="post-webhooks" style={SB}>
+            <Label>ENDPOINTS</Label>
+            <H2>POST /api/v1/webhooks</H2>
+            <Body mb={24}>
+              Register a webhook endpoint. webdoc will POST a signed payload to your URL whenever the specified events occur.
+            </Body>
+            <ParamTable rows={[
+              { param: 'url',    type: 'string', required: 'required', description: 'The delivery endpoint that will receive webhook payloads.' },
+              { param: 'events', type: 'array',  required: 'optional', description: "Events to subscribe to. Default: all. Options: 'scan.completed' | 'scan.failed'" },
+            ]} />
+          </section>
+
+          <section id="get-webhooks" style={SB}>
+            <Label>ENDPOINTS</Label>
+            <H2>GET /api/v1/webhooks</H2>
+            <Body mb={24}>List all registered webhook endpoints for your API key.</Body>
+          </section>
+
+          <section id="delete-webhooks-id" style={SB}>
+            <Label>ENDPOINTS</Label>
+            <H2>{'DELETE /api/v1/webhooks/{id}'}</H2>
+            <Body mb={24}>Remove a registered webhook. No further deliveries will be attempted to this endpoint.</Body>
+            <QueryTable rows={[
+              { param: 'id', type: 'string', description: 'The webhook_id returned when the webhook was created.' },
+            ]} />
+          </section>
+
           <section id="webhooks-overview" style={SB}>
             <Label>WEBHOOKS</Label>
             <H2>Webhooks</H2>
@@ -801,17 +978,17 @@ export default function ApiDocsPage() {
           <section id="webhook-events" style={SB}>
             <Label>WEBHOOKS</Label>
             <H2>Events</H2>
-            <EvBlock name="scan.completed" desc="Fires when a scan finishes successfully. Payload includes the full scan result." />
-            <EvBlock name="scan.failed" desc="Fires when a scan fails after retries. Payload includes error details and scan ID." />
+            <EvBlock name="scan.completed" desc="Fires when a scan finishes successfully. Payload includes scan_id, url, score, findings_count, and timestamp." />
+            <EvBlock name="scan.failed" desc="Fires when a scan fails after retries. Payload includes scan_id, url, error message, and timestamp." />
           </section>
 
           <section id="webhook-delivery" style={SB}>
             <Label>WEBHOOKS</Label>
             <H2>Delivery</H2>
             <Body>
-              Every webhook POST includes a{' '}
-              <code style={{ fontFamily: MONO, fontSize: 12 }}>Webdoc-Signature</code>{' '}
-              header. Compute HMAC-SHA256 of the raw request body using your webhook secret and compare with timing-safe equality.
+              Every webhook POST includes an{' '}
+              <code style={{ fontFamily: MONO, fontSize: 12 }}>X-Webdoc-Signature</code>{' '}
+              header containing the HMAC-SHA256 hex of the raw request body. Verify it against your webhook secret using timing-safe comparison.
             </Body>
             <Body>
               Your endpoint must respond with HTTP 200 within 10 seconds. Non-200 responses trigger a retry.
@@ -822,7 +999,7 @@ export default function ApiDocsPage() {
             <Label>WEBHOOKS</Label>
             <H2>Retries</H2>
             <Body>
-              webdoc retries failed deliveries up to 5 times with exponential backoff: 30s, 5m, 30m, 2h, 8h. Acknowledge immediately with 200 and process asynchronously to avoid timeouts.
+              Webhooks are retried up to 3 times on failure. Attempt 1: immediate. Attempt 2: 5 minutes after failure. Attempt 3: 30 minutes after failure. Each attempt has a 10-second timeout. After 3 failures the webhook is marked failed and no further retries occur. Acknowledge immediately with 200 and process asynchronously to avoid timeouts.
             </Body>
           </section>
 
@@ -840,6 +1017,28 @@ export default function ApiDocsPage() {
             ]} />
           </section>
 
+          <section id="page-type-schema" style={SB}>
+            <Label>RESPONSE SCHEMA</Label>
+            <H2>Page type</H2>
+            <Body mb={24}>
+              The page type classified by the scanner before check execution. Determines which page-type-specific checks apply.
+            </Body>
+            <FieldTable rows={[
+              { name: 'page_type', type: 'string', description: "Classified page type. One of: 'homepage' | 'pricing' | 'product' | 'about' | 'landing' | 'other'" },
+            ]} />
+          </section>
+
+          <section id="score-profile-schema" style={SB}>
+            <Label>RESPONSE SCHEMA</Label>
+            <H2>Score profile</H2>
+            <Body mb={24}>
+              The weight profile used to compute the overall score. Reflects how dimension scores were weighted for this site's classification.
+            </Body>
+            <FieldTable rows={[
+              { name: 'score_profile', type: 'string', description: "Weight profile applied to dimension scores. Format: [site_type]_[buyer_complexity]. Example: 'saas_consultative'" },
+            ]} />
+          </section>
+
           <section id="findings-schema" style={SB}>
             <Label>RESPONSE SCHEMA</Label>
             <H2>Findings</H2>
@@ -853,6 +1052,26 @@ export default function ApiDocsPage() {
               { name: 'fix',            type: 'string',  description: 'Specific, actionable fix recommendation.' },
               { name: 'estimated_lift', type: 'string',  description: 'Projected score improvement if fixed.' },
               { name: 'confidence',     type: 'number',  description: 'Model confidence, 0.0–1.0.' },
+              { name: 'fix_effort',     type: 'string',  description: "Estimated implementation effort. 'hours' = copywriting or minor HTML change. 'days' = new section or content addition. 'weeks' = architectural or design change." },
+              { name: 'impact_tier',    type: 'string',  description: "Projected conversion impact if this finding is addressed. One of: 'high' | 'medium' | 'low'" },
+              { name: 'priority_rank',  type: 'string',  description: "Derived priority. 'P1' = high impact + hours effort (fix this week). 'P2' = high impact or hours effort. 'P3' = everything else." },
+            ]} />
+          </section>
+
+          <section id="findings-summary-schema" style={SB}>
+            <Label>RESPONSE SCHEMA</Label>
+            <H2>Findings summary</H2>
+            <Body mb={24}>
+              Triage counts computed from the findings array. Use this for dashboard display without iterating all findings.
+            </Body>
+            <FieldTable rows={[
+              { name: 'findings_summary',          type: 'object', description: 'Triage counts computed from the findings array.' },
+              { name: 'findings_summary.p1_count', type: 'number', description: 'Fix this week: high impact, low effort findings.' },
+              { name: 'findings_summary.p2_count', type: 'number', description: 'Fix this month: high impact or low effort.' },
+              { name: 'findings_summary.p3_count', type: 'number', description: 'Fix when you can: lower priority improvements.' },
+              { name: 'findings_summary.total',    type: 'number', description: 'Total finding count.' },
+              { name: 'findings_summary.critical', type: 'number', description: 'Critical severity count.' },
+              { name: 'findings_summary.high',     type: 'number', description: 'High severity count.' },
             ]} />
           </section>
 
@@ -865,6 +1084,19 @@ export default function ApiDocsPage() {
               { name: 'top_quartile',   type: 'integer', description: 'Score at the 75th percentile.' },
               { name: 'percentile',     type: 'integer', description: 'Where this site ranks among industry peers.' },
               { name: 'sites_compared', type: 'integer', description: 'Number of sites in the benchmark pool.' },
+            ]} />
+          </section>
+
+          <section id="strengths-schema" style={SB}>
+            <Label>RESPONSE SCHEMA</Label>
+            <H2>Strengths</H2>
+            <Body mb={24}>
+              Top passing checks where this site performs genuinely above average. Only returned when checks pass with specific visible evidence. Array may be empty — never padded.
+            </Body>
+            <FieldTable rows={[
+              { name: 'check_id',    type: 'string', description: 'The diagnostic check ID.' },
+              { name: 'label',       type: 'string', description: 'Short strength label.' },
+              { name: 'observation', type: 'string', description: 'One sentence describing specifically what the site does well, referencing visible page content.' },
             ]} />
           </section>
 
@@ -894,6 +1126,22 @@ export default function ApiDocsPage() {
               { name: 'visual_hierarchy',   type: 'object', description: '{ score: integer, weight: number }' },
               { name: 'objection_handling', type: 'object', description: '{ score: integer, weight: number }' },
               { name: 'urgency',            type: 'object', description: '{ score: integer, weight: number }' },
+            ]} />
+          </section>
+
+          <section id="dimension-benchmarks-schema" style={SB}>
+            <Label>RESPONSE SCHEMA</Label>
+            <H2>Dimension benchmarks</H2>
+            <Body mb={24}>
+              Per-dimension scores benchmarked against corpus data for this site's vertical. Only present when the benchmark field is requested or the fields array is empty.
+            </Body>
+            <FieldTable rows={[
+              { name: 'dimension_benchmarks',                    type: 'object', description: 'Keyed by dimension name. Each value is a benchmark object for that dimension.' },
+              { name: '[dimension].score',                       type: 'number', description: "This site's score for the dimension." },
+              { name: '[dimension].average',                     type: 'number', description: "Industry average for this dimension in the site's vertical." },
+              { name: '[dimension].percentile_label',            type: 'string', description: 'Human-readable label. Examples: "Top 10% of SaaS sites", "Below average", "Industry average".' },
+              { name: '[dimension].p10',                         type: 'number', description: '10th percentile threshold for this dimension.' },
+              { name: '[dimension].p90',                         type: 'number', description: '90th percentile threshold for this dimension.' },
             ]} />
           </section>
 

@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import ScoreRing from '@/components/ui/ScoreRing'
 import Label from '@/components/ui/Label'
+import { Stat } from '@/components/ui/Stat'
 
 // ── Syntax-highlighted JSON primitives ──────────────────────────────────────
 
@@ -223,22 +224,14 @@ function HeroSection() {
           {/* Stats row */}
           <div className="flex flex-row gap-8 mt-9 pt-6 border-t border-background-border overflow-x-auto scroll-track-hide-scrollbar">
             {[
-              { value: '307', lines: ['CHECKS', 'PER SCAN'], color: null },
-              { value: '$0.15', lines: ['PER SCAN'], color: null },
-              { value: '~90s', lines: ['MEDIAN', 'RESPONSE'], color: null },
-              { value: '27', lines: ['CATEGORIES'], color: null },
-              { value: 'FREE', lines: ['CACHE HITS'], color: '#00E676' },
-            ].map(stat => (
-              <div key={stat.value} className="flex-shrink-0">
-                <div
-                  className={`font-score text-4xl${!stat.color ? ' text-text-primary' : ''}`}
-                  style={stat.color ? { color: stat.color } : undefined}
-                >
-                  {stat.value}
-                </div>
-                <div className="font-ui-label mt-1" style={{ color: '#3A3A52' }}>
-                  {stat.lines.map((line, i) => <div key={i}>{line}</div>)}
-                </div>
+              { value: '307',   label: 'CHECKS PER SCAN'  },
+              { value: '$0.15', label: 'PER SCAN'         },
+              { value: '~90s',  label: 'MEDIAN RESPONSE'  },
+              { value: '27',    label: 'CATEGORIES'       },
+              { value: 'FREE',  label: 'CACHE HITS'       },
+            ].map(s => (
+              <div key={s.value} className="flex-shrink-0">
+                <Stat value={s.value} label={s.label} verdict="neutral" />
               </div>
             ))}
           </div>
@@ -816,21 +809,17 @@ function StatsBand() {
         <Label>LIVE DATA</Label>
         <div className="grid grid-cols-4 gap-px bg-background-border mt-8">
           <div className="bg-background-raised px-8 py-6">
-            <div className="font-display font-bold text-4xl text-text-primary">4,800+</div>
-            <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mt-2">SITES SCANNED</div>
+            <Stat value="4,800+" label="SITES SCANNED" verdict="neutral" />
           </div>
           <div className="bg-background-raised px-8 py-6">
-            <div className="font-display font-bold text-4xl text-score-mid">58</div>
-            <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mt-2">AVERAGE SCORE</div>
+            <Stat value={58} label="AVERAGE SCORE" verdict="score" />
             <div className="font-mono text-xs text-text-tertiary mt-1">across all sites scanned</div>
           </div>
           <div className="bg-background-raised px-8 py-6">
-            <div className="font-display font-bold text-4xl text-text-primary">23</div>
-            <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mt-2">AVG FINDINGS PER SITE</div>
+            <Stat value={23} label="AVG FINDINGS PER SITE" verdict="neutral" />
           </div>
           <div className="bg-background-raised px-8 py-6">
-            <div className="font-display font-bold text-4xl text-severity-critical">76%</div>
-            <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mt-2">HAVE NO ABOVE-FOLD PROOF</div>
+            <Stat value="76%" label="HAVE NO ABOVE-FOLD PROOF" verdict="problem-count" />
             <div className="font-mono text-xs text-text-tertiary mt-1">most common critical finding</div>
           </div>
         </div>
@@ -993,17 +982,14 @@ function ConvictionSection() {
           {/* Right — 40% */}
           <div className="flex-[40] min-w-0 flex flex-col">
             <div className="bg-background-raised border border-background-border p-6">
-              <div className="font-score text-5xl" style={{ color: '#F5A623' }}>61</div>
-              <div className="font-ui-label mt-2" style={{ color: '#3A3A52' }}>MEDIAN SCORE</div>
+              <Stat value={61} label="MEDIAN SCORE" verdict="score" />
             </div>
             <div className="bg-background-raised border border-background-border border-t-0 p-6">
-              <div className="font-score text-5xl" style={{ color: '#FF4444' }}>#1</div>
-              <div className="font-ui-label mt-2" style={{ color: '#3A3A52' }}>MOST COMMON FINDING</div>
+              <Stat value="#1" label="MOST COMMON FINDING" verdict="problem-count" />
               <div className="font-mono text-sm text-text-secondary mt-2">Feature-led hero headline</div>
             </div>
             <div className="bg-background-raised border border-background-border border-t-0 p-6">
-              <div className="font-score text-5xl" style={{ color: '#00E676' }}>4hrs</div>
-              <div className="font-ui-label mt-2" style={{ color: '#3A3A52' }}>AVG TIME TO FIX TOP 3</div>
+              <Stat value="4hrs" label="AVG TIME TO FIX TOP 3" verdict="good-count" />
             </div>
           </div>
         </div>
@@ -1040,7 +1026,7 @@ function FinalCtaSection() {
             SCAN FREE →
           </Link>
         </div>
-        <div className="font-ui-label mt-4" style={{ color: '#3A3A52' }}>
+        <div className="font-ui-label mt-4 text-ink-muted">
           307 checks · ~90 seconds · no account required
         </div>
       </div>
@@ -1150,11 +1136,10 @@ function FooterSection() {
         <div className="max-w-[1280px] mx-auto px-8 py-5 flex justify-between items-center">
           <span className="font-mono text-xs text-text-tertiary">© 2026 webdoc.ai</span>
           <span className="font-mono text-xs">
-            <span style={{ color: '#3A3A52' }}>Built in public by Devon Morrell · </span>
+            <span className="text-ink-muted">Built in public by Devon Morrell · </span>
             <a
               href="https://x.com/devonmorrell"
-              className="no-underline hover:underline transition-colors duration-150"
-              style={{ color: '#3A3A52' }}
+              className="text-ink-muted no-underline hover:underline transition-colors duration-150"
               target="_blank"
               rel="noopener noreferrer"
             >

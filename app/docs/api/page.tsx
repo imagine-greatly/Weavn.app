@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Label from '@/components/ui/Label'
+import { CodeBlock } from '@/components/ui/CodeBlock'
 
 const BG       = '#050810'
 const BG_R     = '#080C14'
@@ -598,83 +599,6 @@ print(f"Took {m['duration_ms']}ms")`,
   },
 }
 
-const KW = new Set([
-  'curl','POST','GET','import','const','let','var','await','async',
-  'function','return','true','false','null','undefined','from','export',
-  'default','switch','case','break','if','else','for','while','class',
-  'new','typeof','in','of','print','def','requests','fetch',
-  'console','headers','body','method','status','Response',
-])
-
-function highlight(code: string): string {
-  const e = (s: string) =>
-    s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-
-  return code.split('\n').map(line => {
-    const t = line.trimStart()
-    if (t.startsWith('#')) {
-      return `<span style="color:${T3}">${e(line)}</span>`
-    }
-    const out: string[] = []
-    let i = 0
-    while (i < line.length) {
-      if (line[i] === '/' && line[i + 1] === '/') {
-        out.push(`<span style="color:${T3}">${e(line.slice(i))}</span>`)
-        i = line.length
-        continue
-      }
-      if (line[i] === '"') {
-        let j = i + 1
-        while (j < line.length) {
-          if (line[j] === '\\') { j += 2; continue }
-          if (line[j] === '"') { j++; break }
-          j++
-        }
-        out.push(`<span style="color:${GREEN}">${e(line.slice(i, j))}</span>`)
-        i = j; continue
-      }
-      if (line[i] === "'") {
-        let j = i + 1
-        while (j < line.length) {
-          if (line[j] === '\\') { j += 2; continue }
-          if (line[j] === "'") { j++; break }
-          j++
-        }
-        out.push(`<span style="color:${GREEN}">${e(line.slice(i, j))}</span>`)
-        i = j; continue
-      }
-      if (line[i] === '`') {
-        let j = i + 1
-        while (j < line.length) {
-          if (line[j] === '\\') { j += 2; continue }
-          if (line[j] === '`') { j++; break }
-          j++
-        }
-        out.push(`<span style="color:${GREEN}">${e(line.slice(i, j))}</span>`)
-        i = j; continue
-      }
-      if (/[a-zA-Z_$]/.test(line[i])) {
-        let j = i
-        while (j < line.length && /[\w$]/.test(line[j])) j++
-        const word = line.slice(i, j)
-        out.push(KW.has(word)
-          ? `<span style="color:${CYAN}">${e(word)}</span>`
-          : `<span style="color:#8892A4">${e(word)}</span>`)
-        i = j; continue
-      }
-      if (/\d/.test(line[i])) {
-        let j = i
-        while (j < line.length && /[\d.]/.test(line[j])) j++
-        out.push(`<span style="color:${CYAN}">${e(line.slice(i, j))}</span>`)
-        i = j; continue
-      }
-      out.push(`<span style="color:#8892A4">${e(line[i])}</span>`)
-      i++
-    }
-    return out.join('')
-  }).join('\n')
-}
-
 // ── helpers ────────────────────────────────────────────────────────────────
 
 interface PR { param: string; type: string; required: string; description: string }
@@ -1184,9 +1108,9 @@ export default function ApiDocsPage() {
               </button>
             ))}
           </div>
-          <pre
-            style={{ fontFamily: MONO, fontSize: 12, lineHeight: 1.7, margin: 0, padding: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}
-            dangerouslySetInnerHTML={{ __html: highlight(code) }}
+          <CodeBlock
+            code={code}
+            language={code.trimStart().startsWith('{') || code.trimStart().startsWith('[') ? 'json' : 'bash'}
           />
         </div>
       </aside>

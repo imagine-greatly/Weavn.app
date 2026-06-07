@@ -1,4 +1,6 @@
 import Link from 'next/link'
+import { CodeBlock } from '@/components/ui/CodeBlock'
+import { Stat } from '@/components/ui/Stat'
 
 // ── Data ──────────────────────────────────────────────────────────────────────
 
@@ -130,22 +132,9 @@ export default function ProductPage() {
               site gets ecommerce checks. Universal checks run on everything.
             </p>
             <div className="flex gap-10">
-              <div>
-                <div className="font-score text-4xl" style={{ color: '#00C8FF' }}>307</div>
-                <div className="font-ui-label text-[10px] mt-1" style={{ color: '#00C8FF' }}>
-                  TOTAL CHECKS
-                </div>
-              </div>
-              <div>
-                <div className="font-score text-4xl text-text-primary">27</div>
-                <div className="font-ui-label text-[10px] mt-1 text-text-secondary">CATEGORIES</div>
-              </div>
-              <div>
-                <div className="font-score text-4xl text-text-primary">7</div>
-                <div className="font-ui-label text-[10px] mt-1 text-text-secondary">
-                  DIAGNOSTIC DIMENSIONS
-                </div>
-              </div>
+              <Stat value="307" label="TOTAL CHECKS" verdict="neutral" />
+              <Stat value="27" label="CATEGORIES" verdict="neutral" />
+              <Stat value="7" label="DIAGNOSTIC DIMENSIONS" verdict="neutral" />
             </div>
           </div>
 
@@ -180,7 +169,7 @@ export default function ProductPage() {
 
               {/* Left: step number + connector */}
               <div className="flex flex-col items-center flex-shrink-0" style={{ width: 32 }}>
-                <span className="font-score text-2xl leading-none" style={{ color: '#3A3A52' }}>
+                <span className="font-score text-2xl leading-none text-text-tertiary">
                   {step.num}
                 </span>
                 {i < PIPELINE_STEPS.length - 1 && (
@@ -203,12 +192,9 @@ export default function ProductPage() {
                   {step.description}
                 </p>
                 {step.code !== null && (
-                  <pre
-                    className="bg-background-subtle border border-background-border font-mono text-xs p-3 mt-3 overflow-x-auto"
-                    style={{ color: '#8E8EA0', whiteSpace: 'pre-wrap' }}
-                  >
-                    {step.code}
-                  </pre>
+                  <div className="mt-3">
+                    <CodeBlock code={step.code} language="json" />
+                  </div>
                 )}
               </div>
 
@@ -229,9 +215,8 @@ export default function ProductPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
           <div className="landing-card-electric bg-background-raised border border-background-border p-6">
-            <div className="font-score text-5xl mb-1" style={{ color: '#00C8FF' }}>61</div>
-            <div className="font-ui-label text-xs mb-3 text-text-secondary">
-              WEIGHTED OVERALL SCORE
+            <div className="mb-3">
+              <Stat value={61} label="WEIGHTED OVERALL SCORE" verdict="score" />
             </div>
             <p className="font-body text-sm leading-relaxed text-text-secondary">
               0–100. Calibrated to site type and buyer complexity. Benchmarked against corpus.
@@ -239,8 +224,9 @@ export default function ProductPage() {
           </div>
 
           <div className="landing-card-electric bg-background-raised border border-background-border p-6">
-            <div className="font-score text-5xl mb-1" style={{ color: '#FF8C00' }}>23</div>
-            <div className="font-ui-label text-xs mb-3 text-text-secondary">RANKED FINDINGS</div>
+            <div className="mb-3">
+              <Stat value={23} label="RANKED FINDINGS" verdict="problem-count" />
+            </div>
             <p className="font-body text-sm leading-relaxed text-text-secondary">
               Sorted P1→P3. Each with severity, fix_effort, impact_tier, and specific evidence from
               the page.
@@ -248,8 +234,9 @@ export default function ProductPage() {
           </div>
 
           <div className="landing-card-electric bg-background-raised border border-background-border p-6">
-            <div className="font-score text-5xl mb-1" style={{ color: '#00E676' }}>5</div>
-            <div className="font-ui-label text-xs mb-3 text-text-secondary">VERIFIED STRENGTHS</div>
+            <div className="mb-3">
+              <Stat value={5} label="VERIFIED STRENGTHS" verdict="good-count" />
+            </div>
             <p className="font-body text-sm leading-relaxed text-text-secondary">
               What&apos;s genuinely working above average. Referenced against specific visible content
               — never padded.
@@ -257,9 +244,8 @@ export default function ProductPage() {
           </div>
 
           <div className="landing-card-electric bg-background-raised border border-background-border p-6">
-            <div className="font-score text-5xl mb-1" style={{ color: '#00C8FF' }}>7</div>
-            <div className="font-ui-label text-xs mb-3 text-text-secondary">
-              DIMENSION BENCHMARKS
+            <div className="mb-3">
+              <Stat value={7} label="DIMENSION BENCHMARKS" verdict="neutral" />
             </div>
             <p className="font-body text-sm leading-relaxed text-text-secondary">
               Every dimension score positioned against industry average and percentile for your
@@ -296,7 +282,7 @@ export default function ProductPage() {
               >
                 Scan my site free →
               </Link>
-              <p className="font-ui-label text-[10px] text-center mt-2" style={{ color: '#3A3A52' }}>
+              <p className="font-ui-label text-[10px] text-center mt-2 text-ink-muted">
                 Free · No account required
               </p>
             </div>
@@ -317,7 +303,7 @@ export default function ProductPage() {
               >
                 See agency plans →
               </Link>
-              <p className="font-ui-label text-[10px] text-center mt-2" style={{ color: '#3A3A52' }}>
+              <p className="font-ui-label text-[10px] text-center mt-2 text-ink-muted">
                 From $149/mo · 14-day trial
               </p>
             </div>
@@ -338,7 +324,7 @@ export default function ProductPage() {
               >
                 Get API key →
               </Link>
-              <p className="font-ui-label text-[10px] text-center mt-2" style={{ color: '#3A3A52' }}>
+              <p className="font-ui-label text-[10px] text-center mt-2 text-ink-muted">
                 $0.15/scan · No monthly fee
               </p>
             </div>
@@ -365,7 +351,7 @@ export default function ProductPage() {
         >
           Scan my site →
         </Link>
-        <p className="font-ui-label mt-4" style={{ color: '#3A3A52', fontSize: 10 }}>
+        <p className="font-ui-label mt-4 text-ink-muted" style={{ fontSize: 10 }}>
           307 checks · ~90 seconds · no account required
         </p>
       </section>

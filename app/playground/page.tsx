@@ -2,6 +2,7 @@
 
 import { useState, useRef } from 'react'
 import Link from 'next/link'
+import { CodeBlock } from '@/components/ui/CodeBlock'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -88,71 +89,6 @@ const MOCK_META = {
   tokens_used: 4821,
   complexity:  'standard',
   cached:      false,
-}
-
-// ── JSON viewer ───────────────────────────────────────────────────────────────
-
-function highlightValue(raw: string) {
-  const stripped = raw.replace(/,\s*$/, '')
-  const trail    = raw.slice(stripped.length)
-
-  if (/^".*"$/.test(stripped)) {
-    return (
-      <>
-        <span className="text-green-400">{stripped}</span>
-        {trail && <span className="text-text-secondary">{trail}</span>}
-      </>
-    )
-  }
-  if (/^-?\d+(\.\d+)?$/.test(stripped)) {
-    return (
-      <>
-        <span className="text-amber-400">{stripped}</span>
-        {trail && <span className="text-text-secondary">{trail}</span>}
-      </>
-    )
-  }
-  if (stripped === 'true' || stripped === 'false' || stripped === 'null') {
-    return (
-      <>
-        <span className="text-purple-400">{stripped}</span>
-        {trail && <span className="text-text-secondary">{trail}</span>}
-      </>
-    )
-  }
-  return <span className="text-text-secondary">{raw}</span>
-}
-
-function highlightLine(line: string) {
-  const m = /^(\s*)("[^"]+")\s*:\s*(.+)$/.exec(line)
-  if (m) {
-    const [, indent, key, value] = m
-    return (
-      <>
-        {indent}
-        <span className="text-cyan-DEFAULT">{key}</span>
-        <span className="text-text-secondary">{': '}</span>
-        {highlightValue(value)}
-      </>
-    )
-  }
-  return <span className="text-text-secondary">{line}</span>
-}
-
-function JsonViewer({ data }: { data: Record<string, unknown> }) {
-  const lines = JSON.stringify(data, null, 2).split('\n')
-  return (
-    <div className="p-4 font-mono text-sm leading-6">
-      {lines.map((line, i) => (
-        <div key={i} className="flex">
-          <span className="w-8 flex-shrink-0 text-right mr-4 text-text-tertiary text-xs leading-6 select-none">
-            {i + 1}
-          </span>
-          <span className="flex-1">{highlightLine(line)}</span>
-        </div>
-      ))}
-    </div>
-  )
 }
 
 // ── Severity badge ────────────────────────────────────────────────────────────
@@ -442,15 +378,15 @@ export default function PlaygroundPage() {
                 {curlCopied ? 'copied' : 'copy'}
               </button>
             </div>
-            <div className="bg-background-raised p-3">
-              <pre className="font-mono text-xs text-text-secondary leading-relaxed m-0 whitespace-pre-wrap break-all">
-                <span className="text-cyan-DEFAULT">curl</span>
-                {` -X POST https://webdocai.com/api/v1/scan \\\n`}
-                {`  -H "Authorization: Bearer YOUR_API_KEY" \\\n`}
-                {`  -H "Content-Type: application/json" \\\n`}
-                {`  -d '${JSON.stringify(curlBody, null, 2)}'`}
-              </pre>
-            </div>
+            <CodeBlock
+              language="bash"
+              code={[
+                'curl -X POST https://webdocai.com/api/v1/scan \\',
+                '  -H "Authorization: Bearer YOUR_API_KEY" \\',
+                '  -H "Content-Type: application/json" \\',
+                `  -d '${JSON.stringify(curlBody, null, 2)}'`,
+              ].join('\n')}
+            />
           </div>
 
           {/* 6 — Stats (after scan) */}
@@ -534,7 +470,7 @@ export default function PlaygroundPage() {
               <div className="flex-1 overflow-y-auto">
 
                 {activeTab === 'response' && (
-                  <JsonViewer data={responseData} />
+                  <CodeBlock code={JSON.stringify(responseData, null, 2)} language="json" />
                 )}
 
                 {activeTab === 'findings' && (

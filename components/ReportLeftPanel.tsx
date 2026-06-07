@@ -81,6 +81,12 @@ export type ReportLeftPanelProps = {
   pagesAnalyzed?: string[];
   /** Total rubric checks run — shown in coverage summary line. */
   totalChecked?: number;
+  /** Optional strengths array from payload — shown if present, hidden if absent. */
+  strengths?: Array<{ label: string; observation: string }>;
+  /** Optional score profile string from payload — e.g. "saas_consultative". */
+  scoreProfile?: string;
+  /** Optional map of dimension label → percentile label from payload benchmarks. */
+  dimensionBenchmarks?: Record<string, string>;
 };
 
 const NAV_PILLS: { id: ReportNavSectionId; label: string }[] = [
@@ -201,7 +207,16 @@ export default function ReportLeftPanel({
   onNavSectionChange,
   pagesAnalyzed,
   totalChecked,
+  strengths,
+  scoreProfile,
+  dimensionBenchmarks,
 }: ReportLeftPanelProps) {
+  const scorePulseKeyframe =
+    score >= 65
+      ? 'scorePulseCyan'
+      : score >= 40
+        ? 'scorePulseAmber'
+        : 'scorePulseRed';
   return (
     <aside
       className="report-left-aside flex h-full w-[300px] shrink-0 flex-col overflow-hidden border-r"
@@ -225,6 +240,18 @@ export default function ReportLeftPanel({
         .category-scroll { scrollbar-width: none; }
         @keyframes coverage-blink { 0%,100% { opacity: 1; } 50% { opacity: 0; } }
         .coverage-cursor { display: inline-block; width: 5px; height: 10px; background: #00C8FF; margin-left: 2px; vertical-align: middle; animation: coverage-blink 0.65s step-end infinite; }
+        @keyframes scorePulseCyan {
+          0%, 100% { box-shadow: 0 0 20px rgba(0, 200, 255, 0.15); }
+          50% { box-shadow: 0 0 30px rgba(0, 200, 255, 0.25); }
+        }
+        @keyframes scorePulseAmber {
+          0%, 100% { box-shadow: 0 0 20px rgba(245, 166, 35, 0.15); }
+          50% { box-shadow: 0 0 30px rgba(245, 166, 35, 0.25); }
+        }
+        @keyframes scorePulseRed {
+          0%, 100% { box-shadow: 0 0 20px rgba(255, 68, 68, 0.15); }
+          50% { box-shadow: 0 0 30px rgba(255, 68, 68, 0.25); }
+        }
         @media (max-width: 768px) {
           .report-left-aside {
             width: 100% !important;
@@ -278,12 +305,30 @@ export default function ReportLeftPanel({
               }}
             />
           </div>
-          <span
-            className="font-mono text-[10px] uppercase"
-            style={{ color: "var(--text-primary)", letterSpacing: "0.14em" }}
-          >
-            {domain}
-          </span>
+          <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+            <span
+              className="font-mono text-[10px] uppercase"
+              style={{ color: "var(--text-primary)", letterSpacing: "0.14em" }}
+            >
+              {domain}
+            </span>
+            {scoreProfile && (
+              <span
+                style={{
+                  fontFamily: MONO,
+                  fontSize: 8,
+                  color: "#3A3A52",
+                  letterSpacing: "0.1em",
+                  textTransform: "uppercase",
+                }}
+              >
+                {scoreProfile
+                  .split("_")
+                  .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+                  .join(" · ")}
+              </span>
+            )}
+          </div>
           {!readOnlyLeftPanel ? (
             <div
               className="ml-auto flex items-center gap-1.5"
@@ -317,7 +362,12 @@ export default function ReportLeftPanel({
           }}
         />
 
-        <div className="report-left-score-wrap">
+        <div
+          className="report-left-score-wrap"
+          style={{
+            animation: `${scorePulseKeyframe} 2.5s ease-in-out infinite alternate`,
+          }}
+        >
           <ConversionScoreGauge
             score={score}
             scoreDelta={scoreDelta}
@@ -400,16 +450,42 @@ export default function ReportLeftPanel({
                   >
                     {bar.label}
                   </span>
-                  <span
-                    style={{
-                      fontFamily: "var(--font-orbitron), sans-serif",
-                      fontSize: 9,
-                      fontWeight: 700,
-                      color: barColor,
-                    }}
-                  >
-                    {sc}
-                  </span>
+                  <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                    <span
+                      style={{
+                        fontFamily: "var(--font-orbitron), sans-serif",
+                        fontSize: 9,
+                        fontWeight: 700,
+                        color: barColor,
+                      }}
+                    >
+                      {sc}
+                    </span>
+                    {(() => {
+                      const pLabel = dimensionBenchmarks?.[bar.label];
+                      if (!pLabel) return null;
+                      const lc = pLabel.toLowerCase();
+                      const color =
+                        lc.includes("bottom") ? "#FF4444"
+                        : lc.includes("below") ? "#FF8C00"
+                        : lc.includes("top") ? "#00E676"
+                        : lc.includes("above") ? "#00C8FF"
+                        : "#8E8EA0";
+                      return (
+                        <span
+                          style={{
+                            fontFamily: MONO,
+                            fontSize: 7,
+                            color,
+                            letterSpacing: "0.06em",
+                            textTransform: "uppercase",
+                          }}
+                        >
+                          {pLabel}
+                        </span>
+                      );
+                    })()}
+                  </div>
                 </div>
                 <div
                   style={{
@@ -442,6 +518,68 @@ export default function ReportLeftPanel({
       >
         {pagesAnalyzed && pagesAnalyzed.length > 0 && (
           <DiagnosticCoverage pagesAnalyzed={pagesAnalyzed} totalChecked={totalChecked} />
+        )}
+        {Array.isArray(strengths) && strengths.length > 0 && (
+          <div
+            style={{
+              padding: "0 20px",
+              borderTop: "1px solid rgba(255,255,255,0.06)",
+              paddingTop: 16,
+              marginTop: 16,
+            }}
+          >
+            <div
+              style={{
+                fontFamily: MONO,
+                fontSize: 8,
+                color: "#00E676",
+                letterSpacing: "0.14em",
+                textTransform: "uppercase",
+                marginBottom: 10,
+              }}
+            >
+              WHAT&apos;S WORKING
+            </div>
+            {strengths.map((s, i) => (
+              <div key={i} style={{ marginBottom: 10 }}>
+                <div style={{ display: "flex", alignItems: "flex-start", gap: 6 }}>
+                  <div
+                    style={{
+                      width: 4,
+                      height: 4,
+                      borderRadius: "50%",
+                      background: "#00E676",
+                      flexShrink: 0,
+                      marginTop: 4,
+                    }}
+                  />
+                  <div>
+                    <div
+                      style={{
+                        fontFamily: "var(--font-stack-sans), sans-serif",
+                        fontSize: 11,
+                        fontWeight: 500,
+                        color: "var(--text-primary)",
+                      }}
+                    >
+                      {s.label}
+                    </div>
+                    <div
+                      style={{
+                        fontFamily: "var(--font-stack-sans), sans-serif",
+                        fontSize: 10,
+                        color: "var(--text-secondary)",
+                        marginTop: 2,
+                        lineHeight: 1.5,
+                      }}
+                    >
+                      {s.observation}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         )}
       </div>
 

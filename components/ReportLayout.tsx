@@ -755,6 +755,9 @@ export default function ReportLayout({
           previousScanAt={payload?.previousScanAt}
           pagesAnalyzed={payload?.pagesAnalyzed}
           totalChecked={diagnosticStats?.totalChecked}
+          strengths={(payload as { strengths?: Array<{ label: string; observation: string }> } | undefined)?.strengths}
+          scoreProfile={(payload as { score_profile?: string } | undefined)?.score_profile}
+          dimensionBenchmarks={(payload as { dimension_benchmarks?: Record<string, string> } | undefined)?.dimension_benchmarks}
         />
       </div>
 

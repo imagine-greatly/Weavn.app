@@ -385,6 +385,12 @@ export type ReportLayoutProps = {
   shareToken?: string | null;
   issueReportId?: string | null;
   narrativeFlow?: { verdict: 'strong' | 'weak' | 'broken'; summary: string } | null;
+  /**
+   * White-label mode for agency-to-client shared reports.
+   * Implies isPro=true, sharedView=true, readOnlyLeftPanel=true.
+   * Hides all upgrade prompts, paywall banners, rescan, and live indicator.
+   */
+  whiteLabel?: boolean;
 };
 
 export default function ReportLayout({
@@ -395,16 +401,20 @@ export default function ReportLayout({
   warningCount: warningCountProp,
   passingCount: passingCountProp,
   categories: categoriesProp,
-  sharedView = false,
-  isPro = false,
+  sharedView: sharedViewProp = false,
+  isPro: isProProp = false,
   siteType,
   onRescan,
   fillContainer = false,
-  readOnlyLeftPanel = false,
+  readOnlyLeftPanel: readOnlyLeftPanelProp = false,
   shareToken = null,
   issueReportId = null,
   narrativeFlow,
+  whiteLabel = false,
 }: ReportLayoutProps) {
+  const isPro = whiteLabel ? true : isProProp;
+  const sharedView = whiteLabel ? true : sharedViewProp;
+  const readOnlyLeftPanel = whiteLabel ? true : readOnlyLeftPanelProp;
   const rightPanelRef = useRef<HTMLDivElement>(null);
   const sectionRefs = useRef<Record<string, HTMLElement | null>>({});
 

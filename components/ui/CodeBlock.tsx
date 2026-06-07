@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { SEVERITY_COLOR } from '@/lib/design-tokens'
+import { METRIC_KEYS, SEVERITY_COLOR } from '@/lib/design-tokens'
 
 export interface CodeBlockProps {
   code: string
@@ -10,6 +10,7 @@ export interface CodeBlockProps {
 
 const C = {
   key:    '#8080c0',  // json-key    — JSON object keys (muted purple)
+  metric: '#6F9BC6',  // json-metric — measurement/dimension keys (muted blue)
   str:    '#00C48C',  // json-string — string values (muted green)
   num:    '#C9D1D9',  // json-number — numbers / booleans / null (near-white)
   muted:  '#6E7587',  // ink-muted   — bash commands, flags
@@ -35,6 +36,13 @@ function tokenizeJSON(line: string): Tok[] {
   const comma = trimmed.endsWith(',') ? ',' : ''
   const val = comma ? trimmed.slice(0, -1).trimEnd() : trimmed
 
+  // Key coloring — 3 tiers (precedence order):
+  // 1. severity key → metric blue (its value still uses SEVERITY_COLOR)
+  // 2. METRIC_KEYS   → metric blue
+  // 3. all others    → key purple
+  const keyColor = METRIC_KEYS.includes(key) ? C.metric : C.key
+
+  // Value coloring — unchanged; severity value → SEVERITY_COLOR, never blue
   let valColor: string
   if (key === 'severity') {
     const bare = val.replace(/^"|"$/g, '').toLowerCase()
@@ -50,7 +58,7 @@ function tokenizeJSON(line: string): Tok[] {
 
   return [
     { text: indent, color: C.pri },
-    { text: keyQ,   color: C.key },
+    { text: keyQ,   color: keyColor },
     { text: colon,  color: C.sec },
     { text: val + comma, color: valColor },
   ].filter(t => t.text.length > 0)

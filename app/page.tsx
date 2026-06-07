@@ -8,7 +8,10 @@ import Label from '@/components/ui/Label'
 // ── Syntax-highlighted JSON primitives ──────────────────────────────────────
 
 function K({ c }: { c: string }) {
-  return <span className="text-[#8080c0]">{c}</span>
+  return <span className="text-[#8080c0]">{c}</span>  // json-key purple
+}
+function M({ c }: { c: string }) {
+  return <span className="text-[#6F9BC6]">{c}</span>  // json-metric blue (measurement/dimension keys)
 }
 function S({ c }: { c: string }) {
   return <span className="text-score-high">{c}</span>
@@ -70,31 +73,31 @@ function HeroJson() {
       <P c="{" />{'\n'}
       {'  '}<K c='"scan_id"' /><P c=": " /><S c='"scan_01HXYZ7K2M9N3P4Q"' /><P c="," />{'\n'}
       {'  '}<K c='"url"' /><P c=": " /><S c='"https://acme-saas.com"' /><P c="," />{'\n'}
-      {'  '}<K c='"score"' /><P c=": " /><N c="61" /><P c="," />{'\n'}
+      {'  '}<M c='"score"' /><P c=": " /><N c="61" /><P c="," />{'\n'}
       {'  '}<K c='"industry"' /><P c=": " /><S c='"B2B SaaS"' /><P c="," />{'\n'}
       {'  '}<K c='"benchmark"' /><P c=": {" />{'\n'}
-      {'    '}<K c='"industry_avg"' /><P c=": " /><N c="54" /><P c="," />{'\n'}
-      {'    '}<K c='"top_quartile"' /><P c=": " /><N c="78" /><P c="," />{'\n'}
-      {'    '}<K c='"percentile"' /><P c=": " /><N c="63" />{'\n'}
+      {'    '}<M c='"industry_avg"' /><P c=": " /><N c="54" /><P c="," />{'\n'}
+      {'    '}<M c='"top_quartile"' /><P c=": " /><N c="78" /><P c="," />{'\n'}
+      {'    '}<M c='"percentile"' /><P c=": " /><N c="63" />{'\n'}
       {'  '}<P c="}," />{'\n'}
       {'  '}<K c='"findings"' /><P c=": [" />{'\n'}
       {'    '}<P c="{" />{'\n'}
       {'      '}<K c='"priority"' /><P c=": " /><N c="1" /><P c="," />{'\n'}
-      {'      '}<K c='"severity"' /><P c=": " /><S c='"critical"' /><P c="," />{'\n'}
+      {'      '}<M c='"severity"' /><P c=": " /><S c='"critical"' /><P c="," />{'\n'}
       {'      '}<K c='"category"' /><P c=": " /><S c='"value_proposition"' /><P c="," />{'\n'}
       {'      '}<K c='"title"' /><P c=": " /><S c='"Hero headline is feature-led, not outcome-led"' /><P c="," />{'\n'}
       {'      '}<K c='"estimated_lift"' /><P c=": " /><S c='"12–18% conversion uplift"' />{'\n'}
       {'    '}<P c="}," />{'\n'}
       {'    '}<P c="{" />{'\n'}
       {'      '}<K c='"priority"' /><P c=": " /><N c="2" /><P c="," />{'\n'}
-      {'      '}<K c='"severity"' /><P c=": " /><S c='"high"' /><P c="," />{'\n'}
+      {'      '}<M c='"severity"' /><P c=": " /><S c='"high"' /><P c="," />{'\n'}
       {'      '}<K c='"category"' /><P c=": " /><S c='"social_proof"' /><P c="," />{'\n'}
       {'      '}<K c='"title"' /><P c=": " /><S c='"No above-fold proof — testimonials buried at 2,400px"' /><P c="," />{'\n'}
       {'      '}<K c='"estimated_lift"' /><P c=": " /><S c='"8–11% conversion uplift"' />{'\n'}
       {'    '}<P c="}," />{'\n'}
       {'    '}<P c="{" />{'\n'}
       {'      '}<K c='"priority"' /><P c=": " /><N c="3" /><P c="," />{'\n'}
-      {'      '}<K c='"severity"' /><P c=": " /><S c='"high"' /><P c="," />{'\n'}
+      {'      '}<M c='"severity"' /><P c=": " /><S c='"high"' /><P c="," />{'\n'}
       {'      '}<K c='"category"' /><P c=": " /><S c='"cta_clarity"' /><P c="," />{'\n'}
       {'      '}<K c='"title"' /><P c=": " /><S c='"Dual primary CTAs create decision paralysis"' /><P c="," />{'\n'}
       {'      '}<K c='"estimated_lift"' /><P c=": " /><S c='"6–9% conversion uplift"' />{'\n'}
@@ -425,7 +428,7 @@ function ResponseJson() {
         <span key={f.p}>
           {'    '}<P c="{" />{'\n'}
           {'      '}<K c='"priority"' /><P c=": " /><N c={String(f.p)} /><P c="," />{'\n'}
-          {'      '}<K c='"severity"' /><P c=": " /><S c={`"${f.sev}"`} /><P c="," />{'\n'}
+          {'      '}<M c='"severity"' /><P c=": " /><S c={`"${f.sev}"`} /><P c="," />{'\n'}
           {'      '}<K c='"category"' /><P c=": " /><S c={`"${f.cat}"`} /><P c="," />{'\n'}
           {'      '}<K c='"title"' /><P c=": " /><S c={`"${f.title}"`} /><P c="," />{'\n'}
           {'      '}<K c='"estimated_lift"' /><P c=": " /><S c={`"${f.lift}"`} /><P c="," />{'\n'}

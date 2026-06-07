@@ -56,6 +56,7 @@ const config: Config = {
         'data-critical': '#E8635F',
         // Design token v3 — canonical JSON/severity/score names
         'json-key': '#8080c0',
+        'json-metric': '#6F9BC6',
         'json-string': '#00C48C',
         'json-number': '#C9D1D9',
         'sev-critical': '#E8635F',

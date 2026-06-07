@@ -63,7 +63,7 @@ export default function ObjectionSection() {
               </p>
               <p style={{ ...MONO, fontSize: 11, color: '#6E7587', margin: 0 }}>
                 {o.label}{' '}
-                <span style={{ color: o.valueColor }}>{o.value}</span>
+                <span style={{ ...DISP, fontWeight: 500, color: o.valueColor }}>{o.value}</span>
               </p>
             </div>
           ))}

@@ -4,17 +4,41 @@ import { Stat } from '@/components/ui/Stat'
 
 // ── Data ──────────────────────────────────────────────────────────────────────
 
-const CATEGORIES = [
-  'Hero Section', 'Trust & Credibility', 'CTA & Conversion',
-  'Messaging & Clarity', 'Social Proof', 'SEO & Metadata',
-  'Navigation & UX', 'Psychology & Persuasion', 'Page & Content Gaps',
-  'Offer & Pricing', 'Email & Retention', 'Product Page',
-  'Mobile Experience', 'Checkout & Purchase', 'Page Speed & Technical',
-  'Competitive Differentiation', 'Specificity & Claims', 'Return & Retention',
-  'Accessibility', 'Universal', 'SaaS-Specific',
-  'E-commerce', 'Agency & Service', 'Conversion Path',
-  'Narrative Flow', 'Objection Handling', 'Offer Clarity',
+const CATEGORIES: { name: string; tier: 'core' | 'universal' | 'vertical' }[] = [
+  { name: 'Hero Section', tier: 'core' },
+  { name: 'Trust & Credibility', tier: 'core' },
+  { name: 'CTA & Conversion', tier: 'core' },
+  { name: 'Messaging & Clarity', tier: 'core' },
+  { name: 'Social Proof', tier: 'core' },
+  { name: 'SEO & Metadata', tier: 'universal' },
+  { name: 'Navigation & UX', tier: 'universal' },
+  { name: 'Psychology & Persuasion', tier: 'core' },
+  { name: 'Page & Content Gaps', tier: 'universal' },
+  { name: 'Offer & Pricing', tier: 'core' },
+  { name: 'Email & Retention', tier: 'vertical' },
+  { name: 'Product Page', tier: 'vertical' },
+  { name: 'Mobile Experience', tier: 'universal' },
+  { name: 'Checkout & Purchase', tier: 'vertical' },
+  { name: 'Page Speed & Technical', tier: 'universal' },
+  { name: 'Competitive Differentiation', tier: 'universal' },
+  { name: 'Specificity & Claims', tier: 'core' },
+  { name: 'Return & Retention', tier: 'vertical' },
+  { name: 'Accessibility', tier: 'universal' },
+  { name: 'Universal', tier: 'universal' },
+  { name: 'SaaS-Specific', tier: 'vertical' },
+  { name: 'E-commerce', tier: 'vertical' },
+  { name: 'Agency & Service', tier: 'vertical' },
+  { name: 'Conversion Path', tier: 'core' },
+  { name: 'Narrative Flow', tier: 'core' },
+  { name: 'Objection Handling', tier: 'core' },
+  { name: 'Offer Clarity', tier: 'core' },
 ]
+
+const TIER_STYLES = {
+  core:      { border: '#00C48C', bg: 'rgba(0,196,140,0.06)',    color: '#00C48C' },
+  universal: { border: '#6F9BC6', bg: 'rgba(111,155,198,0.06)',  color: '#6F9BC6' },
+  vertical:  { border: '#8080C0', bg: 'rgba(128,128,192,0.06)',  color: '#8080C0' },
+} as const
 
 interface PipelineStep {
   num: string
@@ -138,16 +162,45 @@ export default function ProductPage() {
             </div>
           </div>
 
-          {/* Right: category chips */}
-          <div className="grid grid-cols-3 gap-2">
-            {CATEGORIES.map((cat) => (
-              <div
-                key={cat}
-                className="bg-background-raised border border-background-border px-3 py-2 font-ui-label text-xs text-text-secondary hover:border-[rgba(0,200,255,0.3)] hover:text-text-primary transition-colors duration-150 cursor-default"
-              >
-                {cat}
-              </div>
-            ))}
+          {/* Right: category chips + legend */}
+          <div>
+            <div className="grid grid-cols-3 gap-2">
+              {CATEGORIES.map((cat) => {
+                const s = TIER_STYLES[cat.tier]
+                return (
+                  <div
+                    key={cat.name}
+                    style={{
+                      border: `0.5px solid ${s.border}`,
+                      backgroundColor: s.bg,
+                      padding: '10px 14px',
+                      fontFamily: '"IBM Plex Mono", monospace',
+                      fontSize: 11,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.1em',
+                      color: s.color,
+                      cursor: 'default',
+                    }}
+                  >
+                    {cat.name}
+                  </div>
+                )
+              })}
+            </div>
+            <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap', marginTop: 16 }}>
+              {[
+                { color: '#00C48C', label: 'conversion core' },
+                { color: '#6F9BC6', label: 'universal' },
+                { color: '#8080C0', label: 'vertical-specific' },
+              ].map(item => (
+                <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span style={{ width: 5, height: 5, backgroundColor: item.color, display: 'block', flexShrink: 0 }} />
+                  <span style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, color: '#6E7587' }}>
+                    {item.label}
+                  </span>
+                </div>
+              ))}
+            </div>
           </div>
 
         </div>
@@ -169,7 +222,16 @@ export default function ProductPage() {
 
               {/* Left: step number + connector */}
               <div className="flex flex-col items-center flex-shrink-0" style={{ width: 32 }}>
-                <span className="font-score text-2xl leading-none text-text-tertiary">
+                <span
+                  style={{
+                    fontFamily: '"IBM Plex Mono", monospace',
+                    fontSize: 13,
+                    fontWeight: 500,
+                    color: '#6F9BC6',
+                    letterSpacing: '0.15em',
+                    lineHeight: 1,
+                  }}
+                >
                   {step.num}
                 </span>
                 {i < PIPELINE_STEPS.length - 1 && (
@@ -182,7 +244,16 @@ export default function ProductPage() {
 
               {/* Right: content block */}
               <div className="bg-background-raised border border-background-border p-6 mb-4 flex-1">
-                <p className="font-ui-label text-xs mb-1" style={{ color: '#00C8FF' }}>
+                <p
+                  style={{
+                    fontFamily: '"IBM Plex Mono", monospace',
+                    fontSize: 11,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.15em',
+                    color: '#6F9BC6',
+                    marginBottom: 4,
+                  }}
+                >
                   {step.label}
                 </p>
                 <h3 className="font-display font-bold text-lg text-text-primary mb-2">
@@ -268,7 +339,16 @@ export default function ProductPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 
           <div className="landing-card-electric bg-background-raised border border-background-border p-8 flex flex-col">
-            <div className="font-ui-label text-xs mb-4" style={{ color: '#00C8FF' }}>
+            <div
+              style={{
+                fontFamily: '"IBM Plex Mono", monospace',
+                fontSize: 11,
+                textTransform: 'uppercase',
+                letterSpacing: '0.1em',
+                color: '#6E7587',
+                marginBottom: 16,
+              }}
+            >
               FOR FOUNDERS
             </div>
             <p className="font-body text-sm leading-relaxed text-text-secondary flex-1">
@@ -278,18 +358,45 @@ export default function ProductPage() {
             <div className="mt-8">
               <Link
                 href="/scan"
-                className="block text-center font-ui-label border border-[#00C8FF]/30 text-[#00C8FF] py-3 no-underline hover:border-[#00C8FF]/60 transition-colors duration-150"
+                style={{
+                  display: 'block',
+                  textAlign: 'center',
+                  fontFamily: '"IBM Plex Mono", monospace',
+                  fontSize: 13,
+                  border: '0.5px solid #00C48C',
+                  color: '#00C48C',
+                  padding: '12px 0',
+                  textDecoration: 'none',
+                  transition: 'opacity 0.15s',
+                }}
               >
                 Scan my site free →
               </Link>
-              <p className="font-ui-label text-[10px] text-center mt-2 text-ink-muted">
+              <p
+                style={{
+                  fontFamily: '"IBM Plex Mono", monospace',
+                  fontSize: 11,
+                  textAlign: 'center',
+                  marginTop: 8,
+                  color: '#6E7587',
+                }}
+              >
                 Free · No account required
               </p>
             </div>
           </div>
 
           <div className="landing-card-electric bg-background-raised border border-background-border p-8 flex flex-col">
-            <div className="font-ui-label text-xs mb-4" style={{ color: '#00C8FF' }}>
+            <div
+              style={{
+                fontFamily: '"IBM Plex Mono", monospace',
+                fontSize: 11,
+                textTransform: 'uppercase',
+                letterSpacing: '0.1em',
+                color: '#6E7587',
+                marginBottom: 16,
+              }}
+            >
               FOR AGENCIES
             </div>
             <p className="font-body text-sm leading-relaxed text-text-secondary flex-1">
@@ -299,18 +406,45 @@ export default function ProductPage() {
             <div className="mt-8">
               <Link
                 href="/pricing"
-                className="block text-center font-ui-label border border-[#00C8FF]/30 text-[#00C8FF] py-3 no-underline hover:border-[#00C8FF]/60 transition-colors duration-150"
+                style={{
+                  display: 'block',
+                  textAlign: 'center',
+                  fontFamily: '"IBM Plex Mono", monospace',
+                  fontSize: 13,
+                  border: '0.5px solid #00C48C',
+                  color: '#00C48C',
+                  padding: '12px 0',
+                  textDecoration: 'none',
+                  transition: 'opacity 0.15s',
+                }}
               >
                 See agency plans →
               </Link>
-              <p className="font-ui-label text-[10px] text-center mt-2 text-ink-muted">
+              <p
+                style={{
+                  fontFamily: '"IBM Plex Mono", monospace',
+                  fontSize: 11,
+                  textAlign: 'center',
+                  marginTop: 8,
+                  color: '#6E7587',
+                }}
+              >
                 From $149/mo · 14-day trial
               </p>
             </div>
           </div>
 
           <div className="landing-card-electric bg-background-raised border border-background-border p-8 flex flex-col">
-            <div className="font-ui-label text-xs mb-4" style={{ color: '#00C8FF' }}>
+            <div
+              style={{
+                fontFamily: '"IBM Plex Mono", monospace',
+                fontSize: 11,
+                textTransform: 'uppercase',
+                letterSpacing: '0.1em',
+                color: '#6E7587',
+                marginBottom: 16,
+              }}
+            >
               FOR DEVELOPERS
             </div>
             <p className="font-body text-sm leading-relaxed text-text-secondary flex-1">
@@ -320,11 +454,29 @@ export default function ProductPage() {
             <div className="mt-8">
               <Link
                 href="/developers"
-                className="block text-center font-ui-label border border-[#00C8FF]/30 text-[#00C8FF] py-3 no-underline hover:border-[#00C8FF]/60 transition-colors duration-150"
+                style={{
+                  display: 'block',
+                  textAlign: 'center',
+                  fontFamily: '"IBM Plex Mono", monospace',
+                  fontSize: 13,
+                  border: '0.5px solid #00C48C',
+                  color: '#00C48C',
+                  padding: '12px 0',
+                  textDecoration: 'none',
+                  transition: 'opacity 0.15s',
+                }}
               >
                 Get API key →
               </Link>
-              <p className="font-ui-label text-[10px] text-center mt-2 text-ink-muted">
+              <p
+                style={{
+                  fontFamily: '"IBM Plex Mono", monospace',
+                  fontSize: 11,
+                  textAlign: 'center',
+                  marginTop: 8,
+                  color: '#6E7587',
+                }}
+              >
                 $0.15/scan · No monthly fee
               </p>
             </div>
@@ -334,25 +486,72 @@ export default function ProductPage() {
       </section>
 
       {/* ── 6. Final CTA ──────────────────────────────────────────────────────── */}
-      <section className="bg-background-raised border-t border-background-border py-16 px-8 text-center">
+      <style>{`
+        @keyframes scan-cta-pulse {
+          0%, 100% { border-color: rgba(0,196,140,0.3); }
+          50% { border-color: rgba(0,196,140,0.8); }
+        }
+        @media (prefers-reduced-motion: no-preference) {
+          .scan-cta-pulse { animation: scan-cta-pulse 2s infinite; }
+        }
+      `}</style>
+      <section
+        style={{
+          backgroundColor: '#0A0E18',
+          borderTop: '0.5px solid rgba(255,255,255,0.07)',
+          padding: '64px 32px',
+          textAlign: 'center',
+        }}
+      >
         <h2
-          className="section-headline text-3xl mb-4 mx-auto"
-          style={{ letterSpacing: '-0.5px' }}
+          className="font-score"
+          style={{
+            fontSize: 'clamp(28px, 4vw, 40px)',
+            fontWeight: 700,
+            letterSpacing: '-0.5px',
+            color: '#E6E9EE',
+            marginBottom: 16,
+          }}
         >
           See it run on your site.
         </h2>
-        <p className="section-subhead mb-8 mx-auto" style={{ fontSize: 16, maxWidth: 420 }}>
+        <p
+          style={{
+            fontFamily: '"IBM Plex Sans", sans-serif',
+            fontSize: 16,
+            color: '#9398A8',
+            maxWidth: 420,
+            margin: '0 auto 32px',
+          }}
+        >
           Free scan. No account required. Results in 90 seconds.
         </p>
         <Link
           href="/scan"
-          className="landing-cta-button-pulse inline-block font-ui-label py-4 px-8 no-underline hover:opacity-90 transition-opacity duration-150"
-          style={{ backgroundColor: '#00C8FF', color: '#050810' }}
+          className="scan-cta-pulse"
+          style={{
+            display: 'inline-block',
+            fontFamily: '"IBM Plex Mono", monospace',
+            fontSize: 13,
+            backgroundColor: '#00C48C',
+            color: '#050810',
+            padding: '13px 28px',
+            textDecoration: 'none',
+            border: '2px solid rgba(0,196,140,0.3)',
+            transition: 'opacity 0.15s',
+          }}
         >
-          Scan my site →
+          SCAN MY SITE →
         </Link>
-        <p className="font-ui-label mt-4 text-ink-muted" style={{ fontSize: 10 }}>
-          307 checks · ~90 seconds · no account required
+        <p
+          style={{
+            fontFamily: '"IBM Plex Mono", monospace',
+            fontSize: 11,
+            color: '#6E7587',
+            marginTop: 16,
+          }}
+        >
+          307 CHECKS · ~90 SECONDS · NO ACCOUNT REQUIRED
         </p>
       </section>
 

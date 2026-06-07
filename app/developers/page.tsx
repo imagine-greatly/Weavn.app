@@ -2,15 +2,16 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { CodeBlock } from '@/components/ui/CodeBlock'
 
 // ── Data ──────────────────────────────────────────────────────────────────────
 
 const RATE_POINTS = [
-  { label: 'Playground', price: '$0.25' },
-  { label: 'Dev', price: '$0.19' },
-  { label: 'Builder', price: '$0.17' },
-  { label: 'Scale', price: '$0.15' },
-  { label: 'Enterprise', price: '$0.11' },
+  { label: 'Playground', price: '$0.25', color: '#EFB23E' },
+  { label: 'Dev', price: '$0.19', color: '#EFB23E' },
+  { label: 'Builder', price: '$0.17', color: '#6F9BC6' },
+  { label: 'Scale', price: '$0.15', color: '#00C48C' },
+  { label: 'Enterprise', price: '$0.11', color: '#00C48C' },
 ]
 
 const KEY_FACTS = [
@@ -40,35 +41,58 @@ const FAQS = [
   {
     q: 'How does caching work?',
     a: 'If you scan the same URL within 24 hours of a previous scan, the cached result is returned instantly at zero cost — no scan credit consumed. Cache is invalidated when we detect meaningful page changes via content fingerprinting.',
+    accent: '#6F9BC6',
   },
   {
     q: "What's the difference between sync and async mode?",
     a: 'Sync mode (default) holds the HTTP connection open and returns the full JSON response when the scan completes — typically 87–142 seconds. Async mode accepts the request immediately (202), runs the scan in the background, and POSTs the result to your webhook endpoint when ready.',
+    accent: '#8080C0',
   },
   {
     q: 'Can I mix brief and full scans in the same plan?',
     a: 'Yes. Brief scans (summary-only, no full finding detail) are available on all plans and consume the same scan credit as a full scan but return faster. Field selection lets you request only the response fields you need.',
+    accent: '#6F9BC6',
   },
   {
     q: 'What happens if a site blocks the scanner?',
     a: 'The scanner returns a structured error with code BOT_BLOCKED. This does not consume a scan credit. We use Browserless Pro with stealth mode — most sites scan successfully, but Cloudflare Enterprise sites may block.',
+    accent: '#6F9BC6',
   },
   {
     q: 'Is there an uptime SLA?',
     a: 'Enterprise plans include a written SLA. All other plans target 99.5% uptime with no formal guarantee. Status updates at status.webdocai.com.',
+    accent: '#00C48C',
   },
 ]
 
-// ── Sub-components ────────────────────────────────────────────────────────────
+const CURL_CODE = `curl -X POST https://webdocai.com/api/v1/scan \\
+  -H "Authorization: Bearer wdoc_live_••••" \\
+  -H "Content-Type: application/json" \\
+  -d '{"url": "https://your-site.com"}'`
+
+// ── Sub-components ─────────────────────────────────────────────────────────────
 
 function Bullet({ text }: { text: string }) {
   return (
-    <li className="flex items-start gap-2.5 mb-2">
+    <li style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 8, listStyle: 'none' }}>
       <span
-        className="flex-shrink-0 rounded-full mt-[7px]"
-        style={{ width: 4, height: 4, backgroundColor: '#3A3A52' }}
+        style={{
+          flexShrink: 0,
+          width: 5,
+          height: 5,
+          backgroundColor: '#00C48C',
+          marginTop: 7,
+          display: 'block',
+        }}
       />
-      <span style={{ fontFamily: 'var(--font-stack-sans)', fontSize: 13, lineHeight: 1.65, color: '#8E8EA0' }}>
+      <span
+        style={{
+          fontFamily: '"IBM Plex Sans", sans-serif',
+          fontSize: 14,
+          lineHeight: 1.65,
+          color: '#9398A8',
+        }}
+      >
         {text}
       </span>
     </li>
@@ -81,80 +105,175 @@ export default function DevelopersPage() {
   const [openFaq, setOpenFaq] = useState<number | null>(null)
 
   return (
-    <main className="bg-background-base min-h-screen">
+    <main style={{ backgroundColor: '#050810', minHeight: '100vh' }}>
 
-      {/* ── 1. Hero band ─────────────────────────────────────────────────────── */}
-      <section className="pt-24 pb-12 max-w-4xl mx-auto px-8 text-center">
-        <div className="section-label mb-4">API PRICING</div>
+      {/* ── 1. Hero band ──────────────────────────────────────────────────────── */}
+      <section
+        style={{
+          padding: '96px 32px 48px',
+          maxWidth: 896,
+          margin: '0 auto',
+          textAlign: 'center',
+        }}
+      >
+        <div
+          style={{
+            fontFamily: '"IBM Plex Mono", monospace',
+            fontSize: 11,
+            textTransform: 'uppercase',
+            letterSpacing: '0.2em',
+            color: '#6F9BC6',
+            marginBottom: 16,
+          }}
+        >
+          API PRICING
+        </div>
         <h1
-          className="section-headline mb-4"
-          style={{ fontSize: 'clamp(36px, 5vw, 56px)', letterSpacing: '-1.5px' }}
+          className="font-score"
+          style={{
+            fontSize: 'clamp(36px, 5vw, 56px)',
+            fontWeight: 700,
+            letterSpacing: '-1.5px',
+            color: '#E6E9EE',
+            margin: '0 0 16px',
+          }}
         >
           Conversion intelligence. Per scan.
         </h1>
-        <p className="section-subhead max-w-2xl mx-auto mb-8">
+        <p
+          style={{
+            fontFamily: '"IBM Plex Sans", sans-serif',
+            fontSize: 16,
+            lineHeight: 1.6,
+            color: '#9398A8',
+            maxWidth: 672,
+            margin: '0 auto 32px',
+          }}
+        >
           POST a URL. Get structured JSON. 307 checks across 27 categories. No dashboard required.
         </p>
 
-        {/* Terminal curl block */}
-        <div className="bg-background-subtle border border-background-border p-4 max-w-2xl mx-auto text-left">
-          <pre className="font-mono text-sm m-0 leading-relaxed whitespace-pre-wrap">
-            <span style={{ color: '#00C8FF' }}>curl</span>
-            <span style={{ color: '#8E8EA0' }}>{' -X POST '}</span>
-            <span style={{ color: '#00C8FF' }}>https://webdocai.com/api/v1/scan</span>
-            <span style={{ color: '#8E8EA0' }}>{' \\\n  -H "Authorization: Bearer '}</span>
-            <span style={{ color: '#00C8FF' }}>wdoc_live_••••</span>
-            <span style={{ color: '#8E8EA0' }}>{'" \\\n  -H "Content-Type: application/json" \\\n  -d \'{"url": "'}</span>
-            <span style={{ color: '#00C8FF' }}>https://your-site.com</span>
-            <span style={{ color: '#8E8EA0' }}>{"\"}'"}  </span>
-          </pre>
+        <div style={{ maxWidth: 672, margin: '0 auto' }}>
+          <CodeBlock code={CURL_CODE} language="bash" />
         </div>
       </section>
 
-      {/* ── 2. Rate gradient bar ─────────────────────────────────────────────── */}
+      {/* ── 2. Rate gradient bar ──────────────────────────────────────────────── */}
       <section
-        className="bg-background-subtle py-10 px-8"
-        style={{ borderTop: '1px solid var(--border-default)', borderBottom: '1px solid var(--border-default)' }}
+        style={{
+          backgroundColor: '#0A0E18',
+          borderTop: '0.5px solid rgba(255,255,255,0.07)',
+          borderBottom: '0.5px solid rgba(255,255,255,0.07)',
+          padding: '40px 32px',
+        }}
       >
-        <div className="max-w-3xl mx-auto">
-          <div className="section-label text-center mb-6">PER-SCAN RATE</div>
+        <div style={{ maxWidth: 768, margin: '0 auto' }}>
+          <div
+            style={{
+              fontFamily: '"IBM Plex Mono", monospace',
+              fontSize: 11,
+              textTransform: 'uppercase',
+              letterSpacing: '0.2em',
+              color: '#6E7587',
+              textAlign: 'center',
+              marginBottom: 24,
+            }}
+          >
+            PER-SCAN RATE
+          </div>
 
           {/* Gradient bar */}
           <div
-            className="w-full rounded-full"
             style={{
               height: 8,
-              background: 'linear-gradient(to right, #FF8C00, #F5A623, #00C8FF, #00C48C)',
+              background: 'linear-gradient(to right, #EFB23E, #6F9BC6, #00C48C)',
             }}
           />
 
-          {/* 5 labeled tick points */}
-          <div className="flex justify-between">
+          {/* Tick points */}
+          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
             {RATE_POINTS.map((point, i) => (
-              <div key={i} className="flex flex-col items-center">
-                <div style={{ width: 1, height: 12, backgroundColor: '#3A3A52' }} />
-                <div className="font-ui-label text-text-secondary mt-1">{point.label}</div>
-                <div className="font-mono text-sm mt-0.5" style={{ color: '#00C8FF' }}>{point.price}</div>
+              <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                <div style={{ width: '0.5px', height: 12, backgroundColor: 'rgba(255,255,255,0.2)' }} />
+                <div
+                  style={{
+                    fontFamily: '"IBM Plex Mono", monospace',
+                    fontSize: 11,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.1em',
+                    color: '#6E7587',
+                    marginTop: 4,
+                  }}
+                >
+                  {point.label}
+                </div>
+                <div
+                  className="font-score"
+                  style={{ fontSize: 14, fontWeight: 500, color: point.color, marginTop: 2 }}
+                >
+                  {point.price}
+                </div>
               </div>
             ))}
           </div>
 
-          <p className="font-mono text-sm text-center mt-6" style={{ color: '#3A3A52' }}>
+          <p
+            style={{
+              fontFamily: '"IBM Plex Mono", monospace',
+              fontSize: 12,
+              textAlign: 'center',
+              marginTop: 24,
+              color: '#6E7587',
+            }}
+          >
             Cache hits are never billed — at any tier.
           </p>
         </div>
       </section>
 
-      {/* ── 3. Five plan cards ───────────────────────────────────────────────── */}
-      <section id="pricing" className="max-w-7xl mx-auto px-8 py-20">
+      {/* ── 3. Five plan cards ────────────────────────────────────────────────── */}
+      <section id="pricing" style={{ maxWidth: 1280, margin: '0 auto', padding: '80px 32px' }}>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
 
           {/* PLAYGROUND */}
-          <div className="landing-card-electric border border-background-border bg-background-subtle p-6 flex flex-col">
-            <div className="font-ui-label text-text-secondary mb-4">PLAYGROUND</div>
-            <div className="font-score text-4xl text-text-primary mb-1">25 free</div>
-            <div className="font-mono text-xs text-text-secondary mb-6">then $0.25/scan</div>
-            <ul className="list-none p-0 m-0 flex-1">
+          <div
+            style={{
+              backgroundColor: '#0A0E18',
+              border: '0.5px solid rgba(255,255,255,0.07)',
+              padding: '24px',
+              display: 'flex',
+              flexDirection: 'column',
+            }}
+          >
+            <div
+              style={{
+                fontFamily: '"IBM Plex Mono", monospace',
+                fontSize: 11,
+                textTransform: 'uppercase',
+                letterSpacing: '0.15em',
+                color: '#6E7587',
+                marginBottom: 16,
+              }}
+            >
+              PLAYGROUND
+            </div>
+            <div
+              className="font-score"
+              style={{ fontSize: 40, fontWeight: 700, color: '#E6E9EE', lineHeight: 1, marginBottom: 4 }}
+            >
+              25 free
+            </div>
+            <div
+              style={{
+                fontFamily: '"IBM Plex Sans", sans-serif',
+                fontSize: 14,
+                color: '#8E8EA0',
+                marginBottom: 24,
+              }}
+            >
+              then $0.25/scan
+            </div>
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0, flex: 1 }}>
               <Bullet text="25 free scans" />
               <Bullet text="Full JSON response" />
               <Bullet text="No monthly fee" />
@@ -162,18 +281,62 @@ export default function DevelopersPage() {
             </ul>
             <Link
               href="/developer"
-              className="block text-center font-ui-label text-text-secondary py-3 mt-6 no-underline hover:text-text-primary transition-colors duration-150"
+              style={{
+                display: 'block',
+                textAlign: 'center',
+                fontFamily: '"IBM Plex Mono", monospace',
+                fontSize: 13,
+                color: '#9398A8',
+                border: '0.5px solid #6E7587',
+                padding: '12px 0',
+                marginTop: 24,
+                textDecoration: 'none',
+                transition: 'color 0.15s',
+              }}
             >
-              Get API key →
+              GET API KEY →
             </Link>
           </div>
 
           {/* DEV */}
-          <div className="landing-card-electric border border-background-border bg-background-subtle p-6 flex flex-col">
-            <div className="font-ui-label text-text-secondary mb-4">DEV</div>
-            <div className="font-score text-4xl text-text-primary mb-1">$29</div>
-            <div className="font-mono text-xs text-text-secondary mb-6">/mo</div>
-            <ul className="list-none p-0 m-0 flex-1">
+          <div
+            style={{
+              backgroundColor: '#0A0E18',
+              border: '0.5px solid rgba(255,255,255,0.07)',
+              padding: '24px',
+              display: 'flex',
+              flexDirection: 'column',
+            }}
+          >
+            <div
+              style={{
+                fontFamily: '"IBM Plex Mono", monospace',
+                fontSize: 11,
+                textTransform: 'uppercase',
+                letterSpacing: '0.15em',
+                color: '#6E7587',
+                marginBottom: 16,
+              }}
+            >
+              DEV
+            </div>
+            <div
+              className="font-score"
+              style={{ fontSize: 40, fontWeight: 700, color: '#E6E9EE', lineHeight: 1, marginBottom: 4 }}
+            >
+              $29
+            </div>
+            <div
+              style={{
+                fontFamily: '"IBM Plex Sans", sans-serif',
+                fontSize: 14,
+                color: '#8E8EA0',
+                marginBottom: 24,
+              }}
+            >
+              /mo
+            </div>
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0, flex: 1 }}>
               <Bullet text="300 scans/month" />
               <Bullet text="$0.19/scan overage" />
               <Bullet text="Webhook support" />
@@ -182,24 +345,62 @@ export default function DevelopersPage() {
             </ul>
             <Link
               href="/signup?plan=dev-api"
-              className="block text-center font-ui-label border border-[#00C8FF]/30 text-[#00C8FF] py-3 mt-6 no-underline hover:border-[#00C8FF]/60 transition-colors duration-150"
+              style={{
+                display: 'block',
+                textAlign: 'center',
+                fontFamily: '"IBM Plex Mono", monospace',
+                fontSize: 13,
+                color: '#6F9BC6',
+                border: '0.5px solid #6F9BC6',
+                padding: '12px 0',
+                marginTop: 24,
+                textDecoration: 'none',
+                transition: 'opacity 0.15s',
+              }}
             >
-              Start Dev plan →
+              START DEV PLAN →
             </Link>
           </div>
 
-          {/* BUILDER — elevated / best value */}
-          <div className="landing-card-electric relative border border-[#00C8FF]/30 bg-background-interactive glow-ambient p-6 flex flex-col mt-3 lg:mt-0">
+          {/* BUILDER */}
+          <div
+            style={{
+              backgroundColor: '#0A0E18',
+              border: '0.5px solid rgba(255,255,255,0.07)',
+              padding: '24px',
+              display: 'flex',
+              flexDirection: 'column',
+            }}
+          >
             <div
-              className="absolute font-ui-label px-3 py-1 whitespace-nowrap"
-              style={{ top: -12, left: '50%', transform: 'translateX(-50%)', backgroundColor: '#00C8FF', color: '#050810' }}
+              style={{
+                fontFamily: '"IBM Plex Mono", monospace',
+                fontSize: 11,
+                textTransform: 'uppercase',
+                letterSpacing: '0.15em',
+                color: '#6E7587',
+                marginBottom: 16,
+              }}
             >
-              BEST VALUE
+              BUILDER
             </div>
-            <div className="font-ui-label mb-4" style={{ color: '#00C8FF' }}>BUILDER</div>
-            <div className="font-score text-4xl text-text-primary mb-1">$99</div>
-            <div className="font-mono text-xs text-text-secondary mb-6">/mo</div>
-            <ul className="list-none p-0 m-0 flex-1">
+            <div
+              className="font-score"
+              style={{ fontSize: 40, fontWeight: 700, color: '#E6E9EE', lineHeight: 1, marginBottom: 4 }}
+            >
+              $99
+            </div>
+            <div
+              style={{
+                fontFamily: '"IBM Plex Sans", sans-serif',
+                fontSize: 14,
+                color: '#8E8EA0',
+                marginBottom: 24,
+              }}
+            >
+              /mo
+            </div>
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0, flex: 1 }}>
               <Bullet text="1,000 scans/month" />
               <Bullet text="$0.17/scan overage" />
               <Bullet text="Batch endpoint (10 URLs)" />
@@ -208,19 +409,62 @@ export default function DevelopersPage() {
             </ul>
             <Link
               href="/signup?plan=builder-api"
-              className="block text-center font-ui-label py-3 mt-6 no-underline hover:opacity-90 transition-opacity duration-150"
-              style={{ backgroundColor: '#00C8FF', color: '#050810' }}
+              style={{
+                display: 'block',
+                textAlign: 'center',
+                fontFamily: '"IBM Plex Mono", monospace',
+                fontSize: 13,
+                color: '#050810',
+                backgroundColor: '#00C48C',
+                padding: '12px 0',
+                marginTop: 24,
+                textDecoration: 'none',
+                transition: 'opacity 0.15s',
+              }}
             >
-              Start Builder plan →
+              START BUILDER PLAN →
             </Link>
           </div>
 
           {/* SCALE */}
-          <div className="landing-card-electric border border-background-border bg-background-subtle p-6 flex flex-col">
-            <div className="font-ui-label text-text-secondary mb-4">SCALE</div>
-            <div className="font-score text-4xl text-text-primary mb-1">$249</div>
-            <div className="font-mono text-xs text-text-secondary mb-6">/mo</div>
-            <ul className="list-none p-0 m-0 flex-1">
+          <div
+            style={{
+              backgroundColor: '#0A0E18',
+              border: '0.5px solid rgba(255,255,255,0.07)',
+              padding: '24px',
+              display: 'flex',
+              flexDirection: 'column',
+            }}
+          >
+            <div
+              style={{
+                fontFamily: '"IBM Plex Mono", monospace',
+                fontSize: 11,
+                textTransform: 'uppercase',
+                letterSpacing: '0.15em',
+                color: '#6E7587',
+                marginBottom: 16,
+              }}
+            >
+              SCALE
+            </div>
+            <div
+              className="font-score"
+              style={{ fontSize: 40, fontWeight: 700, color: '#E6E9EE', lineHeight: 1, marginBottom: 4 }}
+            >
+              $249
+            </div>
+            <div
+              style={{
+                fontFamily: '"IBM Plex Sans", sans-serif',
+                fontSize: 14,
+                color: '#8E8EA0',
+                marginBottom: 24,
+              }}
+            >
+              /mo
+            </div>
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0, flex: 1 }}>
               <Bullet text="3,000 scans/month" />
               <Bullet text="$0.15/scan overage" />
               <Bullet text="All batch + async features" />
@@ -229,18 +473,62 @@ export default function DevelopersPage() {
             </ul>
             <Link
               href="/signup?plan=scale-api"
-              className="block text-center font-ui-label border border-[#00C8FF]/30 text-[#00C8FF] py-3 mt-6 no-underline hover:border-[#00C8FF]/60 transition-colors duration-150"
+              style={{
+                display: 'block',
+                textAlign: 'center',
+                fontFamily: '"IBM Plex Mono", monospace',
+                fontSize: 13,
+                color: '#6F9BC6',
+                border: '0.5px solid #6F9BC6',
+                padding: '12px 0',
+                marginTop: 24,
+                textDecoration: 'none',
+                transition: 'opacity 0.15s',
+              }}
             >
-              Start Scale plan →
+              START SCALE PLAN →
             </Link>
           </div>
 
           {/* ENTERPRISE */}
-          <div className="landing-card-electric border border-background-border bg-background-subtle p-6 flex flex-col">
-            <div className="font-ui-label text-text-secondary mb-4">ENTERPRISE</div>
-            <div className="font-score text-4xl text-text-secondary mb-1">Custom</div>
-            <div className="font-mono text-xs text-text-secondary mb-6">&nbsp;</div>
-            <ul className="list-none p-0 m-0 flex-1">
+          <div
+            style={{
+              backgroundColor: '#0A0E18',
+              border: '0.5px solid rgba(255,255,255,0.07)',
+              padding: '24px',
+              display: 'flex',
+              flexDirection: 'column',
+            }}
+          >
+            <div
+              style={{
+                fontFamily: '"IBM Plex Mono", monospace',
+                fontSize: 11,
+                textTransform: 'uppercase',
+                letterSpacing: '0.15em',
+                color: '#6E7587',
+                marginBottom: 16,
+              }}
+            >
+              ENTERPRISE
+            </div>
+            <div
+              className="font-score"
+              style={{ fontSize: 40, fontWeight: 700, color: '#E6E9EE', lineHeight: 1, marginBottom: 4 }}
+            >
+              Custom
+            </div>
+            <div
+              style={{
+                fontFamily: '"IBM Plex Sans", sans-serif',
+                fontSize: 14,
+                color: '#8E8EA0',
+                marginBottom: 24,
+              }}
+            >
+              &nbsp;
+            </div>
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0, flex: 1 }}>
               <Bullet text="Volume pricing from $0.11/scan" />
               <Bullet text="SLA guarantee" />
               <Bullet text="Custom rate limits" />
@@ -249,90 +537,320 @@ export default function DevelopersPage() {
             </ul>
             <Link
               href="mailto:hello@webdocai.com"
-              className="block text-center font-ui-label text-text-secondary py-3 mt-6 no-underline hover:text-text-primary transition-colors duration-150"
+              style={{
+                display: 'block',
+                textAlign: 'center',
+                fontFamily: '"IBM Plex Mono", monospace',
+                fontSize: 13,
+                color: '#9398A8',
+                border: '0.5px solid #6E7587',
+                padding: '12px 0',
+                marginTop: 24,
+                textDecoration: 'none',
+                transition: 'color 0.15s',
+              }}
             >
-              Talk to us →
+              TALK TO US →
             </Link>
           </div>
 
         </div>
       </section>
 
-      {/* ── 4. Key facts grid ────────────────────────────────────────────────── */}
-      <section className="max-w-7xl mx-auto px-8 pb-16">
-        <div className="section-label text-center mb-8">{"WHAT'S INCLUDED"}</div>
+      {/* ── 4. What's included ────────────────────────────────────────────────── */}
+      <section style={{ maxWidth: 1280, margin: '0 auto', padding: '0 32px 64px' }}>
+        <div
+          style={{
+            fontFamily: '"IBM Plex Mono", monospace',
+            fontSize: 11,
+            textTransform: 'uppercase',
+            letterSpacing: '0.2em',
+            color: '#6E7587',
+            textAlign: 'center',
+            marginBottom: 32,
+          }}
+        >
+          {"WHAT'S INCLUDED"}
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {KEY_FACTS.map(fact => (
+
+          {/* Cache Policy */}
+          <div
+            style={{
+              backgroundColor: '#0A0E18',
+              border: '0.5px solid rgba(255,255,255,0.07)',
+              padding: '20px 22px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 8,
+            }}
+          >
             <div
-              key={fact.name}
-              className="border border-background-border bg-background-subtle p-6"
+              style={{
+                fontFamily: '"IBM Plex Mono", monospace',
+                fontSize: 11,
+                textTransform: 'uppercase',
+                letterSpacing: '0.15em',
+                color: '#6F9BC6',
+              }}
             >
-              <div className="font-ui-label text-text-secondary mb-3">{fact.name}</div>
-              <p
-                className="font-body text-text-primary mb-2"
-                style={{ fontFamily: 'var(--font-stack-sans)', fontSize: 15, fontWeight: 500, color: 'var(--text-primary)', lineHeight: 1.4 }}
-              >
-                {fact.value}
-              </p>
-              <p
-                className="text-text-secondary"
-                style={{ fontFamily: 'var(--font-stack-sans)', fontSize: 13, lineHeight: 1.65 }}
-              >
-                {fact.detail}
-              </p>
+              CACHE POLICY
             </div>
-          ))}
+            <p className="font-score" style={{ fontSize: 17, fontWeight: 600, color: '#E6E9EE', margin: 0 }}>
+              {KEY_FACTS[0].value}
+            </p>
+            <p style={{ fontFamily: '"IBM Plex Sans", sans-serif', fontSize: 14, lineHeight: 1.6, color: '#9398A8', margin: 0 }}>
+              {KEY_FACTS[0].detail}
+            </p>
+            <p style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, color: '#00C48C', margin: 0, marginTop: 8 }}>
+              cache_hit: true · cost_usd: 0.00
+            </p>
+          </div>
+
+          {/* Async Mode */}
+          <div
+            style={{
+              backgroundColor: '#0A0E18',
+              border: '0.5px solid rgba(255,255,255,0.07)',
+              padding: '20px 22px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 8,
+            }}
+          >
+            <div
+              style={{
+                fontFamily: '"IBM Plex Mono", monospace',
+                fontSize: 11,
+                textTransform: 'uppercase',
+                letterSpacing: '0.15em',
+                color: '#6F9BC6',
+              }}
+            >
+              ASYNC MODE
+            </div>
+            <p className="font-score" style={{ fontSize: 17, fontWeight: 600, color: '#E6E9EE', margin: 0 }}>
+              {KEY_FACTS[1].value}
+            </p>
+            <p style={{ fontFamily: '"IBM Plex Sans", sans-serif', fontSize: 14, lineHeight: 1.6, color: '#9398A8', margin: 0 }}>
+              {KEY_FACTS[1].detail}
+            </p>
+            <p style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, margin: 0, marginTop: 8 }}>
+              <span style={{ color: '#8080C0' }}>async</span>
+              <span style={{ color: '#9398A8' }}>: </span>
+              <span style={{ color: '#00C48C' }}>true</span>
+              <span style={{ color: '#9398A8' }}> · </span>
+              <span style={{ color: '#8080C0' }}>webhook_url</span>
+              <span style={{ color: '#9398A8' }}>: </span>
+              <span style={{ color: '#00C48C' }}>your-endpoint</span>
+            </p>
+          </div>
+
+          {/* Batch Endpoint */}
+          <div
+            style={{
+              backgroundColor: '#0A0E18',
+              border: '0.5px solid rgba(255,255,255,0.07)',
+              padding: '20px 22px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 8,
+            }}
+          >
+            <div
+              style={{
+                fontFamily: '"IBM Plex Mono", monospace',
+                fontSize: 11,
+                textTransform: 'uppercase',
+                letterSpacing: '0.15em',
+                color: '#6F9BC6',
+              }}
+            >
+              BATCH ENDPOINT
+            </div>
+            <p className="font-score" style={{ fontSize: 17, fontWeight: 600, color: '#E6E9EE', margin: 0 }}>
+              {KEY_FACTS[2].value}
+            </p>
+            <p style={{ fontFamily: '"IBM Plex Sans", sans-serif', fontSize: 14, lineHeight: 1.6, color: '#9398A8', margin: 0 }}>
+              {KEY_FACTS[2].detail}
+            </p>
+            <p style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, color: '#6F9BC6', margin: 0, marginTop: 8 }}>
+              POST /api/v1/scan/batch · up to 10 URLs
+            </p>
+          </div>
+
+          {/* Response Time */}
+          <div
+            style={{
+              backgroundColor: '#0A0E18',
+              border: '0.5px solid rgba(255,255,255,0.07)',
+              padding: '20px 22px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 8,
+            }}
+          >
+            <div
+              style={{
+                fontFamily: '"IBM Plex Mono", monospace',
+                fontSize: 11,
+                textTransform: 'uppercase',
+                letterSpacing: '0.15em',
+                color: '#6F9BC6',
+              }}
+            >
+              RESPONSE TIME
+            </div>
+            <p className="font-score" style={{ fontSize: 17, fontWeight: 600, color: '#E6E9EE', margin: 0 }}>
+              {KEY_FACTS[3].value}
+            </p>
+            <p style={{ fontFamily: '"IBM Plex Sans", sans-serif', fontSize: 14, lineHeight: 1.6, color: '#9398A8', margin: 0 }}>
+              {KEY_FACTS[3].detail}
+            </p>
+            <p style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, margin: 0, marginTop: 8 }}>
+              <span style={{ color: '#8080C0' }}>p50</span>
+              <span style={{ color: '#9398A8' }}>: </span>
+              <span style={{ color: '#6F9BC6' }}>87s</span>
+              <span style={{ color: '#9398A8' }}> · </span>
+              <span style={{ color: '#8080C0' }}>p95</span>
+              <span style={{ color: '#9398A8' }}>: </span>
+              <span style={{ color: '#6F9BC6' }}>142s</span>
+            </p>
+          </div>
+
         </div>
       </section>
 
-      {/* ── 5. Two CTA buttons ───────────────────────────────────────────────── */}
-      <section className="py-16 text-center">
-        <div className="flex items-center justify-center gap-4 flex-wrap">
+      {/* ── 5. CTA pair ───────────────────────────────────────────────────────── */}
+      <section style={{ padding: '64px 32px', textAlign: 'center' }}>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 16,
+            flexWrap: 'wrap',
+          }}
+        >
           <Link
             href="/playground"
-            className="font-ui-label border border-[#00C8FF]/30 text-[#00C8FF] px-6 py-3 no-underline hover:border-[#00C8FF]/60 transition-colors duration-150"
+            style={{
+              fontFamily: '"IBM Plex Mono", monospace',
+              fontSize: 13,
+              backgroundColor: '#00C48C',
+              color: '#050810',
+              padding: '13px 28px',
+              textDecoration: 'none',
+              display: 'inline-block',
+              transition: 'opacity 0.15s',
+            }}
           >
-            Try the playground →
+            TRY THE PLAYGROUND →
           </Link>
           <Link
             href="/docs/api"
-            className="font-ui-label text-text-secondary px-6 py-3 no-underline hover:text-text-primary transition-colors duration-150"
+            style={{
+              fontFamily: '"IBM Plex Mono", monospace',
+              fontSize: 13,
+              border: '0.5px solid #6E7587',
+              color: '#9398A8',
+              padding: '13px 28px',
+              textDecoration: 'none',
+              display: 'inline-block',
+              transition: 'color 0.15s, border-color 0.15s',
+            }}
           >
-            Read the docs →
+            READ THE DOCS →
           </Link>
         </div>
-        <p className="font-mono text-xs mt-4" style={{ color: '#3A3A52' }}>
+        <p
+          style={{
+            fontFamily: '"IBM Plex Mono", monospace',
+            fontSize: 11,
+            color: '#6E7587',
+            marginTop: 16,
+          }}
+        >
           No credit card required to start.
         </p>
       </section>
 
-      {/* ── 6. FAQ accordion ─────────────────────────────────────────────────── */}
-      <section className="max-w-3xl mx-auto px-8 pb-16">
-        <div className="section-label text-center mb-12">DEVELOPER FAQ</div>
+      {/* ── 6. FAQ accordion ──────────────────────────────────────────────────── */}
+      <section style={{ maxWidth: 768, margin: '0 auto', padding: '0 32px 64px' }}>
+        <div
+          style={{
+            fontFamily: '"IBM Plex Mono", monospace',
+            fontSize: 11,
+            textTransform: 'uppercase',
+            letterSpacing: '0.2em',
+            color: '#6E7587',
+            textAlign: 'center',
+            marginBottom: 48,
+          }}
+        >
+          DEVELOPER FAQ
+        </div>
 
         {FAQS.map((faq, i) => (
-          <div key={i} className="border-b" style={{ borderColor: 'var(--border-default)' }}>
+          <div
+            key={i}
+            style={{
+              borderBottom: '0.5px solid rgba(255,255,255,0.06)',
+              borderLeft: `3px solid ${faq.accent}`,
+              backgroundColor: openFaq === i ? '#0A0E18' : 'transparent',
+              paddingLeft: 16,
+              transition: 'background-color 0.2s',
+            }}
+          >
             <button
               onClick={() => setOpenFaq(openFaq === i ? null : i)}
-              className="w-full flex justify-between items-center py-4 cursor-pointer bg-transparent border-0 text-left gap-4"
+              style={{
+                width: '100%',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                padding: '16px 0',
+                cursor: 'pointer',
+                backgroundColor: 'transparent',
+                border: 'none',
+                textAlign: 'left',
+                gap: 16,
+              }}
             >
               <span
-                className="font-body font-semibold"
-                style={{ fontSize: 15, color: 'var(--text-primary)' }}
+                style={{
+                  fontFamily: '"IBM Plex Sans", sans-serif',
+                  fontSize: 16,
+                  fontWeight: 500,
+                  color: '#E6E9EE',
+                }}
               >
                 {faq.q}
               </span>
               <span
-                className="flex-shrink-0 text-text-secondary transition-transform duration-200"
-                style={{ display: 'inline-block', transform: openFaq === i ? 'rotate(180deg)' : 'rotate(0deg)' }}
+                style={{
+                  flexShrink: 0,
+                  color: '#6E7587',
+                  display: 'inline-block',
+                  transform: openFaq === i ? 'rotate(180deg)' : 'rotate(0deg)',
+                  transition: 'transform 0.2s',
+                  fontSize: 16,
+                  lineHeight: 1,
+                }}
               >
                 ▾
               </span>
             </button>
             {openFaq === i && (
               <p
-                className="pb-4 leading-relaxed"
-                style={{ fontFamily: 'var(--font-stack-sans)', fontSize: 14, color: '#8E8EA0' }}
+                style={{
+                  fontFamily: '"IBM Plex Sans", sans-serif',
+                  fontSize: 14,
+                  color: '#9398A8',
+                  lineHeight: 1.65,
+                  paddingBottom: 16,
+                  margin: 0,
+                }}
               >
                 {faq.a}
               </p>
@@ -341,18 +859,24 @@ export default function DevelopersPage() {
         ))}
       </section>
 
-      {/* ── 7. Footer routing band ───────────────────────────────────────────── */}
+      {/* ── 7. Footer routing band ────────────────────────────────────────────── */}
       <div
-        className="border-t py-6 text-center"
-        style={{ borderColor: 'var(--border-default)' }}
+        style={{
+          borderTop: '0.5px solid rgba(255,255,255,0.07)',
+          padding: '24px 0',
+          textAlign: 'center',
+        }}
       >
-        <p className="font-body text-sm" style={{ color: '#3A3A52' }}>
+        <p
+          style={{
+            fontFamily: '"IBM Plex Sans", sans-serif',
+            fontSize: 14,
+            color: '#9398A8',
+            margin: 0,
+          }}
+        >
           Need a dashboard?{' '}
-          <Link
-            href="/pricing"
-            className="no-underline hover:opacity-80 transition-opacity"
-            style={{ color: '#00C8FF' }}
-          >
+          <Link href="/pricing" style={{ color: '#00C48C', textDecoration: 'none' }}>
             See agency plans →
           </Link>
         </p>

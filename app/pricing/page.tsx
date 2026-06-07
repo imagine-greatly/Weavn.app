@@ -29,26 +29,32 @@ const FAQS = [
   {
     q: 'What counts as a scan?',
     a: 'Each URL you submit counts as one scan. Rescanning the same URL counts as a new scan. Cache hits within 24 hours of an identical scan are free and do not consume your monthly allowance.',
+    accent: '#6F9BC6',
   },
   {
     q: 'Can I upgrade or downgrade anytime?',
     a: 'Yes. Plan changes take effect immediately. Upgrades are prorated. Downgrades take effect at the next billing cycle.',
+    accent: '#00C48C',
   },
   {
     q: 'What are the 100 bundled API calls on Agency?',
     a: 'The Agency plan includes 100 API calls per month that can be used programmatically via the API — useful for automating client scans or integrating webdoc into your own workflow. Additional API calls beyond 100 are billed at $0.19/scan.',
+    accent: '#6F9BC6',
   },
   {
     q: 'Is there a free trial on paid plans?',
     a: 'Yes — Starter and Agency both include a 14-day free trial. No credit card required to start.',
+    accent: '#00C48C',
   },
   {
     q: 'How does white-labeling work?',
-    a: 'Agency plan generates shareable report links with your client\'s domain context and your branding. No "powered by webdoc" in client-facing views.',
+    a: "Agency plan generates shareable report links with your client's domain context and your branding. No \"powered by webdoc\" in client-facing views.",
+    accent: '#00C48C',
   },
   {
     q: 'What happens if I hit my scan limit?',
     a: 'Scans stop until your next billing cycle resets your allowance. You can upgrade at any time to immediately unlock more scans.',
+    accent: '#00C48C',
   },
 ]
 
@@ -159,31 +165,67 @@ const TABLE_GROUPS: TableGroup[] = [
   },
 ]
 
-// ── Sub-components ────────────────────────────────────────────────────────────
+// ── Sub-components ─────────────────────────────────────────────────────────────
 
 function Cell({ val }: { val: CellVal }): JSX.Element {
-  if (val.type === 'check') return <span style={{ color: '#00E676' }}>✓</span>
-  if (val.type === 'dash') return <span style={{ color: '#3A3A52' }}>—</span>
-  return <span className="text-text-secondary">{val.value}</span>
+  if (val.type === 'check')
+    return (
+      <span
+        style={{
+          display: 'inline-block',
+          width: 7,
+          height: 7,
+          backgroundColor: '#00C48C',
+          verticalAlign: 'middle',
+        }}
+      />
+    )
+  if (val.type === 'dash')
+    return <span style={{ color: '#6E7587' }}>—</span>
+  return <span style={{ color: '#9398A8' }}>{val.value}</span>
 }
 
-function Bullet({ text, cyan }: { text: string; cyan?: boolean }) {
+function Bullet({ text }: { text: string }) {
   return (
-    <li className="flex items-start gap-2.5 mb-2">
+    <li style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 8, listStyle: 'none' }}>
       <span
-        className="flex-shrink-0 rounded-full mt-[7px]"
-        style={{ width: 4, height: 4, backgroundColor: cyan ? '#00C8FF' : '#3A3A52' }}
+        style={{
+          flexShrink: 0,
+          width: 5,
+          height: 5,
+          backgroundColor: '#00C48C',
+          marginTop: 7,
+          display: 'block',
+        }}
       />
-      <span style={{ fontFamily: 'var(--font-stack-sans)', fontSize: 13, lineHeight: 1.65, color: '#8E8EA0' }}>
+      <span
+        style={{
+          fontFamily: '"IBM Plex Sans", sans-serif',
+          fontSize: 14,
+          lineHeight: 1.65,
+          color: '#9398A8',
+        }}
+      >
         {text}
       </span>
     </li>
   )
 }
 
-function InheritRow({ text }: { text: string }) {
+function InheritLabel({ text }: { text: string }) {
   return (
-    <li className="font-ui-label mb-3 mt-1" style={{ color: '#3A3A52', listStyle: 'none' }}>
+    <li
+      style={{
+        listStyle: 'none',
+        marginBottom: 16,
+        marginTop: 4,
+        fontFamily: '"IBM Plex Mono", monospace',
+        fontSize: 10,
+        textTransform: 'uppercase',
+        letterSpacing: '0.1em',
+        color: '#6E7587',
+      }}
+    >
       {text}
     </li>
   )
@@ -199,45 +241,107 @@ export default function PricingPage() {
   const price = (monthly: number) => (isAnnual ? Math.round(monthly * 0.8) : monthly)
 
   return (
-    <main className="bg-background-base min-h-screen">
+    <main style={{ backgroundColor: '#050810', minHeight: '100vh' }}>
 
-      {/* ── 1. Hero band ─────────────────────────────────────────────────────── */}
-      <section className="pt-24 pb-16 max-w-4xl mx-auto px-8 text-center">
-        <div className="section-label mb-4">PLANS &amp; PRICING</div>
+      {/* ── 1. Hero band ──────────────────────────────────────────────────────── */}
+      <section
+        style={{
+          padding: '96px 32px 64px',
+          maxWidth: 896,
+          margin: '0 auto',
+          textAlign: 'center',
+        }}
+      >
+        <div
+          style={{
+            fontFamily: '"IBM Plex Mono", monospace',
+            fontSize: 11,
+            textTransform: 'uppercase',
+            letterSpacing: '0.2em',
+            color: '#6F9BC6',
+            marginBottom: 16,
+          }}
+        >
+          PLANS &amp; PRICING
+        </div>
         <h1
-          className="section-headline mb-4"
-          style={{ fontSize: 'clamp(36px, 5vw, 56px)', letterSpacing: '-1.5px' }}
+          className="font-score"
+          style={{
+            fontSize: 'clamp(36px, 5vw, 56px)',
+            fontWeight: 700,
+            letterSpacing: '-1.5px',
+            color: '#E6E9EE',
+            margin: '0 0 16px',
+          }}
         >
           Start free. Scale when ready.
         </h1>
-        <p className="section-subhead max-w-2xl mx-auto mb-10">
+        <p
+          style={{
+            fontFamily: '"IBM Plex Sans", sans-serif',
+            fontSize: 16,
+            lineHeight: 1.6,
+            color: '#9398A8',
+            maxWidth: 672,
+            margin: '0 auto 40px',
+          }}
+        >
           Four plans for founders, growing teams, and agencies. No setup fees. Cancel anytime.
         </p>
 
-        {/* Monthly / Annual toggle pills */}
-        <div className="inline-flex items-center p-1 bg-background-raised border border-background-border">
+        {/* Monthly / Annual toggle */}
+        <div
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            backgroundColor: '#0A0E18',
+            border: '0.5px solid rgba(255,255,255,0.08)',
+            padding: 4,
+          }}
+        >
           <button
             onClick={() => setIsAnnual(false)}
-            className={`font-ui-label px-5 py-2 border-0 cursor-pointer transition-colors duration-150 ${
-              !isAnnual
-                ? 'bg-background-interactive text-text-primary'
-                : 'bg-transparent text-text-secondary hover:text-text-primary'
-            }`}
+            style={{
+              fontFamily: '"IBM Plex Mono", monospace',
+              fontSize: 13,
+              padding: '8px 20px',
+              backgroundColor: !isAnnual ? '#0D1420' : 'transparent',
+              color: !isAnnual ? '#E6E9EE' : '#6E7587',
+              border: 'none',
+              cursor: 'pointer',
+              borderRadius: 0,
+              transition: 'background-color 0.15s, color 0.15s',
+            }}
           >
             Monthly
           </button>
           <button
             onClick={() => setIsAnnual(true)}
-            className={`font-ui-label px-5 py-2 border-0 cursor-pointer transition-colors duration-150 flex items-center gap-2 ${
-              isAnnual
-                ? 'bg-background-interactive text-text-primary'
-                : 'bg-transparent text-text-secondary hover:text-text-primary'
-            }`}
+            style={{
+              fontFamily: '"IBM Plex Mono", monospace',
+              fontSize: 13,
+              padding: '8px 20px',
+              backgroundColor: isAnnual ? '#0D1420' : 'transparent',
+              color: isAnnual ? '#E6E9EE' : '#6E7587',
+              border: 'none',
+              cursor: 'pointer',
+              borderRadius: 0,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              transition: 'background-color 0.15s, color 0.15s',
+            }}
           >
             Annual
             <span
-              className="font-ui-label px-2 py-0.5"
-              style={{ fontSize: 9, backgroundColor: 'rgba(0,230,118,0.15)', color: '#00E676' }}
+              style={{
+                fontFamily: '"IBM Plex Mono", monospace',
+                fontSize: 10,
+                backgroundColor: 'rgba(0,196,140,0.12)',
+                color: '#00C48C',
+                padding: '3px 8px',
+                letterSpacing: '0.05em',
+              }}
             >
               SAVE 20%
             </span>
@@ -245,16 +349,88 @@ export default function PricingPage() {
         </div>
       </section>
 
-      {/* ── 2. Pricing cards ─────────────────────────────────────────────────── */}
-      <section className="max-w-7xl mx-auto px-8 pb-20">
+      {/* ── 2. Pricing cards ──────────────────────────────────────────────────── */}
+      <section style={{ maxWidth: 1280, margin: '0 auto', padding: '0 32px 80px' }}>
+
+        {/* Solo / Teams group labels — desktop only */}
+        <div className="hidden lg:grid lg:grid-cols-4 gap-4 mb-2">
+          <div
+            className="col-span-2"
+            style={{
+              fontFamily: '"IBM Plex Mono", monospace',
+              fontSize: 10,
+              textTransform: 'uppercase',
+              letterSpacing: '0.15em',
+              color: '#6E7587',
+            }}
+          >
+            SOLO
+          </div>
+          <div
+            className="col-span-2"
+            style={{
+              fontFamily: '"IBM Plex Mono", monospace',
+              fontSize: 10,
+              textTransform: 'uppercase',
+              letterSpacing: '0.15em',
+              color: '#6E7587',
+            }}
+          >
+            TEAMS
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
 
           {/* FREE */}
-          <div className="landing-card-electric border border-background-border bg-background-raised p-8 flex flex-col">
-            <div className="font-ui-label text-text-secondary mb-4">FREE</div>
-            <div className="font-score text-5xl text-text-primary mb-1">$0</div>
-            <div className="font-mono text-xs text-text-secondary mb-8">forever</div>
-            <ul className="list-none p-0 m-0 flex-1">
+          <div
+            style={{
+              backgroundColor: '#0A0E18',
+              border: '0.5px solid rgba(255,255,255,0.07)',
+              padding: '28px 24px',
+              display: 'flex',
+              flexDirection: 'column',
+            }}
+          >
+            <div
+              style={{
+                fontFamily: '"IBM Plex Mono", monospace',
+                fontSize: 11,
+                textTransform: 'uppercase',
+                letterSpacing: '0.15em',
+                color: '#6E7587',
+                marginBottom: 6,
+              }}
+            >
+              FREE
+            </div>
+            <div
+              style={{
+                fontFamily: '"IBM Plex Mono", monospace',
+                fontSize: 11,
+                color: '#6E7587',
+                marginBottom: 16,
+              }}
+            >
+              for your first scan
+            </div>
+            <div
+              className="font-score"
+              style={{ fontSize: 44, fontWeight: 700, color: '#E6E9EE', lineHeight: 1, marginBottom: 4 }}
+            >
+              $0
+            </div>
+            <div
+              style={{
+                fontFamily: '"IBM Plex Sans", sans-serif',
+                fontSize: 14,
+                color: '#8E8EA0',
+                marginBottom: 32,
+              }}
+            >
+              forever
+            </div>
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0, flex: 1 }}>
               <Bullet text="3 scans per month" />
               <Bullet text="Full 307-check audit" />
               <Bullet text="Score + findings" />
@@ -263,19 +439,73 @@ export default function PricingPage() {
             </ul>
             <Link
               href="/scan"
-              className="block text-center font-ui-label text-text-secondary py-3 mt-8 no-underline hover:text-text-primary transition-colors duration-150"
+              style={{
+                display: 'block',
+                textAlign: 'center',
+                fontFamily: '"IBM Plex Mono", monospace',
+                fontSize: 13,
+                color: '#9398A8',
+                border: '0.5px solid #6E7587',
+                padding: '12px 0',
+                marginTop: 32,
+                textDecoration: 'none',
+                transition: 'color 0.15s, border-color 0.15s',
+              }}
             >
-              Start free →
+              START FREE →
             </Link>
           </div>
 
-          {/* STARTER */}
-          <div className="landing-card-electric border border-background-border bg-background-raised p-8 flex flex-col">
-            <div className="font-ui-label text-text-secondary mb-4">STARTER</div>
-            <div className="font-score text-5xl text-text-primary mb-1">${price(49)}</div>
-            <div className="font-mono text-xs text-text-secondary mb-8">per month</div>
-            <ul className="list-none p-0 m-0 flex-1">
-              <InheritRow text="Everything in Free, plus:" />
+          {/* FOUNDER */}
+          <div
+            style={{
+              backgroundColor: '#0A0E18',
+              border: '0.5px solid rgba(255,255,255,0.07)',
+              padding: '28px 24px',
+              display: 'flex',
+              flexDirection: 'column',
+            }}
+          >
+            <div
+              style={{
+                fontFamily: '"IBM Plex Mono", monospace',
+                fontSize: 11,
+                textTransform: 'uppercase',
+                letterSpacing: '0.15em',
+                color: '#6E7587',
+                marginBottom: 6,
+              }}
+            >
+              FOUNDER
+            </div>
+            <div
+              style={{
+                fontFamily: '"IBM Plex Mono", monospace',
+                fontSize: 11,
+                color: '#6E7587',
+                marginBottom: 16,
+              }}
+            >
+              for founders running their own site
+            </div>
+            <div
+              className="font-score"
+              style={{ fontSize: 44, fontWeight: 700, color: '#E6E9EE', lineHeight: 1, marginBottom: 4 }}
+            >
+              ${price(49)}
+            </div>
+            <div
+              style={{
+                fontFamily: '"IBM Plex Sans", sans-serif',
+                fontSize: 14,
+                color: '#8E8EA0',
+                marginBottom: 32,
+              }}
+            >
+              per month
+            </div>
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0, flex: 1 }}>
+              <InheritLabel text="Everything in Free, plus:" />
               <Bullet text="50 scans per month" />
               <Bullet text="Priority processing" />
               <Bullet text="30-day report history" />
@@ -284,48 +514,149 @@ export default function PricingPage() {
             </ul>
             <Link
               href="/signup?plan=starter"
-              className="block text-center font-ui-label border border-[#00C8FF]/30 text-[#00C8FF] py-3 mt-8 no-underline hover:border-[#00C8FF]/60 transition-colors duration-150"
+              style={{
+                display: 'block',
+                textAlign: 'center',
+                fontFamily: '"IBM Plex Mono", monospace',
+                fontSize: 13,
+                color: '#00C48C',
+                border: '0.5px solid #00C48C',
+                padding: '12px 0',
+                marginTop: 32,
+                textDecoration: 'none',
+                transition: 'opacity 0.15s',
+              }}
             >
-              Start free trial →
+              START FREE TRIAL →
             </Link>
           </div>
 
-          {/* AGENCY — elevated / recommended */}
-          <div className="landing-card-electric relative border border-[#00C8FF]/30 bg-background-interactive glow-ambient p-8 flex flex-col mt-3 lg:mt-0">
+          {/* AGENCY */}
+          <div
+            style={{
+              backgroundColor: '#0A0E18',
+              border: '0.5px solid rgba(255,255,255,0.07)',
+              padding: '28px 24px',
+              display: 'flex',
+              flexDirection: 'column',
+            }}
+          >
             <div
-              className="absolute font-ui-label px-3 py-1 whitespace-nowrap"
-              style={{ top: -12, left: '50%', transform: 'translateX(-50%)', backgroundColor: '#00C8FF', color: '#050810' }}
+              style={{
+                fontFamily: '"IBM Plex Mono", monospace',
+                fontSize: 11,
+                textTransform: 'uppercase',
+                letterSpacing: '0.15em',
+                color: '#6E7587',
+                marginBottom: 6,
+              }}
             >
-              MOST POPULAR
+              AGENCY
             </div>
-            <div className="font-ui-label mb-4" style={{ color: '#00C8FF' }}>AGENCY</div>
-            <div className="font-score text-5xl text-text-primary mb-1">${price(149)}</div>
-            <div className="font-mono text-xs text-text-secondary mb-8">per month</div>
-            <ul className="list-none p-0 m-0 flex-1">
-              <InheritRow text="Everything in Starter, plus:" />
+            <div
+              style={{
+                fontFamily: '"IBM Plex Mono", monospace',
+                fontSize: 11,
+                color: '#6E7587',
+                marginBottom: 16,
+              }}
+            >
+              for teams auditing client sites
+            </div>
+            <div
+              className="font-score"
+              style={{ fontSize: 44, fontWeight: 700, color: '#E6E9EE', lineHeight: 1, marginBottom: 4 }}
+            >
+              ${price(149)}
+            </div>
+            <div
+              style={{
+                fontFamily: '"IBM Plex Sans", sans-serif',
+                fontSize: 14,
+                color: '#8E8EA0',
+                marginBottom: 32,
+              }}
+            >
+              per month
+            </div>
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0, flex: 1 }}>
+              <InheritLabel text="Everything in Founder, plus:" />
               <Bullet text="200 scans per month" />
               <Bullet text="White-label report links" />
               <Bullet text="Client workspaces" />
-              <Bullet text="100 bundled API calls/month" cyan />
+              <Bullet text="100 bundled API calls/month" />
               <Bullet text="Multi-page scanning" />
               <Bullet text="Priority support + SLA" />
             </ul>
             <Link
               href="/signup?plan=agency"
-              className="block text-center font-ui-label py-3 mt-8 no-underline hover:opacity-90 transition-opacity duration-150"
-              style={{ backgroundColor: '#00C8FF', color: '#050810' }}
+              style={{
+                display: 'block',
+                textAlign: 'center',
+                fontFamily: '"IBM Plex Mono", monospace',
+                fontSize: 13,
+                color: '#050810',
+                backgroundColor: '#00C48C',
+                padding: '12px 0',
+                marginTop: 32,
+                textDecoration: 'none',
+                transition: 'opacity 0.15s',
+              }}
             >
-              Start free trial →
+              START FREE TRIAL →
             </Link>
           </div>
 
           {/* ENTERPRISE */}
-          <div className="landing-card-electric border border-background-border bg-background-raised p-8 flex flex-col">
-            <div className="font-ui-label text-text-secondary mb-4">ENTERPRISE</div>
-            <div className="font-score text-5xl text-text-primary mb-1">${price(499)}</div>
-            <div className="font-mono text-xs text-text-secondary mb-8">per month</div>
-            <ul className="list-none p-0 m-0 flex-1">
-              <InheritRow text="Everything in Agency, plus:" />
+          <div
+            style={{
+              backgroundColor: '#0A0E18',
+              border: '0.5px solid rgba(255,255,255,0.07)',
+              padding: '28px 24px',
+              display: 'flex',
+              flexDirection: 'column',
+            }}
+          >
+            <div
+              style={{
+                fontFamily: '"IBM Plex Mono", monospace',
+                fontSize: 11,
+                textTransform: 'uppercase',
+                letterSpacing: '0.15em',
+                color: '#6E7587',
+                marginBottom: 6,
+              }}
+            >
+              ENTERPRISE
+            </div>
+            <div
+              style={{
+                fontFamily: '"IBM Plex Mono", monospace',
+                fontSize: 11,
+                color: '#6E7587',
+                marginBottom: 16,
+              }}
+            >
+              for agencies at scale
+            </div>
+            <div
+              className="font-score"
+              style={{ fontSize: 44, fontWeight: 700, color: '#E6E9EE', lineHeight: 1, marginBottom: 4 }}
+            >
+              ${price(499)}
+            </div>
+            <div
+              style={{
+                fontFamily: '"IBM Plex Sans", sans-serif',
+                fontSize: 14,
+                color: '#8E8EA0',
+                marginBottom: 32,
+              }}
+            >
+              per month
+            </div>
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0, flex: 1 }}>
+              <InheritLabel text="Everything in Agency, plus:" />
               <Bullet text="Unlimited scans" />
               <Bullet text="Custom integrations" />
               <Bullet text="Dedicated account manager" />
@@ -335,67 +666,110 @@ export default function PricingPage() {
             </ul>
             <Link
               href="mailto:hello@webdocai.com"
-              className="block text-center font-ui-label text-text-secondary py-3 mt-8 no-underline hover:text-text-primary transition-colors duration-150"
+              style={{
+                display: 'block',
+                textAlign: 'center',
+                fontFamily: '"IBM Plex Mono", monospace',
+                fontSize: 13,
+                color: '#9398A8',
+                border: '0.5px solid #6E7587',
+                padding: '12px 0',
+                marginTop: 32,
+                textDecoration: 'none',
+                transition: 'color 0.15s',
+              }}
             >
-              Talk to us →
+              TALK TO US →
             </Link>
           </div>
 
         </div>
       </section>
 
-      {/* ── 3. API callout band ──────────────────────────────────────────────── */}
+      {/* ── 3. API callout band ───────────────────────────────────────────────── */}
       <section
-        className="py-6 px-8"
         style={{
-          background: '#0D1420',
-          borderTop: '1px solid rgba(0, 200, 255, 0.15)',
-          borderBottom: '1px solid rgba(0, 200, 255, 0.15)',
+          backgroundColor: '#0A0E18',
+          borderTop: '0.5px solid rgba(255,255,255,0.07)',
+          borderBottom: '0.5px solid rgba(255,255,255,0.07)',
+          padding: '24px 48px',
         }}
       >
-        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div
+          style={{
+            maxWidth: 1152,
+            margin: '0 auto',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: 16,
+          }}
+        >
           <div>
-            <p className="font-mono text-xs uppercase tracking-widest mb-1" style={{ color: '#00C8FF' }}>
+            <p
+              style={{
+                fontFamily: '"IBM Plex Mono", monospace',
+                fontSize: 11,
+                textTransform: 'uppercase',
+                letterSpacing: '0.15em',
+                color: '#6F9BC6',
+                margin: '0 0 4px',
+              }}
+            >
               BUILDING WITH THE API?
             </p>
-            <p className="font-body text-sm" style={{ color: '#8E8EA0' }}>
+            <p
+              className="font-score"
+              style={{
+                fontSize: 16,
+                fontWeight: 600,
+                color: '#E6E9EE',
+                margin: 0,
+              }}
+            >
               Developer plans from $0.15/scan. No dashboard required.
             </p>
           </div>
           <Link
             href="/developers#pricing"
-            className="font-ui-label no-underline w-full sm:w-auto text-center sm:text-left flex-shrink-0"
             style={{
-              border: '1px solid rgba(0, 200, 255, 0.4)',
-              background: 'rgba(0, 200, 255, 0.08)',
-              color: '#00C8FF',
+              fontFamily: '"IBM Plex Mono", monospace',
+              fontSize: 13,
+              border: '0.5px solid #6F9BC6',
+              color: '#6F9BC6',
               padding: '12px 24px',
+              textDecoration: 'none',
               display: 'block',
-              transition: 'all 150ms ease',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.borderColor = 'rgba(0,200,255,0.7)'
-              e.currentTarget.style.background = 'rgba(0,200,255,0.15)'
-              e.currentTarget.style.boxShadow = 'var(--cyan-glow-active)'
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.borderColor = 'rgba(0,200,255,0.4)'
-              e.currentTarget.style.background = 'rgba(0,200,255,0.08)'
-              e.currentTarget.style.boxShadow = 'none'
+              flexShrink: 0,
+              transition: 'opacity 0.15s',
             }}
           >
-            See developer pricing →
+            SEE DEVELOPER PRICING →
           </Link>
         </div>
       </section>
 
-      {/* ── 4. Comparison table ──────────────────────────────────────────────── */}
-      <section className="max-w-7xl mx-auto px-8 py-12">
+      {/* ── 4. Comparison table ───────────────────────────────────────────────── */}
+      <section style={{ maxWidth: 1280, margin: '0 auto', padding: '48px 32px' }}>
         <button
           onClick={() => setShowTable(v => !v)}
-          className="font-ui-label text-text-secondary cursor-pointer w-full text-center bg-transparent border-0 hover:text-text-primary transition-colors duration-150"
+          style={{
+            fontFamily: '"IBM Plex Mono", monospace',
+            fontSize: 11,
+            textTransform: 'uppercase',
+            letterSpacing: '0.1em',
+            color: '#6E7587',
+            cursor: 'pointer',
+            width: '100%',
+            textAlign: 'center',
+            backgroundColor: 'transparent',
+            border: 'none',
+            padding: '8px 0',
+            transition: 'color 0.15s',
+          }}
         >
-          Compare all features {showTable ? '↑' : '↓'}
+          COMPARE ALL FEATURES {showTable ? '↑' : '↓'}
         </button>
 
         <div
@@ -405,13 +779,25 @@ export default function PricingPage() {
             maxHeight: showTable ? '2000px' : '0',
           }}
         >
-          <div className="mt-8 overflow-x-auto">
-            <table className="w-full min-w-[580px] border-collapse">
+          <div style={{ marginTop: 32, overflowX: 'auto' }}>
+            <table style={{ width: '100%', minWidth: 580, borderCollapse: 'collapse' }}>
               <thead>
                 <tr>
-                  <th className="text-left py-3 pr-4 w-[36%]" />
+                  <th style={{ textAlign: 'left', padding: '12px 16px 12px 0', width: '36%' }} />
                   {['FREE', 'STARTER', 'AGENCY', 'ENTERPRISE'].map(plan => (
-                    <th key={plan} className="font-ui-label text-text-secondary text-center py-3 px-4">
+                    <th
+                      key={plan}
+                      style={{
+                        fontFamily: '"IBM Plex Mono", monospace',
+                        fontSize: 11,
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.1em',
+                        color: '#6E7587',
+                        textAlign: 'center',
+                        padding: '12px 16px',
+                        fontWeight: 400,
+                      }}
+                    >
                       {plan}
                     </th>
                   ))}
@@ -420,45 +806,50 @@ export default function PricingPage() {
               <tbody>
                 {TABLE_GROUPS.flatMap((group, gi) => [
                   <tr key={`g-${gi}`}>
-                    <td colSpan={5} className="pt-8 pb-2">
-                      <span className="font-ui-label" style={{ color: '#3A3A52' }}>{group.label}</span>
+                    <td colSpan={5} style={{ paddingTop: 32, paddingBottom: 8 }}>
+                      <span
+                        style={{
+                          fontFamily: '"IBM Plex Mono", monospace',
+                          fontSize: 10,
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.1em',
+                          color: '#6E7587',
+                        }}
+                      >
+                        {group.label}
+                      </span>
                     </td>
                   </tr>,
                   ...group.rows.map((row, ri) => (
                     <tr
                       key={`r-${gi}-${ri}`}
-                      style={{ backgroundColor: ri % 2 === 1 ? 'rgba(10,15,26,0.7)' : 'transparent' }}
+                      style={{ backgroundColor: ri % 2 === 1 ? 'rgba(10,14,24,0.7)' : 'transparent' }}
                     >
                       <td
-                        className="font-body text-sm text-text-secondary py-3 pr-4 border-b"
-                        style={{ borderColor: 'var(--border-default)', fontSize: 13 }}
+                        style={{
+                          fontFamily: '"IBM Plex Sans", sans-serif',
+                          fontSize: 13,
+                          color: '#9398A8',
+                          padding: '12px 16px 12px 0',
+                          borderBottom: '0.5px solid rgba(255,255,255,0.06)',
+                        }}
                       >
                         {row.feature}
                       </td>
-                      <td
-                        className="text-center py-3 px-4 border-b font-body text-sm text-text-secondary"
-                        style={{ borderColor: 'var(--border-default)', fontSize: 13 }}
-                      >
-                        <Cell val={row.free} />
-                      </td>
-                      <td
-                        className="text-center py-3 px-4 border-b font-body text-sm text-text-secondary"
-                        style={{ borderColor: 'var(--border-default)', fontSize: 13 }}
-                      >
-                        <Cell val={row.starter} />
-                      </td>
-                      <td
-                        className="text-center py-3 px-4 border-b font-body text-sm text-text-secondary"
-                        style={{ borderColor: 'var(--border-default)', fontSize: 13 }}
-                      >
-                        <Cell val={row.agency} />
-                      </td>
-                      <td
-                        className="text-center py-3 px-4 border-b font-body text-sm text-text-secondary"
-                        style={{ borderColor: 'var(--border-default)', fontSize: 13 }}
-                      >
-                        <Cell val={row.enterprise} />
-                      </td>
+                      {(['free', 'starter', 'agency', 'enterprise'] as const).map(col => (
+                        <td
+                          key={col}
+                          style={{
+                            textAlign: 'center',
+                            padding: '12px 16px',
+                            borderBottom: '0.5px solid rgba(255,255,255,0.06)',
+                            fontFamily: '"IBM Plex Sans", sans-serif',
+                            fontSize: 13,
+                          }}
+                        >
+                          <Cell val={row[col]} />
+                        </td>
+                      ))}
                     </tr>
                   )),
                 ])}
@@ -468,31 +859,83 @@ export default function PricingPage() {
         </div>
       </section>
 
-      {/* ── 5. FAQ accordion ─────────────────────────────────────────────────── */}
-      <section className="max-w-3xl mx-auto px-8 pb-16">
-        <div className="section-label text-center mb-12">COMMON QUESTIONS</div>
+      {/* ── 5. FAQ accordion ──────────────────────────────────────────────────── */}
+      <section style={{ maxWidth: 768, margin: '0 auto', padding: '0 32px 64px' }}>
+        <div
+          style={{
+            fontFamily: '"IBM Plex Mono", monospace',
+            fontSize: 11,
+            textTransform: 'uppercase',
+            letterSpacing: '0.2em',
+            color: '#6E7587',
+            textAlign: 'center',
+            marginBottom: 48,
+          }}
+        >
+          COMMON QUESTIONS
+        </div>
 
         {FAQS.map((faq, i) => (
-          <div key={i} className="border-b" style={{ borderColor: 'var(--border-default)' }}>
+          <div
+            key={i}
+            style={{
+              borderBottom: '0.5px solid rgba(255,255,255,0.06)',
+              borderLeft: `3px solid ${faq.accent}`,
+              backgroundColor: openFaq === i ? '#0A0E18' : 'transparent',
+              paddingLeft: 16,
+              transition: 'background-color 0.2s',
+            }}
+          >
             <button
               onClick={() => setOpenFaq(openFaq === i ? null : i)}
-              className="w-full flex justify-between items-center py-4 cursor-pointer bg-transparent border-0 text-left gap-4"
+              style={{
+                width: '100%',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                padding: '16px 0',
+                cursor: 'pointer',
+                backgroundColor: 'transparent',
+                border: 'none',
+                textAlign: 'left',
+                gap: 16,
+              }}
             >
               <span
-                className="font-body font-semibold text-text-primary"
-                style={{ fontSize: 15, color: 'var(--text-primary)' }}
+                style={{
+                  fontFamily: '"IBM Plex Sans", sans-serif',
+                  fontSize: 16,
+                  fontWeight: 500,
+                  color: '#E6E9EE',
+                }}
               >
                 {faq.q}
               </span>
               <span
-                className="flex-shrink-0 text-text-secondary transition-transform duration-200"
-                style={{ display: 'inline-block', transform: openFaq === i ? 'rotate(180deg)' : 'rotate(0deg)' }}
+                style={{
+                  flexShrink: 0,
+                  color: '#6E7587',
+                  display: 'inline-block',
+                  transform: openFaq === i ? 'rotate(180deg)' : 'rotate(0deg)',
+                  transition: 'transform 0.2s',
+                  fontSize: 16,
+                  lineHeight: 1,
+                }}
               >
                 ▾
               </span>
             </button>
             {openFaq === i && (
-              <p className="font-body pb-4 leading-relaxed" style={{ fontSize: 14, color: '#8E8EA0' }}>
+              <p
+                style={{
+                  fontFamily: '"IBM Plex Sans", sans-serif',
+                  fontSize: 14,
+                  color: '#9398A8',
+                  lineHeight: 1.65,
+                  paddingBottom: 16,
+                  margin: 0,
+                }}
+              >
                 {faq.a}
               </p>
             )}
@@ -500,17 +943,26 @@ export default function PricingPage() {
         ))}
       </section>
 
-      {/* ── 6. Footer routing band ───────────────────────────────────────────── */}
+      {/* ── 6. Footer routing band ────────────────────────────────────────────── */}
       <div
-        className="border-t py-6 text-center"
-        style={{ borderColor: 'var(--border-default)' }}
+        style={{
+          borderTop: '0.5px solid rgba(255,255,255,0.07)',
+          padding: '24px 0',
+          textAlign: 'center',
+        }}
       >
-        <p className="font-body text-sm" style={{ color: '#3A3A52' }}>
+        <p
+          style={{
+            fontFamily: '"IBM Plex Sans", sans-serif',
+            fontSize: 14,
+            color: '#9398A8',
+            margin: 0,
+          }}
+        >
           Need API access?{' '}
           <Link
             href="/developers#pricing"
-            className="no-underline hover:opacity-80 transition-opacity"
-            style={{ color: '#00C8FF' }}
+            style={{ color: '#6F9BC6', textDecoration: 'none' }}
           >
             See developer pricing →
           </Link>

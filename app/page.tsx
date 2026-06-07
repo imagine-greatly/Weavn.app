@@ -5,8 +5,8 @@ import Link from 'next/link'
 import ScoreRing from '@/components/ui/ScoreRing'
 import { Stat } from '@/components/ui/Stat'
 import { CodeBlock } from '@/components/ui/CodeBlock'
-import ProblemSection from '@/components/sections/ProblemSection'
 import OutputSection from '@/components/sections/OutputSection'
+import ResponseAnnotatorSection from '@/components/sections/ResponseAnnotatorSection'
 import ObjectionSection from '@/components/sections/ObjectionSection'
 
 // ── Syntax-highlighted JSON primitives ──────────────────────────────────────
@@ -145,8 +145,22 @@ function HeroSection() {
   const [activeHeroTab, setActiveHeroTab] = useState<HeroTab>('api')
 
   return (
-    <section className="scanline-texture min-h-screen pt-[120px] pb-20 px-8">
-      <div className="max-w-[1280px] mx-auto flex gap-16 items-start">
+    <section className="scanline-texture min-h-screen pt-[120px] pb-20 px-8 relative overflow-hidden">
+
+      {/* Full-bleed ambient blooms — green behind the JSON panel, purple lower-left */}
+      <div
+        aria-hidden
+        style={{
+          position: 'absolute',
+          inset: 0,
+          pointerEvents: 'none',
+          zIndex: 0,
+          background:
+            'radial-gradient(ellipse 800px 600px at 75% 50%, rgba(0,196,140,0.05) 0%, transparent 60%), radial-gradient(ellipse 600px 400px at 25% 80%, rgba(128,128,192,0.04) 0%, transparent 60%)',
+        }}
+      />
+
+      <div className="max-w-[1280px] mx-auto flex gap-16 items-start relative z-10">
 
         {/* Left column */}
         <div className="flex-[55] min-w-0">
@@ -241,7 +255,13 @@ function HeroSection() {
         </div>
 
         {/* Right column — terminal panel */}
-        <div className="flex-[45] min-w-0 relative glow-cyan border border-background-border bg-background-raised">
+        <div
+          className="flex-[45] min-w-0 relative border border-background-border bg-background-raised"
+          style={{
+            boxShadow: '0 0 60px rgba(0,196,140,0.06), 0 0 120px rgba(128,128,192,0.04)',
+            borderTop: '0.5px solid rgba(0,196,140,0.2)',
+          }}
+        >
 
           {/* Tab bar */}
           <div className="flex border-b border-background-border bg-background-subtle">
@@ -507,9 +527,13 @@ function ThreeDoorsSection() {
                   <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: '#6E7587' }}>score</span>
                   <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: '#EFB23E', fontWeight: 600 }}>61</span>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
                   <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: '#6E7587' }}>findings</span>
                   <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: '#E8635F' }}>23 critical items</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: '#6E7587' }}>percentile</span>
+                  <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: '#6F9BC6' }}>63rd of B2B SaaS sites</span>
                 </div>
               </div>
             </div>
@@ -558,14 +582,30 @@ const CORPUS_JSON = `{
     "corpus_size": 4812,
     "industry_avg": 58,
     "top_quartile": 78,
-    "most_common_critical": "feature_led_headline"
+    "most_common_critical": "feature_led_headline",
+    "median_fix_time_hrs": 4,
+    "sites_above_70": "31%",
+    "updated": "weekly"
   }
 }`
 
 function StatsBand() {
   return (
-    <section style={{ padding: '96px 0', borderTop: '0.5px solid rgba(255,255,255,0.06)' }}>
-      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 48px' }}>
+    <section style={{ position: 'relative', overflow: 'hidden', padding: '96px 0', borderTop: '0.5px solid rgba(255,255,255,0.06)' }}>
+
+      {/* Ambient amber bloom behind the verdict stat row */}
+      <div
+        aria-hidden
+        style={{
+          position: 'absolute',
+          inset: 0,
+          pointerEvents: 'none',
+          zIndex: 0,
+          background: 'radial-gradient(ellipse 800px 300px at 50% 60%, rgba(239,178,62,0.03) 0%, transparent 70%)',
+        }}
+      />
+
+      <div style={{ position: 'relative', zIndex: 1, maxWidth: 1200, margin: '0 auto', padding: '0 48px' }}>
         <p style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, color: '#6F9BC6', margin: '0 0 18px' }}>
           Benchmark corpus
         </p>
@@ -866,7 +906,7 @@ const FAQ_ITEMS = [
   {
     q: 'Can I use this for client sites?',
     a: "Yes — that's what the Agency plan is for. Unlimited client workspaces, white-label report links, multi-page scanning, and competitor benchmarking per client. $149/month.",
-    accent: '#00C48C',
+    accent: '#6F9BC6',
   },
 ]
 
@@ -993,11 +1033,11 @@ function FooterSection() {
 
 export default function HomePage() {
   return (
-    <main className="bg-background-base min-h-screen">
+    <main className="bg-background-base min-h-screen home-atmosphere">
       <NavBar />
       <HeroSection />
-      <ProblemSection />
       <OutputSection />
+      <ResponseAnnotatorSection />
       <HowItWorksSection />
       <StatsBand />
       <ThreeDoorsSection />

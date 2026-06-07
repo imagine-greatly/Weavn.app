@@ -99,6 +99,11 @@ body {
     @apply antialiased;
     color: var(--text-primary);
     background-color: var(--bg-base);
+    /* Atmospheric blueprint grid — barely-perceptible instrument paper (muted blue) */
+    background-image:
+      linear-gradient(rgba(111, 155, 198, 0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(111, 155, 198, 0.03) 1px, transparent 1px);
+    background-size: 48px 48px;
   }
 
   h1, h2, h3, h4, h5, h6, .font-display {
@@ -1224,6 +1229,21 @@ svg path { fill: none !important; }
 /* Design system utilities */
 .glow-cyan {
   box-shadow: 0 0 20px rgba(0, 200, 255, 0.15), 0 0 60px rgba(0, 200, 255, 0.05);
+}
+
+/* Atmospheric panel depth — top edge catches faint light.
+   Scoped to the homepage; targets inline #0A0E18 surface panels globally
+   so no per-component style edits are needed. */
+.home-atmosphere [style*="0A0E18" i] {
+  border-top-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Score ring glow — faint band-colored drop-shadow on the progress arc only.
+   Suppressed entirely when the user prefers reduced motion. */
+@media (prefers-reduced-motion: no-preference) {
+  .score-ring-arc {
+    filter: drop-shadow(0 0 6px var(--ring-glow));
+  }
 }
 
 .scanline-texture {

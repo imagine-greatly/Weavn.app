@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import { scoreBand } from '@/lib/design-tokens'
 
 interface ScoreRingProps {
@@ -24,6 +24,12 @@ const BAND_HEX: Record<string, string> = {
   'json-string':  '#00C48C',
 }
 
+const BAND_GLOW: Record<string, string> = {
+  'sev-critical': 'rgba(232,99,95,0.4)',
+  'sev-high':     'rgba(239,178,62,0.4)',
+  'json-string':  'rgba(0,196,140,0.4)',
+}
+
 function ScoreRing({ score, size = 'md', label, animate = true, animated }: ScoreRingProps) {
   const shouldAnimate = animated !== undefined ? animated : animate
   const { px, stroke, font } = SIZE_MAP[size]
@@ -32,6 +38,7 @@ function ScoreRing({ score, size = 'md', label, animate = true, animated }: Scor
   const circumference = 2 * Math.PI * radius
   const targetFill = (Math.min(Math.max(score, 0), 100) / 100) * circumference
   const color = BAND_HEX[scoreBand(score)] ?? '#00C48C'
+  const glow = BAND_GLOW[scoreBand(score)] ?? 'rgba(0,196,140,0.4)'
 
   const arcRef = useRef<SVGCircleElement>(null)
   const [displayScore, setDisplayScore] = useState(score)
@@ -80,6 +87,7 @@ function ScoreRing({ score, size = 'md', label, animate = true, animated }: Scor
         />
         <circle
           ref={arcRef}
+          className="score-ring-arc"
           cx={center}
           cy={center}
           r={radius}
@@ -88,6 +96,7 @@ function ScoreRing({ score, size = 'md', label, animate = true, animated }: Scor
           strokeWidth={stroke}
           strokeDasharray={`${targetFill} ${circumference}`}
           transform={`rotate(-90 ${center} ${center})`}
+          style={{ '--ring-glow': glow } as CSSProperties}
         />
         <text
           x={center}

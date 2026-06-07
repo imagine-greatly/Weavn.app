@@ -60,12 +60,17 @@ interface ScanResult {
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 const PROGRESS_LABELS = [
-  'Page content fetched',
-  'Site type classified',
-  'Running conversion checks...',
-  'Analyzing trust signals...',
-  'Checking message clarity...',
-  'Generating findings...',
+  'Rendering page via headless browser...',
+  'Classifying site type and buyer complexity...',
+  'Loading diagnostic profile — 307 checks...',
+  'Running hero and messaging analysis...',
+  'Evaluating trust signals and social proof...',
+  'Checking CTA placement and conversion flow...',
+  'Analyzing narrative arc and objection handling...',
+  'Running technical and mobile checks...',
+  'Benchmarking against corpus...',
+  'Compiling strengths and priority findings...',
+  'Generating structured output...',
 ]
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -157,7 +162,7 @@ function buildMockData(url: string, domain: string): ScanResult {
     ],
     copy_rewrites: {
       headline:    'Stop losing signups to a homepage nobody understands.',
-      subheadline: 'Get a clinical conversion audit of your site in 90 seconds. 264 checks. Specific fixes.',
+      subheadline: 'Get a clinical conversion audit of your site in 90 seconds. 307 checks. Specific fixes.',
       cta:         'Scan my site free →',
     },
     growth_blueprint: [
@@ -174,9 +179,11 @@ function buildMockData(url: string, domain: string): ScanResult {
 
 export default function ScanPage() {
   const router = useRouter()
-  const [scanState, setScanState]   = useState<ScanState>('idle')
-  const [url, setUrl]               = useState('')
+  const [scanState, setScanState]       = useState<ScanState>('idle')
+  const [url, setUrl]                   = useState('')
   const [visibleItems, setVisibleItems] = useState(0)
+  const [showInitiating, setShowInitiating] = useState(false)
+  const [initiatingVisible, setInitiatingVisible] = useState(false)
 
   const domainRef = useRef('')
   const urlRef    = useRef('')
@@ -216,7 +223,49 @@ export default function ScanPage() {
     urlRef.current    = trimmed
     domainRef.current = extractDomain(trimmed)
     setVisibleItems(0)
-    setScanState('scanning')
+    setShowInitiating(true)
+    setInitiatingVisible(true)
+
+    setTimeout(() => {
+      setInitiatingVisible(false)
+      setTimeout(() => {
+        setShowInitiating(false)
+        setScanState('scanning')
+      }, 300)
+    }, 1500)
+  }
+
+  // ── INITIATING OVERLAY ─────────────────────────────────────────────────────
+
+  if (showInitiating) {
+    return (
+      <div
+        className="fixed inset-0 z-50 flex items-center justify-center bg-background-base"
+        style={{
+          opacity: initiatingVisible ? 1 : 0,
+          transition: 'opacity 300ms ease',
+        }}
+      >
+        <div className="text-center">
+          <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest">
+            INITIATING DIAGNOSTIC
+          </div>
+          <div className="font-mono text-sm text-cyan-DEFAULT mt-2">
+            POST /api/v1/scan
+          </div>
+          <div className="font-mono text-xs text-text-tertiary mt-1">
+            → url: {domainRef.current}
+          </div>
+          <div className="font-mono text-xs text-text-tertiary">
+            → checks: 307
+          </div>
+          <div className="font-mono text-xs text-text-tertiary mt-1 flex items-center justify-center gap-1">
+            <span>→ classifying site...</span>
+            <span style={{ animation: 'terminalBlink 1s step-end infinite' }} className="text-cyan-DEFAULT">▋</span>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   // ── IDLE ───────────────────────────────────────────────────────────────────
@@ -257,7 +306,7 @@ export default function ScanPage() {
           </div>
 
           <div className="flex items-center justify-center gap-1.5 mt-4 font-mono text-xs text-text-tertiary">
-            <span>264 checks</span>
+            <span>307 checks</span>
             <span className="opacity-40">·</span>
             <span>~90 seconds</span>
             <span className="opacity-40">·</span>
@@ -282,6 +331,10 @@ export default function ScanPage() {
           0%, 100% { opacity: 1; }
           50%      { opacity: 0.5; }
         }
+        @keyframes beamSweep {
+          0%   { left: -20%; }
+          100% { left: 110%; }
+        }
       `}</style>
 
       <div className="max-w-sm w-full mx-auto text-center">
@@ -291,9 +344,9 @@ export default function ScanPage() {
           Scanning {domainRef.current}...
         </div>
 
-        {/* Waveform */}
+        {/* Waveform with beam overlay */}
         <div
-          className="flex items-center justify-center mb-10"
+          className="relative w-full max-w-full flex items-center justify-center mb-10 overflow-hidden"
           style={{ gap: 4, height: 60 }}
         >
           {Array.from({ length: 20 }, (_, i) => (
@@ -307,6 +360,18 @@ export default function ScanPage() {
               }}
             />
           ))}
+          {/* Alternating left→right→left beam sweep */}
+          <div
+            style={{
+              position:        'absolute',
+              top:             0,
+              width:           '20%',
+              height:          '100%',
+              background:      'linear-gradient(90deg, transparent 0%, rgba(0,200,255,0.25) 50%, transparent 100%)',
+              animation:       'beamSweep 1.8s ease-in-out infinite alternate',
+              pointerEvents:   'none',
+            }}
+          />
         </div>
 
         {/* Progress items */}

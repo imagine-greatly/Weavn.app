@@ -119,9 +119,9 @@ const PIPELINE_STEPS: PipelineStep[] = [
 
 export default function ProductPage() {
   return (
-    <main className="bg-background-base min-h-screen">
+    <main style={{ minHeight: '100vh' }}>
 
-      {/* ── 1. Hero ───────────────────────────────────────────────────────────── */}
+      {/* ── 1. Hero — transparent, grid-exposed ──────────────────────────────── */}
       <section className="pt-24 pb-16 px-8 text-center">
         <div className="section-label mb-4">THE ENGINE</div>
         <h1
@@ -136,198 +136,247 @@ export default function ProductPage() {
           against a corpus of real sites.
         </p>
       </section>
+      <div className="section-separator" />
 
-      {/* ── 2. Diagnostic Coverage ────────────────────────────────────────────── */}
-      <section className="max-w-7xl mx-auto px-8 pb-20">
-        <div className="section-label mb-3">DIAGNOSTIC COVERAGE</div>
-        <h2
-          className="section-headline mb-12"
-          style={{ fontSize: 'clamp(28px, 4vw, 44px)', letterSpacing: '-1px' }}
-        >
-          27 categories. Nothing missed.
-        </h2>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
+      {/* ── 2. Diagnostic Coverage — transparent + purple bloom ──────────────── */}
+      <section
+        className="max-w-7xl mx-auto px-8 pb-20"
+        style={{ position: 'relative', overflow: 'hidden' }}
+      >
+        {/* Purple bloom */}
+        <div
+          aria-hidden
+          style={{
+            position: 'absolute',
+            inset: 0,
+            pointerEvents: 'none',
+            zIndex: 0,
+            background: 'radial-gradient(ellipse 1000px 600px at 50% 50%, rgba(128,128,192,0.06) 0%, transparent 60%)',
+          }}
+        />
+        <div style={{ position: 'relative', zIndex: 1 }}>
+          <div className="section-label mb-3">DIAGNOSTIC COVERAGE</div>
+          <h2
+            className="section-headline mb-12"
+            style={{ fontSize: 'clamp(28px, 4vw, 44px)', letterSpacing: '-1px' }}
+          >
+            27 categories. Nothing missed.
+          </h2>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
 
-          {/* Left: copy + stat blocks */}
-          <div>
-            <p className="section-subhead mb-10" style={{ fontSize: 16 }}>
-              Every scan evaluates the full conversion surface of a page — not just the obvious
-              elements. Checks are gated by site type: a SaaS site gets SaaS checks. An ecommerce
-              site gets ecommerce checks. Universal checks run on everything.
-            </p>
-            <div className="flex gap-10">
-              <Stat value="307" label="TOTAL CHECKS" verdict="neutral" />
-              <Stat value="27" label="CATEGORIES" verdict="neutral" />
-              <Stat value="7" label="DIAGNOSTIC DIMENSIONS" verdict="neutral" />
+            {/* Left: copy + stat blocks */}
+            <div>
+              <p className="section-subhead mb-10" style={{ fontSize: 16 }}>
+                Every scan evaluates the full conversion surface of a page — not just the obvious
+                elements. Checks are gated by site type: a SaaS site gets SaaS checks. An ecommerce
+                site gets ecommerce checks. Universal checks run on everything.
+              </p>
+              <div className="flex gap-10">
+                <Stat value="307" label="TOTAL CHECKS" verdict="neutral" />
+                <Stat value="27" label="CATEGORIES" verdict="neutral" />
+                <Stat value="7" label="DIAGNOSTIC DIMENSIONS" verdict="neutral" />
+              </div>
             </div>
-          </div>
 
-          {/* Right: category chips + legend */}
+            {/* Right: category chips + legend */}
+            <div>
+              <div className="grid grid-cols-3 gap-2">
+                {CATEGORIES.map((cat) => {
+                  const s = TIER_STYLES[cat.tier]
+                  return (
+                    <div
+                      key={cat.name}
+                      style={{
+                        border: `0.5px solid ${s.border}`,
+                        backgroundColor: s.bg,
+                        padding: '10px 14px',
+                        fontFamily: '"IBM Plex Mono", monospace',
+                        fontSize: 11,
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.1em',
+                        color: s.color,
+                        cursor: 'default',
+                      }}
+                    >
+                      {cat.name}
+                    </div>
+                  )
+                })}
+              </div>
+              <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap', marginTop: 16 }}>
+                {[
+                  { color: '#00C48C', label: 'conversion core' },
+                  { color: '#6F9BC6', label: 'universal' },
+                  { color: '#8080C0', label: 'vertical-specific' },
+                ].map(item => (
+                  <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span style={{ width: 5, height: 5, backgroundColor: item.color, display: 'block', flexShrink: 0 }} />
+                    <span style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, color: '#6E7587' }}>
+                      {item.label}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </section>
+      <div className="section-separator" />
+
+      {/* ── 3. Pipeline — mounted module bg #080D18 ──────────────────────────── */}
+      <section style={{
+        position: 'relative',
+        overflow: 'hidden',
+        background: '#080D18',
+        borderTop: '0.5px solid rgba(128,128,192,0.15)',
+        borderBottom: '0.5px solid rgba(255,255,255,0.05)',
+      }}>
+        <div style={{ maxWidth: '56rem', margin: '0 auto', padding: '80px 32px' }}>
+          <div className="section-label mb-3">THE PIPELINE</div>
+          <h2
+            className="section-headline mb-12"
+            style={{ fontSize: 'clamp(28px, 4vw, 44px)', letterSpacing: '-1px' }}
+          >
+            What happens between POST and response.
+          </h2>
+
           <div>
-            <div className="grid grid-cols-3 gap-2">
-              {CATEGORIES.map((cat) => {
-                const s = TIER_STYLES[cat.tier]
-                return (
-                  <div
-                    key={cat.name}
+            {PIPELINE_STEPS.map((step, i) => (
+              <div key={step.num} className="flex gap-6">
+
+                {/* Left: step number + connector */}
+                <div className="flex flex-col items-center flex-shrink-0" style={{ width: 32 }}>
+                  <span
                     style={{
-                      border: `0.5px solid ${s.border}`,
-                      backgroundColor: s.bg,
-                      padding: '10px 14px',
+                      fontFamily: '"IBM Plex Mono", monospace',
+                      fontSize: 13,
+                      fontWeight: 500,
+                      color: '#6F9BC6',
+                      letterSpacing: '0.15em',
+                      lineHeight: 1,
+                    }}
+                  >
+                    {step.num}
+                  </span>
+                  {i < PIPELINE_STEPS.length - 1 && (
+                    <div
+                      className="flex-1 mt-2"
+                      style={{ width: 1, background: 'rgba(111,155,198,0.15)', minHeight: 24 }}
+                    />
+                  )}
+                </div>
+
+                {/* Right: wd-panel step card */}
+                <div className="wd-panel flex-1" style={{ padding: 24, marginBottom: 16 }}>
+                  <p
+                    style={{
                       fontFamily: '"IBM Plex Mono", monospace',
                       fontSize: 11,
                       textTransform: 'uppercase',
-                      letterSpacing: '0.1em',
-                      color: s.color,
-                      cursor: 'default',
+                      letterSpacing: '0.15em',
+                      color: '#6F9BC6',
+                      marginBottom: 8,
+                      borderLeft: '2px solid rgba(111,155,198,0.3)',
+                      paddingLeft: 8,
                     }}
                   >
-                    {cat.name}
-                  </div>
-                )
-              })}
-            </div>
-            <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap', marginTop: 16 }}>
-              {[
-                { color: '#00C48C', label: 'conversion core' },
-                { color: '#6F9BC6', label: 'universal' },
-                { color: '#8080C0', label: 'vertical-specific' },
-              ].map(item => (
-                <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <span style={{ width: 5, height: 5, backgroundColor: item.color, display: 'block', flexShrink: 0 }} />
-                  <span style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, color: '#6E7587' }}>
-                    {item.label}
-                  </span>
+                    {step.label}
+                  </p>
+                  <h3 className="font-display font-bold text-lg text-text-primary mb-2">
+                    {step.title}
+                  </h3>
+                  <p className="font-body text-sm leading-relaxed text-text-secondary">
+                    {step.description}
+                  </p>
+                  {step.code !== null && (
+                    <div className="mt-3">
+                      <CodeBlock code={step.code} language="json" />
+                    </div>
+                  )}
                 </div>
-              ))}
-            </div>
-          </div>
 
-        </div>
-      </section>
-
-      {/* ── 3. The Pipeline ───────────────────────────────────────────────────── */}
-      <section className="max-w-4xl mx-auto px-8 pb-20">
-        <div className="section-label mb-3">THE PIPELINE</div>
-        <h2
-          className="section-headline mb-12"
-          style={{ fontSize: 'clamp(28px, 4vw, 44px)', letterSpacing: '-1px' }}
-        >
-          What happens between POST and response.
-        </h2>
-
-        <div>
-          {PIPELINE_STEPS.map((step, i) => (
-            <div key={step.num} className="flex gap-6">
-
-              {/* Left: step number + connector */}
-              <div className="flex flex-col items-center flex-shrink-0" style={{ width: 32 }}>
-                <span
-                  style={{
-                    fontFamily: '"IBM Plex Mono", monospace',
-                    fontSize: 13,
-                    fontWeight: 500,
-                    color: '#6F9BC6',
-                    letterSpacing: '0.15em',
-                    lineHeight: 1,
-                  }}
-                >
-                  {step.num}
-                </span>
-                {i < PIPELINE_STEPS.length - 1 && (
-                  <div
-                    className="flex-1 mt-2"
-                    style={{ width: 1, background: '#111827', minHeight: 24 }}
-                  />
-                )}
               </div>
+            ))}
+          </div>
+        </div>
+      </section>
+      <div className="section-separator" />
 
-              {/* Right: content block */}
-              <div className="bg-background-raised border border-background-border p-6 mb-4 flex-1">
-                <p
-                  style={{
-                    fontFamily: '"IBM Plex Mono", monospace',
-                    fontSize: 11,
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.15em',
-                    color: '#6F9BC6',
-                    marginBottom: 4,
-                  }}
-                >
-                  {step.label}
-                </p>
-                <h3 className="font-display font-bold text-lg text-text-primary mb-2">
-                  {step.title}
-                </h3>
-                <p className="font-body text-sm leading-relaxed text-text-secondary">
-                  {step.description}
-                </p>
-                {step.code !== null && (
-                  <div className="mt-3">
-                    <CodeBlock code={step.code} language="json" />
-                  </div>
-                )}
+      {/* ── 4. Output — mounted module bg #06090F + green bloom ──────────────── */}
+      <section style={{
+        position: 'relative',
+        overflow: 'hidden',
+        background: '#06090F',
+        borderTop: '0.5px solid rgba(0,196,140,0.15)',
+        borderBottom: '0.5px solid rgba(255,255,255,0.05)',
+      }}>
+        {/* Green bloom */}
+        <div
+          aria-hidden
+          style={{
+            position: 'absolute',
+            inset: 0,
+            pointerEvents: 'none',
+            zIndex: 0,
+            background: 'radial-gradient(ellipse 800px 500px at 50% 40%, rgba(0,196,140,0.06) 0%, transparent 60%)',
+          }}
+        />
+        <div style={{ position: 'relative', zIndex: 1, maxWidth: '56rem', margin: '0 auto', padding: '80px 32px' }}>
+          <div className="section-label mb-3">WHAT COMES BACK</div>
+          <h2
+            className="section-headline mb-12"
+            style={{ fontSize: 'clamp(28px, 4vw, 44px)', letterSpacing: '-1px' }}
+          >
+            One response. Every surface covered.
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+            <div className="wd-panel" style={{ padding: 24 }}>
+              <div style={{ marginBottom: 12 }}>
+                <Stat value={61} label="WEIGHTED OVERALL SCORE" verdict="score" />
               </div>
-
+              <p className="font-body text-sm leading-relaxed text-text-secondary">
+                0–100. Calibrated to site type and buyer complexity. Benchmarked against corpus.
+              </p>
             </div>
-          ))}
+
+            <div className="wd-panel" style={{ padding: 24 }}>
+              <div style={{ marginBottom: 12 }}>
+                <Stat value={23} label="RANKED FINDINGS" verdict="problem-count" />
+              </div>
+              <p className="font-body text-sm leading-relaxed text-text-secondary">
+                Sorted P1→P3. Each with severity, fix_effort, impact_tier, and specific evidence from
+                the page.
+              </p>
+            </div>
+
+            <div className="wd-panel" style={{ padding: 24 }}>
+              <div style={{ marginBottom: 12 }}>
+                <Stat value={5} label="VERIFIED STRENGTHS" verdict="good-count" />
+              </div>
+              <p className="font-body text-sm leading-relaxed text-text-secondary">
+                What&apos;s genuinely working above average. Referenced against specific visible content
+                — never padded.
+              </p>
+            </div>
+
+            <div className="wd-panel" style={{ padding: 24 }}>
+              <div style={{ marginBottom: 12 }}>
+                <Stat value={7} label="DIMENSION BENCHMARKS" verdict="neutral" />
+              </div>
+              <p className="font-body text-sm leading-relaxed text-text-secondary">
+                Every dimension score positioned against industry average and percentile for your
+                site&apos;s vertical.
+              </p>
+            </div>
+
+          </div>
         </div>
       </section>
+      <div className="section-separator" />
 
-      {/* ── 4. The Output ─────────────────────────────────────────────────────── */}
-      <section className="max-w-4xl mx-auto px-8 pb-20">
-        <div className="section-label mb-3">WHAT COMES BACK</div>
-        <h2
-          className="section-headline mb-12"
-          style={{ fontSize: 'clamp(28px, 4vw, 44px)', letterSpacing: '-1px' }}
-        >
-          One response. Every surface covered.
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-          <div className="landing-card-electric bg-background-raised border border-background-border p-6">
-            <div className="mb-3">
-              <Stat value={61} label="WEIGHTED OVERALL SCORE" verdict="score" />
-            </div>
-            <p className="font-body text-sm leading-relaxed text-text-secondary">
-              0–100. Calibrated to site type and buyer complexity. Benchmarked against corpus.
-            </p>
-          </div>
-
-          <div className="landing-card-electric bg-background-raised border border-background-border p-6">
-            <div className="mb-3">
-              <Stat value={23} label="RANKED FINDINGS" verdict="problem-count" />
-            </div>
-            <p className="font-body text-sm leading-relaxed text-text-secondary">
-              Sorted P1→P3. Each with severity, fix_effort, impact_tier, and specific evidence from
-              the page.
-            </p>
-          </div>
-
-          <div className="landing-card-electric bg-background-raised border border-background-border p-6">
-            <div className="mb-3">
-              <Stat value={5} label="VERIFIED STRENGTHS" verdict="good-count" />
-            </div>
-            <p className="font-body text-sm leading-relaxed text-text-secondary">
-              What&apos;s genuinely working above average. Referenced against specific visible content
-              — never padded.
-            </p>
-          </div>
-
-          <div className="landing-card-electric bg-background-raised border border-background-border p-6">
-            <div className="mb-3">
-              <Stat value={7} label="DIMENSION BENCHMARKS" verdict="neutral" />
-            </div>
-            <p className="font-body text-sm leading-relaxed text-text-secondary">
-              Every dimension score positioned against industry average and percentile for your
-              site&apos;s vertical.
-            </p>
-          </div>
-
-        </div>
-      </section>
-
-      {/* ── 5. Three Audiences ────────────────────────────────────────────────── */}
+      {/* ── 5. Three Audiences — transparent + wd-panel cards ────────────────── */}
       <section className="max-w-7xl mx-auto px-8 pb-20">
         <div className="section-label mb-3">WHO USES IT</div>
         <h2
@@ -338,7 +387,7 @@ export default function ProductPage() {
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 
-          <div className="landing-card-electric bg-background-raised border border-background-border p-8 flex flex-col">
+          <div className="wd-panel flex flex-col" style={{ padding: 32 }}>
             <div
               style={{
                 fontFamily: '"IBM Plex Mono", monospace',
@@ -355,7 +404,7 @@ export default function ProductPage() {
               Paste your URL. Get a full conversion audit in 90 seconds — score, ranked findings,
               strengths, and how you compare against your category. Free to start.
             </p>
-            <div className="mt-8">
+            <div style={{ marginTop: 32 }}>
               <Link
                 href="/scan"
                 style={{
@@ -386,7 +435,7 @@ export default function ProductPage() {
             </div>
           </div>
 
-          <div className="landing-card-electric bg-background-raised border border-background-border p-8 flex flex-col">
+          <div className="wd-panel flex flex-col" style={{ padding: 32 }}>
             <div
               style={{
                 fontFamily: '"IBM Plex Mono", monospace',
@@ -403,7 +452,7 @@ export default function ProductPage() {
               Run client audits at scale. White-label report links, client workspaces, multi-page
               scanning. Show up to every call with data.
             </p>
-            <div className="mt-8">
+            <div style={{ marginTop: 32 }}>
               <Link
                 href="/pricing"
                 style={{
@@ -434,7 +483,7 @@ export default function ProductPage() {
             </div>
           </div>
 
-          <div className="landing-card-electric bg-background-raised border border-background-border p-8 flex flex-col">
+          <div className="wd-panel flex flex-col" style={{ padding: 32 }}>
             <div
               style={{
                 fontFamily: '"IBM Plex Mono", monospace',
@@ -451,7 +500,7 @@ export default function ProductPage() {
               POST a URL, get structured JSON. Batch endpoint, async mode, webhooks. Integrate
               conversion intelligence into your product in an afternoon.
             </p>
-            <div className="mt-8">
+            <div style={{ marginTop: 32 }}>
               <Link
                 href="/developers"
                 style={{
@@ -484,8 +533,9 @@ export default function ProductPage() {
 
         </div>
       </section>
+      <div className="section-separator" />
 
-      {/* ── 6. Final CTA ──────────────────────────────────────────────────────── */}
+      {/* ── 6. Final CTA — transparent, grid-exposed ─────────────────────────── */}
       <style>{`
         @keyframes scan-cta-pulse {
           0%, 100% { border-color: rgba(0,196,140,0.3); }
@@ -495,14 +545,7 @@ export default function ProductPage() {
           .scan-cta-pulse { animation: scan-cta-pulse 2s infinite; }
         }
       `}</style>
-      <section
-        style={{
-          backgroundColor: '#0A0E18',
-          borderTop: '0.5px solid rgba(255,255,255,0.07)',
-          padding: '64px 32px',
-          textAlign: 'center',
-        }}
-      >
+      <section style={{ padding: '64px 32px', textAlign: 'center' }}>
         <h2
           className="font-score"
           style={{

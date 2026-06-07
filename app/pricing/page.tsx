@@ -177,13 +177,7 @@ function Cell({ val }: { val: CellVal }): JSX.Element {
   if (val.type === 'check')
     return (
       <span
-        style={{
-          display: 'inline-block',
-          width: 7,
-          height: 7,
-          backgroundColor: '#00C48C',
-          verticalAlign: 'middle',
-        }}
+        style={{ display: 'inline-block', width: 7, height: 7, backgroundColor: '#00C48C', verticalAlign: 'middle' }}
       />
     )
   if (val.type === 'dash')
@@ -194,37 +188,15 @@ function Cell({ val }: { val: CellVal }): JSX.Element {
 function Bullet({ text }: { text: string }) {
   return (
     <li style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 8, listStyle: 'none' }}>
-      <span
-        style={{
-          flexShrink: 0,
-          width: 5,
-          height: 5,
-          backgroundColor: '#00C48C',
-          marginTop: 7,
-          display: 'block',
-        }}
-      />
-      <span style={{ ...SANS, fontSize: 14, lineHeight: 1.65, color: '#9398A8' }}>
-        {text}
-      </span>
+      <span style={{ flexShrink: 0, width: 5, height: 5, backgroundColor: '#00C48C', marginTop: 7, display: 'block' }} />
+      <span style={{ ...SANS, fontSize: 14, lineHeight: 1.65, color: '#9398A8' }}>{text}</span>
     </li>
   )
 }
 
 function InheritLabel({ text }: { text: string }) {
   return (
-    <li
-      style={{
-        listStyle: 'none',
-        marginBottom: 16,
-        marginTop: 4,
-        ...MONO,
-        fontSize: 10,
-        textTransform: 'uppercase',
-        letterSpacing: '0.1em',
-        color: '#6E7587',
-      }}
-    >
+    <li style={{ listStyle: 'none', marginBottom: 16, marginTop: 4, ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#6E7587' }}>
       {text}
     </li>
   )
@@ -241,16 +213,14 @@ export default function PricingPage() {
   const savings = (monthly: number) => Math.round(monthly * 0.2 * 12)
 
   return (
-    <main style={{ backgroundColor: '#06090F', minHeight: '100vh' }}>
+    <main style={{ minHeight: '100vh' }}>
 
-      {/* ── 1. Hero band ──────────────────────────────────────────────────────── */}
+      {/* ── 1. Hero — transparent, grid-exposed ──────────────────────────────── */}
       <section style={{ padding: '96px 32px 64px', maxWidth: 896, margin: '0 auto', textAlign: 'center' }}>
         <div style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.2em', color: '#6F9BC6', marginBottom: 16 }}>
           PLANS &amp; PRICING
         </div>
-        <h1
-          style={{ ...DISP, fontSize: 'clamp(36px, 5vw, 56px)', fontWeight: 700, letterSpacing: '-1.5px', color: '#E6E9EE', margin: '0 0 16px' }}
-        >
+        <h1 style={{ ...DISP, fontSize: 'clamp(36px, 5vw, 56px)', fontWeight: 700, letterSpacing: '-1.5px', color: '#E6E9EE', margin: '0 0 16px' }}>
           Start free. Scale when ready.
         </h1>
         <p style={{ ...SANS, fontSize: 16, lineHeight: 1.6, color: '#9398A8', maxWidth: 672, margin: '0 auto 40px' }}>
@@ -258,65 +228,24 @@ export default function PricingPage() {
         </p>
 
         {/* Monthly / Annual toggle */}
-        <div
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            backgroundColor: '#0A0E18',
-            border: '0.5px solid rgba(255,255,255,0.08)',
-            padding: 4,
-          }}
-        >
+        <div style={{ display: 'inline-flex', alignItems: 'center', backgroundColor: '#0A0E18', border: '0.5px solid rgba(255,255,255,0.08)', padding: 4 }}>
           <button
             onClick={() => setIsAnnual(false)}
-            style={{
-              ...MONO,
-              fontSize: 13,
-              padding: '8px 20px',
-              backgroundColor: !isAnnual ? '#0D1420' : 'transparent',
-              color: !isAnnual ? '#E6E9EE' : '#6E7587',
-              border: 'none',
-              cursor: 'pointer',
-              borderRadius: 0,
-              transition: 'background-color 0.15s, color 0.15s',
-            }}
+            style={{ ...MONO, fontSize: 13, padding: '8px 20px', backgroundColor: !isAnnual ? '#0D1420' : 'transparent', color: !isAnnual ? '#E6E9EE' : '#6E7587', border: 'none', cursor: 'pointer', borderRadius: 0, transition: 'background-color 0.15s, color 0.15s' }}
           >
             Monthly
           </button>
           <button
             onClick={() => setIsAnnual(true)}
-            style={{
-              ...MONO,
-              fontSize: 13,
-              padding: '8px 20px',
-              backgroundColor: isAnnual ? '#0D1420' : 'transparent',
-              color: isAnnual ? '#E6E9EE' : '#6E7587',
-              border: 'none',
-              cursor: 'pointer',
-              borderRadius: 0,
-              display: 'flex',
-              alignItems: 'center',
-              gap: 8,
-              transition: 'background-color 0.15s, color 0.15s',
-            }}
+            style={{ ...MONO, fontSize: 13, padding: '8px 20px', backgroundColor: isAnnual ? '#0D1420' : 'transparent', color: isAnnual ? '#E6E9EE' : '#6E7587', border: 'none', cursor: 'pointer', borderRadius: 0, display: 'flex', alignItems: 'center', gap: 8, transition: 'background-color 0.15s, color 0.15s' }}
           >
             Annual
-            <span
-              style={{
-                ...MONO,
-                fontSize: 10,
-                backgroundColor: 'rgba(0,196,140,0.12)',
-                color: '#00C48C',
-                padding: '3px 8px',
-                letterSpacing: '0.05em',
-              }}
-            >
+            <span style={{ ...MONO, fontSize: 10, backgroundColor: 'rgba(0,196,140,0.12)', color: '#00C48C', padding: '3px 8px', letterSpacing: '0.05em' }}>
               SAVE 20%
             </span>
           </button>
         </div>
 
-        {/* Annual savings callout — visible only when annual active */}
         {isAnnual && (
           <div style={{ marginTop: 16, ...MONO, fontSize: 11, color: '#6E7587', lineHeight: 1.8 }}>
             <span style={{ color: '#00C48C' }}>save ${savings(49)}/yr</span> on Founder
@@ -327,11 +256,11 @@ export default function PricingPage() {
           </div>
         )}
       </section>
+      <div className="section-separator" />
 
-      {/* ── 2. Pricing cards ──────────────────────────────────────────────────── */}
-      <section style={{ position: 'relative', maxWidth: 1280, margin: '0 auto', padding: '0 32px 80px' }}>
-
-        {/* Green bloom behind Agency card (3rd column, ~60% from left) */}
+      {/* ── 2. Tier cards — mounted module bg #06090F ────────────────────────── */}
+      <section style={{ position: 'relative', overflow: 'hidden', background: '#06090F', borderTop: '0.5px solid rgba(255,255,255,0.08)' }}>
+        {/* Agency bloom behind 3rd card */}
         <div
           aria-hidden
           style={{
@@ -339,269 +268,144 @@ export default function PricingPage() {
             inset: 0,
             pointerEvents: 'none',
             zIndex: 0,
-            background: 'radial-gradient(ellipse 520px 640px at 63% 50%, rgba(0,196,140,0.07) 0%, transparent 65%)',
+            background: 'radial-gradient(ellipse 500px 700px at 55% 50%, rgba(0,196,140,0.06) 0%, transparent 60%)',
           }}
         />
+        <div style={{ position: 'relative', zIndex: 1, maxWidth: 1280, margin: '0 auto', padding: '64px 32px 80px' }}>
 
-        {/* Solo / Teams group labels — desktop only */}
-        <div className="hidden lg:grid lg:grid-cols-4 gap-4 mb-2" style={{ position: 'relative', zIndex: 1 }}>
-          <div className="col-span-2" style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#6E7587' }}>
-            SOLO
-          </div>
-          <div className="col-span-2" style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#6E7587' }}>
-            TEAMS
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4" style={{ position: 'relative', zIndex: 1, alignItems: 'stretch' }}>
-
-          {/* FREE */}
-          <div className="wd-panel" style={{ display: 'flex', flexDirection: 'column' }}>
-            {/* Header zone */}
-            <div style={{ padding: '20px 24px' }}>
-              <div style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#6E7587', marginBottom: 6 }}>
-                FREE
-              </div>
-              <div style={{ ...MONO, fontSize: 11, color: '#6E7587', marginBottom: 16 }}>
-                for your first scan
-              </div>
-              <div style={{ ...DISP, fontSize: 44, fontWeight: 700, color: '#E6E9EE', lineHeight: 1, marginBottom: 4 }}>
-                $0
-              </div>
-              <div style={{ ...SANS, fontSize: 14, color: '#8E8EA0', marginBottom: 8 }}>
-                forever
-              </div>
-              <div style={{ ...MONO, fontSize: 10, color: '#6E7587' }}>
-                3 scans / month — no card
-              </div>
+          {/* Solo / Teams group labels — desktop only */}
+          <div className="hidden lg:grid lg:grid-cols-4 gap-4 mb-2">
+            <div className="col-span-2" style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#6E7587' }}>
+              SOLO
             </div>
-            <div style={{ height: '0.5px', background: 'rgba(255,255,255,0.07)' }} />
-            {/* Feature zone */}
-            <div style={{ padding: '16px 24px 24px', background: 'rgba(255,255,255,0.01)', flexGrow: 1 }}>
-              <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-                <Bullet text="3 scans per month" />
-                <Bullet text="Full 307-check audit" />
-                <Bullet text="Score + findings" />
-                <Bullet text="7-day report history" />
-                <Bullet text="Community support" />
-              </ul>
-            </div>
-            <div style={{ height: '0.5px', background: 'rgba(255,255,255,0.07)' }} />
-            {/* CTA zone */}
-            <div style={{ padding: '16px 24px 24px' }}>
-              <Link
-                href="/scan"
-                style={{
-                  display: 'block',
-                  textAlign: 'center',
-                  ...MONO,
-                  fontSize: 13,
-                  color: '#9398A8',
-                  border: '0.5px solid #6E7587',
-                  padding: '12px 0',
-                  textDecoration: 'none',
-                  transition: 'color 0.15s, border-color 0.15s',
-                }}
-              >
-                START FREE →
-              </Link>
+            <div className="col-span-2" style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#6E7587' }}>
+              TEAMS
             </div>
           </div>
 
-          {/* FOUNDER */}
-          <div className="wd-panel" style={{ display: 'flex', flexDirection: 'column' }}>
-            {/* Header zone */}
-            <div style={{ padding: '20px 24px' }}>
-              <div style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#6E7587', marginBottom: 6 }}>
-                FOUNDER
-              </div>
-              <div style={{ ...MONO, fontSize: 11, color: '#6E7587', marginBottom: 16 }}>
-                for founders running their own site
-              </div>
-              <div style={{ ...DISP, fontSize: 44, fontWeight: 700, color: '#E6E9EE', lineHeight: 1, marginBottom: 4 }}>
-                ${price(49)}
-              </div>
-              <div style={{ ...SANS, fontSize: 14, color: '#8E8EA0', marginBottom: 8 }}>
-                per month
-              </div>
-              <div style={{ ...MONO, fontSize: 10, color: '#6E7587' }}>
-                ≈ ${(price(49) / 50).toFixed(2)} / scan at 50 scans/mo
-              </div>
-            </div>
-            <div style={{ height: '0.5px', background: 'rgba(255,255,255,0.07)' }} />
-            {/* Feature zone */}
-            <div style={{ padding: '16px 24px 24px', background: 'rgba(255,255,255,0.01)', flexGrow: 1 }}>
-              <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-                <InheritLabel text="Everything in Free, plus:" />
-                <Bullet text="50 scans per month" />
-                <Bullet text="Priority processing" />
-                <Bullet text="30-day report history" />
-                <Bullet text="Email support" />
-                <Bullet text="CSV export" />
-              </ul>
-            </div>
-            <div style={{ height: '0.5px', background: 'rgba(255,255,255,0.07)' }} />
-            {/* CTA zone */}
-            <div style={{ padding: '16px 24px 24px' }}>
-              <Link
-                href="/signup?plan=starter"
-                style={{
-                  display: 'block',
-                  textAlign: 'center',
-                  ...MONO,
-                  fontSize: 13,
-                  color: '#00C48C',
-                  border: '0.5px solid #00C48C',
-                  padding: '12px 0',
-                  textDecoration: 'none',
-                  transition: 'opacity 0.15s',
-                }}
-              >
-                START FREE TRIAL →
-              </Link>
-            </div>
-          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4" style={{ alignItems: 'stretch' }}>
 
-          {/* AGENCY — left border accent + wd-panel-primary */}
-          <div
-            className="wd-panel"
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              borderLeft: '2px solid rgba(0,196,140,0.4)',
-            }}
-          >
-            {/* Header zone */}
-            <div style={{ padding: '20px 24px' }}>
-              <div style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#00C48C', marginBottom: 6 }}>
-                AGENCY
+            {/* FREE */}
+            <div className="wd-panel" style={{ display: 'flex', flexDirection: 'column' }}>
+              <div style={{ padding: '20px 24px' }}>
+                <div style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#6E7587', marginBottom: 6 }}>FREE</div>
+                <div style={{ ...MONO, fontSize: 11, color: '#6E7587', marginBottom: 16 }}>for your first scan</div>
+                <div style={{ ...DISP, fontSize: 44, fontWeight: 700, color: '#E6E9EE', lineHeight: 1, marginBottom: 4 }}>$0</div>
+                <div style={{ ...SANS, fontSize: 14, color: '#8E8EA0', marginBottom: 8 }}>forever</div>
+                <div style={{ ...MONO, fontSize: 10, color: '#6E7587' }}>3 scans / month — no card</div>
               </div>
-              <div style={{ ...MONO, fontSize: 11, color: '#6E7587', marginBottom: 16 }}>
-                for teams auditing client sites
+              <div style={{ height: '0.5px', background: 'rgba(255,255,255,0.07)' }} />
+              <div style={{ padding: '16px 24px 24px', background: 'rgba(255,255,255,0.01)', flexGrow: 1 }}>
+                <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                  <Bullet text="3 scans per month" />
+                  <Bullet text="Full 307-check audit" />
+                  <Bullet text="Score + findings" />
+                  <Bullet text="7-day report history" />
+                  <Bullet text="Community support" />
+                </ul>
               </div>
-              <div style={{ ...DISP, fontSize: 44, fontWeight: 700, color: '#E6E9EE', lineHeight: 1, marginBottom: 4 }}>
-                ${price(149)}
-              </div>
-              <div style={{ ...SANS, fontSize: 14, color: '#8E8EA0', marginBottom: 8 }}>
-                per month
-              </div>
-              <div style={{ ...MONO, fontSize: 10, color: '#6E7587' }}>
-                ≈ ${(price(149) / 200).toFixed(2)} / scan at 200 scans/mo
+              <div style={{ height: '0.5px', background: 'rgba(255,255,255,0.07)' }} />
+              <div style={{ padding: '16px 24px 24px' }}>
+                <Link href="/scan" style={{ display: 'block', textAlign: 'center', ...MONO, fontSize: 13, color: '#9398A8', border: '0.5px solid #6E7587', padding: '12px 0', textDecoration: 'none', transition: 'color 0.15s, border-color 0.15s' }}>
+                  START FREE →
+                </Link>
               </div>
             </div>
-            <div style={{ height: '0.5px', background: 'rgba(0,196,140,0.2)' }} />
-            {/* Feature zone */}
-            <div style={{ padding: '16px 24px 24px', background: 'rgba(0,196,140,0.02)', flexGrow: 1 }}>
-              <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-                <InheritLabel text="Everything in Founder, plus:" />
-                <Bullet text="200 scans per month" />
-                <Bullet text="White-label report links" />
-                <Bullet text="Client workspaces" />
-                <Bullet text="100 bundled API calls/month" />
-                <Bullet text="Multi-page scanning" />
-                <Bullet text="Priority support + SLA" />
-              </ul>
-            </div>
-            <div style={{ height: '0.5px', background: 'rgba(0,196,140,0.2)' }} />
-            {/* CTA zone */}
-            <div style={{ padding: '16px 24px 24px' }}>
-              <Link
-                href="/signup?plan=agency"
-                style={{
-                  display: 'block',
-                  textAlign: 'center',
-                  ...MONO,
-                  fontSize: 13,
-                  color: '#050810',
-                  backgroundColor: '#00C48C',
-                  padding: '12px 0',
-                  textDecoration: 'none',
-                  transition: 'opacity 0.15s',
-                }}
-              >
-                START FREE TRIAL →
-              </Link>
-            </div>
-          </div>
 
-          {/* ENTERPRISE */}
-          <div className="wd-panel" style={{ display: 'flex', flexDirection: 'column' }}>
-            {/* Header zone */}
-            <div style={{ padding: '20px 24px' }}>
-              <div style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#6E7587', marginBottom: 6 }}>
-                ENTERPRISE
+            {/* FOUNDER */}
+            <div className="wd-panel" style={{ display: 'flex', flexDirection: 'column' }}>
+              <div style={{ padding: '20px 24px' }}>
+                <div style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#6E7587', marginBottom: 6 }}>FOUNDER</div>
+                <div style={{ ...MONO, fontSize: 11, color: '#6E7587', marginBottom: 16 }}>for founders running their own site</div>
+                <div style={{ ...DISP, fontSize: 44, fontWeight: 700, color: '#E6E9EE', lineHeight: 1, marginBottom: 4 }}>${price(49)}</div>
+                <div style={{ ...SANS, fontSize: 14, color: '#8E8EA0', marginBottom: 8 }}>per month</div>
+                <div style={{ ...MONO, fontSize: 10, color: '#6E7587' }}>≈ ${(price(49) / 50).toFixed(2)} / scan at 50 scans/mo</div>
               </div>
-              <div style={{ ...MONO, fontSize: 11, color: '#6E7587', marginBottom: 16 }}>
-                for agencies at scale
+              <div style={{ height: '0.5px', background: 'rgba(255,255,255,0.07)' }} />
+              <div style={{ padding: '16px 24px 24px', background: 'rgba(255,255,255,0.01)', flexGrow: 1 }}>
+                <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                  <InheritLabel text="Everything in Free, plus:" />
+                  <Bullet text="50 scans per month" />
+                  <Bullet text="Priority processing" />
+                  <Bullet text="30-day report history" />
+                  <Bullet text="Email support" />
+                  <Bullet text="CSV export" />
+                </ul>
               </div>
-              <div style={{ ...DISP, fontSize: 44, fontWeight: 700, color: '#E6E9EE', lineHeight: 1, marginBottom: 4 }}>
-                ${price(499)}
-              </div>
-              <div style={{ ...SANS, fontSize: 14, color: '#8E8EA0', marginBottom: 8 }}>
-                per month
-              </div>
-              <div style={{ ...MONO, fontSize: 10, color: '#6E7587' }}>
-                volume pricing — contact us
+              <div style={{ height: '0.5px', background: 'rgba(255,255,255,0.07)' }} />
+              <div style={{ padding: '16px 24px 24px' }}>
+                <Link href="/signup?plan=starter" style={{ display: 'block', textAlign: 'center', ...MONO, fontSize: 13, color: '#00C48C', border: '0.5px solid #00C48C', padding: '12px 0', textDecoration: 'none', transition: 'opacity 0.15s' }}>
+                  START FREE TRIAL →
+                </Link>
               </div>
             </div>
-            <div style={{ height: '0.5px', background: 'rgba(255,255,255,0.07)' }} />
-            {/* Feature zone */}
-            <div style={{ padding: '16px 24px 24px', background: 'rgba(255,255,255,0.01)', flexGrow: 1 }}>
-              <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-                <InheritLabel text="Everything in Agency, plus:" />
-                <Bullet text="Unlimited scans" />
-                <Bullet text="Custom integrations" />
-                <Bullet text="Dedicated account manager" />
-                <Bullet text="SSO + team management" />
-                <Bullet text="Custom SLA" />
-                <Bullet text="Invoice billing" />
-              </ul>
-            </div>
-            <div style={{ height: '0.5px', background: 'rgba(255,255,255,0.07)' }} />
-            {/* CTA zone */}
-            <div style={{ padding: '16px 24px 24px' }}>
-              <Link
-                href="mailto:hello@webdocai.com"
-                style={{
-                  display: 'block',
-                  textAlign: 'center',
-                  ...MONO,
-                  fontSize: 13,
-                  color: '#9398A8',
-                  border: '0.5px solid #6E7587',
-                  padding: '12px 0',
-                  textDecoration: 'none',
-                  transition: 'color 0.15s',
-                }}
-              >
-                TALK TO US →
-              </Link>
-            </div>
-          </div>
 
+            {/* AGENCY — left border accent */}
+            <div className="wd-panel" style={{ display: 'flex', flexDirection: 'column', borderLeft: '2px solid rgba(0,196,140,0.4)' }}>
+              <div style={{ padding: '20px 24px' }}>
+                <div style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#00C48C', marginBottom: 6 }}>AGENCY</div>
+                <div style={{ ...MONO, fontSize: 11, color: '#6E7587', marginBottom: 16 }}>for teams auditing client sites</div>
+                <div style={{ ...DISP, fontSize: 44, fontWeight: 700, color: '#E6E9EE', lineHeight: 1, marginBottom: 4 }}>${price(149)}</div>
+                <div style={{ ...SANS, fontSize: 14, color: '#8E8EA0', marginBottom: 8 }}>per month</div>
+                <div style={{ ...MONO, fontSize: 10, color: '#6E7587' }}>≈ ${(price(149) / 200).toFixed(2)} / scan at 200 scans/mo</div>
+              </div>
+              <div style={{ height: '0.5px', background: 'rgba(0,196,140,0.2)' }} />
+              <div style={{ padding: '16px 24px 24px', background: 'rgba(0,196,140,0.02)', flexGrow: 1 }}>
+                <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                  <InheritLabel text="Everything in Founder, plus:" />
+                  <Bullet text="200 scans per month" />
+                  <Bullet text="White-label report links" />
+                  <Bullet text="Client workspaces" />
+                  <Bullet text="100 bundled API calls/month" />
+                  <Bullet text="Multi-page scanning" />
+                  <Bullet text="Priority support + SLA" />
+                </ul>
+              </div>
+              <div style={{ height: '0.5px', background: 'rgba(0,196,140,0.2)' }} />
+              <div style={{ padding: '16px 24px 24px' }}>
+                <Link href="/signup?plan=agency" style={{ display: 'block', textAlign: 'center', ...MONO, fontSize: 13, color: '#050810', backgroundColor: '#00C48C', padding: '12px 0', textDecoration: 'none', transition: 'opacity 0.15s' }}>
+                  START FREE TRIAL →
+                </Link>
+              </div>
+            </div>
+
+            {/* ENTERPRISE */}
+            <div className="wd-panel" style={{ display: 'flex', flexDirection: 'column' }}>
+              <div style={{ padding: '20px 24px' }}>
+                <div style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#6E7587', marginBottom: 6 }}>ENTERPRISE</div>
+                <div style={{ ...MONO, fontSize: 11, color: '#6E7587', marginBottom: 16 }}>for agencies at scale</div>
+                <div style={{ ...DISP, fontSize: 44, fontWeight: 700, color: '#E6E9EE', lineHeight: 1, marginBottom: 4 }}>${price(499)}</div>
+                <div style={{ ...SANS, fontSize: 14, color: '#8E8EA0', marginBottom: 8 }}>per month</div>
+                <div style={{ ...MONO, fontSize: 10, color: '#6E7587' }}>volume pricing — contact us</div>
+              </div>
+              <div style={{ height: '0.5px', background: 'rgba(255,255,255,0.07)' }} />
+              <div style={{ padding: '16px 24px 24px', background: 'rgba(255,255,255,0.01)', flexGrow: 1 }}>
+                <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                  <InheritLabel text="Everything in Agency, plus:" />
+                  <Bullet text="Unlimited scans" />
+                  <Bullet text="Custom integrations" />
+                  <Bullet text="Dedicated account manager" />
+                  <Bullet text="SSO + team management" />
+                  <Bullet text="Custom SLA" />
+                  <Bullet text="Invoice billing" />
+                </ul>
+              </div>
+              <div style={{ height: '0.5px', background: 'rgba(255,255,255,0.07)' }} />
+              <div style={{ padding: '16px 24px 24px' }}>
+                <Link href="mailto:hello@webdocai.com" style={{ display: 'block', textAlign: 'center', ...MONO, fontSize: 13, color: '#9398A8', border: '0.5px solid #6E7587', padding: '12px 0', textDecoration: 'none', transition: 'color 0.15s' }}>
+                  TALK TO US →
+                </Link>
+              </div>
+            </div>
+
+          </div>
         </div>
       </section>
+      <div className="section-separator" />
 
-      {/* ── 3. API callout band ───────────────────────────────────────────────── */}
-      <section
-        style={{
-          backgroundColor: '#0A0E18',
-          borderTop: '0.5px solid rgba(255,255,255,0.07)',
-          borderBottom: '0.5px solid rgba(255,255,255,0.07)',
-          padding: '24px 48px',
-        }}
-      >
-        <div
-          style={{
-            maxWidth: 1152,
-            margin: '0 auto',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            flexWrap: 'wrap',
-            gap: 16,
-          }}
-        >
+      {/* ── 3. API callout band — mounted module bg #080D18 ──────────────────── */}
+      <section style={{ background: '#080D18', borderTop: '0.5px solid rgba(111,155,198,0.15)', borderBottom: '0.5px solid rgba(255,255,255,0.05)', padding: '24px 48px' }}>
+        <div style={{ maxWidth: 1152, margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
           <div>
             <p style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#6F9BC6', margin: '0 0 4px' }}>
               BUILDING WITH THE API?
@@ -610,128 +414,66 @@ export default function PricingPage() {
               Developer plans from $0.15/scan. No dashboard required.
             </p>
           </div>
-          <Link
-            href="/developers#pricing"
-            style={{
-              ...MONO,
-              fontSize: 13,
-              border: '0.5px solid #6F9BC6',
-              color: '#6F9BC6',
-              padding: '12px 24px',
-              textDecoration: 'none',
-              display: 'block',
-              flexShrink: 0,
-              transition: 'opacity 0.15s',
-            }}
-          >
+          <Link href="/developers#pricing" style={{ ...MONO, fontSize: 13, border: '0.5px solid #6F9BC6', color: '#6F9BC6', padding: '12px 24px', textDecoration: 'none', display: 'block', flexShrink: 0, transition: 'opacity 0.15s' }}>
             SEE DEVELOPER PRICING →
           </Link>
         </div>
       </section>
+      <div className="section-separator" />
 
-      {/* ── 4. Comparison table ───────────────────────────────────────────────── */}
-      <section style={{ maxWidth: 1280, margin: '0 auto', padding: '48px 32px' }}>
-        <button
-          onClick={() => setShowTable(v => !v)}
-          style={{
-            ...MONO,
-            fontSize: 11,
-            textTransform: 'uppercase',
-            letterSpacing: '0.1em',
-            color: '#6E7587',
-            cursor: 'pointer',
-            width: '100%',
-            textAlign: 'center',
-            backgroundColor: 'transparent',
-            border: 'none',
-            padding: '8px 0',
-            transition: 'color 0.15s',
-          }}
-        >
-          COMPARE ALL FEATURES {showTable ? '↑' : '↓'}
-        </button>
+      {/* ── 4. Comparison table — mounted module bg #06090F ──────────────────── */}
+      <section style={{ background: '#06090F' }}>
+        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '48px 32px' }}>
+          <button
+            onClick={() => setShowTable(v => !v)}
+            style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#6E7587', cursor: 'pointer', width: '100%', textAlign: 'center', backgroundColor: 'transparent', border: 'none', padding: '8px 0', transition: 'color 0.15s' }}
+          >
+            COMPARE ALL FEATURES {showTable ? '↑' : '↓'}
+          </button>
 
-        <div
-          style={{
-            overflow: 'hidden',
-            transition: 'max-height 0.4s ease',
-            maxHeight: showTable ? '2000px' : '0',
-          }}
-        >
-          <div style={{ marginTop: 32, overflowX: 'auto' }}>
-            <table style={{ width: '100%', minWidth: 580, borderCollapse: 'collapse' }}>
-              <thead>
-                <tr>
-                  <th style={{ textAlign: 'left', padding: '12px 16px 12px 0', width: '36%' }} />
-                  {['FREE', 'STARTER', 'AGENCY', 'ENTERPRISE'].map(plan => (
-                    <th
-                      key={plan}
-                      style={{
-                        ...MONO,
-                        fontSize: 11,
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.1em',
-                        color: '#6E7587',
-                        textAlign: 'center',
-                        padding: '12px 16px',
-                        fontWeight: 400,
-                      }}
-                    >
-                      {plan}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {TABLE_GROUPS.flatMap((group, gi) => [
-                  <tr key={`g-${gi}`}>
-                    <td colSpan={5} style={{ paddingTop: 32, paddingBottom: 8 }}>
-                      <span style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#6E7587' }}>
-                        {group.label}
-                      </span>
-                    </td>
-                  </tr>,
-                  ...group.rows.map((row, ri) => (
-                    <tr
-                      key={`r-${gi}-${ri}`}
-                      style={{ backgroundColor: ri % 2 === 1 ? 'rgba(10,14,24,0.7)' : 'transparent' }}
-                    >
-                      <td
-                        style={{
-                          ...SANS,
-                          fontSize: 13,
-                          color: '#9398A8',
-                          padding: '12px 16px 12px 0',
-                          borderBottom: '0.5px solid rgba(255,255,255,0.06)',
-                        }}
-                      >
-                        {row.feature}
+          <div style={{ overflow: 'hidden', transition: 'max-height 0.4s ease', maxHeight: showTable ? '2000px' : '0' }}>
+            <div style={{ marginTop: 32, overflowX: 'auto' }}>
+              <table style={{ width: '100%', minWidth: 580, borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr>
+                    <th style={{ textAlign: 'left', padding: '12px 16px 12px 0', width: '36%' }} />
+                    {['FREE', 'STARTER', 'AGENCY', 'ENTERPRISE'].map(plan => (
+                      <th key={plan} style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#6E7587', textAlign: 'center', padding: '12px 16px', fontWeight: 400 }}>
+                        {plan}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {TABLE_GROUPS.flatMap((group, gi) => [
+                    <tr key={`g-${gi}`}>
+                      <td colSpan={5} style={{ paddingTop: 32, paddingBottom: 8 }}>
+                        <span style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#6E7587' }}>{group.label}</span>
                       </td>
-                      {(['free', 'starter', 'agency', 'enterprise'] as const).map(col => (
-                        <td
-                          key={col}
-                          style={{
-                            textAlign: 'center',
-                            padding: '12px 16px',
-                            borderBottom: '0.5px solid rgba(255,255,255,0.06)',
-                            ...SANS,
-                            fontSize: 13,
-                          }}
-                        >
-                          <Cell val={row[col]} />
+                    </tr>,
+                    ...group.rows.map((row, ri) => (
+                      <tr key={`r-${gi}-${ri}`} style={{ backgroundColor: ri % 2 === 1 ? 'rgba(10,14,24,0.7)' : 'transparent' }}>
+                        <td style={{ ...SANS, fontSize: 13, color: '#9398A8', padding: '12px 16px 12px 0', borderBottom: '0.5px solid rgba(255,255,255,0.06)' }}>
+                          {row.feature}
                         </td>
-                      ))}
-                    </tr>
-                  )),
-                ])}
-              </tbody>
-            </table>
+                        {(['free', 'starter', 'agency', 'enterprise'] as const).map(col => (
+                          <td key={col} style={{ textAlign: 'center', padding: '12px 16px', borderBottom: '0.5px solid rgba(255,255,255,0.06)', ...SANS, fontSize: 13 }}>
+                            <Cell val={row[col]} />
+                          </td>
+                        ))}
+                      </tr>
+                    )),
+                  ])}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       </section>
+      <div className="section-separator" />
 
-      {/* ── 5. FAQ accordion ──────────────────────────────────────────────────── */}
-      <section style={{ maxWidth: 768, margin: '0 auto', padding: '0 32px 64px' }}>
+      {/* ── 5. FAQ — transparent, grid-exposed ───────────────────────────────── */}
+      <section style={{ maxWidth: 768, margin: '0 auto', padding: '48px 32px 64px' }}>
         <div style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.2em', color: '#6E7587', textAlign: 'center', marginBottom: 48 }}>
           COMMON QUESTIONS
         </div>
@@ -751,41 +493,14 @@ export default function PricingPage() {
             >
               <button
                 onClick={() => setOpenFaq(isOpen ? null : i)}
-                style={{
-                  width: '100%',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  padding: '16px 0',
-                  cursor: 'pointer',
-                  backgroundColor: 'transparent',
-                  border: 'none',
-                  textAlign: 'left',
-                  gap: 16,
-                }}
+                style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 0', cursor: 'pointer', backgroundColor: 'transparent', border: 'none', textAlign: 'left', gap: 16 }}
               >
-                <span style={{ ...SANS, fontSize: 16, fontWeight: 500, color: '#E6E9EE' }}>
-                  {faq.q}
-                </span>
-                <span
-                  style={{
-                    flexShrink: 0,
-                    color: isOpen ? faq.accent : '#6E7587',
-                    display: 'inline-block',
-                    transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)',
-                    transition: 'transform 0.2s, color 0.2s',
-                    fontSize: 16,
-                    lineHeight: 1,
-                  }}
-                >
-                  ▾
-                </span>
+                <span style={{ ...SANS, fontSize: 16, fontWeight: 500, color: '#E6E9EE' }}>{faq.q}</span>
+                <span style={{ flexShrink: 0, color: isOpen ? faq.accent : '#6E7587', display: 'inline-block', transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s, color 0.2s', fontSize: 16, lineHeight: 1 }}>▾</span>
               </button>
               {isOpen && (
                 <div>
-                  <p style={{ ...SANS, fontSize: 14, color: '#9398A8', lineHeight: 1.65, margin: 0, padding: '0 24px 20px' }}>
-                    {faq.a}
-                  </p>
+                  <p style={{ ...SANS, fontSize: 14, color: '#9398A8', lineHeight: 1.65, margin: 0, padding: '0 24px 20px' }}>{faq.a}</p>
                   <div style={{ height: '0.5px', background: faq.accent, opacity: 0.4 }} />
                 </div>
               )}
@@ -793,9 +508,10 @@ export default function PricingPage() {
           )
         })}
       </section>
+      <div className="section-separator" />
 
-      {/* ── 6. Footer routing band ────────────────────────────────────────────── */}
-      <div style={{ borderTop: '0.5px solid rgba(255,255,255,0.07)', padding: '24px 0', textAlign: 'center' }}>
+      {/* ── 6. Footer — transparent ──────────────────────────────────────────── */}
+      <div style={{ padding: '24px 0', textAlign: 'center' }}>
         <p style={{ ...SANS, fontSize: 14, color: '#9398A8', margin: 0 }}>
           Need API access?{' '}
           <Link href="/developers#pricing" style={{ color: '#6F9BC6', textDecoration: 'none' }}>

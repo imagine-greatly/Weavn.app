@@ -4,17 +4,17 @@ import { useState } from 'react'
 import Label from '@/components/ui/Label'
 import { CodeBlock } from '@/components/ui/CodeBlock'
 
-const BG       = '#050810'
-const BG_R     = '#080C14'
-const BG_S     = '#0A0F1A'
+const BG       = 'transparent'
+const BG_R     = '#06090F'
+const BG_S     = '#0A0E18'
 const BG_I     = '#0D1420'
-const BD       = '#111827'
-const CYAN     = '#00C8FF'
+const BD       = 'rgba(255,255,255,0.06)'
+const WD_BLUE  = '#6F9BC6'
 const GREEN    = '#00C48C'
-const T1       = '#F0F4FF'
-const T2       = '#8E8EA0'
-const T3       = '#2D3748'
-const MONO     = "'Space Mono', 'Courier New', monospace"
+const T1       = '#E6E9EE'
+const T2       = '#9398A8'
+const T3       = '#6E7587'
+const MONO     = "'IBM Plex Mono', monospace"
 const DISP     = "'Space Grotesk', sans-serif"
 
 type Lang = 'curl' | 'node' | 'python'
@@ -612,7 +612,7 @@ function ParamTable({ rows }: { rows: PR[] }) {
       </div>
       {rows.map((r, i) => (
         <div key={i} style={{ display: 'grid', gridTemplateColumns: cols, padding: '10px 16px', borderBottom: i < rows.length - 1 ? `1px solid ${BD}` : 'none' }}>
-          <span style={{ fontFamily: MONO, fontSize: 12, color: CYAN }}>{r.param}</span>
+          <span style={{ fontFamily: MONO, fontSize: 12, color: WD_BLUE }}>{r.param}</span>
           <span style={{ fontFamily: MONO, fontSize: 12, color: T3 }}>{r.type}</span>
           <span style={{ fontFamily: MONO, fontSize: 12, color: r.required === 'required' ? '#F5A623' : T3 }}>{r.required}</span>
           <span style={{ fontFamily: DISP, fontSize: 12, color: T2 }}>{r.description}</span>
@@ -633,7 +633,7 @@ function QueryTable({ rows }: { rows: QR[] }) {
       </div>
       {rows.map((r, i) => (
         <div key={i} style={{ display: 'grid', gridTemplateColumns: cols, padding: '10px 16px', borderBottom: i < rows.length - 1 ? `1px solid ${BD}` : 'none' }}>
-          <span style={{ fontFamily: MONO, fontSize: 12, color: CYAN }}>{r.param}</span>
+          <span style={{ fontFamily: MONO, fontSize: 12, color: WD_BLUE }}>{r.param}</span>
           <span style={{ fontFamily: MONO, fontSize: 12, color: T3 }}>{r.type}</span>
           <span style={{ fontFamily: DISP, fontSize: 12, color: T2 }}>{r.description}</span>
         </div>
@@ -653,7 +653,7 @@ function FieldTable({ rows }: { rows: FR[] }) {
       </div>
       {rows.map((r, i) => (
         <div key={i} style={{ display: 'grid', gridTemplateColumns: cols, padding: '10px 16px', borderBottom: i < rows.length - 1 ? `1px solid ${BD}` : 'none' }}>
-          <span style={{ fontFamily: MONO, fontSize: 12, color: CYAN }}>{r.name}</span>
+          <span style={{ fontFamily: MONO, fontSize: 12, color: WD_BLUE }}>{r.name}</span>
           <span style={{ fontFamily: MONO, fontSize: 12, color: T3 }}>{r.type}</span>
           <span style={{ fontFamily: DISP, fontSize: 12, color: T2 }}>{r.description}</span>
         </div>
@@ -670,7 +670,7 @@ function ErrTable({ rows }: { rows: { code: string; meaning: string }[] }) {
       </div>
       {rows.map((r, i) => (
         <div key={i} style={{ display: 'grid', gridTemplateColumns: '80px 1fr', padding: '10px 16px', borderBottom: i < rows.length - 1 ? `1px solid ${BD}` : 'none' }}>
-          <span style={{ fontFamily: MONO, fontSize: 12, color: CYAN }}>{r.code}</span>
+          <span style={{ fontFamily: MONO, fontSize: 12, color: WD_BLUE }}>{r.code}</span>
           <span style={{ fontFamily: DISP, fontSize: 12, color: T2 }}>{r.meaning}</span>
         </div>
       ))}
@@ -688,16 +688,37 @@ function EvBlock({ name, desc }: { name: string; desc: string }) {
 }
 
 function H2({ children }: { children: React.ReactNode }) {
-  return <h2 style={{ fontFamily: DISP, fontWeight: 700, fontSize: 28, color: T1, margin: '16px 0', letterSpacing: '-0.4px' }}>{children}</h2>
+  return (
+    <h2 style={{
+      fontFamily: DISP, fontWeight: 700, fontSize: 28, color: T1,
+      margin: '16px 0', letterSpacing: '-0.4px',
+      borderLeft: '2px solid rgba(111,155,198,0.2)',
+      paddingLeft: 12, marginLeft: -14,
+    }}>
+      {children}
+    </h2>
+  )
 }
 function Body({ children, mb = 24 }: { children: React.ReactNode; mb?: number }) {
   return <p style={{ fontFamily: DISP, fontSize: 14, color: T2, lineHeight: 1.8, marginBottom: mb }}>{children}</p>
 }
 function Mono({ children }: { children: React.ReactNode }) {
-  return <code style={{ display: 'block', fontFamily: MONO, fontSize: 12, color: T2, background: BG_S, border: `1px solid ${BD}`, padding: '12px 16px' }}>{children}</code>
+  return (
+    <code style={{
+      display: 'block', fontFamily: MONO, fontSize: 12, color: T2,
+      background: BG_S,
+      borderTop: '1px solid rgba(255,255,255,0.1)',
+      borderLeft: '1px solid rgba(255,255,255,0.07)',
+      borderRight: '1px solid rgba(255,255,255,0.04)',
+      borderBottom: '1px solid rgba(255,255,255,0.03)',
+      padding: '12px 16px',
+    }}>
+      {children}
+    </code>
+  )
 }
 
-const SB: React.CSSProperties = { marginBottom: 64, paddingBottom: 64, borderBottom: `1px solid ${BD}` }
+const SB: React.CSSProperties = { marginBottom: 64, paddingBottom: 64, borderBottom: '1px solid rgba(111,155,198,0.12)' }
 const SL: React.CSSProperties = { paddingBottom: 64 }
 
 // ── page ───────────────────────────────────────────────────────────────────
@@ -724,7 +745,7 @@ export default function ApiDocsPage() {
       {/* ── LEFT NAV ── */}
       <aside style={{ width: 220, flexShrink: 0, background: BG_R, borderRight: `1px solid ${BD}`, height: '100%', overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
         <div style={{ padding: '20px 24px', borderBottom: `1px solid ${BD}`, flexShrink: 0 }}>
-          <div style={{ fontFamily: "'Orbitron', sans-serif", fontSize: 13, fontWeight: 700, color: CYAN, letterSpacing: '0.08em' }}>
+          <div style={{ fontFamily: DISP, fontSize: 13, fontWeight: 700, color: T1, letterSpacing: '0.04em' }}>
             webdoc.ai
           </div>
           <div style={{ fontFamily: MONO, fontSize: 10, color: T3, marginTop: 4 }}>API v1</div>
@@ -745,8 +766,8 @@ export default function ApiDocsPage() {
                       display: 'block', width: '100%', textAlign: 'left',
                       fontFamily: DISP, fontSize: 13, padding: '8px 24px',
                       cursor: 'pointer', border: 'none', outline: 'none',
-                      background: on ? BG_I : 'transparent',
-                      borderLeft: `2px solid ${on ? CYAN : 'transparent'}`,
+                      background: on ? 'rgba(0,196,140,0.04)' : 'transparent',
+                      borderLeft: `2px solid ${on ? GREEN : 'transparent'}`,
                       color: on ? T1 : T2,
                       transition: 'color 0.15s',
                     }}
@@ -1088,7 +1109,7 @@ export default function ApiDocsPage() {
       </main>
 
       {/* ── RIGHT CODE PANEL ── */}
-      <aside style={{ width: 380, flexShrink: 0, background: BG_R, borderLeft: `1px solid ${BD}`, height: '100%', overflowY: 'auto' }}>
+      <aside style={{ width: 380, flexShrink: 0, background: BG_R, borderLeft: '0.5px solid rgba(128,128,192,0.15)', height: '100%', overflowY: 'auto', boxShadow: 'inset 1px 0 0 rgba(128,128,192,0.1)' }}>
         <div style={{ position: 'sticky', top: 0, padding: '40px 24px' }}>
           <div style={{ display: 'flex', borderBottom: `1px solid ${BD}`, marginBottom: 20 }}>
             {LANGS.map(l => (
@@ -1099,8 +1120,8 @@ export default function ApiDocsPage() {
                   fontFamily: MONO, fontSize: 12,
                   padding: '8px 14px', cursor: 'pointer',
                   border: 'none', outline: 'none', background: 'transparent',
-                  borderBottom: lang === l.id ? `2px solid ${CYAN}` : '2px solid transparent',
-                  color: lang === l.id ? CYAN : T3,
+                  borderBottom: lang === l.id ? `2px solid ${WD_BLUE}` : '2px solid transparent',
+                  color: lang === l.id ? WD_BLUE : T3,
                   transition: 'color 0.15s', marginBottom: -1,
                 }}
               >
@@ -1108,10 +1129,12 @@ export default function ApiDocsPage() {
               </button>
             ))}
           </div>
-          <CodeBlock
-            code={code}
-            language={code.trimStart().startsWith('{') || code.trimStart().startsWith('[') ? 'json' : 'bash'}
-          />
+          <div className="wd-panel">
+            <CodeBlock
+              code={code}
+              language={code.trimStart().startsWith('{') || code.trimStart().startsWith('[') ? 'json' : 'bash'}
+            />
+          </div>
         </div>
       </aside>
 

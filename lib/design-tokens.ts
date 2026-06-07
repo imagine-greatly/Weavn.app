@@ -15,7 +15,7 @@ export const TOKENS = {
     },
     text: {
       primary: '#F0F4FF',
-      secondary: '#4A5568',
+      secondary: '#8E8EA0',
       tertiary: '#2D3748',
       inverse: '#050810',
     },
@@ -64,3 +64,16 @@ export const SURFACE = {
   interactive: 'bg-background-raised border border-background-border hover:bg-background-interactive transition-colors duration-150',
   inset: 'bg-background-subtle border border-background-border',
 } as const;
+
+// Design token v2 — data/score constants
+export const IMPACT_KEYS = ['estimated_lift', 'percentile', 'impact_tier'] as const;
+
+export const SEVERITY_COLOR: Record<string, string> = {
+  critical: 'sev-critical',
+  high: 'sev-high',
+  medium: 'sev-high',
+  low: 'ink-muted',
+};
+
+export const scoreBand = (n: number): string =>
+  n < 50 ? 'sev-critical' : n < 70 ? 'sev-high' : 'json-string';

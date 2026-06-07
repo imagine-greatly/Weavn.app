@@ -1,10 +1,14 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { scoreBand } from '@/lib/design-tokens'
 
 interface ScoreRingProps {
   score: number
   size?: 'sm' | 'md' | 'lg'
+  label?: string
+  animate?: boolean
+  /** @deprecated use animate */
   animated?: boolean
 }
 
@@ -14,65 +18,107 @@ const SIZE_MAP = {
   lg: { px: 96, stroke: 5, font: 18 },
 }
 
-function scoreColor(score: number): string {
-  if (score >= 70) return '#00C48C'
-  if (score >= 40) return '#F5A623'
-  return '#FF4444'
+const BAND_HEX: Record<string, string> = {
+  'sev-critical': '#E8635F',
+  'sev-high':     '#EFB23E',
+  'json-string':  '#00C48C',
 }
 
-export default function ScoreRing({ score, size = 'md', animated = true }: ScoreRingProps) {
+function ScoreRing({ score, size = 'md', label, animate = true, animated }: ScoreRingProps) {
+  const shouldAnimate = animated !== undefined ? animated : animate
   const { px, stroke, font } = SIZE_MAP[size]
   const center = px / 2
   const radius = center - stroke / 2 - 1
   const circumference = 2 * Math.PI * radius
-  const fill = (Math.min(Math.max(score, 0), 100) / 100) * circumference
-  const color = scoreColor(score)
+  const targetFill = (Math.min(Math.max(score, 0), 100) / 100) * circumference
+  const color = BAND_HEX[scoreBand(score)] ?? '#00C48C'
+
   const arcRef = useRef<SVGCircleElement>(null)
+  const [displayScore, setDisplayScore] = useState(score)
 
   useEffect(() => {
-    if (!animated || !arcRef.current) return
+    if (!arcRef.current) return
+    const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    const doAnimate = shouldAnimate && !prefersReduced
+
+    if (!doAnimate) {
+      setDisplayScore(score)
+      arcRef.current.style.strokeDasharray = `${targetFill} ${circumference}`
+      return
+    }
+
+    setDisplayScore(0)
     arcRef.current.style.strokeDasharray = `0 ${circumference}`
-    const raf = requestAnimationFrame(() => {
-      arcRef.current!.style.transition = 'stroke-dasharray 1.2s cubic-bezier(0.4, 0, 0.2, 1)'
-      arcRef.current!.style.strokeDasharray = `${fill} ${circumference}`
-    })
-    return () => cancelAnimationFrame(raf)
-  }, [animated, fill, circumference])
+
+    const start = performance.now()
+    const duration = 1100
+    let rafId: number
+
+    const tick = (now: number) => {
+      const t = Math.min((now - start) / duration, 1)
+      const ease = 1 - Math.pow(1 - t, 3)
+      setDisplayScore(Math.round(score * ease))
+      if (arcRef.current) {
+        arcRef.current.style.strokeDasharray = `${targetFill * ease} ${circumference}`
+      }
+      if (t < 1) rafId = requestAnimationFrame(tick)
+    }
+    rafId = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(rafId)
+  }, [shouldAnimate, score, targetFill, circumference])
 
   return (
-    <svg width={px} height={px} viewBox={`0 0 ${px} ${px}`} style={{ display: 'block' }}>
-      <circle
-        cx={center}
-        cy={center}
-        r={radius}
-        fill="none"
-        stroke="#111827"
-        strokeWidth={stroke}
-      />
-      <circle
-        ref={arcRef}
-        cx={center}
-        cy={center}
-        r={radius}
-        fill="none"
-        stroke={color}
-        strokeWidth={stroke}
-        strokeLinecap="round"
-        strokeDasharray={animated ? `0 ${circumference}` : `${fill} ${circumference}`}
-        transform={`rotate(-90 ${center} ${center})`}
-      />
-      <text
-        x={center}
-        y={center}
-        dominantBaseline="central"
-        textAnchor="middle"
-        fill={color}
-        fontFamily="'IBM Plex Mono', monospace"
-        fontWeight={500}
-        fontSize={font}
-      >
-        {score}
-      </text>
-    </svg>
+    <div style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+      <svg width={px} height={px} viewBox={`0 0 ${px} ${px}`} style={{ display: 'block' }}>
+        <circle
+          cx={center}
+          cy={center}
+          r={radius}
+          fill="none"
+          stroke="#111827"
+          strokeWidth={stroke}
+        />
+        <circle
+          ref={arcRef}
+          cx={center}
+          cy={center}
+          r={radius}
+          fill="none"
+          stroke={color}
+          strokeWidth={stroke}
+          strokeDasharray={`${targetFill} ${circumference}`}
+          transform={`rotate(-90 ${center} ${center})`}
+        />
+        <text
+          x={center}
+          y={center}
+          dominantBaseline="central"
+          textAnchor="middle"
+          fill={color}
+          fontFamily="'Space Grotesk', sans-serif"
+          fontWeight={500}
+          fontSize={font}
+        >
+          {displayScore}
+        </text>
+      </svg>
+      {label && (
+        <span
+          style={{
+            fontFamily: "'IBM Plex Mono', monospace",
+            fontWeight: 500,
+            fontSize: 11,
+            textTransform: 'uppercase',
+            letterSpacing: '0.12em',
+            color: '#6E7587',
+          }}
+        >
+          {label}
+        </span>
+      )}
+    </div>
   )
 }
+
+export { ScoreRing }
+export default ScoreRing

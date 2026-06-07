@@ -346,20 +346,43 @@ export default function PricingPage() {
 
       {/* ── 3. API callout band ──────────────────────────────────────────────── */}
       <section
-        className="border-t border-b bg-background-subtle py-8 px-8"
-        style={{ borderColor: 'var(--border-default)' }}
+        className="py-6 px-8"
+        style={{
+          background: '#0D1420',
+          borderTop: '1px solid rgba(0, 200, 255, 0.15)',
+          borderBottom: '1px solid rgba(0, 200, 255, 0.15)',
+        }}
       >
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
-            <p className="font-body text-text-secondary mb-1">Building with the API?</p>
-            <p className="font-mono text-sm" style={{ color: '#3A3A52' }}>
-              Plans from $0.15/scan — no monthly fee on Playground
+            <p className="font-mono text-xs uppercase tracking-widest mb-1" style={{ color: '#00C8FF' }}>
+              BUILDING WITH THE API?
+            </p>
+            <p className="font-body text-sm" style={{ color: '#8E8EA0' }}>
+              Developer plans from $0.15/scan. No dashboard required.
             </p>
           </div>
           <Link
             href="/developers#pricing"
-            className="font-ui-label no-underline hover:opacity-80 transition-opacity flex-shrink-0"
-            style={{ color: '#00C8FF' }}
+            className="font-ui-label no-underline w-full sm:w-auto text-center sm:text-left flex-shrink-0"
+            style={{
+              border: '1px solid rgba(0, 200, 255, 0.4)',
+              background: 'rgba(0, 200, 255, 0.08)',
+              color: '#00C8FF',
+              padding: '12px 24px',
+              display: 'block',
+              transition: 'all 150ms ease',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor = 'rgba(0,200,255,0.7)'
+              e.currentTarget.style.background = 'rgba(0,200,255,0.15)'
+              e.currentTarget.style.boxShadow = 'var(--cyan-glow-active)'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = 'rgba(0,200,255,0.4)'
+              e.currentTarget.style.background = 'rgba(0,200,255,0.08)'
+              e.currentTarget.style.boxShadow = 'none'
+            }}
           >
             See developer pricing →
           </Link>

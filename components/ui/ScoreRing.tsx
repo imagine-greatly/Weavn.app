@@ -24,10 +24,16 @@ const BAND_HEX: Record<string, string> = {
   'json-string':  '#00C48C',
 }
 
-const BAND_GLOW: Record<string, string> = {
-  'sev-critical': 'rgba(232,99,95,0.4)',
-  'sev-high':     'rgba(239,178,62,0.4)',
-  'json-string':  'rgba(0,196,140,0.4)',
+const BAND_GLOW_NEAR: Record<string, string> = {
+  'sev-critical': 'rgba(232,99,95,0.7)',
+  'sev-high':     'rgba(239,178,62,0.7)',
+  'json-string':  'rgba(0,196,140,0.7)',
+}
+
+const BAND_GLOW_FAR: Record<string, string> = {
+  'sev-critical': 'rgba(232,99,95,0.3)',
+  'sev-high':     'rgba(239,178,62,0.3)',
+  'json-string':  'rgba(0,196,140,0.3)',
 }
 
 function ScoreRing({ score, size = 'md', label, animate = true, animated }: ScoreRingProps) {
@@ -37,8 +43,9 @@ function ScoreRing({ score, size = 'md', label, animate = true, animated }: Scor
   const radius = center - stroke / 2 - 1
   const circumference = 2 * Math.PI * radius
   const targetFill = (Math.min(Math.max(score, 0), 100) / 100) * circumference
-  const color = BAND_HEX[scoreBand(score)] ?? '#00C48C'
-  const glow = BAND_GLOW[scoreBand(score)] ?? 'rgba(0,196,140,0.4)'
+  const color    = BAND_HEX[scoreBand(score)]      ?? '#00C48C'
+  const glowNear = BAND_GLOW_NEAR[scoreBand(score)] ?? 'rgba(0,196,140,0.7)'
+  const glowFar  = BAND_GLOW_FAR[scoreBand(score)]  ?? 'rgba(0,196,140,0.3)'
 
   const arcRef = useRef<SVGCircleElement>(null)
   const [displayScore, setDisplayScore] = useState(score)
@@ -96,7 +103,7 @@ function ScoreRing({ score, size = 'md', label, animate = true, animated }: Scor
           strokeWidth={stroke}
           strokeDasharray={`${targetFill} ${circumference}`}
           transform={`rotate(-90 ${center} ${center})`}
-          style={{ '--ring-glow': glow } as CSSProperties}
+          style={{ '--ring-glow-near': glowNear, '--ring-glow-far': glowFar } as CSSProperties}
         />
         <text
           x={center}

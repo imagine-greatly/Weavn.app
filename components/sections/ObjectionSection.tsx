@@ -35,7 +35,7 @@ const OBJECTIONS = [
 
 export default function ObjectionSection() {
   return (
-    <section style={{ padding: '96px 0', borderTop: '0.5px solid rgba(255,255,255,0.06)' }}>
+    <section style={{ padding: '96px 0', background: '#050810' }}>
       <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 48px' }}>
 
         {/* Eyebrow */}
@@ -53,7 +53,7 @@ export default function ObjectionSection() {
           {OBJECTIONS.map((o) => (
             <div
               key={o.q}
-              style={{ background: '#0A0E18', border: '0.5px solid rgba(255,255,255,0.07)', padding: '24px 26px' }}
+              className="wd-panel" style={{ padding: '24px 26px' }}
             >
               <p style={{ ...DISP, fontWeight: 600, fontSize: 16, color: '#E6E9EE', margin: '0 0 12px', lineHeight: 1.35 }}>
                 {o.q}

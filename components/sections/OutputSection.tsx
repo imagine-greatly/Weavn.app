@@ -4,9 +4,16 @@ const DISP = { fontFamily: "'Space Grotesk', sans-serif" }
 
 export default function OutputSection() {
   return (
-    <section style={{ position: 'relative', overflow: 'hidden', padding: '96px 0', borderTop: '0.5px solid rgba(255,255,255,0.06)' }}>
+    <section style={{
+      position: 'relative',
+      overflow: 'hidden',
+      padding: '96px 0',
+      background: 'rgba(10,14,24,0.95)',
+      borderTop: '0.5px solid rgba(255,255,255,0.05)',
+      borderBottom: '0.5px solid rgba(255,255,255,0.05)',
+    }}>
 
-      {/* Ambient green bloom, top-right behind the finding card */}
+      {/* Green bloom — the fix exists, it glows */}
       <div
         aria-hidden
         style={{
@@ -14,7 +21,7 @@ export default function OutputSection() {
           inset: 0,
           pointerEvents: 'none',
           zIndex: 0,
-          background: 'radial-gradient(ellipse 600px 400px at 80% 20%, rgba(0,196,140,0.04) 0%, transparent 70%)',
+          background: 'radial-gradient(ellipse 900px 600px at 85% 10%, rgba(0,196,140,0.08) 0%, transparent 65%)',
         }}
       />
 
@@ -36,7 +43,10 @@ export default function OutputSection() {
         </p>
 
         {/* Finding card */}
-        <div style={{ background: '#0A0E18', border: '0.5px solid rgba(255,255,255,0.07)' }}>
+        <div
+          className="wd-panel"
+          style={{ boxShadow: '0 0 0 1px rgba(255,255,255,0.06), 0 0 30px rgba(0,196,140,0.06)' }}
+        >
 
           {/* Top bar */}
           <div style={{

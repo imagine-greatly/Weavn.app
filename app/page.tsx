@@ -156,7 +156,7 @@ function HeroSection() {
           pointerEvents: 'none',
           zIndex: 0,
           background:
-            'radial-gradient(ellipse 800px 600px at 75% 50%, rgba(0,196,140,0.05) 0%, transparent 60%), radial-gradient(ellipse 600px 400px at 25% 80%, rgba(128,128,192,0.04) 0%, transparent 60%)',
+            'radial-gradient(ellipse 1200px 800px at 75% 50%, rgba(0,196,140,0.07) 0%, transparent 60%), radial-gradient(ellipse 800px 600px at 20% 80%, rgba(128,128,192,0.06) 0%, transparent 55%)',
         }}
       />
 
@@ -166,7 +166,7 @@ function HeroSection() {
         <div className="flex-[55] min-w-0">
           {/* Status pill */}
           <div className="inline-flex items-center gap-2 bg-background-raised border border-background-border px-3 py-1 mb-8">
-            <span className="w-1.5 h-1.5 rounded-full bg-score-high animate-pulse flex-shrink-0" />
+            <span className="status-dot w-1.5 h-1.5 rounded-full bg-score-high flex-shrink-0" />
             <span className="font-mono text-xs text-text-tertiary">POST /api/v1/scan → 200 OK · 87,340ms</span>
           </div>
 
@@ -204,7 +204,7 @@ function HeroSection() {
           </div>
 
           {/* Curl block */}
-          <div className="bg-background-subtle border border-background-border p-4 mt-8">
+          <div className="wd-panel p-4 mt-8">
             <pre className="font-mono text-sm m-0 leading-relaxed whitespace-pre-wrap">
               <span className="text-cyan-DEFAULT">curl</span>
               <span className="text-text-tertiary">{' -X POST https://webdocai.com/api/v1/scan \\\n  -H "Authorization: Bearer '}</span>
@@ -258,8 +258,8 @@ function HeroSection() {
         <div
           className="flex-[45] min-w-0 relative border border-background-border bg-background-raised"
           style={{
-            boxShadow: '0 0 60px rgba(0,196,140,0.06), 0 0 120px rgba(128,128,192,0.04)',
-            borderTop: '0.5px solid rgba(0,196,140,0.2)',
+            boxShadow: '0 0 0 1px rgba(0,196,140,0.25), 0 0 40px rgba(0,196,140,0.12), 0 0 80px rgba(0,196,140,0.06), 0 0 120px rgba(128,128,192,0.08)',
+            borderTop: '1px solid rgba(0,196,140,0.4)',
           }}
         >
 
@@ -366,7 +366,7 @@ function HeroSection() {
 
 function HowItWorksSection() {
   return (
-    <section style={{ padding: '96px 0', borderTop: '0.5px solid rgba(255,255,255,0.06)' }}>
+    <section style={{ padding: '96px 0' }}>
       <style>{`
         @keyframes wiwScanPulse {
           0%, 100% { opacity: 0.35; }
@@ -400,7 +400,7 @@ function HowItWorksSection() {
             <p style={{ fontFamily: "'IBM Plex Sans', sans-serif", fontSize: 14, color: '#9398A8', lineHeight: 1.6, margin: '0 0 16px' }}>
               Submit any URL via the API or paste it in the playground. Add optional parameters: site_type override, finding_depth, async mode, or page paths for multi-page scans.
             </p>
-            <div style={{ background: '#0A0E18', border: '0.5px solid rgba(255,255,255,0.07)', padding: '12px 14px' }}>
+            <div style={{ background: '#0A0E18', borderTop: '1px solid rgba(255,255,255,0.12)', borderLeft: '1px solid rgba(255,255,255,0.08)', borderRight: '1px solid rgba(255,255,255,0.04)', borderBottom: '1px solid rgba(255,255,255,0.03)', padding: '12px 14px' }}>
               <CodeBlock language="bash" code={`curl -X POST /api/v1/scan \\
   -H "Authorization: Bearer wdoc_live_••••" \\
   -d '{"url":"https://your-site.com"}'`} />
@@ -418,7 +418,7 @@ function HowItWorksSection() {
             <p style={{ fontFamily: "'IBM Plex Sans', sans-serif", fontSize: 14, color: '#9398A8', lineHeight: 1.6, margin: '0 0 16px' }}>
               The page renders in headless Chrome. The site is classified: SaaS, ecommerce, service, B2B. Only relevant checks fire. SaaS sites get SaaS checks. 27 diagnostic categories total.
             </p>
-            <div style={{ background: '#0A0E18', border: '0.5px solid rgba(255,255,255,0.07)', padding: '20px 18px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
+            <div className="wd-panel" style={{ padding: '20px 18px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
               <ScoreRing score={0} size="sm" animate={false} />
               <span className="wiw-scan-label" style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: '#6E7587', letterSpacing: 1 }}>
                 scanning…
@@ -437,7 +437,7 @@ function HowItWorksSection() {
             <p style={{ fontFamily: "'IBM Plex Sans', sans-serif", fontSize: 14, color: '#9398A8', lineHeight: 1.6, margin: '0 0 16px' }}>
               Score, ranked findings, AI-rewritten copy, and industry benchmarks returned as JSON. Every finding references specific visible content — never fabricated.
             </p>
-            <div style={{ background: '#0A0E18', border: '0.5px solid rgba(255,255,255,0.07)', padding: '12px 14px' }}>
+            <div style={{ background: '#0A0E18', borderTop: '1px solid rgba(255,255,255,0.12)', borderLeft: '1px solid rgba(255,255,255,0.08)', borderRight: '1px solid rgba(255,255,255,0.04)', borderBottom: '1px solid rgba(255,255,255,0.03)', padding: '12px 14px' }}>
               <CodeBlock language="json" code={`{
   "score": 61,
   "percentile": 63,
@@ -460,7 +460,7 @@ function HowItWorksSection() {
 
 function ThreeDoorsSection() {
   return (
-    <section style={{ padding: '96px 0', borderTop: '0.5px solid rgba(255,255,255,0.06)' }}>
+    <section style={{ padding: '96px 0', background: '#050810' }}>
       <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 48px' }}>
         <p style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, color: '#6F9BC6', margin: '0 0 18px' }}>
           One engine. Three interfaces.
@@ -475,7 +475,7 @@ function ThreeDoorsSection() {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
 
           {/* Card 1 — Founders */}
-          <div style={{ background: '#0A0E18', border: '0.5px solid rgba(255,255,255,0.07)', padding: '28px', display: 'flex', flexDirection: 'column' }}>
+          <div className="wd-panel" style={{ padding: '28px', display: 'flex', flexDirection: 'column' }}>
             <p style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, textTransform: 'uppercase', letterSpacing: 1.5, color: '#6F9BC6', margin: '0 0 14px' }}>
               For founders
             </p>
@@ -509,7 +509,7 @@ function ThreeDoorsSection() {
           </div>
 
           {/* Card 2 — Agencies */}
-          <div style={{ background: '#0A0E18', border: '0.5px solid rgba(255,255,255,0.07)', padding: '28px', display: 'flex', flexDirection: 'column' }}>
+          <div className="wd-panel" style={{ padding: '28px', display: 'flex', flexDirection: 'column' }}>
             <p style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, textTransform: 'uppercase', letterSpacing: 1.5, color: '#6F9BC6', margin: '0 0 14px' }}>
               For agencies
             </p>
@@ -546,7 +546,7 @@ function ThreeDoorsSection() {
           </div>
 
           {/* Card 3 — Developers */}
-          <div style={{ background: '#0A0E18', border: '0.5px solid rgba(255,255,255,0.07)', padding: '28px', display: 'flex', flexDirection: 'column' }}>
+          <div className="wd-panel" style={{ padding: '28px', display: 'flex', flexDirection: 'column' }}>
             <p style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, textTransform: 'uppercase', letterSpacing: 1.5, color: '#6F9BC6', margin: '0 0 14px' }}>
               For developers
             </p>
@@ -591,9 +591,9 @@ const CORPUS_JSON = `{
 
 function StatsBand() {
   return (
-    <section style={{ position: 'relative', overflow: 'hidden', padding: '96px 0', borderTop: '0.5px solid rgba(255,255,255,0.06)' }}>
+    <section style={{ position: 'relative', overflow: 'hidden', padding: '96px 0', background: 'rgba(8,12,20,0.98)' }}>
 
-      {/* Ambient amber bloom behind the verdict stat row */}
+      {/* Amber bloom — verdict data is warm */}
       <div
         aria-hidden
         style={{
@@ -601,7 +601,7 @@ function StatsBand() {
           inset: 0,
           pointerEvents: 'none',
           zIndex: 0,
-          background: 'radial-gradient(ellipse 800px 300px at 50% 60%, rgba(239,178,62,0.03) 0%, transparent 70%)',
+          background: 'radial-gradient(ellipse 1000px 500px at 50% 50%, rgba(239,178,62,0.06) 0%, transparent 60%)',
         }}
       />
 
@@ -623,13 +623,13 @@ function StatsBand() {
             { value: 23,       label: 'Avg findings per site',    verdict: 'problem-count'  },
             { value: '76%',    label: 'No above-fold proof',      verdict: 'problem-count'  },
           ] as const).map(s => (
-            <div key={s.label} style={{ background: '#0A0E18', padding: '24px' }}>
+            <div key={s.label} className="wd-panel" style={{ padding: '24px', borderTopColor: 'rgba(239,178,62,0.2)' }}>
               <Stat value={s.value} label={s.label} verdict={s.verdict} />
             </div>
           ))}
         </div>
 
-        <div style={{ background: '#0A0E18', border: '0.5px solid rgba(255,255,255,0.07)', padding: '16px 20px', marginBottom: 20 }}>
+        <div style={{ background: '#0A0E18', borderTop: '1px solid rgba(255,255,255,0.12)', borderLeft: '1px solid rgba(255,255,255,0.08)', borderRight: '1px solid rgba(255,255,255,0.04)', borderBottom: '1px solid rgba(255,255,255,0.03)', padding: '16px 20px', marginBottom: 20 }}>
           <CodeBlock language="json" code={CORPUS_JSON} />
         </div>
 
@@ -687,7 +687,7 @@ function PricingSection() {
   const [billing, setBilling] = useState<'monthly' | 'annual'>('monthly')
 
   return (
-    <section style={{ padding: '96px 0', borderTop: '0.5px solid rgba(255,255,255,0.06)' }}>
+    <section style={{ padding: '96px 0', background: 'rgba(10,14,24,0.95)' }}>
       <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 48px' }}>
 
         <p style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, color: '#6F9BC6', margin: '0 0 18px' }}>
@@ -699,7 +699,7 @@ function PricingSection() {
         <p style={{ fontFamily: "'IBM Plex Sans', sans-serif", fontSize: 14, color: '#6E7587', margin: '0 0 28px' }}>No contracts. Cancel anytime.</p>
 
         {/* Toggle */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 36, background: '#0A0E18', border: '0.5px solid rgba(255,255,255,0.07)', padding: 4, width: 'fit-content' }}>
+        <div className="wd-panel" style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 36, padding: 4, width: 'fit-content' }}>
           {(['monthly', 'annual'] as const).map(b => (
             <button
               key={b}
@@ -728,9 +728,8 @@ function PricingSection() {
           {PLANS.map(plan => (
             <div
               key={plan.tier}
+              className={`wd-panel${plan.primary ? ' wd-panel-primary' : ''}`}
               style={{
-                background: '#0A0E18',
-                border: plan.primary ? '0.5px solid rgba(0,196,140,0.35)' : '0.5px solid rgba(255,255,255,0.07)',
                 padding: '28px',
                 display: 'flex',
                 flexDirection: 'column',
@@ -789,7 +788,7 @@ function PricingSection() {
         </div>
 
         {/* Developer callout */}
-        <div style={{ background: '#0A0E18', border: '0.5px solid rgba(255,255,255,0.07)', padding: '28px 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 20 }}>
+        <div className="wd-panel" style={{ padding: '28px 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 20 }}>
           <div>
             <p style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, textTransform: 'uppercase', letterSpacing: 1.5, color: '#6F9BC6', margin: '0 0 8px' }}>
               For developers
@@ -823,11 +822,11 @@ function FinalCtaSection() {
   const [focused, setFocused] = useState(false)
 
   return (
-    <section style={{ padding: '96px 0', borderTop: '0.5px solid rgba(255,255,255,0.06)' }}>
+    <section style={{ padding: '96px 0', background: '#050810' }}>
       <style>{`
         @keyframes ctaPulse {
-          0%, 100% { box-shadow: 0 0 0 1px rgba(0,196,140,0.25); }
-          50%       { box-shadow: 0 0 0 1px rgba(0,196,140,0.7); }
+          0%, 100% { box-shadow: 0 0 0 1px rgba(0,196,140,0.3), 0 0 0 0 rgba(0,196,140,0.3); }
+          50%       { box-shadow: 0 0 0 1px rgba(0,196,140,1.0), 0 0 0 6px rgba(0,196,140,0); }
         }
         .cta-btn-pulse { animation: ctaPulse 2s ease-in-out infinite; }
         @media (prefers-reduced-motion: reduce) {
@@ -850,7 +849,15 @@ function FinalCtaSection() {
           POST /api/v1/scan
         </p>
 
-        <div style={{ display: 'flex', border: `0.5px solid ${focused ? '#00C48C' : 'rgba(255,255,255,0.12)'}`, background: '#0A0E18', transition: 'border-color 0.15s' }}>
+        <div style={{
+          display: 'flex',
+          background: '#0A0E18',
+          borderTop: `1px solid ${focused ? 'rgba(0,196,140,0.5)' : 'rgba(255,255,255,0.12)'}`,
+          borderLeft: `1px solid ${focused ? 'rgba(0,196,140,0.3)' : 'rgba(255,255,255,0.08)'}`,
+          borderRight: `1px solid ${focused ? 'rgba(0,196,140,0.2)' : 'rgba(255,255,255,0.04)'}`,
+          borderBottom: `1px solid ${focused ? 'rgba(0,196,140,0.15)' : 'rgba(255,255,255,0.03)'}`,
+          transition: 'border-color 0.15s',
+        }}>
           <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, color: '#6E7587', padding: '0 12px', display: 'flex', alignItems: 'center', flexShrink: 0, borderRight: '0.5px solid rgba(255,255,255,0.08)' }}>
             https://
           </span>
@@ -914,7 +921,7 @@ function FaqSection() {
   const [openFaq, setOpenFaq] = useState<number | null>(null)
 
   return (
-    <section style={{ padding: '96px 0', borderTop: '0.5px solid rgba(255,255,255,0.06)' }}>
+    <section style={{ padding: '96px 0', background: 'rgba(8,12,20,0.98)' }}>
       <div style={{ maxWidth: 760, margin: '0 auto', padding: '0 48px' }}>
         <p style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, color: '#6F9BC6', margin: '0 0 18px' }}>
           FAQ
@@ -1033,17 +1040,26 @@ function FooterSection() {
 
 export default function HomePage() {
   return (
-    <main className="bg-background-base min-h-screen home-atmosphere">
+    <main className="bg-background-base min-h-screen instrument-grid">
       <NavBar />
       <HeroSection />
+      <div className="section-separator" />
       <OutputSection />
+      <div className="section-separator" />
       <ResponseAnnotatorSection />
+      <div className="section-separator" />
       <HowItWorksSection />
+      <div className="section-separator" />
       <StatsBand />
+      <div className="section-separator" />
       <ThreeDoorsSection />
+      <div className="section-separator" />
       <PricingSection />
+      <div className="section-separator" />
       <ObjectionSection />
+      <div className="section-separator" />
       <FaqSection />
+      <div className="section-separator" />
       <FinalCtaSection />
       <FooterSection />
     </main>

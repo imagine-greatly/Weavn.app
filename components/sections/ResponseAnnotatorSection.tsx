@@ -65,9 +65,9 @@ const ANNOTATIONS: { field: string; desc: string }[] = [
 
 export default function ResponseAnnotatorSection() {
   return (
-    <section style={{ position: 'relative', overflow: 'hidden', padding: '96px 0', borderTop: '0.5px solid rgba(255,255,255,0.06)' }}>
+    <section style={{ position: 'relative', overflow: 'hidden', padding: '96px 0', background: '#050810' }}>
 
-      {/* Ambient purple bloom behind the JSON column */}
+      {/* Purple bloom — structured data intelligence emits purple */}
       <div
         aria-hidden
         style={{
@@ -75,7 +75,7 @@ export default function ResponseAnnotatorSection() {
           inset: 0,
           pointerEvents: 'none',
           zIndex: 0,
-          background: 'radial-gradient(ellipse 500px 600px at 20% 50%, rgba(128,128,192,0.05) 0%, transparent 70%)',
+          background: 'radial-gradient(ellipse 800px 1000px at 15% 50%, rgba(128,128,192,0.09) 0%, transparent 60%)',
         }}
       />
 
@@ -125,8 +125,17 @@ export default function ResponseAnnotatorSection() {
         {/* Two-column layout — 60% left / 40% right, stacked on mobile */}
         <div className="grid grid-cols-1 lg:grid-cols-[3fr_2fr] gap-10 items-start">
 
-          {/* LEFT — JSON block */}
-          <div className="min-w-0">
+          {/* LEFT — JSON block with purple emission */}
+          <div
+            className="min-w-0"
+            style={{
+              borderTop: '1px solid rgba(128,128,192,0.3)',
+              borderLeft: '1px solid rgba(128,128,192,0.15)',
+              borderRight: '1px solid rgba(128,128,192,0.08)',
+              borderBottom: '1px solid rgba(128,128,192,0.05)',
+              boxShadow: '0 0 0 1px rgba(128,128,192,0.2), 0 0 40px rgba(128,128,192,0.08)',
+            }}
+          >
             <CodeBlock language="json" code={RESPONSE_JSON} />
           </div>
 

@@ -99,11 +99,14 @@ body {
     @apply antialiased;
     color: var(--text-primary);
     background-color: var(--bg-base);
-    /* Atmospheric blueprint grid — barely-perceptible instrument paper (muted blue) */
+    /* Instrument grid — fine (64px) + macro (320px) divisions */
     background-image:
-      linear-gradient(rgba(111, 155, 198, 0.03) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(111, 155, 198, 0.03) 1px, transparent 1px);
-    background-size: 48px 48px;
+      linear-gradient(rgba(111,155,198,0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(111,155,198,0.06) 1px, transparent 1px),
+      linear-gradient(rgba(111,155,198,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(111,155,198,0.03) 1px, transparent 1px);
+    background-size: 64px 64px, 64px 64px, 320px 320px, 320px 320px;
+    background-position: center center;
   }
 
   h1, h2, h3, h4, h5, h6, .font-display {
@@ -1231,19 +1234,66 @@ svg path { fill: none !important; }
   box-shadow: 0 0 20px rgba(0, 200, 255, 0.15), 0 0 60px rgba(0, 200, 255, 0.05);
 }
 
-/* Atmospheric panel depth — top edge catches faint light.
-   Scoped to the homepage; targets inline #0A0E18 surface panels globally
-   so no per-component style edits are needed. */
-.home-atmosphere [style*="0A0E18" i] {
-  border-top-color: rgba(255, 255, 255, 0.1) !important;
+/* ── Panel physicality ─────────────────────────────────────────────────────── */
+/* Directional light from above-left — panels feel like physical objects */
+.wd-panel {
+  background: #0A0E18;
+  border-top: 1px solid rgba(255,255,255,0.12);
+  border-left: 1px solid rgba(255,255,255,0.08);
+  border-right: 1px solid rgba(255,255,255,0.04);
+  border-bottom: 1px solid rgba(255,255,255,0.03);
 }
 
-/* Score ring glow — faint band-colored drop-shadow on the progress arc only.
-   Suppressed entirely when the user prefers reduced motion. */
+/* Primary/featured card variant — green directional borders */
+.wd-panel-primary {
+  border-top-color: rgba(0,196,140,0.4) !important;
+  border-left-color: rgba(0,196,140,0.25) !important;
+  border-right-color: rgba(0,196,140,0.15) !important;
+  border-bottom-color: rgba(0,196,140,0.1) !important;
+}
+
+/* ── Score ring emission ────────────────────────────────────────────────────── */
 @media (prefers-reduced-motion: no-preference) {
   .score-ring-arc {
-    filter: drop-shadow(0 0 6px var(--ring-glow));
+    filter: drop-shadow(0 0 8px var(--ring-glow-near)) drop-shadow(0 0 16px var(--ring-glow-far));
   }
+}
+
+/* ── Section separator ─────────────────────────────────────────────────────── */
+.section-separator {
+  height: 1px;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    rgba(111,155,198,0.15) 20%,
+    rgba(0,196,140,0.2) 50%,
+    rgba(111,155,198,0.15) 80%,
+    transparent 100%
+  );
+  margin: 0;
+}
+
+/* ── Live status dot ───────────────────────────────────────────────────────── */
+@keyframes status-pulse {
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(0,196,140,0.4); }
+  50% { opacity: 0.8; box-shadow: 0 0 0 4px rgba(0,196,140,0); }
+}
+.status-dot {
+  animation: status-pulse 2s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .status-dot { animation: none; }
+}
+
+/* ── Instrument grid on homepage main ──────────────────────────────────────── */
+/* Applied via .instrument-grid class on <main> so the grid shows through */
+.instrument-grid {
+  background-image:
+    linear-gradient(rgba(111,155,198,0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(111,155,198,0.06) 1px, transparent 1px),
+    linear-gradient(rgba(111,155,198,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(111,155,198,0.03) 1px, transparent 1px);
+  background-size: 64px 64px, 64px 64px, 320px 320px, 320px 320px;
+  background-position: center center;
 }
 
 .scanline-texture {

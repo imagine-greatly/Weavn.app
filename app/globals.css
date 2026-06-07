@@ -1264,9 +1264,9 @@ svg path { fill: none !important; }
   height: 1px;
   background: linear-gradient(90deg,
     transparent 0%,
-    rgba(111,155,198,0.15) 20%,
-    rgba(0,196,140,0.2) 50%,
-    rgba(111,155,198,0.15) 80%,
+    rgba(111,155,198,0.12) 20%,
+    rgba(111,155,198,0.2) 50%,
+    rgba(111,155,198,0.12) 80%,
     transparent 100%
   );
   margin: 0;

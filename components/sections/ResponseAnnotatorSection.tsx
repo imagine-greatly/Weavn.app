@@ -65,7 +65,7 @@ const ANNOTATIONS: { field: string; desc: string }[] = [
 
 export default function ResponseAnnotatorSection() {
   return (
-    <section style={{ position: 'relative', overflow: 'hidden', padding: '96px 0', background: '#050810' }}>
+    <section style={{ position: 'relative', overflow: 'hidden', padding: '96px 0', background: '#06090F', borderTop: '0.5px solid rgba(128,128,192,0.2)', borderBottom: '0.5px solid rgba(255,255,255,0.05)' }}>
 
       {/* Purple bloom — structured data intelligence emits purple */}
       <div

@@ -238,20 +238,6 @@ function HeroSection() {
             </Link>
           </div>
 
-          {/* Stats row */}
-          <div className="flex flex-row gap-8 mt-9 pt-6 border-t border-background-border overflow-x-auto scroll-track-hide-scrollbar">
-            {[
-              { value: '307',   label: 'CHECKS PER SCAN'  },
-              { value: '$0.15', label: 'PER SCAN'         },
-              { value: '~90s',  label: 'MEDIAN RESPONSE'  },
-              { value: '27',    label: 'CATEGORIES'       },
-              { value: 'FREE',  label: 'CACHE HITS'       },
-            ].map(s => (
-              <div key={s.value} className="flex-shrink-0">
-                <Stat value={s.value} label={s.label} verdict="neutral" />
-              </div>
-            ))}
-          </div>
         </div>
 
         {/* Right column — terminal panel */}
@@ -364,89 +350,175 @@ function HeroSection() {
 
 // ── How It Works ─────────────────────────────────────────────────────────────
 
-function HowItWorksSection() {
+// ── Stats Strip ───────────────────────────────────────────────────────────────
+
+function StatsStrip() {
+  const STATS = [
+    { value: '307',   label: 'CHECKS PER SCAN', color: '#E6E9EE' },
+    { value: '$0.15', label: 'PER SCAN',         color: '#E6E9EE' },
+    { value: '~90s',  label: 'MEDIAN RESPONSE',  color: '#E6E9EE' },
+    { value: '27',    label: 'CATEGORIES',        color: '#E6E9EE' },
+    { value: 'FREE',  label: 'CACHE HITS',        color: '#00C48C' },
+  ]
   return (
     <section style={{ padding: '96px 0' }}>
-      <style>{`
-        @keyframes wiwScanPulse {
-          0%, 100% { opacity: 0.35; }
-          50% { opacity: 1; }
-        }
-        .wiw-scan-label {
-          animation: wiwScanPulse 1.4s ease-in-out infinite;
-        }
-        @media (prefers-reduced-motion: reduce) {
-          .wiw-scan-label { animation: none; opacity: 0.7; }
-        }
-      `}</style>
       <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 48px' }}>
-        <p style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, color: '#6F9BC6', margin: '0 0 18px' }}>
-          How it works
-        </p>
-        <h2 style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 36, lineHeight: 1.15, color: '#E6E9EE', margin: '0 0 48px', letterSpacing: '-0.5px' }}>
-          POST a URL. Get a diagnosis.
-        </h2>
+        <div style={{ display: 'flex', alignItems: 'stretch', borderTop: '1px solid rgba(111,155,198,0.15)' }}>
+          {STATS.map((s, i) => (
+            <div
+              key={s.value}
+              style={{
+                flex: 1,
+                padding: '48px 48px 0',
+                borderRight: i < STATS.length - 1 ? '0.5px solid rgba(111,155,198,0.12)' : 'none',
+              }}
+            >
+              <div style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 56, color: s.color, lineHeight: 1, marginBottom: 10 }}>
+                {s.value}
+              </div>
+              <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontWeight: 500, fontSize: 12, textTransform: 'uppercase', letterSpacing: 1.5, color: '#6E7587' }}>
+                {s.label}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+// ── How It Works ─────────────────────────────────────────────────────────────
 
-          {/* Step 01 */}
-          <div>
-            <p style={{ fontFamily: "'IBM Plex Mono', monospace", fontWeight: 500, fontSize: 13, textTransform: 'uppercase', letterSpacing: 1.5, color: '#6F9BC6', margin: '0 0 10px' }}>
-              01 —
-            </p>
-            <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 18, color: '#E6E9EE', margin: '0 0 8px' }}>
-              POST a URL
-            </p>
-            <p style={{ fontFamily: "'IBM Plex Sans', sans-serif", fontSize: 14, color: '#9398A8', lineHeight: 1.6, margin: '0 0 16px' }}>
-              Submit any URL via the API or paste it in the playground. Add optional parameters: site_type override, finding_depth, async mode, or page paths for multi-page scans.
-            </p>
-            <div style={{ background: '#0A0E18', borderTop: '1px solid rgba(255,255,255,0.12)', borderLeft: '1px solid rgba(255,255,255,0.08)', borderRight: '1px solid rgba(255,255,255,0.04)', borderBottom: '1px solid rgba(255,255,255,0.03)', padding: '12px 14px' }}>
-              <CodeBlock language="bash" code={`curl -X POST /api/v1/scan \\
+const MONO = { fontFamily: "'IBM Plex Mono', monospace" }
+const SANS = { fontFamily: "'IBM Plex Sans', sans-serif" }
+const DISP = { fontFamily: "'Space Grotesk', sans-serif" }
+
+const HIW_CURL = `curl -X POST https://webdocai.com/api/v1/scan \\
   -H "Authorization: Bearer wdoc_live_••••" \\
-  -d '{"url":"https://your-site.com"}'`} />
-            </div>
-          </div>
+  -H "Content-Type: application/json" \\
+  -d '{
+    "url": "https://your-site.com",
+    "finding_depth": "full",
+    "async": false
+  }'`
 
-          {/* Step 02 */}
-          <div>
-            <p style={{ fontFamily: "'IBM Plex Mono', monospace", fontWeight: 500, fontSize: 13, textTransform: 'uppercase', letterSpacing: 1.5, color: '#6F9BC6', margin: '0 0 10px' }}>
-              02 —
-            </p>
-            <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 18, color: '#E6E9EE', margin: '0 0 8px' }}>
-              307 checks run
-            </p>
-            <p style={{ fontFamily: "'IBM Plex Sans', sans-serif", fontSize: 14, color: '#9398A8', lineHeight: 1.6, margin: '0 0 16px' }}>
-              The page renders in headless Chrome. The site is classified: SaaS, ecommerce, service, B2B. Only relevant checks fire. SaaS sites get SaaS checks. 27 diagnostic categories total.
-            </p>
-            <div className="wd-panel" style={{ padding: '20px 18px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
-              <ScoreRing score={0} size="sm" animate={false} />
-              <span className="wiw-scan-label" style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: '#6E7587', letterSpacing: 1 }}>
-                scanning…
-              </span>
-            </div>
-          </div>
-
-          {/* Step 03 */}
-          <div>
-            <p style={{ fontFamily: "'IBM Plex Mono', monospace", fontWeight: 500, fontSize: 13, textTransform: 'uppercase', letterSpacing: 1.5, color: '#6F9BC6', margin: '0 0 10px' }}>
-              03 —
-            </p>
-            <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 18, color: '#E6E9EE', margin: '0 0 8px' }}>
-              Get structured output
-            </p>
-            <p style={{ fontFamily: "'IBM Plex Sans', sans-serif", fontSize: 14, color: '#9398A8', lineHeight: 1.6, margin: '0 0 16px' }}>
-              Score, ranked findings, AI-rewritten copy, and industry benchmarks returned as JSON. Every finding references specific visible content — never fabricated.
-            </p>
-            <div style={{ background: '#0A0E18', borderTop: '1px solid rgba(255,255,255,0.12)', borderLeft: '1px solid rgba(255,255,255,0.08)', borderRight: '1px solid rgba(255,255,255,0.04)', borderBottom: '1px solid rgba(255,255,255,0.03)', padding: '12px 14px' }}>
-              <CodeBlock language="json" code={`{
+const HIW_JSON = `{
   "score": 61,
+  "severity": "critical",
   "percentile": 63,
   "findings": 23,
   "rewritten_copy": {
-    "headline": "Ship projects on time."
-  }
-}`} />
+    "headline": "Ship projects on time, every time.",
+    "cta_primary": "Start free — no credit card"
+  },
+  "cost_usd": 0.15,
+  "duration_ms": 87340
+}`
+
+const STEP_NUM_STYLE: React.CSSProperties = {
+  position: 'relative',
+  zIndex: 1,
+  display: 'inline-block',
+  background: '#050810',
+  border: '0.5px solid rgba(111,155,198,0.3)',
+  padding: '6px 10px',
+  marginBottom: 16,
+  ...MONO,
+  fontSize: 13,
+  color: '#6F9BC6',
+}
+
+function HowItWorksSection() {
+  return (
+    <section style={{ padding: '96px 0' }}>
+      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 48px' }}>
+        <p style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, color: '#6F9BC6', margin: '0 0 18px' }}>
+          How it works
+        </p>
+        <h2 style={{ ...DISP, fontWeight: 700, fontSize: 36, lineHeight: 1.15, color: '#E6E9EE', margin: '0 0 48px', letterSpacing: '-0.5px' }}>
+          POST a URL. Get a diagnosis.
+        </h2>
+
+        {/* Step header row — connecting line behind step numbers */}
+        <div style={{ position: 'relative', marginBottom: 0 }}>
+          <div className="hidden sm:block" style={{ position: 'absolute', top: 18, left: 0, right: 0, height: 1, background: 'rgba(111,155,198,0.2)', zIndex: 0 }} />
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+            <div>
+              <div style={STEP_NUM_STYLE}>01</div>
+              <p style={{ ...DISP, fontWeight: 700, fontSize: 18, color: '#E6E9EE', margin: '0 0 8px' }}>POST a URL</p>
+              <p style={{ ...SANS, fontSize: 14, color: '#9398A8', lineHeight: 1.6, margin: 0 }}>
+                Submit any URL via the API or paste it in the playground. Add optional parameters: site_type override, finding_depth, async mode, or page paths for multi-page scans.
+              </p>
             </div>
+
+            <div>
+              <div style={STEP_NUM_STYLE}>02</div>
+              <p style={{ ...DISP, fontWeight: 700, fontSize: 18, color: '#E6E9EE', margin: '0 0 8px' }}>307 checks run</p>
+              <p style={{ ...SANS, fontSize: 14, color: '#9398A8', lineHeight: 1.6, margin: 0 }}>
+                The page renders in headless Chrome. The site is classified: SaaS, ecommerce, service, B2B. Only relevant checks fire. SaaS sites get SaaS checks. 27 diagnostic categories total.
+              </p>
+            </div>
+
+            <div>
+              <div style={STEP_NUM_STYLE}>03</div>
+              <p style={{ ...DISP, fontWeight: 700, fontSize: 18, color: '#E6E9EE', margin: '0 0 8px' }}>Get structured output</p>
+              <p style={{ ...SANS, fontSize: 14, color: '#9398A8', lineHeight: 1.6, margin: 0 }}>
+                Score, ranked findings, AI-rewritten copy, and industry benchmarks returned as JSON. Every finding references specific visible content — never fabricated.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Pipeline dashed connector */}
+        <div style={{ borderTop: '1px dashed rgba(111,155,198,0.15)', margin: '32px 0 0' }} />
+
+        {/* Artifact row */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6" style={{ marginTop: 0 }}>
+
+          {/* Artifact 01 — curl */}
+          <div style={{ paddingTop: 24 }}>
+            <div style={{ background: '#0A0E18', borderTop: '1px solid rgba(111,155,198,0.2)', borderLeft: '1px solid rgba(111,155,198,0.12)', borderRight: '1px solid rgba(111,155,198,0.07)', borderBottom: '1px solid rgba(111,155,198,0.05)' }}>
+              <CodeBlock language="bash" code={HIW_CURL} />
+            </div>
+            <div style={{ display: 'flex', gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
+              <span style={{ ...MONO, fontSize: 11, color: '#00C48C', background: '#0A0E18', border: '0.5px solid rgba(255,255,255,0.06)', padding: '6px 12px' }}>307 checks</span>
+              <span style={{ ...MONO, fontSize: 11, color: '#6F9BC6', background: '#0A0E18', border: '0.5px solid rgba(255,255,255,0.06)', padding: '6px 12px' }}>27 categories</span>
+              <span style={{ ...MONO, fontSize: 11, color: '#6E7587', background: '#0A0E18', border: '0.5px solid rgba(255,255,255,0.06)', padding: '6px 12px' }}>~90s median</span>
+            </div>
+          </div>
+
+          {/* Artifact 02 — scan state panel */}
+          <div style={{ paddingTop: 24 }}>
+            <div className="wd-panel" style={{ padding: '16px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+                <span className="status-dot" style={{ width: 7, height: 7, borderRadius: '50%', background: '#00C48C', flexShrink: 0 }} />
+                <span style={{ ...MONO, fontSize: 11, color: '#6E7587', textTransform: 'uppercase', letterSpacing: 1.5 }}>SCANNING</span>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 16 }}>
+                {[
+                  { name: 'hero_section',        done: true  },
+                  { name: 'value_proposition',   done: true  },
+                  { name: 'trust_credibility',   done: true  },
+                  { name: 'cta_conversion',      done: false },
+                  { name: 'social_proof',        done: false },
+                ].map(c => (
+                  <div key={c.name} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <span style={{ width: 5, height: 5, flexShrink: 0, background: c.done ? '#00C48C' : 'rgba(110,117,135,0.4)', display: 'inline-block' }} />
+                    <span style={{ ...MONO, fontSize: 11, color: c.done ? '#9398A8' : '#6E7587' }}>{c.name}</span>
+                  </div>
+                ))}
+              </div>
+              <p style={{ ...MONO, fontSize: 11, color: '#6E7587', margin: 0 }}>running 307 checks across 27 categories</p>
+            </div>
+          </div>
+
+          {/* Artifact 03 — output JSON */}
+          <div style={{ paddingTop: 24 }}>
+            <div style={{ background: '#0A0E18', borderTop: '1px solid rgba(111,155,198,0.2)', borderLeft: '1px solid rgba(111,155,198,0.12)', borderRight: '1px solid rgba(111,155,198,0.07)', borderBottom: '1px solid rgba(111,155,198,0.05)' }}>
+              <CodeBlock language="json" code={HIW_JSON} />
+            </div>
+            <p style={{ ...MONO, fontSize: 11, color: '#6E7587', margin: '12px 0 0' }}>Build against this schema once. Every URL returns identical structure.</p>
           </div>
 
         </div>
@@ -458,114 +530,126 @@ function HowItWorksSection() {
 
 // ── Three Doors ───────────────────────────────────────────────────────────────
 
+const DEV_JSON = `{
+  "score": 61,
+  "severity": "critical",
+  "estimated_lift": "12–18%",
+  "cost_usd": 0.15
+}`
+
 function ThreeDoorsSection() {
   return (
-    <section style={{ padding: '96px 0', background: '#050810' }}>
+    <section style={{ padding: '96px 0' }}>
       <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 48px' }}>
-        <p style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, color: '#6F9BC6', margin: '0 0 18px' }}>
+        <p style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, color: '#6F9BC6', margin: '0 0 18px' }}>
           One engine. Three interfaces.
         </p>
-        <h2 style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 36, lineHeight: 1.15, color: '#E6E9EE', margin: '0 0 14px', letterSpacing: '-0.5px' }}>
+        <h2 style={{ ...DISP, fontWeight: 700, fontSize: 36, lineHeight: 1.15, color: '#E6E9EE', margin: '0 0 14px', letterSpacing: '-0.5px' }}>
           Same scan. Different interface.
         </h2>
-        <p style={{ fontFamily: "'IBM Plex Sans', sans-serif", fontSize: 15, color: '#9398A8', maxWidth: 560, lineHeight: 1.65, margin: '0 0 40px' }}>
+        <p style={{ ...SANS, fontSize: 15, color: '#9398A8', maxWidth: 560, lineHeight: 1.65, margin: '0 0 40px' }}>
           Whether you&apos;re diagnosing your own site, managing client audits, or building conversion intelligence into a product — it&apos;s the same engine underneath.
         </p>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4" style={{ alignItems: 'stretch' }}>
 
           {/* Card 1 — Founders */}
-          <div className="wd-panel" style={{ padding: '28px', display: 'flex', flexDirection: 'column' }}>
-            <p style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, textTransform: 'uppercase', letterSpacing: 1.5, color: '#6F9BC6', margin: '0 0 14px' }}>
-              For founders
-            </p>
-            <h3 style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 20, color: '#E6E9EE', margin: '0 0 10px', lineHeight: 1.25 }}>
-              Diagnose your site.
-            </h3>
-            <p style={{ fontFamily: "'IBM Plex Sans', sans-serif", fontSize: 14, color: '#9398A8', lineHeight: 1.6, margin: '0 0 18px' }}>
-              Paste your URL. Get a full conversion audit in 90 seconds — score, ranked findings, AI-rewritten copy, and how you compare against your category.
-            </p>
-            <div style={{ background: '#050810', border: '0.5px solid rgba(255,255,255,0.07)', padding: '12px 14px', flex: 1, marginBottom: 18 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-                <ScoreRing score={61} size="sm" animate={false} />
-                <div>
-                  <p style={{ fontFamily: "'IBM Plex Sans', sans-serif", fontSize: 12, fontWeight: 500, color: '#E6E9EE', margin: 0 }}>acme-saas.com</p>
-                  <p style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: '#6E7587', margin: 0 }}>63rd percentile · B2B SaaS</p>
+          <div className="wd-panel" style={{ display: 'flex', flexDirection: 'column' }}>
+            {/* Header zone */}
+            <div style={{ padding: '24px 24px 16px', borderBottom: '0.5px solid rgba(255,255,255,0.06)' }}>
+              <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: 1.5, color: '#6F9BC6', margin: '0 0 10px' }}>For founders</p>
+              <h3 style={{ ...DISP, fontWeight: 700, fontSize: 22, color: '#E6E9EE', margin: '0 0 10px', lineHeight: 1.25 }}>Diagnose your site.</h3>
+              <p style={{ ...SANS, fontSize: 14, color: '#9398A8', lineHeight: 1.6, margin: 0 }}>
+                Paste your URL. Get a full conversion audit in 90 seconds — score, ranked findings, AI-rewritten copy, and how you compare against your category.
+              </p>
+            </div>
+            {/* Artifact zone */}
+            <div style={{ padding: '20px 24px', background: 'rgba(255,255,255,0.015)', flexGrow: 1 }}>
+              <div style={{ background: '#050810', border: '0.5px solid rgba(255,255,255,0.07)', padding: '12px 14px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+                  <ScoreRing score={61} size="sm" animate={false} />
+                  <div>
+                    <p style={{ ...SANS, fontSize: 12, fontWeight: 500, color: '#E6E9EE', margin: 0 }}>acme-saas.com</p>
+                    <p style={{ ...MONO, fontSize: 10, color: '#6E7587', margin: 0 }}>63rd percentile · B2B SaaS</p>
+                  </div>
+                </div>
+                <div style={{ borderTop: '0.5px solid rgba(255,255,255,0.06)', paddingTop: 8 }}>
+                  <p style={{ ...MONO, fontSize: 10, color: '#9398A8', margin: '0 0 3px' }}>
+                    critical: <span style={{ color: '#E8635F' }}>hero headline is feature-led</span>
+                  </p>
+                  <p style={{ ...MONO, fontSize: 10, color: '#00C48C', margin: 0 }}>+12–18% lift with rewrite</p>
                 </div>
               </div>
-              <div style={{ borderTop: '0.5px solid rgba(255,255,255,0.06)', paddingTop: 8 }}>
-                <p style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: '#9398A8', margin: '0 0 3px' }}>
-                  critical: <span style={{ color: '#E8635F' }}>Hero headline is feature-led</span>
-                </p>
-                <p style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: '#00C48C', margin: 0 }}>+12–18% lift with rewrite</p>
-              </div>
             </div>
-            <div style={{ paddingTop: 18, borderTop: '0.5px solid rgba(255,255,255,0.06)' }}>
-              <Link href="/scan" style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: '#E6E9EE', border: '0.5px solid rgba(0,196,140,0.35)', padding: '10px 14px', display: 'block', textAlign: 'center', textDecoration: 'none' }}>
+            {/* CTA zone */}
+            <div style={{ padding: '16px 24px 24px', borderTop: '0.5px solid rgba(255,255,255,0.06)' }}>
+              <Link href="/scan" style={{ ...MONO, fontSize: 11, color: '#E6E9EE', border: '0.5px solid rgba(0,196,140,0.35)', padding: '10px 14px', display: 'block', textAlign: 'center', textDecoration: 'none' }}>
                 Scan my site free →
               </Link>
-              <p style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: '#6E7587', textAlign: 'center', marginTop: 8, marginBottom: 0 }}>Free · No account required</p>
+              <p style={{ ...MONO, fontSize: 10, color: '#6E7587', textAlign: 'center', marginTop: 8, marginBottom: 0 }}>Free · No account required</p>
             </div>
           </div>
 
           {/* Card 2 — Agencies */}
-          <div className="wd-panel" style={{ padding: '28px', display: 'flex', flexDirection: 'column' }}>
-            <p style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, textTransform: 'uppercase', letterSpacing: 1.5, color: '#6F9BC6', margin: '0 0 14px' }}>
-              For agencies
-            </p>
-            <h3 style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 20, color: '#E6E9EE', margin: '0 0 10px', lineHeight: 1.25 }}>
-              Manage client audits.
-            </h3>
-            <p style={{ fontFamily: "'IBM Plex Sans', sans-serif", fontSize: 14, color: '#9398A8', lineHeight: 1.6, margin: '0 0 18px' }}>
-              Client workspaces, white-label report links, multi-page scanning, competitor benchmarking. Show up to every call with data, not opinions.
-            </p>
-            <div style={{ background: '#050810', border: '0.5px solid rgba(255,255,255,0.07)', padding: '12px 14px', flex: 1, marginBottom: 18 }}>
-              <p style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 9, textTransform: 'uppercase', letterSpacing: 1.5, color: '#6E7587', margin: '0 0 3px' }}>PREPARED FOR</p>
-              <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 500, fontSize: 14, color: '#E6E9EE', margin: '0 0 10px' }}>Acme Inc.</p>
-              <div style={{ borderTop: '0.5px solid rgba(255,255,255,0.06)', paddingTop: 8 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                  <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: '#6E7587' }}>score</span>
-                  <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: '#EFB23E', fontWeight: 600 }}>61</span>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                  <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: '#6E7587' }}>findings</span>
-                  <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: '#E8635F' }}>23 critical items</span>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: '#6E7587' }}>percentile</span>
-                  <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: '#6F9BC6' }}>63rd of B2B SaaS sites</span>
+          <div className="wd-panel" style={{ display: 'flex', flexDirection: 'column' }}>
+            {/* Header zone */}
+            <div style={{ padding: '24px 24px 16px', borderBottom: '0.5px solid rgba(255,255,255,0.06)' }}>
+              <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: 1.5, color: '#6F9BC6', margin: '0 0 10px' }}>For agencies</p>
+              <h3 style={{ ...DISP, fontWeight: 700, fontSize: 22, color: '#E6E9EE', margin: '0 0 10px', lineHeight: 1.25 }}>Manage client audits.</h3>
+              <p style={{ ...SANS, fontSize: 14, color: '#9398A8', lineHeight: 1.6, margin: 0 }}>
+                Client workspaces, white-label report links, multi-page scanning, competitor benchmarking. Show up to every call with data, not opinions.
+              </p>
+            </div>
+            {/* Artifact zone */}
+            <div style={{ padding: '20px 24px', background: 'rgba(255,255,255,0.015)', flexGrow: 1 }}>
+              <div style={{ background: '#050810', border: '0.5px solid rgba(255,255,255,0.07)', padding: '12px 14px' }}>
+                <p style={{ ...MONO, fontSize: 9, textTransform: 'uppercase', letterSpacing: 1.5, color: '#6E7587', margin: '0 0 3px' }}>PREPARED FOR</p>
+                <p style={{ ...DISP, fontWeight: 500, fontSize: 14, color: '#E6E9EE', margin: '0 0 10px' }}>Acme Inc.</p>
+                <div style={{ borderTop: '0.5px solid rgba(255,255,255,0.06)', paddingTop: 8 }}>
+                  {[
+                    { k: 'score',     v: '61',                   vc: '#EFB23E' },
+                    { k: 'findings',  v: '23 critical items',    vc: '#E8635F' },
+                    { k: 'percentile',v: '63rd of B2B SaaS',     vc: '#6F9BC6' },
+                  ].map(r => (
+                    <div key={r.k} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                      <span style={{ ...MONO, fontSize: 10, color: '#6E7587' }}>{r.k}</span>
+                      <span style={{ ...MONO, fontSize: 10, color: r.vc }}>{r.v}</span>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
-            <div style={{ paddingTop: 18, borderTop: '0.5px solid rgba(255,255,255,0.06)' }}>
-              <Link href="/pricing" style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: '#E6E9EE', border: '0.5px solid rgba(0,196,140,0.35)', padding: '10px 14px', display: 'block', textAlign: 'center', textDecoration: 'none' }}>
+            {/* CTA zone */}
+            <div style={{ padding: '16px 24px 24px', borderTop: '0.5px solid rgba(255,255,255,0.06)' }}>
+              <Link href="/pricing" style={{ ...MONO, fontSize: 11, color: '#E6E9EE', border: '0.5px solid rgba(0,196,140,0.35)', padding: '10px 14px', display: 'block', textAlign: 'center', textDecoration: 'none' }}>
                 See agency plans →
               </Link>
-              <p style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: '#6E7587', textAlign: 'center', marginTop: 8, marginBottom: 0 }}>From $149/mo · 14-day trial</p>
+              <p style={{ ...MONO, fontSize: 10, color: '#6E7587', textAlign: 'center', marginTop: 8, marginBottom: 0 }}>From $149/mo · 14-day trial</p>
             </div>
           </div>
 
           {/* Card 3 — Developers */}
-          <div className="wd-panel" style={{ padding: '28px', display: 'flex', flexDirection: 'column' }}>
-            <p style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, textTransform: 'uppercase', letterSpacing: 1.5, color: '#6F9BC6', margin: '0 0 14px' }}>
-              For developers
-            </p>
-            <h3 style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 20, color: '#E6E9EE', margin: '0 0 10px', lineHeight: 1.25 }}>
-              Build with it.
-            </h3>
-            <p style={{ fontFamily: "'IBM Plex Sans', sans-serif", fontSize: 14, color: '#9398A8', lineHeight: 1.6, margin: '0 0 18px' }}>
-              POST a URL, get structured JSON. Batch endpoint, async mode, webhooks. Integrate conversion intelligence into your product in an afternoon.
-            </p>
-            <div style={{ background: '#050810', border: '0.5px solid rgba(255,255,255,0.07)', padding: '12px 14px', flex: 1, marginBottom: 18 }}>
-              <CodeBlock language="bash" code={`curl -X POST /api/v1/scan \\
-  -H "Authorization: Bearer wdoc_live_••••" \\
-  -d '{"url":"https://your-site.com"}'`} />
+          <div className="wd-panel" style={{ display: 'flex', flexDirection: 'column' }}>
+            {/* Header zone */}
+            <div style={{ padding: '24px 24px 16px', borderBottom: '0.5px solid rgba(255,255,255,0.06)' }}>
+              <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: 1.5, color: '#6F9BC6', margin: '0 0 10px' }}>For developers</p>
+              <h3 style={{ ...DISP, fontWeight: 700, fontSize: 22, color: '#E6E9EE', margin: '0 0 10px', lineHeight: 1.25 }}>Build with it.</h3>
+              <p style={{ ...SANS, fontSize: 14, color: '#9398A8', lineHeight: 1.6, margin: 0 }}>
+                POST a URL, get structured JSON. Batch endpoint, async mode, webhooks. Integrate conversion intelligence into your product in an afternoon.
+              </p>
             </div>
-            <div style={{ paddingTop: 18, borderTop: '0.5px solid rgba(255,255,255,0.06)' }}>
-              <Link href="/developer" style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: '#E6E9EE', border: '0.5px solid rgba(0,196,140,0.35)', padding: '10px 14px', display: 'block', textAlign: 'center', textDecoration: 'none' }}>
+            {/* Artifact zone */}
+            <div style={{ padding: '20px 24px', background: 'rgba(255,255,255,0.015)', flexGrow: 1 }}>
+              <div style={{ background: '#050810', border: '0.5px solid rgba(255,255,255,0.07)', padding: '12px 14px' }}>
+                <CodeBlock language="json" code={DEV_JSON} />
+              </div>
+            </div>
+            {/* CTA zone */}
+            <div style={{ padding: '16px 24px 24px', borderTop: '0.5px solid rgba(255,255,255,0.06)' }}>
+              <Link href="/developer" style={{ ...MONO, fontSize: 11, color: '#E6E9EE', border: '0.5px solid rgba(0,196,140,0.35)', padding: '10px 14px', display: 'block', textAlign: 'center', textDecoration: 'none' }}>
                 Get API key →
               </Link>
-              <p style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: '#6E7587', textAlign: 'center', marginTop: 8, marginBottom: 0 }}>$0.15/scan · No monthly fee</p>
+              <p style={{ ...MONO, fontSize: 10, color: '#6E7587', textAlign: 'center', marginTop: 8, marginBottom: 0 }}>$0.15/scan · No monthly fee</p>
             </div>
           </div>
 
@@ -589,11 +673,18 @@ const CORPUS_JSON = `{
   }
 }`
 
+const CORPUS_STATS = [
+  { value: '4,800+', label: 'Sites scanned',        color: '#E6E9EE' },
+  { value: '58',     label: 'Average score',         color: '#EFB23E' },
+  { value: '23',     label: 'Avg findings per site', color: '#EFB23E' },
+  { value: '76%',    label: 'No above-fold proof',   color: '#E8635F' },
+] as const
+
 function StatsBand() {
   return (
-    <section style={{ position: 'relative', overflow: 'hidden', padding: '96px 0', background: 'rgba(8,12,20,0.98)' }}>
+    <section style={{ position: 'relative', overflow: 'hidden', padding: '96px 0', background: '#080D18', borderTop: '0.5px solid rgba(239,178,62,0.12)', borderBottom: '0.5px solid rgba(255,255,255,0.05)' }}>
 
-      {/* Amber bloom — verdict data is warm */}
+      {/* Amber bloom */}
       <div
         aria-hidden
         style={{
@@ -606,34 +697,49 @@ function StatsBand() {
       />
 
       <div style={{ position: 'relative', zIndex: 1, maxWidth: 1200, margin: '0 auto', padding: '0 48px' }}>
-        <p style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, color: '#6F9BC6', margin: '0 0 18px' }}>
+        <p style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, color: '#6F9BC6', margin: '0 0 18px' }}>
           Benchmark corpus
         </p>
-        <h2 style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 36, lineHeight: 1.15, color: '#E6E9EE', margin: '0 0 12px', letterSpacing: '-0.5px' }}>
+        <h2 style={{ ...DISP, fontWeight: 700, fontSize: 36, lineHeight: 1.15, color: '#E6E9EE', margin: '0 0 12px', letterSpacing: '-0.5px' }}>
           4,800 sites scanned. The benchmarks are real.
         </h2>
-        <p style={{ fontFamily: "'IBM Plex Sans', sans-serif", fontSize: 15, color: '#9398A8', maxWidth: 540, lineHeight: 1.65, margin: '0 0 40px' }}>
+        <p style={{ ...SANS, fontSize: 15, color: '#9398A8', maxWidth: 540, lineHeight: 1.65, margin: '0 0 40px' }}>
           Every score is positioned against a real corpus of scanned sites, segmented by vertical. No synthetic data. No curated samples.
         </p>
 
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-px" style={{ background: 'rgba(255,255,255,0.06)', marginBottom: 32 }}>
-          {([
-            { value: '4,800+', label: 'Sites scanned',           verdict: 'neutral'        },
-            { value: 58,       label: 'Average score',            verdict: 'score'          },
-            { value: 23,       label: 'Avg findings per site',    verdict: 'problem-count'  },
-            { value: '76%',    label: 'No above-fold proof',      verdict: 'problem-count'  },
-          ] as const).map(s => (
-            <div key={s.label} className="wd-panel" style={{ padding: '24px', borderTopColor: 'rgba(239,178,62,0.2)' }}>
-              <Stat value={s.value} label={s.label} verdict={s.verdict} />
+        {/* Stat cells */}
+        <div style={{ display: 'flex', borderTop: '1px solid rgba(239,178,62,0.15)', marginBottom: 32 }}>
+          {CORPUS_STATS.map((s, i) => (
+            <div
+              key={s.label}
+              style={{
+                flex: 1,
+                padding: '24px 28px',
+                background: '#0A0E18',
+                borderTop: '1px solid rgba(255,255,255,0.1)',
+                borderLeft: i === 0 ? '1px solid rgba(255,255,255,0.07)' : '0.5px solid rgba(255,255,255,0.06)',
+                borderRight: i === CORPUS_STATS.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
+                borderBottom: '1px solid rgba(255,255,255,0.03)',
+              }}
+            >
+              <div style={{ ...DISP, fontWeight: 700, fontSize: 48, color: s.color, lineHeight: 1, marginBottom: 8 }}>{s.value}</div>
+              <div style={{ ...MONO, fontSize: 11, color: '#6E7587', textTransform: 'uppercase', letterSpacing: 1.5 }}>{s.label}</div>
             </div>
           ))}
         </div>
 
-        <div style={{ background: '#0A0E18', borderTop: '1px solid rgba(255,255,255,0.12)', borderLeft: '1px solid rgba(255,255,255,0.08)', borderRight: '1px solid rgba(255,255,255,0.04)', borderBottom: '1px solid rgba(255,255,255,0.03)', padding: '16px 20px', marginBottom: 20 }}>
-          <CodeBlock language="json" code={CORPUS_JSON} />
+        {/* JSON block with header */}
+        <div style={{ background: '#0A0E18', borderTop: '1px solid rgba(255,255,255,0.12)', borderLeft: '1px solid rgba(255,255,255,0.08)', borderRight: '1px solid rgba(255,255,255,0.04)', borderBottom: '1px solid rgba(255,255,255,0.03)', marginBottom: 20 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', borderBottom: '0.5px solid rgba(255,255,255,0.06)' }}>
+            <span style={{ width: 5, height: 5, background: '#00C48C', flexShrink: 0, display: 'inline-block' }} />
+            <span style={{ ...MONO, fontSize: 11, color: '#6E7587' }}>benchmark_data · live corpus · updated weekly</span>
+          </div>
+          <div style={{ padding: '16px 20px' }}>
+            <CodeBlock language="json" code={CORPUS_JSON} />
+          </div>
         </div>
 
-        <p style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: '#6E7587', textAlign: 'center', margin: 0 }}>
+        <p style={{ ...MONO, fontSize: 11, color: '#6E7587', textAlign: 'center', margin: 0 }}>
           Aggregated from real scans · no synthetic data · updated weekly
         </p>
       </div>
@@ -687,7 +793,7 @@ function PricingSection() {
   const [billing, setBilling] = useState<'monthly' | 'annual'>('monthly')
 
   return (
-    <section style={{ padding: '96px 0', background: 'rgba(10,14,24,0.95)' }}>
+    <section style={{ padding: '96px 0', background: '#06090F', borderTop: '0.5px solid rgba(255,255,255,0.08)', borderBottom: '0.5px solid rgba(255,255,255,0.05)' }}>
       <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 48px' }}>
 
         <p style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, color: '#6F9BC6', margin: '0 0 18px' }}>
@@ -822,65 +928,69 @@ function FinalCtaSection() {
   const [focused, setFocused] = useState(false)
 
   return (
-    <section style={{ padding: '96px 0', background: '#050810' }}>
+    <section style={{ position: 'relative', overflow: 'hidden', padding: '96px 0', background: '#080D18', borderTop: '0.5px solid rgba(0,196,140,0.2)' }}>
       <style>{`
-        @keyframes ctaPulse {
-          0%, 100% { box-shadow: 0 0 0 1px rgba(0,196,140,0.3), 0 0 0 0 rgba(0,196,140,0.3); }
-          50%       { box-shadow: 0 0 0 1px rgba(0,196,140,1.0), 0 0 0 6px rgba(0,196,140,0); }
+        @keyframes scan-pulse {
+          0%, 100% { box-shadow: 0 0 0 0 rgba(0,196,140,0.3); }
+          50%       { box-shadow: 0 0 0 8px rgba(0,196,140,0); }
         }
-        .cta-btn-pulse { animation: ctaPulse 2s ease-in-out infinite; }
-        @media (prefers-reduced-motion: reduce) {
-          .cta-btn-pulse { animation: none; }
-        }
+        .scan-btn-pulse { animation: scan-pulse 2.5s ease-in-out infinite; }
+        @media (prefers-reduced-motion: reduce) { .scan-btn-pulse { animation: none; } }
       `}</style>
-      <div style={{ maxWidth: 640, margin: '0 auto', padding: '0 48px', textAlign: 'center' }}>
 
-        <p style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, color: '#6F9BC6', margin: '0 0 18px' }}>
+      {/* Green radial bloom */}
+      <div aria-hidden style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0, background: 'radial-gradient(ellipse 800px 400px at 50% 50%, rgba(0,196,140,0.07) 0%, transparent 60%)' }} />
+
+      <div style={{ position: 'relative', zIndex: 1, maxWidth: 640, margin: '0 auto', padding: '0 48px', textAlign: 'center' }}>
+
+        <p style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, color: '#6F9BC6', margin: '0 0 18px' }}>
           Run it on your site
         </p>
-        <h2 style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 38, lineHeight: 1.1, color: '#E6E9EE', margin: '0 0 12px', letterSpacing: '-0.5px' }}>
+        <h2 style={{ ...DISP, fontWeight: 700, fontSize: 44, lineHeight: 1.1, color: '#E6E9EE', margin: '0 0 12px', letterSpacing: '-0.5px' }}>
           See your score in 90 seconds.
         </h2>
-        <p style={{ fontFamily: "'IBM Plex Sans', sans-serif", fontSize: 15, color: '#9398A8', lineHeight: 1.65, margin: '0 0 28px' }}>
+        <p style={{ ...SANS, fontSize: 16, color: '#9398A8', lineHeight: 1.65, margin: '0 0 32px' }}>
           Paste any URL. Get ranked findings, benchmarks, and AI-rewritten copy.
         </p>
 
-        <p style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, textTransform: 'uppercase', letterSpacing: 1.5, color: '#6F9BC6', textAlign: 'left', margin: '0 0 6px' }}>
+        <p style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: 1.5, color: '#6E7587', textAlign: 'left', margin: '0 0 6px' }}>
           POST /api/v1/scan
         </p>
 
         <div style={{
           display: 'flex',
           background: '#0A0E18',
-          borderTop: `1px solid ${focused ? 'rgba(0,196,140,0.5)' : 'rgba(255,255,255,0.12)'}`,
-          borderLeft: `1px solid ${focused ? 'rgba(0,196,140,0.3)' : 'rgba(255,255,255,0.08)'}`,
+          borderTop: `1px solid ${focused ? 'rgba(0,196,140,0.6)' : 'rgba(255,255,255,0.1)'}`,
+          borderLeft: `1px solid ${focused ? 'rgba(0,196,140,0.3)' : 'rgba(255,255,255,0.07)'}`,
           borderRight: `1px solid ${focused ? 'rgba(0,196,140,0.2)' : 'rgba(255,255,255,0.04)'}`,
           borderBottom: `1px solid ${focused ? 'rgba(0,196,140,0.15)' : 'rgba(255,255,255,0.03)'}`,
           transition: 'border-color 0.15s',
+          marginBottom: 8,
         }}>
-          <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, color: '#6E7587', padding: '0 12px', display: 'flex', alignItems: 'center', flexShrink: 0, borderRight: '0.5px solid rgba(255,255,255,0.08)' }}>
+          <span style={{ ...MONO, fontSize: 12, color: '#6E7587', padding: '0 12px', display: 'flex', alignItems: 'center', flexShrink: 0, borderRight: '0.5px solid rgba(255,255,255,0.08)' }}>
             https://
           </span>
           <input
             type="text"
             placeholder="your-site.com"
-            style={{ flex: 1, background: 'transparent', fontFamily: "'IBM Plex Mono', monospace", fontSize: 14, color: '#E6E9EE', padding: '13px 14px', border: 'none', outline: 'none' }}
+            style={{ flex: 1, background: 'transparent', ...MONO, fontSize: 14, color: '#E6E9EE', padding: '13px 14px', border: 'none', outline: 'none' }}
             readOnly
             onFocus={() => setFocused(true)}
             onBlur={() => setFocused(false)}
             onClick={() => { window.location.href = '/scan' }}
           />
-          <Link
-            href="/scan"
-            className="cta-btn-pulse"
-            style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, fontWeight: 600, letterSpacing: 1.5, textTransform: 'uppercase', background: '#00C48C', color: '#050810', padding: '13px 20px', textDecoration: 'none', whiteSpace: 'nowrap', flexShrink: 0, display: 'flex', alignItems: 'center' }}
-          >
-            SCAN FREE →
-          </Link>
         </div>
 
-        <p style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: '#6E7587', marginTop: 16 }}>
-          307 checks · ~90 seconds · no account required
+        <Link
+          href="/scan"
+          className="scan-btn-pulse"
+          style={{ display: 'block', ...MONO, fontSize: 13, fontWeight: 600, letterSpacing: 1, textTransform: 'uppercase', background: '#00C48C', color: '#050810', padding: '16px', textDecoration: 'none', textAlign: 'center', marginBottom: 16 }}
+        >
+          SCAN FREE →
+        </Link>
+
+        <p style={{ ...MONO, fontSize: 11, color: '#6E7587', margin: 0, textTransform: 'uppercase', letterSpacing: 1 }}>
+          307 CHECKS · ~90 SECONDS · NO ACCOUNT REQUIRED
         </p>
       </div>
     </section>
@@ -921,55 +1031,69 @@ function FaqSection() {
   const [openFaq, setOpenFaq] = useState<number | null>(null)
 
   return (
-    <section style={{ padding: '96px 0', background: 'rgba(8,12,20,0.98)' }}>
+    <section style={{ padding: '96px 0' }}>
       <div style={{ maxWidth: 760, margin: '0 auto', padding: '0 48px' }}>
-        <p style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, color: '#6F9BC6', margin: '0 0 18px' }}>
-          FAQ
-        </p>
-        <h2 style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 36, lineHeight: 1.15, color: '#E6E9EE', margin: '0 0 36px', letterSpacing: '-0.5px' }}>
+
+        {/* Eyebrow + count badge */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 18 }}>
+          <p style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, color: '#6F9BC6', margin: 0 }}>
+            COMMON QUESTIONS
+          </p>
+          <span style={{ ...MONO, fontSize: 10, color: '#6F9BC6', background: '#0A0E18', border: '0.5px solid rgba(111,155,198,0.4)', padding: '2px 8px' }}>
+            5 answers
+          </span>
+        </div>
+
+        <h2 style={{ ...DISP, fontWeight: 700, fontSize: 36, lineHeight: 1.15, color: '#E6E9EE', margin: '0 0 36px', letterSpacing: '-0.5px' }}>
           Common questions.
         </h2>
 
-        {FAQ_ITEMS.map((item, i) => (
-          <div
-            key={i}
-            style={{
-              display: 'flex',
-              borderBottom: '0.5px solid rgba(255,255,255,0.06)',
-              background: openFaq === i ? '#0A0E18' : 'transparent',
-              transition: 'background 0.15s',
-            }}
-          >
-            {/* Left accent bar */}
-            <div style={{ width: 3, flexShrink: 0, alignSelf: 'stretch', background: item.accent }} />
+        {FAQ_ITEMS.map((item, i) => {
+          const isOpen = openFaq === i
+          return (
+            <div
+              key={i}
+              style={{
+                display: 'flex',
+                borderBottom: '0.5px solid rgba(255,255,255,0.06)',
+                background: isOpen ? '#0A0E18' : 'transparent',
+                transition: 'background 0.15s',
+              }}
+            >
+              {/* Left accent bar — brightens when open */}
+              <div style={{ width: 3, flexShrink: 0, alignSelf: 'stretch', background: item.accent, opacity: isOpen ? 1 : 0.6, transition: 'opacity 0.15s' }} />
 
-            {/* Content */}
-            <div style={{ flex: 1, padding: '0 18px' }}>
-              <div
-                style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', padding: '18px 0' }}
-                onClick={() => setOpenFaq(openFaq === i ? null : i)}
-              >
-                <span style={{ fontFamily: "'IBM Plex Sans', sans-serif", fontWeight: 500, fontSize: 15, color: '#E6E9EE' }}>
-                  {item.q}
-                </span>
-                <svg
-                  width={16}
-                  height={16}
-                  viewBox="0 0 16 16"
-                  fill="none"
-                  style={{ flexShrink: 0, marginLeft: 16, transform: openFaq === i ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s', color: '#6E7587' }}
+              {/* Content */}
+              <div style={{ flex: 1, padding: '0 18px' }}>
+                <div
+                  style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', padding: '18px 0' }}
+                  onClick={() => setOpenFaq(isOpen ? null : i)}
                 >
-                  <path d="M4 6l4 4 4-4" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
+                  <span style={{ ...SANS, fontWeight: 500, fontSize: 15, color: '#E6E9EE' }}>
+                    {item.q}
+                  </span>
+                  <svg
+                    width={16}
+                    height={16}
+                    viewBox="0 0 16 16"
+                    fill="none"
+                    style={{ flexShrink: 0, marginLeft: 16, transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s', color: isOpen ? item.accent : '#6E7587' }}
+                  >
+                    <path d="M4 6l4 4 4-4" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </div>
+                {isOpen && (
+                  <>
+                    <p style={{ ...SANS, fontSize: 14, color: '#9398A8', lineHeight: 1.7, padding: '0 24px 20px 0', margin: 0 }}>
+                      {item.a}
+                    </p>
+                    <div style={{ height: '0.5px', background: item.accent, marginBottom: 0 }} />
+                  </>
+                )}
               </div>
-              {openFaq === i && (
-                <p style={{ fontFamily: "'IBM Plex Sans', sans-serif", fontSize: 14, color: '#9398A8', lineHeight: 1.65, paddingBottom: 18, margin: 0 }}>
-                  {item.a}
-                </p>
-              )}
             </div>
-          </div>
-        ))}
+          )
+        })}
       </div>
     </section>
   )
@@ -1043,6 +1167,8 @@ export default function HomePage() {
     <main className="bg-background-base min-h-screen instrument-grid">
       <NavBar />
       <HeroSection />
+      <div className="section-separator" />
+      <StatsStrip />
       <div className="section-separator" />
       <OutputSection />
       <div className="section-separator" />

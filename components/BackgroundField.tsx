@@ -9,7 +9,7 @@ export default function BackgroundField() {
   const circuitGridDataUrl =
     "data:image/svg+xml," +
     encodeURIComponent(
-      `<svg xmlns="http://www.w3.org/2000/svg" width="60" height="60"><defs><pattern id="g" width="60" height="60"><line x1="0" y1="0" x2="60" y2="0" stroke="rgba(0,200,255,0.015)" stroke-width="1"/><line x1="0" y1="0" x2="0" y2="60" stroke="rgba(0,200,255,0.015)" stroke-width="1"/><circle cx="0" cy="0" r="1" fill="rgba(0,200,255,0.03)"/></pattern></defs><rect width="60" height="60" fill="url(#g)"/></svg>`
+      `<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64"><defs><pattern id="g" width="64" height="64"><line x1="0" y1="0" x2="64" y2="0" stroke="rgba(111,155,198,0.06)" stroke-width="1"/><line x1="0" y1="0" x2="0" y2="64" stroke="rgba(111,155,198,0.06)" stroke-width="1"/><circle cx="0" cy="0" r="1.5" fill="rgba(111,155,198,0.10)"/></pattern></defs><rect width="64" height="64" fill="url(#g)"/></svg>`
     );
 
   return (
@@ -28,7 +28,7 @@ export default function BackgroundField() {
         className="absolute inset-0 opacity-100"
         style={{
           backgroundImage: `url("${circuitGridDataUrl}")`,
-          backgroundSize: "60px 60px",
+          backgroundSize: "64px 64px",
         }}
       />
 
@@ -37,7 +37,7 @@ export default function BackgroundField() {
         className="absolute inset-0"
         style={{
           background:
-            "radial-gradient(ellipse 80% 40% at 50% 0%, rgba(0,200,255,0.033) 0%, transparent 60%)",
+            "radial-gradient(ellipse 80% 40% at 50% 0%, rgba(111,155,198,0.025) 0%, transparent 60%)",
         }}
       />
 

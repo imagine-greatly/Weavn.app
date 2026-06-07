@@ -8,8 +8,8 @@ export default function OutputSection() {
       position: 'relative',
       overflow: 'hidden',
       padding: '96px 0',
-      background: 'rgba(10,14,24,0.95)',
-      borderTop: '0.5px solid rgba(255,255,255,0.05)',
+      background: '#080D18',
+      borderTop: '0.5px solid rgba(0,196,140,0.15)',
       borderBottom: '0.5px solid rgba(255,255,255,0.05)',
     }}>
 

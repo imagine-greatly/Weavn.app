@@ -4,34 +4,48 @@ import { useEffect, useRef } from "react";
 
 type Pt = { x: number; y: number };
 
+type TraceColor = { line: string; dot: string };
+
 type TraceLine = {
   points: Pt[];
   totalLen: number;
   duration: number;
   startTime: number;
+  color: TraceColor;
 };
 
-const MAX_LINES = 15;
-const LINE_COLOR = "rgba(0,200,255,0.035)";
-const DOT_FILL = "rgba(0,200,255,0.1)";
+const GRID = 64;
+const MAX_LINES = 28;
 const DOT_RADIUS = 1.5;
+
+const TRACE_COLORS: TraceColor[] = [
+  { line: 'rgba(111,155,198,0.045)', dot: 'rgba(111,155,198,0.135)' }, // 60% — muted blue
+  { line: 'rgba(128,128,192,0.040)', dot: 'rgba(128,128,192,0.12)'  }, // 30% — muted purple
+  { line: 'rgba(0,196,140,0.035)',   dot: 'rgba(0,196,140,0.10)'    }, // 10% — muted green
+];
+
+function randomTraceColor(): TraceColor {
+  const r = Math.random();
+  if (r < 0.6) return TRACE_COLORS[0]!;
+  if (r < 0.9) return TRACE_COLORS[1]!;
+  return TRACE_COLORS[2]!;
+}
+
+function snap(v: number): number {
+  return Math.round(v / GRID) * GRID;
+}
 
 function randomInRange(a: number, b: number) {
   return a + Math.random() * (b - a);
 }
 
 function buildManhattanPath(w: number, h: number): Pt[] {
-  const m = 48;
   const edgePoint = (edge: number): Pt => {
     switch (edge) {
-      case 0:
-        return { x: m + Math.random() * Math.max(40, w - 2 * m), y: 0 };
-      case 1:
-        return { x: w, y: m + Math.random() * Math.max(40, h - 2 * m) };
-      case 2:
-        return { x: m + Math.random() * Math.max(40, w - 2 * m), y: h };
-      default:
-        return { x: 0, y: m + Math.random() * Math.max(40, h - 2 * m) };
+      case 0: return { x: snap(Math.random() * w), y: 0 };
+      case 1: return { x: w, y: snap(Math.random() * h) };
+      case 2: return { x: snap(Math.random() * w), y: h };
+      default: return { x: 0, y: snap(Math.random() * h) };
     }
   };
 
@@ -142,16 +156,17 @@ export default function LandingCircuitCanvas({ overlay }: Props) {
 
     const w0 = window.innerWidth;
     const h0 = window.innerHeight;
-    let nextSpawnAt = performance.now() + randomInRange(0, 2500);
-    for (let s = 0; s < 8 && linesRef.current.length < MAX_LINES; s++) {
+    let nextSpawnAt = performance.now() + randomInRange(0, 1500);
+    for (let s = 0; s < 14 && linesRef.current.length < MAX_LINES; s++) {
       const points = buildManhattanPath(w0, h0);
       const totalLen = polylineLength(points);
-      if (totalLen >= 80) {
+      if (totalLen >= 64) {
         linesRef.current.push({
           points,
           totalLen,
-          duration: randomInRange(14000, 22000),
-          startTime: performance.now() - randomInRange(0, 10000),
+          duration: randomInRange(18000, 28000),
+          startTime: performance.now() - randomInRange(0, 14000),
+          color: randomTraceColor(),
         });
       }
     }
@@ -159,12 +174,13 @@ export default function LandingCircuitCanvas({ overlay }: Props) {
     const spawnLine = (w: number, h: number) => {
       const points = buildManhattanPath(w, h);
       const totalLen = polylineLength(points);
-      if (totalLen < 80) return;
+      if (totalLen < 64) return;
       linesRef.current.push({
         points,
         totalLen,
-        duration: randomInRange(14000, 22000),
+        duration: randomInRange(18000, 28000),
         startTime: performance.now(),
+        color: randomTraceColor(),
       });
       if (linesRef.current.length > MAX_LINES) {
         linesRef.current.shift();
@@ -180,7 +196,7 @@ export default function LandingCircuitCanvas({ overlay }: Props) {
 
       if (linesRef.current.length < MAX_LINES && now >= nextSpawnAt) {
         spawnLine(w, h);
-        nextSpawnAt = now + randomInRange(2300, 3100);
+        nextSpawnAt = now + randomInRange(1200, 2000);
       }
 
       const beforeCount = linesRef.current.length;
@@ -205,14 +221,15 @@ export default function LandingCircuitCanvas({ overlay }: Props) {
 
       ctx.clearRect(0, 0, w, h);
       ctx.lineWidth = 1;
-      ctx.strokeStyle = LINE_COLOR;
       ctx.lineCap = "square";
       ctx.lineJoin = "miter";
-      ctx.fillStyle = DOT_FILL;
 
       for (const line of linesRef.current) {
         const t = Math.min((now - line.startTime) / line.duration, 1);
         const visibleLen = line.totalLen * t;
+
+        ctx.strokeStyle = line.color.line;
+        ctx.fillStyle = line.color.dot;
         drawPartialPath(ctx, line.points, visibleLen);
 
         const head = pointAtDistance(line.points, visibleLen);

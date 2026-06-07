@@ -35,7 +35,7 @@ const OBJECTIONS = [
 
 export default function ObjectionSection() {
   return (
-    <section style={{ padding: '96px 0', background: '#050810' }}>
+    <section style={{ padding: '96px 0' }}>
       <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 48px' }}>
 
         {/* Eyebrow */}

@@ -67,33 +67,36 @@ function severityStyles(severity: FindingSeverity) {
   switch (severity) {
     case "critical":
       return {
-        borderLeftColor: "var(--red)",
+        borderLeftColor: "#FF4444",
+        backgroundTint: "rgba(255, 68, 68, 0.03)",
         boxShadow:
-          "inset 4px 0 20px rgba(255,45,45,0.12), 0 2px 40px rgba(0,0,0,0.3)",
+          "inset 4px 0 20px rgba(255,68,68,0.12), 0 2px 40px rgba(0,0,0,0.3)",
         hoverShadow:
-          "inset 4px 0 28px rgba(255,45,45,0.18), -2px 0 20px rgba(255,45,45,0.3), 0 8px 48px rgba(0,0,0,0.5)",
-        pillBg: "rgba(255,45,45,0.08)",
-        pillBorder: "rgba(255,45,45,0.2)",
-        pillColor: "var(--red)",
+          "inset 4px 0 28px rgba(255,68,68,0.18), -2px 0 20px rgba(255,68,68,0.3), 0 8px 48px rgba(0,0,0,0.5)",
+        pillBg: "rgba(255,68,68,0.08)",
+        pillBorder: "rgba(255,68,68,0.2)",
+        pillColor: "#FF4444",
       };
     case "warning":
       return {
-        borderLeftColor: "var(--orange)",
+        borderLeftColor: "#FF8C00",
+        backgroundTint: "rgba(255, 140, 0, 0.02)",
         boxShadow: "0 2px 20px rgba(0,0,0,0.2)",
         hoverShadow:
-          "inset 3px 0 16px rgba(255,149,0,0.08), 0 8px 40px rgba(0,0,0,0.4)",
-        pillBg: "rgba(255,149,0,0.08)",
-        pillBorder: "rgba(255,149,0,0.2)",
-        pillColor: "var(--orange)",
+          "inset 3px 0 16px rgba(255,140,0,0.08), 0 8px 40px rgba(0,0,0,0.4)",
+        pillBg: "rgba(255,140,0,0.08)",
+        pillBorder: "rgba(255,140,0,0.2)",
+        pillColor: "#FF8C00",
       };
     case "passing":
       return {
-        borderLeftColor: "var(--green)",
+        borderLeftColor: "#4A9EFF",
+        backgroundTint: "transparent",
         boxShadow: "0 2px 20px rgba(0,0,0,0.15)",
         hoverShadow: "0 4px 24px rgba(0,0,0,0.25)",
-        pillBg: "rgba(0,255,135,0.08)",
-        pillBorder: "rgba(0,255,135,0.2)",
-        pillColor: "var(--green)",
+        pillBg: "rgba(74,158,255,0.08)",
+        pillBorder: "rgba(74,158,255,0.2)",
+        pillColor: "#4A9EFF",
       };
   }
 }
@@ -181,13 +184,29 @@ function rubricLeftBorderColor(
   sev: RubricSeverityLabel | undefined,
   fallback: FindingSeverity
 ): string {
-  if (sev === "Critical") return "#FF2D2D";
-  if (sev === "High") return "#FF6B00";
-  if (sev === "Medium") return "#FFB800";
-  if (sev === "Low") return "rgba(0,200,255,0.4)";
-  if (fallback === "critical") return "#FF2D2D";
-  if (fallback === "warning") return "#FF6B00";
-  return "rgba(0,200,255,0.4)";
+  if (sev === "Critical") return "#FF4444";
+  if (sev === "High") return "#FF8C00";
+  if (sev === "Medium") return "#F5A623";
+  if (sev === "Low") return "#4A9EFF";
+  if (fallback === "critical") return "#FF4444";
+  if (fallback === "warning") return "#FF8C00";
+  return "#4A9EFF";
+}
+
+function cardBorderLeft(finding: FindingData): string {
+  const rs = finding.rubricSeverity;
+  if (rs === "Critical" || finding.severity === "critical") return "#FF4444";
+  if (rs === "High") return "#FF8C00";
+  if (rs === "Medium" || finding.severity === "warning") return "#F5A623";
+  if (finding.severity === "passing") return "#4A9EFF";
+  return "#F5A623";
+}
+
+function cardBackgroundTint(finding: FindingData): string {
+  const rs = finding.rubricSeverity;
+  if (rs === "Critical" || finding.severity === "critical") return "rgba(255, 68, 68, 0.03)";
+  if (rs === "High") return "rgba(255, 140, 0, 0.02)";
+  return "transparent";
 }
 
 function RubricModeBadge({ mode }: { mode: RubricModeLabel }) {
@@ -298,9 +317,9 @@ function QuickWinFindingCard({ finding }: { finding: FindingData }) {
       data-prefetch-id={finding.id}
       style={{
         borderRadius: 0,
-        background: "rgba(240,244,255,0.02)",
+        background: cardBackgroundTint(finding) !== "transparent" ? cardBackgroundTint(finding) : "rgba(240,244,255,0.02)",
         border: "1px solid rgba(0,200,255,0.1)",
-        borderLeft: "2px solid rgba(0,230,118,0.3)",
+        borderLeft: `2px solid ${cardBorderLeft(finding)}`,
         padding: "14px 18px",
         marginBottom: 12,
       }}
@@ -393,9 +412,9 @@ function RevenueFindingCard({
       data-prefetch-id={finding.id}
       style={{
         borderRadius: 2,
-        background: "rgba(240,244,255,0.02)",
+        background: cardBackgroundTint(finding) !== "transparent" ? cardBackgroundTint(finding) : "rgba(240,244,255,0.02)",
         border: "1px solid rgba(255,255,255,0.06)",
-        borderLeft: isCritical ? "3px solid #FF2D2D" : "1px solid rgba(255,255,255,0.06)",
+        borderLeft: `3px solid ${cardBorderLeft(finding)}`,
         marginBottom: 16,
         padding: "18px 20px 20px",
         paddingTop: 16,
@@ -551,7 +570,7 @@ function killerSeverityUi(finding: FindingData): {
       borderLeft: "3px solid #FF4444",
     };
   }
-  if (rs === "High" || finding.severity === "warning") {
+  if (rs === "High") {
     return {
       label: "HIGH IMPACT",
       color: "#FF8C00",
@@ -559,11 +578,19 @@ function killerSeverityUi(finding: FindingData): {
       borderLeft: "3px solid #FF8C00",
     };
   }
+  if (rs === "Medium" || finding.severity === "warning") {
+    return {
+      label: "MEDIUM",
+      color: "#F5A623",
+      pillBorder: "rgba(245,166,35,0.45)",
+      borderLeft: "3px solid #F5A623",
+    };
+  }
   return {
-    label: "MEDIUM",
-    color: "#FFD700",
-    pillBorder: "rgba(255,215,0,0.45)",
-    borderLeft: "3px solid #FFD700",
+    label: "LOW",
+    color: "#4A9EFF",
+    pillBorder: "rgba(74,158,255,0.45)",
+    borderLeft: "3px solid #4A9EFF",
   };
 }
 
@@ -930,7 +957,9 @@ export default function FindingCard({
       data-prefetch-id={finding.id}
       style={{
         borderRadius: 10,
-        background: "var(--bg-card)",
+        background: styles.backgroundTint && styles.backgroundTint !== "transparent"
+          ? styles.backgroundTint
+          : "var(--bg-card)",
         borderColor: "var(--border-default)",
         ...(isMissing
           ? {

@@ -118,10 +118,12 @@ function LockIconSmall({ size = 14 }: { size?: number }) {
 export function LockedFindingCard({ finding, index: _index }: { finding: FindingData; index: number }) {
   const leftColor =
     finding.severity === "critical" || finding.rubricSeverity === "Critical"
-      ? "#FF2D2D"
-      : finding.rubricSeverity === "High" || finding.severity === "warning"
-        ? "#FFB300"
-        : "#8899AA";
+      ? "#FF4444"
+      : finding.rubricSeverity === "High"
+        ? "#FF8C00"
+        : finding.rubricSeverity === "Medium" || finding.severity === "warning"
+          ? "#F5A623"
+          : "#4A9EFF";
   const cat =
     (finding as { category?: string }).category?.trim() ||
     finding.categoryName?.trim() ||
@@ -129,15 +131,19 @@ export function LockedFindingCard({ finding, index: _index }: { finding: Finding
   const badgeLabel =
     finding.severity === "critical" || finding.rubricSeverity === "Critical"
       ? "CRITICAL"
-      : finding.rubricSeverity === "High" || finding.severity === "warning"
+      : finding.rubricSeverity === "High"
         ? "HIGH"
-        : severityBadgeLabel(finding);
+        : finding.rubricSeverity === "Medium" || finding.severity === "warning"
+          ? "MEDIUM"
+          : severityBadgeLabel(finding);
   const badgeSolid =
     finding.severity === "critical" || finding.rubricSeverity === "Critical"
-      ? { background: "#FF2D2D", color: "#FFFFFF", border: "1px solid #FF2D2D" }
-      : finding.rubricSeverity === "High" || finding.severity === "warning"
-        ? { background: "#FFB300", color: "#050810", border: "1px solid #FFB300" }
-        : { background: "rgba(136,153,170,0.12)", color: "#8899AA", border: "1px solid #1A2035" };
+      ? { background: "#FF4444", color: "#FFFFFF", border: "1px solid #FF4444" }
+      : finding.rubricSeverity === "High"
+        ? { background: "#FF8C00", color: "#050810", border: "1px solid #FF8C00" }
+        : finding.rubricSeverity === "Medium" || finding.severity === "warning"
+          ? { background: "#F5A623", color: "#050810", border: "1px solid #F5A623" }
+          : { background: "rgba(74,158,255,0.12)", color: "#4A9EFF", border: "1px solid rgba(74,158,255,0.3)" };
 
   return (
     <div
@@ -362,36 +368,38 @@ export function ReportFindingPreview({
     "—";
   const leftColor =
     finding.severity === "critical" || finding.rubricSeverity === "Critical"
-      ? "#FF2D2D"
-      : finding.rubricSeverity === "High" || finding.severity === "warning"
-        ? "#FFB300"
-        : finding.rubricSeverity === "Medium"
-          ? "#FFD600"
-          : "#8899AA";
+      ? "#FF4444"
+      : finding.rubricSeverity === "High"
+        ? "#FF8C00"
+        : finding.rubricSeverity === "Medium" || finding.severity === "warning"
+          ? "#F5A623"
+          : finding.severity === "passing"
+            ? "#4A9EFF"
+            : "#8899AA";
 
   const badgeStyle =
     finding.severity === "critical" || finding.rubricSeverity === "Critical"
       ? {
-          background: "rgba(255,45,45,0.12)",
-          color: "#FF2D2D",
-          border: "1px solid rgba(255,45,45,0.35)",
+          background: "rgba(255,68,68,0.12)",
+          color: "#FF4444",
+          border: "1px solid rgba(255,68,68,0.35)",
         }
-      : finding.rubricSeverity === "High" || finding.severity === "warning"
+      : finding.rubricSeverity === "High"
         ? {
-            background: "rgba(255,179,0,0.1)",
-            color: "#FFB300",
-            border: "1px solid rgba(255,179,0,0.35)",
+            background: "rgba(255,140,0,0.1)",
+            color: "#FF8C00",
+            border: "1px solid rgba(255,140,0,0.35)",
           }
-        : finding.rubricSeverity === "Medium"
+        : finding.rubricSeverity === "Medium" || finding.severity === "warning"
           ? {
-              background: "rgba(255,214,0,0.08)",
-              color: "#FFD600",
-              border: "1px solid rgba(255,214,0,0.3)",
+              background: "rgba(245,166,35,0.08)",
+              color: "#F5A623",
+              border: "1px solid rgba(245,166,35,0.3)",
             }
           : {
-              background: "rgba(136,153,170,0.08)",
-              color: "#8899AA",
-              border: "1px solid #1A2035",
+              background: "rgba(74,158,255,0.08)",
+              color: "#4A9EFF",
+              border: "1px solid rgba(74,158,255,0.25)",
             };
 
   const href =
@@ -1692,6 +1700,41 @@ export default function ReportRightPanel({
                 margin: "16px 0 24px 0",
               }}
             />
+            {moneyLeaksList.length > 0 && (() => {
+              const p1 = moneyLeaksList.filter(l => l.severity === "critical" || l.rubricSeverity === "Critical").length;
+              const p2 = moneyLeaksList.filter(l => !( l.severity === "critical" || l.rubricSeverity === "Critical") && (l.rubricSeverity === "High" || l.severity === "warning")).length;
+              const p3 = moneyLeaksList.length - p1 - p2;
+              return (
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "1fr 1fr 1fr",
+                    gap: 1,
+                    background: "rgba(255,255,255,0.06)",
+                    border: "1px solid rgba(255,255,255,0.06)",
+                    marginBottom: 24,
+                  }}
+                >
+                  {([
+                    { n: p1, color: "#FF4444", label: "FIX THIS WEEK" },
+                    { n: p2, color: "#FF8C00", label: "FIX THIS MONTH" },
+                    { n: p3, color: "#8E8EA0", label: "WHEN YOU CAN" },
+                  ] as const).map(({ n, color, label }) => (
+                    <div
+                      key={label}
+                      style={{ background: "#0A0D1A", padding: "14px 16px", textAlign: "center" }}
+                    >
+                      <div style={{ fontFamily: REPORT_MONO, fontSize: 24, fontWeight: 900, color, lineHeight: 1 }}>
+                        {n}
+                      </div>
+                      <div style={{ fontFamily: REPORT_MONO, fontSize: 8, color: "#3A3A52", letterSpacing: "0.1em", marginTop: 6, textTransform: "uppercase" }}>
+                        {label}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              );
+            })()}
             <div
               style={{
                 display: "flex",
@@ -1774,18 +1817,34 @@ export default function ReportRightPanel({
                   : [];
                 return (
                   <>
-                    {unlockedFindings.map((finding, i) => (
-                      <CardReveal
-                        key={`k-${finding.id}-u-${i}`}
-                        delayMs={i * STAGGER_MS}
-                      >
-                        <ReportFindingPreview
-                          finding={finding}
-                          index={moneyLeakOrdinal.get(finding.id) ?? i + 1}
-                          issueReportId={issueReportId ?? null}
-                        />
-                      </CardReveal>
-                    ))}
+                    {unlockedFindings.map((finding, i) => {
+                      const isP1 = finding.severity === "critical" || finding.rubricSeverity === "Critical";
+                      const card = (
+                        <CardReveal
+                          key={`k-${finding.id}-u-${i}`}
+                          delayMs={i * STAGGER_MS}
+                        >
+                          <ReportFindingPreview
+                            finding={finding}
+                            index={moneyLeakOrdinal.get(finding.id) ?? i + 1}
+                            issueReportId={issueReportId ?? null}
+                          />
+                        </CardReveal>
+                      );
+                      if (!isP1) return card;
+                      return (
+                        <div
+                          key={`p1-wrap-${finding.id}-${i}`}
+                          style={{
+                            background: "rgba(255, 68, 68, 0.04)",
+                            border: "1px solid rgba(255, 68, 68, 0.12)",
+                            marginBottom: 4,
+                          }}
+                        >
+                          {card}
+                        </div>
+                      );
+                    })}
                     {lockedFindingsInView.length > 0 ? (
                       <div
                         style={{

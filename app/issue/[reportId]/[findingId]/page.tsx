@@ -1378,42 +1378,36 @@ export default function IssuePage() {
   const resolutionTiers = [
     {
       key: "immediate" as const,
-      title: "Immediate",
+      title: "IMMEDIATE",
       sub: "Executable today. No developer required.",
       body: briefExpanded?.resolution?.immediate?.steps,
       time:
         briefExpanded?.resolution?.immediate?.timeEstimate ||
-        "Est. time: 30-60 minutes",
+        "2–4 hours",
       projectedImpact: resolutionProjectedImpact("immediate"),
-      accent: "#00C8FF",
-      titleColor: "#00C8FF",
-      cardBorder: "#1A2035",
+      accentColor: "#00E676",
     },
     {
       key: "proper" as const,
-      title: "Proper",
+      title: "PROPER",
       sub: "Correct long-term implementation.",
       body: briefExpanded?.resolution?.proper?.steps,
       time:
         briefExpanded?.resolution?.proper?.timeEstimate ||
-        "Est. time: 2-4 hours",
+        "1–2 days",
       projectedImpact: resolutionProjectedImpact("proper"),
-      accent: "#8899AA",
-      titleColor: "#FFFFFF",
-      cardBorder: "#1A2035",
+      accentColor: "#00C8FF",
     },
     {
       key: "advanced" as const,
-      title: "Advanced",
+      title: "ADVANCED",
       sub: "What high-converting sites implement at scale.",
       body: briefExpanded?.resolution?.advanced?.steps,
       time:
         briefExpanded?.resolution?.advanced?.timeEstimate ||
-        "Est. time: 1-2 weeks",
+        "1 week+",
       projectedImpact: resolutionProjectedImpact("advanced"),
-      accent: "#1A2035",
-      titleColor: "#8899AA",
-      cardBorder: "#2A3048",
+      accentColor: "#8E8EA0",
     },
   ] as const;
 
@@ -2110,68 +2104,59 @@ export default function IssuePage() {
               </div>
             </div>
           ) : null}
-          <div style={{ display: "flex", flexDirection: "column", gap: 20, marginBottom: 24 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 0, marginBottom: 24 }}>
             {resolutionTiers.map((tier) => (
               <div
                 key={tier.key}
                 style={{
-                  position: "relative",
-                  background: "#0A0F1E",
-                  border: `1px solid ${tier.cardBorder}`,
-                  borderRadius: 8,
-                  padding: "20px 22px 20px 26px",
-                  overflow: "hidden",
+                  background: "#080C14",
+                  border: "1px solid #111827",
+                  borderLeft: `2px solid ${tier.accentColor}`,
+                  padding: "20px 20px 20px 18px",
+                  marginBottom: 12,
                 }}
               >
+                {/* Header row */}
                 <div
                   style={{
-                    position: "absolute",
-                    left: 0,
-                    top: 0,
-                    bottom: 0,
-                    width: 4,
-                    background: tier.accent,
-                    opacity: tier.key === "advanced" ? 1 : 0.9,
-                  }}
-                  aria-hidden
-                />
-                <div
-                  style={{
-                    fontFamily: "var(--font-space-grotesk), sans-serif",
-                    fontSize: 18,
-                    fontWeight: 700,
-                    color: tier.titleColor,
-                    marginBottom: 4,
-                  }}
-                >
-                  {tier.title}
-                </div>
-                <div
-                  style={{
-                    fontFamily: "var(--font-jetbrains-mono), var(--font-space-mono), monospace",
-                    fontSize: 10,
-                    color: "#8899AA",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
                     marginBottom: 12,
                   }}
                 >
-                  {tier.sub}
+                  <span
+                    style={{
+                      fontFamily: "var(--font-jetbrains-mono), var(--font-space-mono), monospace",
+                      fontSize: 10,
+                      fontWeight: 700,
+                      color: tier.accentColor,
+                      letterSpacing: "0.12em",
+                    }}
+                  >
+                    {tier.title}
+                  </span>
+                  <span
+                    style={{
+                      fontFamily: "var(--font-jetbrains-mono), var(--font-space-mono), monospace",
+                      fontSize: 9,
+                      color: "#3A3A52",
+                      letterSpacing: "0.08em",
+                    }}
+                  >
+                    {tier.time}
+                  </span>
                 </div>
-                <p style={{ margin: "0 0 12px 0", ...bodyCopy, lineHeight: 1.7, whiteSpace: "pre-wrap" }}>
+                {/* Divider */}
+                <div style={{ height: 1, background: "#111827", marginBottom: 12 }} />
+                {/* Body */}
+                <p style={{ margin: "0 0 0 0", ...bodyCopy, lineHeight: 1.7, whiteSpace: "pre-wrap" }}>
                   {tier.body || (hasBrief ? "Resolution steps not available. Rescan to generate." : null)}
                 </p>
-                <div
-                  style={{
-                    fontFamily: "var(--font-jetbrains-mono), var(--font-space-mono), monospace",
-                    fontSize: 10,
-                    color: "var(--text-muted)",
-                  }}
-                >
-                  {tier.time}
-                </div>
                 {tier.projectedImpact ? (
                   <div
                     style={{
-                      marginTop: 8,
+                      marginTop: 12,
                       fontFamily: "var(--font-jetbrains-mono), var(--font-space-mono), monospace",
                       fontSize: 10,
                       color: "#00C8FF",
@@ -2220,9 +2205,9 @@ export default function IssuePage() {
         <div
           style={{
             position: "relative",
-            background: "rgba(5,8,16,0.98)",
+            background: "#050810",
             border: "1px solid rgba(0,200,255,0.2)",
-            borderRadius: 12,
+            borderRadius: 0,
             display: "flex",
             flexDirection: "column",
             minHeight: 520,
@@ -2342,14 +2327,14 @@ export default function IssuePage() {
                   style={{
                     maxWidth: "min(920px, 100%)",
                     width: m.role === "assistant" ? "100%" : undefined,
-                    padding: "12px 16px",
-                    borderRadius: m.role === "user" ? "12px 12px 2px 12px" : "2px 12px 12px 12px",
-                    background: m.role === "user" ? "rgba(0,200,255,0.1)" : "rgba(17,20,40,0.8)",
-                    border: m.role === "user" ? "1px solid rgba(0,200,255,0.2)" : "1px solid var(--border-default)",
-                    fontFamily: "Inter, ui-sans-serif, system-ui, sans-serif",
-                    fontSize: 15,
+                    padding: 16,
+                    borderRadius: 0,
+                    background: m.role === "user" ? "#0D1420" : "#080C14",
+                    border: "1px solid #111827",
+                    fontFamily: "var(--font-space-grotesk), sans-serif",
+                    fontSize: 14,
                     fontWeight: 400,
-                    color: m.role === "user" ? "var(--cyan)" : "#FFFFFF",
+                    color: m.role === "user" ? "#F0F4FF" : "#8E8EA0",
                     lineHeight: 1.7,
                     whiteSpace: "pre-wrap",
                     wordBreak: "break-word",
@@ -2373,13 +2358,13 @@ export default function IssuePage() {
                   onClick={() => void send(c)}
                   style={{
                     background: "transparent",
-                    border: "1px solid var(--border-default)",
-                    borderRadius: 6,
+                    border: "1px solid #111827",
+                    borderRadius: 0,
                     padding: "6px 12px",
                     cursor: "pointer",
                     fontFamily: "var(--font-jetbrains-mono), var(--font-space-mono), monospace",
                     fontSize: 9,
-                    color: "var(--text-muted)",
+                    color: "#3A3A52",
                     transition: "all 150ms ease",
                   }}
                   onMouseEnter={(e) => {
@@ -2423,23 +2408,23 @@ export default function IssuePage() {
                 minHeight: 88,
                 maxHeight: 200,
                 resize: "vertical",
-                background: "rgba(17,20,40,0.8)",
-                border: "1px solid var(--border-default)",
-                borderRadius: 8,
+                background: "#0D1420",
+                border: "1px solid #111827",
+                borderRadius: 0,
                 padding: "12px 16px",
-                fontFamily: "Inter, ui-sans-serif, system-ui, sans-serif",
-                fontSize: 14,
-                color: "var(--text-primary)",
+                fontFamily: "var(--font-jetbrains-mono), var(--font-space-mono), monospace",
+                fontSize: 13,
+                color: "#F0F4FF",
                 outline: "none",
                 lineHeight: 1.5,
                 marginBottom: 12,
               }}
               onFocus={(e) => {
-                e.currentTarget.style.borderColor = "rgba(0,200,255,0.35)";
-                e.currentTarget.style.boxShadow = "0 0 40px rgba(0,180,255,0.06)";
+                e.currentTarget.style.borderColor = "rgba(0,200,255,0.5)";
+                e.currentTarget.style.boxShadow = "0 0 0 1px rgba(0,200,255,0.4), 0 0 20px rgba(0,200,255,0.2), 0 0 60px rgba(0,200,255,0.08)";
               }}
               onBlur={(e) => {
-                e.currentTarget.style.borderColor = "var(--border-default)";
+                e.currentTarget.style.borderColor = "#111827";
                 e.currentTarget.style.boxShadow = "none";
               }}
             />
@@ -2450,16 +2435,18 @@ export default function IssuePage() {
               style={{
                 width: "100%",
                 height: 44,
-                borderRadius: 8,
-                background: input.trim() && !streaming ? "transparent" : "var(--bg-elevated)",
-                border: input.trim() && !streaming ? "1px solid #00C8FF" : "none",
+                borderRadius: 0,
+                background: input.trim() && !streaming ? "#00C8FF" : "rgba(17,20,40,0.8)",
+                border: "none",
                 cursor: input.trim() && !streaming ? "pointer" : "not-allowed",
-                color: input.trim() && !streaming ? "#00C8FF" : "var(--text-muted)",
+                color: input.trim() && !streaming ? "#050810" : "#3A3A52",
                 fontFamily: "var(--font-jetbrains-mono), var(--font-space-mono), monospace",
-                fontSize: 11,
-                letterSpacing: "2px",
+                fontSize: 10,
+                letterSpacing: "0.14em",
                 fontWeight: 700,
+                textTransform: "uppercase",
                 transition: "all 150ms ease",
+                opacity: streaming ? 0.5 : 1,
               }}
             >
               SEND

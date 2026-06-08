@@ -692,7 +692,7 @@ function H2({ children }: { children: React.ReactNode }) {
     <h2 style={{
       fontFamily: DISP, fontWeight: 700, fontSize: 28, color: T1,
       margin: '16px 0', letterSpacing: '-0.4px',
-      borderLeft: '2px solid rgba(111,155,198,0.2)',
+      borderLeft: '2px solid rgba(111,155,198,0.25)',
       paddingLeft: 12, marginLeft: -14,
     }}>
       {children}
@@ -808,7 +808,7 @@ export default function ApiDocsPage() {
 
           <section id="introduction" style={SB}>
             <Label>OVERVIEW</Label>
-            <H2>webdoc API</H2>
+            <H2>API Reference · v1</H2>
             <Body>
               The webdoc API returns a structured conversion audit for any URL. POST a URL, get back a JSON object with a score, ranked findings, AI-rewritten copy, and industry benchmarks.
             </Body>
@@ -867,6 +867,36 @@ export default function ApiDocsPage() {
               { param: 'pages',         type: 'string[]', required: 'optional', description: 'Additional page paths to scan beyond the base URL. Max 5 paths. Forces async mode. Each page consumes one scan credit. Example: ["/pricing", "/about"]' },
               { param: 'site_type',     type: 'string',   required: 'optional', description: "Override automatic site type classification. One of: 'saas' | 'ecommerce' | 'service' | 'b2b' | 'creator' | 'local'. If omitted, the scanner classifies the site automatically before running checks." },
             ]} />
+            <p style={{ fontFamily: MONO, fontSize: 11, color: T3, textTransform: 'uppercase', letterSpacing: '0.12em', marginTop: 24, marginBottom: 8 }}>
+              RESPONSE · 200 OK
+            </p>
+            <CodeBlock language="json" code={`{
+  "scan_id": "scan_01HXYZ7K2M9N3P4Q",
+  "url": "https://acme-saas.com",
+  "score": 61,
+  "industry": "B2B SaaS",
+  "benchmark": {
+    "industry_avg": 54,
+    "top_quartile": 78,
+    "percentile": 63
+  },
+  "findings": [
+    {
+      "priority": 1,
+      "severity": "critical",
+      "category": "value_proposition",
+      "title": "Hero headline is feature-led, not outcome-led",
+      "estimated_lift": "12-18% conversion uplift",
+      "fix": "Rewrite to outcome-led, present tense."
+    }
+  ],
+  "rewritten_copy": {
+    "headline": "Ship projects on time, every time.",
+    "cta_primary": "Start free — no credit card"
+  },
+  "cost_usd": 0.15,
+  "duration_ms": 87340
+}`} />
           </section>
 
           <section id="post-scan-batch" style={SB}>
@@ -1130,8 +1160,19 @@ export default function ApiDocsPage() {
       </main>
 
       {/* ── RIGHT CODE PANEL ── */}
-      <aside style={{ width: 380, flexShrink: 0, background: BG_R, borderLeft: '0.5px solid rgba(128,128,192,0.15)', height: '100%', overflowY: 'auto', boxShadow: 'inset 1px 0 0 rgba(128,128,192,0.1)' }}>
-        <div style={{ position: 'sticky', top: 0, padding: '40px 24px' }}>
+      <aside style={{ width: 380, flexShrink: 0, background: BG_R, borderLeft: '0.5px solid rgba(128,128,192,0.15)', height: '100%', overflowY: 'auto', boxShadow: 'inset 1px 0 0 rgba(128,128,192,0.1)', position: 'relative' }}>
+        {/* Faint purple bloom */}
+        <div
+          aria-hidden
+          style={{
+            position: 'absolute',
+            inset: 0,
+            pointerEvents: 'none',
+            zIndex: 0,
+            background: 'radial-gradient(ellipse 400px 800px at 50% 40%, rgba(128,128,192,0.06) 0%, transparent 60%)',
+          }}
+        />
+        <div style={{ position: 'sticky', top: 0, padding: '40px 24px', zIndex: 1 }}>
           <div style={{ display: 'flex', borderBottom: `1px solid ${BD}`, marginBottom: 20 }}>
             {LANGS.map(l => (
               <button

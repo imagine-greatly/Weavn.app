@@ -1,692 +1,545 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useRef, useEffect } from 'react'
+import ScoreRing from '@/components/ui/ScoreRing'
+
+// ── Design tokens ─────────────────────────────────────────────────────────────
+const T = {
+  jsonKey:    '#8080c0',
+  jsonStr:    '#00C48C',
+  jsonMetric: '#6F9BC6',
+  sevCrit:    '#E8635F',
+  sevHigh:    '#EFB23E',
+  inkPrimary: '#E6E9EE',
+  inkSec:     '#9398A8',
+  inkTert:    '#8E8EA0',
+  inkMuted:   '#6E7587',
+  bg:         '#050810',
+  surface:    '#0A0E18',
+  zone1bg:    '#06090F',
+  zone3bg:    '#07090F',
+} as const
+
+function scoreBandColor(n: number): string {
+  if (n >= 70) return T.jsonStr
+  if (n >= 50) return T.sevHigh
+  return T.sevCrit
+}
+
+function severityColor(s: string): string {
+  if (s === 'critical') return T.sevCrit
+  if (s === 'high')     return T.sevHigh
+  if (s === 'medium')   return T.jsonMetric
+  return T.inkMuted
+}
 
 // ── Types ─────────────────────────────────────────────────────────────────────
-
-type Tab      = 'overview' | 'scan-history' | 'findings' | 'benchmarks' | 'settings'
-type Severity = 'critical' | 'high' | 'medium'
-type Status   = 'open' | 'fixed'
+type Priority = 1 | 2 | 3
 
 interface Finding {
   id: string
   title: string
-  severity: Severity
-  dimension: string
+  severity: 'critical' | 'high' | 'medium' | 'low'
+  category: string
   explanation: string
   recommendation: string
+  priority: Priority
+  estimated_lift: string
+  fix_effort: 'low' | 'medium' | 'high'
+  percentile: number
+  industry_avg: string
+  rewritten_copy: { headline: string; cta_primary: string }
 }
 
-interface ScanEntry {
-  date: string
+interface DimensionScore {
+  key: string
+  label: string
   score: number
-  change: number | null
-  findings: number
+  industry_avg: number
+  percentile: number
 }
 
-interface BenchmarkEntry {
-  yours: number
-  avg: number
+interface ScanData {
+  url: string
+  domain: string
+  site_type: string
+  scan_date: string
+  duration_ms: number
+  score: number
+  benchmark: { percentile: number; industry: string }
+  findings: Finding[]
+  dimension_scores: DimensionScore[]
+  strengths: string[]
 }
 
-// ── Constants ─────────────────────────────────────────────────────────────────
+interface PastScan { date: string; score: number }
 
-const MOCK_FINDINGS: Finding[] = [
-  {
-    id: 'MSG_001',
-    title: 'Hero headline is product-focused, not outcome-focused',
-    severity: 'critical',
-    dimension: 'message_clarity',
-    explanation:
-      'Your headline leads with what the product is rather than what the user gains. Outcome-led headlines convert 23% better on average across SaaS landing pages.',
-    recommendation:
-      'Rewrite to lead with the result the user experiences. Instead of naming the product category, name the transformation.',
-  },
-  {
-    id: 'TRS_001',
-    title: 'No social proof visible in first viewport',
-    severity: 'high',
-    dimension: 'trust_signals',
-    explanation:
-      'Trust signals positioned below the fold are ignored by 76% of visitors who bounce before scrolling.',
-    recommendation:
-      'Move at least one trust signal above the fold — customer count, recognizable logo row, or a single sharp testimonial.',
-  },
-  {
-    id: 'CTA_002',
-    title: 'Primary CTA copy is generic',
-    severity: 'high',
-    dimension: 'conversion_architecture',
-    explanation:
-      "CTAs using generic verbs like 'Get Started' underperform specific action CTAs by 14–32%.",
-    recommendation:
-      'Replace with a specific outcome CTA that matches exactly what happens when they click.',
-  },
-  {
-    id: 'TRS_003',
-    title: 'No risk reversal visible near primary CTA',
-    severity: 'medium',
-    dimension: 'trust_signals',
-    explanation:
-      'Risk reversals placed within 100px of the primary CTA reduce friction and increase clicks by 8–15%.',
-    recommendation:
-      'Add a one-line friction reducer directly below your CTA button.',
-  },
-  {
-    id: 'MSG_003',
-    title: 'Value proposition requires prior category knowledge',
-    severity: 'medium',
-    dimension: 'message_clarity',
-    explanation:
-      'Your above-fold copy assumes visitors already know what your product category does. Cold traffic needs category context.',
-    recommendation:
-      'Add a one-sentence explainer that a stranger with no context could understand in under 5 seconds.',
-  },
+// ── Mock data ─────────────────────────────────────────────────────────────────
+const HAS_SCANS = true
+
+const PAST_SCANS: PastScan[] = [
+  { date: 'Apr 12', score: 44 },
+  { date: 'Apr 28', score: 51 },
+  { date: 'May 9',  score: 51 },
+  { date: 'May 21', score: 58 },
+  { date: 'Jun 2',  score: 61 },
+  { date: 'Jun 8',  score: 61 },
 ]
 
-const SCAN_HISTORY: ScanEntry[] = [
-  { date: 'Jun 4, 2026',  score: 61, change: 0,    findings: 5  },
-  { date: 'Jun 2, 2026',  score: 61, change: 3,    findings: 5  },
-  { date: 'May 21, 2026', score: 58, change: 7,    findings: 6  },
-  { date: 'May 9, 2026',  score: 51, change: 0,    findings: 8  },
-  { date: 'Apr 28, 2026', score: 51, change: 7,    findings: 8  },
-  { date: 'Apr 12, 2026', score: 44, change: null, findings: 11 },
-]
-
-const CHART_SCORES = [44, 51, 51, 58, 61, 61]
-const CHART_DATES  = ['Apr 12', 'Apr 28', 'May 9', 'May 21', 'Jun 2', 'Jun 4']
-
-const BENCHMARK_DATA: Record<string, BenchmarkEntry> = {
-  conversion_architecture: { yours: 48, avg: 62 },
-  trust_signals:           { yours: 55, avg: 61 },
-  message_clarity:         { yours: 52, avg: 65 },
-  traffic_readiness:       { yours: 71, avg: 58 },
-  technical_foundation:    { yours: 68, avg: 63 },
-}
-
-const NAV_ITEMS: { key: Tab; label: string }[] = [
-  { key: 'overview',      label: 'Overview'      },
-  { key: 'scan-history',  label: 'Scan History'  },
-  { key: 'findings',      label: 'Findings'      },
-  { key: 'benchmarks',    label: 'Benchmarks'    },
-  { key: 'settings',      label: 'Settings'      },
-]
-
-const TAB_LABELS: Record<Tab, string> = {
-  'overview':      'Overview',
-  'scan-history':  'Scan History',
-  'findings':      'Findings',
-  'benchmarks':    'Benchmarks',
-  'settings':      'Settings',
+const SCAN: ScanData = {
+  url:         'webdocai.com',
+  domain:      'webdocai.com',
+  site_type:   'B2B SAAS',
+  scan_date:   'Jun 8, 2026',
+  duration_ms: 87340,
+  score:       61,
+  benchmark:   { percentile: 34, industry: 'B2B SaaS' },
+  findings: [
+    {
+      id: 'MSG-001', priority: 1, severity: 'critical',
+      category: 'MESSAGE_CLARITY',
+      title: 'Hero headline is product-focused, not outcome-focused',
+      explanation: 'Current headline: "The website intelligence platform." This names the product category but communicates zero user benefit. Outcome-led headlines convert 23% better across SaaS landing pages.',
+      recommendation: 'Rewrite to lead with the result the user experiences. Name the transformation, not the tool. "Find what\'s costing you conversions. Fix it today." speaks directly to the outcome.',
+      estimated_lift: '+18–24%', fix_effort: 'low', percentile: 12, industry_avg: '58%',
+      rewritten_copy: { headline: 'Find what\'s costing you conversions. Fix it today.', cta_primary: 'Scan my site free →' },
+    },
+    {
+      id: 'TRS-001', priority: 1, severity: 'high',
+      category: 'TRUST_SIGNALS',
+      title: 'No social proof visible in first viewport',
+      explanation: 'Zero trust signals appear above the fold. No customer count, logo row, or testimonial. Trust signals below the fold are ignored by 76% of visitors who bounce before scrolling.',
+      recommendation: 'Move at least one trust signal above the fold. Customer count or a sharp single testimonial. "Trusted by 1,200+ founders" requires 4 words and recovers hesitant visitors.',
+      estimated_lift: '+12–16%', fix_effort: 'low', percentile: 22, industry_avg: '63%',
+      rewritten_copy: { headline: '1,200+ SaaS founders have run their site through this.', cta_primary: 'Join them →' },
+    },
+    {
+      id: 'CTA-001', priority: 1, severity: 'high',
+      category: 'CONVERSION_ARCHITECTURE',
+      title: 'Primary CTA copy is generic',
+      explanation: 'CTA reads "Get Started" — one of the 5 lowest-performing CTA patterns. Generic verbs underperform specific action CTAs by 14–32% across tested SaaS pages.',
+      recommendation: 'Replace with a specific outcome CTA. Match the verb to what literally happens when they click. "Get my report" outperforms "Get Started" by an average of 22%.',
+      estimated_lift: '+14–22%', fix_effort: 'low', percentile: 18, industry_avg: '61%',
+      rewritten_copy: { headline: 'Get your full conversion audit free', cta_primary: 'Scan my site — takes 90 seconds →' },
+    },
+    {
+      id: 'TRS-002', priority: 2, severity: 'medium',
+      category: 'TRUST_SIGNALS',
+      title: 'No risk reversal near primary CTA',
+      explanation: 'There is no friction reducer within 100px of the primary CTA. Risk reversals placed near the CTA reduce click hesitation by 8–15%.',
+      recommendation: 'Add a one-line friction reducer directly below the button. "No credit card. No signup. Just a URL." costs 6 words and recovers hesitant visitors.',
+      estimated_lift: '+8–12%', fix_effort: 'low', percentile: 41, industry_avg: '55%',
+      rewritten_copy: { headline: 'Your full conversion audit — no signup, just a URL.', cta_primary: 'Run free audit →' },
+    },
+    {
+      id: 'MSG-002', priority: 2, severity: 'medium',
+      category: 'MESSAGE_CLARITY',
+      title: 'Value proposition requires category knowledge',
+      explanation: 'Above-fold copy assumes the visitor understands what "website conversion intelligence" means. Cold traffic from ads will not have this context and will bounce within 4 seconds.',
+      recommendation: 'Add one sentence that a stranger with no context understands in 5 seconds. Explain the category, then the benefit.',
+      estimated_lift: '+6–10%', fix_effort: 'low', percentile: 38, industry_avg: '52%',
+      rewritten_copy: { headline: 'Paste your URL. We run 307 checks. You get a ranked fix list in 90 seconds.', cta_primary: 'Try it free →' },
+    },
+    {
+      id: 'OBJ-001', priority: 3, severity: 'medium',
+      category: 'OBJECTION_HANDLING',
+      title: 'No objection handling on pricing page',
+      explanation: 'Pricing page lists features and price but provides zero objection handling. "Is this worth it?" is the primary question at this stage and goes unanswered.',
+      recommendation: 'Add a 3-item FAQ below pricing. Address the top 3 objections: "What if my score is already good?", "Can I cancel?", "How is this different from Analytics?"',
+      estimated_lift: '+4–8%', fix_effort: 'medium', percentile: 44, industry_avg: '50%',
+      rewritten_copy: { headline: 'The diagnostic your ad spend deserves.', cta_primary: 'Start free →' },
+    },
+  ],
+  dimension_scores: [
+    { key: 'conversion_architecture', label: 'Conversion Arch.',    score: 48, industry_avg: 62, percentile: 21 },
+    { key: 'trust_signals',           label: 'Trust Signals',        score: 55, industry_avg: 61, percentile: 38 },
+    { key: 'message_clarity',         label: 'Message Clarity',      score: 52, industry_avg: 65, percentile: 29 },
+    { key: 'traffic_readiness',       label: 'Traffic Readiness',    score: 71, industry_avg: 58, percentile: 73 },
+    { key: 'technical_foundation',    label: 'Technical Foundation', score: 68, industry_avg: 63, percentile: 61 },
+    { key: 'objection_handling',      label: 'Objection Handling',   score: 44, industry_avg: 53, percentile: 18 },
+    { key: 'offer_clarity',           label: 'Offer Clarity',        score: 72, industry_avg: 60, percentile: 76 },
+  ],
+  strengths: [
+    'Page load speed in top 15% of B2B SaaS sites — under 1.8s on mobile',
+    'SSL certificate valid, HTTPS enforced, no mixed content warnings',
+    'OpenGraph metadata complete — social previews render correctly',
+    'Schema markup present — Google can extract business entity data',
+    'Primary navigation is unambiguous — 3 items, clear hierarchy',
+  ],
 }
 
 // ── SVG chart helpers ─────────────────────────────────────────────────────────
+const CW = 560
+const CH = 80
+const CPY = 8
 
-const CL = 40    // chart left padding
-const CT = 10    // chart top padding
-const CW = 540   // chart usable width (600 - CL - 20)
-const CH = 152   // chart usable height (192 - CT - 30)
+function scoreToY(s: number): number { return CPY + (1 - s / 100) * (CH - CPY * 2) }
+function idxToX(i: number, n: number): number { return (i / (n - 1)) * CW }
 
-function scoreToSvgY(score: number): number {
-  return CT + CH - (score / 100) * CH
+// ── Priority labels + pills ───────────────────────────────────────────────────
+const P_LABEL: Record<Priority, string> = {
+  1: 'P1 — FIX THIS WEEK',
+  2: 'P2 — FIX THIS MONTH',
+  3: 'P3 — WHEN YOU CAN',
 }
 
-function indexToSvgX(i: number, total: number): number {
-  return CL + (i / (total - 1)) * CW
+const P_PILL: Record<Priority, { bg: string; color: string; text: string }> = {
+  1: { bg: 'rgba(232,99,95,0.13)',   color: '#E8635F', text: 'P1 CRITICAL' },
+  2: { bg: 'rgba(239,178,62,0.13)',  color: '#EFB23E', text: 'P2 HIGH'     },
+  3: { bg: 'rgba(111,155,198,0.13)', color: '#6F9BC6', text: 'P3 MEDIUM'   },
 }
 
-function smoothLinePath(scores: number[]): string {
-  const n = scores.length
-  if (n < 2) return ''
-  const pts: [number, number][] = scores.map((s, i) => [
-    indexToSvgX(i, n),
-    scoreToSvgY(s),
-  ])
-  let d = `M ${pts[0][0].toFixed(1)} ${pts[0][1].toFixed(1)}`
-  for (let i = 1; i < n; i++) {
-    const prev     = pts[i - 1]
-    const curr     = pts[i]
-    const prevPrev = pts[Math.max(0, i - 2)]
-    const next     = pts[Math.min(n - 1, i + 1)]
-    const cp1x = prev[0] + (curr[0] - prevPrev[0]) * 0.3
-    const cp1y = prev[1] + (curr[1] - prevPrev[1]) * 0.3
-    const cp2x = curr[0] - (next[0] - prev[0]) * 0.3
-    const cp2y = curr[1] - (next[1] - prev[1]) * 0.3
-    d += ` C ${cp1x.toFixed(1)} ${cp1y.toFixed(1)}, ${cp2x.toFixed(1)} ${cp2y.toFixed(1)}, ${curr[0].toFixed(1)} ${curr[1].toFixed(1)}`
-  }
-  return d
-}
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
-function barHex(score: number): string {
-  if (score >= 80) return '#22c55e'
-  if (score >= 65) return '#facc15'
-  if (score >= 50) return '#f59e0b'
-  return '#ef4444'
-}
-
-function formatDimension(key: string): string {
-  return key.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
-}
-
-// ── Sub-components ────────────────────────────────────────────────────────────
-
-const SEVERITY_DOTS: Record<Severity, string> = {
-  critical: 'bg-red-400',
-  high:     'bg-amber-400',
-  medium:   'bg-yellow-400',
-}
-
-const SEVERITY_BADGE: Record<Severity, string> = {
-  critical: 'text-red-400 border border-red-400/30',
-  high:     'text-amber-400 border border-amber-400/30',
-  medium:   'text-yellow-400 border border-yellow-400/30',
-}
-
-function SeverityBadge({ severity }: { severity: Severity }) {
-  return (
-    <span className={`font-mono text-xs uppercase px-2 py-0.5 ${SEVERITY_BADGE[severity]}`}>
-      {severity}
-    </span>
-  )
-}
-
-function Toggle({ active, onToggle }: { active: boolean; onToggle: () => void }) {
-  return (
-    <button
-      onClick={onToggle}
-      className={`relative flex-shrink-0 cursor-pointer border-0 rounded-full transition-colors ${
-        active ? 'bg-cyan-DEFAULT' : 'bg-background-border'
-      }`}
-      style={{ width: 40, height: 24 }}
-    >
-      <span
-        className="absolute top-1 rounded-full transition-all"
-        style={{
-          width:           16,
-          height:          16,
-          backgroundColor: active ? '#050810' : '#2D3748',
-          left:            active ? 20 : 4,
-        }}
-      />
-    </button>
-  )
-}
-
-function ChangeCell({ change }: { change: number | null }) {
-  if (change === null || change === 0) {
-    return <span className="text-text-tertiary">—</span>
-  }
-  if (change > 0) {
-    return <span className="text-green-400">+{change}</span>
-  }
-  return <span className="text-red-400">{change}</span>
-}
-
-// ── Page ──────────────────────────────────────────────────────────────────────
-
+// ── Main export ───────────────────────────────────────────────────────────────
 export default function FounderDashboard() {
-  const router = useRouter()
-  const [activeTab, setActiveTab] = useState<Tab>('overview')
-  const [mounted, setMounted]     = useState(false)
+  const scan = SCAN
+  const pastScans = PAST_SCANS
 
-  const [findingStatuses, setFindingStatuses] = useState<Record<string, Status>>(
-    Object.fromEntries(MOCK_FINDINGS.map(f => [f.id, 'open' as Status]))
-  )
-  const [weeklyDigest, setWeeklyDigest]       = useState(true)
-  const [scoreDropAlerts, setScoreDropAlerts] = useState(false)
+  const firstP1Id = scan.findings.find(f => f.priority === 1)?.id ?? scan.findings[0]?.id ?? ''
+  const [selectedId, setSelectedId] = useState<string>(firstP1Id)
+  const [urlInput, setUrlInput]     = useState('')
+  const [urlFocused, setUrlFocused] = useState(false)
+  const [copied, setCopied]         = useState(false)
+  const [shouldAnimate, setShouldAnimate] = useState(false)
+  const animatedRef = useRef(false)
 
   useEffect(() => {
-    const t = setTimeout(() => setMounted(true), 80)
-    return () => clearTimeout(t)
+    if (!animatedRef.current && !sessionStorage.getItem('founder-ring-animated')) {
+      animatedRef.current = true
+      sessionStorage.setItem('founder-ring-animated', '1')
+      setShouldAnimate(true)
+    }
   }, [])
 
-  function toggleFindingStatus(id: string) {
-    setFindingStatuses(prev => ({
-      ...prev,
-      [id]: prev[id] === 'open' ? 'fixed' : 'open',
-    }))
+  const selectedFinding = scan.findings.find(f => f.id === selectedId) ?? null
+
+  const grouped = ([1, 2, 3] as Priority[])
+    .map(p => ({ priority: p, findings: scan.findings.filter(f => f.priority === p) }))
+    .filter(g => g.findings.length > 0)
+
+  function copyHeadline(text: string) {
+    navigator.clipboard.writeText(text).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 1200)
+    })
   }
 
-  const linePath   = smoothLinePath(CHART_SCORES)
-  const lastScore  = CHART_SCORES[CHART_SCORES.length - 1]
-  const firstScore = CHART_SCORES[0]
-  const delta      = lastScore - firstScore
-  const n          = CHART_SCORES.length
-  const lastX      = indexToSvgX(n - 1, n)
-  const lastY      = scoreToSvgY(lastScore)
+  // ── EMPTY STATE ──────────────────────────────────────────────────────────────
+  if (!HAS_SCANS) {
+    return (
+      <>
+        <style>{`
+          @keyframes _scan_pulse { 0%,100%{opacity:1} 50%{opacity:.75} }
+          ._scan_btn { animation: _scan_pulse 2s ease-in-out infinite; }
+        `}</style>
+        <div style={{ minHeight: 'calc(100vh - 4rem)', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', paddingTop: '15vh' }}>
+          <div style={{ width: '100%', maxWidth: 560, padding: '0 24px' }}>
+            <p style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.2em', color: T.jsonMetric, marginBottom: 12 }}>SCAN</p>
+            <h1 style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: 36, color: T.inkPrimary, marginBottom: 12, lineHeight: 1.1 }}>Paste your URL. Get a diagnosis.</h1>
+            <p style={{ fontFamily: "'IBM Plex Sans',sans-serif", fontSize: 15, color: T.inkSec, marginBottom: 32 }}>307 checks. Ranked findings. Rewritten copy. Under 90 seconds.</p>
 
-  const gridScores = [25, 50, 75, 100]
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 12, background: 'rgba(255,255,255,0.02)', border: '0.5px solid rgba(255,255,255,0.08)', padding: '8px 14px', marginBottom: 16 }}>
+              <span style={{ display: 'inline-block', width: 7, height: 7, borderRadius: '50%', background: T.jsonStr, flexShrink: 0 }} />
+              <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 12, color: T.inkSec }}>api.webdocai.com</span>
+              <span style={{ color: T.inkMuted }}>·</span>
+              <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 12, color: T.jsonMetric }}>endpoint: /v1/scan</span>
+            </div>
+
+            <p style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 10, color: T.inkMuted, marginBottom: 6 }}>POST /api/v1/scan</p>
+
+            <input
+              type="url"
+              value={urlInput}
+              onChange={e => setUrlInput(e.target.value)}
+              onFocus={() => setUrlFocused(true)}
+              onBlur={() => setUrlFocused(false)}
+              placeholder="https://your-site.com"
+              style={{
+                display: 'block', width: '100%', boxSizing: 'border-box',
+                background: T.bg,
+                borderTop:    `1px solid ${urlFocused ? 'rgba(0,196,140,0.6)' : 'rgba(255,255,255,0.1)'}`,
+                borderLeft:   '1px solid rgba(255,255,255,0.07)',
+                borderRight:  '1px solid rgba(255,255,255,0.04)',
+                borderBottom: '1px solid rgba(255,255,255,0.03)',
+                fontFamily: "'IBM Plex Mono',monospace", fontSize: 14, color: T.inkSec,
+                padding: '14px 16px', outline: 'none', borderRadius: 0,
+                transition: 'border-top-color 0.15s',
+              }}
+            />
+
+            <button
+              className="_scan_btn"
+              style={{
+                display: 'block', width: '100%', background: T.jsonStr, color: T.bg,
+                fontFamily: "'IBM Plex Mono',monospace", fontSize: 13,
+                textTransform: 'uppercase', letterSpacing: '0.1em',
+                padding: '14px', border: 'none', cursor: 'pointer', borderRadius: 0, marginBottom: 12,
+              }}
+            >
+              SCAN MY SITE →
+            </button>
+
+            <p style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 11, color: T.inkMuted, textAlign: 'center' }}>
+              307 CHECKS · ~90 SECONDS · RESULTS SAVED TO YOUR DASHBOARD
+            </p>
+          </div>
+        </div>
+      </>
+    )
+  }
+
+  // ── LOADED STATE ─────────────────────────────────────────────────────────────
+  const n = pastScans.length
+  const lastScore = pastScans[n - 1]?.score ?? scan.score
+  const lineColor = scoreBandColor(lastScore)
+  const chartPts = pastScans.map((p, i) => `${idxToX(i, n).toFixed(1)},${scoreToY(p.score).toFixed(1)}`).join(' ')
+  const y70 = scoreToY(70)
 
   return (
-    <div className="flex h-[calc(100vh-4rem)] overflow-hidden bg-background-base">
+    <div style={{ height: 'calc(100vh - 4rem)', display: 'flex', flexDirection: 'column' }}>
 
-      {/* ── SIDEBAR ──────────────────────────────────────────────────────── */}
-      <aside className="w-60 flex-shrink-0 border-r border-background-border bg-background-base flex flex-col">
-
-        {/* Site identity */}
-        <div className="px-5 pt-6 pb-5 border-b border-background-border flex-shrink-0">
-          <div className="font-display font-bold text-base text-text-primary">
-            yoursite.com
-          </div>
-          <div className="font-mono text-xs text-text-tertiary mt-1">
-            Score{'  '}
-            <span className="text-cyan-DEFAULT">61</span>
-          </div>
-          <div className="font-mono text-xs text-text-tertiary mt-1">Starter</div>
-        </div>
-
-        {/* Nav */}
-        <nav className="flex-1 overflow-y-auto py-2">
-          {NAV_ITEMS.map(item => (
-            <button
-              key={item.key}
-              onClick={() => setActiveTab(item.key)}
-              className={`w-full flex items-center gap-3 px-5 py-3 font-body text-sm text-left bg-transparent border-0 cursor-pointer transition-colors ${
-                activeTab === item.key
-                  ? 'text-text-primary bg-background-raised border-r-2 border-cyan-DEFAULT'
-                  : 'text-text-secondary hover:text-text-primary hover:bg-background-raised/50'
-              }`}
-            >
-              {item.label}
-            </button>
-          ))}
-        </nav>
-
-        {/* Usage */}
-        <div className="border-t border-background-border px-5 py-4 flex-shrink-0">
-          <div className="font-mono text-xs text-text-tertiary mb-2">
-            SCANS THIS MONTH
-          </div>
-          <div className="w-full h-1 bg-background-border rounded-full mb-1 overflow-hidden">
-            <div
-              className="h-full bg-cyan-DEFAULT rounded-full"
-              style={{ width: mounted ? '40%' : '0%', transition: 'width 700ms ease-out' }}
-            />
-          </div>
-          <div className="font-mono text-xs text-text-tertiary">8 / 20 used</div>
-          <div className="font-mono text-xs text-text-tertiary mt-3">Resets Jul 1</div>
-        </div>
-      </aside>
-
-      {/* ── MAIN ─────────────────────────────────────────────────────────── */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-
-        {/* Top bar */}
-        <div className="flex-shrink-0 h-12 border-b border-background-border px-8 flex items-center justify-between">
-          <span className="font-display font-semibold text-base text-text-primary">
-            {TAB_LABELS[activeTab]}
-          </span>
-          <div className="flex items-center gap-4">
-            <span className="font-mono text-xs text-text-tertiary">
-              Last scanned 3 days ago
+      {/* ── ZONE 1 — INSTRUMENT HEADER ──────────────────────────────────────── */}
+      <header style={{
+        flexShrink: 0,
+        background: T.zone1bg,
+        borderBottom: '0.5px solid rgba(255,255,255,0.06)',
+        padding: '16px 32px',
+        position: 'sticky', top: 0, zIndex: 50,
+        display: 'flex', alignItems: 'center', gap: 24,
+      }}>
+        {/* Left */}
+        <div style={{ flex: 1 }}>
+          <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 14, color: T.jsonStr }}>{scan.domain}</div>
+          <div style={{ display: 'flex', gap: 12, marginTop: 4, alignItems: 'center' }}>
+            <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 10, background: 'rgba(111,155,198,0.1)', color: T.jsonMetric, padding: '3px 8px' }}>{scan.site_type}</span>
+            <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 10, color: T.inkMuted }}>
+              Scanned {scan.scan_date} · {scan.duration_ms.toLocaleString()}ms
             </span>
-            <button className="border border-background-border font-mono text-xs text-text-primary px-4 py-1.5 bg-transparent cursor-pointer hover:border-cyan-DEFAULT transition-colors">
-              RESCAN
-            </button>
           </div>
         </div>
 
-        {/* Tab content */}
-        <div className="flex-1 overflow-y-auto">
-
-          {/* ── OVERVIEW ───────────────────────────────────────────────── */}
-          {activeTab === 'overview' && (
-            <div className="px-8 py-8">
-
-              {/* Score trend */}
-              <div className="mb-10">
-                <div className="flex items-center justify-between mb-4">
-                  <span className="font-mono text-xs text-text-tertiary uppercase tracking-widest">
-                    SCORE OVER TIME
-                  </span>
-                  <span className="font-mono text-xs text-text-tertiary">Last 6 scans</span>
-                </div>
-
-                <div className="w-full relative" style={{ height: 192 }}>
-                  <svg width="100%" height="192" viewBox="0 0 600 192" preserveAspectRatio="none">
-                    {/* Grid lines */}
-                    {gridScores.map(s => {
-                      const y = scoreToSvgY(s)
-                      return (
-                        <g key={s}>
-                          <line x1={CL} y1={y} x2={CL + CW} y2={y} stroke="#1a1f2e" strokeWidth={1} />
-                          <text
-                            x={CL - 6} y={y} textAnchor="end" dominantBaseline="middle"
-                            fontSize={10} fill="#2D3748" fontFamily="'IBM Plex Mono', monospace"
-                          >
-                            {s}
-                          </text>
-                        </g>
-                      )
-                    })}
-                    {/* X axis labels */}
-                    {CHART_DATES.map((label, i) => (
-                      <text
-                        key={i}
-                        x={indexToSvgX(i, n)}
-                        y={192 - 6}
-                        textAnchor="middle"
-                        fontSize={10}
-                        fill="#2D3748"
-                        fontFamily="'IBM Plex Mono', monospace"
-                      >
-                        {label}
-                      </text>
-                    ))}
-                    {/* Line */}
-                    <path
-                      d={linePath}
-                      stroke="#00C8FF"
-                      strokeWidth={2}
-                      fill="none"
-                      style={{
-                        strokeDasharray: 3000,
-                        strokeDashoffset: mounted ? 0 : 3000,
-                        transition: 'stroke-dashoffset 1.2s ease-out',
-                      }}
-                    />
-                    {/* Regular dots */}
-                    {CHART_SCORES.slice(0, -1).map((s, i) => (
-                      <circle
-                        key={i}
-                        cx={indexToSvgX(i, n)}
-                        cy={scoreToSvgY(s)}
-                        r={4}
-                        fill="#00C8FF"
-                        style={{ opacity: mounted ? 1 : 0, transition: 'opacity 0.3s ease-out' }}
-                      />
-                    ))}
-                    {/* Last dot glow ring */}
-                    <circle cx={lastX} cy={lastY} r={10} fill="none" stroke="#00C8FF" strokeOpacity={0.3}
-                      style={{ opacity: mounted ? 1 : 0, transition: 'opacity 0.3s ease-out' }}
-                    />
-                    <circle cx={lastX} cy={lastY} r={6} fill="#00C8FF"
-                      style={{ opacity: mounted ? 1 : 0, transition: 'opacity 0.3s ease-out' }}
-                    />
-                  </svg>
-                </div>
-
-                <div className="text-right mt-1">
-                  <span className="font-mono text-sm text-green-400">
-                    +{delta} since first scan
-                  </span>
-                </div>
-              </div>
-
-              {/* Stat boxes */}
-              <div className="grid grid-cols-3 gap-px bg-background-border mb-10">
-                {[
-                  { label: 'CURRENT SCORE', value: '61', sub: 'Below average' },
-                  { label: 'INDUSTRY RANK', value: '34th', sub: 'Percentile · SaaS' },
-                  { label: 'OPEN FINDINGS', value: '5', sub: '2 critical' },
-                ].map(box => (
-                  <div key={box.label} className="bg-background-base p-5">
-                    <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mb-2">
-                      {box.label}
-                    </div>
-                    <div className="font-display font-bold text-3xl text-text-primary">
-                      {box.value}
-                    </div>
-                    <div className="font-mono text-xs text-text-tertiary mt-1">{box.sub}</div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Top findings */}
-              <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mb-4">
-                OPEN FINDINGS&nbsp;&nbsp;·&nbsp;&nbsp;TOP 3
-              </div>
-              {MOCK_FINDINGS.slice(0, 3).map(f => (
-                <div
-                  key={f.id}
-                  className="flex items-start gap-4 py-4 border-b border-background-border"
-                >
-                  <span
-                    className={`w-2 h-2 rounded-full flex-shrink-0 mt-1.5 ${SEVERITY_DOTS[f.severity]}`}
-                  />
-                  <div className="flex-1 min-w-0">
-                    <div className="font-body text-sm text-text-primary truncate">{f.title}</div>
-                    <div className="font-mono text-xs text-text-tertiary mt-0.5">
-                      {f.dimension}
-                    </div>
-                  </div>
-                  <span className="font-mono text-xs text-text-tertiary flex-shrink-0">{f.id}</span>
-                </div>
-              ))}
-              <button
-                onClick={() => setActiveTab('findings')}
-                className="font-mono text-xs text-cyan-DEFAULT hover:underline mt-4 block bg-transparent border-0 cursor-pointer p-0"
-              >
-                View all findings →
-              </button>
-            </div>
-          )}
-
-          {/* ── SCAN HISTORY ────────────────────────────────────────────── */}
-          {activeTab === 'scan-history' && (
-            <div className="px-8 py-8">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-background-border pb-3">
-                    {['DATE', 'SCORE', 'CHANGE', 'FINDINGS', 'REPORT'].map(col => (
-                      <th
-                        key={col}
-                        className="text-left pb-3 font-mono text-xs text-text-tertiary uppercase tracking-widest font-normal"
-                      >
-                        {col}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {SCAN_HISTORY.map((entry, i) => (
-                    <tr key={i} className="border-b border-background-border">
-                      <td className="py-4 font-mono text-xs text-text-secondary">{entry.date}</td>
-                      <td className="py-4 font-display font-bold text-base text-text-primary">
-                        {entry.score}
-                      </td>
-                      <td className="py-4 font-mono text-xs">
-                        <ChangeCell change={entry.change} />
-                      </td>
-                      <td className="py-4 font-mono text-xs text-text-secondary">
-                        {entry.findings} issues
-                      </td>
-                      <td className="py-4 font-mono text-xs text-cyan-DEFAULT hover:underline cursor-pointer">
-                        View →
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-
-          {/* ── FINDINGS ────────────────────────────────────────────────── */}
-          {activeTab === 'findings' && (
-            <div className="px-8 py-8">
-              {MOCK_FINDINGS.map(f => {
-                const status = findingStatuses[f.id] ?? 'open'
-                return (
-                  <div key={f.id} className="border border-background-border p-5 mb-3">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-3">
-                        <span className="font-mono text-xs text-text-tertiary">{f.id}</span>
-                        <SeverityBadge severity={f.severity} />
-                      </div>
-                      <button
-                        onClick={() => toggleFindingStatus(f.id)}
-                        className={`font-mono text-xs px-2 py-0.5 bg-transparent cursor-pointer transition-colors border ${
-                          status === 'fixed'
-                            ? 'text-green-400 border-green-400/30'
-                            : 'text-text-tertiary border-background-border hover:border-cyan-DEFAULT'
-                        }`}
-                      >
-                        {status === 'fixed' ? 'FIXED' : 'OPEN'}
-                      </button>
-                    </div>
-                    <div className="font-body font-medium text-base text-text-primary mt-2 mb-3">
-                      {f.title}
-                    </div>
-                    <div className="font-body text-sm text-text-secondary leading-relaxed mb-3">
-                      {f.explanation}
-                    </div>
-                    <div className="border-l-2 border-cyan-DEFAULT/30 pl-3">
-                      <span className="font-mono text-xs text-cyan-DEFAULT mr-1">FIX:</span>
-                      <span className="font-body text-sm text-text-secondary">
-                        {f.recommendation}
-                      </span>
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          )}
-
-          {/* ── BENCHMARKS ──────────────────────────────────────────────── */}
-          {activeTab === 'benchmarks' && (
-            <div className="px-8 py-8">
-              <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mb-2">
-                YOUR SITE VS INDUSTRY
-              </div>
-              <p className="font-body text-sm text-text-secondary mb-8">
-                Compared against 2,400+ SaaS sites in the webdoc.ai corpus.
-              </p>
-
-              {Object.entries(BENCHMARK_DATA).map(([key, data]) => {
-                const gap = data.yours - data.avg
-                return (
-                  <div key={key} className="mb-8">
-                    <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mb-3">
-                      {formatDimension(key)}
-                    </div>
-                    {/* Your bar */}
-                    <div className="flex items-center gap-3 mb-2">
-                      <span className="font-mono text-xs text-text-secondary w-8 flex-shrink-0">YOU</span>
-                      <div className="flex-1 h-2 bg-background-border rounded-full overflow-hidden">
-                        <div
-                          className="h-full rounded-full"
-                          style={{
-                            width:           mounted ? `${data.yours}%` : '0%',
-                            backgroundColor: barHex(data.yours),
-                            transition:      'width 700ms ease-out',
-                          }}
-                        />
-                      </div>
-                      <span className="font-mono text-xs text-text-primary w-8 text-right flex-shrink-0">
-                        {data.yours}
-                      </span>
-                    </div>
-                    {/* Avg bar */}
-                    <div className="flex items-center gap-3 mb-2">
-                      <span className="font-mono text-xs text-text-secondary w-8 flex-shrink-0">AVG</span>
-                      <div className="flex-1 h-2 bg-background-border rounded-full overflow-hidden">
-                        <div
-                          className="h-full rounded-full"
-                          style={{
-                            width:      mounted ? `${data.avg}%` : '0%',
-                            backgroundColor: '#1a1f2e',
-                            transition: 'width 700ms ease-out 100ms',
-                          }}
-                        />
-                      </div>
-                      <span className="font-mono text-xs text-text-primary w-8 text-right flex-shrink-0">
-                        {data.avg}
-                      </span>
-                    </div>
-                    {/* Gap */}
-                    {gap !== 0 && (
-                      <div
-                        className={`font-mono text-xs ml-11 ${
-                          gap > 0 ? 'text-green-400' : 'text-red-400'
-                        }`}
-                      >
-                        {gap > 0
-                          ? `↑ ${gap} points above average`
-                          : `↓ ${Math.abs(gap)} points below average`}
-                      </div>
-                    )}
-                  </div>
-                )
-              })}
-            </div>
-          )}
-
-          {/* ── SETTINGS ────────────────────────────────────────────────── */}
-          {activeTab === 'settings' && (
-            <div className="px-8 py-8">
-
-              {/* Your site */}
-              <div className="mb-8">
-                <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mb-3">
-                  YOUR SITE
-                </div>
-                <input
-                  readOnly
-                  value="yoursite.com"
-                  className="w-full font-mono text-sm text-text-primary bg-background-raised border border-background-border px-4 py-3 outline-none"
-                />
-                <div className="font-mono text-xs text-text-tertiary mt-2">
-                  Contact support to change your tracked domain.
-                </div>
-              </div>
-
-              {/* Notifications */}
-              <div className="mb-8">
-                <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mb-3">
-                  NOTIFICATIONS
-                </div>
-                {[
-                  {
-                    label:   'Weekly digest email',
-                    active:  weeklyDigest,
-                    toggle:  () => setWeeklyDigest(p => !p),
-                  },
-                  {
-                    label:   'Score drop alerts',
-                    active:  scoreDropAlerts,
-                    toggle:  () => setScoreDropAlerts(p => !p),
-                  },
-                ].map(row => (
-                  <div
-                    key={row.label}
-                    className="flex items-center justify-between py-4 border-b border-background-border"
-                  >
-                    <span className="font-body text-sm text-text-primary">{row.label}</span>
-                    <Toggle active={row.active} onToggle={row.toggle} />
-                  </div>
-                ))}
-              </div>
-
-              {/* Plan */}
-              <div>
-                <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mb-3">
-                  PLAN
-                </div>
-                <div className="bg-background-raised border border-background-border p-5">
-                  <div className="font-body text-sm text-text-primary">
-                    Starter&nbsp;&nbsp;·&nbsp;&nbsp;$49/month
-                  </div>
-                  <div className="font-mono text-xs text-text-tertiary mt-1">
-                    Renews Jul 4, 2026
-                  </div>
-                  <div className="flex gap-3 mt-4 flex-wrap">
-                    <button className="border border-background-border font-mono text-xs text-text-secondary px-4 py-2 bg-transparent cursor-pointer hover:border-cyan-DEFAULT transition-colors">
-                      Upgrade to Agency →
-                    </button>
-                    <button className="font-mono text-xs text-text-tertiary px-4 py-2 bg-transparent border-0 cursor-pointer hover:text-red-400 transition-colors">
-                      Cancel plan
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-            </div>
-          )}
-
+        {/* Center */}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, flexShrink: 0 }}>
+          <ScoreRing score={scan.score} size="lg" animate={shouldAnimate} />
+          <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 11, color: T.jsonMetric }}>
+            {scan.benchmark.percentile}th of {scan.benchmark.industry} sites
+          </span>
         </div>
+
+        {/* Right */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 20, flexShrink: 0 }}>
+          <div style={{ display: 'flex', gap: 20 }}>
+            {([
+              { label: 'FINDINGS',  value: scan.findings.length,  color: T.sevHigh  },
+              { label: 'STRENGTHS', value: scan.strengths.length,  color: T.jsonStr  },
+              { label: 'COST',      value: '$0.15',                color: T.inkTert  },
+            ] as { label: string; value: string | number; color: string }[]).map(s => (
+              <div key={s.label} style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 10, color: T.inkMuted }}>{s.label}</span>
+                <span style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 600, fontSize: 18, color: s.color }}>{s.value}</span>
+              </div>
+            ))}
+          </div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button style={{ background: 'transparent', border: `0.5px solid ${T.jsonMetric}`, color: T.jsonMetric, fontFamily: "'IBM Plex Mono',monospace", fontSize: 12, padding: '8px 16px', cursor: 'pointer', borderRadius: 0 }}>
+              RESCAN →
+            </button>
+            <button style={{ background: 'transparent', border: 'none', color: T.inkMuted, fontFamily: "'IBM Plex Mono',monospace", fontSize: 12, cursor: 'pointer', padding: '8px 0', borderRadius: 0 }}>
+              SHARE REPORT →
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {/* ── ZONES 2 + 3 ─────────────────────────────────────────────────────── */}
+      <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '55fr 45fr', overflow: 'hidden' }}>
+
+        {/* ── ZONE 2 — LEFT PANEL ─────────────────────────────────────────── */}
+        <div style={{ overflowY: 'auto', padding: 32 }}>
+
+          {/* Findings list */}
+          {grouped.map((group, gi) => (
+            <div key={group.priority}>
+              <div style={{
+                fontFamily: "'IBM Plex Mono',monospace", fontSize: 10,
+                textTransform: 'uppercase', letterSpacing: '0.15em', color: T.inkMuted,
+                padding: gi === 0 ? '0 0 10px' : '16px 0 10px',
+                borderTop: gi === 0 ? 'none' : '0.5px solid rgba(255,255,255,0.05)',
+              }}>
+                {P_LABEL[group.priority]}
+              </div>
+
+              {group.findings.map(f => {
+                const sel = f.id === selectedId
+                const sc = severityColor(f.severity)
+                return (
+                  <div
+                    key={f.id}
+                    onClick={() => setSelectedId(f.id)}
+                    onMouseEnter={e => { if (!sel) (e.currentTarget as HTMLDivElement).style.background = 'rgba(255,255,255,0.02)' }}
+                    onMouseLeave={e => { if (!sel) (e.currentTarget as HTMLDivElement).style.background = 'transparent' }}
+                    style={{
+                      cursor: 'pointer',
+                      borderBottom: '0.5px solid rgba(255,255,255,0.04)',
+                      borderLeft: sel ? '3px solid rgba(128,128,192,0.4)' : `3px solid ${sc}`,
+                      background: sel ? 'rgba(128,128,192,0.04)' : 'transparent',
+                      padding: '14px 16px',
+                      transition: 'background 0.1s',
+                    }}
+                  >
+                    <div style={{ fontFamily: "'IBM Plex Sans',sans-serif", fontSize: 15, fontWeight: 500, color: T.inkPrimary, marginBottom: 4 }}>{f.title}</div>
+                    <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                      <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 11, color: T.jsonKey }}>{f.category}</span>
+                      <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 9, background: `${sc}1a`, color: sc, padding: '2px 6px' }}>{f.severity.toUpperCase()}</span>
+                      <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 11, color: T.jsonStr }}>{f.estimated_lift}</span>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          ))}
+
+          {/* Dimension scores */}
+          <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.15em', color: T.inkMuted, padding: '32px 0 16px' }}>
+            DIMENSION SCORES
+          </div>
+          {scan.dimension_scores.map(dim => {
+            const dc = scoreBandColor(dim.score)
+            const pct = dim.percentile >= 50 ? `top ${100 - dim.percentile}%` : `bottom ${dim.percentile}%`
+            return (
+              <div key={dim.key} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '8px 0', borderBottom: '0.5px solid rgba(255,255,255,0.04)' }}>
+                <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 12, color: T.inkMuted, width: 140, flexShrink: 0 }}>{dim.label}</span>
+                <div style={{ flex: 1, height: 5, background: 'rgba(255,255,255,0.06)', position: 'relative' }}>
+                  <div style={{ height: '100%', width: `${dim.score}%`, background: dc }} />
+                  <div style={{ position: 'absolute', top: 0, left: `${dim.industry_avg}%`, width: 1.5, height: '100%', background: 'rgba(255,255,255,0.3)' }} />
+                </div>
+                <span style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 500, fontSize: 13, color: dc, width: 28, textAlign: 'right' }}>{dim.score}</span>
+                <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 10, color: T.inkMuted, width: 80, textAlign: 'right' }}>{pct}</span>
+              </div>
+            )
+          })}
+
+          {/* Strengths */}
+          <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.15em', color: T.inkMuted, padding: '32px 0 16px' }}>
+            VERIFIED STRENGTHS
+          </div>
+          {scan.strengths.map((s, i) => (
+            <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '8px 0', borderBottom: '0.5px solid rgba(255,255,255,0.04)' }}>
+              <div style={{ width: 5, height: 5, background: T.jsonStr, flexShrink: 0, marginTop: 3 }} />
+              <span style={{ fontFamily: "'IBM Plex Sans',sans-serif", fontSize: 14, color: T.inkSec }}>{s}</span>
+            </div>
+          ))}
+
+          {/* Score history */}
+          {pastScans.length > 1 && (
+            <>
+              <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.15em', color: T.inkMuted, padding: '32px 0 16px' }}>
+                SCORE HISTORY
+              </div>
+              <div className="wd-panel" style={{ padding: '16px 20px' }}>
+                <svg viewBox={`0 0 ${CW} ${CH}`} width="100%" height={CH} style={{ display: 'block', overflow: 'visible' }}>
+                  <line x1={0} y1={y70} x2={CW} y2={y70} stroke="rgba(0,196,140,0.2)" strokeWidth={1} strokeDasharray="4 4" />
+                  <text x={4} y={y70 - 3} fontFamily="'IBM Plex Mono',monospace" fontSize={9} fill={T.inkMuted}>70</text>
+                  <polyline points={chartPts} fill="none" stroke={lineColor} strokeWidth={1.5} strokeLinejoin="round" strokeLinecap="round" />
+                  {pastScans.map((p, i) => (
+                    <circle key={i} cx={idxToX(i, n)} cy={scoreToY(p.score)} r={3} fill={lineColor}
+                      style={{ filter: `drop-shadow(0 0 4px ${lineColor}80)` }} />
+                  ))}
+                </svg>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6 }}>
+                  {pastScans.map((p, i) => (
+                    <span key={i} style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 9, color: T.inkMuted }}>{p.date}</span>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* ── ZONE 3 — RIGHT PANEL (finding detail) ───────────────────────── */}
+        <div style={{
+          overflowY: 'auto',
+          background: T.zone3bg,
+          borderTop: '1px solid rgba(128,128,192,0.25)',
+          borderLeft: '0.5px solid rgba(128,128,192,0.1)',
+          boxShadow: 'inset 0 0 40px rgba(128,128,192,0.06), 0 0 60px rgba(128,128,192,0.04)',
+          padding: 28,
+        }}>
+          {!selectedFinding ? (
+            <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 12, color: T.inkMuted, textAlign: 'center', paddingTop: 60 }}>
+              Select a finding from the list.
+            </div>
+          ) : (() => {
+            const f = selectedFinding
+            const sc = severityColor(f.severity)
+            const pp = P_PILL[f.priority]
+            return (
+              <div>
+                {/* Header bar */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 10, padding: '3px 9px', background: pp.bg, color: pp.color }}>{pp.text}</span>
+                    <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 12, color: T.jsonKey }}>{f.category}</span>
+                  </div>
+                  <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 12, color: T.jsonMetric }}>fix_effort: {f.fix_effort}</span>
+                </div>
+
+                {/* Title */}
+                <h2 style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 600, fontSize: 22, color: T.inkPrimary, lineHeight: 1.2, marginBottom: 20 }}>
+                  {f.title}
+                </h2>
+
+                {/* Evidence */}
+                <div style={{ padding: 16, background: 'rgba(255,255,255,0.02)', borderLeft: '2px solid rgba(111,155,198,0.3)', marginBottom: 16 }}>
+                  <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.1em', color: T.inkMuted, marginBottom: 8 }}>EVIDENCE FROM PAGE</div>
+                  <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 13, color: T.inkSec, lineHeight: 1.65 }}>{f.explanation}</div>
+                </div>
+
+                {/* Fix */}
+                <div style={{ padding: 16, background: 'rgba(255,255,255,0.02)', borderLeft: '2px solid rgba(0,196,140,0.3)', marginBottom: 16 }}>
+                  <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.1em', color: T.inkMuted, marginBottom: 8 }}>RECOMMENDED FIX</div>
+                  <div style={{ fontFamily: "'IBM Plex Sans',sans-serif", fontSize: 15, color: T.inkSec, lineHeight: 1.65 }}>{f.recommendation}</div>
+                </div>
+
+                {/* Metrics row */}
+                <div style={{ padding: '16px 0', borderTop: '0.5px solid rgba(255,255,255,0.06)', borderBottom: '0.5px solid rgba(255,255,255,0.06)', display: 'flex', gap: 24, flexWrap: 'wrap', marginBottom: 16 }}>
+                  {([
+                    { label: 'estimated_lift', value: f.estimated_lift,      color: T.jsonStr   },
+                    { label: 'percentile',      value: `${f.percentile}th`,  color: T.jsonMetric },
+                    { label: 'industry_avg',    value: f.industry_avg,       color: T.jsonMetric },
+                    { label: 'severity',        value: f.severity,           color: sc           },
+                  ] as { label: string; value: string; color: string }[]).map(m => (
+                    <div key={m.label}>
+                      <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 10, color: T.inkMuted }}>{m.label}</div>
+                      <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 500, fontSize: 15, color: m.color }}>{m.value}</div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Rewritten copy */}
+                <div style={{ padding: 16, background: 'rgba(0,196,140,0.03)', borderTop: '1px solid rgba(0,196,140,0.12)' }}>
+                  <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.1em', color: T.inkMuted, marginBottom: 12 }}>
+                    REWRITTEN COPY · INCLUDED IN RESPONSE
+                  </div>
+                  <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start', marginBottom: 10 }}>
+                    <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 11, color: T.inkMuted, flexShrink: 0 }}>headline:</span>
+                    <span style={{ fontFamily: "'IBM Plex Sans',sans-serif", fontSize: 16, color: T.jsonStr, fontWeight: 500 }}>{f.rewritten_copy.headline}</span>
+                  </div>
+                  <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start', marginBottom: 14 }}>
+                    <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 11, color: T.inkMuted, flexShrink: 0 }}>cta_primary:</span>
+                    <span style={{ fontFamily: "'IBM Plex Sans',sans-serif", fontSize: 14, color: T.jsonStr }}>{f.rewritten_copy.cta_primary}</span>
+                  </div>
+                  <button
+                    onClick={() => copyHeadline(f.rewritten_copy.headline)}
+                    style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 11, border: `0.5px solid ${T.jsonMetric}`, color: copied ? T.jsonStr : T.jsonMetric, padding: '6px 12px', background: 'transparent', cursor: 'pointer', borderRadius: 0 }}
+                  >
+                    {copied ? 'Copied ✓' : 'Copy headline'}
+                  </button>
+                </div>
+              </div>
+            )
+          })()}
+        </div>
+
       </div>
     </div>
   )

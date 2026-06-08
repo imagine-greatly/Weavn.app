@@ -31,36 +31,42 @@ const DISP: React.CSSProperties = { fontFamily: '"Space Grotesk", sans-serif' }
 
 // ── Data ──────────────────────────────────────────────────────────────────────
 
-const FAQS = [
+const FAQ_CARDS = [
   {
     q: 'What counts as a scan?',
-    a: 'Each URL you submit counts as one scan. Rescanning the same URL counts as a new scan. Cache hits within 24 hours of an identical scan are free and do not consume your monthly allowance.',
-    accent: '#6F9BC6',
+    a: 'Each URL submitted to the API or via the dashboard counts as one scan. Cache hits — the same URL rescanned within 24 hours — are free and do not count against your limit. Multi-page scans count one credit per page.',
+    dataLine: 'cache hits: always free',
+    dataColor: '#00C48C',
+  },
+  {
+    q: 'What is the Founder tier?',
+    a: 'Formerly called Starter. 20 scans per month, single user, full 307-check audit on every scan. Score trending, competitor analysis, and ranked findings included. No team seats — built for solo founders.',
+    dataLine: '20 scans/month · $2.45/scan effective',
+    dataColor: '#6F9BC6',
+  },
+  {
+    q: 'What does Agency include?',
+    a: '100 scans per month, unlimited client workspaces, white-label report links, multi-page scanning (3 pages), PDF export, 3 team seats, and 100 bundled API calls per month. The 100 API calls can be used programmatically or consumed by the dashboard.',
+    dataLine: '100 scans · 100 API calls · 3 seats',
+    dataColor: '#6F9BC6',
   },
   {
     q: 'Can I upgrade or downgrade anytime?',
-    a: 'Yes. Plan changes take effect immediately. Upgrades are prorated. Downgrades take effect at the next billing cycle.',
-    accent: '#00C48C',
-  },
-  {
-    q: 'What are the 100 bundled API calls on Agency?',
-    a: 'The Agency plan includes 100 API calls per month that can be used programmatically via the API — useful for automating client scans or integrating webdoc into your own workflow. Additional API calls beyond 100 are billed at $0.19/scan.',
-    accent: '#6F9BC6',
-  },
-  {
-    q: 'Is there a free trial on paid plans?',
-    a: 'Yes — Starter and Agency both include a 14-day free trial. No credit card required to start.',
-    accent: '#00C48C',
+    a: 'Yes. Plan changes take effect immediately. Upgrading prorates the difference. Downgrading takes effect at the next billing cycle. No cancellation fees.',
+    dataLine: 'no contracts · cancel anytime',
+    dataColor: '#00C48C',
   },
   {
     q: 'How does white-labeling work?',
-    a: "Agency plan generates shareable report links with your client's domain context and your branding. No \"powered by webdoc\" in client-facing views.",
-    accent: '#00C48C',
+    a: "Agency and Enterprise plans generate shareable report links with no webdoc branding. You can set a custom subdomain (Enterprise). Reports show your agency name and the client's URL. No webdoc logo, no webdoc copy.",
+    dataLine: 'custom subdomain on Enterprise',
+    dataColor: '#00C48C',
   },
   {
     q: 'What happens if I hit my scan limit?',
-    a: 'Scans stop until your next billing cycle resets your allowance. You can upgrade at any time to immediately unlock more scans.',
-    accent: '#00C48C',
+    a: 'Scans stop until the next billing cycle unless you have overage enabled. On API plans, overage is charged at the per-scan rate for your tier. Dashboard plans do not auto-overage — scans are paused until renewal or upgrade.',
+    dataLine: 'overage: enabled on API plans · paused on dashboard plans',
+    dataColor: '#6F9BC6',
   },
 ]
 
@@ -207,7 +213,6 @@ function InheritLabel({ text }: { text: string }) {
 export default function PricingPage() {
   const [isAnnual, setIsAnnual] = useState(false)
   const [showTable, setShowTable] = useState(false)
-  const [openFaq, setOpenFaq] = useState<number | null>(null)
 
   const price = (monthly: number) => isAnnual ? Math.round(monthly * 0.8) : monthly
   const savings = (monthly: number) => Math.round(monthly * 0.2 * 12)
@@ -218,13 +223,14 @@ export default function PricingPage() {
       {/* ── 1. Hero — transparent, grid-exposed ──────────────────────────────── */}
       <section style={{ padding: '96px 32px 64px', maxWidth: 896, margin: '0 auto', textAlign: 'center' }}>
         <div style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.2em', color: '#6F9BC6', marginBottom: 16 }}>
-          PLANS &amp; PRICING
+          PRICING
         </div>
         <h1 style={{ ...DISP, fontSize: 'clamp(36px, 5vw, 56px)', fontWeight: 700, letterSpacing: '-1.5px', color: '#E6E9EE', margin: '0 0 16px' }}>
-          Start free. Scale when ready.
+          Infrastructure pricing. No contracts.
         </h1>
         <p style={{ ...SANS, fontSize: 16, lineHeight: 1.6, color: '#9398A8', maxWidth: 672, margin: '0 auto 40px' }}>
-          Four plans for founders, growing teams, and agencies. No setup fees. Cancel anytime.
+          Pay per scan or subscribe. Four tiers.{' '}
+          Same engine regardless of plan.
         </p>
 
         {/* Monthly / Annual toggle */}
@@ -258,9 +264,18 @@ export default function PricingPage() {
       </section>
       <div className="section-separator" />
 
-      {/* ── 2. Tier cards — mounted module bg #06090F ────────────────────────── */}
-      <section style={{ borderTop: '1px solid rgba(111,155,198,0.1)' }}>
-        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '64px 32px 80px' }}>
+      {/* ── 2. Tier cards — green bloom behind Agency ────────────────────────── */}
+      <section style={{ borderTop: '1px solid rgba(111,155,198,0.1)', position: 'relative', overflow: 'hidden' }}>
+        {/* Atmosphere: faint green bloom at Agency card position */}
+        <div style={{
+          position: 'absolute',
+          inset: 0,
+          background: 'radial-gradient(ellipse 500px 700px at 55% 50%, rgba(0,196,140,0.05) 0%, transparent 60%)',
+          pointerEvents: 'none',
+          zIndex: 0,
+        }} />
+
+        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '64px 32px 80px', position: 'relative', zIndex: 1 }}>
 
           {/* Solo / Teams group labels — desktop only */}
           <div className="hidden lg:grid lg:grid-cols-4 gap-4 mb-2">
@@ -275,13 +290,13 @@ export default function PricingPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4" style={{ alignItems: 'stretch' }}>
 
             {/* FREE */}
-            <div className="wd-panel" style={{ display: 'flex', flexDirection: 'column' }}>
+            <div className="wd-panel" style={{ display: 'flex', flexDirection: 'column', position: 'relative', zIndex: 1 }}>
               <div style={{ padding: '20px 24px' }}>
                 <div style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#6E7587', marginBottom: 6 }}>FREE</div>
-                <div style={{ ...MONO, fontSize: 11, color: '#6E7587', marginBottom: 16 }}>for your first scan</div>
+                <div style={{ ...MONO, fontSize: 11, color: '#6E7587', marginBottom: 16 }}>3 scans · no account required</div>
                 <div style={{ ...DISP, fontSize: 44, fontWeight: 700, color: '#E6E9EE', lineHeight: 1, marginBottom: 4 }}>$0</div>
                 <div style={{ ...SANS, fontSize: 14, color: '#8E8EA0', marginBottom: 8 }}>forever</div>
-                <div style={{ ...MONO, fontSize: 11, color: '#00C48C' }}>3 scans · try the instrument</div>
+                <div style={{ ...MONO, fontSize: 11, color: '#00C48C' }}>3 scans included · no account required</div>
               </div>
               <div style={{ height: '0.5px', background: 'rgba(255,255,255,0.07)' }} />
               <div style={{ padding: '16px 24px 24px', background: 'rgba(255,255,255,0.01)', flexGrow: 1 }}>
@@ -302,10 +317,10 @@ export default function PricingPage() {
             </div>
 
             {/* FOUNDER */}
-            <div className="wd-panel" style={{ display: 'flex', flexDirection: 'column' }}>
+            <div className="wd-panel" style={{ display: 'flex', flexDirection: 'column', position: 'relative', zIndex: 1 }}>
               <div style={{ padding: '20px 24px' }}>
                 <div style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#6E7587', marginBottom: 6 }}>FOUNDER</div>
-                <div style={{ ...MONO, fontSize: 11, color: '#6E7587', marginBottom: 16 }}>for founders running their own site</div>
+                <div style={{ ...MONO, fontSize: 11, color: '#6E7587', marginBottom: 16 }}>20 scans/month · single user</div>
                 <div style={{ ...DISP, fontSize: 44, fontWeight: 700, color: '#E6E9EE', lineHeight: 1, marginBottom: 4 }}>${price(49)}</div>
                 <div style={{ ...SANS, fontSize: 14, color: '#8E8EA0', marginBottom: 8 }}>per month</div>
                 <div style={{ ...MONO, fontSize: 11, color: '#6F9BC6' }}>$2.45/scan effective rate</div>
@@ -330,13 +345,13 @@ export default function PricingPage() {
             </div>
 
             {/* AGENCY — left border accent */}
-            <div className="wd-panel" style={{ display: 'flex', flexDirection: 'column', borderLeft: '2px solid rgba(0,196,140,0.4)' }}>
+            <div className="wd-panel" style={{ display: 'flex', flexDirection: 'column', borderLeft: '2px solid rgba(0,196,140,0.4)', position: 'relative', zIndex: 1 }}>
               <div style={{ padding: '20px 24px' }}>
                 <div style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#00C48C', marginBottom: 6 }}>AGENCY</div>
-                <div style={{ ...MONO, fontSize: 11, color: '#6E7587', marginBottom: 16 }}>for teams auditing client sites</div>
+                <div style={{ ...MONO, fontSize: 11, color: '#6E7587', marginBottom: 16 }}>100 scans/month · client workspaces</div>
                 <div style={{ ...DISP, fontSize: 44, fontWeight: 700, color: '#E6E9EE', lineHeight: 1, marginBottom: 4 }}>${price(149)}</div>
                 <div style={{ ...SANS, fontSize: 14, color: '#8E8EA0', marginBottom: 8 }}>per month</div>
-                <div style={{ ...MONO, fontSize: 11, color: '#00C48C' }}>$1.49/scan + 100 API calls bundled</div>
+                <div style={{ ...MONO, fontSize: 11, color: '#00C48C' }}>$1.49/scan · 100 API calls bundled</div>
               </div>
               <div style={{ height: '0.5px', background: 'rgba(0,196,140,0.2)' }} />
               <div style={{ padding: '16px 24px 24px', background: 'rgba(0,196,140,0.02)', flexGrow: 1 }}>
@@ -359,10 +374,10 @@ export default function PricingPage() {
             </div>
 
             {/* ENTERPRISE */}
-            <div className="wd-panel" style={{ display: 'flex', flexDirection: 'column' }}>
+            <div className="wd-panel" style={{ display: 'flex', flexDirection: 'column', position: 'relative', zIndex: 1 }}>
               <div style={{ padding: '20px 24px' }}>
                 <div style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#6E7587', marginBottom: 6 }}>ENTERPRISE</div>
-                <div style={{ ...MONO, fontSize: 11, color: '#6E7587', marginBottom: 16 }}>for agencies at scale</div>
+                <div style={{ ...MONO, fontSize: 11, color: '#6E7587', marginBottom: 16 }}>500 scans/month · dedicated support</div>
                 <div style={{ ...DISP, fontSize: 44, fontWeight: 700, color: '#E6E9EE', lineHeight: 1, marginBottom: 4 }}>${price(499)}</div>
                 <div style={{ ...SANS, fontSize: 14, color: '#8E8EA0', marginBottom: 8 }}>per month</div>
                 <div style={{ ...MONO, fontSize: 11, color: '#6E7587' }}>custom rate · dedicated support</div>
@@ -392,15 +407,23 @@ export default function PricingPage() {
       </section>
       <div className="section-separator" />
 
-      {/* ── 3. API callout band — mounted module bg #080D18 ──────────────────── */}
-      <section style={{ borderTop: '0.5px solid rgba(111,155,198,0.15)', borderBottom: '0.5px solid rgba(255,255,255,0.05)', padding: '24px 48px' }}>
-        <div style={{ maxWidth: 1152, margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
+      {/* ── 3. API callout band — blue bloom ─────────────────────────────────── */}
+      <section style={{ borderTop: '0.5px solid rgba(111,155,198,0.15)', borderBottom: '0.5px solid rgba(255,255,255,0.05)', padding: '24px 48px', position: 'relative', overflow: 'hidden' }}>
+        {/* Atmosphere: blue bloom */}
+        <div style={{
+          position: 'absolute',
+          inset: 0,
+          background: 'radial-gradient(ellipse 800px 300px at 50% 50%, rgba(111,155,198,0.05) 0%, transparent 60%)',
+          pointerEvents: 'none',
+          zIndex: 0,
+        }} />
+        <div style={{ maxWidth: 1152, margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16, position: 'relative', zIndex: 1 }}>
           <div>
             <p style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#6F9BC6', margin: '0 0 4px' }}>
-              BUILDING WITH THE API?
+              API ACCESS
             </p>
             <p style={{ ...DISP, fontSize: 16, fontWeight: 600, color: '#E6E9EE', margin: 0 }}>
-              Developer plans from $0.15/scan. No dashboard required.
+              Raw API access. No dashboard. From $0.25/scan.
             </p>
           </div>
           <Link href="/developers#pricing" style={{ ...MONO, fontSize: 13, border: '0.5px solid #6F9BC6', color: '#6F9BC6', padding: '12px 24px', textDecoration: 'none', display: 'block', flexShrink: 0, transition: 'opacity 0.15s' }}>
@@ -410,14 +433,14 @@ export default function PricingPage() {
       </section>
       <div className="section-separator" />
 
-      {/* ── 4. Comparison table — mounted module bg #06090F ──────────────────── */}
+      {/* ── 4. Comparison table ───────────────────────────────────────────────── */}
       <section>
         <div style={{ maxWidth: 1280, margin: '0 auto', padding: '48px 32px' }}>
           <button
             onClick={() => setShowTable(v => !v)}
-            style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#6E7587', cursor: 'pointer', width: '100%', textAlign: 'center', backgroundColor: 'transparent', border: 'none', padding: '8px 0', transition: 'color 0.15s' }}
+            style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#6E7587', cursor: 'pointer', width: '100%', textAlign: 'center', backgroundColor: 'transparent', border: 'none', padding: '8px 0', transition: 'color 0.15s' }}
           >
-            COMPARE ALL FEATURES {showTable ? '↑' : '↓'}
+            FEATURE MATRIX
           </button>
 
           <div style={{ overflow: 'hidden', transition: 'max-height 0.4s ease', maxHeight: showTable ? '2000px' : '0' }}>
@@ -461,41 +484,36 @@ export default function PricingPage() {
       </section>
       <div className="section-separator" />
 
-      {/* ── 5. FAQ — transparent, grid-exposed ───────────────────────────────── */}
-      <section style={{ maxWidth: 768, margin: '0 auto', padding: '48px 32px 64px' }}>
-        <div style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.2em', color: '#6E7587', textAlign: 'center', marginBottom: 48 }}>
-          COMMON QUESTIONS
-        </div>
-
-        {FAQS.map((faq, i) => {
-          const isOpen = openFaq === i
-          return (
+      {/* ── 5. FAQ cards — 2×3 grid, no headline ────────────────────────────── */}
+      <section style={{ maxWidth: 1100, margin: '0 auto', padding: '64px 32px 80px' }}>
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(2, 1fr)',
+          gap: 16,
+        }}>
+          {FAQ_CARDS.map((card, i) => (
             <div
               key={i}
+              className="wd-panel"
               style={{
-                borderBottom: '0.5px solid rgba(255,255,255,0.06)',
-                borderLeft: `3px solid ${isOpen ? faq.accent : 'rgba(111,155,198,0.3)'}`,
-                backgroundColor: isOpen ? '#0A0E18' : 'transparent',
-                paddingLeft: 16,
-                transition: 'background-color 0.2s, border-left-color 0.2s',
+                background: '#0A0E18',
+                padding: '22px 24px',
+                display: 'flex',
+                flexDirection: 'column',
               }}
             >
-              <button
-                onClick={() => setOpenFaq(isOpen ? null : i)}
-                style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 0', cursor: 'pointer', backgroundColor: 'transparent', border: 'none', textAlign: 'left', gap: 16 }}
-              >
-                <span style={{ ...SANS, fontSize: 16, fontWeight: 500, color: '#E6E9EE' }}>{faq.q}</span>
-                <span style={{ flexShrink: 0, color: isOpen ? faq.accent : '#6E7587', display: 'inline-block', transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s, color 0.2s', fontSize: 16, lineHeight: 1 }}>▾</span>
-              </button>
-              {isOpen && (
-                <div>
-                  <p style={{ ...SANS, fontSize: 14, color: '#9398A8', lineHeight: 1.65, margin: 0, padding: '0 24px 20px' }}>{faq.a}</p>
-                  <div style={{ height: '0.5px', background: faq.accent, opacity: 0.4 }} />
-                </div>
-              )}
+              <div style={{ ...DISP, fontSize: 16, fontWeight: 600, color: '#E6E9EE', marginBottom: 10 }}>
+                {card.q}
+              </div>
+              <p style={{ ...SANS, fontSize: 14, lineHeight: 1.65, color: '#9398A8', margin: '0 0 16px', flexGrow: 1 }}>
+                {card.a}
+              </p>
+              <div style={{ ...MONO, fontSize: 11, color: card.dataColor, marginTop: 'auto' }}>
+                {card.dataLine}
+              </div>
             </div>
-          )
-        })}
+          ))}
+        </div>
       </section>
       <div className="section-separator" />
 

@@ -124,12 +124,12 @@ export default function ProductPage() {
 
       {/* ── 1. Hero — transparent, grid-exposed ──────────────────────────────── */}
       <section className="pt-24 pb-16 px-8 text-center">
-        <div className="section-label mb-4">THE ENGINE</div>
+        <div className="section-label mb-4">ENGINE</div>
         <h1
           className="section-headline mb-6 mx-auto"
           style={{ fontSize: 'clamp(36px, 5vw, 56px)', letterSpacing: '-1.5px', maxWidth: 900 }}
         >
-          307 checks. One structured output.
+          307 checks. One response.
         </h1>
         <p className="section-subhead max-w-2xl mx-auto">
           webdoc is a conversion audit API. POST any URL, get structured JSON in under 90 seconds.
@@ -162,12 +162,12 @@ export default function ProductPage() {
           }}
         />
         <div style={{ position: 'relative', zIndex: 1 }}>
-          <div className="section-label mb-3">DIAGNOSTIC COVERAGE</div>
+          <div className="section-label mb-3">COVERAGE</div>
           <h2
             className="section-headline mb-12"
             style={{ fontSize: 'clamp(28px, 4vw, 44px)', letterSpacing: '-1px' }}
           >
-            27 categories. Nothing missed.
+            27 diagnostic categories.
           </h2>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
 
@@ -198,7 +198,7 @@ export default function ProductPage() {
                 paddingBottom: 8,
                 borderBottom: '0.5px solid rgba(255,255,255,0.05)',
               }}>
-                DIAGNOSTIC COVERAGE · 27 CATEGORIES · SITE-TYPE GATED
+                27 CATEGORIES · SITE-TYPE GATED · UNIVERSAL + VERTICAL
               </div>
               <div className="grid grid-cols-3 gap-2">
                 {CATEGORIES.map((cat) => {
@@ -244,7 +244,7 @@ export default function ProductPage() {
       </section>
       <div className="section-separator" />
 
-      {/* ── 3. Pipeline — mounted module bg #080D18 ──────────────────────────── */}
+      {/* ── 3. Pipeline — mounted module bg #080D18 + blue bloom ─────────────── */}
       <section style={{
         position: 'relative',
         overflow: 'hidden',
@@ -252,13 +252,24 @@ export default function ProductPage() {
         borderTop: '0.5px solid rgba(128,128,192,0.15)',
         borderBottom: '0.5px solid rgba(255,255,255,0.05)',
       }}>
-        <div style={{ maxWidth: '56rem', margin: '0 auto', padding: '80px 32px' }}>
-          <div className="section-label mb-3">THE PIPELINE</div>
+        {/* Blue bloom — technical, left-anchored */}
+        <div
+          aria-hidden
+          style={{
+            position: 'absolute',
+            inset: 0,
+            pointerEvents: 'none',
+            zIndex: 0,
+            background: 'radial-gradient(ellipse 800px 1200px at 15% 50%, rgba(111,155,198,0.06) 0%, transparent 60%)',
+          }}
+        />
+        <div style={{ maxWidth: '56rem', margin: '0 auto', padding: '80px 32px', position: 'relative', zIndex: 1 }}>
+          <div className="section-label mb-3">PIPELINE</div>
           <h2
             className="section-headline mb-12"
             style={{ fontSize: 'clamp(28px, 4vw, 44px)', letterSpacing: '-1px' }}
           >
-            What happens between POST and response.
+            POST to response. Eight steps.
           </h2>
 
           {/* Pipeline with continuous vertical spine */}
@@ -272,7 +283,7 @@ export default function ProductPage() {
                 top: 24,
                 bottom: 24,
                 width: 2,
-                background: 'rgba(111,155,198,0.15)',
+                background: 'rgba(111,155,198,0.12)',
                 zIndex: 0,
               }}
             />
@@ -365,16 +376,16 @@ export default function ProductPage() {
             inset: 0,
             pointerEvents: 'none',
             zIndex: 0,
-            background: 'radial-gradient(ellipse 800px 500px at 50% 40%, rgba(0,196,140,0.06) 0%, transparent 60%)',
+            background: 'radial-gradient(ellipse 900px 500px at 50% 50%, rgba(0,196,140,0.05) 0%, transparent 60%)',
           }}
         />
         <div style={{ position: 'relative', zIndex: 1, maxWidth: '56rem', margin: '0 auto', padding: '80px 32px' }}>
-          <div className="section-label mb-3">WHAT COMES BACK</div>
+          <div className="section-label mb-3">RESPONSE SCHEMA</div>
           <h2
             className="section-headline mb-12"
             style={{ fontSize: 'clamp(28px, 4vw, 44px)', letterSpacing: '-1px' }}
           >
-            One response. Every surface covered.
+            One response object.
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
@@ -422,14 +433,33 @@ export default function ProductPage() {
       </section>
       <div className="section-separator" />
 
-      {/* ── 5. Three Audiences — transparent + wd-panel cards ────────────────── */}
-      <section className="max-w-7xl mx-auto px-8 pb-20">
-        <div className="section-label mb-3">WHO USES IT</div>
+      {/* ── 5. Three Audiences — transparent + three-bloom ──────────────────── */}
+      <section
+        className="max-w-7xl mx-auto px-8 pb-20"
+        style={{ position: 'relative', overflow: 'hidden' }}
+      >
+        {/* Three-bloom atmosphere */}
+        <div
+          aria-hidden
+          style={{
+            position: 'absolute',
+            inset: 0,
+            pointerEvents: 'none',
+            zIndex: 0,
+            background: [
+              'radial-gradient(ellipse 350px 500px at 18% 70%, rgba(239,178,62,0.04) 0%, transparent 60%)',
+              'radial-gradient(ellipse 350px 500px at 50% 70%, rgba(0,196,140,0.04) 0%, transparent 60%)',
+              'radial-gradient(ellipse 350px 500px at 82% 70%, rgba(111,155,198,0.04) 0%, transparent 60%)',
+            ].join(', '),
+          }}
+        />
+        <div style={{ position: 'relative', zIndex: 1 }}>
+        <div className="section-label mb-3">ACCESS</div>
         <h2
           className="section-headline mb-12"
           style={{ fontSize: 'clamp(28px, 4vw, 44px)', letterSpacing: '-1px' }}
         >
-          Same engine. Three interfaces.
+          One engine. Three access points.
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 
@@ -511,6 +541,7 @@ export default function ProductPage() {
           </div>
 
         </div>
+        </div>
       </section>
       <div className="section-separator" />
 
@@ -546,11 +577,31 @@ export default function ProductPage() {
             fontSize: 16,
             color: '#9398A8',
             maxWidth: 420,
-            margin: '0 auto 32px',
+            margin: '0 auto 24px',
           }}
         >
           Free scan. No account required. Results in 90 seconds.
         </p>
+
+        {/* Status bar */}
+        <div style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: 16,
+          fontFamily: '"IBM Plex Mono", monospace',
+          fontSize: 11,
+          color: '#6E7587',
+          background: '#0A0E18',
+          border: '0.5px solid rgba(255,255,255,0.06)',
+          padding: '8px 16px',
+          marginBottom: 20,
+        }}>
+          <span style={{ color: '#00C48C' }}>● ONLINE</span>
+          <span>307 CHECKS READY</span>
+          <span>~90s MEDIAN</span>
+        </div>
+
+        <div style={{ display: 'block' }}>
         <Link
           href="/scan"
           className="scan-cta-pulse"
@@ -568,16 +619,42 @@ export default function ProductPage() {
         >
           SCAN MY SITE →
         </Link>
-        <p
-          style={{
+        </div>
+
+        {/* Example response */}
+        <div style={{
+          maxWidth: 480,
+          margin: '24px auto 0',
+          textAlign: 'left',
+        }}>
+          <div style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 10, color: '#6E7587', textTransform: 'uppercase', letterSpacing: '0.15em', marginBottom: 8 }}>
+            RESPONSE · 200 OK
+          </div>
+          <div style={{
+            background: '#0A0E18',
+            border: '0.5px solid rgba(255,255,255,0.06)',
+            padding: '14px 16px',
             fontFamily: '"IBM Plex Mono", monospace',
             fontSize: 11,
-            color: '#6E7587',
-            marginTop: 16,
-          }}
-        >
-          307 CHECKS · ~90 SECONDS · NO ACCOUNT REQUIRED
-        </p>
+            lineHeight: 1.7,
+          }}>
+            <span style={{ color: '#8080C0' }}>score</span>
+            <span style={{ color: '#6E7587' }}>: </span>
+            <span style={{ color: '#00C48C' }}>61</span>
+            <span style={{ color: '#6E7587' }}> · </span>
+            <span style={{ color: '#8080C0' }}>findings</span>
+            <span style={{ color: '#6E7587' }}>: </span>
+            <span style={{ color: '#EFB23E' }}>23</span>
+            <span style={{ color: '#6E7587' }}> · </span>
+            <span style={{ color: '#8080C0' }}>industry</span>
+            <span style={{ color: '#6E7587' }}>: </span>
+            <span style={{ color: '#6F9BC6' }}>&quot;saas&quot;</span>
+            <span style={{ color: '#6E7587' }}> · </span>
+            <span style={{ color: '#8080C0' }}>cost_usd</span>
+            <span style={{ color: '#6E7587' }}>: </span>
+            <span style={{ color: '#9398A8' }}>0.15</span>
+          </div>
+        </div>
       </section>
 
     </main>

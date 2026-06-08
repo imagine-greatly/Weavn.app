@@ -162,7 +162,7 @@ export default function ResponseAnnotatorSection() {
         <div style={{ height: 1, background: 'rgba(128,128,192,0.15)', margin: '48px 0' }} />
 
         {/* Expanded finding card — one complete API finding, showing all output fields */}
-        <div style={{ background: '#0A0E18', borderTop: '1px solid rgba(255,255,255,0.12)', borderLeft: '1px solid rgba(255,255,255,0.08)', borderRight: '1px solid rgba(255,255,255,0.04)', borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+        <div style={{ background: '#0A0E18', borderTop: '1px solid rgba(128,128,192,0.25)', borderLeft: '1px solid rgba(255,255,255,0.08)', borderRight: '1px solid rgba(255,255,255,0.04)', borderBottom: '1px solid rgba(255,255,255,0.03)', boxShadow: '0 0 0 1px rgba(128,128,192,0.2), 0 0 30px rgba(128,128,192,0.08), 0 0 60px rgba(128,128,192,0.04)' }}>
 
           {/* Header bar */}
           <div style={{ padding: '14px 20px', borderBottom: '0.5px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>

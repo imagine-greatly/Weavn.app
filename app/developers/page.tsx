@@ -1,6 +1,5 @@
 'use client'
 
-import { useState } from 'react'
 import Link from 'next/link'
 import { CodeBlock } from '@/components/ui/CodeBlock'
 
@@ -17,7 +16,7 @@ const RATE_POINTS = [
 const KEY_FACTS = [
   {
     name: 'CACHE POLICY',
-    value: 'Cache hits never billed',
+    value: 'Cache policy',
     detail: 'Identical URL rescanned within 24h returns cached result at zero cost.',
     why: 'Scan the same URL multiple times in your pipeline for free.',
     artifact: (
@@ -28,7 +27,7 @@ const KEY_FACTS = [
   },
   {
     name: 'ASYNC MODE',
-    value: 'Webhook delivery',
+    value: 'Async mode',
     detail: 'POST with async: true. Result delivered to your endpoint when ready.',
     why: "Don't block your process waiting 90 seconds — fire and forget.",
     artifact: (
@@ -45,7 +44,7 @@ const KEY_FACTS = [
   },
   {
     name: 'BATCH ENDPOINT',
-    value: 'Up to 10 URLs per request',
+    value: 'Batch endpoint',
     detail: 'POST /api/v1/scan/batch — parallel execution, single webhook response.',
     why: "Audit a full site's key pages in one request.",
     artifact: (
@@ -56,7 +55,7 @@ const KEY_FACTS = [
   },
   {
     name: 'RESPONSE TIME',
-    value: '~90s median',
+    value: 'Response time',
     detail: 'p50: 87s · p95: 142s · measured across 30-day rolling window.',
     why: 'p95 is 142s — plan timeouts accordingly.',
     artifact: (
@@ -73,31 +72,42 @@ const KEY_FACTS = [
   },
 ]
 
-const FAQS = [
+const FAQ_CARDS = [
   {
     q: 'How does authentication work?',
-    a: 'Every request requires a Bearer token in the Authorization header. Get your key from the developer portal — it starts with wdoc_live_. Keys are scoped to your account and plan. Do not expose your key in client-side code.',
-    accent: '#6F9BC6',
+    a: 'Every request requires a Bearer token in the Authorization header. Keys start with wdoc_live_ and are scoped to your account and plan. Get your key from the developer portal. Do not expose keys in client-side code — requests must originate server-side.',
+    dataLine: 'Authorization: Bearer wdoc_live_••••',
+    dataColor: '#00C48C',
+  },
+  {
+    q: 'Sync or async — which should I use?',
+    a: 'Sync holds the connection and returns the full response when the scan completes (~90s). Use it for single scans where you can wait. Async returns immediately with a scan_id and POSTs the result to your webhook_url when ready — use it for batch processing or to avoid timeouts.',
+    dataLine: 'async: false (sync) · async: true + webhook_url',
+    dataColor: '#00C48C',
   },
   {
     q: 'How does caching work?',
-    a: 'Identical URL rescanned within 24 hours returns the cached result at zero cost — billed at $0.00 regardless of plan. Cache is invalidated when the page content changes significantly (detected via fingerprint). You can force a fresh scan by passing force_refresh: true.',
-    accent: '#00C48C',
+    a: 'Identical URLs rescanned within 24 hours return the cached result at zero cost. Cache is invalidated when page content changes significantly — detected via fingerprint comparison. Force a fresh scan with force_refresh: true.',
+    dataLine: 'cache hit: cost_usd 0.00',
+    dataColor: '#6F9BC6',
   },
   {
-    q: "What's the difference between sync and async mode?",
-    a: 'Sync mode holds the connection open and returns the full response when the scan completes (~90s). Async mode returns immediately with a scan_id and POSTs the result to your webhook_url when ready. Use async for batch processing or when you need to avoid timeout issues.',
-    accent: '#8080C0',
+    q: "What's in the batch endpoint?",
+    a: 'POST up to 10 URLs in one request to /api/v1/scan/batch. All URLs scan in parallel. Results are delivered to your webhook_url as a single structured payload when all scans complete. Each URL in the batch consumes one scan credit.',
+    dataLine: 'POST /api/v1/scan/batch · max 10 URLs',
+    dataColor: '#00C48C',
   },
   {
-    q: "What happens if a site blocks the scanner?",
-    a: "webdoc uses Browserless Pro with stealth mode and a real Chrome user agent. Most sites scan cleanly. Cloudflare Enterprise with aggressive bot detection occasionally blocks scans — when this happens the API returns a structured error with block_reason: 'automated_access_blocked'. We are actively working on defeat strategies for these cases.",
-    accent: '#6F9BC6',
+    q: 'What if a site blocks the scanner?',
+    a: 'webdoc uses Browserless Pro with stealth mode and a real Chrome user agent. Most sites scan cleanly. Cloudflare Enterprise with aggressive bot detection occasionally blocks — the API returns a structured error with block_reason: "automated_access_blocked". We are actively improving defeat strategies.',
+    dataLine: 'error: automated_access_blocked',
+    dataColor: '#EFB23E',
   },
   {
     q: 'Is there an uptime SLA?',
-    a: 'Enterprise plans include a formal SLA. All other plans target 99.5% uptime. Status and incident history at status.webdocai.com. Planned maintenance is announced 48 hours in advance via the dashboard.',
-    accent: '#00C48C',
+    a: 'Enterprise plans include a formal SLA. All other plans target 99.5% uptime. Status and incident history available at status.webdocai.com. Planned maintenance is announced 48 hours in advance via dashboard notification.',
+    dataLine: 'target uptime: 99.5% · SLA on Enterprise',
+    dataColor: '#00C48C',
   },
 ]
 
@@ -126,24 +136,23 @@ function Bullet({ text }: { text: string }) {
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function DevelopersPage() {
-  const [openFaq, setOpenFaq] = useState<number | null>(null)
-
   return (
     <main style={{ minHeight: '100vh' }}>
 
       {/* ── 1. Hero — transparent, grid-exposed ──────────────────────────────── */}
       <section style={{ padding: '96px 32px 48px', maxWidth: 896, margin: '0 auto', textAlign: 'center' }}>
         <div style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.2em', color: '#6F9BC6', marginBottom: 16 }}>
-          API PRICING
+          API
         </div>
         <h1 style={{ ...DISP, fontSize: 'clamp(36px, 5vw, 56px)', fontWeight: 700, letterSpacing: '-1.5px', color: '#E6E9EE', margin: '0 0 16px' }}>
-          Conversion intelligence. Per scan.
+          One endpoint. Structured output. Per scan.
         </h1>
         <p style={{ ...SANS, fontSize: 16, lineHeight: 1.6, color: '#9398A8', maxWidth: 672, margin: '0 auto 32px' }}>
-          POST a URL. Get structured JSON. 307 checks across 27 categories. No dashboard required.
+          POST any URL. Get structured JSON back — score, ranked findings, benchmarks, and rewritten copy.{' '}
+          No dashboard required.
         </p>
 
-        {/* CodeBlock with live API emission */}
+        {/* CodeBlock with blue emission */}
         <div
           style={{
             maxWidth: 672,
@@ -173,7 +182,7 @@ export default function DevelopersPage() {
       </section>
       <div className="section-separator" />
 
-      {/* ── 2. Rate gradient bar — transparent, grid-exposed + dual bloom ────── */}
+      {/* ── 2. Rate gradient bar — transparent + dual bloom ──────────────────── */}
       <section style={{ position: 'relative', overflow: 'hidden', padding: '40px 32px' }}>
         {/* Amber/green dual bloom */}
         <div
@@ -217,9 +226,9 @@ export default function DevelopersPage() {
       </section>
       <div className="section-separator" />
 
-      {/* ── 3. Five plan cards — mounted module bg #06090F ───────────────────── */}
+      {/* ── 3. Five plan cards — Builder blue bloom ───────────────────────────── */}
       <section style={{ position: 'relative', overflow: 'hidden', background: '#06090F', borderTop: '0.5px solid rgba(111,155,198,0.15)' }}>
-        {/* Builder card bloom — primary conversion tier */}
+        {/* Builder card bloom */}
         <div
           aria-hidden
           style={{
@@ -235,7 +244,8 @@ export default function DevelopersPage() {
 
             {/* PLAYGROUND */}
             <div className="wd-panel" style={{ padding: 24, display: 'flex', flexDirection: 'column' }}>
-              <div style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#6E7587', marginBottom: 16 }}>PLAYGROUND</div>
+              <div style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#6E7587', marginBottom: 6 }}>PLAYGROUND</div>
+              <div style={{ ...MONO, fontSize: 11, color: '#6E7587', marginBottom: 16 }}>25 free scans · no subscription</div>
               <div style={{ ...DISP, fontSize: 40, fontWeight: 700, color: '#E6E9EE', lineHeight: 1, marginBottom: 4 }}>25 free</div>
               <div style={{ ...SANS, fontSize: 14, color: '#8E8EA0', marginBottom: 24 }}>then $0.25/scan</div>
               <ul style={{ listStyle: 'none', padding: 0, margin: 0, flex: 1 }}>
@@ -254,7 +264,8 @@ export default function DevelopersPage() {
 
             {/* DEV */}
             <div className="wd-panel" style={{ padding: 24, display: 'flex', flexDirection: 'column' }}>
-              <div style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#6E7587', marginBottom: 16 }}>DEV</div>
+              <div style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#6E7587', marginBottom: 6 }}>DEV</div>
+              <div style={{ ...MONO, fontSize: 11, color: '#6E7587', marginBottom: 16 }}>300 scans/month · $0.097/scan effective</div>
               <div style={{ ...DISP, fontSize: 40, fontWeight: 700, color: '#E6E9EE', lineHeight: 1, marginBottom: 4 }}>$29</div>
               <div style={{ ...SANS, fontSize: 14, color: '#8E8EA0', marginBottom: 24 }}>/mo</div>
               <ul style={{ listStyle: 'none', padding: 0, margin: 0, flex: 1 }}>
@@ -274,7 +285,8 @@ export default function DevelopersPage() {
 
             {/* BUILDER */}
             <div className="wd-panel" style={{ padding: 24, display: 'flex', flexDirection: 'column' }}>
-              <div style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#6F9BC6', marginBottom: 16 }}>BUILDER</div>
+              <div style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#6F9BC6', marginBottom: 6 }}>BUILDER</div>
+              <div style={{ ...MONO, fontSize: 11, color: '#6E7587', marginBottom: 16 }}>1,000 scans/month · batch + webhooks</div>
               <div style={{ ...DISP, fontSize: 40, fontWeight: 700, color: '#E6E9EE', lineHeight: 1, marginBottom: 4 }}>$99</div>
               <div style={{ ...SANS, fontSize: 14, color: '#8E8EA0', marginBottom: 24 }}>/mo</div>
               <ul style={{ listStyle: 'none', padding: 0, margin: 0, flex: 1 }}>
@@ -294,7 +306,8 @@ export default function DevelopersPage() {
 
             {/* SCALE */}
             <div className="wd-panel" style={{ padding: 24, display: 'flex', flexDirection: 'column' }}>
-              <div style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#6E7587', marginBottom: 16 }}>SCALE</div>
+              <div style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#6E7587', marginBottom: 6 }}>SCALE</div>
+              <div style={{ ...MONO, fontSize: 11, color: '#6E7587', marginBottom: 16 }}>3,000 scans/month · dedicated rate limits</div>
               <div style={{ ...DISP, fontSize: 40, fontWeight: 700, color: '#E6E9EE', lineHeight: 1, marginBottom: 4 }}>$249</div>
               <div style={{ ...SANS, fontSize: 14, color: '#8E8EA0', marginBottom: 24 }}>/mo</div>
               <ul style={{ listStyle: 'none', padding: 0, margin: 0, flex: 1 }}>
@@ -314,7 +327,8 @@ export default function DevelopersPage() {
 
             {/* ENTERPRISE */}
             <div className="wd-panel" style={{ padding: 24, display: 'flex', flexDirection: 'column' }}>
-              <div style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#6E7587', marginBottom: 16 }}>ENTERPRISE</div>
+              <div style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#6E7587', marginBottom: 6 }}>ENTERPRISE</div>
+              <div style={{ ...MONO, fontSize: 11, color: '#6E7587', marginBottom: 16 }}>custom volume · SLA guarantee</div>
               <div style={{ ...DISP, fontSize: 40, fontWeight: 700, color: '#E6E9EE', lineHeight: 1, marginBottom: 4 }}>Custom</div>
               <div style={{ ...SANS, fontSize: 14, color: '#8E8EA0', marginBottom: 24 }}>&nbsp;</div>
               <ul style={{ listStyle: 'none', padding: 0, margin: 0, flex: 1 }}>
@@ -337,11 +351,11 @@ export default function DevelopersPage() {
       </section>
       <div className="section-separator" />
 
-      {/* ── 4. What's included — mounted module bg #080D18 ───────────────────── */}
+      {/* ── 4. Included on all plans — bg #080D18 ────────────────────────────── */}
       <section style={{ background: '#080D18', borderTop: '0.5px solid rgba(128,128,192,0.15)', borderBottom: '0.5px solid rgba(255,255,255,0.05)' }}>
         <div style={{ maxWidth: 1280, margin: '0 auto', padding: '64px 32px' }}>
           <div style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.2em', color: '#6E7587', textAlign: 'center', marginBottom: 32 }}>
-            {"WHAT'S INCLUDED"}
+            INCLUDED ON ALL PLANS
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
@@ -374,7 +388,7 @@ export default function DevelopersPage() {
       </section>
       <div className="section-separator" />
 
-      {/* ── 5. CTA pair — mounted module bg #06090F ──────────────────────────── */}
+      {/* ── 5. CTA pair — bg #06090F ──────────────────────────────────────────── */}
       <section style={{ background: '#06090F', borderTop: '0.5px solid rgba(0,196,140,0.12)', padding: '64px 32px', textAlign: 'center' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, flexWrap: 'wrap' }}>
           <Link
@@ -391,51 +405,60 @@ export default function DevelopersPage() {
           </Link>
         </div>
         <p style={{ ...MONO, fontSize: 11, color: '#6E7587', marginTop: 16 }}>
-          No credit card required to start.
+          Same engine. Same response schema. Every plan.
         </p>
       </section>
       <div className="section-separator" />
 
-      {/* ── 6. FAQ — transparent, grid-exposed ───────────────────────────────── */}
-      <section style={{ maxWidth: 768, margin: '0 auto', padding: '48px 32px 64px' }}>
-        <div style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.2em', color: '#6E7587', textAlign: 'center', marginBottom: 48 }}>
-          DEVELOPER FAQ
-        </div>
-
-        {FAQS.map((faq, i) => {
-          const isOpen = openFaq === i
-          return (
+      {/* ── 6. FAQ cards — 2×3 grid, blue bloom ──────────────────────────────── */}
+      <section style={{ position: 'relative', overflow: 'hidden', maxWidth: 1100, margin: '0 auto', padding: '64px 32px 80px' }}>
+        {/* Faint blue bloom */}
+        <div
+          aria-hidden
+          style={{
+            position: 'absolute',
+            inset: 0,
+            pointerEvents: 'none',
+            zIndex: 0,
+            background: 'radial-gradient(ellipse 1000px 600px at 50% 50%, rgba(111,155,198,0.04) 0%, transparent 65%)',
+          }}
+        />
+        <div style={{
+          position: 'relative',
+          zIndex: 1,
+          display: 'grid',
+          gridTemplateColumns: 'repeat(2, 1fr)',
+          gap: 16,
+        }}>
+          {FAQ_CARDS.map((card, i) => (
             <div
               key={i}
+              className="wd-panel"
               style={{
-                borderBottom: '0.5px solid rgba(255,255,255,0.06)',
-                borderLeft: `3px solid ${isOpen ? faq.accent : 'rgba(111,155,198,0.3)'}`,
-                backgroundColor: isOpen ? '#0A0E18' : 'transparent',
-                paddingLeft: 16,
-                transition: 'background-color 0.2s, border-left-color 0.2s',
+                background: '#0A0E18',
+                padding: '22px 24px',
+                display: 'flex',
+                flexDirection: 'column',
               }}
             >
-              <button
-                onClick={() => setOpenFaq(isOpen ? null : i)}
-                style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 0', cursor: 'pointer', backgroundColor: 'transparent', border: 'none', textAlign: 'left', gap: 16 }}
-              >
-                <span style={{ ...SANS, fontSize: 16, fontWeight: 500, color: '#E6E9EE' }}>{faq.q}</span>
-                <span style={{ flexShrink: 0, color: isOpen ? faq.accent : '#6E7587', display: 'inline-block', transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s, color 0.2s', fontSize: 16, lineHeight: 1 }}>▾</span>
-              </button>
-              {isOpen && (
-                <p style={{ ...SANS, fontSize: 14, color: '#9398A8', lineHeight: 1.65, paddingBottom: 16, margin: 0 }}>
-                  {faq.a}
-                </p>
-              )}
+              <div style={{ fontFamily: '"Space Grotesk", sans-serif', fontSize: 16, fontWeight: 600, color: '#E6E9EE', marginBottom: 10 }}>
+                {card.q}
+              </div>
+              <p style={{ fontFamily: '"IBM Plex Sans", sans-serif', fontSize: 14, lineHeight: 1.65, color: '#9398A8', margin: '0 0 16px', flexGrow: 1 }}>
+                {card.a}
+              </p>
+              <div style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, color: card.dataColor, marginTop: 'auto' }}>
+                {card.dataLine}
+              </div>
             </div>
-          )
-        })}
+          ))}
+        </div>
       </section>
       <div className="section-separator" />
 
       {/* ── 7. Footer — transparent ──────────────────────────────────────────── */}
       <div style={{ padding: '24px 0', textAlign: 'center' }}>
-        <p style={{ ...SANS, fontSize: 14, color: '#9398A8', margin: 0 }}>
+        <p style={{ fontFamily: '"IBM Plex Sans", sans-serif', fontSize: 14, color: '#9398A8', margin: 0 }}>
           Need a dashboard?{' '}
           <Link href="/pricing" style={{ color: '#00C48C', textDecoration: 'none' }}>
             See agency plans →

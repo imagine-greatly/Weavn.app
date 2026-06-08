@@ -3,10 +3,8 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import ScoreRing from '@/components/ui/ScoreRing'
-import { Stat } from '@/components/ui/Stat'
 import { CodeBlock } from '@/components/ui/CodeBlock'
 import ResponseAnnotatorSection from '@/components/sections/ResponseAnnotatorSection'
-import ObjectionSection from '@/components/sections/ObjectionSection'
 
 // ── Syntax-highlighted JSON primitives ──────────────────────────────────────
 
@@ -358,24 +356,14 @@ const DISP = { fontFamily: "'Space Grotesk', sans-serif" }
 
 const HIW_CURL = `curl -X POST https://webdocai.com/api/v1/scan \\
   -H "Authorization: Bearer wdoc_live_••••" \\
-  -H "Content-Type: application/json" \\
-  -d '{
-    "url": "https://your-site.com",
-    "finding_depth": "full",
-    "async": false
-  }'`
+  -d '{"url": "https://your-site.com"}'`
 
 const HIW_JSON = `{
   "score": 61,
   "severity": "critical",
   "percentile": 63,
   "findings": 23,
-  "rewritten_copy": {
-    "headline": "Ship projects on time, every time.",
-    "cta_primary": "Start free — no credit card"
-  },
-  "cost_usd": 0.15,
-  "duration_ms": 87340
+  "cost_usd": 0.15
 }`
 
 const STEP_NUM_STYLE: React.CSSProperties = {
@@ -393,13 +381,25 @@ const STEP_NUM_STYLE: React.CSSProperties = {
 
 function HowItWorksSection() {
   return (
-    <section style={{ padding: '96px 0' }}>
-      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 48px' }}>
+    <section style={{ padding: '96px 0', position: 'relative', overflow: 'hidden' }}>
+      {/* Section atmosphere */}
+      <div
+        aria-hidden
+        style={{
+          position: 'absolute',
+          inset: 0,
+          pointerEvents: 'none',
+          zIndex: 0,
+          background: 'radial-gradient(ellipse 1200px 600px at 50% 60%, rgba(111,155,198,0.06) 0%, transparent 65%)',
+        }}
+      />
+
+      <div style={{ position: 'relative', zIndex: 1, maxWidth: 1200, margin: '0 auto', padding: '0 48px' }}>
         <p style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, color: '#6F9BC6', margin: '0 0 18px' }}>
-          How it works
+          THE PIPELINE
         </p>
         <h2 style={{ ...DISP, fontWeight: 700, fontSize: 36, lineHeight: 1.15, color: '#E6E9EE', margin: '0 0 48px', letterSpacing: '-0.5px' }}>
-          POST a URL. Get a diagnosis.
+          Three steps. One structured response.
         </h2>
 
         {/* Step header row — connecting line behind step numbers */}
@@ -441,19 +441,30 @@ function HowItWorksSection() {
 
           {/* Artifact 01 — curl */}
           <div style={{ paddingTop: 24 }}>
-            <div style={{ background: '#0A0E18', borderTop: '1px solid rgba(111,155,198,0.2)', borderLeft: '1px solid rgba(111,155,198,0.12)', borderRight: '1px solid rgba(111,155,198,0.07)', borderBottom: '1px solid rgba(111,155,198,0.05)' }}>
+            <div style={{
+              background: '#0A0E18',
+              borderTop: '1px solid rgba(111,155,198,0.2)',
+              borderLeft: '1px solid rgba(111,155,198,0.12)',
+              borderRight: '1px solid rgba(111,155,198,0.07)',
+              borderBottom: '1px solid rgba(111,155,198,0.05)',
+              boxShadow: '0 0 0 1px rgba(111,155,198,0.15), 0 0 20px rgba(111,155,198,0.06)',
+            }}>
               <CodeBlock language="bash" code={HIW_CURL} />
             </div>
             <div style={{ display: 'flex', gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
-              <span style={{ ...MONO, fontSize: 11, color: '#00C48C', background: '#0A0E18', border: '0.5px solid rgba(255,255,255,0.06)', padding: '6px 12px' }}>307 checks</span>
-              <span style={{ ...MONO, fontSize: 11, color: '#6F9BC6', background: '#0A0E18', border: '0.5px solid rgba(255,255,255,0.06)', padding: '6px 12px' }}>27 categories</span>
-              <span style={{ ...MONO, fontSize: 11, color: '#6E7587', background: '#0A0E18', border: '0.5px solid rgba(255,255,255,0.06)', padding: '6px 12px' }}>~90s median</span>
+              <span style={{ ...MONO, fontSize: 11, color: '#00C48C', background: '#0A0E18', borderTop: '1px solid rgba(255,255,255,0.12)', borderLeft: '1px solid rgba(255,255,255,0.08)', borderRight: '1px solid rgba(255,255,255,0.04)', borderBottom: '1px solid rgba(255,255,255,0.03)', padding: '6px 12px' }}>307 checks</span>
+              <span style={{ ...MONO, fontSize: 11, color: '#6F9BC6', background: '#0A0E18', borderTop: '1px solid rgba(255,255,255,0.12)', borderLeft: '1px solid rgba(255,255,255,0.08)', borderRight: '1px solid rgba(255,255,255,0.04)', borderBottom: '1px solid rgba(255,255,255,0.03)', padding: '6px 12px' }}>27 categories</span>
+              <span style={{ ...MONO, fontSize: 11, color: '#6E7587', background: '#0A0E18', borderTop: '1px solid rgba(255,255,255,0.12)', borderLeft: '1px solid rgba(255,255,255,0.08)', borderRight: '1px solid rgba(255,255,255,0.04)', borderBottom: '1px solid rgba(255,255,255,0.03)', padding: '6px 12px' }}>~90s median</span>
             </div>
           </div>
 
           {/* Artifact 02 — scan state panel */}
           <div style={{ paddingTop: 24 }}>
-            <div className="wd-panel" style={{ padding: '16px' }}>
+            <div className="wd-panel" style={{
+              padding: '16px',
+              borderTop: '1px solid rgba(111,155,198,0.2)',
+              boxShadow: '0 0 0 1px rgba(111,155,198,0.15), 0 0 20px rgba(111,155,198,0.06)',
+            }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
                 <span className="status-dot" style={{ width: 7, height: 7, borderRadius: '50%', background: '#00C48C', flexShrink: 0 }} />
                 <span style={{ ...MONO, fontSize: 11, color: '#6E7587', textTransform: 'uppercase', letterSpacing: 1.5 }}>SCANNING</span>
@@ -478,7 +489,14 @@ function HowItWorksSection() {
 
           {/* Artifact 03 — output JSON */}
           <div style={{ paddingTop: 24 }}>
-            <div style={{ background: '#0A0E18', borderTop: '1px solid rgba(111,155,198,0.2)', borderLeft: '1px solid rgba(111,155,198,0.12)', borderRight: '1px solid rgba(111,155,198,0.07)', borderBottom: '1px solid rgba(111,155,198,0.05)' }}>
+            <div style={{
+              background: '#0A0E18',
+              borderTop: '1px solid rgba(111,155,198,0.2)',
+              borderLeft: '1px solid rgba(111,155,198,0.12)',
+              borderRight: '1px solid rgba(111,155,198,0.07)',
+              borderBottom: '1px solid rgba(111,155,198,0.05)',
+              boxShadow: '0 0 0 1px rgba(111,155,198,0.15), 0 0 20px rgba(111,155,198,0.06)',
+            }}>
               <CodeBlock language="json" code={HIW_JSON} />
             </div>
             <p style={{ ...MONO, fontSize: 11, color: '#6E7587', margin: '12px 0 0' }}>Build against this schema once. Every URL returns identical structure.</p>
@@ -493,22 +511,28 @@ function HowItWorksSection() {
 
 // ── Three Doors ───────────────────────────────────────────────────────────────
 
-const DEV_JSON = `{
-  "score": 61,
-  "severity": "critical",
-  "estimated_lift": "12–18%",
-  "cost_usd": 0.15
-}`
-
 function ThreeDoorsSection() {
   return (
-    <section style={{ padding: '96px 0' }}>
-      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 48px' }}>
+    <section style={{ padding: '96px 0', position: 'relative', overflow: 'hidden' }}>
+      {/* Three-part bloom — one per audience track */}
+      <div
+        aria-hidden
+        style={{
+          position: 'absolute',
+          inset: 0,
+          pointerEvents: 'none',
+          zIndex: 0,
+          background:
+            'radial-gradient(ellipse 400px 600px at 18% 70%, rgba(239,178,62,0.05) 0%, transparent 60%), radial-gradient(ellipse 400px 600px at 50% 70%, rgba(0,196,140,0.04) 0%, transparent 60%), radial-gradient(ellipse 400px 600px at 82% 70%, rgba(111,155,198,0.05) 0%, transparent 60%)',
+        }}
+      />
+
+      <div style={{ position: 'relative', zIndex: 1, maxWidth: 1200, margin: '0 auto', padding: '0 48px' }}>
         <p style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, color: '#6F9BC6', margin: '0 0 18px' }}>
-          One engine. Three interfaces.
+          ACCESS
         </p>
         <h2 style={{ ...DISP, fontWeight: 700, fontSize: 36, lineHeight: 1.15, color: '#E6E9EE', margin: '0 0 14px', letterSpacing: '-0.5px' }}>
-          Same scan. Different interface.
+          One engine. Three access points.
         </h2>
         <p style={{ ...SANS, fontSize: 15, color: '#9398A8', maxWidth: 560, lineHeight: 1.65, margin: '0 0 40px' }}>
           Whether you&apos;re diagnosing your own site, managing client audits, or building conversion intelligence into a product — it&apos;s the same engine underneath.
@@ -517,7 +541,7 @@ function ThreeDoorsSection() {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4" style={{ alignItems: 'stretch' }}>
 
           {/* Card 1 — Founders */}
-          <div className="wd-panel" style={{ display: 'flex', flexDirection: 'column' }}>
+          <div className="wd-panel" style={{ display: 'flex', flexDirection: 'column', boxShadow: '0 0 0 1px rgba(239,178,62,0.15), 0 0 20px rgba(239,178,62,0.05)', borderTop: '1px solid rgba(239,178,62,0.2)' }}>
             {/* Header zone */}
             <div style={{ padding: '24px 24px 16px', borderBottom: '0.5px solid rgba(255,255,255,0.06)' }}>
               <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: 1.5, color: '#6F9BC6', margin: '0 0 10px' }}>For founders</p>
@@ -527,8 +551,18 @@ function ThreeDoorsSection() {
               </p>
             </div>
             {/* Artifact zone */}
-            <div style={{ padding: '20px 24px', background: 'rgba(255,255,255,0.015)', flexGrow: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ padding: '20px 24px', background: 'rgba(255,255,255,0.015)', flexGrow: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
               <ScoreRing score={61} size="md" animate={true} label="CONVERSION SCORE" />
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6, textAlign: 'center' }}>
+                <p style={{ ...MONO, fontSize: 12, margin: 0 }}>
+                  <span style={{ color: '#6E7587' }}>critical: </span>
+                  <span style={{ color: '#E8635F' }}>hero headline is feature-led</span>
+                </p>
+                <p style={{ ...MONO, fontSize: 12, margin: 0 }}>
+                  <span style={{ color: '#6E7587' }}>lift: </span>
+                  <span style={{ color: '#00C48C' }}>+12–18% with rewrite</span>
+                </p>
+              </div>
             </div>
             {/* CTA zone */}
             <div style={{ padding: '16px 24px 24px', borderTop: '0.5px solid rgba(255,255,255,0.06)' }}>
@@ -540,7 +574,7 @@ function ThreeDoorsSection() {
           </div>
 
           {/* Card 2 — Agencies */}
-          <div className="wd-panel" style={{ display: 'flex', flexDirection: 'column' }}>
+          <div className="wd-panel" style={{ display: 'flex', flexDirection: 'column', boxShadow: '0 0 0 1px rgba(0,196,140,0.2), 0 0 20px rgba(0,196,140,0.06)', borderTop: '1px solid rgba(0,196,140,0.25)' }}>
             {/* Header zone */}
             <div style={{ padding: '24px 24px 16px', borderBottom: '0.5px solid rgba(255,255,255,0.06)' }}>
               <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: 1.5, color: '#6F9BC6', margin: '0 0 10px' }}>For agencies</p>
@@ -577,7 +611,7 @@ function ThreeDoorsSection() {
           </div>
 
           {/* Card 3 — Developers */}
-          <div className="wd-panel" style={{ display: 'flex', flexDirection: 'column' }}>
+          <div className="wd-panel" style={{ display: 'flex', flexDirection: 'column', boxShadow: '0 0 0 1px rgba(111,155,198,0.15), 0 0 20px rgba(111,155,198,0.05)', borderTop: '1px solid rgba(111,155,198,0.2)' }}>
             {/* Header zone */}
             <div style={{ padding: '24px 24px 16px', borderBottom: '0.5px solid rgba(255,255,255,0.06)' }}>
               <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: 1.5, color: '#6F9BC6', margin: '0 0 10px' }}>For developers</p>
@@ -597,6 +631,7 @@ function ThreeDoorsSection() {
                   {'}'}
                 </pre>
               </div>
+              <p style={{ ...MONO, fontSize: 11, color: '#6E7587', margin: '10px 0 0' }}>full schema · 307 checks · $0.15/scan</p>
             </div>
             {/* CTA zone */}
             <div style={{ padding: '16px 24px 24px', borderTop: '0.5px solid rgba(255,255,255,0.06)' }}>
@@ -637,13 +672,33 @@ const CORPUS_STATS = [
 function StatsBand() {
   return (
     <section style={{ position: 'relative', overflow: 'hidden', padding: '96px 0', borderTop: '1px solid rgba(111,155,198,0.1)' }}>
+      <style>{`
+        @keyframes site-marker-pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.5; }
+        }
+        .site-marker-pulse { animation: site-marker-pulse 2s ease-in-out infinite; }
+        @media (prefers-reduced-motion: reduce) { .site-marker-pulse { animation: none; } }
+      `}</style>
 
-      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 48px' }}>
+      {/* Amber radial bloom */}
+      <div
+        aria-hidden
+        style={{
+          position: 'absolute',
+          inset: 0,
+          pointerEvents: 'none',
+          zIndex: 0,
+          background: 'radial-gradient(ellipse 1000px 500px at 50% 40%, rgba(239,178,62,0.05) 0%, transparent 60%)',
+        }}
+      />
+
+      <div style={{ position: 'relative', zIndex: 1, maxWidth: 1200, margin: '0 auto', padding: '0 48px' }}>
         <p style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, color: '#6F9BC6', margin: '0 0 18px' }}>
-          Benchmark corpus
+          CORPUS DATA
         </p>
         <h2 style={{ ...DISP, fontWeight: 700, fontSize: 36, lineHeight: 1.15, color: '#E6E9EE', margin: '0 0 12px', letterSpacing: '-0.5px' }}>
-          4,800 sites scanned. The benchmarks are real.
+          Corpus: 4,812 sites. Percentile-ranked by vertical.
         </h2>
         <p style={{ ...SANS, fontSize: 15, color: '#9398A8', maxWidth: 540, lineHeight: 1.65, margin: '0 0 16px' }}>
           Every score is positioned against a real corpus of scanned sites, segmented by vertical. No synthetic data. No curated samples.
@@ -683,7 +738,7 @@ function StatsBand() {
           </div>
           <div style={{ position: 'relative', paddingTop: 20, paddingBottom: 20 }}>
             <div style={{ position: 'absolute', top: 0, left: '63%', transform: 'translateX(-50%)', textAlign: 'center' }}>
-              <span style={{ ...MONO, fontSize: 10, color: '#E6E9EE', whiteSpace: 'nowrap' }}>YOUR SITE</span>
+              <span className="site-marker-pulse" style={{ ...MONO, fontSize: 10, color: '#E6E9EE', whiteSpace: 'nowrap' }}>YOUR SITE</span>
             </div>
             <div style={{ position: 'relative', height: 6 }}>
               <div style={{ height: 6, background: 'linear-gradient(90deg, #E8635F 0%, #EFB23E 35%, #6F9BC6 60%, #00C48C 100%)' }} />
@@ -781,9 +836,9 @@ function PricingSection() {
           Plans &amp; pricing
         </p>
         <h2 style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 36, lineHeight: 1.15, color: '#E6E9EE', margin: '0 0 8px', letterSpacing: '-0.5px' }}>
-          Start free. Scale when ready.
+          Infrastructure pricing. No contracts.
         </h2>
-        <p style={{ fontFamily: "'IBM Plex Sans', sans-serif", fontSize: 14, color: '#6E7587', margin: '0 0 28px' }}>No contracts. Cancel anytime.</p>
+        <p style={{ fontFamily: "'IBM Plex Sans', sans-serif", fontSize: 14, color: '#6E7587', margin: '0 0 28px' }}>Four tiers. Pay per scan or subscribe. Cancel anytime.</p>
 
         {/* Toggle */}
         <div className="wd-panel" style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 36, padding: 4, width: 'fit-content' }}>
@@ -928,7 +983,7 @@ function FinalCtaSection() {
       <div style={{ position: 'relative', zIndex: 1, maxWidth: 640, margin: '0 auto', padding: '0 48px', textAlign: 'center' }}>
 
         <p style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, color: '#6F9BC6', margin: '0 0 18px' }}>
-          Run it on your site
+          SCAN
         </p>
         <h2 style={{ ...DISP, fontWeight: 700, fontSize: 44, lineHeight: 1.1, color: '#E6E9EE', margin: '0 0 12px', letterSpacing: '-0.5px' }}>
           See your score in 90 seconds.
@@ -936,6 +991,27 @@ function FinalCtaSection() {
         <p style={{ ...SANS, fontSize: 16, color: '#9398A8', lineHeight: 1.65, margin: '0 0 32px' }}>
           Paste any URL. Get ranked findings, benchmarks, and AI-rewritten copy.
         </p>
+
+        {/* API endpoint status bar */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 12,
+          background: 'rgba(255,255,255,0.02)',
+          border: '0.5px solid rgba(255,255,255,0.08)',
+          padding: '8px 14px',
+          ...MONO,
+          fontSize: 12,
+          marginBottom: 10,
+          flexWrap: 'wrap',
+        }}>
+          <span className="status-dot" style={{ width: 7, height: 7, borderRadius: '50%', background: '#00C48C', flexShrink: 0 }} />
+          <span style={{ color: '#9398A8' }}>api.webdocai.com</span>
+          <span style={{ color: '#6E7587' }}>·</span>
+          <span style={{ color: '#6F9BC6' }}>endpoint: /v1/scan</span>
+          <span style={{ color: '#6E7587' }}>·</span>
+          <span style={{ color: '#6F9BC6' }}>method: POST</span>
+        </div>
 
         <p style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: 1.5, color: '#6E7587', textAlign: 'left', margin: '0 0 6px' }}>
           POST /api/v1/scan
@@ -968,10 +1044,38 @@ function FinalCtaSection() {
         <Link
           href="/scan"
           className="scan-btn-pulse"
-          style={{ display: 'block', ...MONO, fontSize: 13, fontWeight: 600, letterSpacing: 1, textTransform: 'uppercase', background: '#00C48C', color: '#050810', padding: '13px 0', textDecoration: 'none', textAlign: 'center', marginBottom: 16 }}
+          style={{ display: 'block', ...MONO, fontSize: 13, fontWeight: 600, letterSpacing: 1, textTransform: 'uppercase', background: '#00C48C', color: '#050810', padding: '13px 0', textDecoration: 'none', textAlign: 'center', marginBottom: 10 }}
         >
           SCAN MY SITE →
         </Link>
+
+        {/* Example response preview */}
+        <div style={{
+          background: '#0A0E18',
+          borderTop: '1px solid rgba(255,255,255,0.08)',
+          borderLeft: '1px solid rgba(255,255,255,0.06)',
+          borderRight: '1px solid rgba(255,255,255,0.04)',
+          borderBottom: '1px solid rgba(255,255,255,0.03)',
+          padding: '12px 16px',
+          marginBottom: 16,
+          textAlign: 'left',
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+            <span style={{ ...MONO, fontSize: 11, color: '#6E7587', textTransform: 'uppercase', letterSpacing: 1.5 }}>EXAMPLE RESPONSE</span>
+            <span style={{ ...MONO, fontSize: 11, color: '#00C48C' }}>200 OK · 87,340ms</span>
+          </div>
+          <div style={{ height: '0.5px', background: 'rgba(255,255,255,0.05)', marginBottom: 10 }} />
+          <div style={{ ...MONO, fontSize: 11 }}>
+            <span style={{ color: '#8080c0' }}>score: </span>
+            <span style={{ color: '#EFB23E' }}>61</span>
+            <span style={{ color: '#6E7587' }}>{'  ·  '}</span>
+            <span style={{ color: '#8080c0' }}>findings: </span>
+            <span style={{ color: '#EFB23E' }}>23</span>
+            <span style={{ color: '#6E7587' }}>{'  ·  '}</span>
+            <span style={{ color: '#8080c0' }}>cost_usd: </span>
+            <span style={{ color: '#9398A8' }}>0.15</span>
+          </div>
+        </div>
 
         <p style={{ ...MONO, fontSize: 11, color: '#6E7587', margin: 0, textTransform: 'uppercase', letterSpacing: 1 }}>
           307 CHECKS · ~90 SECONDS · NO ACCOUNT REQUIRED
@@ -981,103 +1085,88 @@ function FinalCtaSection() {
   )
 }
 
-// ── FAQ ───────────────────────────────────────────────────────────────────────
+// ── FAQ Cards (merged FAQ + Objections) ──────────────────────────────────────
 
-const FAQ_ITEMS = [
+const FAQ_CARDS = [
   {
     q: 'What is a scan?',
-    a: 'A scan is a full conversion audit of any URL. You paste your URL or POST it to the API. webdoc renders the live page in headless Chrome, runs 307 diagnostic checks across 27 categories, scores the result 0–100, and returns ranked findings — each with specific evidence from your page, a concrete fix, estimated conversion lift, and AI-rewritten copy. The entire response is structured JSON. Results arrive in under 90 seconds.',
-    accent: '#00C48C',
+    a: 'A scan runs 307 diagnostic checks on any URL. webdoc renders the live page in headless Chrome, classifies the site type, runs only relevant checks, scores 0–100, and returns ranked findings — each with evidence, a fix, estimated conversion lift, and rewritten copy. Structured JSON. Under 90 seconds.',
+    data: '307 checks · 27 categories · ~90s',
+    dataColor: '#00C48C',
   },
   {
     q: 'How long does a scan take?',
-    a: 'Most scans complete in 60–90 seconds. The median is 87 seconds (p50). Complex pages with heavy JavaScript can take up to 142 seconds (p95). Cache hits return instantly at zero cost — if you scan the same URL within 24 hours the cached result is returned immediately and you are not charged.',
-    accent: '#6F9BC6',
+    a: 'Median response is 87 seconds. p95 is 142 seconds for complex JavaScript-heavy pages. Cache hits on the same URL within 24 hours return instantly at zero cost.',
+    data: 'p50: 87s · p95: 142s · cache: 0ms',
+    dataColor: '#6F9BC6',
   },
   {
     q: 'What does it cost?',
-    a: 'The first 25 scans are free with no account required. After that, pay-per-scan starts at $0.25/scan on the Playground tier. Subscription plans start at $29/month for 300 scans ($0.10/scan effective rate). Agency dashboard plans start at $49/month. Cache hits are always free regardless of plan.',
-    accent: '#00C48C',
+    a: 'First 25 scans are free with no account required. Pay-per-scan starts at $0.25. Subscription plans from $29/month. Cache hits are always free regardless of plan.',
+    data: '25 free · from $0.25/scan · cache free',
+    dataColor: '#00C48C',
   },
   {
-    q: 'Will it work on my site?',
-    a: "Yes — webdoc renders the full live page using headless Chrome with JavaScript execution complete before analysis begins. We see exactly what a real visitor sees, not raw HTML. It works on any publicly accessible URL regardless of framework, CMS, or hosting: Next.js, Webflow, Squarespace, Shopify, WordPress, custom builds. If a browser can load it, we can scan it. Sites behind authentication or paywalls cannot be scanned.",
-    accent: '#6F9BC6',
+    q: 'Will it work on my stack?',
+    a: 'webdoc renders the full live page — not raw HTML. Works on any publicly accessible URL: Next.js, Webflow, Squarespace, Shopify, WordPress, custom builds. Sites behind authentication cannot be scanned.',
+    data: 'renderer: headless Chrome · stealth mode',
+    dataColor: '#6F9BC6',
+  },
+  {
+    q: 'Is this just a Lighthouse score?',
+    a: 'Lighthouse measures page speed and technical performance. webdoc measures conversion — whether your headline drives action, whether proof is above the fold, whether your CTA creates clarity or confusion. Different instrument entirely.',
+    data: 'checks focused on conversion: 307',
+    dataColor: '#00C48C',
+  },
+  {
+    q: 'Are the findings fabricated by AI?',
+    a: "Every finding must reference specific visible content — what's present, absent, or misplaced. The model cannot pass a check without citing the actual page. Findings that fail grounding validation are dropped.",
+    data: 'grounding rule: cite visible content or fail',
+    dataColor: '#6F9BC6',
   },
   {
     q: 'What do I do with the results?',
-    a: "The findings are ranked by estimated conversion uplift — fix the highest-priority ones first. Each finding includes the specific evidence from your page, a concrete fix instruction, and drop-in replacement copy for your headline and CTA. Most teams implement the top three findings in an afternoon. If you're using the API, pipe the JSON directly into your workflow, CRM, or reporting tool. Agency plan users can share white-label report links directly with clients.",
-    accent: '#8080c0',
+    a: 'Findings are ranked by estimated conversion uplift. Fix the highest-priority ones first. Each includes evidence, a concrete fix, and drop-in replacement copy. Most teams implement the top three findings in an afternoon.',
+    data: 'avg fix time for top 3: 4hrs',
+    dataColor: '#00C48C',
   },
-]
+  {
+    q: 'Can I use this for client sites?',
+    a: 'Yes. The Agency plan includes unlimited client workspaces, white-label report links, and 100 bundled API calls per month. Scan any publicly accessible URL on behalf of clients. White-label reports carry no webdoc branding.',
+    data: 'agency: from $149/mo · 14-day trial',
+    dataColor: '#6F9BC6',
+  },
+] as const
 
-function FaqSection() {
-  const [openFaq, setOpenFaq] = useState<number | null>(null)
-
+function FaqCardsSection() {
   return (
     <section style={{ padding: '96px 0' }}>
-      <div style={{ maxWidth: 760, margin: '0 auto', padding: '0 48px' }}>
-
-        {/* Eyebrow + count badge */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 18 }}>
-          <p style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, color: '#6F9BC6', margin: 0 }}>
-            COMMON QUESTIONS
-          </p>
-          <span style={{ ...MONO, fontSize: 10, color: '#6F9BC6', background: '#0A0E18', border: '0.5px solid rgba(111,155,198,0.4)', padding: '2px 8px' }}>
-            5 answers
-          </span>
-        </div>
-
-        <h2 style={{ ...DISP, fontWeight: 700, fontSize: 36, lineHeight: 1.15, color: '#E6E9EE', margin: '0 0 36px', letterSpacing: '-0.5px' }}>
-          Common questions.
-        </h2>
-
-        {FAQ_ITEMS.map((item, i) => {
-          const isOpen = openFaq === i
-          return (
+      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 48px' }}>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {FAQ_CARDS.map((card) => (
             <div
-              key={i}
+              key={card.q}
               style={{
-                display: 'flex',
-                borderBottom: '0.5px solid rgba(255,255,255,0.06)',
-                background: isOpen ? '#0A0E18' : 'transparent',
-                transition: 'background 0.15s',
+                background: '#0A0E18',
+                borderTop: '1px solid rgba(255,255,255,0.12)',
+                borderLeft: '1px solid rgba(255,255,255,0.08)',
+                borderRight: '1px solid rgba(255,255,255,0.04)',
+                borderBottom: '1px solid rgba(255,255,255,0.03)',
+                padding: '22px 24px',
               }}
             >
-              {/* Left accent bar — brightens when open */}
-              <div style={{ width: 3, flexShrink: 0, alignSelf: 'stretch', background: item.accent, opacity: isOpen ? 1 : 0.6, transition: 'opacity 0.15s' }} />
-
-              {/* Content */}
-              <div style={{ flex: 1, padding: '0 18px' }}>
-                <div
-                  style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', padding: '18px 0' }}
-                  onClick={() => setOpenFaq(isOpen ? null : i)}
-                >
-                  <span style={{ ...SANS, fontWeight: 500, fontSize: 15, color: '#E6E9EE' }}>
-                    {item.q}
-                  </span>
-                  <svg
-                    width={16}
-                    height={16}
-                    viewBox="0 0 16 16"
-                    fill="none"
-                    style={{ flexShrink: 0, marginLeft: 16, transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s', color: isOpen ? item.accent : '#6E7587' }}
-                  >
-                    <path d="M4 6l4 4 4-4" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </div>
-                {isOpen && (
-                  <>
-                    <p style={{ ...SANS, fontSize: 14, color: '#9398A8', lineHeight: 1.7, padding: '0 24px 20px 0', margin: 0 }}>
-                      {item.a}
-                    </p>
-                    <div style={{ height: '0.5px', background: item.accent, marginBottom: 0 }} />
-                  </>
-                )}
-              </div>
+              <p style={{ ...DISP, fontWeight: 600, fontSize: 16, color: '#E6E9EE', margin: '0 0 10px', lineHeight: 1.35 }}>
+                {card.q}
+              </p>
+              <p style={{ ...SANS, fontSize: 14, color: '#9398A8', lineHeight: 1.65, margin: '0 0 12px' }}>
+                {card.a}
+              </p>
+              <p style={{ ...MONO, fontSize: 11, color: card.dataColor, margin: 0 }}>
+                {card.data}
+              </p>
             </div>
-          )
-        })}
+          ))}
+        </div>
       </div>
     </section>
   )
@@ -1162,9 +1251,7 @@ export default function HomePage() {
       <div className="section-separator" />
       <PricingSection />
       <div className="section-separator" />
-      <ObjectionSection />
-      <div className="section-separator" />
-      <FaqSection />
+      <FaqCardsSection />
       <div className="section-separator" />
       <FinalCtaSection />
       <FooterSection />

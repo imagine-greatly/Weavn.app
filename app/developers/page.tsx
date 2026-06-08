@@ -19,6 +19,7 @@ const KEY_FACTS = [
     name: 'CACHE POLICY',
     value: 'Cache hits never billed',
     detail: 'Identical URL rescanned within 24h returns cached result at zero cost.',
+    why: 'Scan the same URL multiple times in your pipeline for free.',
     artifact: (
       <p style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, color: '#00C48C', margin: 0 }}>
         cache_hit: true · cost_usd: 0.00
@@ -29,6 +30,7 @@ const KEY_FACTS = [
     name: 'ASYNC MODE',
     value: 'Webhook delivery',
     detail: 'POST with async: true. Result delivered to your endpoint when ready.',
+    why: "Don't block your process waiting 90 seconds — fire and forget.",
     artifact: (
       <p style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, margin: 0 }}>
         <span style={{ color: '#8080C0' }}>async</span>
@@ -45,6 +47,7 @@ const KEY_FACTS = [
     name: 'BATCH ENDPOINT',
     value: 'Up to 10 URLs per request',
     detail: 'POST /api/v1/scan/batch — parallel execution, single webhook response.',
+    why: "Audit a full site's key pages in one request.",
     artifact: (
       <p style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, color: '#6F9BC6', margin: 0 }}>
         POST /api/v1/scan/batch · up to 10 URLs
@@ -55,6 +58,7 @@ const KEY_FACTS = [
     name: 'RESPONSE TIME',
     value: '~90s median',
     detail: 'p50: 87s · p95: 142s · measured across 30-day rolling window.',
+    why: 'p95 is 142s — plan timeouts accordingly.',
     artifact: (
       <p style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, margin: 0 }}>
         <span style={{ color: '#8080C0' }}>p50</span>
@@ -71,28 +75,28 @@ const KEY_FACTS = [
 
 const FAQS = [
   {
-    q: 'How does caching work?',
-    a: 'If you scan the same URL within 24 hours of a previous scan, the cached result is returned instantly at zero cost — no scan credit consumed. Cache is invalidated when we detect meaningful page changes via content fingerprinting.',
+    q: 'How does authentication work?',
+    a: 'Every request requires a Bearer token in the Authorization header. Get your key from the developer portal — it starts with wdoc_live_. Keys are scoped to your account and plan. Do not expose your key in client-side code.',
     accent: '#6F9BC6',
+  },
+  {
+    q: 'How does caching work?',
+    a: 'Identical URL rescanned within 24 hours returns the cached result at zero cost — billed at $0.00 regardless of plan. Cache is invalidated when the page content changes significantly (detected via fingerprint). You can force a fresh scan by passing force_refresh: true.',
+    accent: '#00C48C',
   },
   {
     q: "What's the difference between sync and async mode?",
-    a: 'Sync mode (default) holds the HTTP connection open and returns the full JSON response when the scan completes — typically 87–142 seconds. Async mode accepts the request immediately (202), runs the scan in the background, and POSTs the result to your webhook endpoint when ready.',
+    a: 'Sync mode holds the connection open and returns the full response when the scan completes (~90s). Async mode returns immediately with a scan_id and POSTs the result to your webhook_url when ready. Use async for batch processing or when you need to avoid timeout issues.',
     accent: '#8080C0',
   },
   {
-    q: 'Can I mix brief and full scans in the same plan?',
-    a: 'Yes. Brief scans (summary-only, no full finding detail) are available on all plans and consume the same scan credit as a full scan but return faster. Field selection lets you request only the response fields you need.',
-    accent: '#6F9BC6',
-  },
-  {
-    q: 'What happens if a site blocks the scanner?',
-    a: 'The scanner returns a structured error with code BOT_BLOCKED. This does not consume a scan credit. We use Browserless Pro with stealth mode — most sites scan successfully, but Cloudflare Enterprise sites may block.',
+    q: "What happens if a site blocks the scanner?",
+    a: "webdoc uses Browserless Pro with stealth mode and a real Chrome user agent. Most sites scan cleanly. Cloudflare Enterprise with aggressive bot detection occasionally blocks scans — when this happens the API returns a structured error with block_reason: 'automated_access_blocked'. We are actively working on defeat strategies for these cases.",
     accent: '#6F9BC6',
   },
   {
     q: 'Is there an uptime SLA?',
-    a: 'Enterprise plans include a written SLA. All other plans target 99.5% uptime with no formal guarantee. Status updates at status.webdocai.com.',
+    a: 'Enterprise plans include a formal SLA. All other plans target 99.5% uptime. Status and incident history at status.webdocai.com. Planned maintenance is announced 48 hours in advance via the dashboard.',
     accent: '#00C48C',
   },
 ]
@@ -153,6 +157,19 @@ export default function DevelopersPage() {
         >
           <CodeBlock code={CURL_CODE} language="bash" />
         </div>
+
+        {/* Metric chips */}
+        <div style={{ display: 'flex', justifyContent: 'center', gap: 12, flexWrap: 'wrap', marginTop: 20 }}>
+          {[
+            { label: '307 checks', color: '#00C48C' },
+            { label: '~90s median', color: '#6F9BC6' },
+            { label: 'cache hits free', color: '#00C48C' },
+          ].map(({ label, color }) => (
+            <div key={label} style={{ background: '#0A0E18', border: '0.5px solid rgba(255,255,255,0.06)', padding: '6px 12px', fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, color }}>
+              {label}
+            </div>
+          ))}
+        </div>
       </section>
       <div className="section-separator" />
 
@@ -174,7 +191,7 @@ export default function DevelopersPage() {
         />
         <div style={{ position: 'relative', zIndex: 1, maxWidth: 768, margin: '0 auto' }}>
           <div style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.2em', color: '#6E7587', textAlign: 'center', marginBottom: 24 }}>
-            PER-SCAN RATE
+            PER-SCAN RATE · DECREASES WITH VOLUME
           </div>
 
           <div style={{ height: 8, background: 'linear-gradient(to right, #EFB23E, #6F9BC6, #00C48C)' }} />
@@ -193,8 +210,8 @@ export default function DevelopersPage() {
             ))}
           </div>
 
-          <p style={{ ...MONO, fontSize: 12, textAlign: 'center', marginTop: 24, color: '#6E7587' }}>
-            Cache hits are never billed — at any tier.
+          <p style={{ ...SANS, fontSize: 13, color: '#9398A8', textAlign: 'center', marginTop: 24, maxWidth: 480, margin: '24px auto 0' }}>
+            Cache hits on identical URLs within 24 hours are always free — billed at $0.00 regardless of plan.
           </p>
         </div>
       </section>
@@ -227,7 +244,10 @@ export default function DevelopersPage() {
                 <Bullet text="No monthly fee" />
                 <Bullet text="Rate limited" />
               </ul>
-              <Link href="/developer" style={{ display: 'block', textAlign: 'center', ...MONO, fontSize: 13, color: '#9398A8', border: '0.5px solid #6E7587', padding: '12px 0', marginTop: 24, textDecoration: 'none', transition: 'color 0.15s' }}>
+              <div style={{ margin: '16px 0', borderTop: '0.5px solid rgba(255,255,255,0.05)', paddingTop: 12 }}>
+                <CodeBlock language="json" code={`{ "url": "https://your-site.com", "async": false }`} />
+              </div>
+              <Link href="/developer" style={{ display: 'block', textAlign: 'center', ...MONO, fontSize: 13, color: '#9398A8', border: '0.5px solid #6E7587', padding: '12px 0', marginTop: 8, textDecoration: 'none', transition: 'color 0.15s' }}>
                 GET API KEY →
               </Link>
             </div>
@@ -244,7 +264,10 @@ export default function DevelopersPage() {
                 <Bullet text="Async mode" />
                 <Bullet text="Full JSON schema" />
               </ul>
-              <Link href="/signup?plan=dev-api" style={{ display: 'block', textAlign: 'center', ...MONO, fontSize: 13, color: '#6F9BC6', border: '0.5px solid #6F9BC6', padding: '12px 0', marginTop: 24, textDecoration: 'none', transition: 'opacity 0.15s' }}>
+              <div style={{ margin: '16px 0', borderTop: '0.5px solid rgba(255,255,255,0.05)', paddingTop: 12 }}>
+                <CodeBlock language="json" code={`{ "url": "https://your-site.com",\n  "finding_depth": "full",\n  "webhook_url": "https://your-endpoint.com" }`} />
+              </div>
+              <Link href="/signup?plan=dev-api" style={{ display: 'block', textAlign: 'center', ...MONO, fontSize: 13, color: '#6F9BC6', border: '0.5px solid #6F9BC6', padding: '12px 0', marginTop: 8, textDecoration: 'none', transition: 'opacity 0.15s' }}>
                 START DEV PLAN →
               </Link>
             </div>
@@ -261,7 +284,10 @@ export default function DevelopersPage() {
                 <Bullet text="Webhook + async mode" />
                 <Bullet text="Priority processing" />
               </ul>
-              <Link href="/signup?plan=builder-api" style={{ display: 'block', textAlign: 'center', ...MONO, fontSize: 13, color: '#050810', backgroundColor: '#00C48C', padding: '12px 0', marginTop: 24, textDecoration: 'none', transition: 'opacity 0.15s' }}>
+              <div style={{ margin: '16px 0', borderTop: '0.5px solid rgba(255,255,255,0.05)', paddingTop: 12 }}>
+                <CodeBlock language="json" code={`{ "urls": ["site1.com", "site2.com"],\n  "async": true, "batch": true }`} />
+              </div>
+              <Link href="/signup?plan=builder-api" style={{ display: 'block', textAlign: 'center', ...MONO, fontSize: 13, color: '#050810', backgroundColor: '#00C48C', padding: '12px 0', marginTop: 8, textDecoration: 'none', transition: 'opacity 0.15s' }}>
                 START BUILDER PLAN →
               </Link>
             </div>
@@ -278,7 +304,10 @@ export default function DevelopersPage() {
                 <Bullet text="Dedicated rate limits" />
                 <Bullet text="Usage dashboard" />
               </ul>
-              <Link href="/signup?plan=scale-api" style={{ display: 'block', textAlign: 'center', ...MONO, fontSize: 13, color: '#6F9BC6', border: '0.5px solid #6F9BC6', padding: '12px 0', marginTop: 24, textDecoration: 'none', transition: 'opacity 0.15s' }}>
+              <div style={{ margin: '16px 0', borderTop: '0.5px solid rgba(255,255,255,0.05)', paddingTop: 12 }}>
+                <CodeBlock language="json" code={`{ "batch": true, "priority": "high",\n  "rate_limit": "dedicated" }`} />
+              </div>
+              <Link href="/signup?plan=scale-api" style={{ display: 'block', textAlign: 'center', ...MONO, fontSize: 13, color: '#6F9BC6', border: '0.5px solid #6F9BC6', padding: '12px 0', marginTop: 8, textDecoration: 'none', transition: 'opacity 0.15s' }}>
                 START SCALE PLAN →
               </Link>
             </div>
@@ -295,7 +324,10 @@ export default function DevelopersPage() {
                 <Bullet text="Dedicated support" />
                 <Bullet text="Invoice billing" />
               </ul>
-              <Link href="mailto:hello@webdocai.com" style={{ display: 'block', textAlign: 'center', ...MONO, fontSize: 13, color: '#9398A8', border: '0.5px solid #6E7587', padding: '12px 0', marginTop: 24, textDecoration: 'none', transition: 'color 0.15s' }}>
+              <div style={{ margin: '16px 0', borderTop: '0.5px solid rgba(255,255,255,0.05)', paddingTop: 12, ...MONO, fontSize: 11, color: '#6E7587', lineHeight: 1.7 }}>
+                custom rate limits · dedicated infrastructure · SLA guarantee
+              </div>
+              <Link href="mailto:hello@webdocai.com" style={{ display: 'block', textAlign: 'center', ...MONO, fontSize: 13, color: '#9398A8', border: '0.5px solid #6E7587', padding: '12px 0', marginTop: 8, textDecoration: 'none', transition: 'color 0.15s' }}>
                 TALK TO US →
               </Link>
             </div>
@@ -327,6 +359,9 @@ export default function DevelopersPage() {
                 </p>
                 <p style={{ ...SANS, fontSize: 14, lineHeight: 1.6, color: '#9398A8', margin: 0 }}>
                   {fact.detail}
+                </p>
+                <p style={{ ...SANS, fontSize: 13, lineHeight: 1.5, color: '#6E7587', fontStyle: 'italic', margin: '2px 0 0' }}>
+                  {fact.why}
                 </p>
                 <div style={{ borderTop: '0.5px solid rgba(255,255,255,0.05)', paddingTop: 8, marginTop: 4 }}>
                   {fact.artifact}

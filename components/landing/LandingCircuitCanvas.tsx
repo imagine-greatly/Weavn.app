@@ -31,36 +31,59 @@ function randomTraceColor(): TraceColor {
   return TRACE_COLORS[2]!;
 }
 
-function snap(v: number): number {
-  return Math.round(v / GRID) * GRID;
-}
+const snapToGrid = (value: number, grid: number) => Math.round(value / grid) * grid;
 
 function randomInRange(a: number, b: number) {
   return a + Math.random() * (b - a);
 }
 
 function buildManhattanPath(w: number, h: number): Pt[] {
+  const gridW = snapToGrid(w, GRID);
+  const gridH = snapToGrid(h, GRID);
+
   const edgePoint = (edge: number): Pt => {
     switch (edge) {
-      case 0: return { x: snap(Math.random() * w), y: 0 };
-      case 1: return { x: w, y: snap(Math.random() * h) };
-      case 2: return { x: snap(Math.random() * w), y: h };
-      default: return { x: 0, y: snap(Math.random() * h) };
+      case 0: return { x: snapToGrid(randomInRange(0, w), GRID), y: 0 };
+      case 1: return { x: gridW, y: snapToGrid(randomInRange(0, h), GRID) };
+      case 2: return { x: snapToGrid(randomInRange(0, w), GRID), y: gridH };
+      default: return { x: 0, y: snapToGrid(randomInRange(0, h), GRID) };
     }
   };
 
-  let e0 = Math.floor(Math.random() * 4);
-  let e1 = (e0 + 2 + Math.floor(Math.random() * 3)) % 4;
+  const e0 = Math.floor(Math.random() * 4);
+  let e1 = (e0 + 1 + Math.floor(Math.random() * 3)) % 4;
   if (e1 === e0) e1 = (e0 + 1) % 4;
 
   const start = edgePoint(e0);
   const end = edgePoint(e1);
-  const mid =
-    Math.random() > 0.5
-      ? { x: end.x, y: start.y }
-      : { x: start.x, y: end.y };
 
-  return [start, mid, end];
+  // First direction is perpendicular to the start edge:
+  // left(3)/right(1) edges → move horizontally first; top(0)/bottom(2) → vertically first
+  let goHorizontal = e0 === 1 || e0 === 3;
+
+  const points: Pt[] = [start];
+  let cur = { ...start };
+
+  const numIntermediates = 1 + Math.floor(Math.random() * 4); // 1–4 intermediates → 2–5 segments
+
+  for (let i = 0; i < numIntermediates; i++) {
+    const cells = 1 + Math.floor(Math.random() * 6); // 1–6 grid cells per segment
+    const dist = cells * GRID;
+
+    if (goHorizontal) {
+      const dir = cur.x <= 0 ? 1 : cur.x >= gridW ? -1 : Math.random() > 0.5 ? 1 : -1;
+      cur = { x: Math.min(gridW, Math.max(0, cur.x + dir * dist)), y: cur.y };
+    } else {
+      const dir = cur.y <= 0 ? 1 : cur.y >= gridH ? -1 : Math.random() > 0.5 ? 1 : -1;
+      cur = { x: cur.x, y: Math.min(gridH, Math.max(0, cur.y + dir * dist)) };
+    }
+
+    points.push({ ...cur });
+    goHorizontal = !goHorizontal;
+  }
+
+  points.push(end);
+  return points;
 }
 
 function polylineLength(points: Pt[]): number {
@@ -159,6 +182,9 @@ export default function LandingCircuitCanvas({ overlay }: Props) {
     let nextSpawnAt = performance.now() + randomInRange(0, 1500);
     for (let s = 0; s < 14 && linesRef.current.length < MAX_LINES; s++) {
       const points = buildManhattanPath(w0, h0);
+      if (process.env.NODE_ENV === 'development' && s === 0) {
+        console.log('Circuit path waypoints:', points.map(p => `${p.x},${p.y}`).join(' → '));
+      }
       const totalLen = polylineLength(points);
       if (totalLen >= 64) {
         linesRef.current.push({

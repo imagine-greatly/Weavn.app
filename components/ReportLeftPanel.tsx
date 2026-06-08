@@ -5,9 +5,9 @@ import ConversionScoreGauge from "@/components/ConversionScoreGauge";
 
 function dimensionBarColor(score: number): string {
   const s = Math.max(0, Math.min(100, Number(score) || 0));
-  if (s <= 44) return "#FF2D2D";
-  if (s <= 64) return "#FFB300";
-  return "#00C8FF";
+  if (s <= 44) return "#E8635F";
+  if (s <= 64) return "#EFB23E";
+  return "#00C48C";
 }
 
 /**
@@ -137,10 +137,10 @@ function DiagnosticCoverage({ pagesAnalyzed, totalChecked }: { pagesAnalyzed: st
 
   return (
     <div style={{ padding: "16px 20px 0" }}>
-      <div style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.14em", color: "rgba(0,200,255,0.55)", textTransform: "uppercase", marginBottom: 8 }}>
+      <div style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.14em", color: "rgba(0,196,140,0.55)", textTransform: "uppercase", marginBottom: 8 }}>
         DIAGNOSTIC COVERAGE
       </div>
-      <div style={{ height: 1, background: "rgba(0,200,255,0.1)", marginBottom: 10 }} />
+      <div style={{ height: 1, background: "rgba(255,255,255,0.06)", marginBottom: 10 }} />
       {pagesAnalyzed.map((url, i) => {
         const label = guessPageLabel(url, i);
         const revealed = revealedPages > i;
@@ -158,8 +158,8 @@ function DiagnosticCoverage({ pagesAnalyzed, totalChecked }: { pagesAnalyzed: st
             }}
           >
             <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-              <span style={{ fontFamily: MONO, fontSize: 8, color: "rgba(0,200,255,0.4)" }}>›</span>
-              <span style={{ fontFamily: MONO, fontSize: 9, color: checked ? "rgba(240,244,255,0.6)" : "#00C8FF", letterSpacing: "0.1em" }}>
+              <span style={{ fontFamily: MONO, fontSize: 8, color: "#6E7587" }}>›</span>
+              <span style={{ fontFamily: MONO, fontSize: 9, color: checked ? "rgba(240,244,255,0.6)" : "#00C48C", letterSpacing: "0.1em" }}>
                 {label}
                 {revealed && !checked && (
                   <span className="coverage-cursor" aria-hidden />
@@ -167,15 +167,15 @@ function DiagnosticCoverage({ pagesAnalyzed, totalChecked }: { pagesAnalyzed: st
               </span>
             </div>
             {checked && (
-              <span style={{ fontFamily: MONO, fontSize: 8, color: "rgba(0,200,255,0.5)", letterSpacing: "0.08em" }}>
+              <span style={{ fontFamily: MONO, fontSize: 8, color: "rgba(0,196,140,0.6)", letterSpacing: "0.08em" }}>
                 ✓ ANALYZED
               </span>
             )}
           </div>
         );
       })}
-      <div style={{ height: 1, background: "rgba(0,200,255,0.1)", marginTop: 8, marginBottom: 8 }} />
-      <div style={{ fontFamily: MONO, fontSize: 8, color: "rgba(0,200,255,0.4)", letterSpacing: "0.1em", opacity: showSummary ? 1 : 0, transition: "opacity 200ms ease" }}>
+      <div style={{ height: 1, background: "rgba(255,255,255,0.06)", marginTop: 8, marginBottom: 8 }} />
+      <div style={{ fontFamily: MONO, fontSize: 8, color: "#6E7587", letterSpacing: "0.1em", opacity: showSummary ? 1 : 0, transition: "opacity 200ms ease" }}>
         {pagesAnalyzed.length} {pagesAnalyzed.length === 1 ? "PAGE" : "PAGES"} · {totalChecked ?? 264} CHECKS ANALYZED
       </div>
     </div>
@@ -230,7 +230,7 @@ export default function ReportLeftPanel({
         style={{
           height: 1,
           background:
-            "linear-gradient(90deg, transparent 0%, rgba(0,200,255,0.4) 50%, transparent 100%)",
+            "linear-gradient(90deg, transparent 0%, rgba(0,196,140,0.3) 50%, transparent 100%)",
           flexShrink: 0,
         }}
         aria-hidden
@@ -239,18 +239,18 @@ export default function ReportLeftPanel({
         .category-scroll::-webkit-scrollbar { display: none; }
         .category-scroll { scrollbar-width: none; }
         @keyframes coverage-blink { 0%,100% { opacity: 1; } 50% { opacity: 0; } }
-        .coverage-cursor { display: inline-block; width: 5px; height: 10px; background: #00C8FF; margin-left: 2px; vertical-align: middle; animation: coverage-blink 0.65s step-end infinite; }
+        .coverage-cursor { display: inline-block; width: 5px; height: 10px; background: #00C48C; margin-left: 2px; vertical-align: middle; animation: coverage-blink 0.65s step-end infinite; }
         @keyframes scorePulseCyan {
-          0%, 100% { box-shadow: 0 0 20px rgba(0, 200, 255, 0.15); }
-          50% { box-shadow: 0 0 30px rgba(0, 200, 255, 0.25); }
+          0%, 100% { box-shadow: 0 0 20px rgba(0, 196, 140, 0.1); }
+          50% { box-shadow: 0 0 28px rgba(0, 196, 140, 0.18); }
         }
         @keyframes scorePulseAmber {
-          0%, 100% { box-shadow: 0 0 20px rgba(245, 166, 35, 0.15); }
-          50% { box-shadow: 0 0 30px rgba(245, 166, 35, 0.25); }
+          0%, 100% { box-shadow: 0 0 20px rgba(239, 178, 62, 0.12); }
+          50% { box-shadow: 0 0 28px rgba(239, 178, 62, 0.2); }
         }
         @keyframes scorePulseRed {
-          0%, 100% { box-shadow: 0 0 20px rgba(255, 68, 68, 0.15); }
-          50% { box-shadow: 0 0 30px rgba(255, 68, 68, 0.25); }
+          0%, 100% { box-shadow: 0 0 20px rgba(232, 99, 95, 0.12); }
+          50% { box-shadow: 0 0 28px rgba(232, 99, 95, 0.2); }
         }
         @media (max-width: 768px) {
           .report-left-aside {
@@ -289,7 +289,7 @@ export default function ReportLeftPanel({
             style={{
               width: 20,
               height: 20,
-              borderRadius: 4,
+              borderRadius: 0,
               background: "var(--bg-elevated)",
               border: "1px solid var(--border-default)",
             }}
@@ -335,17 +335,18 @@ export default function ReportLeftPanel({
               style={{ flexShrink: 0 }}
             >
               <span
-                className="live-pulse shrink-0 rounded-full"
+                className="live-pulse shrink-0"
                 style={{
-                  width: 6,
-                  height: 6,
-                  background: "#00C8FF",
+                  width: 5,
+                  height: 5,
+                  background: "#00C48C",
+                  display: "inline-block",
                 }}
                 aria-hidden
               />
               <span
                 className="font-mono"
-                style={{ fontSize: 10, color: "#00C8FF" }}
+                style={{ fontSize: 10, color: "#00C48C" }}
               >
                 LIVE
               </span>
@@ -389,9 +390,9 @@ export default function ReportLeftPanel({
               padding: "0 8px",
               height: 28,
               background: "transparent",
-              border: "1px solid #00C8FF",
-              borderRadius: 2,
-              color: "#00C8FF",
+              border: "1px solid #00C48C",
+              borderRadius: 0,
+              color: "#00C48C",
               fontFamily: "var(--font-jetbrains-mono), var(--font-space-mono), monospace",
               fontSize: 9,
               letterSpacing: "3px",
@@ -399,8 +400,8 @@ export default function ReportLeftPanel({
               cursor: "pointer",
               transition: "all 0.15s ease",
             }}
-            onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(0,200,255,0.06)"; e.currentTarget.style.boxShadow = "0 0 12px rgba(0,200,255,0.3)"; }}
-            onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.boxShadow = "none"; }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(0,196,140,0.06)"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
           >
             RESCAN
           </button>
@@ -415,12 +416,12 @@ export default function ReportLeftPanel({
             marginBottom: 20,
           }}
         >
-          <div className="rounded-lg border border-white/5" style={{ padding: "10px 12px 8px" }}>
+          <div className="border border-white/5" style={{ padding: "10px 12px 8px", borderRadius: 0 }}>
           <div
             style={{
               fontFamily: "var(--font-jetbrains-mono), var(--font-space-mono), monospace",
               fontSize: 8,
-              color: "#00C8FF",
+              color: "#00C48C",
               letterSpacing: "0.2em",
               marginBottom: 12,
             }}
@@ -466,11 +467,11 @@ export default function ReportLeftPanel({
                       if (!pLabel) return null;
                       const lc = pLabel.toLowerCase();
                       const color =
-                        lc.includes("bottom") ? "#FF4444"
-                        : lc.includes("below") ? "#FF8C00"
-                        : lc.includes("top") ? "#00E676"
-                        : lc.includes("above") ? "#00C8FF"
-                        : "#8E8EA0";
+                        lc.includes("bottom") ? "#E8635F"
+                        : lc.includes("below") ? "#EFB23E"
+                        : lc.includes("top") ? "#00C48C"
+                        : lc.includes("above") ? "#6F9BC6"
+                        : "#9398A8";
                       return (
                         <span
                           style={{
@@ -491,7 +492,7 @@ export default function ReportLeftPanel({
                   style={{
                     height: 2,
                     background: "rgba(255,255,255,0.06)",
-                    borderRadius: 1,
+                    borderRadius: 0,
                     overflow: "hidden",
                   }}
                 >
@@ -499,7 +500,7 @@ export default function ReportLeftPanel({
                     style={{
                       width: `${sc}%`,
                       height: "100%",
-                      borderRadius: 1,
+                      borderRadius: 0,
                       background: barColor,
                       transition: "width 0.8s ease",
                     }}
@@ -597,7 +598,7 @@ export default function ReportLeftPanel({
             marginBottom: 16,
             fontFamily: "var(--font-jetbrains-mono), var(--font-space-mono), monospace",
             fontSize: 9,
-            color: "#00C8FF",
+            color: "#00C48C",
             letterSpacing: "0.12em",
           }}
         >
@@ -627,13 +628,13 @@ export default function ReportLeftPanel({
                   fontSize: 9,
                   letterSpacing: "0.1em",
                   padding: "6px 10px",
-                  borderRadius: 4,
+                  borderRadius: 0,
                   border: `1px solid ${
-                    isActive ? "rgba(0,200,255,0.45)" : "rgba(255,255,255,0.12)"
+                    isActive ? "rgba(0,196,140,0.45)" : "rgba(255,255,255,0.12)"
                   }`,
                   cursor: "pointer",
-                  background: isActive ? "rgba(0,200,255,0.1)" : "transparent",
-                  color: isActive ? "#00C8FF" : "rgba(240,244,255,0.45)",
+                  background: isActive ? "rgba(0,196,140,0.08)" : "transparent",
+                  color: isActive ? "#00C48C" : "rgba(240,244,255,0.45)",
                   transitionDuration: "150ms",
                 }}
               >

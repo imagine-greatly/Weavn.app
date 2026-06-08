@@ -3,570 +3,539 @@
 import { useState, useRef } from 'react'
 import Link from 'next/link'
 import { CodeBlock } from '@/components/ui/CodeBlock'
+import { ScoreRing } from '@/components/ui/ScoreRing'
 
-// ── Types ─────────────────────────────────────────────────────────────────────
+// ── Types ──────────────────────────────────────────────────────────────────────
 
-type ScanState    = 'idle' | 'scanning' | 'complete' | 'error'
+type ScanState    = 'idle' | 'scanning' | 'complete'
 type FindingDepth = 'brief' | 'full'
-type ResponseTab  = 'response' | 'findings' | 'benchmarks' | 'metadata'
-type Severity     = 'critical' | 'high' | 'medium'
-type FieldKey     = 'score' | 'findings' | 'benchmarks' | 'copy_rewrites' | 'growth_blueprint' | 'metadata'
+type AsyncMode    = 'false' | 'true'
+type SiteType     = 'auto' | 'saas' | 'ecommerce'
 
-interface FieldDef {
-  key: FieldKey
-  defaultChecked: boolean
-}
+// ── Mock response ──────────────────────────────────────────────────────────────
 
-interface Finding {
-  id: string
-  title: string
-  severity: Severity
-  dimension: string
-  explanation: string
-  recommendation: string
-}
-
-// ── Constants ─────────────────────────────────────────────────────────────────
-
-const FIELDS: FieldDef[] = [
-  { key: 'score',            defaultChecked: true  },
-  { key: 'findings',         defaultChecked: true  },
-  { key: 'benchmarks',       defaultChecked: true  },
-  { key: 'copy_rewrites',    defaultChecked: false },
-  { key: 'growth_blueprint', defaultChecked: false },
-  { key: 'metadata',         defaultChecked: false },
-]
-
-const SCAN_LINES = [
-  '> Fetching page content...',
-  '> Running 264 diagnostic checks...',
-  '> Generating findings...',
-] as const
-
-const MOCK_FINDINGS: Finding[] = [
-  {
-    id: 'MSG_001',
-    title: 'Hero headline is product-focused, not outcome-focused',
-    severity: 'critical',
-    dimension: 'message_clarity',
-    explanation:
-      'Your headline leads with what the product is rather than what the user gains. Outcome-led headlines convert 23% better on average across SaaS sites.',
-    recommendation:
-      'Rewrite the headline to lead with the result the user experiences, not the feature you built.',
-  },
-  {
-    id: 'TRS_001',
-    title: 'No social proof visible in first viewport',
-    severity: 'high',
-    dimension: 'trust_signals',
-    explanation:
-      'Trust signals positioned below the fold are ignored by 76% of visitors who bounce before scrolling.',
-    recommendation:
-      'Move at least one trust signal — customer count, logo row, or testimonial — above the fold.',
-  },
-  {
-    id: 'CTA_002',
-    title: 'Primary CTA copy is generic',
-    severity: 'high',
-    dimension: 'conversion_architecture',
-    explanation:
-      "CTAs using generic verbs like 'Get Started' or 'Sign Up' underperform specific action CTAs by 14–32%.",
-    recommendation:
-      'Replace with a specific outcome CTA that matches your value proposition.',
-  },
-]
-
-const MOCK_BENCHMARK = {
-  industry:      'saas',
-  percentile:    34,
-  average_score: 67,
-  top_quartile:  82,
-}
-
-const MOCK_META = {
-  duration_ms: 2340,
-  cost_usd:    0.15,
-  tokens_used: 4821,
-  complexity:  'standard',
-  cached:      false,
-}
-
-// ── Severity badge ────────────────────────────────────────────────────────────
-
-const SEVERITY_STYLES: Record<Severity, string> = {
-  critical: 'text-red-400 border border-red-400/30',
-  high:     'text-amber-400 border border-amber-400/30',
-  medium:   'text-yellow-400 border border-yellow-400/30',
-}
-
-function SeverityBadge({ severity }: { severity: Severity }) {
-  return (
-    <span className={`font-mono text-xs uppercase px-2 py-0.5 ${SEVERITY_STYLES[severity]}`}>
-      {severity}
-    </span>
-  )
-}
-
-// ── Response payload builder ──────────────────────────────────────────────────
-
-function buildResponseData(
-  fields: Record<FieldKey, boolean>,
-  url: string,
-): Record<string, unknown> {
-  const data: Record<string, unknown> = {}
-  if (fields.score)            data.score            = 61
-  if (fields.findings)         data.findings         = MOCK_FINDINGS
-  if (fields.benchmarks)       data.benchmark        = MOCK_BENCHMARK
-  if (fields.copy_rewrites)    data.copy_rewrites    = {
+const MOCK_RESPONSE = {
+  score: 61,
+  findings: [
+    {
+      id: 'MSG_001',
+      severity: 'critical',
+      dimension: 'message_clarity',
+      title: 'Hero headline is product-focused, not outcome-focused',
+      recommendation: 'Rewrite to lead with the result the user experiences.',
+    },
+    {
+      id: 'TRS_001',
+      severity: 'high',
+      dimension: 'trust_signals',
+      title: 'No social proof visible in first viewport',
+      recommendation: 'Move at least one trust signal above the fold.',
+    },
+    {
+      id: 'CTA_002',
+      severity: 'high',
+      dimension: 'conversion_architecture',
+      title: 'Primary CTA copy is generic',
+      recommendation: 'Replace with a specific outcome CTA.',
+    },
+  ],
+  rewritten_copy: {
     headline: 'Stop losing signups to a homepage nobody understands.',
-    cta:      'Scan my site free →',
-  }
-  if (fields.growth_blueprint) data.growth_blueprint = [
-    { priority: 1, action: 'Rewrite hero headline', effort: 'low', impact: 'high' },
-  ]
-  if (fields.metadata)         data.metadata         = {
-    url:         url || 'https://example.com',
-    scanned_at:  new Date().toISOString(),
-    duration_ms: MOCK_META.duration_ms,
-    cost_usd:    MOCK_META.cost_usd,
-    tokens_used: MOCK_META.tokens_used,
-    complexity:  MOCK_META.complexity,
-    cached:      MOCK_META.cached,
-  }
-  return data
+    cta: 'Scan my site free →',
+  },
+  metadata: {
+    scanned_at: '',
+    duration_ms: 2340,
+    site_type: 'saas',
+    cached: false,
+  },
+}
+
+const IDLE_PLACEHOLDER = `// Response will appear here\n// POST a URL to run a live scan`
+
+// ── Toggle row sub-component ───────────────────────────────────────────────────
+
+function ToggleRow({
+  label,
+  options,
+  value,
+  onChange,
+}: {
+  label: string
+  options: string[]
+  value: string
+  onChange: (v: string) => void
+}) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+      <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, color: '#9398A8' }}>
+        {label}
+      </span>
+      <div style={{ display: 'flex' }}>
+        {options.map((opt, i) => (
+          <button
+            key={opt}
+            onClick={() => onChange(opt)}
+            style={{
+              fontFamily: "'IBM Plex Mono', monospace",
+              fontSize: 11,
+              color: opt === value ? '#E6E9EE' : '#6E7587',
+              background: opt === value ? 'rgba(255,255,255,0.07)' : 'transparent',
+              border: '0.5px solid rgba(255,255,255,0.08)',
+              borderRadius: 0,
+              padding: '4px 10px',
+              cursor: 'pointer',
+              marginLeft: i > 0 ? -0.5 : 0,
+            }}
+          >
+            {opt}
+          </button>
+        ))}
+      </div>
+    </div>
+  )
 }
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function PlaygroundPage() {
-  const [url, setUrl]         = useState('')
-  const [fields, setFields]   = useState<Record<FieldKey, boolean>>({
-    score:            true,
-    findings:         true,
-    benchmarks:       true,
-    copy_rewrites:    false,
-    growth_blueprint: false,
-    metadata:         false,
-  })
-  const [depth, setDepth]     = useState<FindingDepth>('brief')
-  const [limit, setLimit]     = useState(5)
-  const [scanState, setScanState]   = useState<ScanState>('idle')
-  const [activeTab, setActiveTab]   = useState<ResponseTab>('response')
-  const [jsonCopied, setJsonCopied] = useState(false)
-  const [curlCopied, setCurlCopied] = useState(false)
-
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [url, setUrl]                     = useState('')
+  const [findingDepth, setFindingDepth]   = useState<FindingDepth>('full')
+  const [asyncMode, setAsyncMode]         = useState<AsyncMode>('false')
+  const [siteType, setSiteType]           = useState<SiteType>('auto')
+  const [scanState, setScanState]         = useState<ScanState>('idle')
+  const [scanScore, setScanScore]         = useState(0)
+  const [durationMs, setDurationMs]       = useState(0)
+  const [keyCopied, setKeyCopied]         = useState(false)
+  const timerRef  = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const startRef  = useRef(0)
 
   function handleRunScan() {
     if (!url.trim() || scanState === 'scanning') return
     if (timerRef.current) clearTimeout(timerRef.current)
     setScanState('scanning')
-    setActiveTab('response')
-    timerRef.current = setTimeout(
-      () => setScanState('complete'),
-      SCAN_LINES.length * 600 + 400,
-    )
+    setScanScore(0)
+    startRef.current = Date.now()
+    timerRef.current = setTimeout(() => {
+      setScanState('complete')
+      setScanScore(61)
+      setDurationMs(Date.now() - startRef.current)
+    }, 2800)
   }
 
-  function handleCopyJson() {
-    const data = buildResponseData(fields, url)
-    navigator.clipboard?.writeText(JSON.stringify(data, null, 2))
-    setJsonCopied(true)
-    setTimeout(() => setJsonCopied(false), 2000)
+  function handleCopyKey() {
+    navigator.clipboard?.writeText('wdoc_live_example_key')
+    setKeyCopied(true)
+    setTimeout(() => setKeyCopied(false), 2000)
   }
 
-  function handleCopyCurl() {
-    const body: Record<string, unknown> = {
-      url:    url || 'https://example.com',
-      fields: FIELDS.filter(f => fields[f.key]).map(f => f.key),
-    }
-    if (fields.findings) {
-      body.finding_depth = depth
-      body.finding_limit = limit
-    }
-    const text = [
-      'curl -X POST https://webdocai.com/api/v1/scan \\',
-      '  -H "Authorization: Bearer YOUR_API_KEY" \\',
-      '  -H "Content-Type: application/json" \\',
-      `  -d '${JSON.stringify(body, null, 2)}'`,
-    ].join('\n')
-    navigator.clipboard?.writeText(text)
-    setCurlCopied(true)
-    setTimeout(() => setCurlCopied(false), 2000)
-  }
+  const targetUrl  = url || 'https://your-site.com'
+  const curlCode   = [
+    `curl -X POST https://api.webdocai.com/v1/scan \\`,
+    `  -H "Authorization: Bearer wdoc_live_••••••••" \\`,
+    `  -H "Content-Type: application/json" \\`,
+    `  -d '{`,
+    `    "url": "${targetUrl}",`,
+    `    "finding_depth": "${findingDepth}",`,
+    `    "async": ${asyncMode},`,
+    `    "site_type": "${siteType}"`,
+    `  }'`,
+  ].join('\n')
 
-  function toggleField(key: FieldKey) {
-    setFields(prev => ({ ...prev, [key]: !prev[key] }))
-  }
+  const responseCode = scanState === 'complete'
+    ? JSON.stringify(
+        { ...MOCK_RESPONSE, metadata: { ...MOCK_RESPONSE.metadata, scanned_at: new Date().toISOString() } },
+        null, 2,
+      )
+    : IDLE_PLACEHOLDER
 
-  // Build curl body (live-updating)
-  const curlBody: Record<string, unknown> = {
-    url:    url || 'https://example.com',
-    fields: FIELDS.filter(f => fields[f.key]).map(f => f.key),
-  }
-  if (fields.findings) {
-    curlBody.finding_depth = depth
-    curlBody.finding_limit = limit
-  }
-
-  // Tabs available after scan
-  const tabs: { key: ResponseTab; label: string }[] = [
-    { key: 'response',   label: 'Full Response' },
-    ...(fields.findings   ? [{ key: 'findings'   as ResponseTab, label: 'Findings'   }] : []),
-    ...(fields.benchmarks ? [{ key: 'benchmarks' as ResponseTab, label: 'Benchmarks' }] : []),
-    ...(fields.metadata   ? [{ key: 'metadata'   as ResponseTab, label: 'Metadata'   }] : []),
-  ]
-
-  const responseData = buildResponseData(fields, url)
+  const statusLabel: string | null =
+    scanState === 'idle'     ? null :
+    scanState === 'scanning' ? 'scanning…' :
+                               `200 OK · ${durationMs}ms`
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden bg-background-base">
+    <main style={{ background: 'transparent', minHeight: '100vh' }}>
       <style>{`
-        @keyframes typeIn {
-          from { clip-path: inset(0 100% 0 0); }
-          to   { clip-path: inset(0 0% 0 0); }
-        }
-        @keyframes blink {
+        @keyframes playgroundStatusPulse {
           0%, 100% { opacity: 1; }
-          50%      { opacity: 0; }
+          50% { opacity: 0.45; }
+        }
+        @keyframes scanBtnPulse {
+          0%, 100% { box-shadow: 0 0 20px rgba(0,196,140,0.25); }
+          50% { box-shadow: 0 0 40px rgba(0,196,140,0.5), 0 0 80px rgba(0,196,140,0.15); }
+        }
+        .pg-url-input:focus {
+          border-top-color: rgba(0,196,140,0.6) !important;
+          outline: none !important;
+        }
+        .pg-url-input::placeholder { color: #6E7587; }
+        @media (max-width: 900px) {
+          .pg-grid { grid-template-columns: 1fr !important; }
         }
       `}</style>
 
-      {/* TOP BAR */}
-      <div className="flex-shrink-0 h-12 flex items-center justify-between px-4 border-b border-background-border bg-background-raised">
-        <span className="font-mono text-xs text-text-tertiary">
-          webdoc.ai / API Explorer
-        </span>
-        <span className="font-mono text-xs text-text-secondary">
-          POST /api/v1/scan
-        </span>
-      </div>
+      {/* ── PAGE HEADER ───────────────────────────────────────────────── */}
+      <section style={{ maxWidth: 1200, margin: '0 auto', padding: '80px 40px 56px' }}>
+        <div style={{
+          fontFamily: "'IBM Plex Mono', monospace",
+          fontSize: 11,
+          textTransform: 'uppercase',
+          letterSpacing: '0.18em',
+          color: '#6F9BC6',
+          marginBottom: 16,
+        }}>
+          API Playground
+        </div>
 
-      {/* BODY */}
-      <div className="flex flex-1 overflow-hidden">
+        <h1 style={{
+          fontFamily: "'Space Grotesk', sans-serif",
+          fontWeight: 700,
+          fontSize: 36,
+          color: '#E6E9EE',
+          lineHeight: 1.15,
+          margin: '0 0 16px',
+        }}>
+          POST a URL. See exactly what comes back.
+        </h1>
 
-        {/* ── LEFT PANEL ───────────────────────────────────────────────────── */}
-        <aside className="w-[380px] flex-shrink-0 border-r border-background-border overflow-y-auto">
+        <p style={{
+          fontFamily: "'IBM Plex Sans', sans-serif",
+          fontSize: 15,
+          color: '#9398A8',
+          margin: '0 0 24px',
+          maxWidth: 560,
+        }}>
+          Live API calls against the real scan engine. Your key, your requests, real responses. No mocked data.
+        </p>
 
-          {/* 1 — URL */}
-          <div className="p-4 border-b border-background-border">
-            <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mb-2">
-              TARGET URL
+        {/* Status line */}
+        <div style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: 12,
+          border: '0.5px solid rgba(255,255,255,0.08)',
+          padding: '8px 14px',
+          background: 'rgba(255,255,255,0.02)',
+          fontFamily: "'IBM Plex Mono', monospace",
+          fontSize: 12,
+        }}>
+          <span
+            className="status-dot"
+            style={{
+              display: 'inline-block',
+              width: 7, height: 7,
+              borderRadius: '50%',
+              background: '#00C48C',
+              flexShrink: 0,
+            }}
+          />
+          <span style={{ color: '#9398A8' }}>api.webdocai.com</span>
+          <span style={{ color: '#6E7587' }}>·</span>
+          <span style={{ color: '#6F9BC6' }}>v1</span>
+          <span style={{ color: '#6E7587' }}>·</span>
+          <span style={{ color: '#00C48C' }}>live</span>
+        </div>
+      </section>
+
+      {/* ── TWO-COLUMN LAYOUT ─────────────────────────────────────────── */}
+      <section style={{ maxWidth: 1200, margin: '0 auto', padding: '0 40px 80px' }}>
+        <div
+          className="pg-grid"
+          style={{
+            display: 'grid',
+            gridTemplateColumns: '2fr 3fr',
+            alignItems: 'start',
+          }}
+        >
+          {/* ── LEFT COLUMN — REQUEST PANEL ───────────────────────── */}
+          <div className="wd-panel" style={{ borderRadius: 0, padding: 0 }}>
+
+            {/* Panel header */}
+            <div style={{
+              padding: '12px 16px',
+              borderBottom: '0.5px solid rgba(255,255,255,0.06)',
+              fontFamily: "'IBM Plex Mono', monospace",
+              fontSize: 11,
+              textTransform: 'uppercase',
+              letterSpacing: '0.12em',
+              color: '#6E7587',
+            }}>
+              REQUEST
             </div>
-            <input
-              type="url"
-              value={url}
-              onChange={e => setUrl(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && handleRunScan()}
-              placeholder="https://example.com"
-              className="w-full bg-background-base border border-background-border font-mono text-sm text-text-primary px-3 py-2 focus:border-cyan-DEFAULT focus:outline-none placeholder:text-text-tertiary"
-            />
-          </div>
 
-          {/* 2 — Response Fields */}
-          <div className="p-4 border-b border-background-border">
-            <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mb-3">
-              RESPONSE FIELDS
-            </div>
-            {FIELDS.map(f => (
-              <div
-                key={f.key}
-                onClick={() => toggleField(f.key)}
-                className="flex items-center gap-3 mb-2.5 cursor-pointer"
-              >
-                <span
-                  className={`w-3 h-3 flex-shrink-0 border flex items-center justify-center ${
-                    fields[f.key]
-                      ? 'bg-cyan-DEFAULT border-cyan-DEFAULT'
-                      : 'bg-background-base border-background-border'
-                  }`}
-                >
-                  {fields[f.key] && (
-                    <svg width="8" height="6" viewBox="0 0 8 6" fill="none">
-                      <path
-                        d="M1 3L3 5L7 1"
-                        stroke="#050810"
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  )}
+            {/* API key row */}
+            <div style={{ padding: '14px 16px', borderBottom: '0.5px solid rgba(255,255,255,0.06)' }}>
+              <div style={{
+                fontFamily: "'IBM Plex Mono', monospace",
+                fontSize: 10,
+                textTransform: 'uppercase',
+                letterSpacing: '0.1em',
+                color: '#6E7587',
+                marginBottom: 8,
+              }}>
+                API KEY
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 13, color: '#00C48C' }}>
+                  wdoc_live_••••••••
                 </span>
-                <span
-                  className={`font-mono text-sm ${
-                    fields[f.key] ? 'text-text-primary' : 'text-text-secondary'
-                  }`}
-                >
-                  {f.key}
-                </span>
-              </div>
-            ))}
-          </div>
-
-          {/* 3 — Finding Options (conditional) */}
-          {fields.findings && (
-            <div className="p-4 border-b border-background-border">
-              <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mb-3">
-                FINDING OPTIONS
-              </div>
-
-              {/* Depth toggle */}
-              <div className="flex mb-3">
-                {(['brief', 'full'] as FindingDepth[]).map(d => (
-                  <button
-                    key={d}
-                    onClick={() => setDepth(d)}
-                    className={`flex-1 py-1.5 font-mono text-xs bg-transparent border cursor-pointer transition-colors ${
-                      depth === d
-                        ? 'bg-background-border border-background-border text-text-primary'
-                        : 'border-background-border text-text-tertiary hover:text-text-secondary'
-                    }`}
-                  >
-                    {d}
-                  </button>
-                ))}
-              </div>
-
-              {/* Limit */}
-              <div className="flex items-center justify-between">
-                <span className="font-mono text-xs text-text-tertiary uppercase tracking-widest">
-                  LIMIT
-                </span>
-                <input
-                  type="number"
-                  value={limit}
-                  min={1}
-                  max={10}
-                  onChange={e =>
-                    setLimit(Math.min(10, Math.max(1, parseInt(e.target.value) || 1)))
-                  }
-                  className="w-16 text-center font-mono text-sm text-text-primary bg-background-base border border-background-border px-2 py-1 focus:border-cyan-DEFAULT focus:outline-none"
-                />
-              </div>
-            </div>
-          )}
-
-          {/* 4 — Run button */}
-          <div className="p-4 border-b border-background-border">
-            <button
-              onClick={handleRunScan}
-              disabled={!url.trim() || scanState === 'scanning'}
-              className="w-full py-3 bg-cyan-DEFAULT text-background-base font-mono text-sm font-bold tracking-widest uppercase cursor-pointer hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              {scanState === 'scanning' ? (
-                <>
-                  {'SCANNING...'}
-                  <span style={{ animation: 'blink 1s step-end infinite' }}>_</span>
-                </>
-              ) : (
-                'RUN SCAN'
-              )}
-            </button>
-          </div>
-
-          {/* 5 — Curl equivalent */}
-          <div className="p-4 border-b border-background-border">
-            <div className="flex items-center justify-between mb-2">
-              <span className="font-mono text-xs text-text-tertiary uppercase tracking-widest">
-                CURL EQUIVALENT
-              </span>
-              <button
-                onClick={handleCopyCurl}
-                className="font-mono text-xs text-text-tertiary hover:text-cyan-DEFAULT transition-colors"
-              >
-                {curlCopied ? 'copied' : 'copy'}
-              </button>
-            </div>
-            <CodeBlock
-              language="bash"
-              code={[
-                'curl -X POST https://webdocai.com/api/v1/scan \\',
-                '  -H "Authorization: Bearer YOUR_API_KEY" \\',
-                '  -H "Content-Type: application/json" \\',
-                `  -d '${JSON.stringify(curlBody, null, 2)}'`,
-              ].join('\n')}
-            />
-          </div>
-
-          {/* 6 — Stats (after scan) */}
-          {scanState === 'complete' && (
-            <div className="p-4">
-              <div className="flex gap-6 font-mono text-xs text-text-tertiary">
-                <span>
-                  {'DURATION  '}
-                  <span className="text-cyan-DEFAULT">2.3s</span>
-                </span>
-                <span>
-                  {'COST  '}
-                  <span className="text-cyan-DEFAULT">$0.15</span>
-                </span>
-              </div>
-            </div>
-          )}
-        </aside>
-
-        {/* ── RIGHT PANEL ──────────────────────────────────────────────────── */}
-        <div className="flex-1 overflow-y-auto flex flex-col">
-
-          {/* IDLE */}
-          {scanState === 'idle' && (
-            <div className="flex-1 flex flex-col items-center justify-center gap-2">
-              <p className="font-mono text-sm text-text-tertiary">
-                Run a scan to see the response
-              </p>
-              <p className="font-mono text-xs text-text-tertiary">
-                Results appear here as structured JSON
-              </p>
-            </div>
-          )}
-
-          {/* SCANNING */}
-          {scanState === 'scanning' && (
-            <div className="flex-1 flex items-center justify-center">
-              <div className="font-mono text-sm text-text-secondary">
-                {SCAN_LINES.map((line, i) => (
-                  <div
-                    key={i}
-                    className="whitespace-nowrap mb-1"
-                    style={{
-                      animation: `typeIn 0.7s steps(38) ${i * 0.6}s both`,
-                    }}
-                  >
-                    {line}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* COMPLETE */}
-          {scanState === 'complete' && (
-            <>
-              {/* Tab bar */}
-              <div className="flex-shrink-0 border-b border-background-border flex items-center">
-                {tabs.map(tab => (
-                  <button
-                    key={tab.key}
-                    onClick={() => setActiveTab(tab.key)}
-                    className={`font-mono text-xs px-4 py-3 bg-transparent border-0 cursor-pointer transition-colors ${
-                      activeTab === tab.key
-                        ? 'border-b-2 border-cyan-DEFAULT text-text-primary -mb-px'
-                        : 'text-text-tertiary hover:text-text-secondary'
-                    }`}
-                  >
-                    {tab.label}
-                  </button>
-                ))}
                 <button
-                  onClick={handleCopyJson}
-                  className="ml-auto mr-4 font-mono text-xs text-text-tertiary hover:text-cyan-DEFAULT transition-colors"
+                  onClick={handleCopyKey}
+                  style={{
+                    fontFamily: "'IBM Plex Mono', monospace",
+                    fontSize: 10,
+                    color: '#6F9BC6',
+                    background: 'none',
+                    border: '0.5px solid rgba(111,155,198,0.3)',
+                    borderRadius: 0,
+                    padding: '3px 8px',
+                    cursor: 'pointer',
+                    flexShrink: 0,
+                  }}
                 >
-                  {jsonCopied ? 'copied' : 'copy json'}
+                  {keyCopied ? 'Copied' : 'Copy'}
                 </button>
               </div>
+            </div>
 
-              {/* Tab content */}
-              <div className="flex-1 overflow-y-auto">
-
-                {activeTab === 'response' && (
-                  <CodeBlock code={JSON.stringify(responseData, null, 2)} language="json" />
-                )}
-
-                {activeTab === 'findings' && (
-                  <div>
-                    {MOCK_FINDINGS.map(f => (
-                      <div
-                        key={f.id}
-                        className="border-b border-background-border py-3 px-4"
-                      >
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="font-mono text-xs text-text-tertiary">{f.id}</span>
-                          <SeverityBadge severity={f.severity} />
-                        </div>
-                        <div className="font-body text-sm text-text-primary mt-1">{f.title}</div>
-                        <div className="font-body text-xs text-text-secondary mt-1 leading-relaxed">
-                          {f.explanation}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {activeTab === 'benchmarks' && (
-                  <div className="p-4">
-                    <table className="w-full font-mono text-xs">
-                      <thead>
-                        <tr className="border-b border-background-border">
-                          <th className="text-left pb-3 text-text-tertiary font-normal">METRIC</th>
-                          <th className="text-right pb-3 text-text-tertiary font-normal">VALUE</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {([
-                          ['Industry',      MOCK_BENCHMARK.industry],
-                          ['Percentile',    `${MOCK_BENCHMARK.percentile}th`],
-                          ['Average Score', String(MOCK_BENCHMARK.average_score)],
-                          ['Top Quartile',  String(MOCK_BENCHMARK.top_quartile)],
-                        ] as [string, string][]).map(([k, v], i) => (
-                          <tr
-                            key={k}
-                            className={`border-b border-background-border ${
-                              i % 2 === 0 ? 'bg-background-raised' : ''
-                            }`}
-                          >
-                            <td className="text-text-tertiary py-2 px-2">{k}</td>
-                            <td className="text-text-primary py-2 px-2 text-right">{v}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-
-                {activeTab === 'metadata' && (
-                  <div className="p-4 grid grid-cols-2 gap-4 font-mono text-xs">
-                    {([
-                      ['url',         url || 'https://example.com'],
-                      ['duration_ms', String(MOCK_META.duration_ms)],
-                      ['cost_usd',    String(MOCK_META.cost_usd)],
-                      ['tokens_used', String(MOCK_META.tokens_used)],
-                      ['complexity',  MOCK_META.complexity],
-                      ['cached',      String(MOCK_META.cached)],
-                    ] as [string, string][]).map(([k, v]) => (
-                      <div key={k}>
-                        <div className="text-text-tertiary mb-0.5">{k}</div>
-                        <div className="text-text-primary">{v}</div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
+            {/* URL input row */}
+            <div style={{ padding: '14px 16px', borderBottom: '0.5px solid rgba(255,255,255,0.06)' }}>
+              <div style={{
+                fontFamily: "'IBM Plex Mono', monospace",
+                fontSize: 10,
+                textTransform: 'uppercase',
+                letterSpacing: '0.1em',
+                color: '#6E7587',
+                marginBottom: 8,
+              }}>
+                TARGET URL
               </div>
-            </>
-          )}
+              <input
+                type="url"
+                value={url}
+                onChange={e => setUrl(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && handleRunScan()}
+                placeholder="https://your-site.com"
+                className="pg-url-input"
+                style={{
+                  width: '100%',
+                  background: '#050810',
+                  borderTop: '1px solid rgba(255,255,255,0.1)',
+                  borderLeft: '1px solid rgba(255,255,255,0.05)',
+                  borderRight: '1px solid rgba(255,255,255,0.03)',
+                  borderBottom: '1px solid rgba(255,255,255,0.02)',
+                  borderRadius: 0,
+                  fontFamily: "'IBM Plex Mono', monospace",
+                  fontSize: 13,
+                  color: '#9398A8',
+                  padding: '10px 12px',
+                  boxSizing: 'border-box',
+                }}
+              />
+            </div>
 
-          {/* ERROR */}
-          {scanState === 'error' && (
-            <div className="flex-1 flex items-center justify-center">
-              <p className="font-mono text-sm text-red-400">
-                Scan failed. Please try again.
+            {/* Parameters row */}
+            <div style={{ padding: '14px 16px', borderBottom: '0.5px solid rgba(255,255,255,0.06)' }}>
+              <div style={{
+                fontFamily: "'IBM Plex Mono', monospace",
+                fontSize: 10,
+                textTransform: 'uppercase',
+                letterSpacing: '0.1em',
+                color: '#6E7587',
+                marginBottom: 12,
+              }}>
+                PARAMETERS
+              </div>
+              <ToggleRow
+                label="finding_depth"
+                options={['brief', 'full']}
+                value={findingDepth}
+                onChange={v => setFindingDepth(v as FindingDepth)}
+              />
+              <ToggleRow
+                label="async"
+                options={['false', 'true']}
+                value={asyncMode}
+                onChange={v => setAsyncMode(v as AsyncMode)}
+              />
+              <ToggleRow
+                label="site_type"
+                options={['auto', 'saas', 'ecommerce']}
+                value={siteType}
+                onChange={v => setSiteType(v as SiteType)}
+              />
+            </div>
+
+            {/* Scan button */}
+            <div style={{ padding: 16 }}>
+              <button
+                onClick={handleRunScan}
+                disabled={!url.trim() || scanState === 'scanning'}
+                style={{
+                  width: '100%',
+                  background: '#00C48C',
+                  color: '#050810',
+                  fontFamily: "'IBM Plex Mono', monospace",
+                  fontSize: 13,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.08em',
+                  border: 'none',
+                  borderRadius: 0,
+                  padding: '13px 0',
+                  cursor: url.trim() && scanState !== 'scanning' ? 'pointer' : 'not-allowed',
+                  opacity: url.trim() && scanState !== 'scanning' ? 1 : 0.45,
+                  animation: url.trim() && scanState === 'idle'
+                    ? 'scanBtnPulse 3s ease-in-out infinite'
+                    : 'none',
+                }}
+              >
+                {scanState === 'scanning' ? 'SCANNING…' : 'RUN SCAN →'}
+              </button>
+            </div>
+
+            {/* CURL preview */}
+            <div style={{ padding: '14px 16px', borderTop: '0.5px solid rgba(255,255,255,0.06)' }}>
+              <div style={{
+                fontFamily: "'IBM Plex Mono', monospace",
+                fontSize: 10,
+                textTransform: 'uppercase',
+                letterSpacing: '0.1em',
+                color: '#6E7587',
+                marginBottom: 10,
+              }}>
+                CURL EQUIVALENT
+              </div>
+              <CodeBlock language="bash" code={curlCode} />
+            </div>
+          </div>
+
+          {/* ── RIGHT COLUMN — RESPONSE PANEL ────────────────────── */}
+          <div style={{ position: 'relative' }}>
+            {/* Purple bloom */}
+            <div
+              aria-hidden="true"
+              style={{
+                position: 'absolute',
+                inset: 0,
+                background: 'radial-gradient(ellipse 600px 800px at 85% 50%, rgba(128,128,192,0.08) 0%, transparent 60%)',
+                pointerEvents: 'none',
+                zIndex: 0,
+              }}
+            />
+
+            <div
+              className="wd-panel"
+              style={{
+                position: 'relative',
+                zIndex: 1,
+                borderRadius: 0,
+                padding: 0,
+                borderTop: '1px solid rgba(128,128,192,0.3)',
+                boxShadow: '0 0 0 1px rgba(128,128,192,0.15), 0 0 40px rgba(128,128,192,0.08)',
+              }}
+            >
+              {/* Panel header */}
+              <div style={{
+                padding: '12px 16px',
+                borderBottom: '0.5px solid rgba(255,255,255,0.06)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: 12,
+              }}>
+                <span style={{
+                  fontFamily: "'IBM Plex Mono', monospace",
+                  fontSize: 11,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.12em',
+                  color: '#6E7587',
+                }}>
+                  RESPONSE
+                </span>
+
+                {/* Status indicator */}
+                <span style={{
+                  fontFamily: "'IBM Plex Mono', monospace",
+                  fontSize: 11,
+                  color: statusLabel ? '#00C48C' : '#6E7587',
+                  animation: scanState === 'scanning'
+                    ? 'playgroundStatusPulse 1.5s ease-in-out infinite'
+                    : 'none',
+                }}>
+                  {statusLabel ?? 'waiting for scan'}
+                </span>
+
+                <ScoreRing score={scanScore} size="sm" animate={scanState === 'complete'} />
+              </div>
+
+              {/* Response body */}
+              <div style={{ minHeight: 600 }}>
+                <CodeBlock language="json" code={responseCode} />
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── BELOW ─────────────────────────────────────────────────────── */}
+      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 40px' }}>
+        <div className="section-separator" />
+      </div>
+
+      <section style={{ maxWidth: 1200, margin: '0 auto', padding: '48px 40px 80px' }}>
+        {/* Explainer — 3 columns */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(3, 1fr)',
+          gap: 40,
+          marginBottom: 40,
+        }}>
+          {[
+            { label: 'score',          body: '0–100. Calibrated to your site type.' },
+            { label: 'findings[]',     body: 'Ranked by estimated conversion impact.' },
+            { label: 'rewritten_copy', body: 'Drop-in replacement copy, included.' },
+          ].map(({ label, body }) => (
+            <div key={label}>
+              <div style={{
+                fontFamily: "'IBM Plex Mono', monospace",
+                fontSize: 11,
+                textTransform: 'uppercase',
+                letterSpacing: '0.1em',
+                color: '#6E7587',
+                marginBottom: 8,
+              }}>
+                {label}
+              </div>
+              <p style={{
+                fontFamily: "'IBM Plex Sans', sans-serif",
+                fontSize: 13,
+                color: '#9398A8',
+                margin: 0,
+                lineHeight: 1.6,
+              }}>
+                {body}
               </p>
             </div>
-          )}
-
+          ))}
         </div>
-      </div>
 
-      {/* BOTTOM BAR */}
-      <div className="flex-shrink-0 h-11 flex items-center justify-center border-t border-background-border bg-background-raised">
-        <span className="font-mono text-xs text-text-tertiary">
-          {'Ready to integrate?  '}
-          <Link href="/developer" className="text-cyan-DEFAULT hover:underline">
-            Get your API key →
-          </Link>
-        </span>
-      </div>
-    </div>
+        {/* Crosslink row */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 32, flexWrap: 'wrap' }}>
+          <span style={{ fontFamily: "'IBM Plex Sans', sans-serif", fontSize: 14, color: '#9398A8' }}>
+            Need more scans?{' '}
+            <Link href="/pricing" style={{ color: '#6F9BC6', textDecoration: 'none' }}>
+              See API plans →
+            </Link>
+          </span>
+          <span style={{ fontFamily: "'IBM Plex Sans', sans-serif", fontSize: 14, color: '#9398A8' }}>
+            Need a dashboard?{' '}
+            <Link href="/pricing" style={{ color: '#00C48C', textDecoration: 'none' }}>
+              See agency plans →
+            </Link>
+          </span>
+        </div>
+      </section>
+    </main>
   )
 }

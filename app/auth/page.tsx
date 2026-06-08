@@ -10,13 +10,14 @@ import Logo from "@/components/Logo";
 
 type AuthTab = "signin" | "create";
 
-const MONO = "var(--font-space-mono), monospace";
+const MONO = '"IBM Plex Mono", monospace';
+const DISP = '"Space Grotesk", sans-serif';
 
 const C = {
-  cyan: "#00C8FF",
-  labelMuted: "#8899AA",
+  green: "#00C48C",
+  labelMuted: "#6E7587",
   base: "#050810",
-  red: "#FF2D2D",
+  red: "#E8635F",
 } as const;
 
 function isValidEmail(s: string): boolean {
@@ -148,10 +149,10 @@ function AuthPageContent() {
     background: "rgba(255,255,255,0.04)",
     border: "1px solid rgba(255,255,255,0.1)",
     boxShadow: "none",
-    borderRadius: 6,
+    borderRadius: 0,
     padding: "0 14px",
     height: 42,
-    color: "#FFFFFF",
+    color: "#E6E9EE",
     fontFamily: MONO,
     fontWeight: 400,
     fontSize: 13,
@@ -311,8 +312,8 @@ function AuthPageContent() {
   }
 
   const inputFocus = (e: React.FocusEvent<HTMLInputElement>) => {
-    e.currentTarget.style.border = "1px solid rgba(0,200,255,0.4)";
-    e.currentTarget.style.boxShadow = "0 0 0 3px rgba(0,200,255,0.08)";
+    e.currentTarget.style.border = "1px solid rgba(0,196,140,0.5)";
+    e.currentTarget.style.boxShadow = "0 0 0 3px rgba(0,196,140,0.06)";
     e.currentTarget.style.outline = "none";
   };
   const inputBlur = (e: React.FocusEvent<HTMLInputElement>) => {
@@ -326,8 +327,8 @@ function AuthPageContent() {
     <>
       <style>{`
         .auth-input::placeholder {
-          color: #8899AA;
-          font-family: var(--font-space-mono), monospace;
+          color: #6E7587;
+          font-family: "IBM Plex Mono", monospace;
           font-size: 12px;
           opacity: 1;
         }
@@ -356,11 +357,14 @@ function AuthPageContent() {
             zIndex: 10,
             width: "100%",
             maxWidth: 400,
-            background: "rgba(5,8,16,0.75)",
+            background: "rgba(10,14,24,0.92)",
             backdropFilter: "blur(12px)",
             WebkitBackdropFilter: "blur(12px)",
-            border: "1px solid rgba(0,200,255,0.12)",
-            borderRadius: 8,
+            borderTop: "1px solid rgba(255,255,255,0.12)",
+            borderRight: "1px solid rgba(255,255,255,0.07)",
+            borderBottom: "1px solid rgba(255,255,255,0.04)",
+            borderLeft: "1px solid rgba(255,255,255,0.07)",
+            borderRadius: 0,
             padding: "28px 32px",
             display: "flex",
             flexDirection: "column",
@@ -373,16 +377,16 @@ function AuthPageContent() {
                 <span
                   aria-hidden
                   style={{
-                    width: 6,
-                    height: 6,
-                    borderRadius: "50%",
-                    background: C.cyan,
+                    width: 5,
+                    height: 5,
+                    borderRadius: 0,
+                    background: C.green,
                     flexShrink: 0,
                     display: "inline-block",
                     animation: "authPulseDot 1.5s ease-in-out infinite",
                   }}
                 />
-                <span style={{ fontFamily: MONO, color: C.cyan, fontSize: 10, letterSpacing: "0.12em" }}>
+                <span style={{ fontFamily: MONO, color: C.green, fontSize: 10, letterSpacing: "0.12em" }}>
                   DIAGNOSTIC QUEUED — {pendingDomain}
                 </span>
               </span>
@@ -402,7 +406,7 @@ function AuthPageContent() {
             <Logo />
             <span
               style={{
-                fontFamily: "var(--font-orbitron), sans-serif",
+                fontFamily: DISP,
                 fontSize: 16,
                 fontWeight: 700,
                 lineHeight: 1,
@@ -410,8 +414,8 @@ function AuthPageContent() {
                 display: "flex",
               }}
             >
-              <span style={{ color: "#FFFFFF" }}>webdoc</span>
-              <span style={{ color: C.cyan }}>ai</span>
+              <span style={{ color: "#E6E9EE" }}>webdoc</span>
+              <span style={{ color: C.green }}>ai</span>
             </span>
           </div>
 
@@ -470,7 +474,7 @@ function AuthPageContent() {
               gap: 10,
               width: "100%",
               height: 46,
-              borderRadius: 6,
+              borderRadius: 0,
               background: "rgba(255,255,255,0.05)",
               border: "1px solid rgba(255,255,255,0.12)",
               boxShadow: "none",
@@ -485,8 +489,8 @@ function AuthPageContent() {
             }}
             onMouseEnter={(e) => {
               if (isSubmitting || isGoogleLoading) return;
-              e.currentTarget.style.background = "rgba(0,200,255,0.04)";
-              e.currentTarget.style.borderColor = "rgba(0,200,255,0.25)";
+              e.currentTarget.style.background = "rgba(0,196,140,0.04)";
+              e.currentTarget.style.borderColor = "rgba(0,196,140,0.2)";
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.background = "rgba(255,255,255,0.05)";
@@ -589,7 +593,7 @@ function AuthPageContent() {
               <Link
                 href="/auth/forgot-password"
                 style={{ fontFamily: MONO, fontSize: 10, color: C.labelMuted, textDecoration: "none" }}
-                onMouseEnter={(e) => { e.currentTarget.style.color = C.cyan; }}
+                onMouseEnter={(e) => { e.currentTarget.style.color = C.green; }}
                 onMouseLeave={(e) => { e.currentTarget.style.color = C.labelMuted; }}
               >
                 Forgot password?
@@ -605,11 +609,11 @@ function AuthPageContent() {
             style={{
               width: "100%",
               height: 46,
-              borderRadius: 6,
+              borderRadius: 0,
               background: "transparent",
-              border: "1px solid #00C8FF",
+              border: "1px solid #00C48C",
               boxShadow: "none",
-              color: C.cyan,
+              color: C.green,
               fontFamily: MONO,
               fontSize: 13,
               fontWeight: 700,
@@ -621,7 +625,7 @@ function AuthPageContent() {
               transition: "background 150ms ease",
             }}
             onMouseEnter={(e) => {
-              if (!isSubmitting) e.currentTarget.style.background = "rgba(0,200,255,0.08)";
+              if (!isSubmitting) e.currentTarget.style.background = "rgba(0,196,140,0.08)";
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.background = "transparent";
@@ -646,7 +650,7 @@ function AuthPageContent() {
                   <span
                     role="button"
                     tabIndex={0}
-                    style={{ color: C.cyan, cursor: "pointer" }}
+                    style={{ color: C.green, cursor: "pointer" }}
                     onClick={() => switchTab("create")}
                     onKeyDown={(e) => { if (e.key === "Enter") switchTab("create"); }}
                   >
@@ -659,7 +663,7 @@ function AuthPageContent() {
                   <span
                     role="button"
                     tabIndex={0}
-                    style={{ color: C.cyan, cursor: "pointer" }}
+                    style={{ color: C.green, cursor: "pointer" }}
                     onClick={() => switchTab("signin")}
                     onKeyDown={(e) => { if (e.key === "Enter") switchTab("signin"); }}
                   >
@@ -684,11 +688,11 @@ function AuthPageContent() {
               }}
             >
               By creating an account you agree to our{" "}
-              <Link href="/terms" style={{ color: C.cyan, textDecoration: "none" }}>
+              <Link href="/terms" style={{ color: C.green, textDecoration: "none" }}>
                 Terms of Service
               </Link>{" "}
               and{" "}
-              <Link href="/privacy" style={{ color: C.cyan, textDecoration: "none" }}>
+              <Link href="/privacy" style={{ color: C.green, textDecoration: "none" }}>
                 Privacy Policy
               </Link>
               .

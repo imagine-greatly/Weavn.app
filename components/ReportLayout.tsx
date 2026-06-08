@@ -617,7 +617,7 @@ export default function ReportLayout({
             width: 100% !important;
             height: auto !important;
             border-right: none !important;
-            border-bottom: 1px solid #0D1626 !important;
+            border-bottom: 1px solid rgba(255,255,255,0.06) !important;
             box-shadow: none !important;
           }
           .report-right-shell {
@@ -627,7 +627,7 @@ export default function ReportLayout({
         }
       `}</style>
 
-      {/* Ambient cyan spotlight — top left */}
+      {/* Ambient purple spotlight — top left */}
       <div
         style={{
           position: "fixed",
@@ -637,14 +637,14 @@ export default function ReportLayout({
           height: 500,
           borderRadius: "50%",
           background:
-            "radial-gradient(ellipse, rgba(0,200,255,0.05) 0%, transparent 70%)",
+            "radial-gradient(ellipse, rgba(128,128,192,0.04) 0%, transparent 70%)",
           pointerEvents: "none",
           zIndex: 0,
         }}
         aria-hidden
       />
 
-      {/* Ambient cyan spotlight — bottom right */}
+      {/* Ambient purple spotlight — bottom right */}
       <div
         style={{
           position: "fixed",
@@ -654,7 +654,7 @@ export default function ReportLayout({
           height: 600,
           borderRadius: "50%",
           background:
-            "radial-gradient(ellipse, rgba(0,200,255,0.04) 0%, transparent 70%)",
+            "radial-gradient(ellipse, rgba(128,128,192,0.03) 0%, transparent 70%)",
           pointerEvents: "none",
           zIndex: 0,
           animation: "neuralDrift 20s ease-in-out infinite reverse",
@@ -671,7 +671,7 @@ export default function ReportLayout({
           right: 0,
           height: 1,
           background:
-            "linear-gradient(90deg, transparent 0%, rgba(0,200,255,0.15) 30%, rgba(0,200,255,0.3) 50%, rgba(0,200,255,0.15) 70%, transparent 100%)",
+            "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.06) 30%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.06) 70%, transparent 100%)",
           pointerEvents: "none",
           zIndex: 1,
         }}
@@ -686,8 +686,8 @@ export default function ReportLayout({
           left: 0,
           width: 20,
           height: 20,
-          borderTop: "1px solid rgba(0,200,255,0.2)",
-          borderLeft: "1px solid rgba(0,200,255,0.2)",
+          borderTop: "1px solid rgba(255,255,255,0.1)",
+          borderLeft: "1px solid rgba(255,255,255,0.1)",
           pointerEvents: "none",
           zIndex: 3,
         }}
@@ -700,8 +700,8 @@ export default function ReportLayout({
           right: 0,
           width: 20,
           height: 20,
-          borderTop: "1px solid rgba(0,200,255,0.2)",
-          borderRight: "1px solid rgba(0,200,255,0.2)",
+          borderTop: "1px solid rgba(255,255,255,0.1)",
+          borderRight: "1px solid rgba(255,255,255,0.1)",
           pointerEvents: "none",
           zIndex: 3,
         }}
@@ -714,8 +714,8 @@ export default function ReportLayout({
           left: 0,
           width: 20,
           height: 20,
-          borderBottom: "1px solid rgba(0,200,255,0.2)",
-          borderLeft: "1px solid rgba(0,200,255,0.2)",
+          borderBottom: "1px solid rgba(255,255,255,0.1)",
+          borderLeft: "1px solid rgba(255,255,255,0.1)",
           pointerEvents: "none",
           zIndex: 3,
         }}
@@ -728,8 +728,8 @@ export default function ReportLayout({
           right: 0,
           width: 20,
           height: 20,
-          borderBottom: "1px solid rgba(0,200,255,0.2)",
-          borderRight: "1px solid rgba(0,200,255,0.2)",
+          borderBottom: "1px solid rgba(255,255,255,0.1)",
+          borderRight: "1px solid rgba(255,255,255,0.1)",
           pointerEvents: "none",
           zIndex: 3,
         }}

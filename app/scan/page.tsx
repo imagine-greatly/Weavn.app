@@ -57,7 +57,16 @@ interface ScanResult {
   }
 }
 
-// ── Constants ─────────────────────────────────────────────────────────────────
+// ── Phases ────────────────────────────────────────────────────────────────────
+
+const PHASES = [
+  { label: 'URL validated',                             completeAt: 1 },
+  { label: 'Page rendered (headless Chrome)',           completeAt: 2 },
+  { label: 'Site classified (SaaS / ecommerce / service)', completeAt: 3 },
+  { label: 'Running 307 checks…',                 completeAt: 9 },
+  { label: 'Scoring and benchmarking',                 completeAt: 10 },
+  { label: 'Generating findings',                      completeAt: 11 },
+] as const
 
 const PROGRESS_LABELS = [
   'Rendering page via headless browser...',
@@ -71,7 +80,7 @@ const PROGRESS_LABELS = [
   'Benchmarking against corpus...',
   'Compiling strengths and priority findings...',
   'Generating structured output...',
-]
+] as const
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -179,9 +188,9 @@ function buildMockData(url: string, domain: string): ScanResult {
 
 export default function ScanPage() {
   const router = useRouter()
-  const [scanState, setScanState]       = useState<ScanState>('idle')
-  const [url, setUrl]                   = useState('')
-  const [visibleItems, setVisibleItems] = useState(0)
+  const [scanState, setScanState]           = useState<ScanState>('idle')
+  const [url, setUrl]                       = useState('')
+  const [visibleItems, setVisibleItems]     = useState(0)
   const [showInitiating, setShowInitiating] = useState(false)
   const [initiatingVisible, setInitiatingVisible] = useState(false)
 
@@ -235,81 +244,165 @@ export default function ScanPage() {
     }, 1500)
   }
 
-  // ── INITIATING OVERLAY ─────────────────────────────────────────────────────
+  // ── INITIATING OVERLAY ────────────────────────────────────────────────────
 
   if (showInitiating) {
     return (
       <div
-        className="fixed inset-0 z-50 flex items-center justify-center bg-background-base"
+        className="fixed inset-0 z-50 flex items-center justify-center"
         style={{
+          background: '#050810',
           opacity: initiatingVisible ? 1 : 0,
           transition: 'opacity 300ms ease',
         }}
       >
         <div className="text-center">
-          <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest">
+          <div style={{
+            fontFamily: "'IBM Plex Mono', monospace",
+            fontSize: 10,
+            textTransform: 'uppercase',
+            letterSpacing: '0.18em',
+            color: '#6E7587',
+            marginBottom: 12,
+          }}>
             INITIATING DIAGNOSTIC
           </div>
-          <div className="font-mono text-sm text-cyan-DEFAULT mt-2">
+          <div style={{
+            fontFamily: "'IBM Plex Mono', monospace",
+            fontSize: 14,
+            color: '#00C48C',
+            marginBottom: 6,
+          }}>
             POST /api/v1/scan
           </div>
-          <div className="font-mono text-xs text-text-tertiary mt-1">
+          <div style={{
+            fontFamily: "'IBM Plex Mono', monospace",
+            fontSize: 12,
+            color: '#6E7587',
+            marginBottom: 2,
+          }}>
             → url: {domainRef.current}
           </div>
-          <div className="font-mono text-xs text-text-tertiary">
+          <div style={{
+            fontFamily: "'IBM Plex Mono', monospace",
+            fontSize: 12,
+            color: '#6E7587',
+            marginBottom: 10,
+          }}>
             → checks: 307
           </div>
-          <div className="font-mono text-xs text-text-tertiary mt-1 flex items-center justify-center gap-1">
+          <div style={{
+            fontFamily: "'IBM Plex Mono', monospace",
+            fontSize: 12,
+            color: '#6E7587',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 4,
+          }}>
             <span>→ classifying site...</span>
-            <span style={{ animation: 'terminalBlink 1s step-end infinite' }} className="text-cyan-DEFAULT">▋</span>
+            <span style={{ animation: 'terminalBlink 1s step-end infinite', color: '#00C48C' }}>▋</span>
           </div>
         </div>
       </div>
     )
   }
 
-  // ── IDLE ───────────────────────────────────────────────────────────────────
+  // ── IDLE ──────────────────────────────────────────────────────────────────
 
   if (scanState === 'idle') {
     return (
       <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center px-6">
-        <div className="max-w-lg w-full mx-auto text-center">
+        <div style={{ maxWidth: 480, width: '100%', margin: '0 auto', textAlign: 'center' }}>
 
-          <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mb-6">
+          <div style={{
+            fontFamily: "'IBM Plex Mono', monospace",
+            fontSize: 10,
+            textTransform: 'uppercase',
+            letterSpacing: '0.18em',
+            color: '#6E7587',
+            marginBottom: 24,
+          }}>
             FREE CONVERSION SCAN
           </div>
 
-          <h1 className="font-display font-bold text-4xl text-text-primary leading-tight mb-4">
+          <h1 style={{
+            fontFamily: "'Space Grotesk', sans-serif",
+            fontWeight: 700,
+            fontSize: 36,
+            color: '#E6E9EE',
+            lineHeight: 1.2,
+            marginBottom: 16,
+          }}>
             What&apos;s killing your conversions?
           </h1>
 
-          <p className="font-body text-base text-text-secondary mb-10">
+          <p style={{
+            fontFamily: "'IBM Plex Sans', sans-serif",
+            fontSize: 15,
+            color: '#9398A8',
+            lineHeight: 1.6,
+            marginBottom: 36,
+          }}>
             Paste your URL. Get a clinical diagnostic in ~90 seconds. Free. No account required.
           </p>
 
-          <div className="flex">
+          <div style={{ display: 'flex' }}>
             <input
               type="url"
               value={url}
               onChange={e => setUrl(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && handleScan()}
               placeholder="https://yoursite.com"
-              className="flex-1 bg-background-raised border border-background-border font-mono text-sm text-text-primary px-4 py-3 focus:border-cyan-DEFAULT focus:outline-none placeholder:text-text-tertiary"
+              style={{
+                flex: 1,
+                background: '#0A0E18',
+                border: '1px solid #1C1C2E',
+                borderRight: 'none',
+                fontFamily: "'IBM Plex Mono', monospace",
+                fontSize: 13,
+                color: '#E6E9EE',
+                padding: '12px 16px',
+                borderRadius: 0,
+                outline: 'none',
+              }}
             />
             <button
               onClick={handleScan}
               disabled={!url.trim()}
-              className="bg-cyan-DEFAULT text-background-base font-mono text-sm font-bold px-6 py-3 cursor-pointer hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0"
+              style={{
+                background: '#00C48C',
+                color: '#050810',
+                fontFamily: "'IBM Plex Mono', monospace",
+                fontSize: 13,
+                textTransform: 'uppercase',
+                letterSpacing: '0.06em',
+                border: 'none',
+                borderRadius: 0,
+                padding: '12px 20px',
+                cursor: url.trim() ? 'pointer' : 'not-allowed',
+                opacity: url.trim() ? 1 : 0.45,
+                flexShrink: 0,
+              }}
             >
               SCAN MY SITE
             </button>
           </div>
 
-          <div className="flex items-center justify-center gap-1.5 mt-4 font-mono text-xs text-text-tertiary">
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 8,
+            marginTop: 14,
+            fontFamily: "'IBM Plex Mono', monospace",
+            fontSize: 11,
+            color: '#6E7587',
+          }}>
             <span>307 checks</span>
-            <span className="opacity-40">·</span>
+            <span style={{ opacity: 0.4 }}>·</span>
             <span>~90 seconds</span>
-            <span className="opacity-40">·</span>
+            <span style={{ opacity: 0.4 }}>·</span>
             <span>No account needed</span>
           </div>
 
@@ -318,88 +411,138 @@ export default function ScanPage() {
     )
   }
 
-  // ── SCANNING ───────────────────────────────────────────────────────────────
+  // ── SCANNING ──────────────────────────────────────────────────────────────
+
+  const firstIncompleteIdx = PHASES.findIndex(p => p.completeAt > visibleItems)
 
   return (
     <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center px-6">
       <style>{`
         @keyframes waveBar {
-          from { height: 8px; }
-          to   { height: 40px; }
-        }
-        @keyframes itemPulse {
-          0%, 100% { opacity: 1; }
-          50%      { opacity: 0.5; }
+          from { height: 6px; }
+          to   { height: 36px; }
         }
         @keyframes beamSweep {
-          0%   { left: -20%; }
-          100% { left: 110%; }
+          0%   { left: -22%; opacity: 0; }
+          10%  { opacity: 1; }
+          90%  { opacity: 1; }
+          100% { left: 112%; opacity: 0; }
+        }
+        @keyframes phasePulse {
+          0%, 100% { opacity: 1; }
+          50%      { opacity: 0.45; }
+        }
+        @keyframes ambPulse {
+          0%, 100% { box-shadow: 0 0 0 0 rgba(0,196,140,0.4); }
+          50%      { box-shadow: 0 0 0 3px rgba(0,196,140,0); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .scan-waveform-bar { animation-duration: 4s !important; }
+          .scan-beam { animation-duration: 5s !important; opacity: 0.3 !important; }
+        }
+        @media (max-width: 640px) {
+          .scan-waveform-wrap { height: 40px !important; }
+          .scan-waveform-bar  { max-height: 28px !important; }
         }
       `}</style>
 
-      <div className="max-w-sm w-full mx-auto text-center">
+      <div style={{ maxWidth: 400, width: '100%', margin: '0 auto', textAlign: 'center' }}>
 
         {/* Domain */}
-        <div className="font-mono text-sm text-text-secondary mb-8">
-          Scanning {domainRef.current}...
+        <div style={{
+          fontFamily: "'IBM Plex Mono', monospace",
+          fontSize: 13,
+          color: '#00C48C',
+          marginBottom: 28,
+        }}>
+          {domainRef.current}
         </div>
 
         {/* Waveform with beam overlay */}
         <div
-          className="relative w-full max-w-full flex items-center justify-center mb-10 overflow-hidden"
-          style={{ gap: 4, height: 60 }}
+          className="scan-waveform-wrap"
+          style={{
+            position: 'relative',
+            width: '100%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 4,
+            height: 56,
+            marginBottom: 36,
+            overflow: 'hidden',
+          }}
         >
           {Array.from({ length: 20 }, (_, i) => (
             <div
               key={i}
+              className="scan-waveform-bar"
               style={{
-                width:           3,
-                borderRadius:    2,
-                backgroundColor: '#00C8FF',
-                animation:       `waveBar 1.2s ease-in-out ${Math.round((i / 19) * 800)}ms infinite alternate`,
+                width: 3,
+                borderRadius: 0,
+                backgroundColor: '#6F9BC6',
+                animation: `waveBar 1.2s ease-in-out ${Math.round((i / 19) * 800)}ms infinite alternate`,
+                flexShrink: 0,
               }}
             />
           ))}
-          {/* Alternating left→right→left beam sweep */}
+          {/* Seamless beam sweep — fades in from left, fades out right, loops */}
           <div
+            className="scan-beam"
             style={{
-              position:        'absolute',
-              top:             0,
-              width:           '20%',
-              height:          '100%',
-              background:      'linear-gradient(90deg, transparent 0%, rgba(0,200,255,0.25) 50%, transparent 100%)',
-              animation:       'beamSweep 1.8s ease-in-out infinite alternate',
-              pointerEvents:   'none',
+              position: 'absolute',
+              top: 0,
+              left: '-22%',
+              width: '22%',
+              height: '100%',
+              background: 'linear-gradient(90deg, transparent 0%, rgba(111,155,198,0.22) 50%, transparent 100%)',
+              animation: 'beamSweep 2.5s ease-in-out infinite',
+              pointerEvents: 'none',
             }}
           />
         </div>
 
-        {/* Progress items */}
-        <div className="text-left inline-block">
-          {PROGRESS_LABELS.slice(0, visibleItems).map((label, i) => {
-            const isComplete = i < visibleItems - 1
-            const isCurrent  = i === visibleItems - 1
+        {/* Phase indicator */}
+        <div style={{ textAlign: 'left', display: 'inline-block', minWidth: 260 }}>
+          {PHASES.map((phase, idx) => {
+            const isDone   = phase.completeAt <= visibleItems
+            const isActive = !isDone && idx === firstIncompleteIdx
+            const isPending = !isDone && !isActive
+
+            const squareColor = isDone   ? '#00C48C'
+                              : isActive ? '#EFB23E'
+                              :            '#3A3A52'
+
+            const labelColor = isDone   ? '#9398A8'
+                             : isActive ? '#E6E9EE'
+                             :            '#6E7587'
+
             return (
               <div
-                key={i}
-                className="flex items-center gap-2 mb-2"
-                style={isCurrent ? { animation: 'itemPulse 1.5s ease-in-out infinite' } : {}}
+                key={idx}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 10,
+                  marginBottom: 8,
+                  animation: isActive ? 'phasePulse 1.5s ease-in-out infinite' : 'none',
+                }}
               >
-                <span
-                  className={`font-mono text-xs w-4 flex-shrink-0 ${
-                    isComplete ? 'text-green-400' : 'text-transparent'
-                  }`}
-                >
-                  ✓
-                </span>
-                <span
-                  className={`font-mono text-xs ${
-                    isComplete ? 'text-text-secondary' :
-                    isCurrent  ? 'text-text-primary'   :
-                                 'text-text-tertiary'
-                  }`}
-                >
-                  {label}
+                <div
+                  style={{
+                    width: 5,
+                    height: 5,
+                    background: squareColor,
+                    flexShrink: 0,
+                    animation: isActive ? 'ambPulse 1.5s ease-in-out infinite' : 'none',
+                  }}
+                />
+                <span style={{
+                  fontFamily: "'IBM Plex Mono', monospace",
+                  fontSize: 12,
+                  color: labelColor,
+                }}>
+                  {phase.label}
                 </span>
               </div>
             )

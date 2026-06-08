@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { CodeBlock } from '@/components/ui/CodeBlock'
 import { Stat } from '@/components/ui/Stat'
+import { ScoreRing } from '@/components/ui/ScoreRing'
 
 // ── Data ──────────────────────────────────────────────────────────────────────
 
@@ -135,6 +136,12 @@ export default function ProductPage() {
           Every scan runs 307 diagnostic checks across 27 categories, classified by site type, scored
           against a corpus of real sites.
         </p>
+        {/* Stat row */}
+        <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '0 64px', marginTop: 48 }}>
+          <Stat value="307" label="Checks per scan" verdict="neutral" />
+          <Stat value="27" label="Diagnostic categories" verdict="neutral" />
+          <Stat value="7" label="Scoring dimensions" verdict="neutral" />
+        </div>
       </section>
       <div className="section-separator" />
 
@@ -180,6 +187,19 @@ export default function ProductPage() {
 
             {/* Right: category chips + legend */}
             <div>
+              {/* Grid header */}
+              <div style={{
+                fontFamily: '"IBM Plex Mono", monospace',
+                fontSize: 11,
+                textTransform: 'uppercase',
+                letterSpacing: '0.15em',
+                color: '#6E7587',
+                marginBottom: 12,
+                paddingBottom: 8,
+                borderBottom: '0.5px solid rgba(255,255,255,0.05)',
+              }}>
+                DIAGNOSTIC COVERAGE · 27 CATEGORIES · SITE-TYPE GATED
+              </div>
               <div className="grid grid-cols-3 gap-2">
                 {CATEGORIES.map((cat) => {
                   const s = TIER_STYLES[cat.tier]
@@ -241,12 +261,41 @@ export default function ProductPage() {
             What happens between POST and response.
           </h2>
 
-          <div>
-            {PIPELINE_STEPS.map((step, i) => (
-              <div key={step.num} className="flex gap-6">
+          {/* Pipeline with continuous vertical spine */}
+          <div style={{ position: 'relative' }}>
+            {/* Full-height spine line */}
+            <div
+              aria-hidden
+              style={{
+                position: 'absolute',
+                left: 15,
+                top: 24,
+                bottom: 24,
+                width: 2,
+                background: 'rgba(111,155,198,0.15)',
+                zIndex: 0,
+              }}
+            />
+            {PIPELINE_STEPS.map((step) => (
+              <div key={step.num} className="flex gap-6" style={{ position: 'relative', zIndex: 1 }}>
 
-                {/* Left: step number + connector */}
-                <div className="flex flex-col items-center flex-shrink-0" style={{ width: 32 }}>
+                {/* Left: step number with horizontal tick from spine */}
+                <div
+                  className="flex-shrink-0"
+                  style={{ width: 32, paddingTop: 24, position: 'relative' }}
+                >
+                  {/* Horizontal tick */}
+                  <div
+                    aria-hidden
+                    style={{
+                      position: 'absolute',
+                      left: 17,
+                      top: 30,
+                      width: 16,
+                      height: 1,
+                      background: 'rgba(111,155,198,0.25)',
+                    }}
+                  />
                   <span
                     style={{
                       fontFamily: '"IBM Plex Mono", monospace',
@@ -255,16 +304,13 @@ export default function ProductPage() {
                       color: '#6F9BC6',
                       letterSpacing: '0.15em',
                       lineHeight: 1,
+                      display: 'block',
+                      background: '#080D18',
+                      paddingRight: 4,
                     }}
                   >
                     {step.num}
                   </span>
-                  {i < PIPELINE_STEPS.length - 1 && (
-                    <div
-                      className="flex-1 mt-2"
-                      style={{ width: 1, background: 'rgba(111,155,198,0.15)', minHeight: 24 }}
-                    />
-                  )}
                 </div>
 
                 {/* Right: wd-panel step card */}
@@ -387,148 +433,81 @@ export default function ProductPage() {
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 
+          {/* Founder card */}
           <div className="wd-panel flex flex-col" style={{ padding: 32 }}>
-            <div
-              style={{
-                fontFamily: '"IBM Plex Mono", monospace',
-                fontSize: 11,
-                textTransform: 'uppercase',
-                letterSpacing: '0.1em',
-                color: '#6E7587',
-                marginBottom: 16,
-              }}
-            >
+            <div style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#6E7587', marginBottom: 16 }}>
               FOR FOUNDERS
             </div>
             <p className="font-body text-sm leading-relaxed text-text-secondary flex-1">
               Paste your URL. Get a full conversion audit in 90 seconds — score, ranked findings,
               strengths, and how you compare against your category. Free to start.
             </p>
-            <div style={{ marginTop: 32 }}>
-              <Link
-                href="/scan"
-                style={{
-                  display: 'block',
-                  textAlign: 'center',
-                  fontFamily: '"IBM Plex Mono", monospace',
-                  fontSize: 13,
-                  border: '0.5px solid #00C48C',
-                  color: '#00C48C',
-                  padding: '12px 0',
-                  textDecoration: 'none',
-                  transition: 'opacity 0.15s',
-                }}
-              >
-                Scan my site free →
-              </Link>
-              <p
-                style={{
-                  fontFamily: '"IBM Plex Mono", monospace',
-                  fontSize: 11,
-                  textAlign: 'center',
-                  marginTop: 8,
-                  color: '#6E7587',
-                }}
-              >
-                Free · No account required
-              </p>
+            {/* Artifact: ScoreRing */}
+            <div style={{ display: 'flex', justifyContent: 'center', padding: '24px 0', borderTop: '0.5px solid rgba(255,255,255,0.06)', marginTop: 24 }}>
+              <ScoreRing score={61} size="lg" label="SCORE" animate />
             </div>
+            <Link
+              href="/scan"
+              style={{ display: 'block', textAlign: 'center', fontFamily: '"IBM Plex Mono", monospace', fontSize: 13, border: '0.5px solid #00C48C', color: '#00C48C', padding: '12px 0', textDecoration: 'none' }}
+            >
+              Scan my site free →
+            </Link>
+            <p style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, textAlign: 'center', marginTop: 8, color: '#6E7587' }}>Free · No account required</p>
           </div>
 
+          {/* Agency card */}
           <div className="wd-panel flex flex-col" style={{ padding: 32 }}>
-            <div
-              style={{
-                fontFamily: '"IBM Plex Mono", monospace',
-                fontSize: 11,
-                textTransform: 'uppercase',
-                letterSpacing: '0.1em',
-                color: '#6E7587',
-                marginBottom: 16,
-              }}
-            >
+            <div style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#6E7587', marginBottom: 16 }}>
               FOR AGENCIES
             </div>
             <p className="font-body text-sm leading-relaxed text-text-secondary flex-1">
               Run client audits at scale. White-label report links, client workspaces, multi-page
               scanning. Show up to every call with data.
             </p>
-            <div style={{ marginTop: 32 }}>
-              <Link
-                href="/pricing"
-                style={{
-                  display: 'block',
-                  textAlign: 'center',
-                  fontFamily: '"IBM Plex Mono", monospace',
-                  fontSize: 13,
-                  border: '0.5px solid #00C48C',
-                  color: '#00C48C',
-                  padding: '12px 0',
-                  textDecoration: 'none',
-                  transition: 'opacity 0.15s',
-                }}
-              >
-                See agency plans →
-              </Link>
-              <p
-                style={{
-                  fontFamily: '"IBM Plex Mono", monospace',
-                  fontSize: 11,
-                  textAlign: 'center',
-                  marginTop: 8,
-                  color: '#6E7587',
-                }}
-              >
-                From $149/mo · 14-day trial
-              </p>
+            {/* Artifact: two data rows */}
+            <div style={{ padding: '20px 0', borderTop: '0.5px solid rgba(255,255,255,0.06)', marginTop: 24, display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {[
+                { key: 'score', value: '61', color: '#00C48C' },
+                { key: 'findings', value: '23', color: '#EFB23E' },
+              ].map(({ key, value, color }) => (
+                <div key={key} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 12, color: '#8080C0' }}>{key}</span>
+                  <span style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 13, color }}>{value}</span>
+                </div>
+              ))}
             </div>
+            <Link
+              href="/pricing"
+              style={{ display: 'block', textAlign: 'center', fontFamily: '"IBM Plex Mono", monospace', fontSize: 13, border: '0.5px solid #00C48C', color: '#00C48C', padding: '12px 0', textDecoration: 'none' }}
+            >
+              See agency plans →
+            </Link>
+            <p style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, textAlign: 'center', marginTop: 8, color: '#6E7587' }}>From $149/mo · 14-day trial</p>
           </div>
 
+          {/* Developer card */}
           <div className="wd-panel flex flex-col" style={{ padding: 32 }}>
-            <div
-              style={{
-                fontFamily: '"IBM Plex Mono", monospace',
-                fontSize: 11,
-                textTransform: 'uppercase',
-                letterSpacing: '0.1em',
-                color: '#6E7587',
-                marginBottom: 16,
-              }}
-            >
+            <div style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#6E7587', marginBottom: 16 }}>
               FOR DEVELOPERS
             </div>
             <p className="font-body text-sm leading-relaxed text-text-secondary flex-1">
               POST a URL, get structured JSON. Batch endpoint, async mode, webhooks. Integrate
               conversion intelligence into your product in an afternoon.
             </p>
-            <div style={{ marginTop: 32 }}>
-              <Link
-                href="/developers"
-                style={{
-                  display: 'block',
-                  textAlign: 'center',
-                  fontFamily: '"IBM Plex Mono", monospace',
-                  fontSize: 13,
-                  border: '0.5px solid #00C48C',
-                  color: '#00C48C',
-                  padding: '12px 0',
-                  textDecoration: 'none',
-                  transition: 'opacity 0.15s',
-                }}
-              >
-                Get API key →
-              </Link>
-              <p
-                style={{
-                  fontFamily: '"IBM Plex Mono", monospace',
-                  fontSize: 11,
-                  textAlign: 'center',
-                  marginTop: 8,
-                  color: '#6E7587',
-                }}
-              >
-                $0.15/scan · No monthly fee
-              </p>
+            {/* Artifact: 4-line JSON */}
+            <div style={{ marginTop: 24, borderTop: '0.5px solid rgba(255,255,255,0.06)', paddingTop: 20 }}>
+              <CodeBlock
+                language="json"
+                code={`{\n  "url": "https://your-site.com",\n  "finding_depth": "full"\n}`}
+              />
             </div>
+            <Link
+              href="/developers"
+              style={{ display: 'block', textAlign: 'center', fontFamily: '"IBM Plex Mono", monospace', fontSize: 13, border: '0.5px solid #00C48C', color: '#00C48C', padding: '12px 0', textDecoration: 'none', marginTop: 16 }}
+            >
+              Get API key →
+            </Link>
+            <p style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, textAlign: 'center', marginTop: 8, color: '#6E7587' }}>$0.15/scan · No monthly fee</p>
           </div>
 
         </div>
@@ -546,6 +525,9 @@ export default function ProductPage() {
         }
       `}</style>
       <section style={{ padding: '64px 32px', textAlign: 'center' }}>
+        <div style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, color: '#6E7587', textTransform: 'uppercase', letterSpacing: '0.15em', marginBottom: 16 }}>
+          POST /api/v1/scan
+        </div>
         <h2
           className="font-score"
           style={{

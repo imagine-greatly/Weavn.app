@@ -4,19 +4,18 @@ import { useEffect, useState, type CSSProperties } from "react";
 import Link from "next/link";
 import { getSupabaseBrowserClient } from "@/lib/supabaseBrowser";
 
-const MONO = 'var(--font-jetbrains-mono), var(--font-space-mono), monospace';
-const GROTESK = 'var(--font-space-grotesk), sans-serif';
-const ORBITRON = 'var(--font-orbitron), sans-serif';
+const MONO = '"IBM Plex Mono", monospace';
+const DISP = '"Space Grotesk", sans-serif';
 
 const C = {
-  cyan: "#00C8FF",
-  surface: "#070C14",
-  card: "#0D1020",
-  border: "#1C1C2E",
-  primary: "#F0F4FF",
-  secondary: "#8E8EA0",
+  green: "#00C48C",
+  surface: "#070B15",
+  card: "#0A0E18",
+  border: "rgba(255,255,255,0.08)",
+  primary: "#E6E9EE",
+  secondary: "#9398A8",
   base: "#050810",
-  red: "#FF2D2D",
+  red: "#E8635F",
 } as const;
 
 /**
@@ -32,14 +31,14 @@ function LogoRow() {
   return (
     <div className="flex items-center" style={{ gap: 8 }}>
       <span
-        className="shrink-0 rounded-full"
-        style={{ width: 6, height: 6, background: C.cyan, borderRadius: "50%" }}
+        className="shrink-0"
+        style={{ width: 6, height: 6, background: C.green, display: "inline-block" }}
         aria-hidden
       />
-      <span style={{ fontFamily: GROTESK, fontWeight: 700, fontSize: 18, color: C.primary, lineHeight: 1 }}>
+      <span style={{ fontFamily: DISP, fontWeight: 700, fontSize: 18, color: C.primary, lineHeight: 1 }}>
         webdoc
       </span>
-      <span style={{ fontFamily: GROTESK, fontWeight: 700, fontSize: 18, color: C.cyan, lineHeight: 1 }}>
+      <span style={{ fontFamily: DISP, fontWeight: 700, fontSize: 18, color: C.green, lineHeight: 1 }}>
         ai
       </span>
     </div>
@@ -63,14 +62,14 @@ export default function ResetPasswordPage() {
   const inputBase: CSSProperties = {
     width: "100%",
     boxSizing: "border-box",
-    background: C.card,
-    border: `1px solid ${C.border}`,
-    borderRadius: 8,
+    background: "rgba(255,255,255,0.03)",
+    border: "1px solid rgba(255,255,255,0.1)",
+    borderRadius: 0,
     padding: "11px 16px",
     color: C.primary,
-    fontFamily: GROTESK,
+    fontFamily: MONO,
     fontWeight: 400,
-    fontSize: 16,
+    fontSize: 13,
     outline: "none",
     transition: "border-color 150ms ease, box-shadow 150ms ease",
   };
@@ -143,7 +142,7 @@ export default function ResetPasswordPage() {
   return (
     <div
       className="flex min-h-screen w-full flex-col items-center justify-center overflow-auto px-6 py-8"
-      style={{ background: C.surface, minHeight: "100vh" }}
+      style={{ background: "transparent", minHeight: "100vh" }}
     >
       <style jsx>{`
         @keyframes ctaPulse {
@@ -199,10 +198,12 @@ export default function ResetPasswordPage() {
         <div
           style={{
             background: C.card,
-            border: `1px solid ${C.border}`,
-            borderRadius: 8,
+            borderTop: "1px solid rgba(255,255,255,0.12)",
+            borderRight: "1px solid rgba(255,255,255,0.07)",
+            borderBottom: "1px solid rgba(255,255,255,0.04)",
+            borderLeft: "1px solid rgba(255,255,255,0.07)",
+            borderRadius: 0,
             padding: "24px 24px 28px",
-            boxShadow: "0 0 40px rgba(0,180,255,0.06)",
           }}
         >
           {sessionState === "checking" ? (
@@ -213,7 +214,7 @@ export default function ResetPasswordPage() {
                 style={{
                   margin: 0,
                   marginBottom: 16,
-                  fontFamily: GROTESK,
+                  fontFamily: DISP,
                   fontWeight: 300,
                   fontSize: 15,
                   color: C.secondary,
@@ -227,7 +228,7 @@ export default function ResetPasswordPage() {
                 style={{
                   fontFamily: MONO,
                   fontSize: 11,
-                  color: "rgba(0,200,255,0.6)",
+                  color: C.secondary,
                   textDecoration: "none",
                 }}
                 onMouseEnter={(e) => {
@@ -244,7 +245,7 @@ export default function ResetPasswordPage() {
             <p
               style={{
                 margin: 0,
-                fontFamily: GROTESK,
+                fontFamily: DISP,
                 fontWeight: 300,
                 fontSize: 15,
                 color: C.secondary,
@@ -258,10 +259,10 @@ export default function ResetPasswordPage() {
                 style={{
                   margin: 0,
                   marginBottom: 8,
-                  fontFamily: ORBITRON,
+                  fontFamily: DISP,
                   fontWeight: 700,
                   fontSize: 22,
-                  letterSpacing: "0.06em",
+                  letterSpacing: "0.02em",
                   color: C.primary,
                 }}
               >
@@ -274,7 +275,7 @@ export default function ResetPasswordPage() {
                   fontFamily: MONO,
                   fontWeight: 400,
                   fontSize: 13,
-                  color: "rgba(0,200,255,0.6)",
+                  color: C.secondary,
                   lineHeight: 1.5,
                 }}
               >
@@ -309,8 +310,8 @@ export default function ResetPasswordPage() {
                   style={{ ...inputBase, paddingRight: 64 }}
                   disabled={isSubmitting}
                   onFocus={(e) => {
-                    e.currentTarget.style.borderColor = "rgba(0,200,255,0.4)";
-                    e.currentTarget.style.boxShadow = "0 0 0 1px rgba(0,200,255,0.15), 0 0 16px rgba(0,200,255,0.08)";
+                    e.currentTarget.style.borderColor = "rgba(0,196,140,0.5)";
+                    e.currentTarget.style.boxShadow = "0 0 0 3px rgba(0,196,140,0.06)";
                   }}
                   onBlur={(e) => {
                     e.currentTarget.style.borderColor = C.border;
@@ -328,7 +329,7 @@ export default function ResetPasswordPage() {
                     transform: "translateY(-50%)",
                     fontFamily: MONO,
                     fontSize: 11,
-                    color: C.cyan,
+                    color: C.green,
                     cursor: "pointer",
                     background: "none",
                     border: "none",
@@ -338,7 +339,7 @@ export default function ResetPasswordPage() {
                     e.currentTarget.style.color = C.primary;
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.color = C.cyan;
+                    e.currentTarget.style.color = C.green;
                   }}
                 >
                   {showPw ? "HIDE" : "SHOW"}
@@ -373,8 +374,8 @@ export default function ResetPasswordPage() {
                   style={{ ...inputBase, paddingRight: 64 }}
                   disabled={isSubmitting}
                   onFocus={(e) => {
-                    e.currentTarget.style.borderColor = "rgba(0,200,255,0.4)";
-                    e.currentTarget.style.boxShadow = "0 0 0 1px rgba(0,200,255,0.15), 0 0 16px rgba(0,200,255,0.08)";
+                    e.currentTarget.style.borderColor = "rgba(0,196,140,0.5)";
+                    e.currentTarget.style.boxShadow = "0 0 0 3px rgba(0,196,140,0.06)";
                   }}
                   onBlur={(e) => {
                     e.currentTarget.style.borderColor = C.border;
@@ -392,7 +393,7 @@ export default function ResetPasswordPage() {
                     transform: "translateY(-50%)",
                     fontFamily: MONO,
                     fontSize: 11,
-                    color: C.cyan,
+                    color: C.green,
                     cursor: "pointer",
                     background: "none",
                     border: "none",
@@ -402,17 +403,17 @@ export default function ResetPasswordPage() {
                     e.currentTarget.style.color = C.primary;
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.color = C.cyan;
+                    e.currentTarget.style.color = C.green;
                   }}
                 >
                   {showPw2 ? "HIDE" : "SHOW"}
                 </button>
               </div>
               {confirmError ? (
-                <p style={{ marginTop: 6, fontFamily: GROTESK, fontWeight: 300, fontSize: 12, color: C.red }}>{confirmError}</p>
+                <p style={{ marginTop: 6, fontFamily: DISP, fontWeight: 300, fontSize: 12, color: C.red }}>{confirmError}</p>
               ) : null}
               {lengthError ? (
-                <p style={{ marginTop: 6, fontFamily: GROTESK, fontWeight: 300, fontSize: 12, color: C.red }}>{lengthError}</p>
+                <p style={{ marginTop: 6, fontFamily: DISP, fontWeight: 300, fontSize: 12, color: C.red }}>{lengthError}</p>
               ) : null}
 
               <p
@@ -421,7 +422,7 @@ export default function ResetPasswordPage() {
                   marginBottom: 0,
                   fontFamily: MONO,
                   fontSize: 10,
-                  color: "rgba(0,200,255,0.4)",
+                  color: "#6E7587",
                 }}
               >
                 Minimum 8 characters
@@ -435,29 +436,26 @@ export default function ResetPasswordPage() {
                   marginTop: 20,
                   width: "100%",
                   height: 46,
-                  borderRadius: 8,
-                  border: submitError ? `1px solid ${C.red}` : "none",
-                  background: C.cyan,
-                  color: C.base,
+                  borderRadius: 0,
+                  border: submitError ? `1px solid ${C.red}` : `1px solid ${C.green}`,
+                  background: "transparent",
+                  color: C.green,
                   fontFamily: MONO,
                   fontWeight: 700,
                   fontSize: 13,
                   letterSpacing: "0.1em",
                   cursor: isSubmitting ? "not-allowed" : "pointer",
                   opacity: isSubmitting ? 0.75 : 1,
-                  transition: "background-color 150ms ease, box-shadow 150ms ease, opacity 250ms ease, border-color 150ms ease",
+                  transition: "background 150ms ease",
                   animation: isSubmitting ? "ctaPulse 1s ease-in-out infinite" : undefined,
                 }}
                 onMouseEnter={(e) => {
                   if (isSubmitting) return;
-                  e.currentTarget.style.background = "#20D4FF";
-                  e.currentTarget.style.boxShadow = "0 0 0 1px rgba(0,200,255,0.4), 0 0 20px rgba(0,200,255,0.2)";
+                  e.currentTarget.style.background = "rgba(0,196,140,0.08)";
                 }}
                 onMouseLeave={(e) => {
                   if (isSubmitting) return;
-                  e.currentTarget.style.background = C.cyan;
-                  e.currentTarget.style.boxShadow = "none";
-                  e.currentTarget.style.transition = "background-color 300ms ease, box-shadow 300ms ease";
+                  e.currentTarget.style.background = "transparent";
                 }}
               >
                 {isSubmitting ? "UPDATING..." : "UPDATE PASSWORD"}
@@ -467,7 +465,7 @@ export default function ResetPasswordPage() {
                 <p
                   style={{
                     marginTop: 10,
-                    fontFamily: GROTESK,
+                    fontFamily: DISP,
                     fontWeight: 300,
                     fontSize: 13,
                     color: C.red,
@@ -487,7 +485,7 @@ export default function ResetPasswordPage() {
             style={{
               fontFamily: MONO,
               fontSize: 11,
-              color: "rgba(0,200,255,0.6)",
+              color: C.secondary,
               textDecoration: "none",
             }}
             onMouseEnter={(e) => {

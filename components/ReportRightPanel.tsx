@@ -152,7 +152,7 @@ export function LockedFindingCard({ finding, index: _index }: { finding: Finding
         background: "#0A0F1E",
         border: "1px solid #1A2035",
         borderLeft: `3px solid ${leftColor}`,
-        borderRadius: "0 4px 4px 0",
+        borderRadius: 0,
         padding: "16px 20px",
         margin: "8px 0",
       }}
@@ -166,7 +166,7 @@ export function LockedFindingCard({ finding, index: _index }: { finding: Finding
             letterSpacing: "0.1em",
             padding: "3px 8px",
             textTransform: "uppercase",
-            borderRadius: 2,
+            borderRadius: 0,
             ...badgeSolid,
           }}
         >
@@ -180,7 +180,7 @@ export function LockedFindingCard({ finding, index: _index }: { finding: Finding
             color: "#8899AA",
             border: "1px solid #1A2035",
             padding: "3px 8px",
-            borderRadius: 2,
+            borderRadius: 0,
             textTransform: "lowercase",
           }}
         >
@@ -205,7 +205,7 @@ export function LockedFindingCard({ finding, index: _index }: { finding: Finding
           marginTop: 12,
           background: "#080D18",
           border: "1px solid #1A2035",
-          borderRadius: 4,
+          borderRadius: 0,
           padding: "12px 14px",
         }}
       >
@@ -236,10 +236,10 @@ export function FindingsPaywallBanner({ lockedCount }: { lockedCount: number }) 
       role="region"
       aria-label="Pro diagnostic access for additional findings"
       style={{
-        background: "#0A0F1E",
-        border: "1px solid rgba(0,200,255,0.125)",
-        borderLeft: "3px solid #00C8FF",
-        borderRadius: "0 4px 4px 0",
+        background: "#0A0E18",
+        border: "1px solid rgba(0,196,140,0.12)",
+        borderLeft: "3px solid #00C48C",
+        borderRadius: 0,
         padding: "20px 24px",
         margin: "8px 0",
       }}
@@ -248,7 +248,7 @@ export function FindingsPaywallBanner({ lockedCount }: { lockedCount: number }) 
         style={{
           fontFamily: REPORT_MONO,
           fontSize: 10,
-          color: "#00C8FF",
+          color: "#00C48C",
           letterSpacing: "0.12em",
           textTransform: "uppercase",
         }}
@@ -525,7 +525,7 @@ export function ReportFindingPreview({
               fontFamily: REPORT_MONO,
               fontSize: 10,
               letterSpacing: "0.06em",
-              color: "#00C8FF",
+              color: "#00C48C",
               textDecoration: "none",
             }}
           >
@@ -683,7 +683,7 @@ function OptimizedCopyLines({
                 border: "1px solid rgba(255,255,255,0.15)",
                 padding: "6px 14px",
                 display: "inline-block",
-                borderRadius: 6,
+                borderRadius: 0,
               }}
             >
               {display}
@@ -1076,12 +1076,12 @@ export default function ReportRightPanel({
     fontSize: 9,
     letterSpacing: "0.12em",
     padding: "6px 12px",
-    borderRadius: 6,
+    borderRadius: 0,
     border: active
-      ? "1px solid rgba(0,200,255,0.5)"
+      ? "1px solid rgba(0,196,140,0.5)"
       : "1px solid rgba(255,255,255,0.15)",
-    background: active ? "rgba(0,200,255,0.08)" : "transparent",
-    color: active ? "#00C8FF" : "rgba(255,255,255,0.5)",
+    background: active ? "rgba(0,196,140,0.08)" : "transparent",
+    color: active ? "#00C48C" : "rgba(255,255,255,0.5)",
     cursor: "pointer",
     textTransform: "uppercase",
   });
@@ -1173,7 +1173,7 @@ export default function ReportRightPanel({
                 cursor: "pointer",
                 fontFamily: REPORT_MONO,
                 fontSize: 11,
-                color: "#00C8FF",
+                color: "#00C48C",
               }}
             >
               Upgrade to Pro →
@@ -1243,21 +1243,19 @@ export default function ReportRightPanel({
           height: 52,
           background: "rgba(5,8,16,0.95)",
           backdropFilter: "blur(24px)",
-          borderBottom: "1px solid rgba(0,200,255,0.1)",
-          boxShadow:
-            "0 1px 0 rgba(0,200,255,0.06), 0 4px 24px rgba(0,0,0,0.4)",
+          borderBottom: "1px solid rgba(255,255,255,0.07)",
+          boxShadow: "0 4px 24px rgba(0,0,0,0.4)",
           padding: "0 36px",
         }}
       >
         <div className="flex flex-row items-center gap-2.5">
           <span
             style={{
-              width: 6,
-              height: 6,
-              borderRadius: "50%",
-              background: "var(--cyan)",
-              boxShadow: "0 0 8px rgba(0,200,255,0.6)",
+              width: 5,
+              height: 5,
+              background: "#00C48C",
               flexShrink: 0,
+              display: "inline-block",
             }}
             aria-hidden
           />
@@ -1278,8 +1276,8 @@ export default function ReportRightPanel({
             <div
               style={{
                 display: "flex",
-                border: "1px solid rgba(0,200,255,0.35)",
-                borderRadius: 2,
+                border: "1px solid rgba(0,196,140,0.3)",
+                borderRadius: 0,
               }}
             >
               <button
@@ -1294,13 +1292,13 @@ export default function ReportRightPanel({
                   padding: "6px 16px",
                   background: "transparent",
                   border: "none",
-                  borderRight: "1px solid rgba(0,200,255,0.35)",
-                  color: "#00C8FF",
+                  borderRight: "1px solid rgba(0,196,140,0.3)",
+                  color: "#00C48C",
                   cursor: "pointer",
-                  transition: "all 0.15s ease",
+                  transition: "background 0.15s ease",
                 }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(0,200,255,0.04)"; e.currentTarget.style.boxShadow = "0 0 14px rgba(0,200,255,0.2)"; }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.boxShadow = "none"; }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(0,196,140,0.06)"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
               >
                 {linkCopied ? "LINK COPIED" : "SHARE REPORT"}
               </button>
@@ -1318,12 +1316,12 @@ export default function ReportRightPanel({
                   padding: "6px 16px",
                   background: "transparent",
                   border: "none",
-                  color: "#00C8FF",
+                  color: "#9398A8",
                   cursor: "pointer",
-                  transition: "all 0.15s ease",
+                  transition: "background 0.15s ease",
                 }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(0,200,255,0.04)"; e.currentTarget.style.boxShadow = "0 0 14px rgba(0,200,255,0.2)"; }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.boxShadow = "none"; }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.04)"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
               >
                 EXPORT PDF
               </button>
@@ -1336,8 +1334,8 @@ export default function ReportRightPanel({
                 fontFamily: "var(--font-jetbrains-mono), var(--font-space-mono), monospace",
                 fontSize: 10,
                 letterSpacing: "0.08em",
-                color: "rgba(0,200,255,0.95)",
-                borderColor: "rgba(0,200,255,0.25)",
+                color: "rgba(0,196,140,0.95)",
+                borderColor: "rgba(0,196,140,0.25)",
                 background: "rgba(5,8,16,0.95)",
                 opacity: linkCopiedFade ? 0 : 1,
                 boxShadow: "0 4px 24px rgba(0,0,0,0.45)",
@@ -1511,8 +1509,8 @@ export default function ReportRightPanel({
                   {pageFlowText ? (
                     <div
                       style={{
-                        background: "rgba(0,200,255,0.04)",
-                        borderLeft: "2px solid #00C8FF",
+                        background: "rgba(111,155,198,0.04)",
+                        borderLeft: "2px solid #6F9BC6",
                         padding: "14px 18px",
                       }}
                     >
@@ -1522,7 +1520,7 @@ export default function ReportRightPanel({
                             "var(--font-jetbrains-mono), var(--font-space-mono), monospace",
                           fontSize: 9,
                           letterSpacing: "0.14em",
-                          color: "#00C8FF",
+                          color: "#6F9BC6",
                           marginBottom: 8,
                         }}
                       >
@@ -1562,16 +1560,16 @@ export default function ReportRightPanel({
                 <div
                   style={{
                     background: narrativeFlow.verdict === 'strong'
-                      ? "rgba(0,200,255,0.04)"
+                      ? "rgba(0,196,140,0.04)"
                       : narrativeFlow.verdict === 'broken'
-                      ? "rgba(255,45,45,0.04)"
-                      : "rgba(255,179,0,0.04)",
+                      ? "rgba(232,99,95,0.04)"
+                      : "rgba(239,178,62,0.04)",
                     borderLeft: `2px solid ${
                       narrativeFlow.verdict === 'strong'
-                        ? "#00C8FF"
+                        ? "#00C48C"
                         : narrativeFlow.verdict === 'broken'
-                        ? "#FF2D2D"
-                        : "#FFB300"
+                        ? "#E8635F"
+                        : "#EFB23E"
                     }`,
                     padding: "14px 18px",
                   }}
@@ -1591,10 +1589,10 @@ export default function ReportRightPanel({
                         borderRadius: "50%",
                         flexShrink: 0,
                         background: narrativeFlow.verdict === 'strong'
-                          ? "#00C8FF"
+                          ? "#00C48C"
                           : narrativeFlow.verdict === 'broken'
-                          ? "#FF2D2D"
-                          : "#FFB300",
+                          ? "#E8635F"
+                          : "#EFB23E",
                       }}
                       aria-hidden
                     />
@@ -1605,10 +1603,10 @@ export default function ReportRightPanel({
                         letterSpacing: "0.14em",
                         fontWeight: 600,
                         color: narrativeFlow.verdict === 'strong'
-                          ? "#00C8FF"
+                          ? "#00C48C"
                           : narrativeFlow.verdict === 'broken'
-                          ? "#FF2D2D"
-                          : "#FFB300",
+                          ? "#E8635F"
+                          : "#EFB23E",
                       }}
                     >
                       {narrativeFlow.verdict.toUpperCase()}
@@ -1660,7 +1658,7 @@ export default function ReportRightPanel({
                       color: "rgba(255,255,255,0.6)",
                       background: "transparent",
                       border: "1px solid rgba(255,255,255,0.15)",
-                      borderRadius: 6,
+                      borderRadius: 0,
                       padding: "4px 10px",
                     }}
                   >
@@ -1889,9 +1887,9 @@ export default function ReportRightPanel({
                             width: 340,
                             maxWidth: "min(340px, calc(100% - 24px))",
                             boxSizing: "border-box",
-                            background: "rgba(5,8,16,0.92)",
-                            border: "1px solid rgba(0,200,255,0.25)",
-                            borderRadius: 8,
+                            background: "rgba(10,14,24,0.95)",
+                            border: "1px solid rgba(255,255,255,0.1)",
+                            borderRadius: 0,
                             padding: "32px 40px",
                             textAlign: "center",
                             boxShadow: "0 0 60px rgba(0,0,0,0.6)",
@@ -1902,7 +1900,7 @@ export default function ReportRightPanel({
                             style={{
                               fontFamily: REPORT_MONO,
                               fontSize: 10,
-                              color: "var(--cyan)",
+                              color: "#00C48C",
                               letterSpacing: "2px",
                               textTransform: "uppercase",
                             }}
@@ -2092,7 +2090,7 @@ function GrowthBlueprintLockedFindingRow({ item }: { item: GrowthBlueprintLocked
         border: "1px solid #1A2035",
         borderLeft: `2px solid ${borderLeft}`,
         padding: "12px 14px",
-        borderRadius: "0 2px 2px 0",
+        borderRadius: 0,
         marginBottom: 8,
         boxSizing: "border-box",
       }}
@@ -2106,7 +2104,7 @@ function GrowthBlueprintLockedFindingRow({ item }: { item: GrowthBlueprintLocked
             letterSpacing: "0.1em",
             padding: "3px 8px",
             textTransform: "uppercase",
-            borderRadius: 2,
+            borderRadius: 0,
             ...badgeSolid,
           }}
         >
@@ -2186,9 +2184,9 @@ export function GrowthBlueprintFreeTier({
         fontFamily: sm,
         fontSize: 9,
         letterSpacing: "0.14em",
-        color: "#00C8FF",
+        color: "#6F9BC6",
         fontWeight: 700,
-        borderTop: "2px solid #00C8FF",
+        borderTop: "2px solid #6F9BC6",
         paddingTop: 12,
         marginBottom: 12,
       }}
@@ -2216,13 +2214,13 @@ export function GrowthBlueprintFreeTier({
     <div
       style={{
         height: 4,
-        borderRadius: 2,
+        borderRadius: 0,
         background: "rgba(255,255,255,0.06)",
         width: w,
         marginBottom: 12,
       }}
     >
-      <div style={{ width: "42%", height: "100%", borderRadius: 2, background: "rgba(0,200,255,0.35)" }} />
+      <div style={{ width: "42%", height: "100%", borderRadius: 0, background: "rgba(0,196,140,0.3)" }} />
     </div>
   );
 
@@ -2312,7 +2310,7 @@ export function GrowthBlueprintFreeTier({
       {showUpgradeNudge ? (
         <p style={{ margin: "16px 0 0 0", fontFamily: REPORT_MONO, fontSize: 11, color: "#8899AA" }}>
           Full resolution roadmap unlocks with Pro diagnostic access.{" "}
-          <a href="/pricing" style={{ color: "#00C8FF", textDecoration: "none" }}>→ Upgrade</a>
+          <a href="/pricing" style={{ color: "#00C48C", textDecoration: "none" }}>→ Upgrade</a>
         </p>
       ) : null}
     </div>
@@ -2332,7 +2330,7 @@ function BlueprintColumn({
     "var(--font-jetbrains-mono), var(--font-space-mono), monospace";
   const sg = "var(--font-space-grotesk), sans-serif";
   const list = items?.filter((s) => s.trim()) ?? [];
-  const bulletColor = "#00C8FF";
+  const bulletColor = "#6F9BC6";
 
   const header =
     variant === "week1" ? (
@@ -2356,9 +2354,9 @@ function BlueprintColumn({
           fontFamily: sm,
           fontSize: 9,
           letterSpacing: "0.14em",
-          color: "#00C8FF",
+          color: "#6F9BC6",
           fontWeight: 700,
-          borderTop: "2px solid #00C8FF",
+          borderTop: "2px solid #6F9BC6",
           paddingTop: 12,
           marginBottom: 12,
         }}
@@ -2474,11 +2472,11 @@ function FindingsPaywallLockBar({ lockedCount }: { lockedCount: number }) {
         marginLeft: "auto",
         marginRight: "auto",
         background: "rgba(5,8,16,0.95)",
-        border: "1px solid rgba(0,200,255,0.3)",
+        border: "1px solid rgba(0,196,140,0.3)",
         backdropFilter: "blur(12px)",
         WebkitBackdropFilter: "blur(12px)",
-        boxShadow: "var(--cyan-glow-soft), 0 -12px 40px rgba(0,0,0,0.5)",
-        borderRadius: 10,
+        boxShadow: "0 -12px 40px rgba(0,0,0,0.5)",
+        borderRadius: 0,
         padding: "18px 20px",
         display: "flex",
         flexDirection: "row",
@@ -2568,7 +2566,7 @@ function SectionLabelRow({
             fontFamily: mono,
             fontSize: 10,
             fontWeight: 400,
-            color: "#00C8FF",
+            color: "#00C48C",
             letterSpacing: "0.2em",
             lineHeight: 1.4,
           }}
@@ -2613,7 +2611,7 @@ function HeaderButton({
     fontWeight: 600,
     fontSize: 10,
     letterSpacing: "0.08em",
-    borderRadius: 4,
+    borderRadius: 0,
     padding: "6px 16px",
     cursor: disabled ? "not-allowed" : "pointer",
     opacity: disabled ? 0.55 : 1,
@@ -2622,9 +2620,9 @@ function HeaderButton({
 
   const shareIdle: CSSProperties = {
     ...base,
-    background: "rgba(0,200,255,0.08)",
-    border: "1px solid rgba(0,200,255,0.3)",
-    color: disabled ? "rgba(240,244,255,0.25)" : "var(--cyan)",
+    background: "rgba(0,196,140,0.06)",
+    border: "1px solid rgba(0,196,140,0.3)",
+    color: disabled ? "rgba(240,244,255,0.25)" : "#00C48C",
   };
 
   const exportIdle: CSSProperties = {
@@ -2637,8 +2635,8 @@ function HeaderButton({
   const rescanIdle: CSSProperties = {
     ...base,
     background: "transparent",
-    border: "1px solid #00C8FF",
-    color: "#00C8FF",
+    border: "1px solid #00C48C",
+    color: "#00C48C",
   };
 
   const idleStyle = variant === "share" ? shareIdle : variant === "rescan" ? rescanIdle : exportIdle;
@@ -2654,10 +2652,10 @@ function HeaderButton({
       onMouseEnter={(e) => {
         if (disabled) return;
         if (variant === "share") {
-          e.currentTarget.style.background = "rgba(0,200,255,0.15)";
-          e.currentTarget.style.borderColor = "rgba(0,200,255,0.35)";
+          e.currentTarget.style.background = "rgba(0,196,140,0.12)";
+          e.currentTarget.style.borderColor = "rgba(0,196,140,0.4)";
         } else if (variant === "rescan") {
-          e.currentTarget.style.background = "rgba(0,200,255,0.08)";
+          e.currentTarget.style.background = "rgba(0,196,140,0.08)";
         } else {
           e.currentTarget.style.borderColor = "rgba(255,255,255,0.22)";
           e.currentTarget.style.color = "rgba(255,255,255,0.65)";
@@ -2666,10 +2664,10 @@ function HeaderButton({
       onMouseLeave={(e) => {
         if (variant === "share") {
           e.currentTarget.style.background = shareIdle.background as string;
-          e.currentTarget.style.borderColor = "rgba(0,200,255,0.3)";
+          e.currentTarget.style.borderColor = "rgba(0,196,140,0.3)";
           e.currentTarget.style.color = disabled
             ? "rgba(240,244,255,0.25)"
-            : "var(--cyan)";
+            : "#00C48C";
         } else if (variant === "rescan") {
           e.currentTarget.style.background = "transparent";
         } else {

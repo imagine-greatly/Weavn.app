@@ -753,18 +753,34 @@ export default function ApiDocsPage() {
         <nav style={{ flex: 1, paddingBottom: 24 }}>
           {NAV_GROUPS.map(g => (
             <div key={g.label}>
-              <div style={{ fontFamily: MONO, fontSize: 10, color: T3, textTransform: 'uppercase', letterSpacing: '0.2em', padding: '8px 24px', marginTop: 16 }}>
+              <div style={{
+                fontFamily: MONO, fontSize: 10, color: T3, textTransform: 'uppercase',
+                letterSpacing: '0.2em', padding: '8px 24px', marginTop: 16,
+                borderBottom: '0.5px solid rgba(255,255,255,0.05)', marginBottom: 2,
+              }}>
                 {g.label}
               </div>
               {g.items.map(item => {
                 const on = active === item.id
+                // Detect HTTP method badge from item id
+                const methodRaw = item.id.startsWith('post-') ? 'POST'
+                  : item.id.startsWith('get-') ? 'GET'
+                  : item.id.startsWith('delete-') ? 'DEL'
+                  : null
+                const METHOD_STYLE: Record<string, { bg: string; color: string }> = {
+                  POST: { bg: 'rgba(0,196,140,0.1)',    color: GREEN    },
+                  GET:  { bg: 'rgba(111,155,198,0.1)',  color: WD_BLUE  },
+                  DEL:  { bg: 'rgba(232,99,95,0.1)',    color: '#E8635F' },
+                }
+                const ms = methodRaw ? METHOD_STYLE[methodRaw] : null
                 return (
                   <button
                     key={item.id}
                     onClick={() => goTo(item.id)}
                     style={{
-                      display: 'block', width: '100%', textAlign: 'left',
-                      fontFamily: DISP, fontSize: 13, padding: '8px 24px',
+                      display: 'flex', alignItems: 'center', gap: 6,
+                      width: '100%', textAlign: 'left',
+                      fontFamily: MONO, fontSize: 13, padding: '8px 24px',
                       cursor: 'pointer', border: 'none', outline: 'none',
                       background: on ? 'rgba(0,196,140,0.04)' : 'transparent',
                       borderLeft: `2px solid ${on ? GREEN : 'transparent'}`,
@@ -772,6 +788,11 @@ export default function ApiDocsPage() {
                       transition: 'color 0.15s',
                     }}
                   >
+                    {ms && (
+                      <span style={{ fontFamily: MONO, fontSize: 9, background: ms.bg, color: ms.color, padding: '2px 5px', flexShrink: 0 }}>
+                        {methodRaw}
+                      </span>
+                    )}
                     {item.label}
                   </button>
                 )
@@ -1120,8 +1141,8 @@ export default function ApiDocsPage() {
                   fontFamily: MONO, fontSize: 12,
                   padding: '8px 14px', cursor: 'pointer',
                   border: 'none', outline: 'none', background: 'transparent',
-                  borderBottom: lang === l.id ? `2px solid ${WD_BLUE}` : '2px solid transparent',
-                  color: lang === l.id ? WD_BLUE : T3,
+                  borderBottom: lang === l.id ? `2px solid ${GREEN}` : '2px solid transparent',
+                  color: lang === l.id ? T1 : T3,
                   transition: 'color 0.15s', marginBottom: -1,
                 }}
               >

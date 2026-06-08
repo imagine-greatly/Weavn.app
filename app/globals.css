@@ -23,7 +23,14 @@ body {
   --bg-card: #0D1020;
   --bg-elevated: #111428;
   --border-default: #1C1C2E;
-  --border-active: rgba(0, 200, 255, 0.35);
+  --border-active: rgba(111, 155, 198, 0.35);
+  /* Semantic engine aliases */
+  --engine-founders:   #00C8FF;
+  --engine-agencies:   #9D8CFF;
+  --engine-developers: #00C48C;
+  --interactive:       #6F9BC6;
+  --accent-primary:    #6F9BC6;
+  --interactive-glow-active: 0 0 0 1px rgba(111, 155, 198, 0.4), 0 0 20px rgba(111, 155, 198, 0.2), 0 0 60px rgba(111, 155, 198, 0.08);
   --cyan: #00C8FF;
   --cyan-dim: rgba(0, 200, 255, 0.15);
   --cyan-glow-soft: 0 0 40px rgba(0, 180, 255, 0.06);
@@ -89,7 +96,7 @@ body {
   select:focus-visible,
   [role="button"]:focus-visible,
   [role="tab"]:focus-visible {
-    outline: 2px solid rgba(0, 200, 255, 0.5);
+    outline: 2px solid rgba(111, 155, 198, 0.5);
     outline-offset: 2px;
   }
 
@@ -173,7 +180,7 @@ body {
 
 @layer components {
   .glow-ambient { box-shadow: var(--cyan-glow-soft); }
-  .glow-active { box-shadow: var(--cyan-glow-active); }
+  .glow-active { box-shadow: var(--interactive-glow-active); }
   .glow-intense { box-shadow: var(--cyan-glow-intense); }
   .intensity-flash-once {
     animation: intensityFlash 800ms ease-out forwards;
@@ -212,13 +219,13 @@ body {
       90deg,
       transparent 0%,
       transparent 40%,
-      rgba(0, 200, 255, 0.5) 50%,
+      rgba(111, 155, 198, 0.5) 50%,
       transparent 60%,
       transparent 100%
     );
     background-size: 240% 100%;
     background-repeat: no-repeat;
-    box-shadow: 0 0 20px rgba(0, 200, 255, 0.3);
+    box-shadow: 0 0 20px rgba(111, 155, 198, 0.3);
     animation: heroScanSweepAlt 7s ease-in-out infinite;
   }
 
@@ -247,7 +254,7 @@ body {
   }
   .interactive-electric:hover {
     border-color: var(--border-active);
-    box-shadow: var(--cyan-glow-active);
+    box-shadow: var(--interactive-glow-active);
     transition-duration: 150ms;
   }
   .interactive-electric:not(:hover) {
@@ -255,8 +262,8 @@ body {
   }
 
   .hero-bar-focus-within:focus-within {
-    border-color: rgba(0, 200, 255, 0.5);
-    box-shadow: var(--cyan-glow-active);
+    border-color: rgba(111, 155, 198, 0.5);
+    box-shadow: var(--interactive-glow-active);
   }
 
   .hero-input::placeholder {
@@ -288,8 +295,8 @@ body {
   }
 
   .landing-hero-scan-form:focus-within {
-    border-color: rgba(0, 200, 255, 0.5) !important;
-    box-shadow: var(--cyan-glow-active);
+    border-color: rgba(111, 155, 198, 0.5) !important;
+    box-shadow: var(--interactive-glow-active);
   }
 
   /* Hero / final CTA URL bar: one outer border only — strip UA + focus seams between field and submit */
@@ -316,8 +323,8 @@ body {
   }
 
   .landing-footer-scan-form:focus-within {
-    border-color: rgba(0, 200, 255, 0.5) !important;
-    box-shadow: var(--cyan-glow-active);
+    border-color: rgba(111, 155, 198, 0.5) !important;
+    box-shadow: var(--interactive-glow-active);
   }
 
   .landing-footer-scan-form input,
@@ -425,11 +432,11 @@ body {
 @keyframes landingHowConnectGlow {
   0%, 100% {
     opacity: 0.55;
-    box-shadow: 0 0 18px rgba(0, 200, 255, 0.2);
+    box-shadow: 0 0 18px rgba(111, 155, 198, 0.2);
   }
   50% {
     opacity: 1;
-    box-shadow: 0 0 32px rgba(0, 200, 255, 0.45);
+    box-shadow: 0 0 32px rgba(111, 155, 198, 0.45);
   }
 }
 
@@ -517,14 +524,14 @@ body {
 
 /* Hero input focus pulse */
 @keyframes inputFocusPulse {
-  0%, 100% { box-shadow: 0 0 20px rgba(0, 200, 255, 0.2); }
-  50% { box-shadow: 0 0 40px rgba(0, 200, 255, 0.35); }
+  0%, 100% { box-shadow: 0 0 20px rgba(111, 155, 198, 0.2); }
+  50% { box-shadow: 0 0 40px rgba(111, 155, 198, 0.35); }
 }
 
 /* CTA button pulse */
 @keyframes ctaButtonPulse {
-  0%, 100% { box-shadow: 0 0 20px rgba(0, 200, 255, 0.3); }
-  50% { box-shadow: 0 0 40px rgba(0, 200, 255, 0.5); }
+  0%, 100% { box-shadow: 0 0 20px rgba(111, 155, 198, 0.3); }
+  50% { box-shadow: 0 0 40px rgba(111, 155, 198, 0.5); }
 }
 
 /* Floating particles drift */
@@ -714,12 +721,12 @@ body {
 @keyframes landingButtonPulse {
   0%,
   100% {
-    box-shadow: 0 0 20px rgba(0, 200, 255, 0.3);
+    box-shadow: 0 0 20px rgba(111, 155, 198, 0.3);
   }
   50% {
     box-shadow:
-      0 0 40px rgba(0, 200, 255, 0.6),
-      0 0 80px rgba(0, 200, 255, 0.2);
+      0 0 40px rgba(111, 155, 198, 0.6),
+      0 0 80px rgba(111, 155, 198, 0.2);
   }
 }
 

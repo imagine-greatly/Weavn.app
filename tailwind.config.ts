@@ -62,6 +62,12 @@ const config: Config = {
         'sev-critical': '#E8635F',
         'sev-high': '#EFB23E',
         'accent-blue': '#00C8FF',
+        // Semantic engine aliases — canonical names going forward
+        'engine-founders':   '#00C8FF',
+        'engine-agencies':   '#9D8CFF',
+        'engine-developers': '#00C48C',
+        'interactive':       '#6F9BC6',
+        'accent-primary':    '#6F9BC6',
       },
       fontFamily: {
         display: ['Space Grotesk', 'sans-serif'],

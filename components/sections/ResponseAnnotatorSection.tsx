@@ -117,9 +117,9 @@ export default function ResponseAnnotatorSection() {
           <span style={{ color: '#6E7587' }}>·</span>
           <span>
             <span style={{ color: '#8080c0' }}>score: </span>
-            <span style={{ color: '#EFB23E' }}>61</span>
+            <span style={{ color: '#6F9BC6' }}>61</span>
             <span style={{ color: '#8080c0' }}>, findings: </span>
-            <span style={{ color: '#EFB23E' }}>23</span>
+            <span style={{ color: '#6F9BC6' }}>23</span>
             <span style={{ color: '#8080c0' }}>, cost_usd: </span>
             <span style={{ color: '#9398A8' }}>0.15</span>
           </span>

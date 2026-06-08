@@ -18,8 +18,8 @@ const COLS = [
   },
   {
     id: "73",
-    color: "var(--orange)",
-    bloom: "rgba(255,149,0,0.03)",
+    color: "#E8635F",
+    bloom: "rgba(232,99,95,0.03)",
     label: "OF SITES FAIL ABOVE THE FOLD",
     sub: "Visitor exits before primary copy registers",
     from: 0,

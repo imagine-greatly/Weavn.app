@@ -31,7 +31,7 @@ function NavBar() {
     <nav className="fixed top-0 left-0 right-0 z-50 h-[52px] bg-background-base/90 backdrop-blur-md border-b border-background-border flex items-center px-8">
       <div className="flex items-center gap-8 flex-1">
         <Link href="/" className="font-display font-extrabold text-base text-text-primary no-underline">
-          webdoc<span className="text-cyan-DEFAULT">.ai</span>
+          webdoc<span className="text-[#6F9BC6]">.ai</span>
         </Link>
         <div className="flex items-center gap-6">
           {['Pricing', 'Developers', 'Docs', 'Changelog'].map(link => (
@@ -57,7 +57,7 @@ function NavBar() {
         </Link>
         <Link
           href="/signup"
-          className="bg-cyan-DEFAULT text-text-inverse font-body font-semibold text-sm px-4 py-1.5 no-underline hover:opacity-90 transition-opacity duration-150"
+          className="bg-[#6F9BC6] text-text-inverse font-body font-semibold text-sm px-4 py-1.5 no-underline hover:opacity-90 transition-opacity duration-150"
         >
           Get API key →
         </Link>
@@ -153,7 +153,7 @@ function HeroSection() {
           pointerEvents: 'none',
           zIndex: 0,
           background:
-            'radial-gradient(ellipse 1200px 800px at 75% 50%, rgba(0,196,140,0.07) 0%, transparent 60%), radial-gradient(ellipse 800px 600px at 20% 80%, rgba(128,128,192,0.06) 0%, transparent 55%)',
+            'radial-gradient(ellipse 1200px 800px at 75% 50%, rgba(111,155,198,0.07) 0%, transparent 60%), radial-gradient(ellipse 800px 600px at 20% 80%, rgba(128,128,192,0.06) 0%, transparent 55%)',
         }}
       />
 
@@ -217,7 +217,7 @@ function HeroSection() {
           <div className="flex flex-wrap gap-3 mt-8">
             <Link
               href="/signup"
-              className="bg-cyan-DEFAULT text-text-inverse font-body font-bold text-sm px-6 py-3 no-underline hover:opacity-90 transition-opacity duration-150"
+              className="bg-[#6F9BC6] text-text-inverse font-body font-bold text-sm px-6 py-3 no-underline hover:opacity-90 transition-opacity duration-150"
             >
               Get API key →
             </Link>
@@ -241,9 +241,9 @@ function HeroSection() {
         <div
           className="flex-[45] min-w-0 relative bg-background-raised"
           style={{
-            boxShadow: '0 0 0 1px rgba(0,196,140,0.25), 0 0 40px rgba(0,196,140,0.12), 0 0 80px rgba(0,196,140,0.06), 0 0 120px rgba(128,128,192,0.08)',
-            borderTop: '1px solid rgba(0,196,140,0.35)',
-            borderLeft: '0.5px solid rgba(0,196,140,0.15)',
+            boxShadow: '0 0 0 1px rgba(111,155,198,0.25), 0 0 40px rgba(111,155,198,0.12), 0 0 80px rgba(111,155,198,0.06), 0 0 120px rgba(128,128,192,0.08)',
+            borderTop: '1px solid rgba(111,155,198,0.35)',
+            borderLeft: '0.5px solid rgba(111,155,198,0.15)',
             borderRight: '0.5px solid rgba(255,255,255,0.06)',
             borderBottom: '0.5px solid rgba(255,255,255,0.04)',
           }}
@@ -257,7 +257,7 @@ function HeroSection() {
                 onClick={() => setActiveHeroTab(tab.id)}
                 className={`font-mono text-xs px-4 py-2.5 border-0 cursor-pointer transition-colors duration-150 ${
                   activeHeroTab === tab.id
-                    ? 'border-b-2 border-cyan-DEFAULT text-cyan-DEFAULT bg-background-raised -mb-px'
+                    ? 'border-b-2 border-[#6F9BC6] text-[#6F9BC6] bg-background-raised -mb-px'
                     : 'text-text-tertiary hover:text-text-secondary bg-transparent'
                 }`}
               >
@@ -313,7 +313,7 @@ function HeroSection() {
                     <div className="font-body text-xs text-text-primary leading-snug">{f.title}</div>
                   </div>
                 ))}
-                <div className="bg-background-subtle border-l-2 border-cyan-DEFAULT px-3 py-2 mt-3">
+                <div className="bg-background-subtle border-l-2 border-[#6F9BC6] px-3 py-2 mt-3">
                   <div className="font-mono text-xs text-text-tertiary mb-1">AI REWRITE</div>
                   <div className="font-body text-xs text-text-primary">Ship projects on time, every time.</div>
                 </div>
@@ -333,7 +333,7 @@ function HeroSection() {
                       <span className={`font-mono text-xs px-1.5 py-0.5 ${c.positive ? 'bg-score-high/10 text-score-high' : 'bg-severity-critical/10 text-severity-critical'}`}>
                         {c.positive ? `↑${c.delta}` : `↓${c.delta}`}
                       </span>
-                      <span className="font-body text-xs text-cyan-DEFAULT">Report →</span>
+                      <span className="font-body text-xs text-[#6F9BC6]">Report →</span>
                     </div>
                   </div>
                 ))}
@@ -513,23 +513,49 @@ function HowItWorksSection() {
 
 function ThreeDoorsSection() {
   return (
-    <section style={{ padding: '96px 0', position: 'relative', overflow: 'hidden' }}>
-      {/* Three-part bloom — one per audience track */}
-      <div
-        aria-hidden
-        style={{
-          position: 'absolute',
-          inset: 0,
-          pointerEvents: 'none',
-          zIndex: 0,
-          background:
-            'radial-gradient(ellipse 400px 600px at 18% 70%, rgba(239,178,62,0.05) 0%, transparent 60%), radial-gradient(ellipse 400px 600px at 50% 70%, rgba(0,196,140,0.04) 0%, transparent 60%), radial-gradient(ellipse 400px 600px at 82% 70%, rgba(111,155,198,0.05) 0%, transparent 60%)',
-        }}
-      />
+    <section style={{ padding: '96px 0', position: 'relative', overflow: 'hidden', background: '#050810' }}>
+
+      {/* Component-scoped animations and mobile fallback */}
+      <style>{`
+        @keyframes beamFlow {
+          from { stroke-dashoffset: 13; }
+          to   { stroke-dashoffset: 0; }
+        }
+        @keyframes coreNodeGlow {
+          0%, 100% { box-shadow: 0 0 0 1px rgba(111,155,198,0.2), 0 0 14px rgba(111,155,198,0.12), 0 0 40px rgba(111,155,198,0.05); }
+          50%       { box-shadow: 0 0 0 1px rgba(111,155,198,0.35), 0 0 22px rgba(111,155,198,0.25), 0 0 56px rgba(111,155,198,0.10); }
+        }
+        @media (max-width: 639px) {
+          .td-convergence { display: none !important; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .td-beam { animation: none !important; }
+          .td-core-node { animation: none !important; }
+        }
+      `}</style>
+
+      {/* Three-lane ambient blooms — cyan / purple / green */}
+      <div aria-hidden style={{
+        position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0,
+        background: [
+          'radial-gradient(ellipse 500px 700px at 18% 75%, rgba(0,200,255,0.06) 0%, transparent 60%)',
+          'radial-gradient(ellipse 500px 700px at 50% 75%, rgba(157,140,255,0.05) 0%, transparent 60%)',
+          'radial-gradient(ellipse 500px 700px at 82% 75%, rgba(0,196,140,0.05) 0%, transparent 60%)',
+          'radial-gradient(ellipse 800px 400px at 50% 20%, rgba(111,155,198,0.04) 0%, transparent 55%)',
+        ].join(', '),
+      }} />
+
+      {/* Section corner ticks */}
+      <div aria-hidden style={{ position: 'absolute', top: 20, left: 20, width: 14, height: 14, borderTop: '0.5px solid rgba(111,155,198,0.25)', borderLeft: '0.5px solid rgba(111,155,198,0.25)', pointerEvents: 'none', zIndex: 1 }} />
+      <div aria-hidden style={{ position: 'absolute', top: 20, right: 20, width: 14, height: 14, borderTop: '0.5px solid rgba(111,155,198,0.25)', borderRight: '0.5px solid rgba(111,155,198,0.25)', pointerEvents: 'none', zIndex: 1 }} />
+      <div aria-hidden style={{ position: 'absolute', bottom: 20, left: 20, width: 14, height: 14, borderBottom: '0.5px solid rgba(111,155,198,0.25)', borderLeft: '0.5px solid rgba(111,155,198,0.25)', pointerEvents: 'none', zIndex: 1 }} />
+      <div aria-hidden style={{ position: 'absolute', bottom: 20, right: 20, width: 14, height: 14, borderBottom: '0.5px solid rgba(111,155,198,0.25)', borderRight: '0.5px solid rgba(111,155,198,0.25)', pointerEvents: 'none', zIndex: 1 }} />
 
       <div style={{ position: 'relative', zIndex: 1, maxWidth: 1200, margin: '0 auto', padding: '0 48px' }}>
+
+        {/* Section header */}
         <p style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, color: '#6F9BC6', margin: '0 0 18px' }}>
-          ACCESS
+          THE ENGINE
         </p>
         <h2 style={{ ...DISP, fontWeight: 700, fontSize: 36, lineHeight: 1.15, color: '#E6E9EE', margin: '0 0 14px', letterSpacing: '-0.5px' }}>
           One engine. Three access points.
@@ -538,20 +564,118 @@ function ThreeDoorsSection() {
           Whether you&apos;re diagnosing your own site, managing client audits, or building conversion intelligence into a product — it&apos;s the same engine underneath.
         </p>
 
+        {/* ── Engine convergence — core node + three beams ──────────────────── */}
+        <div className="td-convergence" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+
+          {/* Core node */}
+          <div style={{ position: 'relative', marginBottom: 0 }}>
+            {/* Corner ticks on the node */}
+            <div aria-hidden style={{ position: 'absolute', top: -5, left: -5, width: 9, height: 9, borderTop: '0.5px solid rgba(111,155,198,0.6)', borderLeft: '0.5px solid rgba(111,155,198,0.6)' }} />
+            <div aria-hidden style={{ position: 'absolute', top: -5, right: -5, width: 9, height: 9, borderTop: '0.5px solid rgba(111,155,198,0.6)', borderRight: '0.5px solid rgba(111,155,198,0.6)' }} />
+            <div aria-hidden style={{ position: 'absolute', bottom: -5, left: -5, width: 9, height: 9, borderBottom: '0.5px solid rgba(111,155,198,0.6)', borderLeft: '0.5px solid rgba(111,155,198,0.6)' }} />
+            <div aria-hidden style={{ position: 'absolute', bottom: -5, right: -5, width: 9, height: 9, borderBottom: '0.5px solid rgba(111,155,198,0.6)', borderRight: '0.5px solid rgba(111,155,198,0.6)' }} />
+
+            <div
+              className="td-core-node"
+              style={{
+                width: 52,
+                height: 52,
+                background: '#0A0E18',
+                border: '0.5px solid rgba(111,155,198,0.45)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                position: 'relative',
+                animation: 'coreNodeGlow 3.2s ease-in-out infinite',
+              }}
+            >
+              {/* Crosshair lines */}
+              <div aria-hidden style={{ position: 'absolute', width: '100%', height: '0.5px', background: 'rgba(111,155,198,0.18)' }} />
+              <div aria-hidden style={{ position: 'absolute', width: '0.5px', height: '100%', background: 'rgba(111,155,198,0.18)' }} />
+              {/* Center mark */}
+              <div style={{ width: 7, height: 7, background: '#6F9BC6', position: 'relative', zIndex: 1 }} />
+            </div>
+          </div>
+
+          {/* Scan engine label */}
+          <p style={{ ...MONO, fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.2em', color: 'rgba(111,155,198,0.45)', margin: '7px 0 0' }}>
+            SCAN ENGINE
+          </p>
+
+          {/* Three beams fanning from core to each card */}
+          {/*
+            viewBox 0 0 100 100 with preserveAspectRatio="none":
+            x-axis scales to full content width; y-axis fixed at 52px.
+            Card centers: ~16.2% (founders), 50% (agencies), ~83.8% (developers).
+            pathLength="100" normalises dash offsets independent of screen width.
+            vector-effect="non-scaling-stroke" keeps stroke at 1 CSS px on all viewports.
+          */}
+          <svg
+            className="td-beams"
+            viewBox="0 0 100 100"
+            preserveAspectRatio="none"
+            width="100%"
+            height="52"
+            aria-hidden
+            style={{ display: 'block', overflow: 'visible', marginTop: 4 }}
+          >
+            {/* Beam → founders (cyan) */}
+            <line
+              className="td-beam"
+              x1="50" y1="0" x2="16" y2="100"
+              stroke="rgba(0,200,255,0.5)"
+              strokeWidth="1"
+              vectorEffect="non-scaling-stroke"
+              pathLength="100"
+              strokeDasharray="8 5"
+              style={{ animation: 'beamFlow 1.8s linear infinite' }}
+            />
+            {/* Beam → agencies (purple) */}
+            <line
+              className="td-beam"
+              x1="50" y1="0" x2="50" y2="100"
+              stroke="rgba(157,140,255,0.5)"
+              strokeWidth="1"
+              vectorEffect="non-scaling-stroke"
+              pathLength="100"
+              strokeDasharray="8 5"
+              style={{ animation: 'beamFlow 1.8s linear infinite', animationDelay: '0.35s' }}
+            />
+            {/* Beam → developers (green) */}
+            <line
+              className="td-beam"
+              x1="50" y1="0" x2="84" y2="100"
+              stroke="rgba(0,196,140,0.5)"
+              strokeWidth="1"
+              vectorEffect="non-scaling-stroke"
+              pathLength="100"
+              strokeDasharray="8 5"
+              style={{ animation: 'beamFlow 1.8s linear infinite', animationDelay: '0.7s' }}
+            />
+          </svg>
+
+        </div>
+        {/* ── End convergence ─────────────────────────────────────────────────── */}
+
+        {/* Three equal-weight cards */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4" style={{ alignItems: 'stretch' }}>
 
-          {/* Card 1 — Founders */}
-          <div className="wd-panel" style={{ display: 'flex', flexDirection: 'column', boxShadow: '0 0 0 1px rgba(239,178,62,0.15), 0 0 20px rgba(239,178,62,0.05)', borderTop: '1px solid rgba(239,178,62,0.2)' }}>
-            {/* Header zone */}
+          {/* Card 1 — Founders / cyan */}
+          <div className="wd-panel" style={{
+            display: 'flex', flexDirection: 'column',
+            borderTop: '1px solid rgba(0,200,255,0.3)',
+            borderLeft: '1px solid rgba(0,200,255,0.12)',
+            boxShadow: '0 0 0 1px rgba(0,200,255,0.1), 0 0 28px rgba(0,200,255,0.07)',
+          }}>
             <div style={{ padding: '24px 24px 16px', borderBottom: '0.5px solid rgba(255,255,255,0.06)' }}>
-              <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: 1.5, color: '#6F9BC6', margin: '0 0 10px' }}>For founders</p>
+              <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: 1.5, color: '#00C8FF', margin: '0 0 10px' }}>For founders</p>
               <h3 style={{ ...DISP, fontWeight: 700, fontSize: 22, color: '#E6E9EE', margin: '0 0 10px', lineHeight: 1.25 }}>Diagnose your site.</h3>
               <p style={{ ...SANS, fontSize: 14, color: '#9398A8', lineHeight: 1.6, margin: 0 }}>
                 Paste your URL. Get a full conversion audit in 90 seconds — score, ranked findings, AI-rewritten copy, and how you compare against your category.
               </p>
             </div>
-            {/* Artifact zone */}
-            <div style={{ padding: '20px 24px', background: 'rgba(255,255,255,0.015)', flexGrow: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
+            <div style={{ padding: '20px 24px', background: 'rgba(0,200,255,0.02)', flexGrow: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
+              {/* ScoreRing score=61 → scoreBand returns sev-critical → renders red + CRITICAL label */}
               <ScoreRing score={61} size="md" animate={true} label="CONVERSION SCORE" />
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6, textAlign: 'center' }}>
                 <p style={{ ...MONO, fontSize: 12, margin: 0 }}>
@@ -564,33 +688,35 @@ function ThreeDoorsSection() {
                 </p>
               </div>
             </div>
-            {/* CTA zone */}
             <div style={{ padding: '16px 24px 24px', borderTop: '0.5px solid rgba(255,255,255,0.06)' }}>
-              <Link href="/scan" style={{ ...MONO, fontSize: 11, color: '#E6E9EE', border: '0.5px solid rgba(0,196,140,0.35)', padding: '10px 14px', display: 'block', textAlign: 'center', textDecoration: 'none' }}>
+              <Link href="/scan" style={{ ...MONO, fontSize: 11, color: '#E6E9EE', border: '0.5px solid rgba(111,155,198,0.35)', padding: '10px 14px', display: 'block', textAlign: 'center', textDecoration: 'none' }}>
                 Scan my site free →
               </Link>
               <p style={{ ...MONO, fontSize: 10, color: '#6E7587', textAlign: 'center', marginTop: 8, marginBottom: 0 }}>Free · No account required</p>
             </div>
           </div>
 
-          {/* Card 2 — Agencies */}
-          <div className="wd-panel" style={{ display: 'flex', flexDirection: 'column', boxShadow: '0 0 0 1px rgba(0,196,140,0.2), 0 0 20px rgba(0,196,140,0.06)', borderTop: '1px solid rgba(0,196,140,0.25)' }}>
-            {/* Header zone */}
+          {/* Card 2 — Agencies / purple */}
+          <div className="wd-panel" style={{
+            display: 'flex', flexDirection: 'column',
+            borderTop: '1px solid rgba(157,140,255,0.3)',
+            borderLeft: '1px solid rgba(157,140,255,0.12)',
+            boxShadow: '0 0 0 1px rgba(157,140,255,0.1), 0 0 28px rgba(157,140,255,0.08)',
+          }}>
             <div style={{ padding: '24px 24px 16px', borderBottom: '0.5px solid rgba(255,255,255,0.06)' }}>
-              <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: 1.5, color: '#6F9BC6', margin: '0 0 10px' }}>For agencies</p>
+              <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: 1.5, color: '#9D8CFF', margin: '0 0 10px' }}>For agencies</p>
               <h3 style={{ ...DISP, fontWeight: 700, fontSize: 22, color: '#E6E9EE', margin: '0 0 10px', lineHeight: 1.25 }}>Manage client audits.</h3>
               <p style={{ ...SANS, fontSize: 14, color: '#9398A8', lineHeight: 1.6, margin: 0 }}>
                 Client workspaces, white-label report links, multi-page scanning, competitor benchmarking. Show up to every call with data, not opinions.
               </p>
             </div>
-            {/* Artifact zone */}
-            <div style={{ padding: '20px 24px', background: 'rgba(255,255,255,0.015)', flexGrow: 1 }}>
-              <div style={{ background: '#050810', border: '0.5px solid rgba(255,255,255,0.07)', padding: '12px 14px' }}>
+            <div style={{ padding: '20px 24px', background: 'rgba(157,140,255,0.025)', flexGrow: 1 }}>
+              <div style={{ background: '#050810', border: '0.5px solid rgba(157,140,255,0.18)', padding: '12px 14px', boxShadow: '0 0 16px rgba(157,140,255,0.06)' }}>
                 <p style={{ ...MONO, fontSize: 9, textTransform: 'uppercase', letterSpacing: 1.5, color: '#6E7587', margin: '0 0 3px' }}>PREPARED FOR</p>
                 <p style={{ ...DISP, fontWeight: 500, fontSize: 14, color: '#E6E9EE', margin: '0 0 10px' }}>Acme Inc.</p>
                 <div style={{ borderTop: '0.5px solid rgba(255,255,255,0.06)', paddingTop: 8 }}>
                   {[
-                    { k: 'score',    v: '61',          vc: '#6F9BC6' },
+                    { k: 'score',    v: '61',          vc: '#E8635F' },
                     { k: 'findings', v: '23 critical',  vc: '#E8635F' },
                   ].map(r => (
                     <div key={r.k} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
@@ -601,41 +727,42 @@ function ThreeDoorsSection() {
                 </div>
               </div>
             </div>
-            {/* CTA zone */}
             <div style={{ padding: '16px 24px 24px', borderTop: '0.5px solid rgba(255,255,255,0.06)' }}>
-              <Link href="/pricing" style={{ ...MONO, fontSize: 11, color: '#E6E9EE', border: '0.5px solid rgba(0,196,140,0.35)', padding: '10px 14px', display: 'block', textAlign: 'center', textDecoration: 'none' }}>
+              <Link href="/pricing" style={{ ...MONO, fontSize: 11, color: '#E6E9EE', border: '0.5px solid rgba(111,155,198,0.35)', padding: '10px 14px', display: 'block', textAlign: 'center', textDecoration: 'none' }}>
                 See agency plans →
               </Link>
               <p style={{ ...MONO, fontSize: 10, color: '#6E7587', textAlign: 'center', marginTop: 8, marginBottom: 0 }}>From $149/mo · 14-day trial</p>
             </div>
           </div>
 
-          {/* Card 3 — Developers */}
-          <div className="wd-panel" style={{ display: 'flex', flexDirection: 'column', boxShadow: '0 0 0 1px rgba(111,155,198,0.15), 0 0 20px rgba(111,155,198,0.05)', borderTop: '1px solid rgba(111,155,198,0.2)' }}>
-            {/* Header zone */}
+          {/* Card 3 — Developers / green */}
+          <div className="wd-panel" style={{
+            display: 'flex', flexDirection: 'column',
+            borderTop: '1px solid rgba(0,196,140,0.28)',
+            borderLeft: '1px solid rgba(0,196,140,0.1)',
+            boxShadow: '0 0 0 1px rgba(0,196,140,0.1), 0 0 28px rgba(0,196,140,0.07)',
+          }}>
             <div style={{ padding: '24px 24px 16px', borderBottom: '0.5px solid rgba(255,255,255,0.06)' }}>
-              <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: 1.5, color: '#6F9BC6', margin: '0 0 10px' }}>For developers</p>
+              <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: 1.5, color: '#00C48C', margin: '0 0 10px' }}>For developers</p>
               <h3 style={{ ...DISP, fontWeight: 700, fontSize: 22, color: '#E6E9EE', margin: '0 0 10px', lineHeight: 1.25 }}>Build with it.</h3>
               <p style={{ ...SANS, fontSize: 14, color: '#9398A8', lineHeight: 1.6, margin: 0 }}>
                 POST a URL, get structured JSON. Batch endpoint, async mode, webhooks. Integrate conversion intelligence into your product in an afternoon.
               </p>
             </div>
-            {/* Artifact zone */}
-            <div style={{ padding: '20px 24px', background: 'rgba(255,255,255,0.015)', flexGrow: 1 }}>
-              <div style={{ background: '#050810', border: '0.5px solid rgba(255,255,255,0.07)', padding: '12px 14px' }}>
+            <div style={{ padding: '20px 24px', background: 'rgba(0,196,140,0.02)', flexGrow: 1 }}>
+              <div style={{ background: '#050810', border: '0.5px solid rgba(0,196,140,0.14)', padding: '12px 14px', boxShadow: '0 0 16px rgba(0,196,140,0.05)' }}>
                 <pre style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, lineHeight: 1.7, margin: 0, overflow: 'hidden', color: '#9398A8' }}>
                   {'{'}{'\n'}
-                  {'  '}<span style={{ color: '#8080c0' }}>&quot;score&quot;</span>{': '}<span style={{ color: '#EFB23E' }}>61</span>{','}{'\n'}
+                  {'  '}<span style={{ color: '#8080c0' }}>&quot;score&quot;</span>{': '}<span style={{ color: '#E8635F' }}>61</span>{','}{'\n'}
                   {'  '}<span style={{ color: '#6F9BC6' }}>&quot;severity&quot;</span>{': '}<span style={{ color: '#E8635F' }}>&quot;critical&quot;</span>{','}{'\n'}
-                  {'  '}<span style={{ color: '#8080c0' }}>&quot;findings&quot;</span>{': '}<span style={{ color: '#EFB23E' }}>23</span>{'\n'}
+                  {'  '}<span style={{ color: '#8080c0' }}>&quot;findings&quot;</span>{': '}<span style={{ color: '#6F9BC6' }}>23</span>{'\n'}
                   {'}'}
                 </pre>
               </div>
               <p style={{ ...MONO, fontSize: 11, color: '#6E7587', margin: '10px 0 0' }}>full schema · 307 checks · $0.15/scan</p>
             </div>
-            {/* CTA zone */}
             <div style={{ padding: '16px 24px 24px', borderTop: '0.5px solid rgba(255,255,255,0.06)' }}>
-              <Link href="/developer" style={{ ...MONO, fontSize: 11, color: '#E6E9EE', border: '0.5px solid rgba(0,196,140,0.35)', padding: '10px 14px', display: 'block', textAlign: 'center', textDecoration: 'none' }}>
+              <Link href="/developer" style={{ ...MONO, fontSize: 11, color: '#E6E9EE', border: '0.5px solid rgba(111,155,198,0.35)', padding: '10px 14px', display: 'block', textAlign: 'center', textDecoration: 'none' }}>
                 Get API key →
               </Link>
               <p style={{ ...MONO, fontSize: 10, color: '#6E7587', textAlign: 'center', marginTop: 8, marginBottom: 0 }}>$0.15/scan · No monthly fee</p>
@@ -664,8 +791,8 @@ const CORPUS_JSON = `{
 
 const CORPUS_STATS = [
   { value: '4,800+', label: 'Sites scanned',        color: '#E6E9EE' },
-  { value: '58',     label: 'Average score',         color: '#EFB23E' },
-  { value: '23',     label: 'Avg findings per site', color: '#EFB23E' },
+  { value: '58',     label: 'Average score',         color: '#6F9BC6' },
+  { value: '23',     label: 'Avg findings per site', color: '#6F9BC6' },
   { value: '76%',    label: 'No above-fold proof',   color: '#E8635F' },
 ] as const
 
@@ -689,7 +816,7 @@ function StatsBand() {
           inset: 0,
           pointerEvents: 'none',
           zIndex: 0,
-          background: 'radial-gradient(ellipse 1000px 500px at 50% 40%, rgba(239,178,62,0.05) 0%, transparent 60%)',
+          background: 'radial-gradient(ellipse 1000px 500px at 50% 40%, rgba(111,155,198,0.05) 0%, transparent 60%)',
         }}
       />
 
@@ -709,7 +836,7 @@ function StatsBand() {
         </p>
 
         {/* Stat cells */}
-        <div style={{ display: 'flex', borderTop: '1px solid rgba(239,178,62,0.15)', marginBottom: 32 }}>
+        <div style={{ display: 'flex', borderTop: '1px solid rgba(111,155,198,0.15)', marginBottom: 32 }}>
           {CORPUS_STATS.map((s, i) => (
             <div
               key={s.label}
@@ -741,14 +868,14 @@ function StatsBand() {
               <span className="site-marker-pulse" style={{ ...MONO, fontSize: 10, color: '#E6E9EE', whiteSpace: 'nowrap' }}>YOUR SITE</span>
             </div>
             <div style={{ position: 'relative', height: 6 }}>
-              <div style={{ height: 6, background: 'linear-gradient(90deg, #E8635F 0%, #EFB23E 35%, #6F9BC6 60%, #00C48C 100%)' }} />
+              <div style={{ height: 6, background: 'linear-gradient(90deg, #E8635F 0%, #6F9BC6 55%, #00C48C 100%)' }} />
               {[25, 50, 75].map(pct => (
                 <div key={pct} style={{ position: 'absolute', top: 0, left: `${pct}%`, width: 1, height: 6, background: 'rgba(255,255,255,0.2)', transform: 'translateX(-50%)' }} />
               ))}
               <div style={{ position: 'absolute', top: -3, left: '63%', width: 2, height: 12, background: '#E6E9EE', transform: 'translateX(-50%)' }} />
             </div>
             <div style={{ position: 'absolute', bottom: 0, left: '63%', transform: 'translateX(-50%)', textAlign: 'center' }}>
-              <span style={{ ...MONO, fontSize: 10, color: '#EFB23E', whiteSpace: 'nowrap' }}>63rd pct</span>
+              <span style={{ ...MONO, fontSize: 10, color: '#6F9BC6', whiteSpace: 'nowrap' }}>63rd pct</span>
             </div>
           </div>
         </div>
@@ -854,7 +981,7 @@ function PricingSection() {
                 padding: '7px 18px',
                 border: 'none',
                 cursor: 'pointer',
-                background: billing === b ? '#00C48C' : 'transparent',
+                background: billing === b ? '#6F9BC6' : 'transparent',
                 color: billing === b ? '#050810' : '#6E7587',
                 fontWeight: billing === b ? 600 : 400,
                 transition: 'background 0.15s, color 0.15s',
@@ -920,9 +1047,9 @@ function PricingSection() {
                   textTransform: 'uppercase',
                   padding: '11px 0',
                   textDecoration: 'none',
-                  background: plan.primary ? 'rgba(0,196,140,0.06)' : 'transparent',
-                  color: plan.primary ? '#00C48C' : '#E6E9EE',
-                  border: plan.primary ? '1px solid rgba(0,196,140,0.5)' : '0.5px solid rgba(255,255,255,0.15)',
+                  background: plan.primary ? 'rgba(111,155,198,0.06)' : 'transparent',
+                  color: plan.primary ? '#6F9BC6' : '#E6E9EE',
+                  border: plan.primary ? '1px solid rgba(111,155,198,0.5)' : '0.5px solid rgba(255,255,255,0.15)',
                   fontWeight: plan.primary ? 600 : 400,
                 }}
               >
@@ -950,7 +1077,7 @@ function PricingSection() {
           </div>
           <Link
             href="/developers#pricing"
-            style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, letterSpacing: 1.5, textTransform: 'uppercase', color: '#00C48C', border: '0.5px solid rgba(0,196,140,0.4)', padding: '11px 20px', textDecoration: 'none', flexShrink: 0 }}
+            style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, letterSpacing: 1.5, textTransform: 'uppercase', color: '#6F9BC6', border: '0.5px solid rgba(111,155,198,0.4)', padding: '11px 20px', textDecoration: 'none', flexShrink: 0 }}
           >
             SEE DEVELOPER PRICING →
           </Link>
@@ -967,18 +1094,18 @@ function FinalCtaSection() {
   const [focused, setFocused] = useState(false)
 
   return (
-    <section style={{ position: 'relative', overflow: 'hidden', padding: '96px 0', background: '#080D18', borderTop: '0.5px solid rgba(0,196,140,0.2)' }}>
+    <section style={{ position: 'relative', overflow: 'hidden', padding: '96px 0', background: '#080D18', borderTop: '0.5px solid rgba(111,155,198,0.2)' }}>
       <style>{`
         @keyframes scan-pulse {
-          0%, 100% { box-shadow: 0 0 0 0 rgba(0,196,140,0.3); }
-          50%       { box-shadow: 0 0 0 8px rgba(0,196,140,0); }
+          0%, 100% { box-shadow: 0 0 0 0 rgba(111,155,198,0.3); }
+          50%       { box-shadow: 0 0 0 8px rgba(111,155,198,0); }
         }
         .scan-btn-pulse { animation: scan-pulse 2.5s ease-in-out infinite; }
         @media (prefers-reduced-motion: reduce) { .scan-btn-pulse { animation: none; } }
       `}</style>
 
       {/* Green radial bloom */}
-      <div aria-hidden style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0, background: 'radial-gradient(ellipse 800px 400px at 50% 50%, rgba(0,196,140,0.04) 0%, transparent 60%)' }} />
+      <div aria-hidden style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0, background: 'radial-gradient(ellipse 800px 400px at 50% 50%, rgba(111,155,198,0.04) 0%, transparent 60%)' }} />
 
       <div style={{ position: 'relative', zIndex: 1, maxWidth: 640, margin: '0 auto', padding: '0 48px', textAlign: 'center' }}>
 
@@ -1020,10 +1147,10 @@ function FinalCtaSection() {
         <div style={{
           display: 'flex',
           background: '#0A0E18',
-          borderTop: `1px solid ${focused ? 'rgba(0,196,140,0.6)' : 'rgba(255,255,255,0.1)'}`,
-          borderLeft: `1px solid ${focused ? 'rgba(0,196,140,0.3)' : 'rgba(255,255,255,0.07)'}`,
-          borderRight: `1px solid ${focused ? 'rgba(0,196,140,0.2)' : 'rgba(255,255,255,0.04)'}`,
-          borderBottom: `1px solid ${focused ? 'rgba(0,196,140,0.15)' : 'rgba(255,255,255,0.03)'}`,
+          borderTop: `1px solid ${focused ? 'rgba(111,155,198,0.6)' : 'rgba(255,255,255,0.1)'}`,
+          borderLeft: `1px solid ${focused ? 'rgba(111,155,198,0.3)' : 'rgba(255,255,255,0.07)'}`,
+          borderRight: `1px solid ${focused ? 'rgba(111,155,198,0.2)' : 'rgba(255,255,255,0.04)'}`,
+          borderBottom: `1px solid ${focused ? 'rgba(111,155,198,0.15)' : 'rgba(255,255,255,0.03)'}`,
           transition: 'border-color 0.15s',
           marginBottom: 8,
         }}>
@@ -1044,7 +1171,7 @@ function FinalCtaSection() {
         <Link
           href="/scan"
           className="scan-btn-pulse"
-          style={{ display: 'block', ...MONO, fontSize: 13, fontWeight: 600, letterSpacing: 1, textTransform: 'uppercase', background: '#00C48C', color: '#050810', padding: '13px 0', textDecoration: 'none', textAlign: 'center', marginBottom: 10 }}
+          style={{ display: 'block', ...MONO, fontSize: 13, fontWeight: 600, letterSpacing: 1, textTransform: 'uppercase', background: '#6F9BC6', color: '#050810', padding: '13px 0', textDecoration: 'none', textAlign: 'center', marginBottom: 10 }}
         >
           SCAN MY SITE →
         </Link>
@@ -1067,10 +1194,10 @@ function FinalCtaSection() {
           <div style={{ height: '0.5px', background: 'rgba(255,255,255,0.05)', marginBottom: 10 }} />
           <div style={{ ...MONO, fontSize: 11 }}>
             <span style={{ color: '#8080c0' }}>score: </span>
-            <span style={{ color: '#EFB23E' }}>61</span>
+            <span style={{ color: '#6F9BC6' }}>61</span>
             <span style={{ color: '#6E7587' }}>{'  ·  '}</span>
             <span style={{ color: '#8080c0' }}>findings: </span>
-            <span style={{ color: '#EFB23E' }}>23</span>
+            <span style={{ color: '#6F9BC6' }}>23</span>
             <span style={{ color: '#6E7587' }}>{'  ·  '}</span>
             <span style={{ color: '#8080c0' }}>cost_usd: </span>
             <span style={{ color: '#9398A8' }}>0.15</span>
@@ -1180,7 +1307,7 @@ function FooterSection() {
       <div className="max-w-[1280px] mx-auto px-8 py-12 grid grid-cols-4 gap-8">
         <div>
           <Link href="/" className="font-display font-extrabold text-base text-text-primary no-underline">
-            webdoc<span className="text-cyan-DEFAULT">.ai</span>
+            webdoc<span className="text-[#6F9BC6]">.ai</span>
           </Link>
           <p className="font-body text-sm text-text-secondary mt-3 max-w-xs leading-relaxed">
             The conversion audit API. 307 checks, ranked findings, AI-rewritten copy. One endpoint.
@@ -1202,7 +1329,7 @@ function FooterSection() {
           <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mb-4">GET STARTED</div>
           <Link href="/playground" className="font-body text-sm text-text-secondary hover:text-text-primary block mb-3 no-underline">Scan my site free →</Link>
           <Link href="/pricing" className="font-body text-sm text-text-secondary hover:text-text-primary block mb-3 no-underline">Agency plans →</Link>
-          <Link href="/signup" className="font-body text-sm text-cyan-DEFAULT hover:opacity-80 block mb-3 no-underline">Get API key →</Link>
+          <Link href="/signup" className="font-body text-sm text-[#6F9BC6] hover:opacity-80 block mb-3 no-underline">Get API key →</Link>
         </div>
         <div>
           <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mb-4">RESOURCES</div>

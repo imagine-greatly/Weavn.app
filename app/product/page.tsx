@@ -365,7 +365,7 @@ export default function ProductPage() {
         position: 'relative',
         overflow: 'hidden',
         background: '#06090F',
-        borderTop: '0.5px solid rgba(0,196,140,0.15)',
+        borderTop: '0.5px solid rgba(111,155,198,0.15)',
         borderBottom: '0.5px solid rgba(255,255,255,0.05)',
       }}>
         {/* Green bloom */}
@@ -376,7 +376,7 @@ export default function ProductPage() {
             inset: 0,
             pointerEvents: 'none',
             zIndex: 0,
-            background: 'radial-gradient(ellipse 900px 500px at 50% 50%, rgba(0,196,140,0.05) 0%, transparent 60%)',
+            background: 'radial-gradient(ellipse 900px 500px at 50% 50%, rgba(111,155,198,0.05) 0%, transparent 60%)',
           }}
         />
         <div style={{ position: 'relative', zIndex: 1, maxWidth: '56rem', margin: '0 auto', padding: '80px 32px' }}>
@@ -447,8 +447,8 @@ export default function ProductPage() {
             pointerEvents: 'none',
             zIndex: 0,
             background: [
-              'radial-gradient(ellipse 350px 500px at 18% 70%, rgba(239,178,62,0.04) 0%, transparent 60%)',
-              'radial-gradient(ellipse 350px 500px at 50% 70%, rgba(0,196,140,0.04) 0%, transparent 60%)',
+              'radial-gradient(ellipse 350px 500px at 18% 70%, rgba(0,200,255,0.04) 0%, transparent 60%)',
+              'radial-gradient(ellipse 350px 500px at 50% 70%, rgba(157,140,255,0.04) 0%, transparent 60%)',
               'radial-gradient(ellipse 350px 500px at 82% 70%, rgba(111,155,198,0.04) 0%, transparent 60%)',
             ].join(', '),
           }}
@@ -478,7 +478,7 @@ export default function ProductPage() {
             </div>
             <Link
               href="/scan"
-              style={{ display: 'block', textAlign: 'center', fontFamily: '"IBM Plex Mono", monospace', fontSize: 13, border: '0.5px solid #00C48C', color: '#00C48C', padding: '12px 0', textDecoration: 'none' }}
+              style={{ display: 'block', textAlign: 'center', fontFamily: '"IBM Plex Mono", monospace', fontSize: 13, border: '0.5px solid #6F9BC6', color: '#6F9BC6', padding: '12px 0', textDecoration: 'none' }}
             >
               Scan my site free →
             </Link>
@@ -497,8 +497,8 @@ export default function ProductPage() {
             {/* Artifact: two data rows */}
             <div style={{ padding: '20px 0', borderTop: '0.5px solid rgba(255,255,255,0.06)', marginTop: 24, display: 'flex', flexDirection: 'column', gap: 10 }}>
               {[
-                { key: 'score', value: '61', color: '#00C48C' },
-                { key: 'findings', value: '23', color: '#EFB23E' },
+                { key: 'score', value: '61', color: '#E8635F' },
+                { key: 'findings', value: '23', color: '#6F9BC6' },
               ].map(({ key, value, color }) => (
                 <div key={key} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 12, color: '#8080C0' }}>{key}</span>
@@ -508,7 +508,7 @@ export default function ProductPage() {
             </div>
             <Link
               href="/pricing"
-              style={{ display: 'block', textAlign: 'center', fontFamily: '"IBM Plex Mono", monospace', fontSize: 13, border: '0.5px solid #00C48C', color: '#00C48C', padding: '12px 0', textDecoration: 'none' }}
+              style={{ display: 'block', textAlign: 'center', fontFamily: '"IBM Plex Mono", monospace', fontSize: 13, border: '0.5px solid #6F9BC6', color: '#6F9BC6', padding: '12px 0', textDecoration: 'none' }}
             >
               See agency plans →
             </Link>
@@ -533,7 +533,7 @@ export default function ProductPage() {
             </div>
             <Link
               href="/developers"
-              style={{ display: 'block', textAlign: 'center', fontFamily: '"IBM Plex Mono", monospace', fontSize: 13, border: '0.5px solid #00C48C', color: '#00C48C', padding: '12px 0', textDecoration: 'none', marginTop: 16 }}
+              style={{ display: 'block', textAlign: 'center', fontFamily: '"IBM Plex Mono", monospace', fontSize: 13, border: '0.5px solid #6F9BC6', color: '#6F9BC6', padding: '12px 0', textDecoration: 'none', marginTop: 16 }}
             >
               Get API key →
             </Link>
@@ -548,8 +548,8 @@ export default function ProductPage() {
       {/* ── 6. Final CTA — transparent, grid-exposed ─────────────────────────── */}
       <style>{`
         @keyframes scan-cta-pulse {
-          0%, 100% { border-color: rgba(0,196,140,0.3); }
-          50% { border-color: rgba(0,196,140,0.8); }
+          0%, 100% { border-color: rgba(111,155,198,0.3); }
+          50% { border-color: rgba(111,155,198,0.8); }
         }
         @media (prefers-reduced-motion: no-preference) {
           .scan-cta-pulse { animation: scan-cta-pulse 2s infinite; }
@@ -609,11 +609,11 @@ export default function ProductPage() {
             display: 'inline-block',
             fontFamily: '"IBM Plex Mono", monospace',
             fontSize: 13,
-            backgroundColor: '#00C48C',
+            backgroundColor: '#6F9BC6',
             color: '#050810',
             padding: '13px 28px',
             textDecoration: 'none',
-            border: '2px solid rgba(0,196,140,0.3)',
+            border: '2px solid rgba(111,155,198,0.3)',
             transition: 'opacity 0.15s',
           }}
         >
@@ -640,11 +640,11 @@ export default function ProductPage() {
           }}>
             <span style={{ color: '#8080C0' }}>score</span>
             <span style={{ color: '#6E7587' }}>: </span>
-            <span style={{ color: '#00C48C' }}>61</span>
+            <span style={{ color: '#E8635F' }}>61</span>
             <span style={{ color: '#6E7587' }}> · </span>
             <span style={{ color: '#8080C0' }}>findings</span>
             <span style={{ color: '#6E7587' }}>: </span>
-            <span style={{ color: '#EFB23E' }}>23</span>
+            <span style={{ color: '#6F9BC6' }}>23</span>
             <span style={{ color: '#6E7587' }}> · </span>
             <span style={{ color: '#8080C0' }}>industry</span>
             <span style={{ color: '#6E7587' }}>: </span>

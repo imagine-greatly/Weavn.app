@@ -21,7 +21,7 @@ const C = {
 
 const SEV_HEX: Record<string, string> = {
   'sev-critical': '#E8635F',
-  'sev-high':     '#EFB23E',
+  'sev-high':     '#6F9BC6',
   'ink-muted':    '#6E7587',
 }
 

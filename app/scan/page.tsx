@@ -510,7 +510,7 @@ export default function ScanPage() {
             const isPending = !isDone && !isActive
 
             const squareColor = isDone   ? '#00C48C'
-                              : isActive ? '#EFB23E'
+                              : isActive ? '#6F9BC6'
                               :            '#3A3A52'
 
             const labelColor = isDone   ? '#9398A8'

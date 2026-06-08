@@ -6,8 +6,8 @@ import { CodeBlock } from '@/components/ui/CodeBlock'
 // ── Data ──────────────────────────────────────────────────────────────────────
 
 const RATE_POINTS = [
-  { label: 'Playground', price: '$0.25', color: '#EFB23E' },
-  { label: 'Dev', price: '$0.19', color: '#EFB23E' },
+  { label: 'Playground', price: '$0.25', color: '#6F9BC6' },
+  { label: 'Dev', price: '$0.19', color: '#6F9BC6' },
   { label: 'Builder', price: '$0.17', color: '#6F9BC6' },
   { label: 'Scale', price: '$0.15', color: '#00C48C' },
   { label: 'Enterprise', price: '$0.11', color: '#00C48C' },
@@ -101,7 +101,7 @@ const FAQ_CARDS = [
     q: 'What if a site blocks the scanner?',
     a: 'webdoc uses Browserless Pro with stealth mode and a real Chrome user agent. Most sites scan cleanly. Cloudflare Enterprise with aggressive bot detection occasionally blocks — the API returns a structured error with block_reason: "automated_access_blocked". We are actively improving defeat strategies.',
     dataLine: 'error: automated_access_blocked',
-    dataColor: '#EFB23E',
+    dataColor: '#E8635F',
   },
   {
     q: 'Is there an uptime SLA?',
@@ -193,7 +193,7 @@ export default function DevelopersPage() {
             pointerEvents: 'none',
             zIndex: 0,
             background: [
-              'radial-gradient(ellipse 300px 200px at 15% 50%, rgba(239,178,62,0.06) 0%, transparent 70%)',
+              'radial-gradient(ellipse 300px 200px at 15% 50%, rgba(111,155,198,0.06) 0%, transparent 70%)',
               'radial-gradient(ellipse 300px 200px at 85% 50%, rgba(0,196,140,0.06) 0%, transparent 70%)',
             ].join(', '),
           }}
@@ -203,7 +203,7 @@ export default function DevelopersPage() {
             PER-SCAN RATE · DECREASES WITH VOLUME
           </div>
 
-          <div style={{ height: 8, background: 'linear-gradient(to right, #EFB23E, #6F9BC6, #00C48C)' }} />
+          <div style={{ height: 8, background: 'linear-gradient(to right, #6F9BC6, #00C48C)' }} />
 
           <div style={{ display: 'flex', justifyContent: 'space-between' }}>
             {RATE_POINTS.map((point, i) => (
@@ -299,7 +299,7 @@ export default function DevelopersPage() {
               <div style={{ margin: '16px 0', borderTop: '0.5px solid rgba(255,255,255,0.05)', paddingTop: 12 }}>
                 <CodeBlock language="json" code={`{ "urls": ["site1.com", "site2.com"],\n  "async": true, "batch": true }`} />
               </div>
-              <Link href="/signup?plan=builder-api" style={{ display: 'block', textAlign: 'center', ...MONO, fontSize: 13, color: '#050810', backgroundColor: '#00C48C', padding: '12px 0', marginTop: 8, textDecoration: 'none', transition: 'opacity 0.15s' }}>
+              <Link href="/signup?plan=builder-api" style={{ display: 'block', textAlign: 'center', ...MONO, fontSize: 13, color: '#050810', backgroundColor: '#6F9BC6', padding: '12px 0', marginTop: 8, textDecoration: 'none', transition: 'opacity 0.15s' }}>
                 START BUILDER PLAN →
               </Link>
             </div>
@@ -389,11 +389,11 @@ export default function DevelopersPage() {
       <div className="section-separator" />
 
       {/* ── 5. CTA pair — bg #06090F ──────────────────────────────────────────── */}
-      <section style={{ background: '#06090F', borderTop: '0.5px solid rgba(0,196,140,0.12)', padding: '64px 32px', textAlign: 'center' }}>
+      <section style={{ background: '#06090F', borderTop: '0.5px solid rgba(111,155,198,0.12)', padding: '64px 32px', textAlign: 'center' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, flexWrap: 'wrap' }}>
           <Link
             href="/playground"
-            style={{ ...MONO, fontSize: 13, backgroundColor: '#00C48C', color: '#050810', padding: '13px 28px', textDecoration: 'none', display: 'inline-block', transition: 'opacity 0.15s' }}
+            style={{ ...MONO, fontSize: 13, backgroundColor: '#6F9BC6', color: '#050810', padding: '13px 28px', textDecoration: 'none', display: 'inline-block', transition: 'opacity 0.15s' }}
           >
             TRY THE PLAYGROUND →
           </Link>
@@ -460,7 +460,7 @@ export default function DevelopersPage() {
       <div style={{ padding: '24px 0', textAlign: 'center' }}>
         <p style={{ fontFamily: '"IBM Plex Sans", sans-serif', fontSize: 14, color: '#9398A8', margin: 0 }}>
           Need a dashboard?{' '}
-          <Link href="/pricing" style={{ color: '#00C48C', textDecoration: 'none' }}>
+          <Link href="/pricing" style={{ color: '#6F9BC6', textDecoration: 'none' }}>
             See agency plans →
           </Link>
         </p>

@@ -20,21 +20,20 @@ const SIZE_MAP = {
 
 const BAND_HEX: Record<string, string> = {
   'sev-critical': '#E8635F',
-  'sev-high':     '#EFB23E',
   'json-string':  '#00C48C',
 }
 
 const BAND_GLOW_NEAR: Record<string, string> = {
   'sev-critical': 'rgba(232,99,95,0.7)',
-  'sev-high':     'rgba(239,178,62,0.7)',
   'json-string':  'rgba(0,196,140,0.7)',
 }
 
 const BAND_GLOW_FAR: Record<string, string> = {
   'sev-critical': 'rgba(232,99,95,0.3)',
-  'sev-high':     'rgba(239,178,62,0.3)',
   'json-string':  'rgba(0,196,140,0.3)',
 }
+
+const CRIT_FONT: Record<string, number> = { sm: 5, md: 7, lg: 9 }
 
 function ScoreRing({ score, size = 'md', label, animate = true, animated }: ScoreRingProps) {
   const shouldAnimate = animated !== undefined ? animated : animate
@@ -43,9 +42,12 @@ function ScoreRing({ score, size = 'md', label, animate = true, animated }: Scor
   const radius = center - stroke / 2 - 1
   const circumference = 2 * Math.PI * radius
   const targetFill = (Math.min(Math.max(score, 0), 100) / 100) * circumference
-  const color    = BAND_HEX[scoreBand(score)]      ?? '#00C48C'
-  const glowNear = BAND_GLOW_NEAR[scoreBand(score)] ?? 'rgba(0,196,140,0.7)'
-  const glowFar  = BAND_GLOW_FAR[scoreBand(score)]  ?? 'rgba(0,196,140,0.3)'
+  const band     = scoreBand(score)
+  const isCrit   = band === 'sev-critical'
+  const color    = BAND_HEX[band]      ?? '#00C48C'
+  const glowNear = BAND_GLOW_NEAR[band] ?? 'rgba(0,196,140,0.7)'
+  const glowFar  = BAND_GLOW_FAR[band]  ?? 'rgba(0,196,140,0.3)'
+  const critFont = CRIT_FONT[size]
 
   const arcRef = useRef<SVGCircleElement>(null)
   const [displayScore, setDisplayScore] = useState(score)
@@ -107,7 +109,7 @@ function ScoreRing({ score, size = 'md', label, animate = true, animated }: Scor
         />
         <text
           x={center}
-          y={center}
+          y={isCrit ? center - font * 0.45 : center}
           dominantBaseline="central"
           textAnchor="middle"
           fill={color}
@@ -117,6 +119,20 @@ function ScoreRing({ score, size = 'md', label, animate = true, animated }: Scor
         >
           {displayScore}
         </text>
+        {isCrit && (
+          <text
+            x={center}
+            y={center + critFont * 0.5 + 2}
+            dominantBaseline="central"
+            textAnchor="middle"
+            fill={color}
+            fontFamily="'IBM Plex Mono', monospace"
+            fontWeight={400}
+            fontSize={critFont}
+          >
+            CRITICAL
+          </text>
+        )}
       </svg>
       {label && (
         <span

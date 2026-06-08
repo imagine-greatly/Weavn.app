@@ -19,7 +19,7 @@ function Stat({ value, label, verdict = 'neutral' }: StatProps) {
   } else if (verdict === 'good-count') {
     color = '#00C48C'  // json-string
   } else if (verdict === 'problem-count') {
-    color = '#EFB23E'  // sev-high
+    color = '#E8635F'  // sev-critical — problem count frames a deficiency
   } else {
     color = '#E6E9EE'  // ink-primary
   }

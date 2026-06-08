@@ -86,4 +86,4 @@ export const SEVERITY_COLOR: Record<string, string> = {
 };
 
 export const scoreBand = (n: number): string =>
-  n < 50 ? 'sev-critical' : n < 70 ? 'sev-high' : 'json-string';
+  n >= 70 ? 'json-string' : 'sev-critical';

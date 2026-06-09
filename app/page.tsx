@@ -586,16 +586,47 @@ function ThreeDoorsSection() {
           from { stroke-dashoffset: 13; }
           to   { stroke-dashoffset: 0; }
         }
-        @keyframes coreNodeGlow {
-          0%, 100% { box-shadow: 0 0 0 1px rgba(111,155,198,0.2), 0 0 14px rgba(111,155,198,0.12), 0 0 40px rgba(111,155,198,0.05); }
-          50%       { box-shadow: 0 0 0 1px rgba(111,155,198,0.35), 0 0 22px rgba(111,155,198,0.25), 0 0 56px rgba(111,155,198,0.10); }
+        @keyframes tdNodeBloom {
+          0%, 100% { opacity: 0.5;  transform: scale(0.88); }
+          50%       { opacity: 1;    transform: scale(1.18); }
+        }
+        @keyframes tdMidRing {
+          0%, 100% { transform: scale(0.85); opacity: 0.45; }
+          50%       { transform: scale(1.15); opacity: 1; }
+        }
+        @keyframes tdScanRotate {
+          from { transform: rotate(0deg); }
+          to   { transform: rotate(360deg); }
+        }
+        @keyframes tdBeamBreathe {
+          0%, 100% { opacity: 0.55; }
+          50%       { opacity: 0.82; }
+        }
+        @keyframes tdFlareC {
+          0%, 84% { box-shadow: 0 0 0 1px rgba(0,200,255,0.1),   0 0 28px rgba(0,200,255,0.07); }
+          91%      { box-shadow: 0 0 0 1px rgba(0,200,255,0.28),  0 0 44px rgba(0,200,255,0.18); }
+          100%     { box-shadow: 0 0 0 1px rgba(0,200,255,0.1),   0 0 28px rgba(0,200,255,0.07); }
+        }
+        @keyframes tdFlareP {
+          0%, 84% { box-shadow: 0 0 0 1px rgba(157,140,255,0.1),  0 0 28px rgba(157,140,255,0.08); }
+          91%      { box-shadow: 0 0 0 1px rgba(157,140,255,0.28), 0 0 44px rgba(157,140,255,0.2); }
+          100%     { box-shadow: 0 0 0 1px rgba(157,140,255,0.1),  0 0 28px rgba(157,140,255,0.08); }
+        }
+        @keyframes tdFlareG {
+          0%, 84% { box-shadow: 0 0 0 1px rgba(0,196,140,0.1),   0 0 28px rgba(0,196,140,0.07); }
+          91%      { box-shadow: 0 0 0 1px rgba(0,196,140,0.28),  0 0 44px rgba(0,196,140,0.18); }
+          100%     { box-shadow: 0 0 0 1px rgba(0,196,140,0.1),   0 0 28px rgba(0,196,140,0.07); }
         }
         @media (max-width: 639px) {
           .td-convergence { display: none !important; }
         }
         @media (prefers-reduced-motion: reduce) {
-          .td-beam { animation: none !important; }
-          .td-core-node { animation: none !important; }
+          .td-beam       { animation: none !important; }
+          .td-node-bloom { animation: none !important; opacity: 0.5 !important; transform: none !important; }
+          .td-mid-ring   { animation: none !important; opacity: 0.5 !important; transform: none !important; }
+          .td-tick-frame { animation: none !important; }
+          .td-particle   { display: none !important; }
+          .td-card       { animation: none !important; }
         }
       `}</style>
 
@@ -629,94 +660,140 @@ function ThreeDoorsSection() {
           Whether you&apos;re diagnosing your own site, managing client audits, or building conversion intelligence into a product — it&apos;s the same engine underneath.
         </p>
 
-        {/* ── Engine convergence — core node + three beams ──────────────────── */}
+        {/* ── Engine convergence — layered node + organic bezier beams ────────── */}
         <div className="td-convergence" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
 
-          {/* Core node */}
-          <div style={{ position: 'relative', marginBottom: 0 }}>
-            {/* Corner ticks on the node */}
-            <div aria-hidden style={{ position: 'absolute', top: -5, left: -5, width: 9, height: 9, borderTop: '0.5px solid rgba(111,155,198,0.6)', borderLeft: '0.5px solid rgba(111,155,198,0.6)' }} />
-            <div aria-hidden style={{ position: 'absolute', top: -5, right: -5, width: 9, height: 9, borderTop: '0.5px solid rgba(111,155,198,0.6)', borderRight: '0.5px solid rgba(111,155,198,0.6)' }} />
-            <div aria-hidden style={{ position: 'absolute', bottom: -5, left: -5, width: 9, height: 9, borderBottom: '0.5px solid rgba(111,155,198,0.6)', borderLeft: '0.5px solid rgba(111,155,198,0.6)' }} />
-            <div aria-hidden style={{ position: 'absolute', bottom: -5, right: -5, width: 9, height: 9, borderBottom: '0.5px solid rgba(111,155,198,0.6)', borderRight: '0.5px solid rgba(111,155,198,0.6)' }} />
+          {/* Core node — three concentric layers */}
+          <div style={{ position: 'relative', width: 70, height: 70, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
 
-            <div
-              className="td-core-node"
-              style={{
-                width: 52,
-                height: 52,
-                background: '#0A0E18',
-                border: '0.5px solid rgba(111,155,198,0.45)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                position: 'relative',
-                animation: 'coreNodeGlow 3.2s ease-in-out infinite',
-              }}
-            >
+            {/* Layer 3: Outer bloom — 36×36, radial pulse (slowest, most out-of-phase) */}
+            <div className="td-node-bloom" aria-hidden style={{
+              position: 'absolute', width: 36, height: 36,
+              background: 'radial-gradient(circle, rgba(111,155,198,0.18) 0%, transparent 70%)',
+              animation: 'tdNodeBloom 2.4s ease-in-out infinite 0.6s',
+            }} />
+
+            {/* Rotating instrument tick frame — 58×58, 12s scan */}
+            <div className="td-tick-frame" aria-hidden style={{
+              position: 'absolute', width: 58, height: 58,
+              animation: 'tdScanRotate 12s linear infinite',
+            }}>
+              <div style={{ position: 'absolute', top: 0, left: 0,     width: 9, height: 9, borderTop:    '0.5px solid rgba(111,155,198,0.6)', borderLeft:   '0.5px solid rgba(111,155,198,0.6)' }} />
+              <div style={{ position: 'absolute', top: 0, right: 0,    width: 9, height: 9, borderTop:    '0.5px solid rgba(111,155,198,0.6)', borderRight:  '0.5px solid rgba(111,155,198,0.6)' }} />
+              <div style={{ position: 'absolute', bottom: 0, left: 0,  width: 9, height: 9, borderBottom: '0.5px solid rgba(111,155,198,0.6)', borderLeft:   '0.5px solid rgba(111,155,198,0.6)' }} />
+              <div style={{ position: 'absolute', bottom: 0, right: 0, width: 9, height: 9, borderBottom: '0.5px solid rgba(111,155,198,0.6)', borderRight:  '0.5px solid rgba(111,155,198,0.6)' }} />
+            </div>
+
+            {/* Node box — 40×40 */}
+            <div style={{
+              width: 40, height: 40,
+              background: '#0A0E18',
+              border: '0.5px solid rgba(111,155,198,0.4)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              position: 'relative', zIndex: 1,
+            }}>
               {/* Crosshair lines */}
               <div aria-hidden style={{ position: 'absolute', width: '100%', height: '0.5px', background: 'rgba(111,155,198,0.18)' }} />
               <div aria-hidden style={{ position: 'absolute', width: '0.5px', height: '100%', background: 'rgba(111,155,198,0.18)' }} />
-              {/* Center mark */}
-              <div style={{ width: 7, height: 7, background: '#6F9BC6', position: 'relative', zIndex: 1 }} />
+              {/* Layer 2: Mid ring — 20×20, scale pulse offset 0.2s */}
+              <div className="td-mid-ring" aria-hidden style={{
+                position: 'absolute', width: 20, height: 20,
+                border: '0.5px solid rgba(111,155,198,0.4)',
+                animation: 'tdMidRing 2.4s ease-in-out infinite 0.2s',
+              }} />
+              {/* Layer 1: Inner bright point — 6×6, always opaque */}
+              <div style={{ width: 6, height: 6, background: '#6F9BC6', position: 'relative', zIndex: 2 }} />
             </div>
           </div>
 
           {/* Scan engine label */}
-          <p style={{ ...MONO, fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.2em', color: 'rgba(111,155,198,0.45)', margin: '7px 0 0' }}>
+          <p style={{ ...MONO, fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.2em', color: 'rgba(111,155,198,0.45)', margin: '7px 0 4px' }}>
             SCAN ENGINE
           </p>
 
-          {/* Three beams fanning from core to each card */}
           {/*
-            viewBox 0 0 100 100 with preserveAspectRatio="none":
-            x-axis scales to full content width; y-axis fixed at 52px.
-            Card centers: ~16.2% (founders), 50% (agencies), ~83.8% (developers).
-            pathLength="100" normalises dash offsets independent of screen width.
-            vector-effect="non-scaling-stroke" keeps stroke at 1 CSS px on all viewports.
+            Organic bezier beams — viewBox 0 0 900 80, uniform aspect ratio (no preserveAspectRatio="none").
+            Card column centers: ~16% (x≈150), 50% (x=450), ~84% (x≈750).
+            pathLength="100" normalises dash animation. vectorEffect="non-scaling-stroke" keeps 1px weight.
+            Path IDs are referenced directly by <mpath> — elements in SVG body are valid mpath targets.
           */}
           <svg
             className="td-beams"
-            viewBox="0 0 100 100"
-            preserveAspectRatio="none"
+            viewBox="0 0 900 80"
             width="100%"
-            height="52"
             aria-hidden
-            style={{ display: 'block', overflow: 'visible', marginTop: 4 }}
+            style={{ display: 'block', overflow: 'visible' }}
           >
-            {/* Beam → founders (cyan) */}
-            <line
+            <defs>
+              {/* Soft glow applied to primary particles only */}
+              <filter id="td-particleGlow" x="-100%" y="-100%" width="300%" height="300%">
+                <feGaussianBlur stdDeviation="1.2" result="blur" />
+                <feMerge>
+                  <feMergeNode in="blur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+            </defs>
+
+            {/* Cyan — founders: sweeps wide LEFT (300,30), curves back in (180,65) → cresting wave */}
+            <path
+              id="td-path-c"
               className="td-beam"
-              x1="50" y1="0" x2="16" y2="100"
-              stroke="rgba(0,200,255,0.5)"
-              strokeWidth="1"
+              d="M 450,0 C 300,30 180,65 150,80"
+              stroke="rgba(0,200,255,0.55)"
+              strokeWidth="1" fill="none"
               vectorEffect="non-scaling-stroke"
-              pathLength="100"
-              strokeDasharray="8 5"
-              style={{ animation: 'beamFlow 1.8s linear infinite' }}
+              pathLength="100" strokeDasharray="10 6"
+              style={{ animation: 'beamFlow 1.8s linear infinite, tdBeamBreathe 5s ease-in-out infinite 0s' }}
             />
-            {/* Beam → agencies (purple) */}
-            <line
+
+            {/* Purple — agencies: gentle asymmetric S, leans left (430,25) then right (470,55) */}
+            <path
+              id="td-path-p"
               className="td-beam"
-              x1="50" y1="0" x2="50" y2="100"
-              stroke="rgba(157,140,255,0.5)"
-              strokeWidth="1"
+              d="M 450,0 C 430,25 470,55 450,80"
+              stroke="rgba(157,140,255,0.55)"
+              strokeWidth="1" fill="none"
               vectorEffect="non-scaling-stroke"
-              pathLength="100"
-              strokeDasharray="8 5"
-              style={{ animation: 'beamFlow 1.8s linear infinite', animationDelay: '0.35s' }}
+              pathLength="100" strokeDasharray="10 6"
+              style={{ animation: 'beamFlow 1.8s linear infinite 0.4s, tdBeamBreathe 5s ease-in-out infinite 1.5s' }}
             />
-            {/* Beam → developers (green) */}
-            <line
+
+            {/* Green — developers: mirror of cyan — sweeps RIGHT (600,30), curves back in (720,65) */}
+            <path
+              id="td-path-g"
               className="td-beam"
-              x1="50" y1="0" x2="84" y2="100"
-              stroke="rgba(0,196,140,0.5)"
-              strokeWidth="1"
+              d="M 450,0 C 600,30 720,65 750,80"
+              stroke="rgba(0,196,140,0.55)"
+              strokeWidth="1" fill="none"
               vectorEffect="non-scaling-stroke"
-              pathLength="100"
-              strokeDasharray="8 5"
-              style={{ animation: 'beamFlow 1.8s linear infinite', animationDelay: '0.7s' }}
+              pathLength="100" strokeDasharray="10 6"
+              style={{ animation: 'beamFlow 1.8s linear infinite 0.8s, tdBeamBreathe 5s ease-in-out infinite 3s' }}
             />
+
+            {/* Particles — cyan lane: primary at 0s, secondary offset by half-cycle (0.9s) */}
+            <circle className="td-particle" r="1.5" fill="#00C8FF" filter="url(#td-particleGlow)">
+              <animateMotion dur="1.8s" repeatCount="indefinite" begin="0s"><mpath href="#td-path-c" /></animateMotion>
+            </circle>
+            <circle className="td-particle" r="0.8" fill="rgba(0,200,255,0.45)">
+              <animateMotion dur="1.8s" repeatCount="indefinite" begin="0.9s"><mpath href="#td-path-c" /></animateMotion>
+            </circle>
+
+            {/* Particles — purple lane: staggered 0.4s from cyan */}
+            <circle className="td-particle" r="1.5" fill="#9D8CFF" filter="url(#td-particleGlow)">
+              <animateMotion dur="1.8s" repeatCount="indefinite" begin="0.4s"><mpath href="#td-path-p" /></animateMotion>
+            </circle>
+            <circle className="td-particle" r="0.8" fill="rgba(157,140,255,0.45)">
+              <animateMotion dur="1.8s" repeatCount="indefinite" begin="1.3s"><mpath href="#td-path-p" /></animateMotion>
+            </circle>
+
+            {/* Particles — green lane: staggered 0.8s from cyan */}
+            <circle className="td-particle" r="1.5" fill="#00C48C" filter="url(#td-particleGlow)">
+              <animateMotion dur="1.8s" repeatCount="indefinite" begin="0.8s"><mpath href="#td-path-g" /></animateMotion>
+            </circle>
+            <circle className="td-particle" r="0.8" fill="rgba(0,196,140,0.45)">
+              <animateMotion dur="1.8s" repeatCount="indefinite" begin="1.7s"><mpath href="#td-path-g" /></animateMotion>
+            </circle>
           </svg>
 
         </div>
@@ -726,11 +803,13 @@ function ThreeDoorsSection() {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4" style={{ alignItems: 'stretch' }}>
 
           {/* Card 1 — Founders / cyan */}
-          <div className="wd-panel" style={{
+          <div className="wd-panel td-card" style={{
             display: 'flex', flexDirection: 'column',
             borderTop: '1px solid rgba(0,200,255,0.3)',
             borderLeft: '1px solid rgba(0,200,255,0.12)',
             boxShadow: '0 0 0 1px rgba(0,200,255,0.1), 0 0 28px rgba(0,200,255,0.07)',
+            animation: 'tdFlareC 1.8s ease-in-out infinite',
+            animationDelay: '0s',
           }}>
             <div style={{ padding: '24px 24px 16px', borderBottom: '0.5px solid rgba(255,255,255,0.06)' }}>
               <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: 1.5, color: '#00C8FF', margin: '0 0 10px' }}>For founders</p>
@@ -762,11 +841,13 @@ function ThreeDoorsSection() {
           </div>
 
           {/* Card 2 — Agencies / purple */}
-          <div className="wd-panel" style={{
+          <div className="wd-panel td-card" style={{
             display: 'flex', flexDirection: 'column',
             borderTop: '1px solid rgba(157,140,255,0.3)',
             borderLeft: '1px solid rgba(157,140,255,0.12)',
             boxShadow: '0 0 0 1px rgba(157,140,255,0.1), 0 0 28px rgba(157,140,255,0.08)',
+            animation: 'tdFlareP 1.8s ease-in-out infinite',
+            animationDelay: '0.4s',
           }}>
             <div style={{ padding: '24px 24px 16px', borderBottom: '0.5px solid rgba(255,255,255,0.06)' }}>
               <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: 1.5, color: '#9D8CFF', margin: '0 0 10px' }}>For agencies</p>
@@ -801,11 +882,13 @@ function ThreeDoorsSection() {
           </div>
 
           {/* Card 3 — Developers / green */}
-          <div className="wd-panel" style={{
+          <div className="wd-panel td-card" style={{
             display: 'flex', flexDirection: 'column',
             borderTop: '1px solid rgba(0,196,140,0.28)',
             borderLeft: '1px solid rgba(0,196,140,0.1)',
             boxShadow: '0 0 0 1px rgba(0,196,140,0.1), 0 0 28px rgba(0,196,140,0.07)',
+            animation: 'tdFlareG 1.8s ease-in-out infinite',
+            animationDelay: '0.8s',
           }}>
             <div style={{ padding: '24px 24px 16px', borderBottom: '0.5px solid rgba(255,255,255,0.06)' }}>
               <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: 1.5, color: '#00C48C', margin: '0 0 10px' }}>For developers</p>

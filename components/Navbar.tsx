@@ -13,9 +13,9 @@ import { getSupabaseBrowserClient } from "@/lib/supabaseBrowser";
  */
 
 const CENTER_LINKS = [
-  { label: "PRODUCT", href: "/product" },
-  { label: "PLANS", href: "/pricing" },
-  { label: "DEVELOPERS", href: "/developers" },
+  { label: "HOW IT WORKS", href: "/product" },
+  { label: "PRICING", href: "/pricing" },
+  { label: "API", href: "/developers" },
   { label: "DOCS", href: "/docs/api" },
 ];
 

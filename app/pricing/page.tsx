@@ -13,9 +13,9 @@ type CellVal =
 interface TableRow {
   feature: string
   free: CellVal
-  founder: CellVal
-  agency: CellVal
-  enterprise: CellVal
+  starter: CellVal
+  pro: CellVal
+  scale: CellVal
 }
 
 interface TableGroup {
@@ -39,31 +39,31 @@ const DASH_SPECS: Record<string, SpecEntry[]> = {
     { k: 'report_history',       v: '7d' },
     { k: 'team_seats',           v: '1' },
     { k: 'white_label',          v: 'false' },
-    { k: 'api_calls_bundled',    v: '0' },
+    { k: 'client_workspaces',    v: 'false' },
     { k: 'priority_processing',  v: 'false' },
   ],
-  founder: [
+  starter: [
     { k: 'scans_per_month',      v: '20' },
     { k: 'report_history',       v: '30d' },
     { k: 'team_seats',           v: '1' },
     { k: 'white_label',          v: 'false' },
-    { k: 'api_calls_bundled',    v: '0' },
+    { k: 'client_workspaces',    v: 'false' },
     { k: 'priority_processing',  v: 'true' },
   ],
-  agency: [
+  pro: [
     { k: 'scans_per_month',      v: '100' },
     { k: 'report_history',       v: 'unlimited' },
     { k: 'team_seats',           v: '3' },
     { k: 'white_label',          v: 'true' },
-    { k: 'api_calls_bundled',    v: '100' },
+    { k: 'client_workspaces',    v: 'true' },
     { k: 'priority_processing',  v: 'true' },
   ],
-  enterprise: [
+  scale: [
     { k: 'scans_per_month',      v: '500' },
     { k: 'report_history',       v: 'unlimited' },
     { k: 'team_seats',           v: 'unlimited' },
     { k: 'white_label',          v: 'true' },
-    { k: 'api_calls_bundled',    v: '500' },
+    { k: 'client_workspaces',    v: 'true' },
     { k: 'priority_processing',  v: 'true' },
   ],
 }
@@ -129,15 +129,15 @@ const FAQ_CARDS = [
     dataColor: '#00C48C',
   },
   {
-    q: 'What is the Founder tier?',
-    a: 'Formerly called Starter. 20 scans per month, single user, full 307-check audit on every scan. Score trending, competitor analysis, and ranked findings included. No team seats — built for solo founders.',
+    q: 'What is the Starter tier?',
+    a: '20 scans per month, single user, full 307-check audit on every scan. Score trending, competitor analysis, and ranked findings included. No team seats — built for solo founders and individuals.',
     dataLine: '20 scans/month · $2.45/scan effective',
     dataColor: '#6F9BC6',
   },
   {
-    q: 'What does Agency include?',
-    a: '100 scans per month, unlimited client workspaces, white-label report links, multi-page scanning (3 pages), PDF export, 3 team seats, and 100 bundled API calls per month. The 100 API calls can be used programmatically or consumed by the dashboard.',
-    dataLine: '100 scans · 100 api_calls · 3 seats',
+    q: 'What does Pro include?',
+    a: '100 scans per month, unlimited client workspaces, white-label report links, multi-page scanning, PDF export, and 3 team seats. Designed for agencies running audits for multiple clients.',
+    dataLine: '100 scans · white_label: true · 3 seats',
     dataColor: '#6F9BC6',
   },
   {
@@ -166,24 +166,24 @@ const TABLE_GROUPS: TableGroup[] = [
     rows: [
       {
         feature: 'Scans per month',
-        free:       { type: 'text', value: '3' },
-        founder:    { type: 'text', value: '20' },
-        agency:     { type: 'text', value: '100' },
-        enterprise: { type: 'text', value: '500' },
+        free:    { type: 'text', value: '3' },
+        starter: { type: 'text', value: '20' },
+        pro:     { type: 'text', value: '100' },
+        scale:   { type: 'text', value: '500' },
       },
       {
         feature: 'Check depth',
-        free:       { type: 'text', value: '307 checks' },
-        founder:    { type: 'text', value: '307' },
-        agency:     { type: 'text', value: '307' },
-        enterprise: { type: 'text', value: '307' },
+        free:    { type: 'text', value: '307 checks' },
+        starter: { type: 'text', value: '307' },
+        pro:     { type: 'text', value: '307' },
+        scale:   { type: 'text', value: '307' },
       },
       {
         feature: 'Site types',
-        free:       { type: 'text', value: 'All' },
-        founder:    { type: 'text', value: 'All' },
-        agency:     { type: 'text', value: 'All' },
-        enterprise: { type: 'text', value: 'All' },
+        free:    { type: 'text', value: 'All' },
+        starter: { type: 'text', value: 'All' },
+        pro:     { type: 'text', value: 'All' },
+        scale:   { type: 'text', value: 'All' },
       },
     ],
   },
@@ -192,57 +192,57 @@ const TABLE_GROUPS: TableGroup[] = [
     rows: [
       {
         feature: 'Report history',
-        free:       { type: 'text', value: '7 days' },
-        founder:    { type: 'text', value: '30 days' },
-        agency:     { type: 'text', value: '90 days' },
-        enterprise: { type: 'text', value: '1 year' },
+        free:    { type: 'text', value: '7 days' },
+        starter: { type: 'text', value: '30 days' },
+        pro:     { type: 'text', value: 'unlimited' },
+        scale:   { type: 'text', value: 'unlimited' },
       },
       {
         feature: 'White-label reports',
-        free:       { type: 'dash' },
-        founder:    { type: 'dash' },
-        agency:     { type: 'check' },
-        enterprise: { type: 'check' },
+        free:    { type: 'dash' },
+        starter: { type: 'dash' },
+        pro:     { type: 'check' },
+        scale:   { type: 'check' },
       },
       {
         feature: 'CSV export',
-        free:       { type: 'dash' },
-        founder:    { type: 'check' },
-        agency:     { type: 'check' },
-        enterprise: { type: 'check' },
+        free:    { type: 'dash' },
+        starter: { type: 'check' },
+        pro:     { type: 'check' },
+        scale:   { type: 'check' },
       },
       {
         feature: 'PDF export',
-        free:       { type: 'dash' },
-        founder:    { type: 'dash' },
-        agency:     { type: 'check' },
-        enterprise: { type: 'check' },
+        free:    { type: 'dash' },
+        starter: { type: 'dash' },
+        pro:     { type: 'check' },
+        scale:   { type: 'check' },
       },
     ],
   },
   {
-    label: 'AGENCY FEATURES',
+    label: 'ADVANCED FEATURES',
     rows: [
       {
         feature: 'Client workspaces',
-        free:       { type: 'dash' },
-        founder:    { type: 'dash' },
-        agency:     { type: 'check' },
-        enterprise: { type: 'check' },
+        free:    { type: 'dash' },
+        starter: { type: 'dash' },
+        pro:     { type: 'check' },
+        scale:   { type: 'check' },
       },
       {
         feature: 'Multi-page scanning',
-        free:       { type: 'dash' },
-        founder:    { type: 'dash' },
-        agency:     { type: 'check' },
-        enterprise: { type: 'check' },
+        free:    { type: 'dash' },
+        starter: { type: 'dash' },
+        pro:     { type: 'check' },
+        scale:   { type: 'check' },
       },
       {
-        feature: 'API access (bundled)',
-        free:       { type: 'dash' },
-        founder:    { type: 'dash' },
-        agency:     { type: 'text', value: '100 calls' },
-        enterprise: { type: 'text', value: 'Custom' },
+        feature: 'Team seats',
+        free:    { type: 'text', value: '1' },
+        starter: { type: 'text', value: '1' },
+        pro:     { type: 'text', value: '3' },
+        scale:   { type: 'text', value: 'unlimited' },
       },
     ],
   },
@@ -251,17 +251,17 @@ const TABLE_GROUPS: TableGroup[] = [
     rows: [
       {
         feature: 'Support type',
-        free:       { type: 'text', value: 'Community' },
-        founder:    { type: 'text', value: 'Email' },
-        agency:     { type: 'text', value: 'Priority' },
-        enterprise: { type: 'text', value: 'Dedicated' },
+        free:    { type: 'text', value: 'Community' },
+        starter: { type: 'text', value: 'Email' },
+        pro:     { type: 'text', value: 'Priority' },
+        scale:   { type: 'text', value: 'Dedicated' },
       },
       {
         feature: 'SLA',
-        free:       { type: 'dash' },
-        founder:    { type: 'dash' },
-        agency:     { type: 'check' },
-        enterprise: { type: 'text', value: 'Custom' },
+        free:    { type: 'dash' },
+        starter: { type: 'dash' },
+        pro:     { type: 'check' },
+        scale:   { type: 'text', value: 'Custom' },
       },
     ],
   },
@@ -326,10 +326,10 @@ export default function PricingPage() {
             PRICING
           </p>
           <h1 style={{ ...DISP, fontSize: 'clamp(36px, 5vw, 56px)', fontWeight: 700, letterSpacing: '-1.5px', color: '#E6E9EE', margin: '0 0 16px', lineHeight: 1.1 }}>
-            Same engine. Different access.
+            Dashboard pricing. No contracts.
           </h1>
           <p style={{ ...SANS, fontSize: 16, lineHeight: 1.65, color: '#9398A8', maxWidth: 560, margin: '0 auto' }}>
-            One scan engine underneath everything. Choose how you access it.
+            Scan without writing code. Four tiers. Same 307-check engine regardless of plan. Cancel anytime.
           </p>
         </div>
       </section>
@@ -375,11 +375,11 @@ export default function PricingPage() {
 
           {isAnnual && (
             <p style={{ ...MONO, fontSize: 11, color: '#6E7587', margin: '-28px 0 32px', lineHeight: 1.8 }}>
-              <span style={{ color: '#00C48C' }}>save ${savings(49)}/yr</span>
+              <span style={{ color: '#00C48C' }}>save ${savings(49)}/yr on Starter</span>
               {' · '}
-              <span style={{ color: '#00C48C' }}>save ${savings(149)}/yr</span>
+              <span style={{ color: '#00C48C' }}>save ${savings(149)}/yr on Pro</span>
               {' · '}
-              <span style={{ color: '#00C48C' }}>save ${savings(499)}/yr</span>
+              <span style={{ color: '#00C48C' }}>save ${savings(499)}/yr on Scale</span>
             </p>
           )}
 
@@ -404,52 +404,52 @@ export default function PricingPage() {
               </div>
             </div>
 
-            {/* FOUNDER */}
+            {/* STARTER */}
             <div className="wd-panel" style={{ display: 'flex', flexDirection: 'column' }}>
-              <div style={{ padding: '20px 20px 14px', borderBottom: '0.5px solid rgba(255,255,255,0.06)' }}>
-                <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.18em', color: '#6F9BC6', margin: '0 0 6px' }}>FOUNDER</p>
+              <div style={{ padding: '32px 32px 14px', borderBottom: '0.5px solid rgba(255,255,255,0.06)' }}>
+                <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.18em', color: '#6F9BC6', margin: '0 0 6px' }}>STARTER</p>
                 <p style={{ ...MONO, fontSize: 10, color: '#6E7587', margin: '0 0 14px' }}>20 scans/mo · single user</p>
                 <p style={{ ...DISP, fontSize: 40, fontWeight: 700, color: '#E6E9EE', lineHeight: 1, margin: '0 0 4px' }}>${price(49)}</p>
                 <p style={{ ...MONO, fontSize: 10, color: '#6F9BC6', margin: 0 }}>$2.45/scan effective</p>
               </div>
-              <div style={{ padding: '14px 20px', borderBottom: '0.5px solid rgba(255,255,255,0.06)', flexGrow: 1 }}>
-                {DASH_SPECS.founder.map(s => <SpecRow key={s.k} k={s.k} v={s.v} />)}
+              <div style={{ padding: '14px 32px', borderBottom: '0.5px solid rgba(255,255,255,0.06)', flexGrow: 1 }}>
+                {DASH_SPECS.starter.map(s => <SpecRow key={s.k} k={s.k} v={s.v} />)}
               </div>
-              <div style={{ padding: '14px 20px 20px' }}>
-                <Link href="/signup?plan=founder" style={{ display: 'block', textAlign: 'center', ...MONO, fontSize: 12, color: '#6F9BC6', border: '1px solid rgba(111,155,198,0.5)', padding: '10px 0', textDecoration: 'none', transition: 'all 0.15s' }}>
+              <div style={{ padding: '14px 32px 32px' }}>
+                <Link href="/signup?plan=starter" style={{ display: 'block', textAlign: 'center', ...MONO, fontSize: 12, color: '#6F9BC6', border: '1px solid rgba(111,155,198,0.5)', padding: '10px 0', textDecoration: 'none', transition: 'all 0.15s' }}>
                   START FREE TRIAL →
                 </Link>
               </div>
             </div>
 
-            {/* AGENCY */}
+            {/* PRO */}
             <div className="wd-panel" style={{ display: 'flex', flexDirection: 'column' }}>
               <div style={{ padding: '20px 20px 14px', borderBottom: '0.5px solid rgba(255,255,255,0.06)' }}>
-                <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.18em', color: '#9D8CFF', margin: '0 0 6px' }}>AGENCY</p>
+                <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.18em', color: '#6F9BC6', margin: '0 0 6px' }}>PRO</p>
                 <p style={{ ...MONO, fontSize: 10, color: '#6E7587', margin: '0 0 14px' }}>100 scans/mo · client workspaces</p>
                 <p style={{ ...DISP, fontSize: 40, fontWeight: 700, color: '#E6E9EE', lineHeight: 1, margin: '0 0 4px' }}>${price(149)}</p>
-                <p style={{ ...MONO, fontSize: 10, color: '#9D8CFF', margin: 0 }}>$1.49/scan · 100 API calls bundled</p>
+                <p style={{ ...MONO, fontSize: 10, color: '#6F9BC6', margin: 0 }}>$1.49/scan effective</p>
               </div>
               <div style={{ padding: '14px 20px', borderBottom: '0.5px solid rgba(255,255,255,0.06)', flexGrow: 1 }}>
-                {DASH_SPECS.agency.map(s => <SpecRow key={s.k} k={s.k} v={s.v} />)}
+                {DASH_SPECS.pro.map(s => <SpecRow key={s.k} k={s.k} v={s.v} />)}
               </div>
               <div style={{ padding: '14px 20px 20px' }}>
-                <Link href="/signup?plan=agency" style={{ display: 'block', textAlign: 'center', ...MONO, fontSize: 12, color: '#9D8CFF', border: '1px solid rgba(157,140,255,0.5)', padding: '10px 0', textDecoration: 'none', transition: 'all 0.15s' }}>
+                <Link href="/signup?plan=pro" style={{ display: 'block', textAlign: 'center', ...MONO, fontSize: 12, color: '#6F9BC6', border: '1px solid rgba(111,155,198,0.5)', padding: '10px 0', textDecoration: 'none', transition: 'all 0.15s' }}>
                   START FREE TRIAL →
                 </Link>
               </div>
             </div>
 
-            {/* ENTERPRISE */}
+            {/* SCALE */}
             <div className="wd-panel" style={{ display: 'flex', flexDirection: 'column' }}>
               <div style={{ padding: '20px 20px 14px', borderBottom: '0.5px solid rgba(255,255,255,0.06)' }}>
-                <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.18em', color: '#6F9BC6', margin: '0 0 6px' }}>ENTERPRISE</p>
+                <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.18em', color: '#6F9BC6', margin: '0 0 6px' }}>SCALE</p>
                 <p style={{ ...MONO, fontSize: 10, color: '#6E7587', margin: '0 0 14px' }}>500 scans/mo · dedicated support</p>
                 <p style={{ ...DISP, fontSize: 40, fontWeight: 700, color: '#E6E9EE', lineHeight: 1, margin: '0 0 4px' }}>${price(499)}</p>
                 <p style={{ ...MONO, fontSize: 10, color: '#6E7587', margin: 0 }}>custom rate · dedicated support</p>
               </div>
               <div style={{ padding: '14px 20px', borderBottom: '0.5px solid rgba(255,255,255,0.06)', flexGrow: 1 }}>
-                {DASH_SPECS.enterprise.map(s => <SpecRow key={s.k} k={s.k} v={s.v} />)}
+                {DASH_SPECS.scale.map(s => <SpecRow key={s.k} k={s.k} v={s.v} />)}
               </div>
               <div style={{ padding: '14px 20px 20px' }}>
                 <Link href="mailto:hello@webdocai.com" style={{ display: 'block', textAlign: 'center', ...MONO, fontSize: 12, color: '#6F9BC6', border: '1px solid rgba(111,155,198,0.5)', padding: '10px 0', textDecoration: 'none', transition: 'all 0.15s' }}>
@@ -463,142 +463,7 @@ export default function PricingPage() {
       </section>
       <div className="section-separator" />
 
-      {/* ── 3. API PLANS ────────────────────────────────────────────────────── */}
-      <section style={{ position: 'relative', overflow: 'hidden', borderTop: '0.5px solid rgba(0,196,140,0.12)' }}>
-        <div aria-hidden style={{
-          position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0,
-          background: [
-            'radial-gradient(ellipse 1000px 700px at 62% 50%, rgba(0,196,140,0.04) 0%, transparent 60%)',
-            'radial-gradient(ellipse 600px 400px at 15% 30%, rgba(111,155,198,0.04) 0%, transparent 55%)',
-          ].join(', '),
-        }} />
-        <Ticks />
-
-        <div style={{ position: 'relative', zIndex: 1, maxWidth: 1280, margin: '0 auto', padding: '64px 32px 80px' }}>
-          <p style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.18em', color: '#00C48C', margin: '0 0 12px' }}>
-            API PLANS · FOR DEVELOPERS
-          </p>
-          <p style={{ ...SANS, fontSize: 15, color: '#9398A8', maxWidth: 560, lineHeight: 1.65, margin: '0 0 40px' }}>
-            POST a URL. Get structured JSON. No dashboard required. Same 307-check engine.
-          </p>
-
-          {/* Rate gradient bar */}
-          <div className="wd-panel" style={{ padding: '20px 24px 24px', marginBottom: 32, overflow: 'hidden', position: 'relative' }}>
-            <div aria-hidden style={{
-              position: 'absolute', inset: 0, pointerEvents: 'none',
-              background: 'radial-gradient(ellipse 600px 200px at 50% 50%, rgba(111,155,198,0.04) 0%, transparent 70%)',
-            }} />
-            <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.2em', color: '#6E7587', textAlign: 'center', margin: '0 0 20px', position: 'relative', zIndex: 1 }}>
-              RATE DECREASES WITH VOLUME
-            </p>
-            <div style={{ position: 'relative', zIndex: 1 }}>
-              <div style={{ height: 6, background: 'linear-gradient(to right, #6F9BC6, #00C48C)' }} />
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                {RATE_POINTS.map((p, i) => (
-                  <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                    <div style={{ width: '0.5px', height: 10, background: 'rgba(255,255,255,0.15)' }} />
-                    <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#6E7587', margin: '4px 0 2px' }}>{p.label}</p>
-                    <p style={{ ...DISP, fontSize: 13, fontWeight: 600, color: p.color, margin: 0 }}>{p.price}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* API tier cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3" style={{ alignItems: 'stretch' }}>
-
-            {/* PLAYGROUND */}
-            <div className="wd-panel" style={{ display: 'flex', flexDirection: 'column' }}>
-              <div style={{ padding: '18px 18px 12px', borderBottom: '0.5px solid rgba(255,255,255,0.06)' }}>
-                <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#6E7587', margin: '0 0 6px' }}>PLAYGROUND</p>
-                <p style={{ ...DISP, fontSize: 34, fontWeight: 700, color: '#E6E9EE', lineHeight: 1, margin: '0 0 2px' }}>25 free</p>
-                <p style={{ ...MONO, fontSize: 10, color: '#6E7587', margin: 0 }}>then $0.25/scan</p>
-              </div>
-              <div style={{ padding: '12px 18px', borderBottom: '0.5px solid rgba(255,255,255,0.06)', flexGrow: 1 }}>
-                {API_SPECS.playground.map(s => <SpecRow key={s.k} k={s.k} v={s.v} />)}
-              </div>
-              <div style={{ padding: '12px 18px 18px' }}>
-                <Link href="/developer" style={{ display: 'block', textAlign: 'center', ...MONO, fontSize: 11, color: '#6F9BC6', border: '1px solid rgba(111,155,198,0.5)', padding: '9px 0', textDecoration: 'none', transition: 'all 0.15s' }}>
-                  GET API KEY →
-                </Link>
-              </div>
-            </div>
-
-            {/* DEV */}
-            <div className="wd-panel" style={{ display: 'flex', flexDirection: 'column' }}>
-              <div style={{ padding: '18px 18px 12px', borderBottom: '0.5px solid rgba(255,255,255,0.06)' }}>
-                <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#6F9BC6', margin: '0 0 6px' }}>DEV</p>
-                <p style={{ ...DISP, fontSize: 34, fontWeight: 700, color: '#E6E9EE', lineHeight: 1, margin: '0 0 2px' }}>$29</p>
-                <p style={{ ...MONO, fontSize: 10, color: '#6F9BC6', margin: 0 }}>/mo · $0.097/scan</p>
-              </div>
-              <div style={{ padding: '12px 18px', borderBottom: '0.5px solid rgba(255,255,255,0.06)', flexGrow: 1 }}>
-                {API_SPECS.dev.map(s => <SpecRow key={s.k} k={s.k} v={s.v} />)}
-              </div>
-              <div style={{ padding: '12px 18px 18px' }}>
-                <Link href="/signup?plan=dev-api" style={{ display: 'block', textAlign: 'center', ...MONO, fontSize: 11, color: '#6F9BC6', border: '1px solid rgba(111,155,198,0.5)', padding: '9px 0', textDecoration: 'none', transition: 'all 0.15s' }}>
-                  START DEV →
-                </Link>
-              </div>
-            </div>
-
-            {/* BUILDER */}
-            <div className="wd-panel" style={{ display: 'flex', flexDirection: 'column' }}>
-              <div style={{ padding: '18px 18px 12px', borderBottom: '0.5px solid rgba(255,255,255,0.06)' }}>
-                <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#6F9BC6', margin: '0 0 6px' }}>BUILDER</p>
-                <p style={{ ...DISP, fontSize: 34, fontWeight: 700, color: '#E6E9EE', lineHeight: 1, margin: '0 0 2px' }}>$99</p>
-                <p style={{ ...MONO, fontSize: 10, color: '#6F9BC6', margin: 0 }}>/mo · $0.099/scan</p>
-              </div>
-              <div style={{ padding: '12px 18px', borderBottom: '0.5px solid rgba(255,255,255,0.06)', flexGrow: 1 }}>
-                {API_SPECS.builder.map(s => <SpecRow key={s.k} k={s.k} v={s.v} />)}
-              </div>
-              <div style={{ padding: '12px 18px 18px' }}>
-                <Link href="/signup?plan=builder-api" style={{ display: 'block', textAlign: 'center', ...MONO, fontSize: 11, color: '#6F9BC6', border: '1px solid rgba(111,155,198,0.5)', padding: '9px 0', textDecoration: 'none', transition: 'all 0.15s' }}>
-                  START BUILDER →
-                </Link>
-              </div>
-            </div>
-
-            {/* SCALE */}
-            <div className="wd-panel" style={{ display: 'flex', flexDirection: 'column' }}>
-              <div style={{ padding: '18px 18px 12px', borderBottom: '0.5px solid rgba(255,255,255,0.06)' }}>
-                <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#00C48C', margin: '0 0 6px' }}>SCALE</p>
-                <p style={{ ...DISP, fontSize: 34, fontWeight: 700, color: '#E6E9EE', lineHeight: 1, margin: '0 0 2px' }}>$249</p>
-                <p style={{ ...MONO, fontSize: 10, color: '#00C48C', margin: 0 }}>/mo · $0.083/scan</p>
-              </div>
-              <div style={{ padding: '12px 18px', borderBottom: '0.5px solid rgba(255,255,255,0.06)', flexGrow: 1 }}>
-                {API_SPECS.scale.map(s => <SpecRow key={s.k} k={s.k} v={s.v} />)}
-              </div>
-              <div style={{ padding: '12px 18px 18px' }}>
-                <Link href="/signup?plan=scale-api" style={{ display: 'block', textAlign: 'center', ...MONO, fontSize: 11, color: '#00C48C', border: '1px solid rgba(0,196,140,0.5)', padding: '9px 0', textDecoration: 'none', transition: 'all 0.15s' }}>
-                  START SCALE →
-                </Link>
-              </div>
-            </div>
-
-            {/* ENTERPRISE */}
-            <div className="wd-panel" style={{ display: 'flex', flexDirection: 'column' }}>
-              <div style={{ padding: '18px 18px 12px', borderBottom: '0.5px solid rgba(255,255,255,0.06)' }}>
-                <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#6F9BC6', margin: '0 0 6px' }}>ENTERPRISE</p>
-                <p style={{ ...DISP, fontSize: 34, fontWeight: 700, color: '#E6E9EE', lineHeight: 1, margin: '0 0 2px' }}>Custom</p>
-                <p style={{ ...MONO, fontSize: 10, color: '#6E7587', margin: 0 }}>volume · SLA guarantee</p>
-              </div>
-              <div style={{ padding: '12px 18px', borderBottom: '0.5px solid rgba(255,255,255,0.06)', flexGrow: 1 }}>
-                {API_SPECS.enterprise.map(s => <SpecRow key={s.k} k={s.k} v={s.v} />)}
-              </div>
-              <div style={{ padding: '12px 18px 18px' }}>
-                <Link href="mailto:hello@webdocai.com" style={{ display: 'block', textAlign: 'center', ...MONO, fontSize: 11, color: '#6F9BC6', border: '1px solid rgba(111,155,198,0.5)', padding: '9px 0', textDecoration: 'none', transition: 'all 0.15s' }}>
-                  TALK TO US →
-                </Link>
-              </div>
-            </div>
-
-          </div>
-        </div>
-      </section>
-      <div className="section-separator" />
-
-      {/* ── 4. FEATURE MATRIX ──────────────────────────────────────────────── */}
+      {/* ── 3. FEATURE MATRIX ──────────────────────────────────────────────── */}
       <section style={{ position: 'relative', overflow: 'hidden' }}>
         <div aria-hidden style={{
           position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0,
@@ -625,7 +490,7 @@ export default function PricingPage() {
                 <thead>
                   <tr>
                     <th style={{ textAlign: 'left', padding: '12px 16px 12px 0', width: '36%' }} />
-                    {(['FREE', 'FOUNDER', 'AGENCY', 'ENTERPRISE'] as const).map(plan => (
+                    {(['FREE', 'STARTER', 'PRO', 'SCALE'] as const).map(plan => (
                       <th key={plan} style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.12em', color: '#6F9BC6', textAlign: 'center', padding: '12px 16px', fontWeight: 400 }}>
                         {plan}
                       </th>
@@ -647,7 +512,7 @@ export default function PricingPage() {
                         <td style={{ ...MONO, fontSize: 12, color: '#9398A8', padding: '11px 16px 11px 0', borderBottom: '0.5px solid rgba(255,255,255,0.05)' }}>
                           {row.feature}
                         </td>
-                        {(['free', 'founder', 'agency', 'enterprise'] as const).map(col => (
+                        {(['free', 'starter', 'pro', 'scale'] as const).map(col => (
                           <td key={col} style={{ textAlign: 'center', padding: '11px 16px', borderBottom: '0.5px solid rgba(255,255,255,0.05)', ...MONO, fontSize: 12 }}>
                             <Cell val={row[col]} />
                           </td>
@@ -689,43 +554,35 @@ export default function PricingPage() {
       </section>
       <div className="section-separator" />
 
-      {/* ── 6. EXIT BAND — three audiences ──────────────────────────────────── */}
+      {/* ── 5. EXIT BAND ────────────────────────────────────────────────────── */}
       <section style={{ position: 'relative', overflow: 'hidden', borderTop: '0.5px solid rgba(111,155,198,0.15)' }}>
         <div aria-hidden style={{
           position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0,
           background: [
-            'radial-gradient(ellipse 600px 400px at 16% 50%, rgba(0,200,255,0.04) 0%, transparent 60%)',
-            'radial-gradient(ellipse 600px 400px at 50% 50%, rgba(157,140,255,0.03) 0%, transparent 55%)',
-            'radial-gradient(ellipse 600px 400px at 84% 50%, rgba(0,196,140,0.04) 0%, transparent 60%)',
+            'radial-gradient(ellipse 700px 400px at 20% 50%, rgba(157,140,255,0.05) 0%, transparent 60%)',
+            'radial-gradient(ellipse 700px 400px at 80% 50%, rgba(111,155,198,0.05) 0%, transparent 60%)',
           ].join(', '),
         }} />
         <Ticks />
 
         <div style={{ position: 'relative', zIndex: 1, display: 'flex' }}>
-          {/* Founders lane */}
-          <div style={{ flex: 1, padding: '48px 32px', textAlign: 'center', borderRight: '0.5px solid rgba(255,255,255,0.06)' }}>
-            <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#6E7587', margin: '0 0 8px' }}>Diagnosing your site?</p>
-            <p style={{ ...SANS, fontSize: 15, color: '#E6E9EE', fontWeight: 600, margin: '0 0 20px' }}>Start free. No account required.</p>
-            <Link href="/scan" style={{ ...MONO, fontSize: 12, color: '#00C8FF', border: '1px solid rgba(0,200,255,0.5)', padding: '10px 20px', textDecoration: 'none', display: 'inline-block', transition: 'all 0.15s' }}>
-              Scan free →
+          {/* API lane */}
+          <div style={{ flex: 1, padding: '48px 40px', textAlign: 'center', borderRight: '0.5px solid rgba(255,255,255,0.06)' }}>
+            <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#6E7587', margin: '0 0 8px' }}>Already building?</p>
+            <p style={{ ...DISP, fontSize: 15, color: '#E6E9EE', fontWeight: 600, margin: '0 0 6px' }}>Raw API access. No dashboard. Same engine.</p>
+            <p style={{ ...MONO, fontSize: 11, color: '#6E7587', margin: '0 0 20px' }}>25 free scans · from $29/mo</p>
+            <Link href="/developers#pricing" style={{ ...MONO, fontSize: 12, color: '#9D8CFF', border: '1px solid rgba(157,140,255,0.5)', padding: '10px 20px', textDecoration: 'none', display: 'inline-block', transition: 'all 0.15s' }}>
+              See API pricing →
             </Link>
           </div>
 
-          {/* Agencies lane */}
-          <div style={{ flex: 1, padding: '48px 32px', textAlign: 'center', borderRight: '0.5px solid rgba(255,255,255,0.06)' }}>
-            <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#6E7587', margin: '0 0 8px' }}>Running client audits?</p>
-            <p style={{ ...SANS, fontSize: 15, color: '#E6E9EE', fontWeight: 600, margin: '0 0 20px' }}>White-label reports. Client workspaces.</p>
-            <Link href="#dashboard-plans" style={{ ...MONO, fontSize: 12, color: '#9D8CFF', border: '1px solid rgba(157,140,255,0.5)', padding: '10px 20px', textDecoration: 'none', display: 'inline-block', transition: 'all 0.15s' }}>
-              See agency plans →
-            </Link>
-          </div>
-
-          {/* Developers lane */}
-          <div style={{ flex: 1, padding: '48px 32px', textAlign: 'center' }}>
-            <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#6E7587', margin: '0 0 8px' }}>Building with the API?</p>
-            <p style={{ ...SANS, fontSize: 15, color: '#E6E9EE', fontWeight: 600, margin: '0 0 20px' }}>25 free scans. No subscription.</p>
-            <Link href="/developer" style={{ ...MONO, fontSize: 12, color: '#6F9BC6', border: '1px solid rgba(111,155,198,0.5)', padding: '10px 20px', textDecoration: 'none', display: 'inline-block', transition: 'all 0.15s' }}>
-              Get API key →
+          {/* Scan lane */}
+          <div style={{ flex: 1, padding: '48px 40px', textAlign: 'center' }}>
+            <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#6E7587', margin: '0 0 8px' }}>Not sure where to start?</p>
+            <p style={{ ...DISP, fontSize: 15, color: '#E6E9EE', fontWeight: 600, margin: '0 0 6px' }}>Try a free scan. No account required.</p>
+            <p style={{ ...MONO, fontSize: 11, color: '#6E7587', margin: '0 0 20px' }}>3 free scans · no credit card</p>
+            <Link href="/scan" style={{ ...MONO, fontSize: 12, color: '#6F9BC6', border: '1px solid rgba(111,155,198,0.5)', padding: '10px 20px', textDecoration: 'none', display: 'inline-block', transition: 'all 0.15s' }}>
+              Scan my site →
             </Link>
           </div>
         </div>

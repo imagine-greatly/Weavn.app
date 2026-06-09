@@ -169,36 +169,14 @@ function HeroSection() {
 
           {/* Headline */}
           <h1 className="font-display font-extrabold text-5xl leading-[1.04] tracking-[-0.04em] text-text-primary">
-            Website intelligence.<br />
-            <span className="text-cyan-DEFAULT">One endpoint.</span>
+            307 checks. Your score<br />
+            <span className="text-cyan-DEFAULT">in 90 seconds.</span>
           </h1>
 
           {/* Subheadline */}
           <p className="font-body text-lg text-text-secondary leading-relaxed max-w-md mt-5">
-            The conversion audit API. Founders use it to diagnose their site. Agencies use it to run client audits. Developers build it into their products. One scan engine — 307 checks, ranked findings, AI-rewritten copy.
+            Paste any URL. Get a full conversion audit — score, ranked findings, AI-rewritten copy, benchmarked against real sites in your vertical.
           </p>
-
-          {/* Audience pills */}
-          <div className="flex flex-wrap gap-2 mt-6">
-            <Link
-              href="/playground"
-              className="font-mono text-xs px-3 py-1.5 border border-background-border text-text-tertiary transition-colors duration-150 hover:border-text-tertiary hover:text-text-primary no-underline"
-            >
-              Diagnose my site →
-            </Link>
-            <Link
-              href="/pricing"
-              className="font-mono text-xs px-3 py-1.5 border border-background-border text-text-tertiary transition-colors duration-150 hover:border-text-tertiary hover:text-text-primary no-underline"
-            >
-              Manage client audits →
-            </Link>
-            <Link
-              href="/developer"
-              className="font-mono text-xs px-3 py-1.5 border border-cyan-DEFAULT text-cyan-DEFAULT bg-cyan-dim transition-colors duration-150 no-underline"
-            >
-              Build with the API →
-            </Link>
-          </div>
 
           {/* Curl block */}
           <div className="wd-panel p-4 mt-8">
@@ -227,12 +205,6 @@ function HeroSection() {
               className="border border-background-border text-text-secondary font-body text-sm px-6 py-3 no-underline hover:border-text-tertiary hover:text-text-primary transition-colors duration-150"
             >
               Scan my site free →
-            </Link>
-            <Link
-              href="/pricing"
-              className="text-text-tertiary font-body text-sm hover:text-text-secondary transition-colors duration-150 underline underline-offset-4 decoration-background-border"
-            >
-              Agency plans →
             </Link>
           </div>
 
@@ -384,12 +356,10 @@ function HowItWorksSection() {
     <section style={{ padding: '96px 0', position: 'relative', overflow: 'hidden', background: '#050810' }}>
       <style>{`
         @keyframes hiw-cursor-blink { 0%,49%{opacity:1} 50%,100%{opacity:0} }
-        @keyframes hiw-progress { from{transform:scaleX(0)} to{transform:scaleX(1)} }
         @keyframes hiw-flow { from{left:-22%} to{left:112%} }
         @keyframes hiw-json-line { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:translateY(0)} }
         @media (prefers-reduced-motion: reduce) {
           .hiw-cursor{animation:none!important}
-          .hiw-progress-bar{animation:none!important;transform:scaleX(1)!important}
           .hiw-flow-dot{display:none!important}
           .hiw-json-line{animation:none!important;opacity:1!important;transform:none!important}
         }
@@ -505,10 +475,6 @@ function HowItWorksSection() {
             minHeight: 320, display: 'flex', flexDirection: 'column',
             position: 'relative', overflow: 'hidden',
           }}>
-            {/* Progress bar */}
-            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: 'rgba(157,140,255,0.1)', overflow: 'hidden' }}>
-              <div className="hiw-progress-bar" style={{ height: '100%', background: 'rgba(157,140,255,0.65)', transformOrigin: 'left', animation: 'hiw-progress 2.6s ease-in-out infinite' }} />
-            </div>
             <div style={{ padding: '10px 14px', borderBottom: '0.5px solid rgba(157,140,255,0.1)', display: 'flex', alignItems: 'center', gap: 8 }}>
               <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#00C48C', display: 'inline-block', flexShrink: 0 }} />
               <span style={{ ...MONO, fontSize: 10, color: '#6E7587', textTransform: 'uppercase', letterSpacing: '0.15em' }}>SCANNING</span>
@@ -574,74 +540,37 @@ function HowItWorksSection() {
 }
 
 
-// ── Three Doors ───────────────────────────────────────────────────────────────
+// ── Two Surface ──────────────────────────────────────────────────────────────
 
-function ThreeDoorsSection() {
+function TwoSurfaceSection() {
   return (
     <section style={{ padding: '96px 0', position: 'relative', overflow: 'hidden', background: '#050810' }}>
 
-      {/* Component-scoped animations and mobile fallback */}
       <style>{`
-        @keyframes beamFlow {
-          from { stroke-dashoffset: 13; }
-          to   { stroke-dashoffset: 0; }
-        }
-        @keyframes tdNodeBloom {
-          0%, 100% { opacity: 0.5;  transform: scale(0.88); }
-          50%       { opacity: 1;    transform: scale(1.18); }
-        }
-        @keyframes tdMidRing {
-          0%, 100% { transform: scale(0.85); opacity: 0.45; }
-          50%       { transform: scale(1.15); opacity: 1; }
-        }
-        @keyframes tdScanRotate {
-          from { transform: rotate(0deg); }
-          to   { transform: rotate(360deg); }
-        }
-        @keyframes tdBeamBreathe {
-          0%, 100% { opacity: 0.55; }
-          50%       { opacity: 0.82; }
-        }
-        @keyframes tdFlareC {
-          0%, 84% { box-shadow: 0 0 0 1px rgba(0,200,255,0.1),   0 0 28px rgba(0,200,255,0.07); }
-          91%      { box-shadow: 0 0 0 1px rgba(0,200,255,0.28),  0 0 44px rgba(0,200,255,0.18); }
-          100%     { box-shadow: 0 0 0 1px rgba(0,200,255,0.1),   0 0 28px rgba(0,200,255,0.07); }
-        }
-        @keyframes tdFlareP {
-          0%, 84% { box-shadow: 0 0 0 1px rgba(157,140,255,0.1),  0 0 28px rgba(157,140,255,0.08); }
-          91%      { box-shadow: 0 0 0 1px rgba(157,140,255,0.28), 0 0 44px rgba(157,140,255,0.2); }
-          100%     { box-shadow: 0 0 0 1px rgba(157,140,255,0.1),  0 0 28px rgba(157,140,255,0.08); }
-        }
-        @keyframes tdFlareG {
-          0%, 84% { box-shadow: 0 0 0 1px rgba(0,196,140,0.1),   0 0 28px rgba(0,196,140,0.07); }
-          91%      { box-shadow: 0 0 0 1px rgba(0,196,140,0.28),  0 0 44px rgba(0,196,140,0.18); }
-          100%     { box-shadow: 0 0 0 1px rgba(0,196,140,0.1),   0 0 28px rgba(0,196,140,0.07); }
-        }
-        @media (max-width: 639px) {
-          .td-convergence { display: none !important; }
-        }
+        @keyframes surf-ring-blue  { 0%,100%{transform:scale(0.88);opacity:0.5} 50%{transform:scale(1.18);opacity:0.9} }
+        @keyframes surf-ring-purp  { 0%,100%{transform:scale(0.82);opacity:0.45} 50%{transform:scale(1.12);opacity:0.85} }
+        @keyframes surf-ring-green { 0%,100%{transform:scale(0.9);opacity:0.4} 50%{transform:scale(1.08);opacity:0.75} }
+        @keyframes surf-core-rot   { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+        @keyframes surf-flow       { from{stroke-dashoffset:420} to{stroke-dashoffset:0} }
+        @media (max-width: 639px) { .surf-veins { display: none !important; } }
         @media (prefers-reduced-motion: reduce) {
-          .td-beam       { animation: none !important; }
-          .td-node-bloom { animation: none !important; opacity: 0.5 !important; transform: none !important; }
-          .td-mid-ring   { animation: none !important; opacity: 0.5 !important; transform: none !important; }
-          .td-tick-frame { animation: none !important; }
-          .td-particle   { display: none !important; }
-          .td-card       { animation: none !important; }
+          .surf-ring     { animation: none !important; opacity: 0.5 !important; }
+          .surf-core-spin{ animation: none !important; }
+          .surf-glow     { animation: none !important; opacity: 0 !important; }
         }
       `}</style>
 
-      {/* Three-lane ambient blooms — cyan / purple / green */}
+      {/* Ambient blooms */}
       <div aria-hidden style={{
         position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0,
         background: [
-          'radial-gradient(ellipse 500px 700px at 18% 75%, rgba(0,200,255,0.06) 0%, transparent 60%)',
-          'radial-gradient(ellipse 500px 700px at 50% 75%, rgba(157,140,255,0.05) 0%, transparent 60%)',
-          'radial-gradient(ellipse 500px 700px at 82% 75%, rgba(0,196,140,0.05) 0%, transparent 60%)',
+          'radial-gradient(ellipse 600px 700px at 20% 75%, rgba(111,155,198,0.05) 0%, transparent 60%)',
+          'radial-gradient(ellipse 600px 700px at 80% 75%, rgba(157,140,255,0.05) 0%, transparent 60%)',
           'radial-gradient(ellipse 800px 400px at 50% 20%, rgba(111,155,198,0.04) 0%, transparent 55%)',
         ].join(', '),
       }} />
 
-      {/* Section corner ticks */}
+      {/* Corner ticks */}
       <div aria-hidden style={{ position: 'absolute', top: 20, left: 20, width: 14, height: 14, borderTop: '0.5px solid rgba(111,155,198,0.25)', borderLeft: '0.5px solid rgba(111,155,198,0.25)', pointerEvents: 'none', zIndex: 1 }} />
       <div aria-hidden style={{ position: 'absolute', top: 20, right: 20, width: 14, height: 14, borderTop: '0.5px solid rgba(111,155,198,0.25)', borderRight: '0.5px solid rgba(111,155,198,0.25)', pointerEvents: 'none', zIndex: 1 }} />
       <div aria-hidden style={{ position: 'absolute', bottom: 20, left: 20, width: 14, height: 14, borderBottom: '0.5px solid rgba(111,155,198,0.25)', borderLeft: '0.5px solid rgba(111,155,198,0.25)', pointerEvents: 'none', zIndex: 1 }} />
@@ -650,270 +579,168 @@ function ThreeDoorsSection() {
       <div style={{ position: 'relative', zIndex: 1, maxWidth: 1200, margin: '0 auto', padding: '0 48px' }}>
 
         {/* Section header */}
-        <p style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, color: '#6F9BC6', margin: '0 0 18px' }}>
-          THE ENGINE
-        </p>
+        <p style={{ ...MONO, fontSize: 11, textTransform: 'uppercase' as const, letterSpacing: 2, color: '#6F9BC6', margin: '0 0 18px' }}>THE ENGINE</p>
         <h2 style={{ ...DISP, fontWeight: 700, fontSize: 36, lineHeight: 1.15, color: '#E6E9EE', margin: '0 0 14px', letterSpacing: '-0.5px' }}>
-          One engine. Three access points.
+          One engine. Two ways in.
         </h2>
-        <p style={{ ...SANS, fontSize: 15, color: '#9398A8', maxWidth: 560, lineHeight: 1.65, margin: '0 0 40px' }}>
-          Whether you&apos;re diagnosing your own site, managing client audits, or building conversion intelligence into a product — it&apos;s the same engine underneath.
+        <p style={{ ...SANS, fontSize: 15, color: '#9398A8', maxWidth: 560, lineHeight: 1.65, margin: '0 0 56px' }}>
+          The same 307-check scan engine underneath everything. Use the dashboard if you want results without writing code. Use the API if you want to build with the data.
         </p>
 
-        {/* ── Engine convergence — layered node + organic bezier beams ────────── */}
-        <div className="td-convergence" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        {/* Engine convergence visual */}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: 40 }}>
 
-          {/* Core node — three concentric layers */}
+          {/* Core node */}
           <div style={{ position: 'relative', width: 70, height: 70, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
 
-            {/* Layer 3: Outer bloom — 36×36, radial pulse (slowest, most out-of-phase) */}
-            <div className="td-node-bloom" aria-hidden style={{
-              position: 'absolute', width: 36, height: 36,
-              background: 'radial-gradient(circle, rgba(111,155,198,0.18) 0%, transparent 70%)',
-              animation: 'tdNodeBloom 2.4s ease-in-out infinite 0.6s',
+            {/* Rotating tick-mark frame */}
+            <div className="surf-core-spin" aria-hidden style={{
+              position: 'absolute', width: 54, height: 54,
+              animation: 'surf-core-rot 20s linear infinite',
+            }}>
+              <div style={{ position: 'absolute', top: 0, left: 0,     width: 9, height: 9, borderTop:    '0.5px solid rgba(111,155,198,0.5)', borderLeft:   '0.5px solid rgba(111,155,198,0.5)' }} />
+              <div style={{ position: 'absolute', top: 0, right: 0,    width: 9, height: 9, borderTop:    '0.5px solid rgba(111,155,198,0.5)', borderRight:  '0.5px solid rgba(111,155,198,0.5)' }} />
+              <div style={{ position: 'absolute', bottom: 0, left: 0,  width: 9, height: 9, borderBottom: '0.5px solid rgba(111,155,198,0.5)', borderLeft:   '0.5px solid rgba(111,155,198,0.5)' }} />
+              <div style={{ position: 'absolute', bottom: 0, right: 0, width: 9, height: 9, borderBottom: '0.5px solid rgba(111,155,198,0.5)', borderRight:  '0.5px solid rgba(111,155,198,0.5)' }} />
+            </div>
+
+            {/* Three offset organic rings */}
+            <div className="surf-ring" aria-hidden style={{
+              position: 'absolute', width: 22, height: 22,
+              border: '0.5px solid rgba(111,155,198,0.6)',
+              background: 'rgba(111,155,198,0.06)',
+              transform: 'translate(-3px, -2px)',
+              animation: 'surf-ring-blue 2.4s ease-in-out infinite',
+            }} />
+            <div className="surf-ring" aria-hidden style={{
+              position: 'absolute', width: 22, height: 22,
+              border: '0.5px solid rgba(157,140,255,0.6)',
+              background: 'rgba(157,140,255,0.06)',
+              transform: 'translate(2px, 3px)',
+              animation: 'surf-ring-purp 2.8s ease-in-out infinite',
+            }} />
+            <div className="surf-ring" aria-hidden style={{
+              position: 'absolute', width: 20, height: 20,
+              border: '0.5px solid rgba(0,196,140,0.55)',
+              background: 'rgba(0,196,140,0.06)',
+              transform: 'translate(0px, -1px)',
+              animation: 'surf-ring-green 3.2s ease-in-out infinite 0.4s',
             }} />
 
-            {/* Rotating instrument tick frame — 58×58, 12s scan */}
-            <div className="td-tick-frame" aria-hidden style={{
-              position: 'absolute', width: 58, height: 58,
-              animation: 'tdScanRotate 12s linear infinite',
-            }}>
-              <div style={{ position: 'absolute', top: 0, left: 0,     width: 9, height: 9, borderTop:    '0.5px solid rgba(111,155,198,0.6)', borderLeft:   '0.5px solid rgba(111,155,198,0.6)' }} />
-              <div style={{ position: 'absolute', top: 0, right: 0,    width: 9, height: 9, borderTop:    '0.5px solid rgba(111,155,198,0.6)', borderRight:  '0.5px solid rgba(111,155,198,0.6)' }} />
-              <div style={{ position: 'absolute', bottom: 0, left: 0,  width: 9, height: 9, borderBottom: '0.5px solid rgba(111,155,198,0.6)', borderLeft:   '0.5px solid rgba(111,155,198,0.6)' }} />
-              <div style={{ position: 'absolute', bottom: 0, right: 0, width: 9, height: 9, borderBottom: '0.5px solid rgba(111,155,198,0.6)', borderRight:  '0.5px solid rgba(111,155,198,0.6)' }} />
-            </div>
-
-            {/* Node box — 40×40 */}
+            {/* Center bright point */}
             <div style={{
-              width: 40, height: 40,
-              background: '#0A0E18',
-              border: '0.5px solid rgba(111,155,198,0.4)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              position: 'relative', zIndex: 1,
-            }}>
-              {/* Crosshair lines */}
-              <div aria-hidden style={{ position: 'absolute', width: '100%', height: '0.5px', background: 'rgba(111,155,198,0.18)' }} />
-              <div aria-hidden style={{ position: 'absolute', width: '0.5px', height: '100%', background: 'rgba(111,155,198,0.18)' }} />
-              {/* Layer 2: Mid ring — 20×20, scale pulse offset 0.2s */}
-              <div className="td-mid-ring" aria-hidden style={{
-                position: 'absolute', width: 20, height: 20,
-                border: '0.5px solid rgba(111,155,198,0.4)',
-                animation: 'tdMidRing 2.4s ease-in-out infinite 0.2s',
-              }} />
-              {/* Layer 1: Inner bright point — 6×6, always opaque */}
-              <div style={{ width: 6, height: 6, background: '#6F9BC6', position: 'relative', zIndex: 2 }} />
-            </div>
+              width: 6, height: 6,
+              background: 'radial-gradient(circle, rgba(255,255,255,0.9) 0%, rgba(111,155,198,0.8) 40%, transparent 100%)',
+              position: 'relative', zIndex: 2,
+            }} />
           </div>
 
-          {/* Scan engine label */}
-          <p style={{ ...MONO, fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.2em', color: 'rgba(111,155,198,0.45)', margin: '7px 0 4px' }}>
-            SCAN ENGINE
-          </p>
+          {/* Engine label */}
+          <p style={{ ...MONO, fontSize: 9, textTransform: 'uppercase' as const, letterSpacing: '0.2em', color: 'rgba(111,155,198,0.5)', margin: '7px 0 0' }}>SCAN ENGINE</p>
 
-          {/*
-            Organic bezier beams — viewBox 0 0 900 80, uniform aspect ratio (no preserveAspectRatio="none").
-            Card column centers: ~16% (x≈150), 50% (x=450), ~84% (x≈750).
-            pathLength="100" normalises dash animation. vectorEffect="non-scaling-stroke" keeps 1px weight.
-            Path IDs are referenced directly by <mpath> — elements in SVG body are valid mpath targets.
-          */}
+          {/* Two-vein SVG — base paths always visible, animated glow overlays travel along each */}
           <svg
-            className="td-beams"
-            viewBox="0 0 900 80"
+            className="surf-veins"
+            viewBox="0 0 900 120"
             width="100%"
+            height="120"
+            preserveAspectRatio="xMidYMid meet"
             aria-hidden
             style={{ display: 'block', overflow: 'visible' }}
           >
             <defs>
-              {/* Soft glow applied to primary particles only */}
-              <filter id="td-particleGlow" x="-100%" y="-100%" width="300%" height="300%">
-                <feGaussianBlur stdDeviation="1.2" result="blur" />
-                <feMerge>
-                  <feMergeNode in="blur" />
-                  <feMergeNode in="SourceGraphic" />
-                </feMerge>
+              <filter id="surf-glow-blue" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="2.5" />
+              </filter>
+              <filter id="surf-glow-purp" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="2.5" />
               </filter>
             </defs>
 
-            {/* Cyan — founders: sweeps wide LEFT (300,30), curves back in (180,65) → cresting wave */}
-            <path
-              id="td-path-c"
-              className="td-beam"
-              d="M 450,0 C 300,30 180,65 150,80"
-              stroke="rgba(0,200,255,0.55)"
-              strokeWidth="1" fill="none"
-              vectorEffect="non-scaling-stroke"
-              pathLength="100" strokeDasharray="10 6"
-              style={{ animation: 'beamFlow 1.8s linear infinite, tdBeamBreathe 5s ease-in-out infinite 0s' }}
-            />
+            {/* Dashboard vein — left, steel blue */}
+            <path d="M 450,0 C 340,35 180,80 150,120" stroke="rgba(111,155,198,0.3)" strokeWidth="1.5" fill="none" vectorEffect="non-scaling-stroke" />
+            <path className="surf-glow" d="M 450,0 C 340,35 180,80 150,120" stroke="rgba(111,155,198,0.9)" strokeWidth="3" fill="none" vectorEffect="non-scaling-stroke" strokeDasharray="50 420" filter="url(#surf-glow-blue)" style={{ animation: 'surf-flow 2.2s linear infinite' }} />
 
-            {/* Purple — agencies: gentle asymmetric S, leans left (430,25) then right (470,55) */}
-            <path
-              id="td-path-p"
-              className="td-beam"
-              d="M 450,0 C 430,25 470,55 450,80"
-              stroke="rgba(157,140,255,0.55)"
-              strokeWidth="1" fill="none"
-              vectorEffect="non-scaling-stroke"
-              pathLength="100" strokeDasharray="10 6"
-              style={{ animation: 'beamFlow 1.8s linear infinite 0.4s, tdBeamBreathe 5s ease-in-out infinite 1.5s' }}
-            />
-
-            {/* Green — developers: mirror of cyan — sweeps RIGHT (600,30), curves back in (720,65) */}
-            <path
-              id="td-path-g"
-              className="td-beam"
-              d="M 450,0 C 600,30 720,65 750,80"
-              stroke="rgba(0,196,140,0.55)"
-              strokeWidth="1" fill="none"
-              vectorEffect="non-scaling-stroke"
-              pathLength="100" strokeDasharray="10 6"
-              style={{ animation: 'beamFlow 1.8s linear infinite 0.8s, tdBeamBreathe 5s ease-in-out infinite 3s' }}
-            />
-
-            {/* Particles — cyan lane: primary at 0s, secondary offset by half-cycle (0.9s) */}
-            <circle className="td-particle" r="1.5" fill="#00C8FF" filter="url(#td-particleGlow)">
-              <animateMotion dur="1.8s" repeatCount="indefinite" begin="0s"><mpath href="#td-path-c" /></animateMotion>
-            </circle>
-            <circle className="td-particle" r="0.8" fill="rgba(0,200,255,0.45)">
-              <animateMotion dur="1.8s" repeatCount="indefinite" begin="0.9s"><mpath href="#td-path-c" /></animateMotion>
-            </circle>
-
-            {/* Particles — purple lane: staggered 0.4s from cyan */}
-            <circle className="td-particle" r="1.5" fill="#9D8CFF" filter="url(#td-particleGlow)">
-              <animateMotion dur="1.8s" repeatCount="indefinite" begin="0.4s"><mpath href="#td-path-p" /></animateMotion>
-            </circle>
-            <circle className="td-particle" r="0.8" fill="rgba(157,140,255,0.45)">
-              <animateMotion dur="1.8s" repeatCount="indefinite" begin="1.3s"><mpath href="#td-path-p" /></animateMotion>
-            </circle>
-
-            {/* Particles — green lane: staggered 0.8s from cyan */}
-            <circle className="td-particle" r="1.5" fill="#00C48C" filter="url(#td-particleGlow)">
-              <animateMotion dur="1.8s" repeatCount="indefinite" begin="0.8s"><mpath href="#td-path-g" /></animateMotion>
-            </circle>
-            <circle className="td-particle" r="0.8" fill="rgba(0,196,140,0.45)">
-              <animateMotion dur="1.8s" repeatCount="indefinite" begin="1.7s"><mpath href="#td-path-g" /></animateMotion>
-            </circle>
+            {/* API vein — right, purple */}
+            <path d="M 450,0 C 560,35 720,80 750,120" stroke="rgba(157,140,255,0.3)" strokeWidth="1.5" fill="none" vectorEffect="non-scaling-stroke" />
+            <path className="surf-glow" d="M 450,0 C 560,35 720,80 750,120" stroke="rgba(157,140,255,0.9)" strokeWidth="3" fill="none" vectorEffect="non-scaling-stroke" strokeDasharray="50 420" filter="url(#surf-glow-purp)" style={{ animation: 'surf-flow 2.2s linear infinite 0.8s' }} />
           </svg>
-
         </div>
-        {/* ── End convergence ─────────────────────────────────────────────────── */}
 
-        {/* Three equal-weight cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4" style={{ alignItems: 'stretch' }}>
+        {/* Two surface cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6" style={{ alignItems: 'stretch' }}>
 
-          {/* Card 1 — Founders / cyan */}
-          <div className="wd-panel td-card" style={{
+          {/* DASHBOARD — steel blue */}
+          <div className="wd-panel" style={{
             display: 'flex', flexDirection: 'column',
-            borderTop: '1px solid rgba(0,200,255,0.3)',
-            borderLeft: '1px solid rgba(0,200,255,0.12)',
-            boxShadow: '0 0 0 1px rgba(0,200,255,0.1), 0 0 28px rgba(0,200,255,0.07)',
-            animation: 'tdFlareC 1.8s ease-in-out infinite',
-            animationDelay: '0s',
+            borderTop: '1px solid rgba(111,155,198,0.4)',
+            borderLeft: '1px solid rgba(111,155,198,0.12)',
+            boxShadow: '0 0 0 1px rgba(111,155,198,0.08), 0 0 28px rgba(111,155,198,0.06)',
           }}>
             <div style={{ padding: '24px 24px 16px', borderBottom: '0.5px solid rgba(255,255,255,0.06)' }}>
-              <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: 1.5, color: '#00C8FF', margin: '0 0 10px' }}>For founders</p>
-              <h3 style={{ ...DISP, fontWeight: 700, fontSize: 22, color: '#E6E9EE', margin: '0 0 10px', lineHeight: 1.25 }}>Diagnose your site.</h3>
+              <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase' as const, letterSpacing: 1.5, color: '#6F9BC6', margin: '0 0 10px' }}>Dashboard</p>
+              <h3 style={{ ...DISP, fontWeight: 700, fontSize: 22, color: '#E6E9EE', margin: '0 0 10px', lineHeight: 1.25 }}>Results without code.</h3>
               <p style={{ ...SANS, fontSize: 14, color: '#9398A8', lineHeight: 1.6, margin: 0 }}>
-                Paste your URL. Get a full conversion audit in 90 seconds — score, ranked findings, AI-rewritten copy, and how you compare against your category.
+                Scan your site, track your score, send client reports. Full conversion audit in 90 seconds. No API key required.
               </p>
             </div>
-            <div style={{ padding: '20px 24px', background: 'rgba(0,200,255,0.02)', flexGrow: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
-              {/* ScoreRing score=61 → scoreBand returns sev-critical → renders red + CRITICAL label */}
-              <ScoreRing score={61} size="md" animate={true} label="CONVERSION SCORE" />
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 6, textAlign: 'center' }}>
-                <p style={{ ...MONO, fontSize: 12, margin: 0 }}>
-                  <span style={{ color: '#6E7587' }}>critical: </span>
-                  <span style={{ color: '#E8635F' }}>hero headline is feature-led</span>
-                </p>
-                <p style={{ ...MONO, fontSize: 12, margin: 0 }}>
-                  <span style={{ color: '#6E7587' }}>lift: </span>
-                  <span style={{ color: '#00C48C' }}>+12–18% with rewrite</span>
-                </p>
-              </div>
-            </div>
-            <div style={{ padding: '16px 24px 24px', borderTop: '0.5px solid rgba(255,255,255,0.06)' }}>
-              <Link href="/scan" style={{ ...MONO, fontSize: 11, color: '#00C8FF', border: '1px solid rgba(0,200,255,0.5)', padding: '10px 14px', display: 'block', textAlign: 'center', textDecoration: 'none', background: 'transparent' }}>
-                Scan my site free →
-              </Link>
-              <p style={{ ...MONO, fontSize: 10, color: '#6E7587', textAlign: 'center', marginTop: 8, marginBottom: 0 }}>Free · No account required</p>
-            </div>
-          </div>
-
-          {/* Card 2 — Agencies / purple */}
-          <div className="wd-panel td-card" style={{
-            display: 'flex', flexDirection: 'column',
-            borderTop: '1px solid rgba(157,140,255,0.3)',
-            borderLeft: '1px solid rgba(157,140,255,0.12)',
-            boxShadow: '0 0 0 1px rgba(157,140,255,0.1), 0 0 28px rgba(157,140,255,0.08)',
-            animation: 'tdFlareP 1.8s ease-in-out infinite',
-            animationDelay: '0.4s',
-          }}>
-            <div style={{ padding: '24px 24px 16px', borderBottom: '0.5px solid rgba(255,255,255,0.06)' }}>
-              <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: 1.5, color: '#9D8CFF', margin: '0 0 10px' }}>For agencies</p>
-              <h3 style={{ ...DISP, fontWeight: 700, fontSize: 22, color: '#E6E9EE', margin: '0 0 10px', lineHeight: 1.25 }}>Manage client audits.</h3>
-              <p style={{ ...SANS, fontSize: 14, color: '#9398A8', lineHeight: 1.6, margin: 0 }}>
-                Client workspaces, white-label report links, multi-page scanning, competitor benchmarking. Show up to every call with data, not opinions.
-              </p>
-            </div>
-            <div style={{ padding: '20px 24px', background: 'rgba(157,140,255,0.025)', flexGrow: 1 }}>
-              <div style={{ background: '#050810', border: '0.5px solid rgba(157,140,255,0.18)', padding: '12px 14px', boxShadow: '0 0 16px rgba(157,140,255,0.06)' }}>
-                <p style={{ ...MONO, fontSize: 9, textTransform: 'uppercase', letterSpacing: 1.5, color: '#6E7587', margin: '0 0 3px' }}>PREPARED FOR</p>
-                <p style={{ ...DISP, fontWeight: 500, fontSize: 14, color: '#E6E9EE', margin: '0 0 10px' }}>Acme Inc.</p>
-                <div style={{ borderTop: '0.5px solid rgba(255,255,255,0.06)', paddingTop: 8 }}>
-                  {[
-                    { k: 'score',    v: '61',          vc: '#E8635F' },
-                    { k: 'findings', v: '23 critical',  vc: '#E8635F' },
-                  ].map(r => (
-                    <div key={r.k} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                      <span style={{ ...MONO, fontSize: 11, color: '#6E7587' }}>{r.k}</span>
-                      <span style={{ ...DISP, fontWeight: 500, fontSize: 13, color: r.vc }}>{r.v}</span>
-                    </div>
-                  ))}
+            <div style={{ padding: '20px 24px', flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
+              {([
+                { k: 'interface',         v: 'dashboard' },
+                { k: 'scans_per_month',   v: '3 free → 500' },
+                { k: 'white_label',       v: 'pro+' },
+                { k: 'client_workspaces', v: 'pro+' },
+                { k: 'account_required',  v: 'false (first scan)' },
+              ] as { k: string; v: string }[]).map(s => (
+                <div key={s.k} style={{ display: 'flex', alignItems: 'baseline', ...MONO, fontSize: 11, marginBottom: 6 }}>
+                  <span style={{ color: '#8080c0', flexShrink: 0 }}>{s.k}</span>
+                  <span style={{ color: '#6E7587', margin: '0 3px' }}>:</span>
+                  <span style={{ color: s.v === 'dashboard' ? '#00C48C' : '#E6E9EE' }}>{s.v}</span>
                 </div>
-              </div>
+              ))}
             </div>
             <div style={{ padding: '16px 24px 24px', borderTop: '0.5px solid rgba(255,255,255,0.06)' }}>
-              <Link href="/pricing" style={{ ...MONO, fontSize: 11, color: '#9D8CFF', border: '1px solid rgba(157,140,255,0.5)', padding: '10px 14px', display: 'block', textAlign: 'center', textDecoration: 'none', background: 'transparent' }}>
-                See agency plans →
+              <Link href="/scan" style={{ ...MONO, fontSize: 11, color: '#6F9BC6', border: '1px solid rgba(111,155,198,0.5)', padding: '10px 14px', display: 'block', textAlign: 'center' as const, textDecoration: 'none', background: 'transparent' }}>
+                Open dashboard →
               </Link>
-              <p style={{ ...MONO, fontSize: 10, color: '#6E7587', textAlign: 'center', marginTop: 8, marginBottom: 0 }}>From $149/mo · 14-day trial</p>
+              <p style={{ ...MONO, fontSize: 10, color: '#6E7587', textAlign: 'center' as const, marginTop: 8, marginBottom: 0 }}>Free to start · from $49/mo</p>
             </div>
           </div>
 
-          {/* Card 3 — Developers / green */}
-          <div className="wd-panel td-card" style={{
+          {/* API — purple */}
+          <div className="wd-panel" style={{
             display: 'flex', flexDirection: 'column',
-            borderTop: '1px solid rgba(0,196,140,0.28)',
-            borderLeft: '1px solid rgba(0,196,140,0.1)',
-            boxShadow: '0 0 0 1px rgba(0,196,140,0.1), 0 0 28px rgba(0,196,140,0.07)',
-            animation: 'tdFlareG 1.8s ease-in-out infinite',
-            animationDelay: '0.8s',
+            borderTop: '1px solid rgba(157,140,255,0.4)',
+            borderLeft: '1px solid rgba(157,140,255,0.12)',
+            boxShadow: '0 0 0 1px rgba(157,140,255,0.08), 0 0 28px rgba(157,140,255,0.07)',
           }}>
             <div style={{ padding: '24px 24px 16px', borderBottom: '0.5px solid rgba(255,255,255,0.06)' }}>
-              <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: 1.5, color: '#00C48C', margin: '0 0 10px' }}>For developers</p>
-              <h3 style={{ ...DISP, fontWeight: 700, fontSize: 22, color: '#E6E9EE', margin: '0 0 10px', lineHeight: 1.25 }}>Build with it.</h3>
+              <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase' as const, letterSpacing: 1.5, color: '#9D8CFF', margin: '0 0 10px' }}>API</p>
+              <h3 style={{ ...DISP, fontWeight: 700, fontSize: 22, color: '#E6E9EE', margin: '0 0 10px', lineHeight: 1.25 }}>Build with the data.</h3>
               <p style={{ ...SANS, fontSize: 14, color: '#9398A8', lineHeight: 1.6, margin: 0 }}>
-                POST a URL, get structured JSON. Batch endpoint, async mode, webhooks. Integrate conversion intelligence into your product in an afternoon.
+                POST any URL. Get structured JSON — score, findings, benchmarks, rewritten copy. Same engine. No dashboard required.
               </p>
             </div>
-            <div style={{ padding: '20px 24px', background: 'rgba(0,196,140,0.02)', flexGrow: 1 }}>
-              <div style={{ background: '#050810', border: '0.5px solid rgba(0,196,140,0.14)', padding: '12px 14px', boxShadow: '0 0 16px rgba(0,196,140,0.05)' }}>
-                <pre style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, lineHeight: 1.7, margin: 0, overflow: 'hidden', color: '#9398A8' }}>
-                  {'{'}{'\n'}
-                  {'  '}<span style={{ color: '#8080c0' }}>&quot;score&quot;</span>{': '}<span style={{ color: '#E8635F' }}>61</span>{','}{'\n'}
-                  {'  '}<span style={{ color: '#6F9BC6' }}>&quot;severity&quot;</span>{': '}<span style={{ color: '#E8635F' }}>&quot;critical&quot;</span>{','}{'\n'}
-                  {'  '}<span style={{ color: '#8080c0' }}>&quot;findings&quot;</span>{': '}<span style={{ color: '#6F9BC6' }}>23</span>{'\n'}
-                  {'}'}
-                </pre>
-              </div>
-              <p style={{ ...MONO, fontSize: 11, color: '#6E7587', margin: '10px 0 0' }}>full schema · 307 checks · $0.15/scan</p>
+            <div style={{ padding: '20px 24px', flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
+              {([
+                { k: 'endpoint',       v: 'POST /api/v1/scan' },
+                { k: 'response',       v: 'structured JSON' },
+                { k: 'trial_scans',    v: '25 free' },
+                { k: 'async_mode',     v: 'true' },
+                { k: 'batch_endpoint', v: 'true' },
+              ] as { k: string; v: string }[]).map(s => (
+                <div key={s.k} style={{ display: 'flex', alignItems: 'baseline', ...MONO, fontSize: 11, marginBottom: 6 }}>
+                  <span style={{ color: '#8080c0', flexShrink: 0 }}>{s.k}</span>
+                  <span style={{ color: '#6E7587', margin: '0 3px' }}>:</span>
+                  <span style={{ color: s.v === 'true' || s.v === 'structured JSON' || s.v === '25 free' ? '#00C48C' : s.v.startsWith('POST') ? '#9D8CFF' : '#E6E9EE' }}>{s.v}</span>
+                </div>
+              ))}
             </div>
             <div style={{ padding: '16px 24px 24px', borderTop: '0.5px solid rgba(255,255,255,0.06)' }}>
-              <Link href="/developer" style={{ ...MONO, fontSize: 11, color: '#6F9BC6', border: '1px solid rgba(111,155,198,0.5)', padding: '10px 14px', display: 'block', textAlign: 'center', textDecoration: 'none', background: 'transparent' }}>
+              <Link href="/developer" style={{ ...MONO, fontSize: 11, color: '#9D8CFF', border: '1px solid rgba(157,140,255,0.5)', padding: '10px 14px', display: 'block', textAlign: 'center' as const, textDecoration: 'none', background: 'transparent' }}>
                 Get API key →
               </Link>
-              <p style={{ ...MONO, fontSize: 10, color: '#6E7587', textAlign: 'center', marginTop: 8, marginBottom: 0 }}>$0.15/scan · No monthly fee</p>
+              <p style={{ ...MONO, fontSize: 10, color: '#6E7587', textAlign: 'center' as const, marginTop: 8, marginBottom: 0 }}>25 free scans · from $29/mo</p>
             </div>
           </div>
 
@@ -1195,27 +1022,13 @@ function PricingSection() {
           </Link>
         </div>
 
-        {/* Developer callout */}
-        <div className="wd-panel" style={{ padding: '28px 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 20 }}>
-          <div>
-            <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase' as const, letterSpacing: 1.5, color: '#6F9BC6', margin: '0 0 8px' }}>
-              For developers
-            </p>
-            <p style={{ ...DISP, fontWeight: 700, fontSize: 20, color: '#E6E9EE', margin: '0 0 6px' }}>
-              Build with the API
-            </p>
-            <p style={{ ...SANS, fontSize: 14, color: '#9398A8', margin: 0 }}>
-              POST a URL. Get structured JSON. 307 checks.{' '}
-              <span style={{ ...MONO, fontSize: 12, color: '#00C48C' }}>
-                From $0.15/scan · 25 free to start
-              </span>
-            </p>
-          </div>
+        {/* API access link */}
+        <div style={{ textAlign: 'center', paddingTop: 8 }}>
           <Link
             href="/developers#pricing"
-            style={{ ...MONO, fontSize: 11, letterSpacing: 1.5, textTransform: 'uppercase' as const, color: '#6F9BC6', border: '0.5px solid rgba(111,155,198,0.4)', padding: '11px 20px', textDecoration: 'none', flexShrink: 0 }}
+            style={{ ...MONO, fontSize: 11, letterSpacing: 1.5, textTransform: 'uppercase' as const, color: '#9D8CFF', textDecoration: 'none', borderBottom: '0.5px solid rgba(157,140,255,0.35)', paddingBottom: 2 }}
           >
-            SEE DEVELOPER PRICING →
+            API access → see developer pricing
           </Link>
         </div>
 
@@ -1573,7 +1386,7 @@ export default function HomePage() {
       <div className="section-separator" />
       <StatsBand />
       <div className="section-separator" />
-      <ThreeDoorsSection />
+      <TwoSurfaceSection />
       <div className="section-separator" />
       <PricingSection />
       <div className="section-separator" />

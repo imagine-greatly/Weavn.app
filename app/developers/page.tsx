@@ -63,6 +63,25 @@ const API_SPECS: Record<string, SpecEntry[]> = {
   ],
 }
 
+const TABLE_ROWS: { feature: string; values: string[] }[] = [
+  { feature: 'scans / month',   values: ['25 free', '300',    '1,000',   '3,000',   'custom'    ] },
+  { feature: 'overage rate',    values: ['$0.25',   '$0.18',  '$0.14',   '$0.11',   'custom'    ] },
+  { feature: 'async mode',      values: ['✗',       '✓',      '✓',       '✓',       '✓'         ] },
+  { feature: 'batch endpoint',  values: ['✗',       '✗',      '✓',       '✓',       '✓'         ] },
+  { feature: 'webhooks',        values: ['✗',       '✗',      '✓',       '✓',       '✓'         ] },
+  { feature: 'rate limits',     values: ['5/min',   '60/min', '200/min', '500/min', 'dedicated' ] },
+  { feature: 'JSON response',   values: ['✓',       '✓',      '✓',       '✓',       '✓'         ] },
+  { feature: 'cache hits free', values: ['✓',       '✓',      '✓',       '✓',       '✓'         ] },
+]
+
+function cellColor(v: string): string {
+  if (v === '✓') return '#00C48C'
+  if (v === '✗') return '#6E7587'
+  if (v === 'dedicated' || v === 'custom') return '#9D8CFF'
+  if (/^\$/.test(v) || /^[\d,]/.test(v) || v.includes('/min')) return '#6F9BC6'
+  return '#9398A8'
+}
+
 const KEY_FACTS = [
   {
     name: 'CACHE POLICY',
@@ -362,106 +381,74 @@ export default function DevelopersPage() {
             API PLANS · RATE DECREASES WITH VOLUME
           </p>
 
-          {/* Rate bar */}
-          <div className="wd-panel" style={{ padding: '20px 24px 24px', marginBottom: 32, overflow: 'hidden', position: 'relative' }}>
-            <div aria-hidden style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'radial-gradient(ellipse 600px 200px at 50% 50%, rgba(111,155,198,0.04) 0%, transparent 70%)' }} />
-            <div style={{ position: 'relative', zIndex: 1 }}>
-              <div style={{ height: 6, background: 'linear-gradient(to right, #6F9BC6, #00C48C)' }} />
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                {RATE_POINTS.map((p, i) => (
-                  <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                    <div style={{ width: '0.5px', height: 10, background: 'rgba(255,255,255,0.15)' }} />
-                    <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#6E7587', margin: '4px 0 2px' }}>{p.label}</p>
-                    <p style={{ ...DISP, fontSize: 13, fontWeight: 600, color: p.color, margin: 0 }}>{p.price}</p>
-                  </div>
+          {/* Rate context strip */}
+          <p style={{ ...MONO, fontSize: 12, color: '#6E7587', margin: '0 0 24px', lineHeight: 2.2 }}>
+            <span>PLAYGROUND · $0.25/scan → </span>
+            <span style={{ color: '#6F9BC6' }}>DEV · $29/mo → </span>
+            <span style={{ color: '#6F9BC6' }}>BUILDER · $99/mo → </span>
+            <span style={{ color: '#00C48C' }}>SCALE · $249/mo → </span>
+            <span style={{ color: '#9D8CFF' }}>ENTERPRISE · volume</span>
+          </p>
+
+          {/* Comparison table */}
+          <div className="wd-panel" style={{ overflowX: 'auto' }}>
+            <style>{`
+              .dev-tbl { width: 100%; border-collapse: collapse; font-family: 'IBM Plex Mono', monospace; }
+              .dev-tbl th { font-size: 10px; text-transform: uppercase; letter-spacing: 0.15em; color: #6E7587; padding: 12px 14px; text-align: center; border-bottom: 0.5px solid rgba(255,255,255,0.08); font-weight: 400; white-space: nowrap; }
+              .dev-tbl th:first-child { text-align: left; }
+              .dev-tbl td { font-size: 12px; padding: 10px 14px; text-align: center; border-bottom: 0.5px solid rgba(255,255,255,0.04); white-space: nowrap; }
+              .dev-tbl td:first-child { text-align: left; color: #9398A8; font-size: 11px; position: sticky; left: 0; background: #0A0E18; z-index: 2; }
+              .dev-tbl tr:last-child td { border-bottom: none; }
+              .dev-tbl tfoot td { border-top: 0.5px solid rgba(111,155,198,0.2); padding: 12px 14px; }
+            `}</style>
+            <table className="dev-tbl">
+              <thead>
+                <tr>
+                  <th></th>
+                  <th>PLAYGROUND</th>
+                  <th>DEV</th>
+                  <th>BUILDER</th>
+                  <th>SCALE</th>
+                  <th>ENTERPRISE</th>
+                </tr>
+                <tr>
+                  <td>pricing</td>
+                  <td><span style={{ color: '#6E7587' }}>25 free</span></td>
+                  <td><span style={{ color: '#6F9BC6' }}>$29/mo</span></td>
+                  <td><span style={{ color: '#6F9BC6' }}>$99/mo</span></td>
+                  <td><span style={{ color: '#00C48C' }}>$249/mo</span></td>
+                  <td><span style={{ color: '#9D8CFF' }}>custom</span></td>
+                </tr>
+              </thead>
+              <tbody>
+                {TABLE_ROWS.map((row, i) => (
+                  <tr key={i}>
+                    <td>{row.feature}</td>
+                    {row.values.map((v, j) => (
+                      <td key={j}><span style={{ color: cellColor(v) }}>{v}</span></td>
+                    ))}
+                  </tr>
                 ))}
-              </div>
-            </div>
-          </div>
-
-          {/* API plan cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3" style={{ alignItems: 'stretch' }}>
-
-            <div className="wd-panel" style={{ display: 'flex', flexDirection: 'column' }}>
-              <div style={{ padding: '18px 18px 12px', borderBottom: '0.5px solid rgba(255,255,255,0.06)' }}>
-                <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#6E7587', margin: '0 0 6px' }}>PLAYGROUND</p>
-                <p style={{ ...DISP, fontSize: 32, fontWeight: 700, color: '#E6E9EE', lineHeight: 1, margin: '0 0 2px' }}>25 free</p>
-                <p style={{ ...MONO, fontSize: 10, color: '#6E7587', margin: 0 }}>then $0.25/scan</p>
-              </div>
-              <div style={{ padding: '12px 18px', borderBottom: '0.5px solid rgba(255,255,255,0.06)', flexGrow: 1 }}>
-                {API_SPECS.playground.map(s => <SpecRow key={s.k} k={s.k} v={s.v} />)}
-              </div>
-              <div style={{ padding: '12px 18px 18px' }}>
-                <Link href="/developer" style={{ display: 'block', textAlign: 'center', ...MONO, fontSize: 11, color: '#6F9BC6', border: '1px solid rgba(111,155,198,0.5)', padding: '9px 0', textDecoration: 'none', transition: 'all 0.15s' }}>
-                  GET API KEY →
-                </Link>
-              </div>
-            </div>
-
-            <div className="wd-panel" style={{ display: 'flex', flexDirection: 'column' }}>
-              <div style={{ padding: '18px 18px 12px', borderBottom: '0.5px solid rgba(255,255,255,0.06)' }}>
-                <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#6F9BC6', margin: '0 0 6px' }}>DEV</p>
-                <p style={{ ...DISP, fontSize: 32, fontWeight: 700, color: '#E6E9EE', lineHeight: 1, margin: '0 0 2px' }}>$29</p>
-                <p style={{ ...MONO, fontSize: 10, color: '#6F9BC6', margin: 0 }}>/mo · 300 scans</p>
-              </div>
-              <div style={{ padding: '12px 18px', borderBottom: '0.5px solid rgba(255,255,255,0.06)', flexGrow: 1 }}>
-                {API_SPECS.dev.map(s => <SpecRow key={s.k} k={s.k} v={s.v} />)}
-              </div>
-              <div style={{ padding: '12px 18px 18px' }}>
-                <Link href="/signup?plan=dev-api" style={{ display: 'block', textAlign: 'center', ...MONO, fontSize: 11, color: '#6F9BC6', border: '1px solid rgba(111,155,198,0.5)', padding: '9px 0', textDecoration: 'none', transition: 'all 0.15s' }}>
-                  START DEV →
-                </Link>
-              </div>
-            </div>
-
-            <div className="wd-panel" style={{ display: 'flex', flexDirection: 'column' }}>
-              <div style={{ padding: '18px 18px 12px', borderBottom: '0.5px solid rgba(255,255,255,0.06)' }}>
-                <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#6F9BC6', margin: '0 0 6px' }}>BUILDER</p>
-                <p style={{ ...DISP, fontSize: 32, fontWeight: 700, color: '#E6E9EE', lineHeight: 1, margin: '0 0 2px' }}>$99</p>
-                <p style={{ ...MONO, fontSize: 10, color: '#6F9BC6', margin: 0 }}>/mo · 1,000 scans</p>
-              </div>
-              <div style={{ padding: '12px 18px', borderBottom: '0.5px solid rgba(255,255,255,0.06)', flexGrow: 1 }}>
-                {API_SPECS.builder.map(s => <SpecRow key={s.k} k={s.k} v={s.v} />)}
-              </div>
-              <div style={{ padding: '12px 18px 18px' }}>
-                <Link href="/signup?plan=builder-api" style={{ display: 'block', textAlign: 'center', ...MONO, fontSize: 11, color: '#6F9BC6', border: '1px solid rgba(111,155,198,0.5)', padding: '9px 0', textDecoration: 'none', transition: 'all 0.15s' }}>
-                  START BUILDER →
-                </Link>
-              </div>
-            </div>
-
-            <div className="wd-panel" style={{ display: 'flex', flexDirection: 'column' }}>
-              <div style={{ padding: '18px 18px 12px', borderBottom: '0.5px solid rgba(255,255,255,0.06)' }}>
-                <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#00C48C', margin: '0 0 6px' }}>SCALE</p>
-                <p style={{ ...DISP, fontSize: 32, fontWeight: 700, color: '#E6E9EE', lineHeight: 1, margin: '0 0 2px' }}>$249</p>
-                <p style={{ ...MONO, fontSize: 10, color: '#00C48C', margin: 0 }}>/mo · 3,000 scans</p>
-              </div>
-              <div style={{ padding: '12px 18px', borderBottom: '0.5px solid rgba(255,255,255,0.06)', flexGrow: 1 }}>
-                {API_SPECS.scale.map(s => <SpecRow key={s.k} k={s.k} v={s.v} />)}
-              </div>
-              <div style={{ padding: '12px 18px 18px' }}>
-                <Link href="/signup?plan=scale-api" style={{ display: 'block', textAlign: 'center', ...MONO, fontSize: 11, color: '#00C48C', border: '1px solid rgba(0,196,140,0.5)', padding: '9px 0', textDecoration: 'none', transition: 'all 0.15s' }}>
-                  START SCALE →
-                </Link>
-              </div>
-            </div>
-
-            <div className="wd-panel" style={{ display: 'flex', flexDirection: 'column' }}>
-              <div style={{ padding: '18px 18px 12px', borderBottom: '0.5px solid rgba(255,255,255,0.06)' }}>
-                <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#6F9BC6', margin: '0 0 6px' }}>ENTERPRISE</p>
-                <p style={{ ...DISP, fontSize: 32, fontWeight: 700, color: '#E6E9EE', lineHeight: 1, margin: '0 0 2px' }}>Custom</p>
-                <p style={{ ...MONO, fontSize: 10, color: '#6E7587', margin: 0 }}>volume · SLA guarantee</p>
-              </div>
-              <div style={{ padding: '12px 18px', borderBottom: '0.5px solid rgba(255,255,255,0.06)', flexGrow: 1 }}>
-                {API_SPECS.enterprise.map(s => <SpecRow key={s.k} k={s.k} v={s.v} />)}
-              </div>
-              <div style={{ padding: '12px 18px 18px' }}>
-                <Link href="mailto:hello@webdocai.com" style={{ display: 'block', textAlign: 'center', ...MONO, fontSize: 11, color: '#6F9BC6', border: '1px solid rgba(111,155,198,0.5)', padding: '9px 0', textDecoration: 'none', transition: 'all 0.15s' }}>
-                  TALK TO US →
-                </Link>
-              </div>
-            </div>
-
+              </tbody>
+              <tfoot>
+                <tr>
+                  <td />
+                  {([
+                    { href: '/developer',               label: 'GET KEY' },
+                    { href: '/signup?plan=dev-api',     label: 'START DEV' },
+                    { href: '/signup?plan=builder-api', label: 'START BUILDER' },
+                    { href: '/signup?plan=scale-api',   label: 'START SCALE' },
+                    { href: 'mailto:hello@webdocai.com', label: 'TALK TO US' },
+                  ] as { href: string; label: string }[]).map(cta => (
+                    <td key={cta.href}>
+                      <Link href={cta.href} style={{ ...MONO, fontSize: 11, color: '#6F9BC6', textDecoration: 'none' }}>
+                        {cta.label} →
+                      </Link>
+                    </td>
+                  ))}
+                </tr>
+              </tfoot>
+            </table>
           </div>
         </div>
       </section>

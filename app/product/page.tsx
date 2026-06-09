@@ -393,127 +393,103 @@ export default function ProductPage() {
       </section>
       <div className="section-separator" />
 
-      {/* ── 4. Output — #050810 + steel-blue bloom + instrument framing ─────── */}
-      <section style={{
-        position: 'relative',
-        overflow: 'hidden',
-        background: '#050810',
-        borderTop: '0.5px solid rgba(111,155,198,0.15)',
-        borderBottom: '0.5px solid rgba(255,255,255,0.05)',
-      }}>
-        {/* Ambient steel-blue bloom */}
+      {/* ── 4. One response object — two-column JSON + annotations ───────────── */}
+      <section style={{ position: 'relative', overflow: 'hidden', padding: '80px 0', borderTop: '0.5px solid rgba(111,155,198,0.1)' }}>
         <div aria-hidden style={{
           position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0,
-          background: [
-            'radial-gradient(ellipse 1100px 600px at 50% 50%, rgba(111,155,198,0.07) 0%, transparent 65%)',
-            'radial-gradient(ellipse 700px 350px at 50% 0%, rgba(111,155,198,0.04) 0%, transparent 55%)',
-          ].join(', '),
+          background: 'radial-gradient(ellipse 900px 600px at 50% 50%, rgba(111,155,198,0.06) 0%, transparent 60%)',
         }} />
-        {/* Corner ticks — instrument framing */}
         <div aria-hidden style={{ position: 'absolute', top: 20, left: 20, width: 14, height: 14, borderTop: '0.5px solid rgba(111,155,198,0.25)', borderLeft: '0.5px solid rgba(111,155,198,0.25)', pointerEvents: 'none', zIndex: 1 }} />
         <div aria-hidden style={{ position: 'absolute', top: 20, right: 20, width: 14, height: 14, borderTop: '0.5px solid rgba(111,155,198,0.25)', borderRight: '0.5px solid rgba(111,155,198,0.25)', pointerEvents: 'none', zIndex: 1 }} />
         <div aria-hidden style={{ position: 'absolute', bottom: 20, left: 20, width: 14, height: 14, borderBottom: '0.5px solid rgba(111,155,198,0.25)', borderLeft: '0.5px solid rgba(111,155,198,0.25)', pointerEvents: 'none', zIndex: 1 }} />
         <div aria-hidden style={{ position: 'absolute', bottom: 20, right: 20, width: 14, height: 14, borderBottom: '0.5px solid rgba(111,155,198,0.25)', borderRight: '0.5px solid rgba(111,155,198,0.25)', pointerEvents: 'none', zIndex: 1 }} />
 
-        <div style={{ position: 'relative', zIndex: 1, maxWidth: '56rem', margin: '0 auto', padding: '80px 32px' }}>
-          <p style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, color: '#6F9BC6', margin: '0 0 14px' }}>
+        <div style={{ position: 'relative', zIndex: 1, maxWidth: 1200, margin: '0 auto', padding: '0 48px' }}>
+          <p style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.2em', color: '#6F9BC6', margin: '0 0 16px' }}>
             RESPONSE SCHEMA
           </p>
-          <h2 style={{ fontFamily: '"Space Grotesk", sans-serif', fontWeight: 700, fontSize: 'clamp(28px, 4vw, 44px)', letterSpacing: '-1px', color: '#E6E9EE', margin: '0 0 12px', lineHeight: 1.15 }}>
+          <h2 style={{ fontFamily: '"Space Grotesk", sans-serif', fontWeight: 700, fontSize: 36, color: '#E6E9EE', margin: '0 0 8px', lineHeight: 1.15 }}>
             One response object.
           </h2>
-          <div aria-hidden style={{ height: '0.5px', background: 'linear-gradient(to right, rgba(111,155,198,0.35), transparent)', maxWidth: 320, marginBottom: 48 }} />
+          <div aria-hidden style={{ height: '1px', background: 'linear-gradient(to right, transparent, rgba(111,155,198,0.3), transparent)', margin: '0 0 48px' }} />
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div style={{ display: 'flex', gap: 48 }} className="prod-schema-cols">
+            <style>{`
+              @media (max-width: 767px) { .prod-schema-cols { flex-direction: column !important; } }
+            `}</style>
 
-            {/* 61 — WEIGHTED SCORE — RED (< 70 = critical) */}
-            <div style={{
-              background: '#0A0E18',
-              borderTop: '1px solid rgba(232,99,95,0.35)',
-              borderLeft: '1px solid rgba(232,99,95,0.12)',
-              borderRight: '1px solid rgba(255,255,255,0.04)',
-              borderBottom: '1px solid rgba(255,255,255,0.03)',
-              boxShadow: '0 0 28px rgba(232,99,95,0.05)',
-              padding: 24, position: 'relative', overflow: 'hidden',
-            }}>
-              <div aria-hidden style={{ position: 'absolute', top: 0, right: 0, width: '35%', height: '0.5px', background: 'rgba(111,155,198,0.08)' }} />
-              <div aria-hidden style={{ position: 'absolute', top: 0, right: 0, width: '0.5px', height: '35%', background: 'rgba(111,155,198,0.08)' }} />
-              <div style={{ marginBottom: 14 }}>
-                <span style={{ fontFamily: '"Space Grotesk", sans-serif', fontWeight: 700, fontSize: 52, lineHeight: 1, color: '#E8635F', display: 'block' }}>61</span>
-                <span style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.12em', color: '#6E7587', marginTop: 6, display: 'block' }}>WEIGHTED OVERALL SCORE</span>
+            {/* LEFT — JSON panel */}
+            <div style={{ flex: '0 0 55%', minWidth: 0 }}>
+              <div style={{
+                background: '#0A0E18',
+                borderTop: '1px solid rgba(157,140,255,0.35)',
+                borderLeft: '1px solid rgba(157,140,255,0.12)',
+                borderRight: '1px solid rgba(255,255,255,0.05)',
+                borderBottom: '1px solid rgba(255,255,255,0.04)',
+                overflow: 'hidden',
+              }}>
+                <div style={{ padding: '10px 16px', borderBottom: '0.5px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{ width: 5, height: 5, background: '#00C48C', display: 'inline-block', flexShrink: 0 }} />
+                  <span style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, color: '#6E7587' }}>response · application/json · 200 OK</span>
+                  <span style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, color: '#00C48C', marginLeft: 'auto' }}>200 OK</span>
+                </div>
+                <div style={{ padding: '16px 20px', fontFamily: '"IBM Plex Mono", monospace', fontSize: 12, lineHeight: 1.85 }}>
+                  <div><span style={{ color: '#6E7587' }}>{'{'}</span></div>
+                  <div style={{ paddingLeft: 16 }}><span style={{ color: '#8080c0' }}>&quot;scan_id&quot;</span><span style={{ color: '#6E7587' }}>: </span><span style={{ color: '#00C48C' }}>&quot;sc_a8d3f2c1...&quot;</span><span style={{ color: '#6E7587' }}>,</span></div>
+                  <div style={{ paddingLeft: 16 }}><span style={{ color: '#8080c0' }}>&quot;url&quot;</span><span style={{ color: '#6E7587' }}>: </span><span style={{ color: '#00C48C' }}>&quot;https://your-site.com&quot;</span><span style={{ color: '#6E7587' }}>,</span></div>
+                  <div style={{ paddingLeft: 16 }}><span style={{ color: '#8080c0' }}>&quot;score&quot;</span><span style={{ color: '#6E7587' }}>: </span><span style={{ color: '#E8635F' }}>61</span><span style={{ color: '#6E7587' }}>,</span></div>
+                  <div style={{ paddingLeft: 16 }}><span style={{ color: '#8080c0' }}>&quot;severity&quot;</span><span style={{ color: '#6E7587' }}>: </span><span style={{ color: '#E8635F' }}>&quot;critical&quot;</span><span style={{ color: '#6E7587' }}>,</span></div>
+                  <div style={{ paddingLeft: 16 }}><span style={{ color: '#8080c0' }}>&quot;site_type&quot;</span><span style={{ color: '#6E7587' }}>: </span><span style={{ color: '#00C48C' }}>&quot;B2B SaaS&quot;</span><span style={{ color: '#6E7587' }}>,</span></div>
+                  <div style={{ paddingLeft: 16 }}><span style={{ color: '#8080c0' }}>&quot;percentile&quot;</span><span style={{ color: '#6E7587' }}>: </span><span style={{ color: '#6F9BC6' }}>63</span><span style={{ color: '#6E7587' }}>,</span></div>
+                  <div style={{ paddingLeft: 16 }}><span style={{ color: '#8080c0' }}>&quot;benchmark_data&quot;</span><span style={{ color: '#6E7587' }}>: {'{'}</span></div>
+                  <div style={{ paddingLeft: 32 }}><span style={{ color: '#8080c0' }}>&quot;corpus_size&quot;</span><span style={{ color: '#6E7587' }}>: </span><span style={{ color: '#6F9BC6' }}>4812</span><span style={{ color: '#6E7587' }}>,</span></div>
+                  <div style={{ paddingLeft: 32 }}><span style={{ color: '#8080c0' }}>&quot;industry_avg&quot;</span><span style={{ color: '#6E7587' }}>: </span><span style={{ color: '#6F9BC6' }}>58</span><span style={{ color: '#6E7587' }}>,</span></div>
+                  <div style={{ paddingLeft: 32 }}><span style={{ color: '#8080c0' }}>&quot;vertical&quot;</span><span style={{ color: '#6E7587' }}>: </span><span style={{ color: '#00C48C' }}>&quot;B2B SaaS&quot;</span></div>
+                  <div style={{ paddingLeft: 16 }}><span style={{ color: '#6E7587' }}>{'}'}</span><span style={{ color: '#6E7587' }}>,</span></div>
+                  <div style={{ paddingLeft: 16 }}><span style={{ color: '#8080c0' }}>&quot;findings&quot;</span><span style={{ color: '#6E7587' }}>: [</span></div>
+                  <div style={{ paddingLeft: 32 }}><span style={{ color: '#6E7587' }}>{'{'}</span></div>
+                  <div style={{ paddingLeft: 48 }}><span style={{ color: '#8080c0' }}>&quot;priority&quot;</span><span style={{ color: '#6E7587' }}>: </span><span style={{ color: '#6F9BC6' }}>1</span><span style={{ color: '#6E7587' }}>,</span></div>
+                  <div style={{ paddingLeft: 48 }}><span style={{ color: '#8080c0' }}>&quot;severity&quot;</span><span style={{ color: '#6E7587' }}>: </span><span style={{ color: '#E8635F' }}>&quot;critical&quot;</span><span style={{ color: '#6E7587' }}>,</span></div>
+                  <div style={{ paddingLeft: 48 }}><span style={{ color: '#8080c0' }}>&quot;category&quot;</span><span style={{ color: '#6E7587' }}>: </span><span style={{ color: '#00C48C' }}>&quot;value_proposition&quot;</span><span style={{ color: '#6E7587' }}>,</span></div>
+                  <div style={{ paddingLeft: 48 }}><span style={{ color: '#8080c0' }}>&quot;title&quot;</span><span style={{ color: '#6E7587' }}>: </span><span style={{ color: '#E6E9EE' }}>&quot;Hero headline is feature-led&quot;</span><span style={{ color: '#6E7587' }}>,</span></div>
+                  <div style={{ paddingLeft: 48 }}><span style={{ color: '#8080c0' }}>&quot;estimated_lift&quot;</span><span style={{ color: '#6E7587' }}>: </span><span style={{ color: '#00C48C' }}>&quot;+12-18%&quot;</span><span style={{ color: '#6E7587' }}>,</span></div>
+                  <div style={{ paddingLeft: 48 }}><span style={{ color: '#8080c0' }}>&quot;rewritten_copy&quot;</span><span style={{ color: '#6E7587' }}>: </span><span style={{ color: '#00C48C' }}>&quot;Ship projects on time.&quot;</span></div>
+                  <div style={{ paddingLeft: 32 }}><span style={{ color: '#6E7587' }}>{'}'}</span></div>
+                  <div style={{ paddingLeft: 16 }}><span style={{ color: '#6E7587' }}>]</span><span style={{ color: '#6E7587' }}>,</span></div>
+                  <div style={{ paddingLeft: 16 }}><span style={{ color: '#8080c0' }}>&quot;cost_usd&quot;</span><span style={{ color: '#6E7587' }}>: </span><span style={{ color: '#6E7587' }}>0.15</span><span style={{ color: '#6E7587' }}>,</span></div>
+                  <div style={{ paddingLeft: 16 }}><span style={{ color: '#8080c0' }}>&quot;duration_ms&quot;</span><span style={{ color: '#6E7587' }}>: </span><span style={{ color: '#6E7587' }}>87340</span></div>
+                  <div><span style={{ color: '#6E7587' }}>{'}'}</span></div>
+                </div>
               </div>
-              <p style={{ fontFamily: '"IBM Plex Sans", sans-serif', fontSize: 13, lineHeight: 1.65, color: '#9398A8', margin: '0 0 12px' }}>
-                0–100. Calibrated to site type and buyer complexity. Benchmarked against corpus.
-              </p>
-              <p style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, color: '#E8635F', margin: 0 }}>CRITICAL · score &lt; 70</p>
             </div>
 
-            {/* 23 — RANKED FINDINGS — STEEL BLUE */}
-            <div style={{
-              background: '#0A0E18',
-              borderTop: '1px solid rgba(111,155,198,0.3)',
-              borderLeft: '1px solid rgba(111,155,198,0.1)',
-              borderRight: '1px solid rgba(255,255,255,0.04)',
-              borderBottom: '1px solid rgba(255,255,255,0.03)',
-              boxShadow: '0 0 28px rgba(111,155,198,0.04)',
-              padding: 24, position: 'relative', overflow: 'hidden',
-            }}>
-              <div aria-hidden style={{ position: 'absolute', top: 0, right: 0, width: '35%', height: '0.5px', background: 'rgba(111,155,198,0.08)' }} />
-              <div aria-hidden style={{ position: 'absolute', top: 0, right: 0, width: '0.5px', height: '35%', background: 'rgba(111,155,198,0.08)' }} />
-              <div style={{ marginBottom: 14 }}>
-                <span style={{ fontFamily: '"Space Grotesk", sans-serif', fontWeight: 700, fontSize: 52, lineHeight: 1, color: '#6F9BC6', display: 'block' }}>23</span>
-                <span style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.12em', color: '#6E7587', marginTop: 6, display: 'block' }}>RANKED FINDINGS</span>
-              </div>
-              <p style={{ fontFamily: '"IBM Plex Sans", sans-serif', fontSize: 13, lineHeight: 1.65, color: '#9398A8', margin: '0 0 12px' }}>
-                Sorted P1→P3. Each with severity, fix_effort, impact_tier, and specific evidence from the page.
-              </p>
-              <p style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, color: '#6F9BC6', margin: 0 }}>P1→P3 · priority ranked</p>
-            </div>
+            {/* RIGHT — annotations */}
+            <div style={{ flex: 1 }}>
+              {([
+                { field: 'score',                    note: '0–100. Calibrated to site type and buyer complexity. Benchmarked against corpus.' },
+                { field: 'severity',                 note: 'critical when score < 70. The primary prioritization signal.' },
+                { field: 'percentile',               note: 'Your position within your exact vertical. B2B SaaS vs B2B SaaS.' },
+                { field: 'findings[].estimated_lift',note: 'Directional range per finding class. Grounded in corpus data.' },
+                { field: 'findings[].rewritten_copy',note: 'Drop-in replacement. AI-generated, evidence-grounded, ready to ship.' },
+                { field: 'cost_usd',                 note: 'Per scan. Cache hits on the same URL within 24 hours: $0.00.' },
+              ] as { field: string; note: string }[]).map((a, i, arr) => (
+                <div key={a.field}>
+                  <div style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, color: '#8080c0', marginBottom: 4 }}>{a.field}</div>
+                  <div style={{ fontFamily: '"IBM Plex Sans", sans-serif', fontSize: 13, color: '#9398A8' }}>{a.note}</div>
+                  {i < arr.length - 1 && <div style={{ height: '0.5px', background: 'rgba(255,255,255,0.05)', margin: '12px 0' }} />}
+                </div>
+              ))}
 
-            {/* 5 — VERIFIED STRENGTHS — SUCCESS GREEN */}
-            <div style={{
-              background: '#0A0E18',
-              borderTop: '1px solid rgba(0,196,140,0.3)',
-              borderLeft: '1px solid rgba(0,196,140,0.1)',
-              borderRight: '1px solid rgba(255,255,255,0.04)',
-              borderBottom: '1px solid rgba(255,255,255,0.03)',
-              boxShadow: '0 0 28px rgba(0,196,140,0.04)',
-              padding: 24, position: 'relative', overflow: 'hidden',
-            }}>
-              <div aria-hidden style={{ position: 'absolute', top: 0, right: 0, width: '35%', height: '0.5px', background: 'rgba(111,155,198,0.08)' }} />
-              <div aria-hidden style={{ position: 'absolute', top: 0, right: 0, width: '0.5px', height: '35%', background: 'rgba(111,155,198,0.08)' }} />
-              <div style={{ marginBottom: 14 }}>
-                <span style={{ fontFamily: '"Space Grotesk", sans-serif', fontWeight: 700, fontSize: 52, lineHeight: 1, color: '#00C48C', display: 'block' }}>5</span>
-                <span style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.12em', color: '#6E7587', marginTop: 6, display: 'block' }}>VERIFIED STRENGTHS</span>
+              <div style={{ marginTop: 32 }}>
+                {[
+                  'Schema never changes regardless of site type or plan',
+                  'All 307 checks map to this structure',
+                  'Cache hits return the same object at $0.00',
+                ].map(bullet => (
+                  <div key={bullet} style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, color: '#6E7587', marginBottom: 6 }}>· {bullet}</div>
+                ))}
               </div>
-              <p style={{ fontFamily: '"IBM Plex Sans", sans-serif', fontSize: 13, lineHeight: 1.65, color: '#9398A8', margin: '0 0 12px' }}>
-                What&apos;s genuinely working above average. Referenced against specific visible content — never padded.
-              </p>
-              <p style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, color: '#00C48C', margin: 0 }}>above average · evidence-referenced</p>
             </div>
-
-            {/* 7 — DIMENSION BENCHMARKS — STEEL BLUE */}
-            <div style={{
-              background: '#0A0E18',
-              borderTop: '1px solid rgba(111,155,198,0.3)',
-              borderLeft: '1px solid rgba(111,155,198,0.1)',
-              borderRight: '1px solid rgba(255,255,255,0.04)',
-              borderBottom: '1px solid rgba(255,255,255,0.03)',
-              boxShadow: '0 0 28px rgba(111,155,198,0.04)',
-              padding: 24, position: 'relative', overflow: 'hidden',
-            }}>
-              <div aria-hidden style={{ position: 'absolute', top: 0, right: 0, width: '35%', height: '0.5px', background: 'rgba(111,155,198,0.08)' }} />
-              <div aria-hidden style={{ position: 'absolute', top: 0, right: 0, width: '0.5px', height: '35%', background: 'rgba(111,155,198,0.08)' }} />
-              <div style={{ marginBottom: 14 }}>
-                <span style={{ fontFamily: '"Space Grotesk", sans-serif', fontWeight: 700, fontSize: 52, lineHeight: 1, color: '#6F9BC6', display: 'block' }}>7</span>
-                <span style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.12em', color: '#6E7587', marginTop: 6, display: 'block' }}>DIMENSION BENCHMARKS</span>
-              </div>
-              <p style={{ fontFamily: '"IBM Plex Sans", sans-serif', fontSize: 13, lineHeight: 1.65, color: '#9398A8', margin: '0 0 12px' }}>
-                Every dimension score positioned against industry average and percentile for your site&apos;s vertical.
-              </p>
-              <p style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, color: '#6F9BC6', margin: 0 }}>percentile-ranked · by vertical</p>
-            </div>
-
           </div>
         </div>
       </section>

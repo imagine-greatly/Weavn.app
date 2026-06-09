@@ -766,104 +766,122 @@ function StatsBand() {
         @keyframes sb-marker-in { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
         .sb-marker-enter { animation: sb-marker-in 0.6s ease-out 0.5s both; }
         @media (prefers-reduced-motion: reduce) { .sb-marker-enter { animation:none; opacity:1; transform:none; } }
+        @media (max-width: 767px) {
+          .sb-layout { flex-direction: column !important; }
+          .sb-stats-row > div { flex: 0 0 50% !important; min-width: 0; }
+        }
       `}</style>
 
-      {/* Atmosphere: steel blue center-left + purple far-right */}
+      {/* Atmosphere */}
       <div aria-hidden style={{
         position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0,
         background: [
-          'radial-gradient(ellipse 900px 600px at 34% 50%, rgba(111,155,198,0.06) 0%, transparent 60%)',
-          'radial-gradient(ellipse 600px 400px at 88% 55%, rgba(128,128,192,0.04) 0%, transparent 55%)',
+          'radial-gradient(ellipse 900px 600px at 65% 50%, rgba(111,155,198,0.06) 0%, transparent 60%)',
+          'radial-gradient(ellipse 500px 400px at 15% 60%, rgba(157,140,255,0.04) 0%, transparent 55%)',
         ].join(', '),
       }} />
 
       {/* Corner ticks */}
-      <div aria-hidden style={{ position:'absolute',top:20,left:20,width:14,height:14,borderTop:'0.5px solid rgba(111,155,198,0.25)',borderLeft:'0.5px solid rgba(111,155,198,0.25)',pointerEvents:'none',zIndex:1 }} />
-      <div aria-hidden style={{ position:'absolute',top:20,right:20,width:14,height:14,borderTop:'0.5px solid rgba(111,155,198,0.25)',borderRight:'0.5px solid rgba(111,155,198,0.25)',pointerEvents:'none',zIndex:1 }} />
-      <div aria-hidden style={{ position:'absolute',bottom:20,left:20,width:14,height:14,borderBottom:'0.5px solid rgba(111,155,198,0.25)',borderLeft:'0.5px solid rgba(111,155,198,0.25)',pointerEvents:'none',zIndex:1 }} />
-      <div aria-hidden style={{ position:'absolute',bottom:20,right:20,width:14,height:14,borderBottom:'0.5px solid rgba(111,155,198,0.25)',borderRight:'0.5px solid rgba(111,155,198,0.25)',pointerEvents:'none',zIndex:1 }} />
+      <div aria-hidden style={{ position:'absolute',top:20,left:20,width:14,height:14,borderTop:'0.5px solid rgba(111,155,198,0.2)',borderLeft:'0.5px solid rgba(111,155,198,0.2)',pointerEvents:'none',zIndex:1 }} />
+      <div aria-hidden style={{ position:'absolute',top:20,right:20,width:14,height:14,borderTop:'0.5px solid rgba(111,155,198,0.2)',borderRight:'0.5px solid rgba(111,155,198,0.2)',pointerEvents:'none',zIndex:1 }} />
+      <div aria-hidden style={{ position:'absolute',bottom:20,left:20,width:14,height:14,borderBottom:'0.5px solid rgba(111,155,198,0.2)',borderLeft:'0.5px solid rgba(111,155,198,0.2)',pointerEvents:'none',zIndex:1 }} />
+      <div aria-hidden style={{ position:'absolute',bottom:20,right:20,width:14,height:14,borderBottom:'0.5px solid rgba(111,155,198,0.2)',borderRight:'0.5px solid rgba(111,155,198,0.2)',pointerEvents:'none',zIndex:1 }} />
 
-      <div style={{ position: 'relative', zIndex: 1, maxWidth: 1200, margin: '0 auto', padding: '0 48px' }}>
+      <div
+        className="sb-layout"
+        style={{ position: 'relative', zIndex: 1, maxWidth: 1280, margin: '0 auto', padding: '0 48px', display: 'flex', gap: 64 }}
+      >
 
-        {/* Header */}
-        <p style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, color: '#6F9BC6', margin: '0 0 16px' }}>
-          CORPUS DATA
-        </p>
-        <h2 style={{ ...DISP, fontWeight: 700, fontSize: 36, lineHeight: 1.15, color: '#E6E9EE', margin: '0 0 12px', letterSpacing: '-0.5px' }}>
-          4,812 sites. Percentile-ranked by vertical.
-        </h2>
-        <p style={{ ...SANS, fontSize: 15, color: '#9398A8', maxWidth: 640, lineHeight: 1.65, margin: '0 0 40px' }}>
-          Your score is positioned against real scanned sites in your exact vertical.
-          B2B SaaS vs B2B SaaS. Ecommerce vs ecommerce.
-        </p>
+        {/* LEFT COLUMN — copy */}
+        <div style={{ flex: '0 0 38%', alignSelf: 'stretch' }}>
+          <p style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.2em', color: '#6F9BC6', margin: '0 0 16px' }}>
+            CORPUS DATA
+          </p>
+          <h2 style={{ ...DISP, fontWeight: 700, fontSize: 'clamp(28px,3.5vw,42px)', color: '#E6E9EE', letterSpacing: '-0.5px', margin: '0 0 20px', lineHeight: 1.15 }}>
+            Benchmarked against your vertical. Not a generic average.
+          </h2>
+          <p style={{ ...SANS, fontSize: 15, color: '#9398A8', lineHeight: 1.7, margin: '0 0 32px' }}>
+            Every score is positioned against real sites in your exact vertical. A B2B SaaS site is measured against other B2B SaaS sites. An ecommerce site against ecommerce. The corpus grows with every scan — the more sites we process, the sharper the percentiles get.
+          </p>
 
-        {/* Curve panel — instrument readout */}
-        <div className="wd-panel" style={{ overflow: 'hidden' }}>
-
-          {/* Stats row */}
-          <div style={{ display: 'flex', borderBottom: '0.5px solid rgba(255,255,255,0.06)' }}>
-            {CORPUS_STATS.map((s, i) => (
-              <div key={s.label} style={{
-                flex: 1,
-                padding: '20px 24px',
-                borderRight: i < CORPUS_STATS.length - 1 ? '0.5px solid rgba(255,255,255,0.06)' : 'none',
-              }}>
-                <div style={{ ...DISP, fontWeight: 700, fontSize: 42, color: s.color, lineHeight: 1, marginBottom: 6 }}>{s.value}</div>
-                <div style={{ ...MONO, fontSize: 10, color: '#6E7587', textTransform: 'uppercase', letterSpacing: '0.12em' }}>{s.label}</div>
+          {/* Instrument panel */}
+          <div style={{ background: '#0A0E18', border: '0.5px solid rgba(255,255,255,0.08)', padding: '16px 20px', margin: '0 0 24px' }}>
+            {([
+              { k: 'corpus_size',       v: '4,812 sites', vc: '#6F9BC6' },
+              { k: 'verticals_tracked', v: '14',          vc: '#6F9BC6' },
+              { k: 'updated',           v: 'weekly',      vc: '#00C48C' },
+            ] as { k: string; v: string; vc: string }[]).map((row, i) => (
+              <div key={row.k} style={{ display: 'flex', gap: 0, ...MONO, fontSize: 12, marginBottom: i < 2 ? 8 : 0 }}>
+                <span style={{ color: '#8080c0' }}>{row.k}</span>
+                <span style={{ color: '#6E7587' }}>: </span>
+                <span style={{ color: row.vc }}>{row.v}</span>
               </div>
             ))}
           </div>
 
-          {/* Distribution curve */}
-          <div style={{ padding: '20px 24px 0' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-              <span style={{ ...MONO, fontSize: 10, color: '#6E7587' }}>SCORE 0</span>
-              <span style={{ ...MONO, fontSize: 10, color: '#6E7587' }}>SCORE DISTRIBUTION · 4,812 SITES</span>
-              <span style={{ ...MONO, fontSize: 10, color: '#6E7587' }}>SCORE 100</span>
+          <p style={{ ...MONO, fontSize: 11, color: '#6E7587', margin: 0 }}>
+            No synthetic data. No curated samples. Real scans only.
+          </p>
+        </div>
+
+        {/* RIGHT COLUMN — instrument panel */}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div className="wd-panel" style={{ background: '#0A0E18', border: '0.5px solid rgba(111,155,198,0.15)', overflow: 'hidden' }}>
+
+            {/* Stats row */}
+            <div className="sb-stats-row" style={{ display: 'flex', borderBottom: '0.5px solid rgba(255,255,255,0.06)' }}>
+              {CORPUS_STATS.map((s, i) => (
+                <div key={s.label} style={{ flex: 1, padding: '20px 24px', borderRight: i < CORPUS_STATS.length - 1 ? '0.5px solid rgba(255,255,255,0.06)' : 'none' }}>
+                  <div style={{ ...DISP, fontWeight: 700, fontSize: 40, color: s.color, lineHeight: 1, marginBottom: 6 }}>{s.value}</div>
+                  <div style={{ ...MONO, fontSize: 10, color: '#6E7587', textTransform: 'uppercase', letterSpacing: '0.12em' }}>{s.label}</div>
+                </div>
+              ))}
             </div>
-            <svg viewBox="0 0 800 120" width="100%" height="160" preserveAspectRatio="none" aria-hidden style={{ display: 'block' }}>
-              <defs>
-                <linearGradient id="sbCurveGrad" x1="0" y1="0" x2="0" y2="120" gradientUnits="userSpaceOnUse">
-                  <stop offset="0%" stopColor="#6F9BC6" stopOpacity="0.22" />
-                  <stop offset="100%" stopColor="#6F9BC6" stopOpacity="0" />
-                </linearGradient>
-              </defs>
 
-              {/* Subtle gridlines at 25/50/75 */}
-              <line x1="200" y1="8" x2="200" y2="114" stroke="rgba(111,155,198,0.06)" strokeWidth="0.75" />
-              <line x1="400" y1="8" x2="400" y2="114" stroke="rgba(111,155,198,0.06)" strokeWidth="0.75" />
-              <line x1="600" y1="8" x2="600" y2="114" stroke="rgba(111,155,198,0.06)" strokeWidth="0.75" />
+            {/* Curve area */}
+            <div style={{ padding: '20px 24px 0' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+                <span style={{ ...MONO, fontSize: 10, color: '#6E7587' }}>SCORE 0</span>
+                <span style={{ ...MONO, fontSize: 10, color: '#6E7587' }}>SCORE DISTRIBUTION · 4,812 SITES</span>
+                <span style={{ ...MONO, fontSize: 10, color: '#6E7587' }}>SCORE 100</span>
+              </div>
+              <svg viewBox="0 0 800 160" width="100%" height="160" preserveAspectRatio="none" aria-hidden style={{ display: 'block' }}>
+                <defs>
+                  <linearGradient id="sbFill" x1="0" y1="0" x2="0" y2="160" gradientUnits="userSpaceOnUse">
+                    <stop offset="0%" stopColor="#6F9BC6" stopOpacity="0.22" />
+                    <stop offset="100%" stopColor="#6F9BC6" stopOpacity="0" />
+                  </linearGradient>
+                  <filter id="sbGlow" x="-10%" y="-40%" width="120%" height="180%">
+                    <feDropShadow dx="0" dy="0" stdDeviation="3" floodColor="#6F9BC6" floodOpacity="0.35" />
+                  </filter>
+                </defs>
+                <line x1="200" y1="10" x2="200" y2="148" stroke="rgba(111,155,198,0.07)" strokeWidth="0.75" />
+                <line x1="400" y1="10" x2="400" y2="148" stroke="rgba(111,155,198,0.07)" strokeWidth="0.75" />
+                <line x1="600" y1="10" x2="600" y2="148" stroke="rgba(111,155,198,0.07)" strokeWidth="0.75" />
+                <path d="M 0,158 C 40,158 80,155 140,145 C 200,132 260,108 320,82 C 370,60 410,20 464,10 C 510,2 540,8 580,28 C 630,52 680,95 730,128 C 770,150 790,157 800,158 L 800,160 L 0,160 Z" fill="url(#sbFill)" stroke="none" />
+                <path d="M 0,158 C 40,158 80,155 140,145 C 200,132 260,108 320,82 C 370,60 410,20 464,10 C 510,2 540,8 580,28 C 630,52 680,95 730,128 C 770,150 790,157 800,158" fill="none" stroke="#6F9BC6" strokeWidth="1.8" filter="url(#sbGlow)" />
+                <line x1="464" y1="12" x2="464" y2="148" stroke="rgba(255,255,255,0.15)" strokeWidth="0.75" />
+                <text x="464" y="155" textAnchor="middle" fontFamily="IBM Plex Mono, monospace" fontSize="8" fill="rgba(255,255,255,0.25)">AVG 58</text>
+                <g className="sb-marker-enter">
+                  <line x1="504" y1="10" x2="504" y2="148" stroke="rgba(111,155,198,0.75)" strokeWidth="1.5" strokeDasharray="4 3" />
+                  <circle cx="504" cy="22" r="3.5" fill="#6F9BC6" opacity="0.9" />
+                  <text x="504" y="7" textAnchor="middle" fontFamily="IBM Plex Mono, monospace" fontSize="10" fontWeight="600" fill="#6F9BC6">YOUR SITE</text>
+                  <text x="504" y="158" textAnchor="middle" fontFamily="IBM Plex Mono, monospace" fontSize="10" fontWeight="600" fill="#6F9BC6">63rd pct</text>
+                </g>
+                <text x="200" y="158" textAnchor="middle" fontFamily="IBM Plex Mono, monospace" fontSize="7" fill="rgba(111,155,198,0.2)">25</text>
+                <text x="400" y="158" textAnchor="middle" fontFamily="IBM Plex Mono, monospace" fontSize="7" fill="rgba(111,155,198,0.2)">50</text>
+                <text x="600" y="158" textAnchor="middle" fontFamily="IBM Plex Mono, monospace" fontSize="7" fill="rgba(111,155,198,0.2)">75</text>
+              </svg>
+            </div>
 
-              {/* Fill under curve */}
-              <path d="M 0,116 C 60,116 140,110 240,88 C 330,62 400,12 464,8 C 526,8 580,35 640,66 C 700,90 760,112 800,116 L 800,120 L 0,120 Z" fill="url(#sbCurveGrad)" stroke="none" />
-              {/* Curve stroke */}
-              <path d="M 0,116 C 60,116 140,110 240,88 C 330,62 400,12 464,8 C 526,8 580,35 640,66 C 700,90 760,112 800,116" fill="none" stroke="#6F9BC6" strokeWidth="1.5" />
+            {/* Footer */}
+            <div style={{ padding: '12px 24px 20px' }}>
+              <p style={{ ...MONO, fontSize: 11, color: '#6E7587', margin: 0, textAlign: 'center' }}>
+                Benchmarked against sites in your exact vertical · updated as corpus grows
+              </p>
+            </div>
 
-              {/* AVG 58 marker */}
-              <line x1="464" y1="10" x2="464" y2="114" stroke="rgba(255,255,255,0.13)" strokeWidth="0.75" />
-              <text x="464" y="119" textAnchor="middle" fontFamily="IBM Plex Mono, monospace" fontSize="8" fill="rgba(255,255,255,0.25)">AVG 58</text>
-
-              {/* YOUR SITE marker — animated */}
-              <g className="sb-marker-enter">
-                <line x1="504" y1="10" x2="504" y2="108" stroke="rgba(111,155,198,0.7)" strokeWidth="1.2" strokeDasharray="4 3" />
-                <text x="504" y="7" textAnchor="middle" fontFamily="IBM Plex Mono, monospace" fontSize="10" fontWeight="600" fill="#6F9BC6">YOUR SITE</text>
-                <text x="504" y="119" textAnchor="middle" fontFamily="IBM Plex Mono, monospace" fontSize="10" fontWeight="600" fill="#6F9BC6">63rd pct</text>
-              </g>
-
-              {/* Score position labels */}
-              <text x="200" y="119" textAnchor="middle" fontFamily="IBM Plex Mono, monospace" fontSize="7" fill="rgba(111,155,198,0.2)">25</text>
-              <text x="400" y="119" textAnchor="middle" fontFamily="IBM Plex Mono, monospace" fontSize="7" fill="rgba(111,155,198,0.2)">50</text>
-              <text x="600" y="119" textAnchor="middle" fontFamily="IBM Plex Mono, monospace" fontSize="7" fill="rgba(111,155,198,0.2)">75</text>
-            </svg>
           </div>
-
-          {/* Footer */}
-          <div style={{ padding: '12px 24px 20px', marginTop: 4 }}>
-            <p style={{ ...MONO, fontSize: 11, color: '#6E7587', margin: 0, textAlign: 'center' }}>
-              Benchmarked against sites in your exact vertical · updated as corpus grows
-            </p>
-          </div>
-
         </div>
       </div>
     </section>

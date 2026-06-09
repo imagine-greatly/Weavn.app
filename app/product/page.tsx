@@ -1,3 +1,5 @@
+'use client'
+
 import Link from 'next/link'
 import { CodeBlock } from '@/components/ui/CodeBlock'
 import { Stat } from '@/components/ui/Stat'

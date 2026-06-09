@@ -5,20 +5,70 @@ import { CodeBlock } from '@/components/ui/CodeBlock'
 
 // ── Data ──────────────────────────────────────────────────────────────────────
 
+const CURL_CODE = `curl -X POST https://webdocai.com/api/v1/scan \\
+  -H "Authorization: Bearer wdoc_live_••••" \\
+  -H "Content-Type: application/json" \\
+  -d '{"url": "https://your-site.com"}'`
+
 const RATE_POINTS = [
-  { label: 'Playground', price: '$0.25', color: '#6F9BC6' },
-  { label: 'Dev', price: '$0.19', color: '#6F9BC6' },
-  { label: 'Builder', price: '$0.17', color: '#6F9BC6' },
-  { label: 'Scale', price: '$0.15', color: '#00C48C' },
-  { label: 'Enterprise', price: '$0.11', color: '#00C48C' },
+  { label: 'PLAYGROUND', price: '$0.25', color: '#6F9BC6' },
+  { label: 'DEV',        price: '$0.19', color: '#6F9BC6' },
+  { label: 'BUILDER',    price: '$0.17', color: '#6F9BC6' },
+  { label: 'SCALE',      price: '$0.15', color: '#00C48C' },
+  { label: 'ENTERPRISE', price: '$0.11', color: '#00C48C' },
 ]
+
+type SpecEntry = { k: string; v: string }
+
+const API_SPECS: Record<string, SpecEntry[]> = {
+  playground: [
+    { k: 'trial_scans',     v: '25 free' },
+    { k: 'then',            v: '$0.25/scan' },
+    { k: 'async_mode',      v: 'false' },
+    { k: 'batch_endpoint',  v: 'false' },
+    { k: 'webhooks',        v: 'false' },
+    { k: 'rate_limits',     v: 'standard' },
+  ],
+  dev: [
+    { k: 'scans_per_month', v: '300' },
+    { k: 'overage_rate',    v: '$0.19/scan' },
+    { k: 'async_mode',      v: 'true' },
+    { k: 'batch_endpoint',  v: 'false' },
+    { k: 'webhooks',        v: 'true' },
+    { k: 'rate_limits',     v: 'standard' },
+  ],
+  builder: [
+    { k: 'scans_per_month', v: '1,000' },
+    { k: 'overage_rate',    v: '$0.17/scan' },
+    { k: 'async_mode',      v: 'true' },
+    { k: 'batch_endpoint',  v: 'true' },
+    { k: 'webhooks',        v: 'true' },
+    { k: 'rate_limits',     v: 'standard' },
+  ],
+  scale: [
+    { k: 'scans_per_month', v: '3,000' },
+    { k: 'overage_rate',    v: '$0.15/scan' },
+    { k: 'async_mode',      v: 'true' },
+    { k: 'batch_endpoint',  v: 'true' },
+    { k: 'webhooks',        v: 'true' },
+    { k: 'rate_limits',     v: 'dedicated' },
+  ],
+  enterprise: [
+    { k: 'scans_per_month', v: 'custom' },
+    { k: 'overage_rate',    v: 'from $0.11/scan' },
+    { k: 'async_mode',      v: 'true' },
+    { k: 'batch_endpoint',  v: 'true' },
+    { k: 'webhooks',        v: 'true' },
+    { k: 'rate_limits',     v: 'dedicated' },
+  ],
+}
 
 const KEY_FACTS = [
   {
     name: 'CACHE POLICY',
     value: 'Cache policy',
     detail: 'Identical URL rescanned within 24h returns cached result at zero cost.',
-    why: 'Scan the same URL multiple times in your pipeline for free.',
+    why: "Scan the same URL multiple times in your pipeline for free.",
     artifact: (
       <p style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, color: '#00C48C', margin: 0 }}>
         cache_hit: true · cost_usd: 0.00
@@ -88,7 +138,7 @@ const FAQ_CARDS = [
   {
     q: 'How does caching work?',
     a: 'Identical URLs rescanned within 24 hours return the cached result at zero cost. Cache is invalidated when page content changes significantly — detected via fingerprint comparison. Force a fresh scan with force_refresh: true.',
-    dataLine: 'cache hit: cost_usd 0.00',
+    dataLine: 'cache_hit: true · cost_usd: 0.00',
     dataColor: '#6F9BC6',
   },
   {
@@ -99,22 +149,17 @@ const FAQ_CARDS = [
   },
   {
     q: 'What if a site blocks the scanner?',
-    a: 'webdoc uses Browserless Pro with stealth mode and a real Chrome user agent. Most sites scan cleanly. Cloudflare Enterprise with aggressive bot detection occasionally blocks — the API returns a structured error with block_reason: "automated_access_blocked". We are actively improving defeat strategies.',
+    a: 'webdoc uses Browserless Pro with stealth mode and a real Chrome user agent. Most sites scan cleanly. Cloudflare Enterprise with aggressive bot detection occasionally blocks — the API returns a structured error with block_reason: "automated_access_blocked".',
     dataLine: 'error: automated_access_blocked',
     dataColor: '#E8635F',
   },
   {
     q: 'Is there an uptime SLA?',
     a: 'Enterprise plans include a formal SLA. All other plans target 99.5% uptime. Status and incident history available at status.webdocai.com. Planned maintenance is announced 48 hours in advance via dashboard notification.',
-    dataLine: 'target uptime: 99.5% · SLA on Enterprise',
+    dataLine: 'target_uptime: 99.5% · SLA: enterprise_only',
     dataColor: '#00C48C',
   },
 ]
-
-const CURL_CODE = `curl -X POST https://webdocai.com/api/v1/scan \\
-  -H "Authorization: Bearer wdoc_live_••••" \\
-  -H "Content-Type: application/json" \\
-  -d '{"url": "https://your-site.com"}'`
 
 // ── Tokens ────────────────────────────────────────────────────────────────────
 
@@ -122,233 +167,299 @@ const MONO: React.CSSProperties = { fontFamily: '"IBM Plex Mono", monospace' }
 const SANS: React.CSSProperties = { fontFamily: '"IBM Plex Sans", sans-serif' }
 const DISP: React.CSSProperties = { fontFamily: '"Space Grotesk", sans-serif' }
 
-// ── Sub-components ─────────────────────────────────────────────────────────────
+// ── Sub-components ────────────────────────────────────────────────────────────
 
-function Bullet({ text }: { text: string }) {
+function SpecRow({ k, v }: { k: string; v: string }) {
+  const isTrue  = v === 'true'
+  const isFalse = v === 'false'
+  const vColor  = isTrue ? '#00C48C' : isFalse ? '#6E7587' : '#E6E9EE'
   return (
-    <li style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 8, listStyle: 'none' }}>
-      <span style={{ flexShrink: 0, width: 5, height: 5, backgroundColor: '#00C48C', marginTop: 7, display: 'block' }} />
-      <span style={{ ...SANS, fontSize: 14, lineHeight: 1.65, color: '#9398A8' }}>{text}</span>
-    </li>
+    <div style={{ display: 'flex', alignItems: 'baseline', ...MONO, fontSize: 11, marginBottom: 5 }}>
+      <span style={{ color: '#8080c0', flexShrink: 0 }}>{k}</span>
+      <span style={{ color: '#6E7587', margin: '0 3px' }}>:</span>
+      <span style={{ color: vColor }}>{v}</span>
+    </div>
   )
 }
+
+function Ticks() {
+  const b = '0.5px solid rgba(111,155,198,0.2)'
+  return (
+    <>
+      <div aria-hidden style={{ position:'absolute', top:20, left:20,    width:14, height:14, borderTop:b, borderLeft:b,   pointerEvents:'none', zIndex:1 }} />
+      <div aria-hidden style={{ position:'absolute', top:20, right:20,   width:14, height:14, borderTop:b, borderRight:b,  pointerEvents:'none', zIndex:1 }} />
+      <div aria-hidden style={{ position:'absolute', bottom:20, left:20,  width:14, height:14, borderBottom:b, borderLeft:b,  pointerEvents:'none', zIndex:1 }} />
+      <div aria-hidden style={{ position:'absolute', bottom:20, right:20, width:14, height:14, borderBottom:b, borderRight:b, pointerEvents:'none', zIndex:1 }} />
+    </>
+  )
+}
+
+// JSON response lines (rendered with syntax colors for section 2)
+function K({ c }: { c: string }) { return <span style={{ color: '#8080c0' }}>&quot;{c}&quot;</span> }
+function S({ c }: { c: string }) { return <span style={{ color: '#00C48C' }}>&quot;{c}&quot;</span> }
+function N({ c }: { c: string }) { return <span style={{ color: '#6F9BC6' }}>{c}</span> }
+function Muted({ c }: { c: string }) { return <span style={{ color: '#6E7587' }}>{c}</span> }
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function DevelopersPage() {
   return (
     <main style={{ minHeight: '100vh' }}>
+      <style>{`
+        @keyframes dev-json-in { from{opacity:0;transform:translateY(3px)} to{opacity:1;transform:translateY(0)} }
+        .dev-jline { animation: dev-json-in 0.25s ease-out both; }
+        @media (prefers-reduced-motion: reduce) { .dev-jline { animation:none; opacity:1; transform:none; } }
+      `}</style>
 
-      {/* ── 1. Hero ───────────────────────────────────────────────────────────── */}
-      <section style={{ padding: '96px 32px 48px', maxWidth: 896, margin: '0 auto', textAlign: 'center' }}>
-        <div style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.2em', color: '#6F9BC6', marginBottom: 16 }}>
-          API
-        </div>
-        <h1 style={{ ...DISP, fontSize: 'clamp(36px, 5vw, 56px)', fontWeight: 700, letterSpacing: '-1.5px', color: '#E6E9EE', margin: '0 0 16px' }}>
-          One endpoint. Structured output. Per scan.
-        </h1>
-        <p style={{ ...SANS, fontSize: 16, lineHeight: 1.6, color: '#9398A8', maxWidth: 672, margin: '0 auto 32px' }}>
-          POST any URL. Get structured JSON back — score, ranked findings, benchmarks, and rewritten copy.{' '}
-          No dashboard required.
-        </p>
+      {/* ── 1. HERO ─────────────────────────────────────────────────────────── */}
+      <section style={{ position: 'relative', overflow: 'hidden', padding: '96px 32px 64px', textAlign: 'center' }}>
+        <div aria-hidden style={{
+          position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0,
+          background: [
+            'radial-gradient(ellipse 1000px 700px at 50% 35%, rgba(0,196,140,0.07) 0%, transparent 60%)',
+            'radial-gradient(ellipse 500px 300px at 50% 0%, rgba(0,196,140,0.04) 0%, transparent 55%)',
+          ].join(', '),
+        }} />
+        <Ticks />
 
-        {/* CodeBlock with blue emission */}
-        <div
-          style={{
-            maxWidth: 672,
-            margin: '0 auto',
-            borderTop: '1px solid rgba(111,155,198,0.3)',
-            borderLeft: '1px solid rgba(111,155,198,0.15)',
-            borderRight: '1px solid rgba(111,155,198,0.08)',
-            borderBottom: '1px solid rgba(111,155,198,0.05)',
-            boxShadow: '0 0 0 1px rgba(111,155,198,0.2), 0 0 30px rgba(111,155,198,0.08)',
-          }}
-        >
-          <CodeBlock code={CURL_CODE} language="bash" />
-        </div>
+        <div style={{ position: 'relative', zIndex: 1, maxWidth: 896, margin: '0 auto' }}>
+          <p style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.2em', color: '#00C48C', margin: '0 0 20px' }}>
+            API
+          </p>
+          <h1 style={{ ...DISP, fontSize: 'clamp(36px, 5vw, 56px)', fontWeight: 700, letterSpacing: '-1.5px', color: '#E6E9EE', margin: '0 0 16px', lineHeight: 1.1 }}>
+            One endpoint. Structured output. Per scan.
+          </h1>
+          <p style={{ ...SANS, fontSize: 16, lineHeight: 1.65, color: '#9398A8', maxWidth: 600, margin: '0 auto 32px' }}>
+            POST any URL. Get score, ranked findings, benchmarks, and AI-rewritten copy as structured JSON.
+            307 checks. No dashboard required.
+          </p>
 
-        {/* Metric chips */}
-        <div style={{ display: 'flex', justifyContent: 'center', gap: 12, flexWrap: 'wrap', marginTop: 20 }}>
-          {[
-            { label: '307 checks', color: '#00C48C' },
-            { label: '~90s median', color: '#6F9BC6' },
-            { label: 'cache hits free', color: '#00C48C' },
-          ].map(({ label, color }) => (
-            <div key={label} style={{ background: '#0A0E18', border: '0.5px solid rgba(255,255,255,0.06)', padding: '6px 12px', fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, color }}>
-              {label}
+          {/* Curl block */}
+          <div style={{
+            maxWidth: 672, margin: '0 auto 24px',
+            borderTop: '1px solid rgba(0,196,140,0.35)',
+            borderLeft: '1px solid rgba(0,196,140,0.15)',
+            borderRight: '1px solid rgba(0,196,140,0.08)',
+            borderBottom: '1px solid rgba(0,196,140,0.05)',
+            boxShadow: '0 0 0 1px rgba(0,196,140,0.15), 0 0 40px rgba(0,196,140,0.08)',
+            position: 'relative', overflow: 'hidden',
+          }}>
+            <div aria-hidden style={{ position: 'absolute', inset: 0, background: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,196,140,0.015) 2px, rgba(0,196,140,0.015) 4px)', pointerEvents: 'none', zIndex: 0 }} />
+            <div style={{ position: 'relative', zIndex: 1 }}>
+              <CodeBlock code={CURL_CODE} language="bash" />
             </div>
-          ))}
-        </div>
-      </section>
-      <div className="section-separator" />
-
-      {/* ── 2. Rate gradient bar — steel-blue → green bloom ─────────────────── */}
-      <section style={{ position: 'relative', overflow: 'hidden', padding: '40px 32px' }}>
-        {/* Steel-blue / green flanking bloom */}
-        <div
-          aria-hidden
-          style={{
-            position: 'absolute',
-            inset: 0,
-            pointerEvents: 'none',
-            zIndex: 0,
-            background: [
-              'radial-gradient(ellipse 300px 200px at 15% 50%, rgba(111,155,198,0.06) 0%, transparent 70%)',
-              'radial-gradient(ellipse 300px 200px at 85% 50%, rgba(0,196,140,0.06) 0%, transparent 70%)',
-            ].join(', '),
-          }}
-        />
-        <div style={{ position: 'relative', zIndex: 1, maxWidth: 768, margin: '0 auto' }}>
-          <div style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.2em', color: '#6E7587', textAlign: 'center', marginBottom: 24 }}>
-            PER-SCAN RATE · DECREASES WITH VOLUME
           </div>
 
-          <div style={{ height: 8, background: 'linear-gradient(to right, #6F9BC6, #00C48C)' }} />
-
-          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-            {RATE_POINTS.map((point, i) => (
-              <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                <div style={{ width: '0.5px', height: 12, backgroundColor: 'rgba(255,255,255,0.2)' }} />
-                <div style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#6E7587', marginTop: 4 }}>
-                  {point.label}
-                </div>
-                <div style={{ ...DISP, fontSize: 14, fontWeight: 500, color: point.color, marginTop: 2 }}>
-                  {point.price}
-                </div>
-              </div>
+          {/* Stat pills */}
+          <div style={{ display: 'flex', justifyContent: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 32 }}>
+            {['307 checks', '~90s median', 'cache hits free'].map(label => (
+              <span key={label} style={{ background: 'rgba(0,196,140,0.06)', border: '0.5px solid rgba(0,196,140,0.2)', padding: '5px 12px', ...MONO, fontSize: 11, color: '#00C48C', letterSpacing: '0.05em' }}>
+                {label}
+              </span>
             ))}
           </div>
 
-          <p style={{ ...SANS, fontSize: 13, color: '#9398A8', textAlign: 'center', marginTop: 24, maxWidth: 480, margin: '24px auto 0' }}>
-            Cache hits on identical URLs within 24 hours are always free — billed at $0.00 regardless of plan.
+          {/* Primary + secondary CTAs */}
+          <div style={{ display: 'flex', justifyContent: 'center', gap: 12, flexWrap: 'wrap' }}>
+            <Link href="/developer" style={{ ...MONO, fontSize: 13, color: '#6F9BC6', border: '1px solid rgba(111,155,198,0.5)', padding: '12px 28px', textDecoration: 'none', transition: 'all 0.15s', display: 'inline-block' }}>
+              GET API KEY →
+            </Link>
+            <Link href="/docs/api" style={{ ...MONO, fontSize: 13, color: '#6E7587', border: '0.5px solid rgba(255,255,255,0.1)', padding: '12px 28px', textDecoration: 'none', transition: 'all 0.15s', display: 'inline-block' }}>
+              READ THE DOCS →
+            </Link>
+          </div>
+        </div>
+      </section>
+      <div className="section-separator" />
+
+      {/* ── 2. RESPONSE SCHEMA ─────────────────────────────────────────────── */}
+      <section style={{ position: 'relative', overflow: 'hidden', borderTop: '0.5px solid rgba(0,196,140,0.2)' }}>
+        <div aria-hidden style={{
+          position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0,
+          background: 'radial-gradient(ellipse 1000px 700px at 50% 50%, rgba(0,196,140,0.05) 0%, transparent 60%)',
+        }} />
+        <Ticks />
+
+        <div style={{ position: 'relative', zIndex: 1, maxWidth: 896, margin: '0 auto', padding: '64px 32px 72px' }}>
+          <p style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.2em', color: '#00C48C', margin: '0 0 16px' }}>
+            RESPONSE SCHEMA
           </p>
+          <h2 style={{ ...DISP, fontSize: 'clamp(28px, 4vw, 44px)', fontWeight: 700, letterSpacing: '-1px', color: '#E6E9EE', margin: '0 0 40px', lineHeight: 1.15 }}>
+            One response object. Every time.
+          </h2>
+
+          {/* JSON panel with streaming animation */}
+          <div style={{
+            borderTop: '1px solid rgba(0,196,140,0.4)',
+            borderLeft: '1px solid rgba(0,196,140,0.2)',
+            borderRight: '1px solid rgba(255,255,255,0.06)',
+            borderBottom: '1px solid rgba(255,255,255,0.04)',
+            boxShadow: '0 0 0 1px rgba(0,196,140,0.12), 0 0 50px rgba(0,196,140,0.08)',
+            background: '#080D18',
+            overflow: 'hidden',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', borderBottom: '0.5px solid rgba(255,255,255,0.06)' }}>
+              <span style={{ width: 5, height: 5, background: '#00C48C', flexShrink: 0, display: 'inline-block' }} />
+              <span style={{ ...MONO, fontSize: 11, color: '#6E7587' }}>response · application/json · 200 OK</span>
+            </div>
+            <div style={{ padding: '16px 20px', ...MONO, fontSize: 12, lineHeight: 1.7 }}>
+              {[
+                { delay: '0.1s',  content: <><Muted c="{" /></> },
+                { delay: '0.25s', content: <>&nbsp;&nbsp;<K c="scan_id" /><Muted c=": " /><S c="sc_a8d3f2c1" /><Muted c="," /></> },
+                { delay: '0.4s',  content: <>&nbsp;&nbsp;<K c="url" /><Muted c=": " /><S c="https://your-site.com" /><Muted c="," /></> },
+                { delay: '0.55s', content: <>&nbsp;&nbsp;<K c="score" /><Muted c=": " /><span style={{ color: '#E8635F' }}>61</span><Muted c="," /></> },
+                { delay: '0.7s',  content: <>&nbsp;&nbsp;<K c="severity" /><Muted c=": " /><span style={{ color: '#E8635F' }}>&quot;critical&quot;</span><Muted c="," /></> },
+                { delay: '0.85s', content: <>&nbsp;&nbsp;<K c="percentile" /><Muted c=": " /><N c="63" /><Muted c="," /></> },
+                { delay: '1.0s',  content: <>&nbsp;&nbsp;<K c="benchmark_data" /><Muted c=": {" /></> },
+                { delay: '1.1s',  content: <>&nbsp;&nbsp;&nbsp;&nbsp;<K c="industry_avg" /><Muted c=": " /><N c="58" /><Muted c="," /></> },
+                { delay: '1.2s',  content: <>&nbsp;&nbsp;&nbsp;&nbsp;<K c="vertical" /><Muted c=": " /><S c="B2B SaaS" /><Muted c="," /></> },
+                { delay: '1.3s',  content: <>&nbsp;&nbsp;&nbsp;&nbsp;<K c="corpus_size" /><Muted c=": " /><N c="4812" /></> },
+                { delay: '1.4s',  content: <>&nbsp;&nbsp;<Muted c="}," /></> },
+                { delay: '1.5s',  content: <>&nbsp;&nbsp;<K c="findings" /><Muted c=": [" /></> },
+                { delay: '1.6s',  content: <>&nbsp;&nbsp;&nbsp;&nbsp;<Muted c="{ " /><K c="priority" /><Muted c=": " /><S c="P1" /><Muted c=", " /><K c="category" /><Muted c=": " /><S c="hero_section" /><Muted c=" }" /></> },
+                { delay: '1.7s',  content: <>&nbsp;&nbsp;&nbsp;&nbsp;<Muted c="{ " /><K c="estimated_lift" /><Muted c=": " /><span style={{ color: '#00C48C' }}>&quot;+12–18%&quot;</span><Muted c=", " /><K c="priority" /><Muted c=": " /><S c="P1" /><Muted c=" }" /></> },
+                { delay: '1.8s',  content: <>&nbsp;&nbsp;<Muted c="]," /></> },
+                { delay: '1.9s',  content: <>&nbsp;&nbsp;<K c="cost_usd" /><Muted c=": " /><N c="0.15" /><Muted c="," /></> },
+                { delay: '2.0s',  content: <>&nbsp;&nbsp;<K c="duration_ms" /><Muted c=": " /><N c="87432" /></> },
+                { delay: '2.1s',  content: <><Muted c="}" /></> },
+              ].map((line, i) => (
+                <div key={i} className="dev-jline" style={{ animationDelay: line.delay }}>
+                  {line.content}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Schema facts */}
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px 32px', marginTop: 20 }}>
+            {[
+              'Build against this schema once — it never changes',
+              'Every finding cites visible page evidence',
+              'Same structure regardless of site type',
+            ].map(fact => (
+              <span key={fact} style={{ ...MONO, fontSize: 11, color: '#6E7587' }}>
+                · {fact}
+              </span>
+            ))}
+          </div>
         </div>
       </section>
       <div className="section-separator" />
 
-      {/* ── 3. Five plan cards — equal weight, steel-blue bloom ──────────────── */}
-      <section style={{ position: 'relative', overflow: 'hidden', background: '#050810', borderTop: '0.5px solid rgba(111,155,198,0.15)' }}>
-        {/* Ambient steel-blue bloom */}
-        <div
-          aria-hidden
-          style={{
-            position: 'absolute',
-            inset: 0,
-            pointerEvents: 'none',
-            zIndex: 0,
-            background: 'radial-gradient(ellipse 900px 600px at 50% 50%, rgba(111,155,198,0.06) 0%, transparent 65%)',
-          }}
-        />
-        {/* Corner ticks */}
-        <div aria-hidden style={{ position: 'absolute', top: 20, left: 20, width: 14, height: 14, borderTop: '0.5px solid rgba(111,155,198,0.25)', borderLeft: '0.5px solid rgba(111,155,198,0.25)', pointerEvents: 'none', zIndex: 1 }} />
-        <div aria-hidden style={{ position: 'absolute', top: 20, right: 20, width: 14, height: 14, borderTop: '0.5px solid rgba(111,155,198,0.25)', borderRight: '0.5px solid rgba(111,155,198,0.25)', pointerEvents: 'none', zIndex: 1 }} />
-        <div aria-hidden style={{ position: 'absolute', bottom: 20, left: 20, width: 14, height: 14, borderBottom: '0.5px solid rgba(111,155,198,0.25)', borderLeft: '0.5px solid rgba(111,155,198,0.25)', pointerEvents: 'none', zIndex: 1 }} />
-        <div aria-hidden style={{ position: 'absolute', bottom: 20, right: 20, width: 14, height: 14, borderBottom: '0.5px solid rgba(111,155,198,0.25)', borderRight: '0.5px solid rgba(111,155,198,0.25)', pointerEvents: 'none', zIndex: 1 }} />
-        <div id="pricing" style={{ position: 'relative', zIndex: 1, maxWidth: 1280, margin: '0 auto', padding: '64px 32px 80px' }}>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+      {/* ── 3. RATE & PLANS ────────────────────────────────────────────────── */}
+      <section style={{ position: 'relative', overflow: 'hidden', borderTop: '0.5px solid rgba(111,155,198,0.15)' }}>
+        <div aria-hidden style={{
+          position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0,
+          background: [
+            'radial-gradient(ellipse 1000px 700px at 60% 50%, rgba(0,196,140,0.04) 0%, transparent 60%)',
+            'radial-gradient(ellipse 600px 400px at 10% 40%, rgba(111,155,198,0.04) 0%, transparent 55%)',
+          ].join(', '),
+        }} />
+        <Ticks />
 
-            {/* PLAYGROUND */}
-            <div className="wd-panel" style={{ padding: 24, display: 'flex', flexDirection: 'column' }}>
-              <div style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#6E7587', marginBottom: 6 }}>PLAYGROUND</div>
-              <div style={{ ...MONO, fontSize: 11, color: '#6E7587', marginBottom: 16 }}>25 free scans · no subscription</div>
-              <div style={{ ...DISP, fontSize: 40, fontWeight: 700, color: '#E6E9EE', lineHeight: 1, marginBottom: 4 }}>25 free</div>
-              <div style={{ ...SANS, fontSize: 14, color: '#8E8EA0', marginBottom: 24 }}>then $0.25/scan</div>
-              <ul style={{ listStyle: 'none', padding: 0, margin: 0, flex: 1 }}>
-                <Bullet text="25 free scans" />
-                <Bullet text="Full JSON response" />
-                <Bullet text="No monthly fee" />
-                <Bullet text="Rate limited" />
-              </ul>
-              <div style={{ margin: '16px 0', borderTop: '0.5px solid rgba(255,255,255,0.05)', paddingTop: 12 }}>
-                <CodeBlock language="json" code={`{ "url": "https://your-site.com", "async": false }`} />
+        <div style={{ position: 'relative', zIndex: 1, maxWidth: 1280, margin: '0 auto', padding: '64px 32px 80px' }}>
+          <p style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.18em', color: '#6F9BC6', margin: '0 0 40px' }}>
+            API PLANS · RATE DECREASES WITH VOLUME
+          </p>
+
+          {/* Rate bar */}
+          <div className="wd-panel" style={{ padding: '20px 24px 24px', marginBottom: 32, overflow: 'hidden', position: 'relative' }}>
+            <div aria-hidden style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'radial-gradient(ellipse 600px 200px at 50% 50%, rgba(111,155,198,0.04) 0%, transparent 70%)' }} />
+            <div style={{ position: 'relative', zIndex: 1 }}>
+              <div style={{ height: 6, background: 'linear-gradient(to right, #6F9BC6, #00C48C)' }} />
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                {RATE_POINTS.map((p, i) => (
+                  <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                    <div style={{ width: '0.5px', height: 10, background: 'rgba(255,255,255,0.15)' }} />
+                    <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#6E7587', margin: '4px 0 2px' }}>{p.label}</p>
+                    <p style={{ ...DISP, fontSize: 13, fontWeight: 600, color: p.color, margin: 0 }}>{p.price}</p>
+                  </div>
+                ))}
               </div>
-              <Link href="/developer" style={{ display: 'block', textAlign: 'center', ...MONO, fontSize: 13, color: '#6F9BC6', border: '0.5px solid rgba(111,155,198,0.4)', padding: '12px 0', marginTop: 8, textDecoration: 'none', transition: 'opacity 0.15s' }}>
-                GET API KEY →
-              </Link>
+            </div>
+          </div>
+
+          {/* API plan cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3" style={{ alignItems: 'stretch' }}>
+
+            <div className="wd-panel" style={{ display: 'flex', flexDirection: 'column' }}>
+              <div style={{ padding: '18px 18px 12px', borderBottom: '0.5px solid rgba(255,255,255,0.06)' }}>
+                <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#6E7587', margin: '0 0 6px' }}>PLAYGROUND</p>
+                <p style={{ ...DISP, fontSize: 32, fontWeight: 700, color: '#E6E9EE', lineHeight: 1, margin: '0 0 2px' }}>25 free</p>
+                <p style={{ ...MONO, fontSize: 10, color: '#6E7587', margin: 0 }}>then $0.25/scan</p>
+              </div>
+              <div style={{ padding: '12px 18px', borderBottom: '0.5px solid rgba(255,255,255,0.06)', flexGrow: 1 }}>
+                {API_SPECS.playground.map(s => <SpecRow key={s.k} k={s.k} v={s.v} />)}
+              </div>
+              <div style={{ padding: '12px 18px 18px' }}>
+                <Link href="/developer" style={{ display: 'block', textAlign: 'center', ...MONO, fontSize: 11, color: '#6F9BC6', border: '1px solid rgba(111,155,198,0.5)', padding: '9px 0', textDecoration: 'none', transition: 'all 0.15s' }}>
+                  GET API KEY →
+                </Link>
+              </div>
             </div>
 
-            {/* DEV */}
-            <div className="wd-panel" style={{ padding: 24, display: 'flex', flexDirection: 'column' }}>
-              <div style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#6E7587', marginBottom: 6 }}>DEV</div>
-              <div style={{ ...MONO, fontSize: 11, color: '#6E7587', marginBottom: 16 }}>300 scans/month · $0.097/scan effective</div>
-              <div style={{ ...DISP, fontSize: 40, fontWeight: 700, color: '#E6E9EE', lineHeight: 1, marginBottom: 4 }}>$29</div>
-              <div style={{ ...SANS, fontSize: 14, color: '#8E8EA0', marginBottom: 24 }}>/mo</div>
-              <ul style={{ listStyle: 'none', padding: 0, margin: 0, flex: 1 }}>
-                <Bullet text="300 scans/month" />
-                <Bullet text="$0.19/scan overage" />
-                <Bullet text="Webhook support" />
-                <Bullet text="Async mode" />
-                <Bullet text="Full JSON schema" />
-              </ul>
-              <div style={{ margin: '16px 0', borderTop: '0.5px solid rgba(255,255,255,0.05)', paddingTop: 12 }}>
-                <CodeBlock language="json" code={`{ "url": "https://your-site.com",\n  "finding_depth": "full",\n  "webhook_url": "https://your-endpoint.com" }`} />
+            <div className="wd-panel" style={{ display: 'flex', flexDirection: 'column' }}>
+              <div style={{ padding: '18px 18px 12px', borderBottom: '0.5px solid rgba(255,255,255,0.06)' }}>
+                <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#6F9BC6', margin: '0 0 6px' }}>DEV</p>
+                <p style={{ ...DISP, fontSize: 32, fontWeight: 700, color: '#E6E9EE', lineHeight: 1, margin: '0 0 2px' }}>$29</p>
+                <p style={{ ...MONO, fontSize: 10, color: '#6F9BC6', margin: 0 }}>/mo · 300 scans</p>
               </div>
-              <Link href="/signup?plan=dev-api" style={{ display: 'block', textAlign: 'center', ...MONO, fontSize: 13, color: '#6F9BC6', border: '0.5px solid #6F9BC6', padding: '12px 0', marginTop: 8, textDecoration: 'none', transition: 'opacity 0.15s' }}>
-                START DEV PLAN →
-              </Link>
+              <div style={{ padding: '12px 18px', borderBottom: '0.5px solid rgba(255,255,255,0.06)', flexGrow: 1 }}>
+                {API_SPECS.dev.map(s => <SpecRow key={s.k} k={s.k} v={s.v} />)}
+              </div>
+              <div style={{ padding: '12px 18px 18px' }}>
+                <Link href="/signup?plan=dev-api" style={{ display: 'block', textAlign: 'center', ...MONO, fontSize: 11, color: '#6F9BC6', border: '1px solid rgba(111,155,198,0.5)', padding: '9px 0', textDecoration: 'none', transition: 'all 0.15s' }}>
+                  START DEV →
+                </Link>
+              </div>
             </div>
 
-            {/* BUILDER */}
-            <div className="wd-panel" style={{ padding: 24, display: 'flex', flexDirection: 'column' }}>
-              <div style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#6F9BC6', marginBottom: 6 }}>BUILDER</div>
-              <div style={{ ...MONO, fontSize: 11, color: '#6E7587', marginBottom: 16 }}>1,000 scans/month · batch + webhooks</div>
-              <div style={{ ...DISP, fontSize: 40, fontWeight: 700, color: '#E6E9EE', lineHeight: 1, marginBottom: 4 }}>$99</div>
-              <div style={{ ...SANS, fontSize: 14, color: '#8E8EA0', marginBottom: 24 }}>/mo</div>
-              <ul style={{ listStyle: 'none', padding: 0, margin: 0, flex: 1 }}>
-                <Bullet text="1,000 scans/month" />
-                <Bullet text="$0.17/scan overage" />
-                <Bullet text="Batch endpoint (10 URLs)" />
-                <Bullet text="Webhook + async mode" />
-                <Bullet text="Priority processing" />
-              </ul>
-              <div style={{ margin: '16px 0', borderTop: '0.5px solid rgba(255,255,255,0.05)', paddingTop: 12 }}>
-                <CodeBlock language="json" code={`{ "urls": ["site1.com", "site2.com"],\n  "async": true, "batch": true }`} />
+            <div className="wd-panel" style={{ display: 'flex', flexDirection: 'column' }}>
+              <div style={{ padding: '18px 18px 12px', borderBottom: '0.5px solid rgba(255,255,255,0.06)' }}>
+                <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#6F9BC6', margin: '0 0 6px' }}>BUILDER</p>
+                <p style={{ ...DISP, fontSize: 32, fontWeight: 700, color: '#E6E9EE', lineHeight: 1, margin: '0 0 2px' }}>$99</p>
+                <p style={{ ...MONO, fontSize: 10, color: '#6F9BC6', margin: 0 }}>/mo · 1,000 scans</p>
               </div>
-              <Link href="/signup?plan=builder-api" style={{ display: 'block', textAlign: 'center', ...MONO, fontSize: 13, color: '#6F9BC6', border: '0.5px solid rgba(111,155,198,0.4)', padding: '12px 0', marginTop: 8, textDecoration: 'none', transition: 'opacity 0.15s' }}>
-                START BUILDER PLAN →
-              </Link>
+              <div style={{ padding: '12px 18px', borderBottom: '0.5px solid rgba(255,255,255,0.06)', flexGrow: 1 }}>
+                {API_SPECS.builder.map(s => <SpecRow key={s.k} k={s.k} v={s.v} />)}
+              </div>
+              <div style={{ padding: '12px 18px 18px' }}>
+                <Link href="/signup?plan=builder-api" style={{ display: 'block', textAlign: 'center', ...MONO, fontSize: 11, color: '#6F9BC6', border: '1px solid rgba(111,155,198,0.5)', padding: '9px 0', textDecoration: 'none', transition: 'all 0.15s' }}>
+                  START BUILDER →
+                </Link>
+              </div>
             </div>
 
-            {/* SCALE */}
-            <div className="wd-panel" style={{ padding: 24, display: 'flex', flexDirection: 'column' }}>
-              <div style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#6E7587', marginBottom: 6 }}>SCALE</div>
-              <div style={{ ...MONO, fontSize: 11, color: '#6E7587', marginBottom: 16 }}>3,000 scans/month · dedicated rate limits</div>
-              <div style={{ ...DISP, fontSize: 40, fontWeight: 700, color: '#E6E9EE', lineHeight: 1, marginBottom: 4 }}>$249</div>
-              <div style={{ ...SANS, fontSize: 14, color: '#8E8EA0', marginBottom: 24 }}>/mo</div>
-              <ul style={{ listStyle: 'none', padding: 0, margin: 0, flex: 1 }}>
-                <Bullet text="3,000 scans/month" />
-                <Bullet text="$0.15/scan overage" />
-                <Bullet text="All batch + async features" />
-                <Bullet text="Dedicated rate limits" />
-                <Bullet text="Usage dashboard" />
-              </ul>
-              <div style={{ margin: '16px 0', borderTop: '0.5px solid rgba(255,255,255,0.05)', paddingTop: 12 }}>
-                <CodeBlock language="json" code={`{ "batch": true, "priority": "high",\n  "rate_limit": "dedicated" }`} />
+            <div className="wd-panel" style={{ display: 'flex', flexDirection: 'column' }}>
+              <div style={{ padding: '18px 18px 12px', borderBottom: '0.5px solid rgba(255,255,255,0.06)' }}>
+                <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#00C48C', margin: '0 0 6px' }}>SCALE</p>
+                <p style={{ ...DISP, fontSize: 32, fontWeight: 700, color: '#E6E9EE', lineHeight: 1, margin: '0 0 2px' }}>$249</p>
+                <p style={{ ...MONO, fontSize: 10, color: '#00C48C', margin: 0 }}>/mo · 3,000 scans</p>
               </div>
-              <Link href="/signup?plan=scale-api" style={{ display: 'block', textAlign: 'center', ...MONO, fontSize: 13, color: '#6F9BC6', border: '0.5px solid #6F9BC6', padding: '12px 0', marginTop: 8, textDecoration: 'none', transition: 'opacity 0.15s' }}>
-                START SCALE PLAN →
-              </Link>
+              <div style={{ padding: '12px 18px', borderBottom: '0.5px solid rgba(255,255,255,0.06)', flexGrow: 1 }}>
+                {API_SPECS.scale.map(s => <SpecRow key={s.k} k={s.k} v={s.v} />)}
+              </div>
+              <div style={{ padding: '12px 18px 18px' }}>
+                <Link href="/signup?plan=scale-api" style={{ display: 'block', textAlign: 'center', ...MONO, fontSize: 11, color: '#00C48C', border: '1px solid rgba(0,196,140,0.5)', padding: '9px 0', textDecoration: 'none', transition: 'all 0.15s' }}>
+                  START SCALE →
+                </Link>
+              </div>
             </div>
 
-            {/* ENTERPRISE */}
-            <div className="wd-panel" style={{ padding: 24, display: 'flex', flexDirection: 'column' }}>
-              <div style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#6E7587', marginBottom: 6 }}>ENTERPRISE</div>
-              <div style={{ ...MONO, fontSize: 11, color: '#6E7587', marginBottom: 16 }}>custom volume · SLA guarantee</div>
-              <div style={{ ...DISP, fontSize: 40, fontWeight: 700, color: '#E6E9EE', lineHeight: 1, marginBottom: 4 }}>Custom</div>
-              <div style={{ ...SANS, fontSize: 14, color: '#8E8EA0', marginBottom: 24 }}>&nbsp;</div>
-              <ul style={{ listStyle: 'none', padding: 0, margin: 0, flex: 1 }}>
-                <Bullet text="Volume pricing from $0.11/scan" />
-                <Bullet text="SLA guarantee" />
-                <Bullet text="Custom rate limits" />
-                <Bullet text="Dedicated support" />
-                <Bullet text="Invoice billing" />
-              </ul>
-              <div style={{ margin: '16px 0', borderTop: '0.5px solid rgba(255,255,255,0.05)', paddingTop: 12, ...MONO, fontSize: 11, color: '#6E7587', lineHeight: 1.7 }}>
-                custom rate limits · dedicated infrastructure · SLA guarantee
+            <div className="wd-panel" style={{ display: 'flex', flexDirection: 'column' }}>
+              <div style={{ padding: '18px 18px 12px', borderBottom: '0.5px solid rgba(255,255,255,0.06)' }}>
+                <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#6F9BC6', margin: '0 0 6px' }}>ENTERPRISE</p>
+                <p style={{ ...DISP, fontSize: 32, fontWeight: 700, color: '#E6E9EE', lineHeight: 1, margin: '0 0 2px' }}>Custom</p>
+                <p style={{ ...MONO, fontSize: 10, color: '#6E7587', margin: 0 }}>volume · SLA guarantee</p>
               </div>
-              <Link href="mailto:hello@webdocai.com" style={{ display: 'block', textAlign: 'center', ...MONO, fontSize: 13, color: '#6F9BC6', border: '0.5px solid rgba(111,155,198,0.4)', padding: '12px 0', marginTop: 8, textDecoration: 'none', transition: 'opacity 0.15s' }}>
-                TALK TO US →
-              </Link>
+              <div style={{ padding: '12px 18px', borderBottom: '0.5px solid rgba(255,255,255,0.06)', flexGrow: 1 }}>
+                {API_SPECS.enterprise.map(s => <SpecRow key={s.k} k={s.k} v={s.v} />)}
+              </div>
+              <div style={{ padding: '12px 18px 18px' }}>
+                <Link href="mailto:hello@webdocai.com" style={{ display: 'block', textAlign: 'center', ...MONO, fontSize: 11, color: '#6F9BC6', border: '1px solid rgba(111,155,198,0.5)', padding: '9px 0', textDecoration: 'none', transition: 'all 0.15s' }}>
+                  TALK TO US →
+                </Link>
+              </div>
             </div>
 
           </div>
@@ -356,23 +467,36 @@ export default function DevelopersPage() {
       </section>
       <div className="section-separator" />
 
-      {/* ── 4. Included on all plans — bg #080D18 ────────────────────────────── */}
-      <section style={{ background: '#080D18', borderTop: '0.5px solid rgba(128,128,192,0.15)', borderBottom: '0.5px solid rgba(255,255,255,0.05)' }}>
-        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '64px 32px' }}>
-          <div style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.2em', color: '#6E7587', textAlign: 'center', marginBottom: 32 }}>
+      {/* ── 4. INCLUDED ON ALL PLANS ────────────────────────────────────────── */}
+      <section style={{ position: 'relative', overflow: 'hidden', background: '#080D18', borderTop: '0.5px solid rgba(0,196,140,0.15)', borderBottom: '0.5px solid rgba(255,255,255,0.05)' }}>
+        <div aria-hidden style={{
+          position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0,
+          background: 'radial-gradient(ellipse 900px 600px at 50% 50%, rgba(0,196,140,0.04) 0%, transparent 60%)',
+        }} />
+        <Ticks />
+
+        <div style={{ position: 'relative', zIndex: 1, maxWidth: 1280, margin: '0 auto', padding: '64px 32px' }}>
+          <p style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.2em', color: '#00C48C', textAlign: 'center', margin: '0 0 32px' }}>
             INCLUDED ON ALL PLANS
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          </p>
 
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {KEY_FACTS.map((fact) => (
               <div
                 key={fact.name}
-                className="wd-panel"
-                style={{ padding: '20px 22px', display: 'flex', flexDirection: 'column', gap: 8 }}
+                style={{
+                  background: '#0A0E18',
+                  borderTop: '1px solid rgba(0,196,140,0.35)',
+                  borderLeft: '1px solid rgba(0,196,140,0.1)',
+                  borderRight: '1px solid rgba(255,255,255,0.04)',
+                  borderBottom: '1px solid rgba(255,255,255,0.03)',
+                  padding: '20px 22px',
+                  display: 'flex', flexDirection: 'column', gap: 8,
+                }}
               >
-                <div style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#6F9BC6' }}>
+                <p style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#00C48C', margin: 0 }}>
                   {fact.name}
-                </div>
+                </p>
                 <p style={{ ...DISP, fontSize: 17, fontWeight: 600, color: '#E6E9EE', margin: 0 }}>
                   {fact.value}
                 </p>
@@ -387,98 +511,70 @@ export default function DevelopersPage() {
                 </div>
               </div>
             ))}
-
           </div>
         </div>
       </section>
       <div className="section-separator" />
 
-      {/* ── 5. CTA pair — #050810 + bloom + corner ticks ─────────────────────── */}
-      <section style={{ position: 'relative', overflow: 'hidden', background: '#050810', borderTop: '0.5px solid rgba(111,155,198,0.2)', padding: '64px 32px', textAlign: 'center' }}>
-        {/* Bloom */}
-        <div aria-hidden style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0, background: 'radial-gradient(ellipse 900px 500px at 50% 80%, rgba(111,155,198,0.06) 0%, transparent 65%)' }} />
-        {/* Corner ticks */}
-        <div aria-hidden style={{ position: 'absolute', top: 20, left: 20, width: 14, height: 14, borderTop: '0.5px solid rgba(111,155,198,0.25)', borderLeft: '0.5px solid rgba(111,155,198,0.25)', pointerEvents: 'none', zIndex: 1 }} />
-        <div aria-hidden style={{ position: 'absolute', top: 20, right: 20, width: 14, height: 14, borderTop: '0.5px solid rgba(111,155,198,0.25)', borderRight: '0.5px solid rgba(111,155,198,0.25)', pointerEvents: 'none', zIndex: 1 }} />
-        <div aria-hidden style={{ position: 'absolute', bottom: 20, left: 20, width: 14, height: 14, borderBottom: '0.5px solid rgba(111,155,198,0.25)', borderLeft: '0.5px solid rgba(111,155,198,0.25)', pointerEvents: 'none', zIndex: 1 }} />
-        <div aria-hidden style={{ position: 'absolute', bottom: 20, right: 20, width: 14, height: 14, borderBottom: '0.5px solid rgba(111,155,198,0.25)', borderRight: '0.5px solid rgba(111,155,198,0.25)', pointerEvents: 'none', zIndex: 1 }} />
-        <div style={{ position: 'relative', zIndex: 1 }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, flexWrap: 'wrap' }}>
-            <Link
-              href="/playground"
-              style={{ ...MONO, fontSize: 13, backgroundColor: '#6F9BC6', color: '#050810', padding: '13px 28px', textDecoration: 'none', display: 'inline-block', transition: 'opacity 0.15s' }}
-            >
-              TRY THE PLAYGROUND →
-            </Link>
-            <Link
-              href="/docs/api"
-              style={{ ...MONO, fontSize: 13, border: '0.5px solid rgba(111,155,198,0.4)', color: '#6F9BC6', padding: '13px 28px', textDecoration: 'none', display: 'inline-block', transition: 'opacity 0.15s' }}
-            >
-              READ THE DOCS →
-            </Link>
-          </div>
-          <p style={{ ...MONO, fontSize: 11, color: '#6E7587', marginTop: 16 }}>
-            Same engine. Same response schema. Every plan.
+      {/* ── 5. FAQ ──────────────────────────────────────────────────────────── */}
+      <section style={{ position: 'relative', overflow: 'hidden' }}>
+        <div aria-hidden style={{
+          position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0,
+          background: 'radial-gradient(ellipse 900px 600px at 50% 50%, rgba(111,155,198,0.04) 0%, transparent 65%)',
+        }} />
+        <Ticks />
+
+        <div style={{ position: 'relative', zIndex: 1, maxWidth: 1100, margin: '0 auto', padding: '64px 32px 80px' }}>
+          <p style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.18em', color: '#6F9BC6', margin: '0 0 32px' }}>
+            TECHNICAL QUESTIONS
           </p>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {FAQ_CARDS.map((card, i) => (
+              <div key={i} className="wd-panel" style={{ padding: '22px 24px', display: 'flex', flexDirection: 'column' }}>
+                <p style={{ ...DISP, fontSize: 16, fontWeight: 600, color: '#E6E9EE', margin: '0 0 10px' }}>{card.q}</p>
+                <p style={{ ...SANS, fontSize: 14, lineHeight: 1.65, color: '#9398A8', margin: '0 0 16px', flexGrow: 1 }}>{card.a}</p>
+                <p style={{ ...MONO, fontSize: 11, color: card.dataColor, margin: 0 }}>{card.dataLine}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
       <div className="section-separator" />
 
-      {/* ── 6. FAQ cards — 2×3 grid, blue bloom ──────────────────────────────── */}
-      <section style={{ position: 'relative', overflow: 'hidden', maxWidth: 1100, margin: '0 auto', padding: '64px 32px 80px' }}>
-        {/* Faint blue bloom */}
-        <div
-          aria-hidden
-          style={{
-            position: 'absolute',
-            inset: 0,
-            pointerEvents: 'none',
-            zIndex: 0,
-            background: 'radial-gradient(ellipse 1000px 600px at 50% 50%, rgba(111,155,198,0.04) 0%, transparent 65%)',
-          }}
-        />
-        <div style={{
-          position: 'relative',
-          zIndex: 1,
-          display: 'grid',
-          gridTemplateColumns: 'repeat(2, 1fr)',
-          gap: 16,
-        }}>
-          {FAQ_CARDS.map((card, i) => (
-            <div
-              key={i}
-              className="wd-panel"
-              style={{
-                background: '#0A0E18',
-                padding: '22px 24px',
-                display: 'flex',
-                flexDirection: 'column',
-              }}
-            >
-              <div style={{ fontFamily: '"Space Grotesk", sans-serif', fontSize: 16, fontWeight: 600, color: '#E6E9EE', marginBottom: 10 }}>
-                {card.q}
-              </div>
-              <p style={{ fontFamily: '"IBM Plex Sans", sans-serif', fontSize: 14, lineHeight: 1.65, color: '#9398A8', margin: '0 0 16px', flexGrow: 1 }}>
-                {card.a}
-              </p>
-              <div style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, color: card.dataColor, marginTop: 'auto' }}>
-                {card.dataLine}
-              </div>
-            </div>
-          ))}
+      {/* ── 6. EXIT BAND ────────────────────────────────────────────────────── */}
+      <section style={{ position: 'relative', overflow: 'hidden', borderTop: '0.5px solid rgba(0,196,140,0.2)' }}>
+        <div aria-hidden style={{
+          position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0,
+          background: [
+            'radial-gradient(ellipse 600px 400px at 25% 50%, rgba(111,155,198,0.04) 0%, transparent 60%)',
+            'radial-gradient(ellipse 600px 400px at 75% 50%, rgba(0,196,140,0.05) 0%, transparent 60%)',
+          ].join(', '),
+        }} />
+        <Ticks />
+
+        <div style={{ position: 'relative', zIndex: 1, display: 'flex' }}>
+          {/* Dashboard plans */}
+          <div style={{ flex: 1, padding: '48px 40px', borderRight: '0.5px solid rgba(255,255,255,0.06)' }}>
+            <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#6E7587', margin: '0 0 8px' }}>Need a full dashboard?</p>
+            <p style={{ ...DISP, fontSize: 18, fontWeight: 600, color: '#E6E9EE', lineHeight: 1.3, margin: '0 0 8px' }}>Score trending. Client workspaces. White-label reports.</p>
+            <p style={{ ...SANS, fontSize: 13, color: '#6E7587', margin: '0 0 20px' }}>For founders diagnosing their own site and agencies managing clients.</p>
+            <Link href="/pricing" style={{ ...MONO, fontSize: 12, color: '#6F9BC6', border: '1px solid rgba(111,155,198,0.5)', padding: '10px 20px', textDecoration: 'none', display: 'inline-block', transition: 'all 0.15s' }}>
+              See dashboard plans →
+            </Link>
+          </div>
+
+          {/* GET API KEY — primary */}
+          <div style={{ flex: 1, padding: '48px 40px' }}>
+            <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#00C48C', margin: '0 0 8px' }}>Ready to build?</p>
+            <p style={{ ...DISP, fontSize: 18, fontWeight: 600, color: '#E6E9EE', lineHeight: 1.3, margin: '0 0 8px' }}>25 free scans. No subscription. Start in minutes.</p>
+            <p style={{ ...SANS, fontSize: 13, color: '#6E7587', margin: '0 0 20px' }}>Same engine on every plan. Build against the schema once.</p>
+            <Link href="/developer" style={{ ...MONO, fontSize: 12, color: '#00C48C', border: '1px solid rgba(0,196,140,0.5)', padding: '10px 20px', textDecoration: 'none', display: 'inline-block', transition: 'all 0.15s' }}>
+              GET API KEY →
+            </Link>
+          </div>
         </div>
       </section>
-      <div className="section-separator" />
-
-      {/* ── 7. Footer — transparent ──────────────────────────────────────────── */}
-      <div style={{ padding: '24px 0', textAlign: 'center' }}>
-        <p style={{ fontFamily: '"IBM Plex Sans", sans-serif', fontSize: 14, color: '#9398A8', margin: 0 }}>
-          Need a dashboard?{' '}
-          <Link href="/pricing" style={{ color: '#6F9BC6', textDecoration: 'none' }}>
-            See agency plans →
-          </Link>
-        </p>
-      </div>
 
     </main>
   )

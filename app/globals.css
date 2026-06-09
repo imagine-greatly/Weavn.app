@@ -1259,12 +1259,7 @@ svg path { fill: none !important; }
   border-bottom-color: rgba(0,196,140,0.1) !important;
 }
 
-/* ── Score ring emission ────────────────────────────────────────────────────── */
-@media (prefers-reduced-motion: no-preference) {
-  .score-ring-arc {
-    filter: drop-shadow(0 0 8px var(--ring-glow-near)) drop-shadow(0 0 16px var(--ring-glow-far));
-  }
-}
+/* Score ring arc glow is handled via inline SVG filter in ScoreRing.tsx */
 
 /* ── Section separator ─────────────────────────────────────────────────────── */
 .section-separator {

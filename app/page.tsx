@@ -1,9 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import ScoreRing from '@/components/ui/ScoreRing'
-import { CodeBlock } from '@/components/ui/CodeBlock'
 import ResponseAnnotatorSection from '@/components/sections/ResponseAnnotatorSection'
 
 // ── Syntax-highlighted JSON primitives ──────────────────────────────────────
@@ -57,7 +56,8 @@ function NavBar() {
         </Link>
         <Link
           href="/signup"
-          className="bg-[#6F9BC6] text-text-inverse font-body font-semibold text-sm px-4 py-1.5 no-underline hover:opacity-90 transition-opacity duration-150"
+          className="font-body font-semibold text-sm px-4 py-1.5 no-underline transition-all duration-150"
+          style={{ background: 'transparent', border: '1px solid rgba(111,155,198,0.5)', color: '#6F9BC6' }}
         >
           Get API key →
         </Link>
@@ -217,7 +217,8 @@ function HeroSection() {
           <div className="flex flex-wrap gap-3 mt-8">
             <Link
               href="/signup"
-              className="bg-[#6F9BC6] text-text-inverse font-body font-bold text-sm px-6 py-3 no-underline hover:opacity-90 transition-opacity duration-150"
+              className="font-body font-bold text-sm px-6 py-3 no-underline transition-all duration-150"
+              style={{ background: 'transparent', border: '1px solid rgba(111,155,198,0.5)', color: '#6F9BC6' }}
             >
               Get API key →
             </Link>
@@ -241,7 +242,7 @@ function HeroSection() {
         <div
           className="flex-[45] min-w-0 relative bg-background-raised"
           style={{
-            boxShadow: '0 0 0 1px rgba(111,155,198,0.25), 0 0 40px rgba(111,155,198,0.12), 0 0 80px rgba(111,155,198,0.06), 0 0 120px rgba(128,128,192,0.08)',
+            boxShadow: '0 0 0 1px rgba(0,196,140,0.25), 0 0 40px rgba(0,196,140,0.12), 0 0 80px rgba(0,196,140,0.06), 0 0 120px rgba(0,196,140,0.08)',
             borderTop: '1px solid rgba(111,155,198,0.35)',
             borderLeft: '0.5px solid rgba(111,155,198,0.15)',
             borderRight: '0.5px solid rgba(255,255,255,0.06)',
@@ -354,152 +355,216 @@ const MONO = { fontFamily: "'IBM Plex Mono', monospace" }
 const SANS = { fontFamily: "'IBM Plex Sans', sans-serif" }
 const DISP = { fontFamily: "'Space Grotesk', sans-serif" }
 
-const HIW_CURL = `curl -X POST https://webdocai.com/api/v1/scan \\
-  -H "Authorization: Bearer wdoc_live_••••" \\
-  -d '{"url": "https://your-site.com"}'`
+const HIW_SCAN_CATS = [
+  'hero_section', 'value_proposition', 'trust_credibility',
+  'cta_conversion', 'social_proof', 'benchmark_positioning',
+  'copy_effectiveness', 'mobile_experience', 'trust_signals',
+]
 
-const HIW_JSON = `{
-  "score": 61,
-  "severity": "critical",
-  "percentile": 63,
-  "findings": 23,
-  "cost_usd": 0.15
-}`
-
-const STEP_NUM_STYLE: React.CSSProperties = {
-  position: 'relative',
-  zIndex: 1,
-  display: 'inline-block',
-  background: '#050810',
-  border: '0.5px solid rgba(111,155,198,0.3)',
-  padding: '6px 10px',
-  marginBottom: 16,
-  ...MONO,
-  fontSize: 13,
-  color: '#6F9BC6',
-}
+const HIW_JSON_LINES: { delay: number; indent: boolean; content: React.ReactNode }[] = [
+  { delay: 0.1,  indent: false, content: <span style={{ color: '#6E7587' }}>{'{'}</span> },
+  { delay: 0.3,  indent: true,  content: <><span style={{ color: '#8080c0' }}>&quot;score&quot;</span><span style={{ color: '#9398A8' }}>: </span><span style={{ color: '#E8635F' }}>61</span><span style={{ color: '#6E7587' }}>,</span></> },
+  { delay: 0.5,  indent: true,  content: <><span style={{ color: '#8080c0' }}>&quot;severity&quot;</span><span style={{ color: '#9398A8' }}>: </span><span style={{ color: '#E8635F' }}>&quot;critical&quot;</span><span style={{ color: '#6E7587' }}>,</span></> },
+  { delay: 0.7,  indent: true,  content: <><span style={{ color: '#8080c0' }}>&quot;percentile&quot;</span><span style={{ color: '#9398A8' }}>: </span><span style={{ color: '#6F9BC6' }}>63</span><span style={{ color: '#6E7587' }}>,</span></> },
+  { delay: 0.9,  indent: true,  content: <><span style={{ color: '#8080c0' }}>&quot;findings&quot;</span><span style={{ color: '#9398A8' }}>: </span><span style={{ color: '#6F9BC6' }}>23</span><span style={{ color: '#6E7587' }}>,</span></> },
+  { delay: 1.1,  indent: true,  content: <><span style={{ color: '#8080c0' }}>&quot;industry&quot;</span><span style={{ color: '#9398A8' }}>: </span><span style={{ color: '#00C48C' }}>&quot;B2B SaaS&quot;</span><span style={{ color: '#6E7587' }}>,</span></> },
+  { delay: 1.3,  indent: true,  content: <><span style={{ color: '#8080c0' }}>&quot;cost_usd&quot;</span><span style={{ color: '#9398A8' }}>: </span><span style={{ color: '#9398A8' }}>0.15</span></> },
+  { delay: 1.5,  indent: false, content: <span style={{ color: '#6E7587' }}>{'}'}</span> },
+]
 
 function HowItWorksSection() {
+  const [litIdx, setLitIdx] = useState(0)
+
+  useEffect(() => {
+    const t = setInterval(() => setLitIdx(i => (i + 1) % HIW_SCAN_CATS.length), 400)
+    return () => clearInterval(t)
+  }, [])
+
   return (
-    <section style={{ padding: '96px 0', position: 'relative', overflow: 'hidden' }}>
-      {/* Section atmosphere */}
-      <div
-        aria-hidden
-        style={{
-          position: 'absolute',
-          inset: 0,
-          pointerEvents: 'none',
-          zIndex: 0,
-          background: 'radial-gradient(ellipse 1200px 600px at 50% 60%, rgba(111,155,198,0.06) 0%, transparent 65%)',
-        }}
-      />
+    <section style={{ padding: '96px 0', position: 'relative', overflow: 'hidden', background: '#050810' }}>
+      <style>{`
+        @keyframes hiw-cursor-blink { 0%,49%{opacity:1} 50%,100%{opacity:0} }
+        @keyframes hiw-progress { from{transform:scaleX(0)} to{transform:scaleX(1)} }
+        @keyframes hiw-flow { from{left:-22%} to{left:112%} }
+        @keyframes hiw-json-line { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:translateY(0)} }
+        @media (prefers-reduced-motion: reduce) {
+          .hiw-cursor{animation:none!important}
+          .hiw-progress-bar{animation:none!important;transform:scaleX(1)!important}
+          .hiw-flow-dot{display:none!important}
+          .hiw-json-line{animation:none!important;opacity:1!important;transform:none!important}
+        }
+      `}</style>
+
+      {/* Three-lane ambient blooms */}
+      <div aria-hidden style={{
+        position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0,
+        background: [
+          'radial-gradient(ellipse 480px 700px at 16% 70%, rgba(111,155,198,0.06) 0%, transparent 60%)',
+          'radial-gradient(ellipse 480px 700px at 50% 70%, rgba(128,128,192,0.05) 0%, transparent 60%)',
+          'radial-gradient(ellipse 480px 700px at 84% 70%, rgba(0,196,140,0.05) 0%, transparent 60%)',
+        ].join(', '),
+      }} />
+
+      {/* Corner ticks */}
+      <div aria-hidden style={{ position: 'absolute', top: 20, left: 20, width: 14, height: 14, borderTop: '0.5px solid rgba(111,155,198,0.25)', borderLeft: '0.5px solid rgba(111,155,198,0.25)', pointerEvents: 'none', zIndex: 1 }} />
+      <div aria-hidden style={{ position: 'absolute', top: 20, right: 20, width: 14, height: 14, borderTop: '0.5px solid rgba(111,155,198,0.25)', borderRight: '0.5px solid rgba(111,155,198,0.25)', pointerEvents: 'none', zIndex: 1 }} />
+      <div aria-hidden style={{ position: 'absolute', bottom: 20, left: 20, width: 14, height: 14, borderBottom: '0.5px solid rgba(111,155,198,0.25)', borderLeft: '0.5px solid rgba(111,155,198,0.25)', pointerEvents: 'none', zIndex: 1 }} />
+      <div aria-hidden style={{ position: 'absolute', bottom: 20, right: 20, width: 14, height: 14, borderBottom: '0.5px solid rgba(111,155,198,0.25)', borderRight: '0.5px solid rgba(111,155,198,0.25)', pointerEvents: 'none', zIndex: 1 }} />
 
       <div style={{ position: 'relative', zIndex: 1, maxWidth: 1200, margin: '0 auto', padding: '0 48px' }}>
-        <p style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, color: '#6F9BC6', margin: '0 0 18px' }}>
+
+        {/* Header */}
+        <p style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, color: '#6F9BC6', margin: '0 0 16px' }}>
           THE PIPELINE
         </p>
-        <h2 style={{ ...DISP, fontWeight: 700, fontSize: 36, lineHeight: 1.15, color: '#E6E9EE', margin: '0 0 48px', letterSpacing: '-0.5px' }}>
+        <h2 style={{ ...DISP, fontWeight: 700, fontSize: 36, lineHeight: 1.15, color: '#E6E9EE', margin: '0 0 10px', letterSpacing: '-0.5px' }}>
           Three steps. One structured response.
         </h2>
+        <p style={{ ...MONO, fontSize: 12, color: '#6E7587', margin: '0 0 48px', letterSpacing: '0.04em' }}>
+          One POST request. 307 checks fire in sequence. Structured JSON returns.
+        </p>
 
-        {/* Step header row — connecting line behind step numbers */}
-        <div style={{ position: 'relative', marginBottom: 0 }}>
-          <div className="hidden sm:block" style={{ position: 'absolute', top: 18, left: 0, right: 0, height: 1, background: 'rgba(111,155,198,0.2)', zIndex: 0 }} />
-
+        {/* Step connector row with traveling highlight */}
+        <div style={{ position: 'relative', marginBottom: 28 }}>
+          <div className="hidden sm:block" style={{ position: 'absolute', top: 15, left: '16%', right: '16%', height: 1, background: 'rgba(111,155,198,0.12)', overflow: 'hidden' }}>
+            <div className="hiw-flow-dot" style={{
+              position: 'absolute', top: 0, height: '100%', width: '22%',
+              background: 'linear-gradient(to right, transparent, rgba(111,155,198,0.55), transparent)',
+              animation: 'hiw-flow 2.2s linear infinite',
+            }} />
+          </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-            <div>
-              <div style={STEP_NUM_STYLE}>01</div>
-              <p style={{ ...DISP, fontWeight: 700, fontSize: 18, color: '#E6E9EE', margin: '0 0 8px' }}>POST a URL</p>
-              <p style={{ ...SANS, fontSize: 14, color: '#9398A8', lineHeight: 1.6, margin: 0 }}>
-                Submit any URL via the API or paste it in the playground. Add optional parameters: site_type override, finding_depth, async mode, or page paths for multi-page scans.
-              </p>
-            </div>
-
-            <div>
-              <div style={STEP_NUM_STYLE}>02</div>
-              <p style={{ ...DISP, fontWeight: 700, fontSize: 18, color: '#E6E9EE', margin: '0 0 8px' }}>307 checks run</p>
-              <p style={{ ...SANS, fontSize: 14, color: '#9398A8', lineHeight: 1.6, margin: 0 }}>
-                The page renders in headless Chrome. The site is classified: SaaS, ecommerce, service, B2B. Only relevant checks fire. SaaS sites get SaaS checks. 27 diagnostic categories total.
-              </p>
-            </div>
-
-            <div>
-              <div style={STEP_NUM_STYLE}>03</div>
-              <p style={{ ...DISP, fontWeight: 700, fontSize: 18, color: '#E6E9EE', margin: '0 0 8px' }}>Get structured output</p>
-              <p style={{ ...SANS, fontSize: 14, color: '#9398A8', lineHeight: 1.6, margin: 0 }}>
-                Score, ranked findings, AI-rewritten copy, and industry benchmarks returned as JSON. Every finding references specific visible content — never fabricated.
-              </p>
-            </div>
+            {([
+              { num: '01', label: 'INPUT',      accent: '#6F9BC6', aRgba: '111,155,198' },
+              { num: '02', label: 'PROCESSING', accent: '#9D8CFF', aRgba: '157,140,255' },
+              { num: '03', label: 'OUTPUT',     accent: '#00C48C', aRgba: '0,196,140'   },
+            ] as const).map(s => (
+              <div key={s.num} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+                <div style={{
+                  ...MONO, fontSize: 12, color: s.accent,
+                  background: '#050810',
+                  border: `0.5px solid rgba(${s.aRgba},0.3)`,
+                  padding: '5px 12px',
+                  letterSpacing: '0.15em',
+                  position: 'relative', zIndex: 1,
+                }}>
+                  {s.num}
+                </div>
+                <div style={{ ...MONO, fontSize: 10, color: s.accent, textTransform: 'uppercase', letterSpacing: '0.18em', opacity: 0.65 }}>
+                  {s.label}
+                </div>
+              </div>
+            ))}
           </div>
         </div>
 
-        {/* Pipeline dashed connector */}
-        <div style={{ borderTop: '1px dashed rgba(111,155,198,0.15)', margin: '32px 0 0' }} />
+        {/* Three equal panels */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
 
-        {/* Artifact row */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6" style={{ marginTop: 0 }}>
-
-          {/* Artifact 01 — curl */}
-          <div style={{ paddingTop: 24 }}>
-            <div style={{
-              background: '#0A0E18',
-              borderTop: '1px solid rgba(111,155,198,0.2)',
-              borderLeft: '1px solid rgba(111,155,198,0.12)',
-              borderRight: '1px solid rgba(111,155,198,0.07)',
-              borderBottom: '1px solid rgba(111,155,198,0.05)',
-              boxShadow: '0 0 0 1px rgba(111,155,198,0.15), 0 0 20px rgba(111,155,198,0.06)',
-            }}>
-              <CodeBlock language="bash" code={HIW_CURL} />
+          {/* Panel 01 — INPUT */}
+          <div style={{
+            background: '#0A0E18',
+            borderTop: '1px solid rgba(111,155,198,0.42)',
+            borderLeft: '1px solid rgba(111,155,198,0.14)',
+            borderRight: '1px solid rgba(111,155,198,0.07)',
+            borderBottom: '1px solid rgba(111,155,198,0.05)',
+            boxShadow: '0 0 0 1px rgba(111,155,198,0.1), 0 0 24px rgba(111,155,198,0.07)',
+            minHeight: 320, display: 'flex', flexDirection: 'column',
+            position: 'relative', overflow: 'hidden',
+          }}>
+            {/* Scanline texture */}
+            <div aria-hidden style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 1, background: 'repeating-linear-gradient(0deg,rgba(0,0,0,0.035) 0px,rgba(0,0,0,0.035) 1px,transparent 1px,transparent 2px)' }} />
+            <div style={{ padding: '10px 14px', borderBottom: '0.5px solid rgba(111,155,198,0.1)', display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ width: 6, height: 6, background: '#00C48C', display: 'inline-block', flexShrink: 0 }} />
+              <span style={{ ...MONO, fontSize: 10, color: '#6E7587', textTransform: 'uppercase', letterSpacing: '0.15em' }}>terminal · curl</span>
             </div>
-            <div style={{ display: 'flex', gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
-              <span style={{ ...MONO, fontSize: 11, color: '#00C48C', background: '#0A0E18', borderTop: '1px solid rgba(255,255,255,0.12)', borderLeft: '1px solid rgba(255,255,255,0.08)', borderRight: '1px solid rgba(255,255,255,0.04)', borderBottom: '1px solid rgba(255,255,255,0.03)', padding: '6px 12px' }}>307 checks</span>
-              <span style={{ ...MONO, fontSize: 11, color: '#6F9BC6', background: '#0A0E18', borderTop: '1px solid rgba(255,255,255,0.12)', borderLeft: '1px solid rgba(255,255,255,0.08)', borderRight: '1px solid rgba(255,255,255,0.04)', borderBottom: '1px solid rgba(255,255,255,0.03)', padding: '6px 12px' }}>27 categories</span>
-              <span style={{ ...MONO, fontSize: 11, color: '#6E7587', background: '#0A0E18', borderTop: '1px solid rgba(255,255,255,0.12)', borderLeft: '1px solid rgba(255,255,255,0.08)', borderRight: '1px solid rgba(255,255,255,0.04)', borderBottom: '1px solid rgba(255,255,255,0.03)', padding: '6px 12px' }}>~90s median</span>
+            <div style={{ padding: '16px', flexGrow: 1, position: 'relative', zIndex: 2 }}>
+              <pre style={{ ...MONO, fontSize: 12, lineHeight: 1.85, margin: 0, color: '#9398A8', whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>
+                <span style={{ color: '#00C8FF' }}>curl</span>{' -X POST \\\n'}
+                {'  https://webdocai.com/api/v1/scan \\\n'}
+                {'  -H '}<span style={{ color: '#8080c0' }}>&quot;Authorization: Bearer </span><span style={{ color: '#E8635F' }}>wdoc_live_••••</span><span style={{ color: '#8080c0' }}>&quot;</span>{' \\\n'}
+                {'  -d '}<span style={{ color: '#8080c0' }}>&apos;&#123;&quot;url&quot;: &quot;</span><span style={{ color: '#00C48C' }}>https://your-site.com</span><span style={{ color: '#8080c0' }}>&quot;&#125;&apos;</span>
+                <span className="hiw-cursor" style={{ display: 'inline-block', width: 7, height: 13, background: '#6F9BC6', verticalAlign: 'text-bottom', marginLeft: 3, animation: 'hiw-cursor-blink 1s step-end infinite' }} />
+              </pre>
+            </div>
+            <div style={{ padding: '0 14px 14px', display: 'flex', gap: 6, flexWrap: 'wrap', position: 'relative', zIndex: 2 }}>
+              {[{ l: '307 checks', c: '#00C48C' }, { l: '27 categories', c: '#6F9BC6' }, { l: '~90s median', c: '#6E7587' }].map(x => (
+                <span key={x.l} style={{ ...MONO, fontSize: 10, color: x.c, background: 'rgba(255,255,255,0.03)', border: '0.5px solid rgba(255,255,255,0.07)', padding: '4px 8px' }}>{x.l}</span>
+              ))}
             </div>
           </div>
 
-          {/* Artifact 02 — scan state panel */}
-          <div style={{ paddingTop: 24 }}>
-            <div className="wd-panel" style={{
-              padding: '16px',
-              borderTop: '1px solid rgba(111,155,198,0.2)',
-              boxShadow: '0 0 0 1px rgba(111,155,198,0.15), 0 0 20px rgba(111,155,198,0.06)',
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
-                <span className="status-dot" style={{ width: 7, height: 7, borderRadius: '50%', background: '#00C48C', flexShrink: 0 }} />
-                <span style={{ ...MONO, fontSize: 11, color: '#6E7587', textTransform: 'uppercase', letterSpacing: 1.5 }}>SCANNING</span>
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 16 }}>
-                {[
-                  { name: 'hero_section',        done: true  },
-                  { name: 'value_proposition',   done: true  },
-                  { name: 'trust_credibility',   done: true  },
-                  { name: 'cta_conversion',      done: false },
-                  { name: 'social_proof',        done: false },
-                ].map(c => (
-                  <div key={c.name} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <span style={{ width: 5, height: 5, flexShrink: 0, background: c.done ? '#00C48C' : 'rgba(110,117,135,0.4)', display: 'inline-block' }} />
-                    <span style={{ ...MONO, fontSize: 11, color: c.done ? '#9398A8' : '#6E7587' }}>{c.name}</span>
+          {/* Panel 02 — PROCESSING */}
+          <div style={{
+            background: '#0A0E18',
+            borderTop: '1px solid rgba(157,140,255,0.42)',
+            borderLeft: '1px solid rgba(157,140,255,0.12)',
+            borderRight: '1px solid rgba(157,140,255,0.06)',
+            borderBottom: '1px solid rgba(157,140,255,0.04)',
+            boxShadow: '0 0 0 1px rgba(157,140,255,0.08), 0 0 24px rgba(157,140,255,0.07)',
+            minHeight: 320, display: 'flex', flexDirection: 'column',
+            position: 'relative', overflow: 'hidden',
+          }}>
+            {/* Progress bar */}
+            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: 'rgba(157,140,255,0.1)', overflow: 'hidden' }}>
+              <div className="hiw-progress-bar" style={{ height: '100%', background: 'rgba(157,140,255,0.65)', transformOrigin: 'left', animation: 'hiw-progress 2.6s ease-in-out infinite' }} />
+            </div>
+            <div style={{ padding: '10px 14px', borderBottom: '0.5px solid rgba(157,140,255,0.1)', display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#00C48C', display: 'inline-block', flexShrink: 0 }} />
+              <span style={{ ...MONO, fontSize: 10, color: '#6E7587', textTransform: 'uppercase', letterSpacing: '0.15em' }}>SCANNING</span>
+              <span style={{ ...MONO, fontSize: 10, color: '#9D8CFF', marginLeft: 'auto' }}>ai · 307 checks</span>
+            </div>
+            <div style={{ padding: '14px', flexGrow: 1, display: 'flex', flexDirection: 'column', gap: 9 }}>
+              {HIW_SCAN_CATS.map((name, i) => {
+                const isLit = i <= litIdx
+                return (
+                  <div key={name} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ width: 5, height: 5, flexShrink: 0, display: 'inline-block', background: isLit ? '#00C48C' : 'rgba(110,117,135,0.2)', transition: 'background 0.18s' }} />
+                    <span style={{ ...MONO, fontSize: 11, color: isLit ? '#9398A8' : '#3B4257', transition: 'color 0.18s' }}>{name}</span>
                   </div>
-                ))}
-              </div>
-              <p style={{ ...MONO, fontSize: 11, color: '#6E7587', margin: 0 }}>running 307 checks across 27 categories</p>
+                )
+              })}
+            </div>
+            <div style={{ padding: '10px 14px 14px' }}>
+              <span style={{ ...MONO, fontSize: 11, color: '#404860' }}>running 307 checks · 27 categories</span>
+              <span style={{ ...MONO, fontSize: 11, color: '#9D8CFF' }}> ···</span>
             </div>
           </div>
 
-          {/* Artifact 03 — output JSON */}
-          <div style={{ paddingTop: 24 }}>
-            <div style={{
-              background: '#0A0E18',
-              borderTop: '1px solid rgba(111,155,198,0.2)',
-              borderLeft: '1px solid rgba(111,155,198,0.12)',
-              borderRight: '1px solid rgba(111,155,198,0.07)',
-              borderBottom: '1px solid rgba(111,155,198,0.05)',
-              boxShadow: '0 0 0 1px rgba(111,155,198,0.15), 0 0 20px rgba(111,155,198,0.06)',
-            }}>
-              <CodeBlock language="json" code={HIW_JSON} />
+          {/* Panel 03 — OUTPUT */}
+          <div style={{
+            background: '#0A0E18',
+            borderTop: '1px solid rgba(0,196,140,0.42)',
+            borderLeft: '1px solid rgba(0,196,140,0.12)',
+            borderRight: '1px solid rgba(0,196,140,0.06)',
+            borderBottom: '1px solid rgba(0,196,140,0.04)',
+            boxShadow: '0 0 0 1px rgba(0,196,140,0.08), 0 0 24px rgba(0,196,140,0.07)',
+            minHeight: 320, display: 'flex', flexDirection: 'column',
+          }}>
+            <div style={{ padding: '10px 14px', borderBottom: '0.5px solid rgba(0,196,140,0.1)', display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ width: 6, height: 6, background: '#00C48C', display: 'inline-block', flexShrink: 0 }} />
+              <span style={{ ...MONO, fontSize: 10, color: '#6E7587', textTransform: 'uppercase', letterSpacing: '0.15em' }}>response.json</span>
+              <span style={{ ...MONO, fontSize: 10, color: '#00C48C', marginLeft: 'auto' }}>200 OK</span>
             </div>
-            <p style={{ ...MONO, fontSize: 11, color: '#6E7587', margin: '12px 0 0' }}>Build against this schema once. Every URL returns identical structure.</p>
+            <div style={{ padding: '14px 16px', flexGrow: 1 }}>
+              {HIW_JSON_LINES.map((line, i) => (
+                <div
+                  key={i}
+                  className="hiw-json-line"
+                  style={{
+                    ...MONO, fontSize: 12, lineHeight: 1.9,
+                    paddingLeft: line.indent ? 16 : 0,
+                    opacity: 0,
+                    animation: `hiw-json-line 0.3s ease-out ${line.delay}s both`,
+                  }}
+                >
+                  {line.content}
+                </div>
+              ))}
+            </div>
+            <div style={{ padding: '0 16px 14px' }}>
+              <p style={{ ...MONO, fontSize: 11, color: '#404860', margin: 0 }}>Build against this schema once. Every URL returns identical structure.</p>
+            </div>
           </div>
 
         </div>
@@ -689,7 +754,7 @@ function ThreeDoorsSection() {
               </div>
             </div>
             <div style={{ padding: '16px 24px 24px', borderTop: '0.5px solid rgba(255,255,255,0.06)' }}>
-              <Link href="/scan" style={{ ...MONO, fontSize: 11, color: '#E6E9EE', border: '0.5px solid rgba(111,155,198,0.35)', padding: '10px 14px', display: 'block', textAlign: 'center', textDecoration: 'none' }}>
+              <Link href="/scan" style={{ ...MONO, fontSize: 11, color: '#00C8FF', border: '1px solid rgba(0,200,255,0.5)', padding: '10px 14px', display: 'block', textAlign: 'center', textDecoration: 'none', background: 'transparent' }}>
                 Scan my site free →
               </Link>
               <p style={{ ...MONO, fontSize: 10, color: '#6E7587', textAlign: 'center', marginTop: 8, marginBottom: 0 }}>Free · No account required</p>
@@ -728,7 +793,7 @@ function ThreeDoorsSection() {
               </div>
             </div>
             <div style={{ padding: '16px 24px 24px', borderTop: '0.5px solid rgba(255,255,255,0.06)' }}>
-              <Link href="/pricing" style={{ ...MONO, fontSize: 11, color: '#E6E9EE', border: '0.5px solid rgba(111,155,198,0.35)', padding: '10px 14px', display: 'block', textAlign: 'center', textDecoration: 'none' }}>
+              <Link href="/pricing" style={{ ...MONO, fontSize: 11, color: '#9D8CFF', border: '1px solid rgba(157,140,255,0.5)', padding: '10px 14px', display: 'block', textAlign: 'center', textDecoration: 'none', background: 'transparent' }}>
                 See agency plans →
               </Link>
               <p style={{ ...MONO, fontSize: 10, color: '#6E7587', textAlign: 'center', marginTop: 8, marginBottom: 0 }}>From $149/mo · 14-day trial</p>
@@ -762,7 +827,7 @@ function ThreeDoorsSection() {
               <p style={{ ...MONO, fontSize: 11, color: '#6E7587', margin: '10px 0 0' }}>full schema · 307 checks · $0.15/scan</p>
             </div>
             <div style={{ padding: '16px 24px 24px', borderTop: '0.5px solid rgba(255,255,255,0.06)' }}>
-              <Link href="/developer" style={{ ...MONO, fontSize: 11, color: '#E6E9EE', border: '0.5px solid rgba(111,155,198,0.35)', padding: '10px 14px', display: 'block', textAlign: 'center', textDecoration: 'none' }}>
+              <Link href="/developer" style={{ ...MONO, fontSize: 11, color: '#6F9BC6', border: '1px solid rgba(111,155,198,0.5)', padding: '10px 14px', display: 'block', textAlign: 'center', textDecoration: 'none', background: 'transparent' }}>
                 Get API key →
               </Link>
               <p style={{ ...MONO, fontSize: 10, color: '#6E7587', textAlign: 'center', marginTop: 8, marginBottom: 0 }}>$0.15/scan · No monthly fee</p>
@@ -777,18 +842,6 @@ function ThreeDoorsSection() {
 
 // ── Stats Band ────────────────────────────────────────────────────────────────
 
-const CORPUS_JSON = `{
-  "benchmark_data": {
-    "corpus_size": 4812,
-    "industry_avg": 58,
-    "top_quartile": 78,
-    "most_common_critical": "feature_led_headline",
-    "median_fix_time_hrs": 4,
-    "sites_above_70": "31%",
-    "updated": "weekly"
-  }
-}`
-
 const CORPUS_STATS = [
   { value: '4,800+', label: 'Sites scanned',        color: '#E6E9EE' },
   { value: '58',     label: 'Average score',         color: '#6F9BC6' },
@@ -798,140 +851,110 @@ const CORPUS_STATS = [
 
 function StatsBand() {
   return (
-    <section style={{ position: 'relative', overflow: 'hidden', padding: '96px 0', borderTop: '1px solid rgba(111,155,198,0.1)' }}>
+    <section style={{ position: 'relative', overflow: 'hidden', padding: '96px 0', borderTop: '0.5px solid rgba(111,155,198,0.15)' }}>
       <style>{`
-        @keyframes sb-fade-slide-up {
-          from { opacity: 0; transform: translateY(6px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
-        .sb-marker-enter {
-          animation: sb-fade-slide-up 0.6s ease-out 0.4s both;
-        }
-        @media (prefers-reduced-motion: reduce) {
-          .sb-marker-enter { animation: none; }
-        }
+        @keyframes sb-marker-in { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+        .sb-marker-enter { animation: sb-marker-in 0.6s ease-out 0.5s both; }
+        @media (prefers-reduced-motion: reduce) { .sb-marker-enter { animation:none; opacity:1; transform:none; } }
       `}</style>
 
-      {/* Steel-blue radial bloom */}
-      <div
-        aria-hidden
-        style={{
-          position: 'absolute',
-          inset: 0,
-          pointerEvents: 'none',
-          zIndex: 0,
-          background: 'radial-gradient(ellipse 1000px 500px at 50% 40%, rgba(111,155,198,0.05) 0%, transparent 60%)',
-        }}
-      />
+      {/* Atmosphere: steel blue center-left + purple far-right */}
+      <div aria-hidden style={{
+        position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0,
+        background: [
+          'radial-gradient(ellipse 900px 600px at 34% 50%, rgba(111,155,198,0.06) 0%, transparent 60%)',
+          'radial-gradient(ellipse 600px 400px at 88% 55%, rgba(128,128,192,0.04) 0%, transparent 55%)',
+        ].join(', '),
+      }} />
+
+      {/* Corner ticks */}
+      <div aria-hidden style={{ position:'absolute',top:20,left:20,width:14,height:14,borderTop:'0.5px solid rgba(111,155,198,0.25)',borderLeft:'0.5px solid rgba(111,155,198,0.25)',pointerEvents:'none',zIndex:1 }} />
+      <div aria-hidden style={{ position:'absolute',top:20,right:20,width:14,height:14,borderTop:'0.5px solid rgba(111,155,198,0.25)',borderRight:'0.5px solid rgba(111,155,198,0.25)',pointerEvents:'none',zIndex:1 }} />
+      <div aria-hidden style={{ position:'absolute',bottom:20,left:20,width:14,height:14,borderBottom:'0.5px solid rgba(111,155,198,0.25)',borderLeft:'0.5px solid rgba(111,155,198,0.25)',pointerEvents:'none',zIndex:1 }} />
+      <div aria-hidden style={{ position:'absolute',bottom:20,right:20,width:14,height:14,borderBottom:'0.5px solid rgba(111,155,198,0.25)',borderRight:'0.5px solid rgba(111,155,198,0.25)',pointerEvents:'none',zIndex:1 }} />
 
       <div style={{ position: 'relative', zIndex: 1, maxWidth: 1200, margin: '0 auto', padding: '0 48px' }}>
-        <p style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, color: '#6F9BC6', margin: '0 0 18px' }}>
+
+        {/* Header */}
+        <p style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, color: '#6F9BC6', margin: '0 0 16px' }}>
           CORPUS DATA
         </p>
         <h2 style={{ ...DISP, fontWeight: 700, fontSize: 36, lineHeight: 1.15, color: '#E6E9EE', margin: '0 0 12px', letterSpacing: '-0.5px' }}>
-          Corpus: 4,812 sites. Percentile-ranked by vertical.
+          4,812 sites. Percentile-ranked by vertical.
         </h2>
-        <p style={{ ...SANS, fontSize: 15, color: '#9398A8', maxWidth: 540, lineHeight: 1.65, margin: '0 0 16px' }}>
-          Every score is positioned against a real corpus of scanned sites, segmented by vertical. No synthetic data. No curated samples.
-        </p>
-
         <p style={{ ...SANS, fontSize: 15, color: '#9398A8', maxWidth: 640, lineHeight: 1.65, margin: '0 0 40px' }}>
-          Your score isn&apos;t compared to a generic industry average — it&apos;s compared to real sites in your exact vertical. A B2B SaaS site is benchmarked against other B2B SaaS sites. An ecommerce site against other ecommerce sites. The more sites we scan, the sharper the percentiles get.
+          Your score is positioned against real scanned sites in your exact vertical.
+          B2B SaaS vs B2B SaaS. Ecommerce vs ecommerce.
         </p>
 
-        {/* Stat cells */}
-        <div style={{ display: 'flex', borderTop: '1px solid rgba(111,155,198,0.15)', marginBottom: 32 }}>
-          {CORPUS_STATS.map((s, i) => (
-            <div
-              key={s.label}
-              style={{
+        {/* Curve panel — instrument readout */}
+        <div className="wd-panel" style={{ overflow: 'hidden' }}>
+
+          {/* Stats row */}
+          <div style={{ display: 'flex', borderBottom: '0.5px solid rgba(255,255,255,0.06)' }}>
+            {CORPUS_STATS.map((s, i) => (
+              <div key={s.label} style={{
                 flex: 1,
-                padding: '24px 28px',
-                background: '#0A0E18',
-                borderTop: '1px solid rgba(255,255,255,0.1)',
-                borderLeft: i === 0 ? '1px solid rgba(255,255,255,0.07)' : '0.5px solid rgba(255,255,255,0.06)',
-                borderRight: i === CORPUS_STATS.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
-                borderBottom: '1px solid rgba(255,255,255,0.03)',
-              }}
-            >
-              <div style={{ ...DISP, fontWeight: 700, fontSize: 48, color: s.color, lineHeight: 1, marginBottom: 8 }}>{s.value}</div>
-              <div style={{ ...MONO, fontSize: 11, color: '#6E7587', textTransform: 'uppercase', letterSpacing: 1.5 }}>{s.label}</div>
+                padding: '20px 24px',
+                borderRight: i < CORPUS_STATS.length - 1 ? '0.5px solid rgba(255,255,255,0.06)' : 'none',
+              }}>
+                <div style={{ ...DISP, fontWeight: 700, fontSize: 42, color: s.color, lineHeight: 1, marginBottom: 6 }}>{s.value}</div>
+                <div style={{ ...MONO, fontSize: 10, color: '#6E7587', textTransform: 'uppercase', letterSpacing: '0.12em' }}>{s.label}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Distribution curve */}
+          <div style={{ padding: '20px 24px 0' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+              <span style={{ ...MONO, fontSize: 10, color: '#6E7587' }}>SCORE 0</span>
+              <span style={{ ...MONO, fontSize: 10, color: '#6E7587' }}>SCORE DISTRIBUTION · 4,812 SITES</span>
+              <span style={{ ...MONO, fontSize: 10, color: '#6E7587' }}>SCORE 100</span>
             </div>
-          ))}
-        </div>
+            <svg viewBox="0 0 800 120" width="100%" height="160" preserveAspectRatio="none" aria-hidden style={{ display: 'block' }}>
+              <defs>
+                <linearGradient id="sbCurveGrad" x1="0" y1="0" x2="0" y2="120" gradientUnits="userSpaceOnUse">
+                  <stop offset="0%" stopColor="#6F9BC6" stopOpacity="0.22" />
+                  <stop offset="100%" stopColor="#6F9BC6" stopOpacity="0" />
+                </linearGradient>
+              </defs>
 
-        {/* Distribution curve visualization */}
-        <div className="wd-panel" style={{ padding: '20px 24px', marginBottom: 16, overflow: 'hidden' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-            <span style={{ ...MONO, fontSize: 11, color: '#6E7587' }}>SCORE 0</span>
-            <span style={{ ...MONO, fontSize: 11, color: '#6E7587' }}>DISTRIBUTION OF 4,812 SITES</span>
-            <span style={{ ...MONO, fontSize: 11, color: '#6E7587' }}>SCORE 100</span>
+              {/* Subtle gridlines at 25/50/75 */}
+              <line x1="200" y1="8" x2="200" y2="114" stroke="rgba(111,155,198,0.06)" strokeWidth="0.75" />
+              <line x1="400" y1="8" x2="400" y2="114" stroke="rgba(111,155,198,0.06)" strokeWidth="0.75" />
+              <line x1="600" y1="8" x2="600" y2="114" stroke="rgba(111,155,198,0.06)" strokeWidth="0.75" />
+
+              {/* Fill under curve */}
+              <path d="M 0,116 C 60,116 140,110 240,88 C 330,62 400,12 464,8 C 526,8 580,35 640,66 C 700,90 760,112 800,116 L 800,120 L 0,120 Z" fill="url(#sbCurveGrad)" stroke="none" />
+              {/* Curve stroke */}
+              <path d="M 0,116 C 60,116 140,110 240,88 C 330,62 400,12 464,8 C 526,8 580,35 640,66 C 700,90 760,112 800,116" fill="none" stroke="#6F9BC6" strokeWidth="1.5" />
+
+              {/* AVG 58 marker */}
+              <line x1="464" y1="10" x2="464" y2="114" stroke="rgba(255,255,255,0.13)" strokeWidth="0.75" />
+              <text x="464" y="119" textAnchor="middle" fontFamily="IBM Plex Mono, monospace" fontSize="8" fill="rgba(255,255,255,0.25)">AVG 58</text>
+
+              {/* YOUR SITE marker — animated */}
+              <g className="sb-marker-enter">
+                <line x1="504" y1="10" x2="504" y2="108" stroke="rgba(111,155,198,0.7)" strokeWidth="1.2" strokeDasharray="4 3" />
+                <text x="504" y="7" textAnchor="middle" fontFamily="IBM Plex Mono, monospace" fontSize="10" fontWeight="600" fill="#6F9BC6">YOUR SITE</text>
+                <text x="504" y="119" textAnchor="middle" fontFamily="IBM Plex Mono, monospace" fontSize="10" fontWeight="600" fill="#6F9BC6">63rd pct</text>
+              </g>
+
+              {/* Score position labels */}
+              <text x="200" y="119" textAnchor="middle" fontFamily="IBM Plex Mono, monospace" fontSize="7" fill="rgba(111,155,198,0.2)">25</text>
+              <text x="400" y="119" textAnchor="middle" fontFamily="IBM Plex Mono, monospace" fontSize="7" fill="rgba(111,155,198,0.2)">50</text>
+              <text x="600" y="119" textAnchor="middle" fontFamily="IBM Plex Mono, monospace" fontSize="7" fill="rgba(111,155,198,0.2)">75</text>
+            </svg>
           </div>
-          {/*
-            viewBox 0 0 800 120. Score 0 → x=0, score 100 → x=800.
-            Peak at x=464 (score 58, corpus avg). YOUR SITE at x=504 (score 63).
-            Curve: right-skewed bell — steeper left ascent, gentler right tail.
-            preserveAspectRatio="none" → fluid width, fixed 120px height.
-          */}
-          <svg
-            viewBox="0 0 800 120"
-            width="100%"
-            height="120"
-            preserveAspectRatio="none"
-            aria-hidden
-            style={{ display: 'block' }}
-          >
-            <defs>
-              <linearGradient id="curveGrad" x1="0" y1="0" x2="0" y2="120" gradientUnits="userSpaceOnUse">
-                <stop offset="0%" stopColor="#6F9BC6" stopOpacity="0.15" />
-                <stop offset="100%" stopColor="#6F9BC6" stopOpacity="0" />
-              </linearGradient>
-            </defs>
 
-            {/* Fill under curve */}
-            <path
-              d="M 0,116 C 60,116 140,110 240,88 C 330,62 400,12 464,8 C 526,8 580,35 640,66 C 700,90 760,112 800,116 L 800,120 L 0,120 Z"
-              fill="url(#curveGrad)"
-              stroke="none"
-            />
-            {/* Curve stroke */}
-            <path
-              d="M 0,116 C 60,116 140,110 240,88 C 330,62 400,12 464,8 C 526,8 580,35 640,66 C 700,90 760,112 800,116"
-              fill="none"
-              stroke="#6F9BC6"
-              strokeWidth="1.5"
-            />
-
-            {/* Industry avg marker — score 58, x=464 */}
-            <line x1="464" y1="10" x2="464" y2="114" stroke="rgba(255,255,255,0.15)" strokeWidth="0.5" />
-            <text x="464" y="118" textAnchor="middle" fontFamily="IBM Plex Mono, monospace" fontSize="8" fill="rgba(255,255,255,0.3)">AVG 58</text>
-
-            {/* YOUR SITE marker — score 63, x=504 — animated fadeSlideUp */}
-            <g className="sb-marker-enter">
-              <line x1="504" y1="10" x2="504" y2="105" stroke="rgba(111,155,198,0.6)" strokeWidth="1" strokeDasharray="3 2" />
-              <text x="504" y="8" textAnchor="middle" fontFamily="IBM Plex Mono, monospace" fontSize="9" fill="#6F9BC6">YOUR SITE</text>
-              <text x="504" y="118" textAnchor="middle" fontFamily="IBM Plex Mono, monospace" fontSize="9" fill="#6F9BC6">63rd pct</text>
-            </g>
-          </svg>
-        </div>
-        <p style={{ ...MONO, fontSize: 11, color: '#6E7587', textAlign: 'center', margin: '0 0 32px' }}>
-          Benchmarked against sites in the same vertical · updated weekly
-        </p>
-
-        {/* JSON block with header */}
-        <div style={{ background: '#0A0E18', borderTop: '1px solid rgba(255,255,255,0.12)', borderLeft: '1px solid rgba(255,255,255,0.08)', borderRight: '1px solid rgba(255,255,255,0.04)', borderBottom: '1px solid rgba(255,255,255,0.03)', marginBottom: 20 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', borderBottom: '0.5px solid rgba(255,255,255,0.06)' }}>
-            <span style={{ width: 5, height: 5, background: '#00C48C', flexShrink: 0, display: 'inline-block' }} />
-            <span style={{ ...MONO, fontSize: 11, color: '#6E7587' }}>benchmark_data · live corpus · updated weekly</span>
+          {/* Footer */}
+          <div style={{ padding: '12px 24px 20px', marginTop: 4 }}>
+            <p style={{ ...MONO, fontSize: 11, color: '#6E7587', margin: 0, textAlign: 'center' }}>
+              Benchmarked against sites in your exact vertical · updated as corpus grows
+            </p>
           </div>
-          <div style={{ padding: '16px 20px' }}>
-            <CodeBlock language="json" code={CORPUS_JSON} />
-          </div>
-        </div>
 
-        <p style={{ ...MONO, fontSize: 11, color: '#6E7587', textAlign: 'center', margin: 0 }}>
-          Aggregated from real scans · no synthetic data · updated weekly
-        </p>
+        </div>
       </div>
     </section>
   )
@@ -1244,8 +1267,9 @@ function FinalCtaSection() {
             fontWeight: 600,
             letterSpacing: 1.5,
             textTransform: 'uppercase',
-            background: '#6F9BC6',
-            color: '#050810',
+            background: 'transparent',
+            border: '1px solid rgba(111,155,198,0.5)',
+            color: '#6F9BC6',
             padding: '14px 0',
             textDecoration: 'none',
             textAlign: 'center',

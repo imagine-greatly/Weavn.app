@@ -124,25 +124,43 @@ export default function ProductPage() {
   return (
     <main style={{ minHeight: '100vh' }}>
 
-      {/* ── 1. Hero — transparent, grid-exposed ──────────────────────────────── */}
-      <section className="pt-24 pb-16 px-8 text-center">
-        <div className="section-label mb-4">ENGINE</div>
-        <h1
-          className="section-headline mb-6 mx-auto"
-          style={{ fontSize: 'clamp(36px, 5vw, 56px)', letterSpacing: '-1.5px', maxWidth: 900 }}
-        >
-          307 checks. One response.
-        </h1>
-        <p className="section-subhead max-w-2xl mx-auto">
-          webdoc is a conversion audit API. POST any URL, get structured JSON in under 90 seconds.
-          Every scan runs 307 diagnostic checks across 27 categories, classified by site type, scored
-          against a corpus of real sites.
-        </p>
-        {/* Stat row */}
-        <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '0 64px', marginTop: 48 }}>
-          <Stat value="307" label="Checks per scan" verdict="neutral" />
-          <Stat value="27" label="Diagnostic categories" verdict="neutral" />
-          <Stat value="7" label="Scoring dimensions" verdict="neutral" />
+      {/* ── 1. Hero — steel-blue bloom, corner ticks ──────────────────────────── */}
+      <section className="pt-24 pb-16 px-8 text-center" style={{ position: 'relative', overflow: 'hidden' }}>
+        <div aria-hidden style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0, background: 'radial-gradient(ellipse 900px 700px at 50% 40%, rgba(111,155,198,0.07) 0%, transparent 60%)' }} />
+        <div aria-hidden style={{ position: 'absolute', top: 20, left: 20,    width: 14, height: 14, borderTop: '0.5px solid rgba(111,155,198,0.25)', borderLeft: '0.5px solid rgba(111,155,198,0.25)',   pointerEvents: 'none', zIndex: 1 }} />
+        <div aria-hidden style={{ position: 'absolute', top: 20, right: 20,   width: 14, height: 14, borderTop: '0.5px solid rgba(111,155,198,0.25)', borderRight: '0.5px solid rgba(111,155,198,0.25)',  pointerEvents: 'none', zIndex: 1 }} />
+        <div aria-hidden style={{ position: 'absolute', bottom: 20, left: 20,  width: 14, height: 14, borderBottom: '0.5px solid rgba(111,155,198,0.25)', borderLeft: '0.5px solid rgba(111,155,198,0.25)',  pointerEvents: 'none', zIndex: 1 }} />
+        <div aria-hidden style={{ position: 'absolute', bottom: 20, right: 20, width: 14, height: 14, borderBottom: '0.5px solid rgba(111,155,198,0.25)', borderRight: '0.5px solid rgba(111,155,198,0.25)', pointerEvents: 'none', zIndex: 1 }} />
+
+        <div style={{ position: 'relative', zIndex: 1 }}>
+          <div className="section-label mb-4">ENGINE</div>
+          <h1
+            className="section-headline mb-6 mx-auto"
+            style={{ fontSize: 'clamp(36px, 5vw, 56px)', letterSpacing: '-1.5px', maxWidth: 900 }}
+          >
+            307 checks. One response.
+          </h1>
+          <p className="section-subhead max-w-2xl mx-auto">
+            webdoc is a conversion audit API. POST any URL, get structured JSON in under 90 seconds.
+            Every scan runs 307 diagnostic checks across 27 categories, classified by site type, scored
+            against a corpus of real sites.
+          </p>
+          {/* Colored stat row — 307 cyan / 27 steel blue / 7 purple */}
+          <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '0 64px', marginTop: 48 }}>
+            {([
+              { value: '307', label: 'Checks per scan',       color: '#00C8FF', bloom: 'rgba(0,200,255,0.07)'   },
+              { value: '27',  label: 'Diagnostic categories', color: '#6F9BC6', bloom: 'rgba(111,155,198,0.07)' },
+              { value: '7',   label: 'Scoring dimensions',    color: '#9D8CFF', bloom: 'rgba(157,140,255,0.07)' },
+            ] as const).map(s => (
+              <div key={s.value} style={{ position: 'relative', padding: '4px 8px' }}>
+                <div aria-hidden style={{ position: 'absolute', inset: 0, background: `radial-gradient(ellipse 90px 70px at 50% 50%, ${s.bloom} 0%, transparent 70%)`, pointerEvents: 'none' }} />
+                <div style={{ position: 'relative', display: 'inline-flex', flexDirection: 'column', alignItems: 'flex-start', gap: 4 }}>
+                  <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 48, lineHeight: 1, color: s.color }}>{s.value}</span>
+                  <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontWeight: 500, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.12em', color: '#6E7587' }}>{s.label}</span>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
       <div className="section-separator" />
@@ -163,6 +181,11 @@ export default function ProductPage() {
             background: 'radial-gradient(ellipse 1000px 600px at 50% 50%, rgba(128,128,192,0.06) 0%, transparent 60%)',
           }}
         />
+        {/* Corner ticks */}
+        <div aria-hidden style={{ position: 'absolute', top: 20, left: 20,    width: 14, height: 14, borderTop: '0.5px solid rgba(111,155,198,0.2)', borderLeft:   '0.5px solid rgba(111,155,198,0.2)', pointerEvents: 'none', zIndex: 1 }} />
+        <div aria-hidden style={{ position: 'absolute', top: 20, right: 20,   width: 14, height: 14, borderTop: '0.5px solid rgba(111,155,198,0.2)', borderRight:  '0.5px solid rgba(111,155,198,0.2)', pointerEvents: 'none', zIndex: 1 }} />
+        <div aria-hidden style={{ position: 'absolute', bottom: 20, left: 20,  width: 14, height: 14, borderBottom: '0.5px solid rgba(111,155,198,0.2)', borderLeft:  '0.5px solid rgba(111,155,198,0.2)', pointerEvents: 'none', zIndex: 1 }} />
+        <div aria-hidden style={{ position: 'absolute', bottom: 20, right: 20, width: 14, height: 14, borderBottom: '0.5px solid rgba(111,155,198,0.2)', borderRight: '0.5px solid rgba(111,155,198,0.2)', pointerEvents: 'none', zIndex: 1 }} />
         <div style={{ position: 'relative', zIndex: 1 }}>
           <div className="section-label mb-3">COVERAGE</div>
           <h2
@@ -262,9 +285,17 @@ export default function ProductPage() {
             inset: 0,
             pointerEvents: 'none',
             zIndex: 0,
-            background: 'radial-gradient(ellipse 800px 1200px at 15% 50%, rgba(111,155,198,0.06) 0%, transparent 60%)',
+            background: [
+              'radial-gradient(ellipse 800px 1200px at 15% 50%, rgba(111,155,198,0.07) 0%, transparent 60%)',
+              'radial-gradient(ellipse 500px 800px at 90% 70%, rgba(0,196,140,0.04) 0%, transparent 55%)',
+            ].join(', '),
           }}
         />
+        {/* Corner ticks */}
+        <div aria-hidden style={{ position: 'absolute', top: 20, left: 20,    width: 14, height: 14, borderTop: '0.5px solid rgba(111,155,198,0.2)', borderLeft:   '0.5px solid rgba(111,155,198,0.2)', pointerEvents: 'none', zIndex: 1 }} />
+        <div aria-hidden style={{ position: 'absolute', top: 20, right: 20,   width: 14, height: 14, borderTop: '0.5px solid rgba(111,155,198,0.2)', borderRight:  '0.5px solid rgba(111,155,198,0.2)', pointerEvents: 'none', zIndex: 1 }} />
+        <div aria-hidden style={{ position: 'absolute', bottom: 20, left: 20,  width: 14, height: 14, borderBottom: '0.5px solid rgba(111,155,198,0.2)', borderLeft:  '0.5px solid rgba(111,155,198,0.2)', pointerEvents: 'none', zIndex: 1 }} />
+        <div aria-hidden style={{ position: 'absolute', bottom: 20, right: 20, width: 14, height: 14, borderBottom: '0.5px solid rgba(111,155,198,0.2)', borderRight: '0.5px solid rgba(111,155,198,0.2)', pointerEvents: 'none', zIndex: 1 }} />
         <div style={{ maxWidth: '56rem', margin: '0 auto', padding: '80px 32px', position: 'relative', zIndex: 1 }}>
           <div className="section-label mb-3">PIPELINE</div>
           <h2
@@ -500,12 +531,18 @@ export default function ProductPage() {
             0%, 100% { box-shadow: 0 0 0 1px rgba(111,155,198,0.2), 0 0 14px rgba(111,155,198,0.12), 0 0 40px rgba(111,155,198,0.05); }
             50%       { box-shadow: 0 0 0 1px rgba(111,155,198,0.35), 0 0 22px rgba(111,155,198,0.25), 0 0 56px rgba(111,155,198,0.10); }
           }
+          @keyframes prod-cardArrive {
+            from { opacity: 0; transform: translateY(10px); }
+            to   { opacity: 1; transform: translateY(0); }
+          }
           @media (max-width: 639px) {
             .prod-convergence { display: none !important; }
           }
           @media (prefers-reduced-motion: reduce) {
-            .prod-beam { animation: none !important; }
+            .prod-beam      { animation: none !important; }
             .prod-core-node { animation: none !important; }
+            .prod-particle  { display: none !important; }
+            .prod-access-card { animation: none !important; opacity: 1 !important; transform: none !important; }
           }
         `}</style>
 
@@ -566,12 +603,50 @@ export default function ProductPage() {
               SCAN ENGINE
             </p>
 
-            {/* Three beams */}
-            <svg className="prod-beams" viewBox="0 0 100 100" preserveAspectRatio="none" width="100%" height="52" aria-hidden style={{ display: 'block', overflow: 'visible', marginTop: 4 }}>
-              <line className="prod-beam" x1="50" y1="0" x2="16" y2="100" stroke="rgba(0,200,255,0.5)" strokeWidth="1" vectorEffect="non-scaling-stroke" pathLength="100" strokeDasharray="8 5" style={{ animation: 'prod-beamFlow 1.8s linear infinite' }} />
-              <line className="prod-beam" x1="50" y1="0" x2="50" y2="100" stroke="rgba(157,140,255,0.5)" strokeWidth="1" vectorEffect="non-scaling-stroke" pathLength="100" strokeDasharray="8 5" style={{ animation: 'prod-beamFlow 1.8s linear infinite', animationDelay: '0.35s' }} />
-              <line className="prod-beam" x1="50" y1="0" x2="84" y2="100" stroke="rgba(0,196,140,0.5)" strokeWidth="1" vectorEffect="non-scaling-stroke" pathLength="100" strokeDasharray="8 5" style={{ animation: 'prod-beamFlow 1.8s linear infinite', animationDelay: '0.7s' }} />
-            </svg>
+            {/* Three beams — organic cubic bezier + animateMotion particles */}
+            <div style={{ position: 'relative', width: '100%', paddingBottom: '10%', marginTop: 4 }} aria-hidden>
+              <svg
+                viewBox="0 0 100 10"
+                width="100%"
+                height="100%"
+                style={{ position: 'absolute', top: 0, left: 0, overflow: 'visible', display: 'block' }}
+              >
+                <defs>
+                  <path id="prod-path-c" d="M 50,0 C 44,2.5 26,5.8 16,10" />
+                  <path id="prod-path-p" d="M 50,0 C 50,3.3 50,6.7 50,10" />
+                  <path id="prod-path-g" d="M 50,0 C 56,2.5 74,5.8 84,10" />
+                </defs>
+
+                {/* Beam strokes */}
+                <path className="prod-beam" d="M 50,0 C 44,2.5 26,5.8 16,10" stroke="rgba(0,200,255,0.5)"   strokeWidth="1" fill="none" vectorEffect="non-scaling-stroke" pathLength="100" strokeDasharray="8 5" style={{ animation: 'prod-beamFlow 1.8s linear infinite' }} />
+                <path className="prod-beam" d="M 50,0 C 50,3.3 50,6.7 50,10" stroke="rgba(157,140,255,0.5)" strokeWidth="1" fill="none" vectorEffect="non-scaling-stroke" pathLength="100" strokeDasharray="8 5" style={{ animation: 'prod-beamFlow 1.8s linear infinite', animationDelay: '0.35s' }} />
+                <path className="prod-beam" d="M 50,0 C 56,2.5 74,5.8 84,10" stroke="rgba(0,196,140,0.5)"   strokeWidth="1" fill="none" vectorEffect="non-scaling-stroke" pathLength="100" strokeDasharray="8 5" style={{ animation: 'prod-beamFlow 1.8s linear infinite', animationDelay: '0.7s' }} />
+
+                {/* Particles: cyan lane */}
+                <circle className="prod-particle" r="0.7" fill="rgba(0,200,255,0.95)">
+                  <animateMotion dur="1.6s" repeatCount="indefinite" begin="0s"><mpath href="#prod-path-c" /></animateMotion>
+                </circle>
+                <circle className="prod-particle" r="0.45" fill="rgba(0,200,255,0.55)">
+                  <animateMotion dur="1.6s" repeatCount="indefinite" begin="0.8s"><mpath href="#prod-path-c" /></animateMotion>
+                </circle>
+
+                {/* Particles: purple lane */}
+                <circle className="prod-particle" r="0.7" fill="rgba(157,140,255,0.95)">
+                  <animateMotion dur="1.6s" repeatCount="indefinite" begin="0.35s"><mpath href="#prod-path-p" /></animateMotion>
+                </circle>
+                <circle className="prod-particle" r="0.45" fill="rgba(157,140,255,0.55)">
+                  <animateMotion dur="1.6s" repeatCount="indefinite" begin="1.15s"><mpath href="#prod-path-p" /></animateMotion>
+                </circle>
+
+                {/* Particles: green lane */}
+                <circle className="prod-particle" r="0.7" fill="rgba(0,196,140,0.95)">
+                  <animateMotion dur="1.6s" repeatCount="indefinite" begin="0.7s"><mpath href="#prod-path-g" /></animateMotion>
+                </circle>
+                <circle className="prod-particle" r="0.45" fill="rgba(0,196,140,0.55)">
+                  <animateMotion dur="1.6s" repeatCount="indefinite" begin="1.5s"><mpath href="#prod-path-g" /></animateMotion>
+                </circle>
+              </svg>
+            </div>
 
           </div>
 
@@ -579,11 +654,13 @@ export default function ProductPage() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4" style={{ alignItems: 'stretch' }}>
 
             {/* Founders / cyan */}
-            <div className="wd-panel" style={{
+            <div className="wd-panel prod-access-card" style={{
               display: 'flex', flexDirection: 'column',
               borderTop: '1px solid rgba(0,200,255,0.3)',
               borderLeft: '1px solid rgba(0,200,255,0.12)',
               boxShadow: '0 0 0 1px rgba(0,200,255,0.1), 0 0 28px rgba(0,200,255,0.07)',
+              animation: 'prod-cardArrive 0.55s ease-out both',
+              animationDelay: '0.15s',
             }}>
               <div style={{ padding: '24px 24px 16px', borderBottom: '0.5px solid rgba(255,255,255,0.06)' }}>
                 <p style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 10, textTransform: 'uppercase', letterSpacing: 1.5, color: '#00C8FF', margin: '0 0 10px' }}>For founders</p>
@@ -606,7 +683,7 @@ export default function ProductPage() {
                 </div>
               </div>
               <div style={{ padding: '16px 24px 24px', borderTop: '0.5px solid rgba(255,255,255,0.06)' }}>
-                <Link href="/scan" style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, color: '#E6E9EE', border: '0.5px solid rgba(111,155,198,0.35)', padding: '10px 14px', display: 'block', textAlign: 'center', textDecoration: 'none' }}>
+                <Link href="/scan" style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, color: '#00C8FF', border: '1px solid rgba(0,200,255,0.5)', padding: '10px 14px', display: 'block', textAlign: 'center', textDecoration: 'none', background: 'transparent' }}>
                   Scan my site free →
                 </Link>
                 <p style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 10, color: '#6E7587', textAlign: 'center', marginTop: 8, marginBottom: 0 }}>Free · No account required</p>
@@ -614,11 +691,13 @@ export default function ProductPage() {
             </div>
 
             {/* Agencies / purple */}
-            <div className="wd-panel" style={{
+            <div className="wd-panel prod-access-card" style={{
               display: 'flex', flexDirection: 'column',
               borderTop: '1px solid rgba(157,140,255,0.3)',
               borderLeft: '1px solid rgba(157,140,255,0.12)',
               boxShadow: '0 0 0 1px rgba(157,140,255,0.1), 0 0 28px rgba(157,140,255,0.08)',
+              animation: 'prod-cardArrive 0.55s ease-out both',
+              animationDelay: '0.3s',
             }}>
               <div style={{ padding: '24px 24px 16px', borderBottom: '0.5px solid rgba(255,255,255,0.06)' }}>
                 <p style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 10, textTransform: 'uppercase', letterSpacing: 1.5, color: '#9D8CFF', margin: '0 0 10px' }}>For agencies</p>
@@ -645,7 +724,7 @@ export default function ProductPage() {
                 </div>
               </div>
               <div style={{ padding: '16px 24px 24px', borderTop: '0.5px solid rgba(255,255,255,0.06)' }}>
-                <Link href="/pricing" style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, color: '#E6E9EE', border: '0.5px solid rgba(111,155,198,0.35)', padding: '10px 14px', display: 'block', textAlign: 'center', textDecoration: 'none' }}>
+                <Link href="/pricing" style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, color: '#9D8CFF', border: '1px solid rgba(157,140,255,0.5)', padding: '10px 14px', display: 'block', textAlign: 'center', textDecoration: 'none', background: 'transparent' }}>
                   See agency plans →
                 </Link>
                 <p style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 10, color: '#6E7587', textAlign: 'center', marginTop: 8, marginBottom: 0 }}>From $149/mo · 14-day trial</p>
@@ -653,11 +732,13 @@ export default function ProductPage() {
             </div>
 
             {/* Developers / green */}
-            <div className="wd-panel" style={{
+            <div className="wd-panel prod-access-card" style={{
               display: 'flex', flexDirection: 'column',
               borderTop: '1px solid rgba(0,196,140,0.28)',
               borderLeft: '1px solid rgba(0,196,140,0.1)',
               boxShadow: '0 0 0 1px rgba(0,196,140,0.1), 0 0 28px rgba(0,196,140,0.07)',
+              animation: 'prod-cardArrive 0.55s ease-out both',
+              animationDelay: '0.45s',
             }}>
               <div style={{ padding: '24px 24px 16px', borderBottom: '0.5px solid rgba(255,255,255,0.06)' }}>
                 <p style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 10, textTransform: 'uppercase', letterSpacing: 1.5, color: '#00C48C', margin: '0 0 10px' }}>For developers</p>
@@ -679,7 +760,7 @@ export default function ProductPage() {
                 <p style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, color: '#6E7587', margin: '10px 0 0' }}>full schema · 307 checks · $0.15/scan</p>
               </div>
               <div style={{ padding: '16px 24px 24px', borderTop: '0.5px solid rgba(255,255,255,0.06)' }}>
-                <Link href="/developers" style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, color: '#E6E9EE', border: '0.5px solid rgba(111,155,198,0.35)', padding: '10px 14px', display: 'block', textAlign: 'center', textDecoration: 'none' }}>
+                <Link href="/developers" style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, color: '#6F9BC6', border: '1px solid rgba(111,155,198,0.5)', padding: '10px 14px', display: 'block', textAlign: 'center', textDecoration: 'none', background: 'transparent' }}>
                   Get API key →
                 </Link>
                 <p style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 10, color: '#6E7587', textAlign: 'center', marginTop: 8, marginBottom: 0 }}>$0.15/scan · No monthly fee</p>
@@ -712,8 +793,8 @@ export default function ProductPage() {
         <div aria-hidden style={{
           position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0,
           background: [
-            'radial-gradient(ellipse 1100px 600px at 50% 95%, rgba(111,155,198,0.07) 0%, transparent 65%)',
-            'radial-gradient(ellipse 700px 350px at 50% 5%,  rgba(111,155,198,0.03) 0%, transparent 60%)',
+            'radial-gradient(ellipse 1200px 650px at 50% 95%, rgba(111,155,198,0.09) 0%, transparent 65%)',
+            'radial-gradient(ellipse 800px 400px at 50% 5%,  rgba(111,155,198,0.04) 0%, transparent 60%)',
           ].join(', '),
         }} />
 
@@ -798,8 +879,9 @@ export default function ProductPage() {
               fontWeight: 600,
               letterSpacing: 1.5,
               textTransform: 'uppercase',
-              background: '#6F9BC6',
-              color: '#050810',
+              background: 'transparent',
+              border: '1px solid rgba(111,155,198,0.5)',
+              color: '#6F9BC6',
               padding: '14px 0',
               textDecoration: 'none',
               textAlign: 'center',

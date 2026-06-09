@@ -139,7 +139,7 @@ export default function DevelopersPage() {
   return (
     <main style={{ minHeight: '100vh' }}>
 
-      {/* ── 1. Hero — transparent, grid-exposed ──────────────────────────────── */}
+      {/* ── 1. Hero ───────────────────────────────────────────────────────────── */}
       <section style={{ padding: '96px 32px 48px', maxWidth: 896, margin: '0 auto', textAlign: 'center' }}>
         <div style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.2em', color: '#6F9BC6', marginBottom: 16 }}>
           API
@@ -182,9 +182,9 @@ export default function DevelopersPage() {
       </section>
       <div className="section-separator" />
 
-      {/* ── 2. Rate gradient bar — transparent + dual bloom ──────────────────── */}
+      {/* ── 2. Rate gradient bar — steel-blue → green bloom ─────────────────── */}
       <section style={{ position: 'relative', overflow: 'hidden', padding: '40px 32px' }}>
-        {/* Amber/green dual bloom */}
+        {/* Steel-blue / green flanking bloom */}
         <div
           aria-hidden
           style={{
@@ -226,9 +226,9 @@ export default function DevelopersPage() {
       </section>
       <div className="section-separator" />
 
-      {/* ── 3. Five plan cards — Builder blue bloom ───────────────────────────── */}
-      <section style={{ position: 'relative', overflow: 'hidden', background: '#06090F', borderTop: '0.5px solid rgba(111,155,198,0.15)' }}>
-        {/* Builder card bloom */}
+      {/* ── 3. Five plan cards — equal weight, steel-blue bloom ──────────────── */}
+      <section style={{ position: 'relative', overflow: 'hidden', background: '#050810', borderTop: '0.5px solid rgba(111,155,198,0.15)' }}>
+        {/* Ambient steel-blue bloom */}
         <div
           aria-hidden
           style={{
@@ -236,9 +236,14 @@ export default function DevelopersPage() {
             inset: 0,
             pointerEvents: 'none',
             zIndex: 0,
-            background: 'radial-gradient(ellipse 500px 700px at 50% 50%, rgba(111,155,198,0.06) 0%, transparent 60%)',
+            background: 'radial-gradient(ellipse 900px 600px at 50% 50%, rgba(111,155,198,0.06) 0%, transparent 65%)',
           }}
         />
+        {/* Corner ticks */}
+        <div aria-hidden style={{ position: 'absolute', top: 20, left: 20, width: 14, height: 14, borderTop: '0.5px solid rgba(111,155,198,0.25)', borderLeft: '0.5px solid rgba(111,155,198,0.25)', pointerEvents: 'none', zIndex: 1 }} />
+        <div aria-hidden style={{ position: 'absolute', top: 20, right: 20, width: 14, height: 14, borderTop: '0.5px solid rgba(111,155,198,0.25)', borderRight: '0.5px solid rgba(111,155,198,0.25)', pointerEvents: 'none', zIndex: 1 }} />
+        <div aria-hidden style={{ position: 'absolute', bottom: 20, left: 20, width: 14, height: 14, borderBottom: '0.5px solid rgba(111,155,198,0.25)', borderLeft: '0.5px solid rgba(111,155,198,0.25)', pointerEvents: 'none', zIndex: 1 }} />
+        <div aria-hidden style={{ position: 'absolute', bottom: 20, right: 20, width: 14, height: 14, borderBottom: '0.5px solid rgba(111,155,198,0.25)', borderRight: '0.5px solid rgba(111,155,198,0.25)', pointerEvents: 'none', zIndex: 1 }} />
         <div id="pricing" style={{ position: 'relative', zIndex: 1, maxWidth: 1280, margin: '0 auto', padding: '64px 32px 80px' }}>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
 
@@ -257,7 +262,7 @@ export default function DevelopersPage() {
               <div style={{ margin: '16px 0', borderTop: '0.5px solid rgba(255,255,255,0.05)', paddingTop: 12 }}>
                 <CodeBlock language="json" code={`{ "url": "https://your-site.com", "async": false }`} />
               </div>
-              <Link href="/developer" style={{ display: 'block', textAlign: 'center', ...MONO, fontSize: 13, color: '#9398A8', border: '0.5px solid #6E7587', padding: '12px 0', marginTop: 8, textDecoration: 'none', transition: 'color 0.15s' }}>
+              <Link href="/developer" style={{ display: 'block', textAlign: 'center', ...MONO, fontSize: 13, color: '#6F9BC6', border: '0.5px solid rgba(111,155,198,0.4)', padding: '12px 0', marginTop: 8, textDecoration: 'none', transition: 'opacity 0.15s' }}>
                 GET API KEY →
               </Link>
             </div>
@@ -299,7 +304,7 @@ export default function DevelopersPage() {
               <div style={{ margin: '16px 0', borderTop: '0.5px solid rgba(255,255,255,0.05)', paddingTop: 12 }}>
                 <CodeBlock language="json" code={`{ "urls": ["site1.com", "site2.com"],\n  "async": true, "batch": true }`} />
               </div>
-              <Link href="/signup?plan=builder-api" style={{ display: 'block', textAlign: 'center', ...MONO, fontSize: 13, color: '#050810', backgroundColor: '#6F9BC6', padding: '12px 0', marginTop: 8, textDecoration: 'none', transition: 'opacity 0.15s' }}>
+              <Link href="/signup?plan=builder-api" style={{ display: 'block', textAlign: 'center', ...MONO, fontSize: 13, color: '#6F9BC6', border: '0.5px solid rgba(111,155,198,0.4)', padding: '12px 0', marginTop: 8, textDecoration: 'none', transition: 'opacity 0.15s' }}>
                 START BUILDER PLAN →
               </Link>
             </div>
@@ -341,7 +346,7 @@ export default function DevelopersPage() {
               <div style={{ margin: '16px 0', borderTop: '0.5px solid rgba(255,255,255,0.05)', paddingTop: 12, ...MONO, fontSize: 11, color: '#6E7587', lineHeight: 1.7 }}>
                 custom rate limits · dedicated infrastructure · SLA guarantee
               </div>
-              <Link href="mailto:hello@webdocai.com" style={{ display: 'block', textAlign: 'center', ...MONO, fontSize: 13, color: '#9398A8', border: '0.5px solid #6E7587', padding: '12px 0', marginTop: 8, textDecoration: 'none', transition: 'color 0.15s' }}>
+              <Link href="mailto:hello@webdocai.com" style={{ display: 'block', textAlign: 'center', ...MONO, fontSize: 13, color: '#6F9BC6', border: '0.5px solid rgba(111,155,198,0.4)', padding: '12px 0', marginTop: 8, textDecoration: 'none', transition: 'opacity 0.15s' }}>
                 TALK TO US →
               </Link>
             </div>
@@ -388,25 +393,34 @@ export default function DevelopersPage() {
       </section>
       <div className="section-separator" />
 
-      {/* ── 5. CTA pair — bg #06090F ──────────────────────────────────────────── */}
-      <section style={{ background: '#06090F', borderTop: '0.5px solid rgba(111,155,198,0.12)', padding: '64px 32px', textAlign: 'center' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, flexWrap: 'wrap' }}>
-          <Link
-            href="/playground"
-            style={{ ...MONO, fontSize: 13, backgroundColor: '#6F9BC6', color: '#050810', padding: '13px 28px', textDecoration: 'none', display: 'inline-block', transition: 'opacity 0.15s' }}
-          >
-            TRY THE PLAYGROUND →
-          </Link>
-          <Link
-            href="/docs/api"
-            style={{ ...MONO, fontSize: 13, border: '0.5px solid #6E7587', color: '#9398A8', padding: '13px 28px', textDecoration: 'none', display: 'inline-block', transition: 'color 0.15s, border-color 0.15s' }}
-          >
-            READ THE DOCS →
-          </Link>
+      {/* ── 5. CTA pair — #050810 + bloom + corner ticks ─────────────────────── */}
+      <section style={{ position: 'relative', overflow: 'hidden', background: '#050810', borderTop: '0.5px solid rgba(111,155,198,0.2)', padding: '64px 32px', textAlign: 'center' }}>
+        {/* Bloom */}
+        <div aria-hidden style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0, background: 'radial-gradient(ellipse 900px 500px at 50% 80%, rgba(111,155,198,0.06) 0%, transparent 65%)' }} />
+        {/* Corner ticks */}
+        <div aria-hidden style={{ position: 'absolute', top: 20, left: 20, width: 14, height: 14, borderTop: '0.5px solid rgba(111,155,198,0.25)', borderLeft: '0.5px solid rgba(111,155,198,0.25)', pointerEvents: 'none', zIndex: 1 }} />
+        <div aria-hidden style={{ position: 'absolute', top: 20, right: 20, width: 14, height: 14, borderTop: '0.5px solid rgba(111,155,198,0.25)', borderRight: '0.5px solid rgba(111,155,198,0.25)', pointerEvents: 'none', zIndex: 1 }} />
+        <div aria-hidden style={{ position: 'absolute', bottom: 20, left: 20, width: 14, height: 14, borderBottom: '0.5px solid rgba(111,155,198,0.25)', borderLeft: '0.5px solid rgba(111,155,198,0.25)', pointerEvents: 'none', zIndex: 1 }} />
+        <div aria-hidden style={{ position: 'absolute', bottom: 20, right: 20, width: 14, height: 14, borderBottom: '0.5px solid rgba(111,155,198,0.25)', borderRight: '0.5px solid rgba(111,155,198,0.25)', pointerEvents: 'none', zIndex: 1 }} />
+        <div style={{ position: 'relative', zIndex: 1 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, flexWrap: 'wrap' }}>
+            <Link
+              href="/playground"
+              style={{ ...MONO, fontSize: 13, backgroundColor: '#6F9BC6', color: '#050810', padding: '13px 28px', textDecoration: 'none', display: 'inline-block', transition: 'opacity 0.15s' }}
+            >
+              TRY THE PLAYGROUND →
+            </Link>
+            <Link
+              href="/docs/api"
+              style={{ ...MONO, fontSize: 13, border: '0.5px solid rgba(111,155,198,0.4)', color: '#6F9BC6', padding: '13px 28px', textDecoration: 'none', display: 'inline-block', transition: 'opacity 0.15s' }}
+            >
+              READ THE DOCS →
+            </Link>
+          </div>
+          <p style={{ ...MONO, fontSize: 11, color: '#6E7587', marginTop: 16 }}>
+            Same engine. Same response schema. Every plan.
+          </p>
         </div>
-        <p style={{ ...MONO, fontSize: 11, color: '#6E7587', marginTop: 16 }}>
-          Same engine. Same response schema. Every plan.
-        </p>
       </section>
       <div className="section-separator" />
 

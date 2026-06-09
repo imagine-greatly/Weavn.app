@@ -237,16 +237,16 @@ export default function PricingPage() {
         <div style={{ display: 'inline-flex', alignItems: 'center', backgroundColor: '#0A0E18', border: '0.5px solid rgba(255,255,255,0.08)', padding: 4 }}>
           <button
             onClick={() => setIsAnnual(false)}
-            style={{ ...MONO, fontSize: 13, padding: '8px 20px', backgroundColor: !isAnnual ? '#0D1420' : 'transparent', color: !isAnnual ? '#E6E9EE' : '#6E7587', border: 'none', cursor: 'pointer', borderRadius: 0, transition: 'background-color 0.15s, color 0.15s' }}
+            style={{ ...MONO, fontSize: 13, padding: '8px 20px', backgroundColor: !isAnnual ? 'rgba(111,155,198,0.12)' : 'transparent', color: !isAnnual ? '#6F9BC6' : '#6E7587', border: 'none', cursor: 'pointer', borderRadius: 0, transition: 'background-color 0.15s, color 0.15s' }}
           >
             Monthly
           </button>
           <button
             onClick={() => setIsAnnual(true)}
-            style={{ ...MONO, fontSize: 13, padding: '8px 20px', backgroundColor: isAnnual ? '#0D1420' : 'transparent', color: isAnnual ? '#E6E9EE' : '#6E7587', border: 'none', cursor: 'pointer', borderRadius: 0, display: 'flex', alignItems: 'center', gap: 8, transition: 'background-color 0.15s, color 0.15s' }}
+            style={{ ...MONO, fontSize: 13, padding: '8px 20px', backgroundColor: isAnnual ? 'rgba(111,155,198,0.12)' : 'transparent', color: isAnnual ? '#6F9BC6' : '#6E7587', border: 'none', cursor: 'pointer', borderRadius: 0, display: 'flex', alignItems: 'center', gap: 8, transition: 'background-color 0.15s, color 0.15s' }}
           >
             Annual
-            <span style={{ ...MONO, fontSize: 10, backgroundColor: 'rgba(0,196,140,0.12)', color: '#00C48C', padding: '3px 8px', letterSpacing: '0.05em' }}>
+            <span style={{ ...MONO, fontSize: 10, backgroundColor: 'rgba(111,155,198,0.12)', color: '#6F9BC6', padding: '3px 8px', letterSpacing: '0.05em' }}>
               SAVE 20%
             </span>
           </button>
@@ -264,16 +264,21 @@ export default function PricingPage() {
       </section>
       <div className="section-separator" />
 
-      {/* ── 2. Tier cards — green bloom behind Agency ────────────────────────── */}
+      {/* ── 2. Tier cards — equal weight ────────────────────────────────────── */}
       <section style={{ borderTop: '1px solid rgba(111,155,198,0.1)', position: 'relative', overflow: 'hidden' }}>
-        {/* Atmosphere: faint green bloom at Agency card position */}
+        {/* Atmosphere: soft steel-blue bloom */}
         <div style={{
           position: 'absolute',
           inset: 0,
-          background: 'radial-gradient(ellipse 500px 700px at 55% 50%, rgba(0,196,140,0.05) 0%, transparent 60%)',
+          background: 'radial-gradient(ellipse 800px 600px at 50% 50%, rgba(111,155,198,0.04) 0%, transparent 65%)',
           pointerEvents: 'none',
           zIndex: 0,
         }} />
+        {/* corner ticks */}
+        <div style={{ position: 'absolute', top: 20, left: 20, width: 14, height: 14, borderTop: '1px solid rgba(111,155,198,0.2)', borderLeft: '1px solid rgba(111,155,198,0.2)', pointerEvents: 'none', zIndex: 0 }} />
+        <div style={{ position: 'absolute', top: 20, right: 20, width: 14, height: 14, borderTop: '1px solid rgba(111,155,198,0.2)', borderRight: '1px solid rgba(111,155,198,0.2)', pointerEvents: 'none', zIndex: 0 }} />
+        <div style={{ position: 'absolute', bottom: 20, left: 20, width: 14, height: 14, borderBottom: '1px solid rgba(111,155,198,0.2)', borderLeft: '1px solid rgba(111,155,198,0.2)', pointerEvents: 'none', zIndex: 0 }} />
+        <div style={{ position: 'absolute', bottom: 20, right: 20, width: 14, height: 14, borderBottom: '1px solid rgba(111,155,198,0.2)', borderRight: '1px solid rgba(111,155,198,0.2)', pointerEvents: 'none', zIndex: 0 }} />
 
         <div style={{ maxWidth: 1280, margin: '0 auto', padding: '64px 32px 80px', position: 'relative', zIndex: 1 }}>
 
@@ -292,7 +297,7 @@ export default function PricingPage() {
             {/* FREE */}
             <div className="wd-panel" style={{ display: 'flex', flexDirection: 'column', position: 'relative', zIndex: 1 }}>
               <div style={{ padding: '20px 24px' }}>
-                <div style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#6E7587', marginBottom: 6 }}>FREE</div>
+                <div style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#6F9BC6', marginBottom: 6 }}>FREE</div>
                 <div style={{ ...MONO, fontSize: 11, color: '#6E7587', marginBottom: 16 }}>3 scans · no account required</div>
                 <div style={{ ...DISP, fontSize: 44, fontWeight: 700, color: '#E6E9EE', lineHeight: 1, marginBottom: 4 }}>$0</div>
                 <div style={{ ...SANS, fontSize: 14, color: '#8E8EA0', marginBottom: 8 }}>forever</div>
@@ -310,7 +315,7 @@ export default function PricingPage() {
               </div>
               <div style={{ height: '0.5px', background: 'rgba(255,255,255,0.07)' }} />
               <div style={{ padding: '16px 24px 24px' }}>
-                <Link href="/scan" style={{ display: 'block', textAlign: 'center', ...MONO, fontSize: 13, color: '#9398A8', border: '0.5px solid #6E7587', padding: '12px 0', textDecoration: 'none', transition: 'color 0.15s, border-color 0.15s' }}>
+                <Link href="/scan" style={{ display: 'block', textAlign: 'center', ...MONO, fontSize: 13, color: '#6F9BC6', border: '0.5px solid rgba(111,155,198,0.35)', padding: '12px 0', textDecoration: 'none', transition: 'opacity 0.15s' }}>
                   START FREE →
                 </Link>
               </div>
@@ -319,7 +324,7 @@ export default function PricingPage() {
             {/* FOUNDER */}
             <div className="wd-panel" style={{ display: 'flex', flexDirection: 'column', position: 'relative', zIndex: 1 }}>
               <div style={{ padding: '20px 24px' }}>
-                <div style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#6E7587', marginBottom: 6 }}>FOUNDER</div>
+                <div style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#6F9BC6', marginBottom: 6 }}>FOUNDER</div>
                 <div style={{ ...MONO, fontSize: 11, color: '#6E7587', marginBottom: 16 }}>20 scans/month · single user</div>
                 <div style={{ ...DISP, fontSize: 44, fontWeight: 700, color: '#E6E9EE', lineHeight: 1, marginBottom: 4 }}>${price(49)}</div>
                 <div style={{ ...SANS, fontSize: 14, color: '#8E8EA0', marginBottom: 8 }}>per month</div>
@@ -338,23 +343,23 @@ export default function PricingPage() {
               </div>
               <div style={{ height: '0.5px', background: 'rgba(255,255,255,0.07)' }} />
               <div style={{ padding: '16px 24px 24px' }}>
-                <Link href="/signup?plan=starter" style={{ display: 'block', textAlign: 'center', ...MONO, fontSize: 13, color: '#00C48C', border: '0.5px solid #00C48C', padding: '12px 0', textDecoration: 'none', transition: 'opacity 0.15s' }}>
+                <Link href="/signup?plan=starter" style={{ display: 'block', textAlign: 'center', ...MONO, fontSize: 13, color: '#6F9BC6', border: '0.5px solid rgba(111,155,198,0.35)', padding: '12px 0', textDecoration: 'none', transition: 'opacity 0.15s' }}>
                   START FREE TRIAL →
                 </Link>
               </div>
             </div>
 
-            {/* AGENCY — left border accent */}
-            <div className="wd-panel" style={{ display: 'flex', flexDirection: 'column', borderLeft: '2px solid rgba(0,196,140,0.4)', position: 'relative', zIndex: 1 }}>
+            {/* AGENCY */}
+            <div className="wd-panel" style={{ display: 'flex', flexDirection: 'column', position: 'relative', zIndex: 1 }}>
               <div style={{ padding: '20px 24px' }}>
-                <div style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#00C48C', marginBottom: 6 }}>AGENCY</div>
+                <div style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#6F9BC6', marginBottom: 6 }}>AGENCY</div>
                 <div style={{ ...MONO, fontSize: 11, color: '#6E7587', marginBottom: 16 }}>100 scans/month · client workspaces</div>
                 <div style={{ ...DISP, fontSize: 44, fontWeight: 700, color: '#E6E9EE', lineHeight: 1, marginBottom: 4 }}>${price(149)}</div>
                 <div style={{ ...SANS, fontSize: 14, color: '#8E8EA0', marginBottom: 8 }}>per month</div>
                 <div style={{ ...MONO, fontSize: 11, color: '#00C48C' }}>$1.49/scan · 100 API calls bundled</div>
               </div>
-              <div style={{ height: '0.5px', background: 'rgba(0,196,140,0.2)' }} />
-              <div style={{ padding: '16px 24px 24px', background: 'rgba(0,196,140,0.02)', flexGrow: 1 }}>
+              <div style={{ height: '0.5px', background: 'rgba(255,255,255,0.07)' }} />
+              <div style={{ padding: '16px 24px 24px', background: 'rgba(255,255,255,0.01)', flexGrow: 1 }}>
                 <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
                   <InheritLabel text="Everything in Founder, plus:" />
                   <Bullet text="200 scans per month" />
@@ -365,9 +370,9 @@ export default function PricingPage() {
                   <Bullet text="Priority support + SLA" />
                 </ul>
               </div>
-              <div style={{ height: '0.5px', background: 'rgba(0,196,140,0.2)' }} />
+              <div style={{ height: '0.5px', background: 'rgba(255,255,255,0.07)' }} />
               <div style={{ padding: '16px 24px 24px' }}>
-                <Link href="/signup?plan=agency" style={{ display: 'block', textAlign: 'center', ...MONO, fontSize: 13, color: '#00C48C', border: '1px solid rgba(0,196,140,0.5)', background: 'rgba(0,196,140,0.06)', padding: '12px 0', textDecoration: 'none', transition: 'opacity 0.15s' }}>
+                <Link href="/signup?plan=agency" style={{ display: 'block', textAlign: 'center', ...MONO, fontSize: 13, color: '#6F9BC6', border: '0.5px solid rgba(111,155,198,0.35)', padding: '12px 0', textDecoration: 'none', transition: 'opacity 0.15s' }}>
                   START FREE TRIAL →
                 </Link>
               </div>
@@ -376,7 +381,7 @@ export default function PricingPage() {
             {/* ENTERPRISE */}
             <div className="wd-panel" style={{ display: 'flex', flexDirection: 'column', position: 'relative', zIndex: 1 }}>
               <div style={{ padding: '20px 24px' }}>
-                <div style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#6E7587', marginBottom: 6 }}>ENTERPRISE</div>
+                <div style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#6F9BC6', marginBottom: 6 }}>ENTERPRISE</div>
                 <div style={{ ...MONO, fontSize: 11, color: '#6E7587', marginBottom: 16 }}>500 scans/month · dedicated support</div>
                 <div style={{ ...DISP, fontSize: 44, fontWeight: 700, color: '#E6E9EE', lineHeight: 1, marginBottom: 4 }}>${price(499)}</div>
                 <div style={{ ...SANS, fontSize: 14, color: '#8E8EA0', marginBottom: 8 }}>per month</div>
@@ -396,7 +401,7 @@ export default function PricingPage() {
               </div>
               <div style={{ height: '0.5px', background: 'rgba(255,255,255,0.07)' }} />
               <div style={{ padding: '16px 24px 24px' }}>
-                <Link href="mailto:hello@webdocai.com" style={{ display: 'block', textAlign: 'center', ...MONO, fontSize: 13, color: '#9398A8', border: '0.5px solid #6E7587', padding: '12px 0', textDecoration: 'none', transition: 'color 0.15s' }}>
+                <Link href="mailto:hello@webdocai.com" style={{ display: 'block', textAlign: 'center', ...MONO, fontSize: 13, color: '#6F9BC6', border: '0.5px solid rgba(111,155,198,0.35)', padding: '12px 0', textDecoration: 'none', transition: 'opacity 0.15s' }}>
                   TALK TO US →
                 </Link>
               </div>

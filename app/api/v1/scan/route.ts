@@ -408,10 +408,22 @@ export async function POST(req: NextRequest) {
     return apiError("AUTH_INVALID", "Invalid API key", 401, rlHeaders(null));
   }
 
-  // 2. Check scan allowed
+  // 2. Check scan allowed — must fire before any scrape/analysis cost
   const allowedResult = await checkScanAllowed(apiKey.id);
   if (!allowedResult.allowed) {
-    return apiError("RATE_LIMIT_EXCEEDED", "Scan limit reached", 403, rlHeaders(apiKey));
+    return NextResponse.json(
+      {
+        error: {
+          code: "TRIAL_EXHAUSTED",
+          message: `Your ${allowedResult.limit ?? 25}-scan free trial has been used. Upgrade your API key plan to continue.`,
+          status: 429,
+        },
+        reason: allowedResult.reason,
+        limit: allowedResult.limit,
+        used: allowedResult.used,
+      },
+      { status: 429, headers: rlHeaders(apiKey) }
+    );
   }
 
   // 3. Parse body

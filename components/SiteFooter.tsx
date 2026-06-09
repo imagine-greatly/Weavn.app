@@ -9,7 +9,7 @@ function FooterLink({ href, children }: { href: string; children: React.ReactNod
       className="block py-1.5 font-sans text-[14px] font-normal transition-colors duration-150"
       style={{ color: "#8899AA" }}
       onMouseEnter={(e) => {
-        e.currentTarget.style.color = "#FFFFFF";
+        e.currentTarget.style.color = "#6F9BC6";
       }}
       onMouseLeave={(e) => {
         e.currentTarget.style.color = "#8899AA";
@@ -27,8 +27,14 @@ export default function SiteFooter() {
       style={{
         background: "#050810",
         padding: "64px 48px 40px",
+        position: "relative",
       }}
     >
+      {/* corner ticks */}
+      <div style={{ position: 'absolute', top: 20, left: 20, width: 14, height: 14, borderTop: '1px solid rgba(111,155,198,0.2)', borderLeft: '1px solid rgba(111,155,198,0.2)' }} />
+      <div style={{ position: 'absolute', top: 20, right: 20, width: 14, height: 14, borderTop: '1px solid rgba(111,155,198,0.2)', borderRight: '1px solid rgba(111,155,198,0.2)' }} />
+      <div style={{ position: 'absolute', bottom: 20, left: 20, width: 14, height: 14, borderBottom: '1px solid rgba(111,155,198,0.2)', borderLeft: '1px solid rgba(111,155,198,0.2)' }} />
+      <div style={{ position: 'absolute', bottom: 20, right: 20, width: 14, height: 14, borderBottom: '1px solid rgba(111,155,198,0.2)', borderRight: '1px solid rgba(111,155,198,0.2)' }} />
       <div className="mx-auto grid max-w-[1100px] gap-12 md:grid-cols-2 lg:grid-cols-3">
         <div>
           <Link href="/" className="inline-flex items-center gap-2" aria-label="WebDoc home" style={{ textDecoration: "none" }}>
@@ -49,7 +55,7 @@ export default function SiteFooter() {
               }}
             >
               <span style={{ color: "var(--text-primary)" }}>webdoc</span>
-              <span style={{ color: "var(--cyan)" }}>ai</span>
+              <span style={{ color: "#6F9BC6" }}>ai</span>
             </span>
           </Link>
           <p className="mt-3 max-w-[260px] font-sans text-[14px] font-normal" style={{ color: "#8899AA" }}>
@@ -84,9 +90,16 @@ export default function SiteFooter() {
 
       </div>
 
+      {/* tapered centerline separator */}
+      <div style={{
+        maxWidth: 1100,
+        margin: '48px auto 0',
+        height: 1,
+        background: 'linear-gradient(to right, transparent, rgba(111,155,198,0.3), transparent)',
+      }} />
       <div
         className="mx-auto flex max-w-[1100px] flex-col items-start justify-between gap-4 md:flex-row md:items-center"
-        style={{ marginTop: 48, paddingTop: 24 }}
+        style={{ marginTop: 0, paddingTop: 24 }}
       >
         <p className="font-mono text-[11px]" style={{ color: "#8899AA" }}>
           © 2026 WebDoc AI. All rights reserved.

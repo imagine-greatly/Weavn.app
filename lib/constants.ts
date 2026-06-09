@@ -34,3 +34,15 @@ export const SCAN_STATUS_MESSAGES = [
   "Cross-referencing 282 checkpoints against our revenue benchmarks...",
   "Compiling Revenue Score...",
 ] as const;
+
+// ── Free-tier quotas — single source of truth ─────────────────────────────────
+// Enforcement reads from here. Marketing copy will import from here too.
+
+/** Anonymous playground: max scans per IP per 60-minute window. Enforced at app/api/playground/scan/route.ts. */
+export const PLAYGROUND_SCANS_PER_HOUR = 1;
+
+/** Developer API: lifetime trial ceiling for keys whose plan is 'playground', 'payg', or 'free'. After exhaustion, key must upgrade. */
+export const FREE_API_TRIAL_SCANS = 25;
+
+/** Dashboard: max fresh scans per calendar month (UTC) for a user whose profiles.plan = 'free'. Resets on the 1st of each month. */
+export const FREE_DASHBOARD_SCANS_PER_MONTH = 3;

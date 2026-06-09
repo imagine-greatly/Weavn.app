@@ -14,6 +14,7 @@ import { runAnalysis, buildPageSummary } from "@/lib/analyze";
 import { saveReport } from "@/lib/supabase";
 import { generateAndPersistAllFindingBriefs } from "@/lib/findingExtendedAnalysis";
 import { Resend } from "resend";
+import { FREE_DASHBOARD_SCANS_PER_MONTH } from "@/lib/constants";
 
 
 function mergeCookies(from: NextResponse, to: NextResponse) {
@@ -103,6 +104,63 @@ export async function POST(req: NextRequest) {
       mergeCookies(supabaseCookieResponse, res);
       return res;
     };
+  }
+
+  // ── Free dashboard monthly quota — checked before any scan cost ──────────────
+  // Only applies to non-internal, logged-in free-plan users.
+  if (!internalBypass && userId) {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (supabaseUrl && serviceKey) {
+      try {
+        const quotaClient = createClient(supabaseUrl, serviceKey);
+
+        // Fetch the user's plan. profiles PK is user_id, not id.
+        const { data: profileData } = await quotaClient
+          .from("profiles")
+          .select("plan")
+          .eq("user_id", userId)
+          .maybeSingle();
+        const userPlanNow = (profileData as { plan?: string } | null)?.plan ?? "free";
+
+        if (userPlanNow === "free") {
+          const now = new Date();
+          const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)).toISOString();
+
+          // Count completed (non-error) scans this calendar month for this user.
+          // Dashboard route never serves cache hits — every completed report is a billed scan.
+          // Excludes pending/failed/error rows so in-flight or failed attempts don't consume quota.
+          const { count } = await quotaClient
+            .from("reports")
+            .select("id", { count: "exact", head: true })
+            .eq("user_id", userId)
+            .gte("created_at", monthStart)
+            .neq("status", "pending")
+            .neq("status", "failed")
+            .neq("status", "error");
+
+          const monthlyUsed = count ?? 0;
+          if (monthlyUsed >= FREE_DASHBOARD_SCANS_PER_MONTH) {
+            const resetsAt = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1)).toISOString();
+            return withCookies(
+              NextResponse.json(
+                {
+                  error: "Monthly scan limit reached",
+                  reason: "free_monthly_exhausted",
+                  limit: FREE_DASHBOARD_SCANS_PER_MONTH,
+                  used: monthlyUsed,
+                  resets_at: resetsAt,
+                },
+                { status: 429 }
+              )
+            );
+          }
+        }
+      } catch (quotaErr) {
+        // Quota check failure must not block the scan — log and continue
+        console.warn("[scan] monthly quota check failed (non-fatal):", quotaErr instanceof Error ? quotaErr.message : quotaErr);
+      }
+    }
   }
 
   let url: string;

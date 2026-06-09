@@ -91,11 +91,11 @@ export default function Navbar() {
     `group/cta flex items-center ${navCtaTypography} transition-[background-color,border-color,box-shadow,opacity] duration-150 ease-out hover:duration-150 md:duration-300`;
 
   const ctaOutlineStyle = {
-    color: "var(--cyan)" as const,
+    color: "#6F9BC6" as const,
     background: "transparent" as const,
-    border: "1px solid rgba(0,200,255,0.4)",
+    border: "1px solid rgba(111,155,198,0.35)",
     padding: "10px 20px",
-    borderRadius: 4,
+    borderRadius: 0,
     boxShadow: "none" as const,
   };
 
@@ -133,7 +133,7 @@ export default function Navbar() {
         background: "rgba(5,8,16,0.75)",
         backdropFilter: "blur(24px) saturate(180%)",
         WebkitBackdropFilter: "blur(24px) saturate(180%)",
-        borderColor: "rgba(28,28,46,0.8)",
+        borderColor: "rgba(111,155,198,0.12)",
       }}
     >
       {/* Left — Logo: always landing (/) for every user */}
@@ -160,7 +160,7 @@ export default function Navbar() {
           }}
         >
           <span style={{ color: "#FFFFFF" }}>webdoc</span>
-          <span style={{ color: "#00C8FF" }}>ai</span>
+          <span style={{ color: "#6F9BC6" }}>ai</span>
         </span>
       </Link>
 
@@ -182,15 +182,15 @@ export default function Navbar() {
                 href={item.href}
                 className={`${navLinkTypography} transition-colors duration-150`}
                 style={{
-                  color: pathname === item.href ? "#FFFFFF" : "#8899AA",
+                  color: pathname === item.href ? "#6F9BC6" : "#8899AA",
                   textDecoration: "none",
                 }}
                 onMouseEnter={(e) => {
                   if (pathname === item.href) return;
-                  e.currentTarget.style.color = "#FFFFFF";
+                  e.currentTarget.style.color = "#6F9BC6";
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.color = pathname === item.href ? "#FFFFFF" : "#8899AA";
+                  e.currentTarget.style.color = pathname === item.href ? "#6F9BC6" : "#8899AA";
                 }}
               >
                 {item.label}
@@ -219,25 +219,25 @@ export default function Navbar() {
             href="/auth?tab=signin"
             className="hidden md:flex items-center"
             style={{
-              border: "1px solid rgba(0,200,255,0.5)",
+              border: "1px solid rgba(111,155,198,0.35)",
               background: "transparent",
-              color: "#00C8FF",
+              color: "#6F9BC6",
               fontFamily: "var(--font-space-mono), monospace",
               fontSize: 11,
               letterSpacing: "0.08em",
               padding: "8px 16px",
-              borderRadius: 4,
+              borderRadius: 0,
               textDecoration: "none",
               transition: "border-color 150ms ease, background-color 150ms ease, box-shadow 150ms ease",
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.background = "rgba(0,200,255,0.08)";
-              e.currentTarget.style.borderColor = "rgba(0,200,255,0.7)";
-              e.currentTarget.style.boxShadow = "0 0 0 1px rgba(0,200,255,0.4), 0 0 20px rgba(0,200,255,0.2), 0 0 60px rgba(0,200,255,0.08)";
+              e.currentTarget.style.background = "rgba(111,155,198,0.08)";
+              e.currentTarget.style.borderColor = "rgba(111,155,198,0.6)";
+              e.currentTarget.style.boxShadow = "var(--interactive-glow-active)";
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.background = "transparent";
-              e.currentTarget.style.borderColor = "rgba(0,200,255,0.5)";
+              e.currentTarget.style.borderColor = "rgba(111,155,198,0.35)";
               e.currentTarget.style.boxShadow = "none";
             }}
           >
@@ -250,13 +250,13 @@ export default function Navbar() {
               className={`${ctaButtonClass} shrink-0`}
               style={{ ...ctaOutlineStyle, textDecoration: "none" }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.background = "rgba(0,200,255,0.08)";
-                e.currentTarget.style.borderColor = "rgba(0,200,255,0.7)";
-                e.currentTarget.style.boxShadow = "var(--cyan-glow-active)";
+                e.currentTarget.style.background = "rgba(111,155,198,0.08)";
+                e.currentTarget.style.borderColor = "rgba(111,155,198,0.6)";
+                e.currentTarget.style.boxShadow = "var(--interactive-glow-active)";
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.background = "transparent";
-                e.currentTarget.style.borderColor = "rgba(0,200,255,0.4)";
+                e.currentTarget.style.borderColor = "rgba(111,155,198,0.35)";
                 e.currentTarget.style.boxShadow = "none";
                 e.currentTarget.style.transitionDuration = "300ms";
               }}
@@ -289,7 +289,7 @@ export default function Navbar() {
                     borderRadius: "50%",
                     border: "1px solid #1A2035",
                     background: "#0A0F1E",
-                    color: "#00C8FF",
+                    color: "#6F9BC6",
                     display: "inline-flex",
                     alignItems: "center",
                     justifyContent: "center",
@@ -430,7 +430,7 @@ export default function Navbar() {
                   href={item.href}
                   className={`${navLinkTypography} flex min-h-[48px] items-center py-3 transition-colors duration-150 mobile-min-body-text`}
                   style={{
-                    color: pathname === item.href ? "#FFFFFF" : "#8899AA",
+                    color: pathname === item.href ? "#6F9BC6" : "#8899AA",
                     textDecoration: "none",
                   }}
                   onClick={() => setMobileMenuOpen(false)}
@@ -493,10 +493,10 @@ export default function Navbar() {
             position: "relative",
           }}
         >
-          <div style={{ position: "absolute", top: 0, left: 0, width: 24, height: 24, borderTop: "1px solid #00C8FF", borderLeft: "1px solid #00C8FF" }} />
-          <div style={{ position: "absolute", top: 0, right: 0, width: 24, height: 24, borderTop: "1px solid #00C8FF", borderRight: "1px solid #00C8FF" }} />
-          <div style={{ position: "absolute", bottom: 0, left: 0, width: 24, height: 24, borderBottom: "1px solid #00C8FF", borderLeft: "1px solid #00C8FF" }} />
-          <div style={{ position: "absolute", bottom: 0, right: 0, width: 24, height: 24, borderBottom: "1px solid #00C8FF", borderRight: "1px solid #00C8FF" }} />
+          <div style={{ position: "absolute", top: 0, left: 0, width: 24, height: 24, borderTop: "1px solid rgba(111,155,198,0.5)", borderLeft: "1px solid rgba(111,155,198,0.5)" }} />
+          <div style={{ position: "absolute", top: 0, right: 0, width: 24, height: 24, borderTop: "1px solid rgba(111,155,198,0.5)", borderRight: "1px solid rgba(111,155,198,0.5)" }} />
+          <div style={{ position: "absolute", bottom: 0, left: 0, width: 24, height: 24, borderBottom: "1px solid rgba(111,155,198,0.5)", borderLeft: "1px solid rgba(111,155,198,0.5)" }} />
+          <div style={{ position: "absolute", bottom: 0, right: 0, width: 24, height: 24, borderBottom: "1px solid rgba(111,155,198,0.5)", borderRight: "1px solid rgba(111,155,198,0.5)" }} />
           <div style={{ fontFamily: "Inter, ui-sans-serif, system-ui, sans-serif", color: "#FFFFFF", fontSize: 20, marginBottom: 8 }}>
             Set Your Display Name
           </div>

@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import Stripe from "stripe";
+import { FREE_API_TRIAL_SCANS } from "@/lib/constants";
 
 function getServiceClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -96,11 +97,48 @@ export async function logScanUsage(
   }
 }
 
+// Plans that are subject to the free trial ceiling. Any other plan value is
+// treated as paid/subscription and passes through without a trial gate.
+const FREE_TRIAL_PLANS = new Set(["playground", "payg", "free"]);
+
 export async function checkScanAllowed(
-  _apiKeyId: string
-): Promise<{ allowed: boolean; reason?: string }> {
-  // Hook for future plan-based limits — currently always allowed
-  return { allowed: true };
+  apiKeyId: string
+): Promise<{ allowed: boolean; reason?: string; limit?: number; used?: number; remaining?: number }> {
+  const supabase = getServiceClient();
+
+  const { data, error } = await supabase
+    .from("api_keys")
+    .select("plan, scans_used")
+    .eq("id", apiKeyId)
+    .single();
+
+  if (error || !data) {
+    // DB lookup failure — allow through rather than blocking on infra errors
+    console.warn("[checkScanAllowed] key lookup failed:", error?.message ?? "no data");
+    return { allowed: true };
+  }
+
+  const row = data as { plan: string; scans_used: number };
+
+  // Paid / subscription plans are not trial-gated (plan-level limits are a later task)
+  if (!FREE_TRIAL_PLANS.has(row.plan)) {
+    return { allowed: true };
+  }
+
+  // Free trial plan: enforce lifetime ceiling
+  if (row.scans_used >= FREE_API_TRIAL_SCANS) {
+    return {
+      allowed: false,
+      reason: "trial_exhausted",
+      limit: FREE_API_TRIAL_SCANS,
+      used: row.scans_used,
+    };
+  }
+
+  return {
+    allowed: true,
+    remaining: FREE_API_TRIAL_SCANS - row.scans_used,
+  };
 }
 
 export class InsufficientCreditsError extends Error {

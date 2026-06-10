@@ -782,12 +782,12 @@ function StatsBand() {
           </p>
         </div>
 
-        {/* RIGHT COLUMN — instrument panel */}
+        {/* RIGHT COLUMN — curve + stats */}
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div className="wd-panel" style={{ background: '#0A0E18', border: '0.5px solid rgba(111,155,198,0.15)', overflow: 'hidden' }}>
+          <div style={{ overflow: 'hidden' }}>
 
             {/* Stats row */}
-            <div className="sb-stats-row" style={{ display: 'flex', borderBottom: '0.5px solid rgba(255,255,255,0.06)' }}>
+            <div className="sb-stats-row" style={{ display: 'flex' }}>
               {CORPUS_STATS.map((s, i) => (
                 <div key={s.label} style={{ flex: 1, padding: '20px 24px', borderRight: i < CORPUS_STATS.length - 1 ? '0.5px solid rgba(255,255,255,0.06)' : 'none' }}>
                   <div style={{ ...DISP, fontWeight: 700, fontSize: 40, color: s.color, lineHeight: 1, marginBottom: 6 }}>{s.value}</div>
@@ -799,32 +799,31 @@ function StatsBand() {
             {/* Curve area */}
             <div style={{ padding: '20px 24px 0' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-                <span style={{ ...MONO, fontSize: 10, color: '#6E7587' }}>SCORE 0</span>
-                <span style={{ ...MONO, fontSize: 10, color: '#6E7587' }}>SCORE DISTRIBUTION · 4,812 SITES</span>
-                <span style={{ ...MONO, fontSize: 10, color: '#6E7587' }}>SCORE 100</span>
+                <span style={{ ...MONO, fontSize: 9, color: 'rgba(111,155,198,0.35)' }}>SCORE 0</span>
+                <span style={{ ...MONO, fontSize: 9, color: 'rgba(111,155,198,0.35)' }}>SCORE DISTRIBUTION · 4,812 SITES</span>
+                <span style={{ ...MONO, fontSize: 9, color: 'rgba(111,155,198,0.35)' }}>SCORE 100</span>
               </div>
               <svg viewBox="0 0 800 160" width="100%" height="160" preserveAspectRatio="none" aria-hidden style={{ display: 'block' }}>
                 <defs>
-                  <linearGradient id="sbFill" x1="0" y1="0" x2="0" y2="160" gradientUnits="userSpaceOnUse">
-                    <stop offset="0%" stopColor="#6F9BC6" stopOpacity="0.22" />
-                    <stop offset="100%" stopColor="#6F9BC6" stopOpacity="0" />
-                  </linearGradient>
-                  <filter id="sbGlow" x="-10%" y="-40%" width="120%" height="180%">
-                    <feDropShadow dx="0" dy="0" stdDeviation="3" floodColor="#6F9BC6" floodOpacity="0.35" />
+                  <filter id="sbGlow" x="-20%" y="-60%" width="140%" height="220%">
+                    <feGaussianBlur stdDeviation="1.2" result="blur"/>
+                    <feMerge>
+                      <feMergeNode in="blur"/>
+                      <feMergeNode in="SourceGraphic"/>
+                    </feMerge>
                   </filter>
                 </defs>
-                <line x1="200" y1="10" x2="200" y2="148" stroke="rgba(111,155,198,0.07)" strokeWidth="0.75" />
-                <line x1="400" y1="10" x2="400" y2="148" stroke="rgba(111,155,198,0.07)" strokeWidth="0.75" />
-                <line x1="600" y1="10" x2="600" y2="148" stroke="rgba(111,155,198,0.07)" strokeWidth="0.75" />
-                <path d="M 0,158 C 40,158 80,155 140,145 C 200,132 260,108 320,82 C 370,60 410,20 464,10 C 510,2 540,8 580,28 C 630,52 680,95 730,128 C 770,150 790,157 800,158 L 800,160 L 0,160 Z" fill="url(#sbFill)" stroke="none" />
-                <path d="M 0,158 C 40,158 80,155 140,145 C 200,132 260,108 320,82 C 370,60 410,20 464,10 C 510,2 540,8 580,28 C 630,52 680,95 730,128 C 770,150 790,157 800,158" fill="none" stroke="#6F9BC6" strokeWidth="1.8" filter="url(#sbGlow)" />
-                <line x1="464" y1="12" x2="464" y2="148" stroke="rgba(255,255,255,0.15)" strokeWidth="0.75" />
-                <text x="464" y="155" textAnchor="middle" fontFamily="IBM Plex Mono, monospace" fontSize="8" fill="rgba(255,255,255,0.25)">AVG 58</text>
+                <line x1="200" y1="10" x2="200" y2="148" stroke="rgba(111,155,198,0.04)" strokeWidth="0.75" />
+                <line x1="400" y1="10" x2="400" y2="148" stroke="rgba(111,155,198,0.04)" strokeWidth="0.75" />
+                <line x1="600" y1="10" x2="600" y2="148" stroke="rgba(111,155,198,0.04)" strokeWidth="0.75" />
+                <path d="M 0,158 C 40,158 80,155 140,145 C 200,132 260,108 320,82 C 370,60 410,20 464,10 C 510,2 540,8 580,28 C 630,52 680,95 730,128 C 770,150 790,157 800,158" fill="none" stroke="#6F9BC6" strokeWidth="1.0" strokeOpacity="0.7" filter="url(#sbGlow)" />
+                <line x1="464" y1="12" x2="464" y2="148" stroke="rgba(255,255,255,0.1)" strokeWidth="0.75" />
+                <text x="464" y="155" textAnchor="middle" fontFamily="IBM Plex Mono, monospace" fontSize="7" fill="rgba(255,255,255,0.15)">AVG 58</text>
                 <g className="sb-marker-enter">
-                  <line x1="504" y1="10" x2="504" y2="148" stroke="rgba(111,155,198,0.75)" strokeWidth="1.5" strokeDasharray="4 3" />
-                  <circle cx="504" cy="22" r="3.5" fill="#6F9BC6" opacity="0.9" />
-                  <text x="504" y="7" textAnchor="middle" fontFamily="IBM Plex Mono, monospace" fontSize="10" fontWeight="600" fill="#6F9BC6">YOUR SITE</text>
-                  <text x="504" y="158" textAnchor="middle" fontFamily="IBM Plex Mono, monospace" fontSize="10" fontWeight="600" fill="#6F9BC6">63rd pct</text>
+                  <line x1="504" y1="10" x2="504" y2="148" stroke="rgba(111,155,198,0.5)" strokeWidth="0.75" strokeDasharray="3 3" />
+                  <circle cx="504" cy="22" r="2" fill="#6F9BC6" opacity="0.6" />
+                  <text x="504" y="7" textAnchor="middle" fontFamily="IBM Plex Mono, monospace" fontSize="9" fontWeight="400" fill="rgba(111,155,198,0.8)">YOUR SITE</text>
+                  <text x="504" y="158" textAnchor="middle" fontFamily="IBM Plex Mono, monospace" fontSize="9" fontWeight="400" fill="rgba(111,155,198,0.8)">63rd pct</text>
                 </g>
                 <text x="200" y="158" textAnchor="middle" fontFamily="IBM Plex Mono, monospace" fontSize="7" fill="rgba(111,155,198,0.2)">25</text>
                 <text x="400" y="158" textAnchor="middle" fontFamily="IBM Plex Mono, monospace" fontSize="7" fill="rgba(111,155,198,0.2)">50</text>

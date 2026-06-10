@@ -6,7 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { Eye, EyeOff } from "lucide-react";
 import { getSupabaseBrowserClient } from "@/lib/supabaseBrowser";
 import type { ReportPayload } from "@/lib/reportSchema";
-import Logo from "@/components/Logo";
+import WebdocMark from "@/components/ui/WebdocMark";
 
 type AuthTab = "signin" | "create";
 
@@ -15,6 +15,7 @@ const DISP = '"Space Grotesk", sans-serif';
 
 const C = {
   green: "#00C48C",
+  blue: "#6F9BC6",
   labelMuted: "#6E7587",
   base: "#050810",
   red: "#E8635F",
@@ -110,6 +111,7 @@ function AuthPageContent() {
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [signupEmailSent, setSignupEmailSent] = useState(false);
   const [pendingDomain, setPendingDomain] = useState<string | null>(null);
+
   useEffect(() => {
     if (typeof sessionStorage === "undefined") return;
     const raw = sessionStorage.getItem("pendingUrl");
@@ -146,11 +148,11 @@ function AuthPageContent() {
   const inputStyle: CSSProperties = {
     width: "100%",
     boxSizing: "border-box",
-    background: "rgba(255,255,255,0.04)",
-    border: "1px solid rgba(255,255,255,0.1)",
+    background: "#080D18",
+    border: "0.5px solid rgba(111,155,198,0.2)",
     boxShadow: "none",
     borderRadius: 0,
-    padding: "0 14px",
+    padding: "10px 14px",
     height: 42,
     color: "#E6E9EE",
     fontFamily: MONO,
@@ -312,12 +314,12 @@ function AuthPageContent() {
   }
 
   const inputFocus = (e: React.FocusEvent<HTMLInputElement>) => {
-    e.currentTarget.style.border = "1px solid rgba(0,196,140,0.5)";
-    e.currentTarget.style.boxShadow = "0 0 0 3px rgba(0,196,140,0.06)";
+    e.currentTarget.style.border = "1px solid rgba(111,155,198,0.5)";
+    e.currentTarget.style.boxShadow = "0 0 0 3px rgba(111,155,198,0.08)";
     e.currentTarget.style.outline = "none";
   };
   const inputBlur = (e: React.FocusEvent<HTMLInputElement>) => {
-    e.currentTarget.style.border = "1px solid rgba(255,255,255,0.1)";
+    e.currentTarget.style.border = "0.5px solid rgba(111,155,198,0.2)";
     e.currentTarget.style.boxShadow = "none";
   };
 
@@ -336,321 +338,363 @@ function AuthPageContent() {
           0%, 100% { opacity: 1; }
           50% { opacity: 0.3; }
         }
+        @media (max-width: 767px) {
+          .auth-panels { flex-direction: column !important; }
+          .auth-brand-panel { width: 100% !important; min-height: auto !important; padding: 32px 32px !important; }
+          .auth-brand-stats { display: none !important; }
+          .auth-brand-footer { display: none !important; }
+          .auth-brand-divider { display: none !important; }
+        }
       `}</style>
 
-      {/* STEP 2 — Full bleed centered layout */}
-      <div
-        style={{
-          position: "relative",
-          minHeight: "100vh",
+      <div className="auth-panels" style={{ display: "flex", minHeight: "100vh" }}>
+
+        {/* ── LEFT — Brand panel ── */}
+        <div
+          className="auth-brand-panel"
+          style={{
+            width: "40%",
+            background: "#050810",
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "center",
+            padding: "64px 56px",
+            position: "relative",
+            overflow: "hidden",
+            flexShrink: 0,
+          }}
+        >
+          {/* Atmosphere */}
+          <div aria-hidden style={{
+            position: "absolute", inset: 0, pointerEvents: "none",
+            background: [
+              "radial-gradient(ellipse 600px 800px at 30% 50%, rgba(111,155,198,0.06) 0%, transparent 60%)",
+              "radial-gradient(ellipse 300px 400px at 70% 80%, rgba(157,140,255,0.04) 0%, transparent 55%)",
+            ].join(", "),
+          }} />
+          {/* Corner ticks */}
+          <div aria-hidden style={{ position: "absolute", top: 20, left: 20, width: 14, height: 14, borderTop: "0.5px solid rgba(111,155,198,0.2)", borderLeft: "0.5px solid rgba(111,155,198,0.2)", pointerEvents: "none" }} />
+          <div aria-hidden style={{ position: "absolute", top: 20, right: 20, width: 14, height: 14, borderTop: "0.5px solid rgba(111,155,198,0.2)", borderRight: "0.5px solid rgba(111,155,198,0.2)", pointerEvents: "none" }} />
+          <div aria-hidden style={{ position: "absolute", bottom: 20, left: 20, width: 14, height: 14, borderBottom: "0.5px solid rgba(111,155,198,0.2)", borderLeft: "0.5px solid rgba(111,155,198,0.2)", pointerEvents: "none" }} />
+          <div aria-hidden style={{ position: "absolute", bottom: 20, right: 20, width: 14, height: 14, borderBottom: "0.5px solid rgba(111,155,198,0.2)", borderRight: "0.5px solid rgba(111,155,198,0.2)", pointerEvents: "none" }} />
+
+          {/* Brand content */}
+          <div style={{ position: "relative", zIndex: 1 }}>
+            <WebdocMark size={64} animated={false} />
+            <h1 style={{ fontFamily: DISP, fontSize: 28, fontWeight: 600, color: "#E6E9EE", letterSpacing: "-0.5px", marginTop: 20, marginBottom: 0, lineHeight: 1.2 }}>
+              webdoc<span style={{ color: C.blue }}>.ai</span>
+            </h1>
+            <p style={{ fontFamily: MONO, fontSize: 11, textTransform: "uppercase", letterSpacing: "0.18em", color: C.labelMuted, marginTop: 8, marginBottom: 0 }}>
+              CONVERSION INTELLIGENCE
+            </p>
+
+            {/* Tapered divider */}
+            <div
+              className="auth-brand-divider"
+              style={{
+                height: "0.5px",
+                background: "linear-gradient(to right, rgba(111,155,198,0.3), transparent)",
+                marginTop: 40,
+                marginBottom: 40,
+              }}
+            />
+
+            {/* Instrument panel */}
+            <div className="auth-brand-stats" style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              {([
+                { k: "engine",   v: "307 checks · 27 categories",  vc: C.blue  },
+                { k: "response", v: "structured JSON · ~90s",       vc: C.blue  },
+                { k: "corpus",   v: "4,812 sites · weekly updates", vc: C.green },
+              ] as { k: string; v: string; vc: string }[]).map(row => (
+                <div key={row.k} style={{ fontFamily: MONO, fontSize: 12, display: "flex" }}>
+                  <span style={{ color: "#8080c0" }}>{row.k}</span>
+                  <span style={{ color: C.labelMuted }}>: </span>
+                  <span style={{ color: row.vc }}>{row.v}</span>
+                </div>
+              ))}
+            </div>
+
+            <p
+              className="auth-brand-footer"
+              style={{ fontFamily: MONO, fontSize: 10, color: C.labelMuted, marginTop: 40, marginBottom: 0 }}
+            >
+              Same engine on every plan. Cancel anytime.
+            </p>
+          </div>
+        </div>
+
+        {/* ── RIGHT — Form panel ── */}
+        <div style={{
+          flex: 1,
+          background: "#080D18",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          background: "transparent",
-          padding: 24,
-        }}
-      >
-        {/* Form card */}
-        <div
-          style={{
+          position: "relative",
+          overflow: "hidden",
+          padding: "40px 24px",
+        }}>
+          {/* Grid texture */}
+          <div aria-hidden style={{
+            position: "absolute", inset: 0, pointerEvents: "none",
+            backgroundImage: [
+              "linear-gradient(rgba(111,155,198,0.02) 1px, transparent 1px)",
+              "linear-gradient(90deg, rgba(111,155,198,0.02) 1px, transparent 1px)",
+            ].join(", "),
+            backgroundSize: "60px 60px",
+          }} />
+          {/* Corner ticks */}
+          <div aria-hidden style={{ position: "absolute", top: 20, left: 20, width: 14, height: 14, borderTop: "0.5px solid rgba(111,155,198,0.15)", borderLeft: "0.5px solid rgba(111,155,198,0.15)", pointerEvents: "none" }} />
+          <div aria-hidden style={{ position: "absolute", top: 20, right: 20, width: 14, height: 14, borderTop: "0.5px solid rgba(111,155,198,0.15)", borderRight: "0.5px solid rgba(111,155,198,0.15)", pointerEvents: "none" }} />
+          <div aria-hidden style={{ position: "absolute", bottom: 20, left: 20, width: 14, height: 14, borderBottom: "0.5px solid rgba(111,155,198,0.15)", borderLeft: "0.5px solid rgba(111,155,198,0.15)", pointerEvents: "none" }} />
+          <div aria-hidden style={{ position: "absolute", bottom: 20, right: 20, width: 14, height: 14, borderBottom: "0.5px solid rgba(111,155,198,0.15)", borderRight: "0.5px solid rgba(111,155,198,0.15)", pointerEvents: "none" }} />
+
+          {/* Form card */}
+          <div style={{
             position: "relative",
-            zIndex: 10,
+            zIndex: 1,
             width: "100%",
             maxWidth: 400,
-            background: "rgba(10,14,24,0.92)",
-            backdropFilter: "blur(12px)",
-            WebkitBackdropFilter: "blur(12px)",
-            borderTop: "1px solid rgba(255,255,255,0.12)",
-            borderRight: "1px solid rgba(255,255,255,0.07)",
-            borderBottom: "1px solid rgba(255,255,255,0.04)",
-            borderLeft: "1px solid rgba(255,255,255,0.07)",
-            borderRadius: 0,
-            padding: "28px 32px",
+            background: "#050810",
+            border: "0.5px solid rgba(111,155,198,0.15)",
+            padding: "40px",
             display: "flex",
             flexDirection: "column",
-          }}
-        >
-          {/* 1. Diagnostic queued context */}
-          {pendingDomain ? (
-            <div style={{ marginBottom: 20 }}>
-              <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <span
-                  aria-hidden
-                  style={{
-                    width: 5,
-                    height: 5,
-                    borderRadius: 0,
-                    background: C.green,
-                    flexShrink: 0,
-                    display: "inline-block",
-                    animation: "authPulseDot 1.5s ease-in-out infinite",
-                  }}
-                />
-                <span style={{ fontFamily: MONO, color: C.green, fontSize: 10, letterSpacing: "0.12em" }}>
-                  DIAGNOSTIC QUEUED — {pendingDomain}
+          }}>
+
+            {/* Pending domain context */}
+            {pendingDomain ? (
+              <div style={{ marginBottom: 20 }}>
+                <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <span
+                    aria-hidden
+                    style={{
+                      width: 5, height: 5, borderRadius: 0,
+                      background: C.green, flexShrink: 0, display: "inline-block",
+                      animation: "authPulseDot 1.5s ease-in-out infinite",
+                    }}
+                  />
+                  <span style={{ fontFamily: MONO, color: C.green, fontSize: 10, letterSpacing: "0.12em" }}>
+                    DIAGNOSTIC QUEUED — {pendingDomain}
+                  </span>
                 </span>
-              </span>
-            </div>
-          ) : null}
+              </div>
+            ) : null}
 
-          {/* 2. Logo — bracket icon + wordmark, centered */}
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              gap: 9,
-              marginBottom: isCreate ? 6 : 6,
-            }}
-          >
-            <Logo />
-            <span
-              style={{
-                fontFamily: DISP,
-                fontSize: 16,
-                fontWeight: 700,
-                lineHeight: 1,
-                letterSpacing: "0.02em",
-                display: "flex",
-              }}
-            >
-              <span style={{ color: "#E6E9EE" }}>webdoc</span>
-              <span style={{ color: C.green }}>ai</span>
-            </span>
-          </div>
+            {/* Form header */}
+            <p style={{ fontFamily: MONO, fontSize: 11, textTransform: "uppercase", letterSpacing: "0.18em", color: C.blue, margin: "0 0 8px" }}>
+              {isCreate ? "CREATE ACCOUNT" : "SIGN IN"}
+            </p>
+            <h2 style={{ fontFamily: DISP, fontSize: 24, fontWeight: 700, color: "#E6E9EE", margin: "0 0 32px" }}>
+              {isCreate ? "Create your account." : "Welcome back."}
+            </h2>
 
-          {/* 3. Platform label */}
-          <p
-            style={{
-              fontFamily: MONO,
-              fontSize: 9,
-              letterSpacing: "0.2em",
-              color: C.labelMuted,
-              textAlign: "center",
-              margin: `0 0 ${isCreate ? "20px" : "28px"} 0`,
-              textTransform: "uppercase",
-            }}
-          >
-            CONVERSION INTELLIGENCE PLATFORM
-          </p>
-
-          {/* 4. Google button */}
-          <button
-            type="button"
-            disabled={isSubmitting || isGoogleLoading}
-            onClick={async () => {
-              setGoogleError(null);
-              setIsGoogleLoading(true);
-              try {
-                const pending =
-                  typeof sessionStorage !== "undefined"
-                    ? sessionStorage.getItem("pendingUrl")
-                    : null;
-                if (pending) {
-                  document.cookie =
-                    "pendingUrl=" +
-                    encodeURIComponent(pending) +
-                    ";path=/;max-age=300;SameSite=Lax";
-                  sessionStorage.setItem("pendingUrl", pending);
-                }
-                const supabase = getSupabaseBrowserClient();
-                const { error } = await supabase.auth.signInWithOAuth({
-                  provider: "google",
-                  options: { redirectTo: window.location.origin + "/auth/callback" },
-                });
-                if (error) {
-                  setGoogleError(error.message || "Google authentication failed.");
+            {/* Google button */}
+            <button
+              type="button"
+              disabled={isSubmitting || isGoogleLoading}
+              onClick={async () => {
+                setGoogleError(null);
+                setIsGoogleLoading(true);
+                try {
+                  const pending =
+                    typeof sessionStorage !== "undefined"
+                      ? sessionStorage.getItem("pendingUrl")
+                      : null;
+                  if (pending) {
+                    document.cookie =
+                      "pendingUrl=" +
+                      encodeURIComponent(pending) +
+                      ";path=/;max-age=300;SameSite=Lax";
+                    sessionStorage.setItem("pendingUrl", pending);
+                  }
+                  const supabase = getSupabaseBrowserClient();
+                  const { error } = await supabase.auth.signInWithOAuth({
+                    provider: "google",
+                    options: { redirectTo: window.location.origin + "/auth/callback" },
+                  });
+                  if (error) {
+                    setGoogleError(error.message || "Google authentication failed.");
+                    setIsGoogleLoading(false);
+                  }
+                } catch {
+                  setGoogleError("Google authentication failed.");
                   setIsGoogleLoading(false);
                 }
-              } catch {
-                setGoogleError("Google authentication failed.");
-                setIsGoogleLoading(false);
-              }
-            }}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 10,
-              width: "100%",
-              height: 46,
-              borderRadius: 0,
-              background: "rgba(255,255,255,0.05)",
-              border: "1px solid rgba(255,255,255,0.12)",
-              boxShadow: "none",
-              color: "#FFFFFF",
-              fontFamily: MONO,
-              fontSize: 12,
-              letterSpacing: "0.05em",
-              cursor: isSubmitting || isGoogleLoading ? "not-allowed" : "pointer",
-              opacity: isGoogleLoading ? 0.72 : 1,
-              marginBottom: 16,
-              transition: "background 150ms ease, border-color 150ms ease",
-            }}
-            onMouseEnter={(e) => {
-              if (isSubmitting || isGoogleLoading) return;
-              e.currentTarget.style.background = "rgba(0,196,140,0.04)";
-              e.currentTarget.style.borderColor = "rgba(0,196,140,0.2)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = "rgba(255,255,255,0.05)";
-              e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)";
-            }}
-          >
-            <GoogleIcon />
-            <span style={{ opacity: isGoogleLoading ? 0.7 : 1 }}>Continue with Google</span>
-          </button>
-          {googleError ? <ErrorText>{googleError}</ErrorText> : null}
+              }}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 10,
+                width: "100%",
+                padding: "12px",
+                borderRadius: 0,
+                background: "rgba(255,255,255,0.04)",
+                border: "0.5px solid rgba(255,255,255,0.12)",
+                color: "#E6E9EE",
+                fontFamily: MONO,
+                fontSize: 12,
+                letterSpacing: "0.05em",
+                cursor: isSubmitting || isGoogleLoading ? "not-allowed" : "pointer",
+                opacity: isGoogleLoading ? 0.72 : 1,
+                transition: "background 150ms ease",
+              }}
+              onMouseEnter={(e) => {
+                if (!isSubmitting && !isGoogleLoading) e.currentTarget.style.background = "rgba(255,255,255,0.08)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = "rgba(255,255,255,0.04)";
+              }}
+            >
+              <GoogleIcon />
+              <span style={{ opacity: isGoogleLoading ? 0.7 : 1 }}>Continue with Google</span>
+            </button>
+            {googleError ? <ErrorText>{googleError}</ErrorText> : null}
 
-          {/* 5. OR divider */}
-          <div style={{ display: "flex", alignItems: "center", marginBottom: 16 }}>
-            <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.08)" }} />
-            <span style={{ fontFamily: MONO, fontSize: 10, color: C.labelMuted, padding: "0 12px" }}>or</span>
-            <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.08)" }} />
-          </div>
+            {/* OR divider */}
+            <div style={{ display: "flex", alignItems: "center", gap: 16, margin: "24px 0" }}>
+              <div style={{ flex: 1, height: "0.5px", background: "rgba(255,255,255,0.08)" }} />
+              <span style={{ fontFamily: MONO, fontSize: 10, color: C.labelMuted }}>OR</span>
+              <div style={{ flex: 1, height: "0.5px", background: "rgba(255,255,255,0.08)" }} />
+            </div>
 
-          {/* 6. Name input — signup only, above email */}
-          {isCreate ? (
-            <div style={{ marginBottom: 12 }}>
-              <label htmlFor="auth-name" style={labelStyle}>NAME</label>
+            {/* Name — signup only */}
+            {isCreate ? (
+              <div style={{ marginBottom: 16 }}>
+                <label htmlFor="auth-name" style={labelStyle}>NAME</label>
+                <input
+                  id="auth-name"
+                  type="text"
+                  autoComplete="name"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  placeholder="Your name"
+                  className="auth-input"
+                  style={inputStyle}
+                  onFocus={inputFocus}
+                  onBlur={inputBlur}
+                />
+                {fullNameError ? <ErrorText>{fullNameError}</ErrorText> : null}
+              </div>
+            ) : null}
+
+            {/* Email */}
+            <div>
+              <label htmlFor="auth-email" style={labelStyle}>EMAIL</label>
               <input
-                id="auth-name"
-                type="text"
-                autoComplete="name"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                placeholder="Your name"
+                id="auth-email"
+                type="email"
+                autoComplete="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@company.com"
                 className="auth-input"
                 style={inputStyle}
                 onFocus={inputFocus}
                 onBlur={inputBlur}
               />
-              {fullNameError ? <ErrorText>{fullNameError}</ErrorText> : null}
+              {emailError ? <ErrorText>{emailError}</ErrorText> : null}
             </div>
-          ) : null}
 
-          {/* 7. Email input */}
-          <div style={{ marginBottom: 12 }}>
-            <label htmlFor="auth-email" style={labelStyle}>EMAIL</label>
-            <input
-              id="auth-email"
-              type="email"
-              autoComplete="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@company.com"
-              className="auth-input"
-              style={inputStyle}
-              onFocus={inputFocus}
-              onBlur={inputBlur}
-            />
-            {emailError ? <ErrorText>{emailError}</ErrorText> : null}
-          </div>
-
-          {/* 8. Password input with show/hide toggle */}
-          <div style={{ marginBottom: 4 }}>
-            <label htmlFor="auth-pw" style={labelStyle}>PASSWORD</label>
-            <div style={{ position: "relative" }}>
-              <input
-                id="auth-pw"
-                type={showPw ? "text" : "password"}
-                autoComplete={tab === "signin" ? "current-password" : "new-password"}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="········"
-                className="auth-input"
-                style={{ ...inputStyle, paddingRight: 44 }}
-                onFocus={inputFocus}
-                onBlur={inputBlur}
-              />
-              <button
-                type="button"
-                onClick={() => setShowPw((v) => !v)}
-                style={{
-                  position: "absolute",
-                  right: 12,
-                  top: "50%",
-                  transform: "translateY(-50%)",
-                  border: "none",
-                  background: "transparent",
-                  padding: 0,
-                  cursor: "pointer",
-                  color: C.labelMuted,
-                  display: "flex",
-                  alignItems: "center",
-                }}
-                aria-label={showPw ? "Hide password" : "Show password"}
-              >
-                {showPw ? <EyeOff size={18} strokeWidth={1.75} /> : <Eye size={18} strokeWidth={1.75} />}
-              </button>
+            {/* Password */}
+            <div style={{ marginTop: 16 }}>
+              <label htmlFor="auth-pw" style={labelStyle}>PASSWORD</label>
+              <div style={{ position: "relative" }}>
+                <input
+                  id="auth-pw"
+                  type={showPw ? "text" : "password"}
+                  autoComplete={tab === "signin" ? "current-password" : "new-password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="········"
+                  className="auth-input"
+                  style={{ ...inputStyle, paddingRight: 44 }}
+                  onFocus={inputFocus}
+                  onBlur={inputBlur}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPw((v) => !v)}
+                  style={{
+                    position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)",
+                    border: "none", background: "transparent", padding: 0, cursor: "pointer",
+                    color: C.labelMuted, display: "flex", alignItems: "center",
+                  }}
+                  aria-label={showPw ? "Hide password" : "Show password"}
+                >
+                  {showPw ? <EyeOff size={18} strokeWidth={1.75} /> : <Eye size={18} strokeWidth={1.75} />}
+                </button>
+              </div>
+              {passwordError ? <ErrorText>{passwordError}</ErrorText> : null}
             </div>
-            {passwordError ? <ErrorText>{passwordError}</ErrorText> : null}
-          </div>
 
-          {/* 9. Forgot password — signin only */}
-          {tab === "signin" ? (
-            <div style={{ textAlign: "right", marginBottom: 16 }}>
-              <Link
-                href="/auth/forgot-password"
-                style={{ fontFamily: MONO, fontSize: 10, color: C.labelMuted, textDecoration: "none" }}
-                onMouseEnter={(e) => { e.currentTarget.style.color = C.green; }}
-                onMouseLeave={(e) => { e.currentTarget.style.color = C.labelMuted; }}
-              >
-                Forgot password?
-              </Link>
-            </div>
-          ) : null}
+            {/* Forgot password */}
+            {tab === "signin" ? (
+              <div style={{ textAlign: "right", marginTop: 8 }}>
+                <Link
+                  href="/auth/forgot-password"
+                  style={{ fontFamily: MONO, fontSize: 10, color: C.labelMuted, textDecoration: "none" }}
+                  onMouseEnter={(e) => { e.currentTarget.style.color = C.blue; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.color = C.labelMuted; }}
+                >
+                  Forgot password?
+                </Link>
+              </div>
+            ) : null}
 
-          {/* 10. Submit button */}
-          <button
-            type="button"
-            disabled={isSubmitting}
-            onClick={() => void (tab === "signin" ? handleSignIn() : handleCreateAccount())}
-            style={{
-              width: "100%",
-              height: 46,
-              borderRadius: 0,
-              background: "transparent",
-              border: "1px solid #00C48C",
-              boxShadow: "none",
-              color: C.green,
-              fontFamily: MONO,
-              fontSize: 13,
-              fontWeight: 700,
-              letterSpacing: "0.08em",
-              textTransform: "uppercase",
-              cursor: isSubmitting ? "not-allowed" : "pointer",
-              opacity: isSubmitting ? 0.75 : 1,
-              marginBottom: 16,
-              transition: "background 150ms ease",
-            }}
-            onMouseEnter={(e) => {
-              if (!isSubmitting) e.currentTarget.style.background = "rgba(0,196,140,0.08)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = "transparent";
-            }}
-          >
-            {tab === "signin" ? "SIGN IN →" : "CREATE ACCOUNT →"}
-          </button>
-          {globalError ? <ErrorText>{globalError}</ErrorText> : null}
+            {/* Submit button */}
+            <button
+              type="button"
+              disabled={isSubmitting}
+              onClick={() => void (tab === "signin" ? handleSignIn() : handleCreateAccount())}
+              style={{
+                width: "100%",
+                padding: "12px",
+                borderRadius: 0,
+                background: "rgba(111,155,198,0.08)",
+                border: "1px solid rgba(111,155,198,0.5)",
+                color: C.blue,
+                fontFamily: MONO,
+                fontSize: 13,
+                fontWeight: 400,
+                letterSpacing: "0.15em",
+                textTransform: "uppercase",
+                cursor: isSubmitting ? "not-allowed" : "pointer",
+                opacity: isSubmitting ? 0.75 : 1,
+                marginTop: 24,
+                transition: "background 150ms ease, box-shadow 150ms ease",
+              }}
+              onMouseEnter={(e) => {
+                if (!isSubmitting) {
+                  e.currentTarget.style.background = "rgba(111,155,198,0.15)";
+                  e.currentTarget.style.boxShadow = "0 0 20px rgba(111,155,198,0.12)";
+                }
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = "rgba(111,155,198,0.08)";
+                e.currentTarget.style.boxShadow = "none";
+              }}
+            >
+              {tab === "signin" ? "SIGN IN →" : "CREATE ACCOUNT →"}
+            </button>
+            {globalError ? <ErrorText>{globalError}</ErrorText> : null}
 
-          {signupEmailSent && isCreate ? (
-            <p style={{ marginTop: 8, fontFamily: MONO, fontSize: 11, color: C.labelMuted, lineHeight: 1.5 }}>
-              Confirmation email sent. Complete verification to continue.
-            </p>
-          ) : null}
+            {signupEmailSent && isCreate ? (
+              <p style={{ marginTop: 8, fontFamily: MONO, fontSize: 11, color: C.labelMuted, lineHeight: 1.5 }}>
+                Confirmation email sent. Complete verification to continue.
+              </p>
+            ) : null}
 
-          {/* 11. Mode toggle */}
-          <div style={{ textAlign: "center" }}>
-            <p style={{ fontFamily: MONO, fontSize: 11, color: C.labelMuted, margin: 0 }}>
+            {/* Mode toggle */}
+            <p style={{ fontFamily: MONO, fontSize: 11, color: C.labelMuted, textAlign: "center", marginTop: 20, marginBottom: 0 }}>
               {tab === "signin" ? (
                 <>
                   {"Don't have an account? "}
                   <span
                     role="button"
                     tabIndex={0}
-                    style={{ color: C.green, cursor: "pointer" }}
+                    style={{ color: C.blue, cursor: "pointer" }}
                     onClick={() => switchTab("create")}
                     onKeyDown={(e) => { if (e.key === "Enter") switchTab("create"); }}
                   >
@@ -663,7 +707,7 @@ function AuthPageContent() {
                   <span
                     role="button"
                     tabIndex={0}
-                    style={{ color: C.green, cursor: "pointer" }}
+                    style={{ color: C.blue, cursor: "pointer" }}
                     onClick={() => switchTab("signin")}
                     onKeyDown={(e) => { if (e.key === "Enter") switchTab("signin"); }}
                   >
@@ -672,35 +716,25 @@ function AuthPageContent() {
                 </>
               )}
             </p>
+
+            {/* Terms — signup only */}
+            {isCreate ? (
+              <p style={{
+                marginTop: 12, marginBottom: 0,
+                fontFamily: MONO, fontSize: 10, color: C.labelMuted,
+                textAlign: "center", lineHeight: 1.6,
+              }}>
+                By creating an account you agree to our{" "}
+                <Link href="/terms" style={{ color: C.blue, textDecoration: "none" }}>Terms of Service</Link>{" "}
+                and{" "}
+                <Link href="/privacy" style={{ color: C.blue, textDecoration: "none" }}>Privacy Policy</Link>.
+              </p>
+            ) : null}
+
           </div>
-
-          {/* 12. Terms — signup only */}
-          {isCreate ? (
-            <p
-              style={{
-                marginTop: 12,
-                marginBottom: 0,
-                fontFamily: MONO,
-                fontSize: 10,
-                color: C.labelMuted,
-                textAlign: "center",
-                lineHeight: 1.6,
-              }}
-            >
-              By creating an account you agree to our{" "}
-              <Link href="/terms" style={{ color: C.green, textDecoration: "none" }}>
-                Terms of Service
-              </Link>{" "}
-              and{" "}
-              <Link href="/privacy" style={{ color: C.green, textDecoration: "none" }}>
-                Privacy Policy
-              </Link>
-              .
-            </p>
-          ) : null}
         </div>
-      </div>
 
+      </div>
     </>
   );
 }

@@ -858,202 +858,245 @@ function StatsBand() {
   )
 }
 
-// ── Pricing ───────────────────────────────────────────────────────────────────
-
-const PLANS = [
-  {
-    tier: 'FREE',
-    price: { monthly: '$0', annual: '$0' },
-    period: { monthly: 'no account required', annual: 'no account required' },
-    economy: '3 scans · try the instrument',
-    economyColor: '#00C48C',
-    features: ['1 scan included', 'Full conversion score', 'Top 3 findings', 'Benchmark position'],
-    cta: 'TRY FREE →',
-    href: '/playground',
-  },
-  {
-    tier: 'STARTER',
-    price: { monthly: '$49', annual: '$39' },
-    period: { monthly: '/ month', annual: '/ mo · billed annually' },
-    economy: '$2.45/scan effective rate',
-    economyColor: '#6F9BC6',
-    features: ['20 scans / month', 'Auto competitor analysis', 'Score trending over time', 'Full findings ranked', 'Single user'],
-    cta: 'START TRIAL →',
-    href: '/signup?plan=starter',
-  },
-  {
-    tier: 'PRO',
-    price: { monthly: '$149', annual: '$119' },
-    period: { monthly: '/ month', annual: '/ mo · billed annually' },
-    economy: '$1.49/scan effective rate',
-    economyColor: '#00C48C',
-    features: ['100 scans / month', 'Unlimited client workspaces', 'White-label report links', 'Multi-page scanning (3 pages)', 'PDF export with your logo', '3 team seats'],
-    cta: 'START TRIAL →',
-    href: '/signup?plan=pro',
-  },
-  {
-    tier: 'SCALE',
-    price: { monthly: '$499', annual: '$399' },
-    period: { monthly: '/ month', annual: '/ mo · billed annually' },
-    economy: 'custom rate · dedicated support',
-    economyColor: '#6E7587',
-    features: ['500 scans / month', 'Everything in Pro', '10 team seats', 'White-label subdomain', 'Scan scheduling + alerts', 'Slack notifications'],
-    cta: 'START TRIAL →',
-    href: '/signup?plan=scale',
-  },
-] as const
+// ── Pricing ─────────────────────────────────────────────────────────────────
 
 function PricingSection() {
   const [billing, setBilling] = useState<'monthly' | 'annual'>('monthly')
 
+  const DASH_PLANS = [
+    {
+      tier: 'FREE',
+      price: { monthly: '$0', annual: '$0' },
+      economy: '3 scans · try the instrument',
+      specs: [
+        { k: 'scans_per_month', v: '3' },
+        { k: 'white_label',     v: 'false' },
+        { k: 'team_seats',      v: '1' },
+      ],
+      cta: 'TRY FREE →',
+      href: '/playground',
+    },
+    {
+      tier: 'STARTER',
+      price: { monthly: '$49', annual: '$39' },
+      economy: '$2.45/scan effective',
+      specs: [
+        { k: 'scans_per_month', v: '20' },
+        { k: 'white_label',     v: 'false' },
+        { k: 'team_seats',      v: '1' },
+      ],
+      cta: 'START TRIAL →',
+      href: '/signup?plan=starter',
+    },
+    {
+      tier: 'PRO',
+      price: { monthly: '$149', annual: '$119' },
+      economy: '$1.49/scan effective',
+      specs: [
+        { k: 'scans_per_month', v: '100' },
+        { k: 'white_label',     v: 'true' },
+        { k: 'team_seats',      v: '3' },
+      ],
+      cta: 'START TRIAL →',
+      href: '/signup?plan=pro',
+    },
+    {
+      tier: 'SCALE',
+      price: { monthly: '$499', annual: '$399' },
+      economy: 'custom rate · priority support',
+      specs: [
+        { k: 'scans_per_month', v: '500' },
+        { k: 'white_label',     v: 'true' },
+        { k: 'team_seats',      v: 'unlimited' },
+      ],
+      cta: 'START TRIAL →',
+      href: '/signup?plan=scale',
+    },
+  ] as const
+
+  const API_RATES = [
+    { label: 'PLAYGROUND', price: '$0.25/scan', color: '#6F9BC6' },
+    { label: 'DEV',        price: '$29/mo',     color: '#6F9BC6' },
+    { label: 'BUILDER',    price: '$99/mo',     color: '#6F9BC6' },
+    { label: 'SCALE',      price: '$249/mo',    color: '#00C48C' },
+    { label: 'ENTERPRISE', price: 'custom',     color: '#00C48C' },
+  ] as const
+
+  const API_PLANS = [
+    { tier: 'PLAYGROUND', desc: '25 free',               cta: 'GET KEY →', href: '/developer',               accent: '#9D8CFF', borderRgba: '157,140,255' },
+    { tier: 'DEV',        desc: '$29/mo · 300 scans',    cta: 'START →',   href: '/signup?plan=dev-api',     accent: '#9D8CFF', borderRgba: '157,140,255' },
+    { tier: 'BUILDER',    desc: '$99/mo · 1,000 scans',  cta: 'START →',   href: '/signup?plan=builder-api', accent: '#9D8CFF', borderRgba: '157,140,255' },
+    { tier: 'SCALE',      desc: '$249/mo · 3,000 scans', cta: 'START →',   href: '/signup?plan=scale-api',   accent: '#00C48C', borderRgba: '0,196,140'   },
+    { tier: 'ENTERPRISE', desc: 'Custom · volume',       cta: 'TALK →',    href: 'mailto:hello@webdocai.com',accent: '#00C48C', borderRgba: '0,196,140'   },
+  ] as const
+
   return (
     <section style={{ padding: '96px 0', borderTop: '1px solid rgba(111,155,198,0.1)', position: 'relative', overflow: 'hidden' }}>
-      {/* ambient bloom */}
-      <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0, background: [
-        'radial-gradient(ellipse 1000px 600px at 50% 30%, rgba(111,155,198,0.04) 0%, transparent 60%)',
-        'radial-gradient(ellipse 400px 300px at 85% 80%, rgba(157,140,255,0.03) 0%, transparent 55%)',
+      {/* Atmosphere */}
+      <div aria-hidden style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0, background: [
+        'radial-gradient(ellipse 700px 600px at 20% 50%, rgba(111,155,198,0.04) 0%, transparent 60%)',
+        'radial-gradient(ellipse 700px 600px at 80% 50%, rgba(157,140,255,0.04) 0%, transparent 60%)',
       ].join(', ') }} />
-      {/* corner ticks */}
-      <div style={{ position: 'absolute', top: 20, left: 20, width: 14, height: 14, borderTop: '1px solid rgba(111,155,198,0.18)', borderLeft: '1px solid rgba(111,155,198,0.18)', pointerEvents: 'none', zIndex: 0 }} />
-      <div style={{ position: 'absolute', top: 20, right: 20, width: 14, height: 14, borderTop: '1px solid rgba(111,155,198,0.18)', borderRight: '1px solid rgba(111,155,198,0.18)', pointerEvents: 'none', zIndex: 0 }} />
-      <div style={{ position: 'absolute', bottom: 20, left: 20, width: 14, height: 14, borderBottom: '1px solid rgba(111,155,198,0.18)', borderLeft: '1px solid rgba(111,155,198,0.18)', pointerEvents: 'none', zIndex: 0 }} />
-      <div style={{ position: 'absolute', bottom: 20, right: 20, width: 14, height: 14, borderBottom: '1px solid rgba(111,155,198,0.18)', borderRight: '1px solid rgba(111,155,198,0.18)', pointerEvents: 'none', zIndex: 0 }} />
+      {/* Corner ticks */}
+      <div aria-hidden style={{ position: 'absolute', top: 20, left: 20, width: 14, height: 14, borderTop: '1px solid rgba(111,155,198,0.18)', borderLeft: '1px solid rgba(111,155,198,0.18)', pointerEvents: 'none', zIndex: 1 }} />
+      <div aria-hidden style={{ position: 'absolute', top: 20, right: 20, width: 14, height: 14, borderTop: '1px solid rgba(111,155,198,0.18)', borderRight: '1px solid rgba(111,155,198,0.18)', pointerEvents: 'none', zIndex: 1 }} />
+      <div aria-hidden style={{ position: 'absolute', bottom: 20, left: 20, width: 14, height: 14, borderBottom: '1px solid rgba(111,155,198,0.18)', borderLeft: '1px solid rgba(111,155,198,0.18)', pointerEvents: 'none', zIndex: 1 }} />
+      <div aria-hidden style={{ position: 'absolute', bottom: 20, right: 20, width: 14, height: 14, borderBottom: '1px solid rgba(111,155,198,0.18)', borderRight: '1px solid rgba(111,155,198,0.18)', pointerEvents: 'none', zIndex: 1 }} />
+
       <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 48px', position: 'relative', zIndex: 1 }}>
 
-        <div style={{ ...MONO, fontSize: 11, textTransform: 'uppercase' as const, letterSpacing: '0.2em', color: '#6F9BC6', marginBottom: 16 }}>PLANS</div>
-        <h2 style={{ ...DISP, fontWeight: 700, fontSize: 36, lineHeight: 1.15, color: '#E6E9EE', margin: '0 0 8px', letterSpacing: '-0.5px' }}>
-          Infrastructure pricing. No contracts.
+        {/* Section header */}
+        <p style={{ ...MONO, fontSize: 11, textTransform: 'uppercase' as const, letterSpacing: '0.2em', color: '#6F9BC6', margin: '0 0 16px' }}>PLANS</p>
+        <h2 style={{ ...DISP, fontWeight: 700, fontSize: 36, lineHeight: 1.15, color: '#E6E9EE', margin: '0 0 10px', letterSpacing: '-0.5px' }}>
+          One engine. Two ways to pay.
         </h2>
-        <p style={{ ...SANS, fontSize: 14, color: '#6E7587', margin: '0 0 28px' }}>Four tiers. Pay per scan or subscribe. Cancel anytime.</p>
+        <p style={{ ...SANS, fontSize: 14, color: '#9398A8', margin: '0 0 48px', maxWidth: 560 }}>
+          Dashboard for results without code. API for building with the data. Same engine underneath every plan.
+        </p>
 
-        {/* Toggle */}
-        <div className="wd-panel" style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 36, padding: 4, width: 'fit-content' }}>
-          {(['monthly', 'annual'] as const).map(b => (
-            <button
-              key={b}
-              onClick={() => setBilling(b)}
-              style={{
-                ...MONO,
-                fontSize: 11,
-                textTransform: 'uppercase' as const,
-                letterSpacing: 1.5,
-                padding: '7px 18px',
-                border: 'none',
-                cursor: 'pointer',
-                background: billing === b ? '#6F9BC6' : 'transparent',
-                color: billing === b ? '#050810' : '#6E7587',
-                fontWeight: billing === b ? 600 : 400,
-                transition: 'background 0.15s, color 0.15s',
-              }}
-            >
-              {b === 'annual' ? 'Annual (save 20%)' : 'Monthly'}
-            </button>
-          ))}
-        </div>
-
-        {/* Plan cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-          {PLANS.map(plan => (
-            <div
-              key={plan.tier}
-              className="wd-panel"
-              style={{
-                padding: '28px',
-                display: 'flex',
-                flexDirection: 'column',
-              }}
-            >
-              <div style={{ marginBottom: 16 }}>
-                <span style={{ ...MONO, fontSize: 10, textTransform: 'uppercase' as const, letterSpacing: 1.5, color: '#6F9BC6' }}>
-                  {plan.tier}
-                </span>
-              </div>
-
-              <div style={{ marginBottom: 24 }}>
-                <span style={{ ...DISP, fontWeight: 700, fontSize: 42, color: '#E6E9EE', lineHeight: 1 }}>
-                  {plan.price[billing]}
-                </span>
-                <div style={{ ...SANS, fontSize: 12, color: '#6E7587', marginTop: 4 }}>
-                  {plan.period[billing]}
-                </div>
-                <div style={{ ...MONO, fontSize: 11, color: plan.economyColor, marginTop: 6 }}>
-                  {plan.economy}
-                </div>
-              </div>
-
-              <div style={{ flex: 1 }} />
-
-              <Link
-                href={plan.href}
-                style={{
-                  display: 'block',
-                  textAlign: 'center',
-                  ...MONO,
-                  fontSize: 11,
-                  letterSpacing: 1.5,
-                  textTransform: 'uppercase' as const,
-                  padding: '11px 0',
-                  textDecoration: 'none',
-                  background: 'transparent',
-                  color: '#6F9BC6',
-                  border: '0.5px solid rgba(111,155,198,0.35)',
-                  fontWeight: 400,
-                }}
-              >
-                {plan.cta}
-              </Link>
-            </div>
-          ))}
-        </div>
-
-        {/* Full pricing link */}
-        <div style={{ textAlign: 'center', marginBottom: 24 }}>
-          <Link href="/pricing" style={{ ...MONO, fontSize: 11, color: '#6F9BC6', textDecoration: 'none', letterSpacing: 1 }}>
-            See full pricing &amp; comparison →
-          </Link>
-        </div>
-
-        {/* API callout band */}
         <style>{`
-          @media (max-width: 767px) { .pricing-api-band { flex-direction: column !important; align-items: flex-start !important; } }
+          @media (max-width: 767px) {
+            .pricing-cols { grid-template-columns: 1fr !important; }
+            .pricing-col-divider { display: none !important; }
+            .pricing-dash-grid { grid-template-columns: 1fr !important; }
+          }
         `}</style>
-        <div
-          className="wd-panel pricing-api-band"
-          style={{
-            background: '#0A0E18',
-            padding: '24px 32px',
-            borderTop: '0.5px solid rgba(157,140,255,0.15)',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            flexWrap: 'wrap' as const,
-            gap: 20,
-          }}
-        >
-          <div>
-            <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase' as const, letterSpacing: '0.18em', color: '#9D8CFF', margin: '0 0 6px' }}>FOR DEVELOPERS</p>
-            <p style={{ ...DISP, fontSize: 18, fontWeight: 700, color: '#E6E9EE', margin: '0 0 4px' }}>Build with the API</p>
-            <p style={{ ...SANS, fontSize: 14, color: '#9398A8', margin: 0 }}>
-              POST a URL, get structured JSON. 307 checks.{' '}
-              <span style={{ ...MONO, fontSize: 12, color: '#9D8CFF' }}>Playground free · paid from $29/mo</span>
+
+        {/* Two-column grid */}
+        <div className="pricing-cols" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 0, position: 'relative' }}>
+
+          {/* Vertical divider */}
+          <div className="pricing-col-divider" aria-hidden style={{ position: 'absolute', top: 0, bottom: 0, left: '50%', width: '0.5px', background: 'rgba(255,255,255,0.08)', pointerEvents: 'none' }} />
+
+          {/* ── LEFT — DASHBOARD ── */}
+          <div style={{ paddingRight: 48 }}>
+            <p style={{ ...MONO, fontSize: 11, textTransform: 'uppercase' as const, letterSpacing: '0.18em', color: '#6F9BC6', margin: '0 0 6px' }}>DASHBOARD</p>
+            <p style={{ ...SANS, fontSize: 13, color: '#9398A8', margin: '0 0 20px' }}>Results without code. Full report interface.</p>
+
+            {/* Billing toggle */}
+            <div className="wd-panel" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: 4 }}>
+              {(['monthly', 'annual'] as const).map(b => (
+                <button
+                  key={b}
+                  onClick={() => setBilling(b)}
+                  style={{
+                    ...MONO,
+                    fontSize: 11,
+                    textTransform: 'uppercase' as const,
+                    letterSpacing: '0.1em',
+                    padding: '6px 14px',
+                    border: 'none',
+                    cursor: 'pointer',
+                    background: billing === b ? '#6F9BC6' : 'transparent',
+                    color: billing === b ? '#050810' : '#6E7587',
+                    fontWeight: billing === b ? 600 : 400,
+                    transition: 'background 0.15s, color 0.15s',
+                  }}
+                >
+                  {b === 'annual' ? 'Annual · save 20%' : 'Monthly'}
+                </button>
+              ))}
+            </div>
+
+            {/* 2x2 card grid */}
+            <div className="pricing-dash-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 20 }}>
+              {DASH_PLANS.map(plan => (
+                <div key={plan.tier} className="wd-panel" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase' as const, letterSpacing: '0.15em', color: '#6F9BC6', margin: 0 }}>{plan.tier}</p>
+                  <p style={{ ...DISP, fontSize: 32, fontWeight: 700, color: '#E6E9EE', lineHeight: 1, margin: 0 }}>{plan.price[billing]}</p>
+                  <p style={{ ...MONO, fontSize: 10, color: '#6F9BC6', margin: 0 }}>{plan.economy}</p>
+                  <div style={{ borderTop: '0.5px solid rgba(255,255,255,0.06)', margin: '4px 0' }} />
+                  {plan.specs.map(s => (
+                    <div key={s.k} style={{ display: 'flex', alignItems: 'baseline', ...MONO, fontSize: 11 }}>
+                      <span style={{ color: '#8080c0', flexShrink: 0 }}>{s.k}</span>
+                      <span style={{ color: '#6E7587', margin: '0 2px' }}>:</span>
+                      <span style={{ color: s.v === 'true' ? '#00C48C' : s.v === 'false' ? '#6E7587' : s.v === 'unlimited' ? '#9D8CFF' : '#E6E9EE' }}>{s.v}</span>
+                    </div>
+                  ))}
+                  <div style={{ flex: 1 }} />
+                  <Link
+                    href={plan.href}
+                    style={{
+                      display: 'block',
+                      textAlign: 'center' as const,
+                      ...MONO,
+                      fontSize: 11,
+                      letterSpacing: '0.1em',
+                      textTransform: 'uppercase' as const,
+                      padding: '9px 0',
+                      textDecoration: 'none',
+                      background: 'transparent',
+                      color: '#6F9BC6',
+                      border: '0.5px solid rgba(111,155,198,0.35)',
+                      marginTop: 4,
+                    }}
+                  >
+                    {plan.cta}
+                  </Link>
+                </div>
+              ))}
+            </div>
+
+            <p style={{ ...MONO, fontSize: 11, color: '#6E7587', textAlign: 'center' as const, margin: '16px 0 0' }}>
+              <Link href="/pricing" style={{ color: '#6E7587', textDecoration: 'none' }}>See full dashboard pricing →</Link>
             </p>
           </div>
-          <div style={{ display: 'flex', gap: 12, flexShrink: 0 }}>
-            <Link
-              href="/pricing"
-              style={{ ...MONO, fontSize: 12, color: '#9D8CFF', border: '1px solid rgba(157,140,255,0.5)', padding: '10px 20px', background: 'transparent', textDecoration: 'none', display: 'inline-block' }}
-            >
-              See API pricing →
-            </Link>
-            <Link
-              href="/developer"
-              style={{ ...MONO, fontSize: 12, color: '#9D8CFF', border: '1px solid rgba(157,140,255,0.5)', padding: '10px 20px', background: 'transparent', textDecoration: 'none', display: 'inline-block' }}
-            >
-              Get API key →
-            </Link>
-          </div>
-        </div>
 
+          {/* ── RIGHT — API ── */}
+          <div style={{ paddingLeft: 48 }}>
+            <p style={{ ...MONO, fontSize: 11, textTransform: 'uppercase' as const, letterSpacing: '0.18em', color: '#9D8CFF', margin: '0 0 6px' }}>API</p>
+            <p style={{ ...SANS, fontSize: 13, color: '#9398A8', margin: '0 0 20px' }}>Structured JSON. Build into anything.</p>
+
+            {/* Rate context — height matches toggle for visual alignment */}
+            <div style={{ height: 36, display: 'flex', alignItems: 'center' }}>
+              <p style={{ ...MONO, fontSize: 11, color: '#6E7587', margin: 0 }}>Rate decreases with volume</p>
+            </div>
+
+            {/* Rate rows */}
+            <div style={{ marginTop: 12 }}>
+              {API_RATES.map((r, i) => (
+                <div key={r.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0', borderBottom: i < API_RATES.length - 1 ? '0.5px solid rgba(255,255,255,0.04)' : 'none' }}>
+                  <span style={{ ...MONO, fontSize: 10, color: '#6E7587', textTransform: 'uppercase' as const, letterSpacing: '0.12em' }}>{r.label}</span>
+                  <span style={{ ...DISP, fontSize: 13, color: r.color }}>{r.price}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* API tier cards */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 20 }}>
+              {API_PLANS.map(plan => (
+                <div key={plan.tier} className="wd-panel" style={{ padding: '16px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div>
+                    <span style={{ ...MONO, fontSize: 10, textTransform: 'uppercase' as const, letterSpacing: '0.15em', color: plan.accent }}>{plan.tier}</span>
+                    {' '}
+                    <span style={{ ...DISP, fontSize: 20, color: '#E6E9EE', lineHeight: 1 }}>{plan.desc}</span>
+                  </div>
+                  <Link
+                    href={plan.href}
+                    style={{
+                      ...MONO,
+                      fontSize: 11,
+                      color: plan.accent,
+                      border: `1px solid rgba(${plan.borderRgba},0.4)`,
+                      padding: '7px 14px',
+                      textDecoration: 'none',
+                      background: 'transparent',
+                      flexShrink: 0,
+                      marginLeft: 12,
+                    }}
+                  >
+                    {plan.cta}
+                  </Link>
+                </div>
+              ))}
+            </div>
+
+            <p style={{ ...MONO, fontSize: 11, color: '#6E7587', textAlign: 'center' as const, margin: '16px 0 0' }}>
+              <Link href="/developers" style={{ color: '#6E7587', textDecoration: 'none' }}>Full API docs and pricing →</Link>
+            </p>
+          </div>
+
+        </div>
       </div>
     </section>
   )
@@ -1109,9 +1152,9 @@ function FinalCtaSection() {
         <div style={{ flex: 1, padding: '64px 56px' }}>
           <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#6E7587', margin: '0 0 12px' }}>BUILD WITH THE DATA</p>
           <h2 style={{ ...DISP, fontSize: 24, fontWeight: 700, color: '#E6E9EE', lineHeight: 1.3, margin: '0 0 8px' }}>
-            POST a URL. Get structured JSON. Same engine underneath.
+            POST a URL. Get structured JSON. Build anything.
           </h2>
-          <p style={{ ...SANS, fontSize: 14, color: '#9398A8', margin: '0 0 28px' }}>25 free scans. No subscription required.</p>
+          <p style={{ ...SANS, fontSize: 14, color: '#9398A8', margin: '0 0 28px' }}>25 free scans, no subscription. Start scanning in minutes.</p>
           <Link href="/developer" style={{ ...MONO, fontSize: 12, color: '#9D8CFF', border: '1px solid rgba(157,140,255,0.5)', padding: '11px 24px', background: 'transparent', textDecoration: 'none', display: 'inline-block' }}>
             Get API key →
           </Link>

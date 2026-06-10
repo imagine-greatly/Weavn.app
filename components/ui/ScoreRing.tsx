@@ -71,12 +71,12 @@ function ScoreRing({ score, size = 'md', label, animate = true, animated }: Scor
   const filterId = `arcGlow-${size}`
 
   return (
-    <div style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-      <svg width={px} height={px} viewBox={`0 0 ${px} ${px}`} style={{ display: 'block' }}>
+    <div style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'center', gap: 4, overflow: 'visible' }}>
+      <svg width={px} height={px} viewBox={`0 0 ${px} ${px}`} overflow="visible" style={{ display: 'block' }}>
         <defs>
           <filter id={filterId} x="-80%" y="-80%" width="260%" height="260%">
-            <feGaussianBlur stdDeviation="1.8" result="blur1" />
-            <feGaussianBlur in="SourceGraphic" stdDeviation="4.5" result="blur2" />
+            <feGaussianBlur stdDeviation="1.2" result="blur1" />
+            <feGaussianBlur in="SourceGraphic" stdDeviation="2.5" result="blur2" />
             <feMerge>
               <feMergeNode in="blur2" />
               <feMergeNode in="blur1" />

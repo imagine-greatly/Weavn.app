@@ -721,23 +721,18 @@ function TwoSurfaceSection() {
 
 // ── Stats Band ────────────────────────────────────────────────────────────────
 
-const CORPUS_STATS = [
-  { value: '4,800+', label: 'Sites scanned',        color: '#E6E9EE' },
-  { value: '58',     label: 'Average score',         color: 'rgba(111,155,198,0.45)' },
-  { value: '23',     label: 'Avg findings per site', color: 'rgba(111,155,198,0.45)' },
-  { value: '76%',    label: 'No above-fold proof',   color: '#E8635F' },
-] as const
-
 function StatsBand() {
   return (
-    <section style={{ position: 'relative', overflow: 'hidden', padding: '96px 0', borderTop: '0.5px solid rgba(111,155,198,0.15)' }}>
+    <section style={{ position: 'relative', overflow: 'hidden', padding: '96px 0 0 0', borderTop: '0.5px solid rgba(111,155,198,0.12)' }}>
       <style>{`
         @keyframes sb-marker-in { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
-        .sb-marker-enter { animation: sb-marker-in 0.6s ease-out 0.5s both; }
+        .sb-marker-enter { animation: sb-marker-in 0.6s ease-out 0.4s both; }
         @media (prefers-reduced-motion: reduce) { .sb-marker-enter { animation:none; opacity:1; transform:none; } }
         @media (max-width: 767px) {
-          .sb-layout { flex-direction: column !important; }
-          .sb-stats-row > div { flex: 0 0 50% !important; min-width: 0; }
+          .sb-stat-strip { flex-wrap: wrap !important; }
+          .sb-stat-strip > .sb-stat-cell { flex: 0 0 50% !important; min-width: 0; }
+          .sb-stat-strip > .sb-corpus-cell { flex: 0 0 100% !important; border-right: none !important; border-top: 0.5px solid rgba(111,155,198,0.08) !important; }
+          .sb-curve-svg { height: 180px !important; }
         }
       `}</style>
 
@@ -745,115 +740,198 @@ function StatsBand() {
       <div aria-hidden style={{
         position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0,
         background: [
-          'radial-gradient(ellipse 900px 600px at 65% 50%, rgba(111,155,198,0.06) 0%, transparent 60%)',
-          'radial-gradient(ellipse 500px 400px at 15% 60%, rgba(157,140,255,0.04) 0%, transparent 55%)',
+          'radial-gradient(ellipse 1200px 600px at 50% 30%, rgba(111,155,198,0.05) 0%, transparent 60%)',
+          'radial-gradient(ellipse 600px 400px at 20% 60%, rgba(157,140,255,0.03) 0%, transparent 55%)',
         ].join(', '),
       }} />
 
       {/* Corner ticks */}
-      <div aria-hidden style={{ position:'absolute',top:20,left:20,width:14,height:14,borderTop:'0.5px solid rgba(111,155,198,0.2)',borderLeft:'0.5px solid rgba(111,155,198,0.2)',pointerEvents:'none',zIndex:1 }} />
-      <div aria-hidden style={{ position:'absolute',top:20,right:20,width:14,height:14,borderTop:'0.5px solid rgba(111,155,198,0.2)',borderRight:'0.5px solid rgba(111,155,198,0.2)',pointerEvents:'none',zIndex:1 }} />
-      <div aria-hidden style={{ position:'absolute',bottom:20,left:20,width:14,height:14,borderBottom:'0.5px solid rgba(111,155,198,0.2)',borderLeft:'0.5px solid rgba(111,155,198,0.2)',pointerEvents:'none',zIndex:1 }} />
-      <div aria-hidden style={{ position:'absolute',bottom:20,right:20,width:14,height:14,borderBottom:'0.5px solid rgba(111,155,198,0.2)',borderRight:'0.5px solid rgba(111,155,198,0.2)',pointerEvents:'none',zIndex:1 }} />
+      <div aria-hidden style={{ position:'absolute',top:20,left:20,width:14,height:14,borderTop:'0.5px solid rgba(111,155,198,0.18)',borderLeft:'0.5px solid rgba(111,155,198,0.18)',pointerEvents:'none',zIndex:1 }} />
+      <div aria-hidden style={{ position:'absolute',top:20,right:20,width:14,height:14,borderTop:'0.5px solid rgba(111,155,198,0.18)',borderRight:'0.5px solid rgba(111,155,198,0.18)',pointerEvents:'none',zIndex:1 }} />
+      <div aria-hidden style={{ position:'absolute',bottom:20,left:20,width:14,height:14,borderBottom:'0.5px solid rgba(111,155,198,0.18)',borderLeft:'0.5px solid rgba(111,155,198,0.18)',pointerEvents:'none',zIndex:1 }} />
+      <div aria-hidden style={{ position:'absolute',bottom:20,right:20,width:14,height:14,borderBottom:'0.5px solid rgba(111,155,198,0.18)',borderRight:'0.5px solid rgba(111,155,198,0.18)',pointerEvents:'none',zIndex:1 }} />
 
-      <div
-        className="sb-layout"
-        style={{ position: 'relative', zIndex: 1, maxWidth: 1280, margin: '0 auto', padding: '0 48px', display: 'flex', gap: 64 }}
-      >
+      {/* ── TOP CONTENT ── */}
+      <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 48px 48px', position: 'relative', zIndex: 1 }}>
 
-        {/* LEFT COLUMN — copy */}
-        <div style={{ flex: '0 0 38%', alignSelf: 'stretch' }}>
+        {/* Kicker + headline + subcopy */}
+        <div style={{ maxWidth: 680 }}>
           <p style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.2em', color: '#6F9BC6', margin: '0 0 16px' }}>
             CORPUS DATA
           </p>
-          <h2 style={{ ...DISP, fontWeight: 700, fontSize: 'clamp(28px,3.5vw,42px)', color: '#E6E9EE', letterSpacing: '-0.5px', margin: '0 0 20px', lineHeight: 1.15 }}>
-            Benchmarked against your vertical. Not a generic average.
+          <h2 style={{ ...DISP, fontWeight: 700, fontSize: 'clamp(32px,4vw,48px)', color: '#E6E9EE', letterSpacing: '-0.5px', margin: '0 0 16px', lineHeight: 1.1 }}>
+            Not an average. A percentile.
           </h2>
-          <p style={{ ...SANS, fontSize: 15, color: '#9398A8', lineHeight: 1.7, margin: '0 0 32px' }}>
-            Every score is positioned against real sites in your exact vertical. A B2B SaaS site is measured against other B2B SaaS sites. An ecommerce site against ecommerce. The corpus grows with every scan — the more sites we process, the sharper the percentiles get.
+          <p style={{ ...SANS, fontSize: 15, color: '#9398A8', lineHeight: 1.65, margin: 0 }}>
+            Every score is positioned against real sites in your exact vertical — not a generic industry average. B2B SaaS vs B2B SaaS. Ecommerce vs ecommerce. The corpus grows with every scan.
           </p>
+        </div>
 
-          {/* Instrument panel */}
-          <div style={{ background: '#0A0E18', border: '0.5px solid rgba(255,255,255,0.08)', padding: '16px 20px', margin: '0 0 24px' }}>
+        {/* Instrument strip */}
+        <div
+          className="sb-stat-strip"
+          style={{
+            display: 'flex',
+            alignItems: 'stretch',
+            gap: 0,
+            marginTop: 40,
+            borderTop: '0.5px solid rgba(111,155,198,0.12)',
+            borderBottom: '0.5px solid rgba(111,155,198,0.12)',
+          }}
+        >
+          {([
+            { value: '4,800+', label: 'SITES SCANNED',      color: '#E6E9EE' },
+            { value: '58',     label: 'AVERAGE SCORE',       color: 'rgba(111,155,198,0.5)' },
+            { value: '23',     label: 'AVG FINDINGS',        color: 'rgba(111,155,198,0.5)' },
+            { value: '76%',    label: 'NO ABOVE-FOLD PROOF', color: '#E8635F' },
+          ] as { value: string; label: string; color: string }[]).map(s => (
+            <div
+              key={s.label}
+              className="sb-stat-cell"
+              style={{ flex: 1, padding: '20px 28px', borderRight: '0.5px solid rgba(111,155,198,0.08)' }}
+            >
+              <div style={{ ...DISP, fontSize: 40, fontWeight: 700, color: s.color, lineHeight: 1 }}>{s.value}</div>
+              <div style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.12em', color: '#6E7587', marginTop: 6 }}>{s.label}</div>
+            </div>
+          ))}
+
+          {/* Corpus facts cell */}
+          <div
+            className="sb-corpus-cell"
+            style={{ flex: '0 0 240px', padding: '20px 28px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 6 }}
+          >
             {([
-              { k: 'corpus_size',       v: '4,812 sites', vc: '#6F9BC6' },
-              { k: 'verticals_tracked', v: '14',          vc: '#6F9BC6' },
-              { k: 'updated',           v: 'weekly',      vc: '#00C48C' },
-            ] as { k: string; v: string; vc: string }[]).map((row, i) => (
-              <div key={row.k} style={{ display: 'flex', gap: 0, ...MONO, fontSize: 12, marginBottom: i < 2 ? 8 : 0 }}>
+              { k: 'corpus_size', v: '4,812', vc: '#6F9BC6' },
+              { k: 'verticals',   v: '14',    vc: '#6F9BC6' },
+              { k: 'updated',     v: 'weekly', vc: '#00C48C' },
+            ] as { k: string; v: string; vc: string }[]).map(row => (
+              <div key={row.k} style={{ ...MONO, fontSize: 11, display: 'flex' }}>
                 <span style={{ color: '#8080c0' }}>{row.k}</span>
                 <span style={{ color: '#6E7587' }}>: </span>
                 <span style={{ color: row.vc }}>{row.v}</span>
               </div>
             ))}
           </div>
-
-          <p style={{ ...MONO, fontSize: 11, color: '#6E7587', margin: 0 }}>
-            No synthetic data. No curated samples. Real scans only.
-          </p>
-        </div>
-
-        {/* RIGHT COLUMN — curve + stats */}
-        <div style={{ flex: 1, minWidth: 0, position: 'relative' }}>
-          <div aria-hidden style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0, background: 'radial-gradient(ellipse 300px 200px at 65% 40%, rgba(111,155,198,0.08) 0%, transparent 60%)' }} />
-          <div style={{ overflow: 'hidden', position: 'relative', zIndex: 1 }}>
-
-            {/* Stats row */}
-            <div className="sb-stats-row" style={{ display: 'flex' }}>
-              {CORPUS_STATS.map((s, i) => (
-                <div key={s.label} style={{ flex: 1, padding: '20px 24px', borderRight: i < CORPUS_STATS.length - 1 ? '0.5px solid rgba(255,255,255,0.06)' : 'none' }}>
-                  <div style={{ ...DISP, fontWeight: 700, fontSize: 40, color: s.color, lineHeight: 1, marginBottom: 6 }}>{s.value}</div>
-                  <div style={{ ...MONO, fontSize: 10, color: '#6E7587', textTransform: 'uppercase', letterSpacing: '0.12em' }}>{s.label}</div>
-                </div>
-              ))}
-            </div>
-
-            {/* Curve area */}
-            <div style={{ padding: '20px 24px 0' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-                <span style={{ ...MONO, fontSize: 9, color: 'rgba(111,155,198,0.35)' }}>SCORE 0</span>
-                <span style={{ ...MONO, fontSize: 9, color: 'rgba(111,155,198,0.35)' }}>SCORE DISTRIBUTION · 4,812 SITES</span>
-                <span style={{ ...MONO, fontSize: 9, color: 'rgba(111,155,198,0.35)' }}>SCORE 100</span>
-              </div>
-              <svg viewBox="0 -24 800 220" width="100%" height="220" preserveAspectRatio="none" overflow="visible" aria-hidden style={{ display: 'block' }}>
-                <defs>
-                  <filter id="sbGlow" x="-20%" y="-80%" width="140%" height="280%">
-                    <feGaussianBlur stdDeviation="2.0" result="blur"/>
-                    <feMerge>
-                      <feMergeNode in="blur"/>
-                      <feMergeNode in="SourceGraphic"/>
-                    </feMerge>
-                  </filter>
-                </defs>
-                <line x1="200" y1="10" x2="200" y2="188" stroke="rgba(111,155,198,0.04)" strokeWidth="0.75" />
-                <line x1="400" y1="10" x2="400" y2="188" stroke="rgba(111,155,198,0.04)" strokeWidth="0.75" />
-                <line x1="600" y1="10" x2="600" y2="188" stroke="rgba(111,155,198,0.04)" strokeWidth="0.75" />
-                <path d="M 0,198 C 40,198 80,194 140,182 C 200,166 260,136 320,104 C 370,76 410,28 464,12 C 510,2 540,10 580,36 C 630,66 680,120 730,162 C 770,188 790,196 800,198" fill="none" stroke="rgba(140,180,220,1.0)" strokeWidth="1.0" filter="url(#sbGlow)" />
-                <line x1="464" y1="12" x2="464" y2="188" stroke="rgba(255,255,255,0.08)" strokeWidth="0.75" />
-                <text x="464" y="198" textAnchor="middle" fontFamily="IBM Plex Mono, monospace" fontSize="7" fill="rgba(255,255,255,0.12)">AVG 58</text>
-                <g className="sb-marker-enter">
-                  <line x1="520" y1="-12" x2="520" y2="188" stroke="rgba(140,180,220,0.8)" strokeWidth="0.75" strokeDasharray="3 2" />
-                  <circle cx="520" cy="22" r="6" fill="rgba(140,180,220,0.15)" />
-                  <circle cx="520" cy="22" r="3" fill="rgba(140,180,220,1.0)" />
-                  <text x="520" y="-12" textAnchor="middle" fontFamily="IBM Plex Mono, monospace" fontSize="11" fontWeight="600" fill="rgba(140,180,220,0.9)">YOUR SITE</text>
-                  <text x="520" y="202" textAnchor="middle" fontFamily="IBM Plex Mono, monospace" fontSize="11" fontWeight="700" fill="rgba(140,180,220,1.0)">63rd pct</text>
-                </g>
-                <text x="200" y="202" textAnchor="middle" fontFamily="IBM Plex Mono, monospace" fontSize="7" fill="rgba(111,155,198,0.2)">25</text>
-                <text x="400" y="202" textAnchor="middle" fontFamily="IBM Plex Mono, monospace" fontSize="7" fill="rgba(111,155,198,0.2)">50</text>
-                <text x="600" y="202" textAnchor="middle" fontFamily="IBM Plex Mono, monospace" fontSize="7" fill="rgba(111,155,198,0.2)">75</text>
-              </svg>
-            </div>
-
-            {/* Footer */}
-            <div style={{ padding: '12px 24px 20px' }}>
-              <p style={{ ...MONO, fontSize: 11, color: '#6E7587', margin: 0, textAlign: 'center' }}>
-                Benchmarked against sites in your exact vertical · updated as corpus grows
-              </p>
-            </div>
-
-          </div>
         </div>
       </div>
+
+      {/* ── FULL-BLEED CURVE ── */}
+      <svg
+        className="sb-curve-svg"
+        width="100%"
+        height="280"
+        viewBox="0 0 1440 280"
+        preserveAspectRatio="none"
+        overflow="visible"
+        aria-hidden
+        style={{ display: 'block', marginTop: 0 }}
+      >
+        <defs>
+          <linearGradient id="sbZoneGrad" x1="0" y1="0" x2="1440" y2="0" gradientUnits="userSpaceOnUse">
+            <stop offset="0%"   stopColor="#E8635F" stopOpacity="0.06" />
+            <stop offset="35%"  stopColor="#6F9BC6" stopOpacity="0.04" />
+            <stop offset="65%"  stopColor="#6F9BC6" stopOpacity="0.04" />
+            <stop offset="100%" stopColor="#00C48C" stopOpacity="0.07" />
+          </linearGradient>
+
+          <linearGradient id="sbCurveFill" x1="0" y1="0" x2="0" y2="280" gradientUnits="userSpaceOnUse">
+            <stop offset="0%"   stopColor="#6F9BC6" stopOpacity="0.12" />
+            <stop offset="100%" stopColor="#6F9BC6" stopOpacity="0" />
+          </linearGradient>
+
+          <linearGradient id="sbCurveStroke" x1="0" y1="0" x2="1440" y2="0" gradientUnits="userSpaceOnUse">
+            <stop offset="0%"   stopColor="#E8635F" stopOpacity="0.4" />
+            <stop offset="30%"  stopColor="#6F9BC6" stopOpacity="0.8" />
+            <stop offset="55%"  stopColor="#6F9BC6" stopOpacity="0.9" />
+            <stop offset="75%"  stopColor="#6F9BC6" stopOpacity="0.7" />
+            <stop offset="100%" stopColor="#00C48C" stopOpacity="0.5" />
+          </linearGradient>
+
+          <filter id="sbCurveGlow" x="-5%" y="-60%" width="110%" height="220%">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="2.5" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          <filter id="sbMarkerGlow" x="-200%" y="-200%" width="500%" height="500%">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+            </feMerge>
+          </filter>
+        </defs>
+
+        {/* 1. Zone fill */}
+        <path
+          d="M 0,272 C 80,272 160,268 280,255 C 400,240 520,210 640,175 C 740,145 790,90 835,40 C 870,12 895,8 907,14 C 930,25 960,50 1000,88 C 1060,140 1120,188 1200,225 C 1300,258 1380,270 1440,272 L 1440,280 L 0,280 Z"
+          fill="url(#sbZoneGrad)"
+          stroke="none"
+        />
+
+        {/* 2. Gridlines at 25 / 50 / 75 */}
+        <line x1="360"  y1="20" x2="360"  y2="270" stroke="rgba(111,155,198,0.06)" strokeWidth="0.75" />
+        <line x1="720"  y1="20" x2="720"  y2="270" stroke="rgba(111,155,198,0.06)" strokeWidth="0.75" />
+        <line x1="1080" y1="20" x2="1080" y2="270" stroke="rgba(111,155,198,0.06)" strokeWidth="0.75" />
+
+        {/* 3. Curve fill */}
+        <path
+          d="M 0,272 C 80,272 160,268 280,255 C 400,240 520,210 640,175 C 740,145 790,90 835,40 C 870,12 895,8 907,14 C 930,25 960,50 1000,88 C 1060,140 1120,188 1200,225 C 1300,258 1380,270 1440,272 L 1440,280 L 0,280 Z"
+          fill="url(#sbCurveFill)"
+          stroke="none"
+        />
+
+        {/* 4. Curve stroke — horizontal color gradient + glow */}
+        <path
+          d="M 0,272 C 80,272 160,268 280,255 C 400,240 520,210 640,175 C 740,145 790,90 835,40 C 870,12 895,8 907,14 C 930,25 960,50 1000,88 C 1060,140 1120,188 1200,225 C 1300,258 1380,270 1440,272"
+          fill="none"
+          stroke="url(#sbCurveStroke)"
+          strokeWidth="1.5"
+          filter="url(#sbCurveGlow)"
+          vectorEffect="non-scaling-stroke"
+        />
+
+        {/* 5. AVG 58 marker */}
+        <line x1="835" y1="30" x2="835" y2="265" stroke="rgba(255,255,255,0.08)" strokeWidth="0.75" />
+        <text x="835" y="275" textAnchor="middle" fontFamily="IBM Plex Mono, monospace" fontSize="11" fill="rgba(255,255,255,0.2)">AVG 58</text>
+
+        {/* 6. Zone boundary labels */}
+        <text x="360"  y="275" textAnchor="middle" fontFamily="IBM Plex Mono, monospace" fontSize="9" fill="rgba(232,99,95,0.3)">BOTTOM 25%</text>
+        <text x="1080" y="275" textAnchor="middle" fontFamily="IBM Plex Mono, monospace" fontSize="9" fill="rgba(0,196,140,0.3)">TOP 25%</text>
+
+        {/* 7. YOUR SITE marker at x=907, curve y≈14 */}
+        <g className="sb-marker-enter">
+          <line
+            x1="907" y1="0" x2="907" y2="260"
+            stroke="rgba(140,180,220,0.7)"
+            strokeWidth="1.2"
+            strokeDasharray="4 3"
+          />
+          <circle cx="907" cy="14" r="8" fill="rgba(140,180,220,0.15)" filter="url(#sbMarkerGlow)" />
+          <circle cx="907" cy="14" r="3" fill="rgba(140,180,220,0.9)" />
+          <g transform="translate(907, -8)">
+            <rect x="-52" y="-46" width="104" height="40" fill="#080D18" stroke="rgba(140,180,220,0.3)" strokeWidth="0.5" />
+            <text x="0" y="-30" textAnchor="middle" fontFamily="IBM Plex Mono, monospace" fontSize="9"  fill="rgba(140,180,220,0.6)" letterSpacing="0.1em">YOUR SITE</text>
+            <text x="0" y="-14" textAnchor="middle" fontFamily="IBM Plex Mono, monospace" fontSize="13" fontWeight="600" fill="rgba(140,180,220,1.0)">63rd pct</text>
+          </g>
+        </g>
+
+        {/* 8. Score axis labels */}
+        <text x="0"    y="278" textAnchor="start"  fontFamily="IBM Plex Mono, monospace" fontSize="9" fill="rgba(111,155,198,0.2)">0</text>
+        <text x="360"  y="278" textAnchor="middle" fontFamily="IBM Plex Mono, monospace" fontSize="9" fill="rgba(111,155,198,0.2)">25</text>
+        <text x="720"  y="278" textAnchor="middle" fontFamily="IBM Plex Mono, monospace" fontSize="9" fill="rgba(111,155,198,0.2)">50</text>
+        <text x="1080" y="278" textAnchor="middle" fontFamily="IBM Plex Mono, monospace" fontSize="9" fill="rgba(111,155,198,0.2)">75</text>
+        <text x="1440" y="278" textAnchor="end"    fontFamily="IBM Plex Mono, monospace" fontSize="9" fill="rgba(111,155,198,0.2)">100</text>
+      </svg>
+
+      {/* 9. Bottom caption */}
+      <div style={{ textAlign: 'center', padding: '12px 0 32px', position: 'relative', zIndex: 1 }}>
+        <p style={{ ...MONO, fontSize: 10, color: 'rgba(111,155,198,0.3)', margin: 0 }}>
+          Benchmarked against sites in your exact vertical · no synthetic data · updated weekly
+        </p>
+      </div>
+
     </section>
   )
 }

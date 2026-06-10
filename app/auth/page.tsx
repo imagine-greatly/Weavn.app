@@ -117,6 +117,15 @@ function AuthPageContent() {
   const [signupEmailSent,setSignupEmailSent]= useState(false);
   const [pendingDomain,  setPendingDomain]  = useState<string | null>(null);
 
+  const surface = searchParams.get("surface") || "dashboard";
+
+  useEffect(() => {
+    if (typeof sessionStorage === "undefined") return;
+    sessionStorage.setItem("auth_surface", surface);
+    const plan = searchParams.get("plan");
+    if (plan) sessionStorage.setItem("auth_plan", plan);
+  }, [surface, searchParams]);
+
   useEffect(() => {
     if (typeof sessionStorage === "undefined") return;
     const raw = sessionStorage.getItem("pendingUrl");
@@ -228,7 +237,8 @@ function AuthPageContent() {
       if (data?.session) {
         setTimeout(() => {
           const next = searchParams.get("next");
-          window.location.replace(next ?? buildScanRedirect());
+          const authSurface = typeof sessionStorage !== "undefined" ? (sessionStorage.getItem("auth_surface") || "dashboard") : "dashboard";
+          window.location.replace(next ?? `/onboarding?surface=${authSurface}`);
         }, 800);
       } else {
         setSignupEmailSent(true);
@@ -278,17 +288,10 @@ function AuthPageContent() {
       <style>{`
         .auth-input::placeholder { color: #6E7587; font-family: "IBM Plex Mono", monospace; font-size: 12px; opacity: 1; }
         @keyframes authPulseDot { 0%,100%{opacity:1} 50%{opacity:0.3} }
-        .circuit-animated { display: block; }
-        .circuit-static   { display: none;  }
-        @media (prefers-reduced-motion: reduce) {
-          .circuit-animated { display: none  !important; }
-          .circuit-static   { display: block !important; }
-        }
         @media (max-width: 767px) {
           .auth-root     { flex-direction: column !important; }
-          .auth-left     { flex: none !important; width: 100% !important; padding: 28px 28px 24px !important; min-height: auto !important; }
-          .auth-left-preview  { display: none !important; }
-          .auth-left-tagline  { display: block !important; }
+          .auth-left     { display: none !important; }
+          .auth-mobile-header { display: flex !important; }
           .auth-right    { padding: 32px 20px !important; }
         }
       `}</style>
@@ -301,14 +304,14 @@ function AuthPageContent() {
         <div
           className="auth-left"
           style={{
-            flex: "0 0 45%",
+            flex: "0 0 42%",
             background: C.base,
             position: "relative",
             overflow: "hidden",
             display: "flex",
             flexDirection: "column",
-            justifyContent: "center",
-            padding: "64px 56px",
+            justifyContent: "space-between",
+            padding: "56px 48px",
           }}
         >
           {/* Atmosphere */}
@@ -337,225 +340,79 @@ function AuthPageContent() {
             <div key={i} aria-hidden style={{ position: "absolute", width: 16, height: 16, pointerEvents: "none", ...s }} />
           ))}
 
-          {/* ── Circuit traces SVG ── */}
-          {/* Animated version — hidden via prefers-reduced-motion */}
-          <svg
-            className="circuit-animated"
-            aria-hidden
-            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", pointerEvents: "none", zIndex: 0, overflow: "hidden" }}
-          >
-            <defs>
-              {/* Trace glow (soft luminance layer) */}
-              <filter id="ctTraceGlow" x="-20%" y="-20%" width="140%" height="140%">
-                <feGaussianBlur stdDeviation="1.5" result="blur"/>
-                <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-              </filter>
-              {/* Dot glow — pure bloom, no hard circle */}
-              <filter id="ctDot1" x="-300%" y="-300%" width="700%" height="700%">
-                <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="blur"/>
-                <feMerge><feMergeNode in="blur"/></feMerge>
-              </filter>
-              <filter id="ctDot2" x="-300%" y="-300%" width="700%" height="700%">
-                <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="blur"/>
-                <feMerge><feMergeNode in="blur"/></feMerge>
-              </filter>
-              <filter id="ctDot3" x="-300%" y="-300%" width="700%" height="700%">
-                <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="blur"/>
-                <feMerge><feMergeNode in="blur"/></feMerge>
-              </filter>
-              <filter id="ctDot4" x="-300%" y="-300%" width="700%" height="700%">
-                <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="blur"/>
-                <feMerge><feMergeNode in="blur"/></feMerge>
-              </filter>
-            </defs>
-
-            {/* ── TRACE 1 — steel blue, opacity 0.35, 8s, begin 0s ── */}
-            {/* Glow layer */}
-            <path id="ct1" d="M 52,104 H 208 V 52 H 364 V 156 H 468 V 260 H 364 V 364"
-              fill="none" stroke="#6F9BC6" strokeWidth="0.75" opacity="0.14"
-              strokeDasharray="884" filter="url(#ctTraceGlow)">
-              <animate attributeName="stroke-dashoffset" values="884;0;0;884" keyTimes="0;0.625;0.875;1" dur="8s" begin="0s" repeatCount="indefinite"/>
-            </path>
-            {/* Base trace */}
-            <path d="M 52,104 H 208 V 52 H 364 V 156 H 468 V 260 H 364 V 364"
-              fill="none" stroke="#6F9BC6" strokeWidth="0.75" opacity="0.35"
-              strokeDasharray="884">
-              <animate attributeName="stroke-dashoffset" values="884;0;0;884" keyTimes="0;0.625;0.875;1" dur="8s" begin="0s" repeatCount="indefinite"/>
-            </path>
-            {/* Terminal dots — square rects at each waypoint */}
-            {([[52,104],[208,104],[208,52],[364,52],[364,156],[468,156],[468,260],[364,260],[364,364]] as [number,number][]).map(([x,y]) => (
-              <rect key={`t1-${x}-${y}`} x={x-1} y={y-1} width={2} height={2} fill="#6F9BC6" opacity="0.6"/>
-            ))}
-            {/* Signal dot */}
-            <circle r="2" fill="#6F9BC6" opacity="0.9" filter="url(#ctDot1)">
-              <animateMotion dur="8s" begin="0s" repeatCount="indefinite"
-                keyTimes="0;0.625;0.875;1" keyPoints="0;1;1;0" calcMode="linear">
-                <mpath href="#ct1"/>
-              </animateMotion>
-            </circle>
-
-            {/* ── TRACE 2 — purple, opacity 0.25, 10s, begin 2s ── */}
-            <path id="ct2" d="M 0,260 H 104 V 364 H 260 V 312 H 416 V 468 H 520 V 416"
-              fill="none" stroke="#9D8CFF" strokeWidth="0.75" opacity="0.10"
-              strokeDasharray="884" filter="url(#ctTraceGlow)">
-              <animate attributeName="stroke-dashoffset" values="884;0;0;884" keyTimes="0;0.625;0.875;1" dur="10s" begin="2s" repeatCount="indefinite"/>
-            </path>
-            <path d="M 0,260 H 104 V 364 H 260 V 312 H 416 V 468 H 520 V 416"
-              fill="none" stroke="#9D8CFF" strokeWidth="0.75" opacity="0.25"
-              strokeDasharray="884">
-              <animate attributeName="stroke-dashoffset" values="884;0;0;884" keyTimes="0;0.625;0.875;1" dur="10s" begin="2s" repeatCount="indefinite"/>
-            </path>
-            {([[0,260],[104,260],[104,364],[260,364],[260,312],[416,312],[416,468],[520,468],[520,416]] as [number,number][]).map(([x,y]) => (
-              <rect key={`t2-${x}-${y}`} x={x-1} y={y-1} width={2} height={2} fill="#9D8CFF" opacity="0.6"/>
-            ))}
-            <circle r="2" fill="#9D8CFF" opacity="0.9" filter="url(#ctDot2)">
-              <animateMotion dur="10s" begin="2s" repeatCount="indefinite"
-                keyTimes="0;0.625;0.875;1" keyPoints="0;1;1;0" calcMode="linear">
-                <mpath href="#ct2"/>
-              </animateMotion>
-            </circle>
-
-            {/* ── TRACE 3 — steel blue, opacity 0.20, 6s, begin 4s ── */}
-            <path id="ct3" d="M 312,0 V 104 H 468 V 208 H 572 V 364 H 520"
-              fill="none" stroke="#6F9BC6" strokeWidth="0.75" opacity="0.08"
-              strokeDasharray="676" filter="url(#ctTraceGlow)">
-              <animate attributeName="stroke-dashoffset" values="676;0;0;676" keyTimes="0;0.625;0.875;1" dur="6s" begin="4s" repeatCount="indefinite"/>
-            </path>
-            <path d="M 312,0 V 104 H 468 V 208 H 572 V 364 H 520"
-              fill="none" stroke="#6F9BC6" strokeWidth="0.75" opacity="0.20"
-              strokeDasharray="676">
-              <animate attributeName="stroke-dashoffset" values="676;0;0;676" keyTimes="0;0.625;0.875;1" dur="6s" begin="4s" repeatCount="indefinite"/>
-            </path>
-            {([[312,0],[312,104],[468,104],[468,208],[572,208],[572,364],[520,364]] as [number,number][]).map(([x,y]) => (
-              <rect key={`t3-${x}-${y}`} x={x-1} y={y-1} width={2} height={2} fill="#6F9BC6" opacity="0.6"/>
-            ))}
-            <circle r="2" fill="#6F9BC6" opacity="0.9" filter="url(#ctDot3)">
-              <animateMotion dur="6s" begin="4s" repeatCount="indefinite"
-                keyTimes="0;0.625;0.875;1" keyPoints="0;1;1;0" calcMode="linear">
-                <mpath href="#ct3"/>
-              </animateMotion>
-            </circle>
-
-            {/* ── TRACE 4 — green, opacity 0.15, 9s, begin 1s ── */}
-            <path id="ct4" d="M 104,520 H 260 V 468 H 364 V 572 H 520 V 468 H 572"
-              fill="none" stroke="#00C48C" strokeWidth="0.75" opacity="0.06"
-              strokeDasharray="728" filter="url(#ctTraceGlow)">
-              <animate attributeName="stroke-dashoffset" values="728;0;0;728" keyTimes="0;0.625;0.875;1" dur="9s" begin="1s" repeatCount="indefinite"/>
-            </path>
-            <path d="M 104,520 H 260 V 468 H 364 V 572 H 520 V 468 H 572"
-              fill="none" stroke="#00C48C" strokeWidth="0.75" opacity="0.15"
-              strokeDasharray="728">
-              <animate attributeName="stroke-dashoffset" values="728;0;0;728" keyTimes="0;0.625;0.875;1" dur="9s" begin="1s" repeatCount="indefinite"/>
-            </path>
-            {([[104,520],[260,520],[260,468],[364,468],[364,572],[520,572],[520,468],[572,468]] as [number,number][]).map(([x,y]) => (
-              <rect key={`t4-${x}-${y}`} x={x-1} y={y-1} width={2} height={2} fill="#00C48C" opacity="0.6"/>
-            ))}
-            <circle r="2" fill="#00C48C" opacity="0.9" filter="url(#ctDot4)">
-              <animateMotion dur="9s" begin="1s" repeatCount="indefinite"
-                keyTimes="0;0.625;0.875;1" keyPoints="0;1;1;0" calcMode="linear">
-                <mpath href="#ct4"/>
-              </animateMotion>
-            </circle>
-          </svg>
-
-          {/* Static version — shown only with prefers-reduced-motion */}
-          <svg
-            className="circuit-static"
-            aria-hidden
-            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", pointerEvents: "none", zIndex: 0, overflow: "hidden" }}
-          >
-            <path d="M 52,104 H 208 V 52 H 364 V 156 H 468 V 260 H 364 V 364" fill="none" stroke="#6F9BC6" strokeWidth="0.75" opacity="0.35"/>
-            <path d="M 0,260 H 104 V 364 H 260 V 312 H 416 V 468 H 520 V 416"  fill="none" stroke="#9D8CFF" strokeWidth="0.75" opacity="0.25"/>
-            <path d="M 312,0 V 104 H 468 V 208 H 572 V 364 H 520"              fill="none" stroke="#6F9BC6" strokeWidth="0.75" opacity="0.20"/>
-            <path d="M 104,520 H 260 V 468 H 364 V 572 H 520 V 468 H 572"      fill="none" stroke="#00C48C" strokeWidth="0.75" opacity="0.15"/>
-          </svg>
-
           {/* Content */}
-          <div style={{ position: "relative", zIndex: 1 }}>
+          <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", height: "100%", gap: 0 }}>
 
-            {/* Wordmark */}
-            <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 48 }}>
-              <WebdocMark size={44} animated={false} />
-              <span style={{ fontFamily: DISP, fontSize: 26, fontWeight: 600, color: "#E6E9EE", letterSpacing: "-0.5px" }}>
-                webdoc<span style={{ color: C.blue }}>.ai</span>
-              </span>
+            {/* TOP — brand identity */}
+            <div style={{ marginBottom: "auto" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 32 }}>
+                <WebdocMark size={48} animated={false} />
+                <span style={{ fontFamily: DISP, fontSize: 24, fontWeight: 600, color: "#E6E9EE", letterSpacing: "-0.5px" }}>
+                  webdoc<span style={{ color: C.blue }}>.ai</span>
+                </span>
+              </div>
+              <p style={{ fontFamily: MONO, fontSize: 10, textTransform: "uppercase", letterSpacing: "0.2em", color: C.labelMuted, margin: 0 }}>
+                CONVERSION INTELLIGENCE
+              </p>
             </div>
 
-            {/* Tagline — mobile only (preview hidden on mobile) */}
-            <p
-              className="auth-left-tagline"
-              style={{ display: "none", fontFamily: MONO, fontSize: 11, color: C.labelMuted, margin: 0, letterSpacing: "0.1em" }}
+            {/* MIDDLE — scan result preview */}
+            <div
+              className="auth-left-preview"
+              style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", paddingTop: 32, paddingBottom: 16 }}
             >
-              CONVERSION INTELLIGENCE · FREE TO START
-            </p>
-
-            {/* Scan result preview panel */}
-            <div className="auth-left-preview">
-              <p style={{ fontFamily: MONO, fontSize: 10, textTransform: "uppercase", letterSpacing: "0.18em", color: C.labelMuted, marginBottom: 16, marginTop: 0 }}>
-                WHAT YOU'RE ABOUT TO UNLOCK
+              <p style={{ fontFamily: MONO, fontSize: 10, textTransform: "uppercase", letterSpacing: "0.18em", color: "rgba(111,155,198,0.5)", marginBottom: 16, marginTop: 0 }}>
+                WHAT YOU&apos;RE ABOUT TO UNLOCK
               </p>
-
               <div style={{
-                background: "rgba(111,155,198,0.03)",
-                border: "0.5px solid rgba(111,155,198,0.15)",
-                padding: 24,
+                background: "rgba(5,8,16,0.8)",
+                border: "0.5px solid rgba(111,155,198,0.18)",
+                padding: 0,
+                overflow: "hidden",
               }}>
-                {/* Top row: ScoreRing + details */}
-                <div style={{ display: "flex", alignItems: "flex-start", gap: 24, marginBottom: 20 }}>
-
-                  {/* Left: score ring */}
+                {/* Panel header */}
+                <div style={{ padding: "10px 16px", borderBottom: "0.5px solid rgba(111,155,198,0.1)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <div aria-hidden style={{ width: 5, height: 5, borderRadius: "50%", background: C.green }} />
+                    <span style={{ fontFamily: MONO, fontSize: 10, color: C.labelMuted }}>scan complete · acme-saas.com</span>
+                  </div>
+                  <span style={{ fontFamily: MONO, fontSize: 10, color: C.green }}>200 OK</span>
+                </div>
+                {/* Panel body */}
+                <div style={{ padding: 20, display: "flex", alignItems: "flex-start", gap: 20 }}>
                   <div style={{ flexShrink: 0, textAlign: "center" }}>
                     <ScoreRing score={61} size="md" animate={false} />
-                    <p style={{ fontFamily: MONO, fontSize: 10, color: C.labelMuted, textAlign: "center", marginTop: 8, marginBottom: 0 }}>
-                      acme-saas.com
-                    </p>
+                    <p style={{ fontFamily: MONO, fontSize: 9, color: C.labelMuted, textAlign: "center", marginTop: 6, marginBottom: 0 }}>acme-saas.com</p>
                   </div>
-
-                  {/* Right: stats */}
-                  <div style={{ flex: 1 }}>
-                    <p style={{ fontFamily: MONO, fontSize: 10, textTransform: "uppercase", color: C.labelMuted, marginBottom: 4, marginTop: 0 }}>
-                      CONVERSION SCORE
-                    </p>
-                    <p style={{ fontFamily: MONO, fontSize: 10, color: C.red, marginBottom: 12, marginTop: 0 }}>
-                      CRITICAL · score &lt; 70
-                    </p>
-
-                    <p style={{ fontFamily: MONO, fontSize: 10, textTransform: "uppercase", color: C.labelMuted, marginBottom: 4, marginTop: 0 }}>
-                      PERCENTILE
-                    </p>
-                    <p style={{ fontFamily: MONO, fontSize: 14, fontWeight: 600, color: C.blue, marginBottom: 12, marginTop: 0 }}>
-                      63rd in B2B SaaS
-                    </p>
-
-                    <p style={{ fontFamily: MONO, fontSize: 10, textTransform: "uppercase", color: C.labelMuted, marginBottom: 4, marginTop: 0 }}>
-                      TOP FINDING
-                    </p>
-                    <p style={{ fontFamily: SANS, fontSize: 13, color: "#9398A8", lineHeight: 1.5, marginBottom: 4, marginTop: 0 }}>
-                      Hero headline is feature-led, not outcome-led
-                    </p>
-                    <p style={{ fontFamily: MONO, fontSize: 11, color: C.green, marginBottom: 0, marginTop: 0 }}>
-                      +12–18% estimated lift
-                    </p>
+                  <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 12 }}>
+                    <div>
+                      <p style={{ fontFamily: MONO, fontSize: 9, textTransform: "uppercase", color: C.labelMuted, marginBottom: 2, marginTop: 0 }}>PERCENTILE</p>
+                      <p style={{ fontFamily: MONO, fontSize: 16, fontWeight: 600, color: C.blue, marginBottom: 0, marginTop: 0 }}>63rd in B2B SaaS</p>
+                    </div>
+                    <div>
+                      <p style={{ fontFamily: MONO, fontSize: 9, textTransform: "uppercase", color: C.labelMuted, marginBottom: 2, marginTop: 0 }}>TOP FINDING</p>
+                      <p style={{ fontFamily: SANS, fontSize: 13, color: "#E6E9EE", lineHeight: 1.4, marginBottom: 3, marginTop: 0 }}>Hero headline is feature-led, not outcome-led</p>
+                      <p style={{ fontFamily: MONO, fontSize: 11, color: C.green, marginTop: 0, marginBottom: 0 }}>+12–18% estimated lift</p>
+                    </div>
+                    <div>
+                      <p style={{ fontFamily: MONO, fontSize: 9, textTransform: "uppercase", color: C.labelMuted, marginBottom: 2, marginTop: 0 }}>FINDINGS</p>
+                      <p style={{ fontFamily: MONO, fontSize: 13, color: C.blue, marginBottom: 0, marginTop: 0 }}>23 ranked · P1→P3</p>
+                    </div>
                   </div>
                 </div>
-
-                {/* Bottom row */}
-                <div style={{
-                  borderTop: "0.5px solid rgba(111,155,198,0.08)",
-                  paddingTop: 16,
-                  display: "flex",
-                  justifyContent: "space-between",
-                }}>
-                  <span style={{ fontFamily: MONO, fontSize: 10, color: C.labelMuted }}>307 checks run</span>
-                  <span style={{ fontFamily: MONO, fontSize: 10, color: C.labelMuted }}>27 categories</span>
-                  <span style={{ fontFamily: MONO, fontSize: 10, color: C.green }}>200 OK · 87,340ms</span>
+                {/* Panel footer */}
+                <div style={{ padding: "10px 16px", borderTop: "0.5px solid rgba(111,155,198,0.08)", display: "flex", justifyContent: "space-between" }}>
+                  <span style={{ fontFamily: MONO, fontSize: 9, color: C.labelMuted }}>307 checks</span>
+                  <span style={{ fontFamily: MONO, fontSize: 9, color: C.labelMuted }}>27 categories</span>
+                  <span style={{ fontFamily: MONO, fontSize: 9, color: C.labelMuted }}>87,340ms</span>
                 </div>
               </div>
-
-              <p style={{ fontFamily: MONO, fontSize: 11, color: C.labelMuted, marginTop: 32, marginBottom: 0 }}>
-                Free to start. No credit card required.
-              </p>
             </div>
+
+            {/* BOTTOM — reassurance */}
+            <p style={{ fontFamily: MONO, fontSize: 11, color: "rgba(111,155,198,0.4)", marginTop: 32, marginBottom: 0 }}>
+              Free to start · no credit card · cancel anytime
+            </p>
 
           </div>
         </div>
@@ -593,6 +450,17 @@ function AuthPageContent() {
 
           {/* Form card */}
           <div style={{ width: "100%", maxWidth: 420, position: "relative", zIndex: 1 }}>
+
+            {/* Mobile-only wordmark header */}
+            <div
+              className="auth-mobile-header"
+              style={{ display: "none", alignItems: "center", gap: 10, marginBottom: 28 }}
+            >
+              <WebdocMark size={36} animated={false} />
+              <span style={{ fontFamily: DISP, fontSize: 20, fontWeight: 600, color: "#E6E9EE" }}>
+                webdoc<span style={{ color: C.blue }}>.ai</span>
+              </span>
+            </div>
 
             {/* Tab toggle */}
             <div style={{ display: "flex", background: C.base, border: "0.5px solid rgba(111,155,198,0.2)", padding: 3, width: "fit-content", marginBottom: 32 }}>

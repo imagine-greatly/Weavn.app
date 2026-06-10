@@ -281,7 +281,7 @@ export default function DevelopersPage() {
 
           {/* Primary + secondary CTAs */}
           <div style={{ display: 'flex', justifyContent: 'center', gap: 12, flexWrap: 'wrap' }}>
-            <Link href="/developer" style={{ ...MONO, fontSize: 13, color: '#9D8CFF', border: '1px solid rgba(157,140,255,0.5)', padding: '12px 28px', textDecoration: 'none', transition: 'all 0.15s', display: 'inline-block' }}>
+            <Link href="/auth?surface=api" style={{ ...MONO, fontSize: 13, color: '#9D8CFF', border: '1px solid rgba(157,140,255,0.5)', padding: '12px 28px', textDecoration: 'none', transition: 'all 0.15s', display: 'inline-block' }}>
               GET API KEY →
             </Link>
             <Link href="/docs/api" style={{ ...MONO, fontSize: 13, color: '#6E7587', border: '0.5px solid rgba(255,255,255,0.1)', padding: '12px 28px', textDecoration: 'none', transition: 'all 0.15s', display: 'inline-block' }}>
@@ -405,7 +405,7 @@ export default function DevelopersPage() {
                 <SpecRow k="rate_limits"    v="5/min" />
               </div>
               <div style={{ padding: '14px 20px 20px' }}>
-                <Link href="/developer" style={{ display: 'block', textAlign: 'center', ...MONO, fontSize: 12, color: '#6F9BC6', border: '1px solid rgba(111,155,198,0.5)', padding: '10px 0', textDecoration: 'none' }}>
+                <Link href="/auth?surface=api" style={{ display: 'block', textAlign: 'center', ...MONO, fontSize: 12, color: '#6F9BC6', border: '1px solid rgba(111,155,198,0.5)', padding: '10px 0', textDecoration: 'none' }}>
                   GET API KEY →
                 </Link>
               </div>
@@ -428,7 +428,7 @@ export default function DevelopersPage() {
                 <SpecRow k="rate_limits"     v="60/min" />
               </div>
               <div style={{ padding: '14px 20px 20px' }}>
-                <Link href="/signup?plan=dev-api" style={{ display: 'block', textAlign: 'center', ...MONO, fontSize: 12, color: '#6F9BC6', border: '1px solid rgba(111,155,198,0.5)', padding: '10px 0', textDecoration: 'none' }}>
+                <Link href="/auth?surface=api&plan=dev" style={{ display: 'block', textAlign: 'center', ...MONO, fontSize: 12, color: '#6F9BC6', border: '1px solid rgba(111,155,198,0.5)', padding: '10px 0', textDecoration: 'none' }}>
                   START DEV →
                 </Link>
               </div>
@@ -451,7 +451,7 @@ export default function DevelopersPage() {
                 <SpecRow k="rate_limits"     v="200/min" />
               </div>
               <div style={{ padding: '14px 20px 20px' }}>
-                <Link href="/signup?plan=builder-api" style={{ display: 'block', textAlign: 'center', ...MONO, fontSize: 12, color: '#6F9BC6', border: '1px solid rgba(111,155,198,0.5)', padding: '10px 0', textDecoration: 'none' }}>
+                <Link href="/auth?surface=api&plan=builder" style={{ display: 'block', textAlign: 'center', ...MONO, fontSize: 12, color: '#6F9BC6', border: '1px solid rgba(111,155,198,0.5)', padding: '10px 0', textDecoration: 'none' }}>
                   START BUILDER →
                 </Link>
               </div>
@@ -474,7 +474,7 @@ export default function DevelopersPage() {
                 <SpecRow k="rate_limits"     v="500/min" />
               </div>
               <div style={{ padding: '14px 20px 20px' }}>
-                <Link href="/signup?plan=scale-api" style={{ display: 'block', textAlign: 'center', ...MONO, fontSize: 12, color: '#00C48C', border: '1px solid rgba(0,196,140,0.5)', padding: '10px 0', textDecoration: 'none' }}>
+                <Link href="/auth?surface=api&plan=scale" style={{ display: 'block', textAlign: 'center', ...MONO, fontSize: 12, color: '#00C48C', border: '1px solid rgba(0,196,140,0.5)', padding: '10px 0', textDecoration: 'none' }}>
                   START SCALE →
                 </Link>
               </div>
@@ -610,7 +610,7 @@ export default function DevelopersPage() {
             <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#9D8CFF', margin: '0 0 8px' }}>Ready to build?</p>
             <p style={{ ...DISP, fontSize: 18, fontWeight: 600, color: '#E6E9EE', lineHeight: 1.3, margin: '0 0 8px' }}>25 free scans. No subscription. Start in minutes.</p>
             <p style={{ ...SANS, fontSize: 13, color: '#6E7587', margin: '0 0 20px' }}>Same engine on every plan. Build against the schema once.</p>
-            <Link href="/developer" style={{ ...MONO, fontSize: 12, color: '#9D8CFF', border: '1px solid rgba(157,140,255,0.5)', padding: '10px 20px', textDecoration: 'none', display: 'inline-block', transition: 'all 0.15s' }}>
+            <Link href="/auth?surface=api" style={{ ...MONO, fontSize: 12, color: '#9D8CFF', border: '1px solid rgba(157,140,255,0.5)', padding: '10px 20px', textDecoration: 'none', display: 'inline-block', transition: 'all 0.15s' }}>
               GET API KEY →
             </Link>
           </div>

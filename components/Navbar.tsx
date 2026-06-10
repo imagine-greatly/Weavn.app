@@ -209,22 +209,32 @@ export default function Navbar() {
 
       {/* Right — Actions */}
       <div className="flex flex-1 flex-shrink-0 items-center justify-end gap-4">
-        {!isLoggedIn ? (
+        {!isLoggedIn && (
           <Link
             href="/auth?tab=signin"
             className="hidden md:flex items-center"
             style={{
-              border: "1px solid rgba(111,155,198,0.35)",
               background: "transparent",
-              color: "#6F9BC6",
+              color: "#8899AA",
               fontFamily: "var(--font-space-mono), monospace",
               fontSize: 11,
               letterSpacing: "0.08em",
               padding: "8px 16px",
               borderRadius: 0,
               textDecoration: "none",
-              transition: "border-color 150ms ease, background-color 150ms ease, box-shadow 150ms ease",
+              transition: "color 150ms ease",
             }}
+            onMouseEnter={(e) => { e.currentTarget.style.color = "#6F9BC6"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.color = "#8899AA"; }}
+          >
+            Sign in
+          </Link>
+        )}
+        <div className="hidden items-center gap-4 md:flex">
+          <a
+            href={isLoggedIn ? "/dashboard" : "/auth?surface=dashboard"}
+            className={`${ctaButtonClass} shrink-0`}
+            style={{ ...ctaOutlineStyle, textDecoration: "none" }}
             onMouseEnter={(e) => {
               e.currentTarget.style.background = "rgba(111,155,198,0.08)";
               e.currentTarget.style.borderColor = "rgba(111,155,198,0.6)";
@@ -234,35 +244,16 @@ export default function Navbar() {
               e.currentTarget.style.background = "transparent";
               e.currentTarget.style.borderColor = "rgba(111,155,198,0.35)";
               e.currentTarget.style.boxShadow = "none";
+              e.currentTarget.style.transitionDuration = "300ms";
             }}
           >
-            Sign in
-          </Link>
-        ) : (
-          <div className="hidden items-center gap-4 md:flex">
-            <a
-              href="/dashboard"
-              className={`${ctaButtonClass} shrink-0`}
-              style={{ ...ctaOutlineStyle, textDecoration: "none" }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = "rgba(111,155,198,0.08)";
-                e.currentTarget.style.borderColor = "rgba(111,155,198,0.6)";
-                e.currentTarget.style.boxShadow = "var(--interactive-glow-active)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = "transparent";
-                e.currentTarget.style.borderColor = "rgba(111,155,198,0.35)";
-                e.currentTarget.style.boxShadow = "none";
-                e.currentTarget.style.transitionDuration = "300ms";
-              }}
-            >
-              DASHBOARD
-              <span className="ml-1 inline-block transition-transform duration-150 group-hover/cta:translate-x-[3px]">
-                →
-              </span>
-            </a>
+            DASHBOARD
+            <span className="ml-1 inline-block transition-transform duration-150 group-hover/cta:translate-x-[3px]">
+              →
+            </span>
+          </a>
 
-            <div id="nav-user-dropdown" style={{ position: "relative" }}>
+            {isLoggedIn && <div id="nav-user-dropdown" style={{ position: "relative" }}>
               <button
                 type="button"
                 onClick={() => setDropdownOpen((v) => !v)}
@@ -388,9 +379,8 @@ export default function Navbar() {
                   </button>
                 </div>
               )}
-            </div>
+            </div>}
           </div>
-        )}
       </div>
     </header>
 
@@ -439,27 +429,24 @@ export default function Navbar() {
             className="mt-4 flex flex-col gap-3 border-t pt-4"
             style={{ borderColor: "var(--border-default)" }}
           >
-            {!isLoggedIn ? (
-              <>
-                <Link
-                  href="/auth?tab=signin"
-                  className="font-mono mobile-min-body-text py-2 transition-colors duration-150"
-                  style={{ color: "var(--text-secondary)", textDecoration: "none" }}
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  Sign in
-                </Link>
-              </>
-            ) : (
-              <a
-                href="/dashboard"
-                className={`${navCtaTypography} flex min-h-[48px] items-center justify-center px-4 py-3`}
-                style={{ ...ctaOutlineStyle, textDecoration: "none", width: "100%" }}
+            {!isLoggedIn && (
+              <Link
+                href="/auth?tab=signin"
+                className="font-mono mobile-min-body-text py-2 transition-colors duration-150"
+                style={{ color: "var(--text-secondary)", textDecoration: "none" }}
                 onClick={() => setMobileMenuOpen(false)}
               >
-                DASHBOARD →
-              </a>
+                Sign in
+              </Link>
             )}
+            <a
+              href={isLoggedIn ? "/dashboard" : "/auth?surface=dashboard"}
+              className={`${navCtaTypography} flex min-h-[48px] items-center justify-center px-4 py-3`}
+              style={{ ...ctaOutlineStyle, textDecoration: "none", width: "100%" }}
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              DASHBOARD →
+            </a>
           </div>
         </nav>
       </div>

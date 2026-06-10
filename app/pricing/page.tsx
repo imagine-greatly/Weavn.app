@@ -74,56 +74,6 @@ const DASH_TIERS = [
   },
 ] as const
 
-const API_TIERS = [
-  {
-    tier:         'DEV',
-    price:        '$29/mo',
-    economy:      '$0.097/scan effective',
-    economyColor: '#6F9BC6',
-    diff:         '300 scans/month. Async mode. Webhooks.',
-    spec:         'async_mode: true · webhooks: true · $0.19/scan overage · 60 req/min',
-    cta:          'START DEV →',
-    href:         '/signup?plan=dev-api',
-    ctaColor:     '#9D8CFF',
-    ctaBorder:    'rgba(157,140,255,0.4)',
-  },
-  {
-    tier:         'BUILDER',
-    price:        '$99/mo',
-    economy:      '$0.099/scan effective',
-    economyColor: '#6F9BC6',
-    diff:         '1,000 scans. Batch endpoint. 10 URLs per request.',
-    spec:         'batch_endpoint: true · async_mode: true · webhooks: true · 200 req/min',
-    cta:          'START BUILDER →',
-    href:         '/signup?plan=builder-api',
-    ctaColor:     '#9D8CFF',
-    ctaBorder:    'rgba(157,140,255,0.4)',
-  },
-  {
-    tier:         'SCALE',
-    price:        '$249/mo',
-    economy:      '$0.083/scan effective',
-    economyColor: '#00C48C',
-    diff:         '3,000 scans. Dedicated rate limits. Priority processing.',
-    spec:         'rate_limits: dedicated · 500 req/min · all batch + async features',
-    cta:          'START SCALE →',
-    href:         '/signup?plan=scale-api',
-    ctaColor:     '#00C48C',
-    ctaBorder:    'rgba(0,196,140,0.4)',
-  },
-  {
-    tier:         'ENTERPRISE',
-    price:        'custom',
-    economy:      'from $0.11/scan · SLA guarantee',
-    economyColor: '#6F9BC6',
-    diff:         'Custom volume. Dedicated infrastructure. SLA.',
-    spec:         'custom rate limits · invoice billing · dedicated support · custom integrations',
-    cta:          'TALK TO US →',
-    href:         'mailto:hello@webdocai.com',
-    ctaColor:     '#9D8CFF',
-    ctaBorder:    'rgba(157,140,255,0.4)',
-  },
-] as const
 
 // ── FAQ data ──────────────────────────────────────────────────────────────────
 
@@ -300,15 +250,11 @@ function Ticks() {
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function PricingPage() {
-  const [surface,   setSurface]   = useState<'dashboard' | 'api'>('dashboard')
   const [billing,   setBilling]   = useState<'monthly' | 'annual'>('monthly')
   const [showTable, setShowTable] = useState(false)
 
   const isAnnual = billing === 'annual'
   const savings  = (m: number) => Math.round(m * 0.2 * 12)
-
-  const isDash = surface === 'dashboard'
-  const isApi  = surface === 'api'
 
   return (
     <main style={{ minHeight: '100vh' }}>
@@ -325,8 +271,6 @@ export default function PricingPage() {
         .tier-row:hover { background: #080D18; }
         .tier-center { padding: 0 48px; }
         @media (max-width: 767px) {
-          .pricing-switcher { flex-direction: column !important; width: 100% !important; }
-          .pricing-switcher button { padding: 14px 24px !important; width: 100% !important; }
           .tier-row { grid-template-columns: 1fr !important; padding: 20px 24px !important; }
           .tier-center { padding: 12px 0 !important; }
           .tier-right { padding-top: 4px; }
@@ -343,322 +287,130 @@ export default function PricingPage() {
 
         <div style={{ position: 'relative', zIndex: 1 }}>
           <p style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.2em', color: '#6F9BC6', margin: '0 0 16px' }}>
-            PRICING
+            DASHBOARD PLANS
           </p>
-          <h1 style={{ ...DISP, fontSize: 'clamp(36px, 5vw, 52px)', fontWeight: 700, color: '#E6E9EE', margin: '0 0 40px', lineHeight: 1.1 }}>
-            Access the engine.
+          <h1 style={{ ...DISP, fontSize: 'clamp(36px, 5vw, 52px)', fontWeight: 700, color: '#E6E9EE', margin: '0 0 16px', lineHeight: 1.1 }}>
+            Scan without writing code.
           </h1>
-
-          {/* Surface switcher */}
-          <div style={{ display: 'flex', justifyContent: 'center', paddingBottom: 0 }}>
-            <div
-              className="pricing-switcher"
-              style={{
-                display: 'inline-flex',
-                background: '#080D18',
-                border: '0.5px solid rgba(255,255,255,0.08)',
-                padding: 4,
-                gap: 0,
-              }}
-            >
-              {/* DASHBOARD button */}
-              <button
-                onClick={() => setSurface('dashboard')}
-                style={{
-                  padding: '16px 48px',
-                  border: 'none',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                  borderRadius: 0,
-                  textAlign: 'center',
-                  background: isDash ? 'rgba(111,155,198,0.1)' : 'transparent',
-                  boxShadow: isDash ? 'inset 0 0 0 0.5px rgba(111,155,198,0.4)' : 'none',
-                }}
-              >
-                <div style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.18em', color: isDash ? '#6F9BC6' : '#6E7587', marginBottom: 4 }}>
-                  DASHBOARD
-                </div>
-                <div style={{ ...SANS, fontSize: 13, color: isDash ? '#9398A8' : '#4d5566' }}>
-                  Results without code
-                </div>
-              </button>
-
-              {/* API button */}
-              <button
-                onClick={() => setSurface('api')}
-                style={{
-                  padding: '16px 48px',
-                  border: 'none',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                  borderRadius: 0,
-                  textAlign: 'center',
-                  background: isApi ? 'rgba(157,140,255,0.1)' : 'transparent',
-                  boxShadow: isApi ? 'inset 0 0 0 0.5px rgba(157,140,255,0.4)' : 'none',
-                }}
-              >
-                <div style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.18em', color: isApi ? '#9D8CFF' : '#6E7587', marginBottom: 4 }}>
-                  API
-                </div>
-                <div style={{ ...SANS, fontSize: 13, color: isApi ? '#9398A8' : '#4d5566' }}>
-                  Build with the data
-                </div>
-              </button>
-            </div>
-          </div>
+          <p style={{ ...SANS, fontSize: 16, color: '#9398A8', margin: '0 0 48px', lineHeight: 1.6 }}>
+            Four tiers. Full 307-check audit on every plan. Cancel anytime.
+          </p>
         </div>
       </section>
 
       {/* ── 2. TIER DISPLAY ─────────────────────────────────────────────────── */}
       <section style={{ padding: '48px', minHeight: 500, position: 'relative' }}>
 
-        {/* Atmosphere — shifts between steel blue (dashboard) and purple (api) */}
         <div aria-hidden style={{
           position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0,
-          transition: 'opacity 0.3s',
-          background: isDash
-            ? 'radial-gradient(ellipse 900px 600px at 50% 30%, rgba(111,155,198,0.05) 0%, transparent 60%)'
-            : 'radial-gradient(ellipse 900px 600px at 50% 30%, rgba(157,140,255,0.05) 0%, transparent 60%)',
+          background: 'radial-gradient(ellipse 900px 600px at 50% 30%, rgba(111,155,198,0.05) 0%, transparent 60%)',
         }} />
 
         <div style={{ position: 'relative', zIndex: 1, maxWidth: 1100, margin: '0 auto' }}>
 
-          {/* ── DASHBOARD SURFACE ── */}
-          {isDash && (
-            <>
-              {/* Billing toggle */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 32, justifyContent: 'center' }}>
-                <span style={{ ...MONO, fontSize: 11, color: '#6E7587' }}>Monthly</span>
-                <button
-                  onClick={() => setBilling(b => b === 'monthly' ? 'annual' : 'monthly')}
-                  aria-label="Toggle billing period"
-                  style={{
-                    width: 40, height: 22,
-                    background: isAnnual ? 'rgba(111,155,198,0.3)' : 'rgba(255,255,255,0.08)',
-                    border: '0.5px solid rgba(111,155,198,0.3)',
-                    cursor: 'pointer',
-                    position: 'relative',
-                    borderRadius: 0,
-                    transition: 'background 0.2s',
-                    padding: 0,
-                    flexShrink: 0,
-                  }}
-                >
-                  <div style={{
-                    position: 'absolute',
-                    top: 3,
-                    left: isAnnual ? 21 : 2,
-                    width: 16,
-                    height: 16,
-                    background: isAnnual ? '#6F9BC6' : 'rgba(255,255,255,0.35)',
-                    transition: 'left 0.2s, background 0.2s',
-                  }} />
-                </button>
-                <span style={{ ...MONO, fontSize: 11, color: '#6E7587' }}>Annual</span>
-                {isAnnual && (
-                  <span style={{ ...MONO, fontSize: 10, color: '#00C48C', background: 'rgba(0,196,140,0.1)', padding: '2px 8px' }}>
-                    SAVE 20%
-                  </span>
-                )}
-              </div>
-
-              {/* Annual savings callout */}
-              {isAnnual && (
-                <p style={{ ...MONO, fontSize: 11, color: '#6E7587', textAlign: 'center', margin: '-16px 0 24px' }}>
-                  <span style={{ color: '#00C48C' }}>save ${savings(49)}/yr on Starter</span>
-                  {' · '}
-                  <span style={{ color: '#00C48C' }}>save ${savings(149)}/yr on Pro</span>
-                  {' · '}
-                  <span style={{ color: '#00C48C' }}>save ${savings(499)}/yr on Scale</span>
-                </p>
-              )}
-
-              {/* Tier rows */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 1, background: 'rgba(111,155,198,0.08)' }}>
-                {DASH_TIERS.map(t => (
-                  <div key={t.tier} className="tier-row">
-                    {/* LEFT — tier name + price */}
-                    <div style={{ minWidth: 0 }}>
-                      <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#6F9BC6', margin: '0 0 4px' }}>
-                        {t.tier}
-                      </p>
-                      <p style={{ ...DISP, fontSize: 36, fontWeight: 700, color: '#E6E9EE', lineHeight: 1, margin: 0 }}>
-                        {t.monthly === 0 ? '$0' : `$${isAnnual ? t.annual : t.monthly}`}
-                        {t.monthly > 0 && (
-                          <span style={{ ...MONO, fontSize: 12, color: '#6E7587', fontWeight: 400, marginLeft: 4 }}>/mo</span>
-                        )}
-                      </p>
-                      <p style={{ ...MONO, fontSize: 10, color: '#6F9BC6', margin: '4px 0 0' }}>
-                        {t.economy}
-                      </p>
-                    </div>
-
-                    {/* CENTER — differentiator + spec */}
-                    <div className="tier-center">
-                      <p style={{ ...SANS, fontSize: 15, fontWeight: 500, color: '#E6E9EE', margin: '0 0 8px' }}>
-                        {t.diff}
-                      </p>
-                      <p style={{ ...MONO, fontSize: 11, color: '#6E7587', margin: 0 }}>
-                        {t.spec}
-                      </p>
-                    </div>
-
-                    {/* RIGHT — CTA */}
-                    <div className="tier-right">
-                      <Link
-                        href={t.href}
-                        style={{
-                          ...MONO,
-                          fontSize: 12,
-                          color: '#6F9BC6',
-                          border: '1px solid rgba(111,155,198,0.4)',
-                          padding: '11px 28px',
-                          textDecoration: 'none',
-                          display: 'inline-block',
-                          background: 'transparent',
-                          whiteSpace: 'nowrap',
-                        }}
-                      >
-                        {t.cta}
-                      </Link>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <p style={{ ...MONO, fontSize: 11, color: '#6E7587', textAlign: 'center', marginTop: 24 }}>
-                All plans include: full 307-check audit · AI-rewritten copy · corpus benchmarking · cache hits free
-              </p>
-            </>
-          )}
-
-          {/* ── API SURFACE ── */}
-          {isApi && (
-            <>
-              {/* Playground hero panel */}
+          {/* Billing toggle */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 32, justifyContent: 'center' }}>
+            <span style={{ ...MONO, fontSize: 11, color: '#6E7587' }}>Monthly</span>
+            <button
+              onClick={() => setBilling(b => b === 'monthly' ? 'annual' : 'monthly')}
+              aria-label="Toggle billing period"
+              style={{
+                width: 40, height: 22,
+                background: isAnnual ? 'rgba(111,155,198,0.3)' : 'rgba(255,255,255,0.08)',
+                border: '0.5px solid rgba(111,155,198,0.3)',
+                cursor: 'pointer',
+                position: 'relative',
+                borderRadius: 0,
+                transition: 'background 0.2s',
+                padding: 0,
+                flexShrink: 0,
+              }}
+            >
               <div style={{
-                background: 'rgba(157,140,255,0.04)',
-                border: '0.5px solid rgba(157,140,255,0.2)',
-                padding: '32px 40px',
-                marginBottom: 24,
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                gap: 32,
-                flexWrap: 'wrap',
-              }}>
-                <div>
-                  <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.18em', color: '#9D8CFF', margin: '0 0 8px' }}>
-                    START HERE
-                  </p>
-                  <p style={{ ...DISP, fontSize: 32, fontWeight: 700, color: '#E6E9EE', margin: '0 0 8px', lineHeight: 1.1 }}>
-                    25 free scans.
-                  </p>
-                  <p style={{ ...SANS, fontSize: 15, color: '#9398A8', margin: 0, maxWidth: 480 }}>
-                    No subscription. No credit card. Full JSON response on every scan. Rate limited to 5 requests/min.
-                  </p>
-                </div>
-                <Link
-                  href="/developer"
-                  style={{
-                    ...MONO,
-                    fontSize: 13,
-                    color: '#9D8CFF',
-                    border: '1px solid rgba(157,140,255,0.5)',
-                    padding: '14px 32px',
-                    background: 'transparent',
-                    borderRadius: 0,
-                    textDecoration: 'none',
-                    whiteSpace: 'nowrap',
-                    flexShrink: 0,
-                  }}
-                >
-                  GET API KEY →
-                </Link>
-              </div>
+                position: 'absolute',
+                top: 3,
+                left: isAnnual ? 21 : 2,
+                width: 16,
+                height: 16,
+                background: isAnnual ? '#6F9BC6' : 'rgba(255,255,255,0.35)',
+                transition: 'left 0.2s, background 0.2s',
+              }} />
+            </button>
+            <span style={{ ...MONO, fontSize: 11, color: '#6E7587' }}>Annual</span>
+            {isAnnual && (
+              <span style={{ ...MONO, fontSize: 10, color: '#00C48C', background: 'rgba(0,196,140,0.1)', padding: '2px 8px' }}>
+                SAVE 20%
+              </span>
+            )}
+          </div>
 
-              {/* Rate context */}
-              <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.18em', color: '#6E7587', marginBottom: 16, textAlign: 'center' }}>
-                PAID PLANS · RATE DECREASES WITH VOLUME
-              </p>
-              <div style={{ maxWidth: 600, margin: '0 auto 32px' }}>
-                <div style={{ position: 'relative', height: 3, background: 'linear-gradient(to right, rgba(111,155,198,0.4), rgba(0,196,140,0.7))' }}>
-                  {[0, 25, 50, 75, 100].map((pct, i) => (
-                    <div
-                      key={i}
-                      style={{
-                        position: 'absolute',
-                        top: -4,
-                        left: pct === 100 ? 'calc(100% - 0.5px)' : `${pct}%`,
-                        width: '0.5px',
-                        height: 11,
-                        background: 'rgba(255,255,255,0.3)',
-                      }}
-                    />
-                  ))}
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6 }}>
-                  {(['PLAYGROUND', 'DEV', 'BUILDER', 'SCALE', 'ENTERPRISE'] as const).map(label => (
-                    <span key={label} style={{ ...MONO, fontSize: 9, color: '#6E7587' }}>{label}</span>
-                  ))}
-                </div>
-              </div>
-
-              {/* API tier rows */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 1, background: 'rgba(157,140,255,0.08)' }}>
-                {API_TIERS.map(t => (
-                  <div key={t.tier} className="tier-row">
-                    {/* LEFT */}
-                    <div style={{ minWidth: 0 }}>
-                      <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#9D8CFF', margin: '0 0 4px' }}>
-                        {t.tier}
-                      </p>
-                      <p style={{ ...DISP, fontSize: 36, fontWeight: 700, color: '#E6E9EE', lineHeight: 1, margin: 0 }}>
-                        {t.price}
-                      </p>
-                      <p style={{ ...MONO, fontSize: 10, color: t.economyColor, margin: '4px 0 0' }}>
-                        {t.economy}
-                      </p>
-                    </div>
-
-                    {/* CENTER */}
-                    <div className="tier-center">
-                      <p style={{ ...SANS, fontSize: 15, fontWeight: 500, color: '#E6E9EE', margin: '0 0 8px' }}>
-                        {t.diff}
-                      </p>
-                      <p style={{ ...MONO, fontSize: 11, color: '#6E7587', margin: 0 }}>
-                        {t.spec}
-                      </p>
-                    </div>
-
-                    {/* RIGHT */}
-                    <div className="tier-right">
-                      <Link
-                        href={t.href}
-                        style={{
-                          ...MONO,
-                          fontSize: 12,
-                          color: t.ctaColor,
-                          border: `1px solid ${t.ctaBorder}`,
-                          padding: '11px 28px',
-                          textDecoration: 'none',
-                          display: 'inline-block',
-                          background: 'transparent',
-                          whiteSpace: 'nowrap',
-                        }}
-                      >
-                        {t.cta}
-                      </Link>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <p style={{ ...MONO, fontSize: 11, color: '#6E7587', textAlign: 'center', marginTop: 24 }}>
-                All API plans include: full JSON schema · cache hits free · async mode · webhook delivery · same 307-check engine
-              </p>
-            </>
+          {/* Annual savings callout */}
+          {isAnnual && (
+            <p style={{ ...MONO, fontSize: 11, color: '#6E7587', textAlign: 'center', margin: '-16px 0 24px' }}>
+              <span style={{ color: '#00C48C' }}>save ${savings(49)}/yr on Starter</span>
+              {' · '}
+              <span style={{ color: '#00C48C' }}>save ${savings(149)}/yr on Pro</span>
+              {' · '}
+              <span style={{ color: '#00C48C' }}>save ${savings(499)}/yr on Scale</span>
+            </p>
           )}
+
+          {/* Tier rows */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 1, background: 'rgba(111,155,198,0.08)' }}>
+            {DASH_TIERS.map(t => (
+              <div key={t.tier} className="tier-row">
+                {/* LEFT — tier name + price */}
+                <div style={{ minWidth: 0 }}>
+                  <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#6F9BC6', margin: '0 0 4px' }}>
+                    {t.tier}
+                  </p>
+                  <p style={{ ...DISP, fontSize: 36, fontWeight: 700, color: '#E6E9EE', lineHeight: 1, margin: 0 }}>
+                    {t.monthly === 0 ? '$0' : `$${isAnnual ? t.annual : t.monthly}`}
+                    {t.monthly > 0 && (
+                      <span style={{ ...MONO, fontSize: 12, color: '#6E7587', fontWeight: 400, marginLeft: 4 }}>/mo</span>
+                    )}
+                  </p>
+                  <p style={{ ...MONO, fontSize: 10, color: '#6F9BC6', margin: '4px 0 0' }}>
+                    {t.economy}
+                  </p>
+                </div>
+
+                {/* CENTER — differentiator + spec */}
+                <div className="tier-center">
+                  <p style={{ ...SANS, fontSize: 15, fontWeight: 500, color: '#E6E9EE', margin: '0 0 8px' }}>
+                    {t.diff}
+                  </p>
+                  <p style={{ ...MONO, fontSize: 11, color: '#6E7587', margin: 0 }}>
+                    {t.spec}
+                  </p>
+                </div>
+
+                {/* RIGHT — CTA */}
+                <div className="tier-right">
+                  <Link
+                    href={t.href}
+                    style={{
+                      ...MONO,
+                      fontSize: 12,
+                      color: '#6F9BC6',
+                      border: '1px solid rgba(111,155,198,0.4)',
+                      padding: '11px 28px',
+                      textDecoration: 'none',
+                      display: 'inline-block',
+                      background: 'transparent',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {t.cta}
+                  </Link>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <p style={{ ...MONO, fontSize: 11, color: '#6E7587', textAlign: 'center', marginTop: 24 }}>
+            All plans include: full 307-check audit · AI-rewritten copy · corpus benchmarking · cache hits free
+          </p>
 
         </div>
       </section>
@@ -792,31 +544,28 @@ export default function PricingPage() {
       <section style={{ position: 'relative', overflow: 'hidden', borderTop: '0.5px solid rgba(111,155,198,0.15)' }}>
         <div aria-hidden style={{
           position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0,
-          background: [
-            'radial-gradient(ellipse 700px 400px at 20% 50%, rgba(157,140,255,0.05) 0%, transparent 60%)',
-            'radial-gradient(ellipse 700px 400px at 80% 50%, rgba(111,155,198,0.05) 0%, transparent 60%)',
-          ].join(', '),
+          background: 'radial-gradient(ellipse 900px 400px at 50% 50%, rgba(111,155,198,0.06) 0%, transparent 60%)',
         }} />
         <Ticks />
 
         <div style={{ position: 'relative', zIndex: 1, display: 'flex' }}>
-          {/* API lane */}
+          {/* Dashboard / scan lane */}
           <div style={{ flex: 1, padding: '48px 40px', textAlign: 'center', borderRight: '0.5px solid rgba(255,255,255,0.06)' }}>
-            <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#6E7587', margin: '0 0 8px' }}>Already building?</p>
-            <p style={{ ...DISP, fontSize: 15, color: '#E6E9EE', fontWeight: 600, margin: '0 0 6px' }}>Raw API access. No dashboard. Same engine.</p>
-            <p style={{ ...MONO, fontSize: 11, color: '#6E7587', margin: '0 0 20px' }}>25 free scans · from $29/mo</p>
-            <Link href="/developers#pricing" style={{ ...MONO, fontSize: 12, color: '#9D8CFF', border: '1px solid rgba(157,140,255,0.5)', padding: '10px 20px', textDecoration: 'none', display: 'inline-block', transition: 'all 0.15s' }}>
-              See API pricing →
-            </Link>
-          </div>
-
-          {/* Scan lane */}
-          <div style={{ flex: 1, padding: '48px 40px', textAlign: 'center' }}>
             <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#6E7587', margin: '0 0 8px' }}>Not sure where to start?</p>
             <p style={{ ...DISP, fontSize: 15, color: '#E6E9EE', fontWeight: 600, margin: '0 0 6px' }}>Try a free scan. No account required.</p>
             <p style={{ ...MONO, fontSize: 11, color: '#6E7587', margin: '0 0 20px' }}>3 free scans · no credit card</p>
             <Link href="/scan" style={{ ...MONO, fontSize: 12, color: '#6F9BC6', border: '1px solid rgba(111,155,198,0.5)', padding: '10px 20px', textDecoration: 'none', display: 'inline-block', transition: 'all 0.15s' }}>
               Scan my site →
+            </Link>
+          </div>
+
+          {/* API callout */}
+          <div style={{ flex: 1, padding: '48px 40px', textAlign: 'center' }}>
+            <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#6E7587', marginBottom: 8, marginTop: 0 }}>BUILDING WITH THE API?</p>
+            <p style={{ ...DISP, fontSize: 18, fontWeight: 700, color: '#E6E9EE', marginBottom: 4, marginTop: 0 }}>API pricing and docs →</p>
+            <p style={{ ...SANS, fontSize: 13, color: '#9398A8', marginBottom: 16, marginTop: 0 }}>Five tiers. Rate decreases with volume. 25 free scans.</p>
+            <Link href="/developers" style={{ ...MONO, fontSize: 12, color: '#9D8CFF', border: '1px solid rgba(157,140,255,0.5)', padding: '10px 20px', textDecoration: 'none', display: 'inline-block', transition: 'all 0.15s' }}>
+              See API pricing →
             </Link>
           </div>
         </div>

@@ -552,12 +552,24 @@ function TwoSurfaceSection() {
         @keyframes surf-ring-purp  { 0%,100%{transform:scale(0.82);opacity:0.45} 50%{transform:scale(1.12);opacity:0.85} }
         @keyframes surf-ring-green { 0%,100%{transform:scale(0.9);opacity:0.4} 50%{transform:scale(1.08);opacity:0.75} }
         @keyframes surf-core-rot   { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
-        @keyframes surf-flow       { from{stroke-dashoffset:420} to{stroke-dashoffset:0} }
+        @keyframes ts-bloom-db {
+          0%   { box-shadow: 0 0 0 1px rgba(111,155,198,0.08), 0 0 28px rgba(111,155,198,0.06); }
+          20%  { box-shadow: 0 0 0 1px rgba(111,155,198,0.3),  0 0 50px rgba(111,155,198,0.2);  }
+          100% { box-shadow: 0 0 0 1px rgba(111,155,198,0.08), 0 0 28px rgba(111,155,198,0.06); }
+        }
+        @keyframes ts-bloom-api {
+          0%   { box-shadow: 0 0 0 1px rgba(157,140,255,0.08), 0 0 28px rgba(157,140,255,0.07); }
+          20%  { box-shadow: 0 0 0 1px rgba(157,140,255,0.3),  0 0 50px rgba(157,140,255,0.2);  }
+          100% { box-shadow: 0 0 0 1px rgba(157,140,255,0.08), 0 0 28px rgba(157,140,255,0.07); }
+        }
+        .ts-card-db  { animation: ts-bloom-db  2s ease-out infinite 2s;   }
+        .ts-card-api { animation: ts-bloom-api 2s ease-out infinite 2.8s; }
         @media (max-width: 639px) { .surf-veins { display: none !important; } }
         @media (prefers-reduced-motion: reduce) {
           .surf-ring     { animation: none !important; opacity: 0.5 !important; }
           .surf-core-spin{ animation: none !important; }
-          .surf-glow     { animation: none !important; opacity: 0 !important; }
+          .surf-bead     { display: none !important; }
+          .ts-card-db, .ts-card-api { animation: none !important; }
         }
       `}</style>
 
@@ -596,7 +608,7 @@ function TwoSurfaceSection() {
           {/* Engine label */}
           <p style={{ ...MONO, fontSize: 9, textTransform: 'uppercase' as const, letterSpacing: '0.2em', color: 'rgba(111,155,198,0.5)', margin: '7px 0 0' }}>SCAN ENGINE</p>
 
-          {/* Two-vein SVG — base paths always visible, animated glow overlays travel along each */}
+          {/* Two-vein SVG — paths provide mpath reference, beads travel along them */}
           <svg
             className="surf-veins"
             viewBox="0 0 900 120"
@@ -607,21 +619,49 @@ function TwoSurfaceSection() {
             style={{ display: 'block', overflow: 'visible' }}
           >
             <defs>
-              <filter id="surf-glow-blue" x="-50%" y="-50%" width="200%" height="200%">
-                <feGaussianBlur stdDeviation="2.5" />
-              </filter>
-              <filter id="surf-glow-purp" x="-50%" y="-50%" width="200%" height="200%">
-                <feGaussianBlur stdDeviation="2.5" />
+              <filter id="ts-bead-glow" x="-300%" y="-300%" width="700%" height="700%">
+                <feGaussianBlur stdDeviation="5" result="blur"/>
+                <feMerge>
+                  <feMergeNode in="blur"/>
+                </feMerge>
               </filter>
             </defs>
 
-            {/* Dashboard vein — left, steel blue */}
-            <path d="M 450,0 C 340,35 180,80 150,120" stroke="rgba(111,155,198,0.3)" strokeWidth="1.5" fill="none" vectorEffect="non-scaling-stroke" />
-            <path className="surf-glow" d="M 450,0 C 340,35 180,80 150,120" stroke="rgba(111,155,198,0.9)" strokeWidth="3" fill="none" vectorEffect="non-scaling-stroke" strokeDasharray="50 420" filter="url(#surf-glow-blue)" style={{ animation: 'surf-flow 2.2s linear infinite' }} />
+            {/* mpath references — invisible */}
+            <path id="ts-path-db"  d="M 450,0 C 340,35 180,80 150,120" stroke="none" fill="none" />
+            <path id="ts-path-api" d="M 450,0 C 560,35 720,80 750,120" stroke="none" fill="none" />
 
-            {/* API vein — right, purple */}
-            <path d="M 450,0 C 560,35 720,80 750,120" stroke="rgba(157,140,255,0.3)" strokeWidth="1.5" fill="none" vectorEffect="non-scaling-stroke" />
-            <path className="surf-glow" d="M 450,0 C 560,35 720,80 750,120" stroke="rgba(157,140,255,0.9)" strokeWidth="3" fill="none" vectorEffect="non-scaling-stroke" strokeDasharray="50 420" filter="url(#surf-glow-purp)" style={{ animation: 'surf-flow 2.2s linear infinite 0.8s' }} />
+            {/* Dashboard bead — primary */}
+            <circle className="surf-bead" r="2" fill="#6F9BC6" filter="url(#ts-bead-glow)">
+              <animateMotion dur="2s" repeatCount="indefinite" begin="0s" keyPoints="0;1" keyTimes="0;1" calcMode="spline" keySplines="0.4 0 0.6 1">
+                <mpath href="#ts-path-db"/>
+              </animateMotion>
+              <animate attributeName="opacity" values="0;0;0.95;0.95;0" keyTimes="0;0.05;0.15;0.85;1" dur="2s" repeatCount="indefinite" begin="0s"/>
+            </circle>
+
+            {/* Dashboard bead — trail */}
+            <circle className="surf-bead" r="2" fill="#6F9BC6" filter="url(#ts-bead-glow)">
+              <animateMotion dur="2s" repeatCount="indefinite" begin="0.15s" keyPoints="0;1" keyTimes="0;1" calcMode="spline" keySplines="0.4 0 0.6 1">
+                <mpath href="#ts-path-db"/>
+              </animateMotion>
+              <animate attributeName="opacity" values="0;0;0.4;0.4;0" keyTimes="0;0.05;0.15;0.85;1" dur="2s" repeatCount="indefinite" begin="0.15s"/>
+            </circle>
+
+            {/* API bead — primary */}
+            <circle className="surf-bead" r="2" fill="#9D8CFF" filter="url(#ts-bead-glow)">
+              <animateMotion dur="2s" repeatCount="indefinite" begin="0.8s" keyPoints="0;1" keyTimes="0;1" calcMode="spline" keySplines="0.4 0 0.6 1">
+                <mpath href="#ts-path-api"/>
+              </animateMotion>
+              <animate attributeName="opacity" values="0;0;0.95;0.95;0" keyTimes="0;0.05;0.15;0.85;1" dur="2s" repeatCount="indefinite" begin="0.8s"/>
+            </circle>
+
+            {/* API bead — trail */}
+            <circle className="surf-bead" r="2" fill="#9D8CFF" filter="url(#ts-bead-glow)">
+              <animateMotion dur="2s" repeatCount="indefinite" begin="0.95s" keyPoints="0;1" keyTimes="0;1" calcMode="spline" keySplines="0.4 0 0.6 1">
+                <mpath href="#ts-path-api"/>
+              </animateMotion>
+              <animate attributeName="opacity" values="0;0;0.4;0.4;0" keyTimes="0;0.05;0.15;0.85;1" dur="2s" repeatCount="indefinite" begin="0.95s"/>
+            </circle>
           </svg>
         </div>
 
@@ -629,7 +669,7 @@ function TwoSurfaceSection() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6" style={{ alignItems: 'stretch' }}>
 
           {/* DASHBOARD — steel blue */}
-          <div className="wd-panel" style={{
+          <div className="wd-panel ts-card-db" style={{
             display: 'flex', flexDirection: 'column',
             borderTop: '1px solid rgba(111,155,198,0.4)',
             borderLeft: '1px solid rgba(111,155,198,0.12)',
@@ -666,7 +706,7 @@ function TwoSurfaceSection() {
           </div>
 
           {/* API — purple */}
-          <div className="wd-panel" style={{
+          <div className="wd-panel ts-card-api" style={{
             display: 'flex', flexDirection: 'column',
             borderTop: '1px solid rgba(157,140,255,0.4)',
             borderLeft: '1px solid rgba(157,140,255,0.12)',

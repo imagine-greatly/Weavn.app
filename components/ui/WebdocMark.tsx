@@ -12,13 +12,13 @@ export default function WebdocMark({ size = 46, animated = false, style, classNa
   const rawId = useId()
   const uid = rawId.replace(/:/g, '_')
   const w = size
-  const h = Math.round(size * 1.35)
+  const h = Math.round(size * 0.925)
 
   return (
     <svg
       width={w}
       height={h}
-      viewBox="0 0 200 270"
+      viewBox="0 60 200 185"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       style={{ display: 'block', flexShrink: 0, ...style }}

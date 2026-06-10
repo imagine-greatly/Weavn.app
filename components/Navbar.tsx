@@ -144,7 +144,7 @@ export default function Navbar() {
         aria-label="WebDoc home"
         style={{ textDecoration: "none", color: "inherit", gap: "10px", cursor: "pointer" }}
       >
-        <WebdocMark size={36} animated={false} />
+        <WebdocMark size={52} animated={false} />
         <span
           style={{
             fontFamily: "var(--font-orbitron), sans-serif",

@@ -39,7 +39,7 @@ export default function SiteFooter() {
       <div className="mx-auto grid max-w-[1100px] gap-12 md:grid-cols-2 lg:grid-cols-3">
         <div>
           <Link href="/" className="inline-flex items-center gap-2" aria-label="WebDoc home" style={{ textDecoration: "none" }}>
-            <WebdocMark size={28} animated={false} />
+            <WebdocMark size={36} animated={false} />
             <span
               style={{
                 fontFamily: "var(--font-jetbrains-mono), var(--font-space-mono), monospace",

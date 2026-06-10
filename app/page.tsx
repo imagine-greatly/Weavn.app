@@ -548,29 +548,7 @@ function TwoSurfaceSection() {
     <section style={{ padding: '96px 0', position: 'relative', overflow: 'hidden', background: '#050810' }}>
 
       <style>{`
-        @keyframes surf-ring-blue  { 0%,100%{transform:scale(0.88);opacity:0.5} 50%{transform:scale(1.18);opacity:0.9} }
-        @keyframes surf-ring-purp  { 0%,100%{transform:scale(0.82);opacity:0.45} 50%{transform:scale(1.12);opacity:0.85} }
-        @keyframes surf-ring-green { 0%,100%{transform:scale(0.9);opacity:0.4} 50%{transform:scale(1.08);opacity:0.75} }
-        @keyframes surf-core-rot   { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
-        @keyframes ts-bloom-db {
-          0%   { box-shadow: 0 0 0 1px rgba(111,155,198,0.08), 0 0 28px rgba(111,155,198,0.06); }
-          20%  { box-shadow: 0 0 0 1px rgba(111,155,198,0.3),  0 0 50px rgba(111,155,198,0.2);  }
-          100% { box-shadow: 0 0 0 1px rgba(111,155,198,0.08), 0 0 28px rgba(111,155,198,0.06); }
-        }
-        @keyframes ts-bloom-api {
-          0%   { box-shadow: 0 0 0 1px rgba(157,140,255,0.08), 0 0 28px rgba(157,140,255,0.07); }
-          20%  { box-shadow: 0 0 0 1px rgba(157,140,255,0.3),  0 0 50px rgba(157,140,255,0.2);  }
-          100% { box-shadow: 0 0 0 1px rgba(157,140,255,0.08), 0 0 28px rgba(157,140,255,0.07); }
-        }
-        .ts-card-db  { animation: ts-bloom-db  2s ease-out infinite 2s;   }
-        .ts-card-api { animation: ts-bloom-api 2s ease-out infinite 2.8s; }
-        @media (max-width: 639px) { .surf-veins { display: none !important; } }
-        @media (prefers-reduced-motion: reduce) {
-          .surf-ring     { animation: none !important; opacity: 0.5 !important; }
-          .surf-core-spin{ animation: none !important; }
-          .surf-bead     { display: none !important; }
-          .ts-card-db, .ts-card-api { animation: none !important; }
-        }
+        @media (max-width: 639px) { .ts-veins { display: none !important; } }
       `}</style>
 
       {/* Ambient blooms */}
@@ -608,60 +586,44 @@ function TwoSurfaceSection() {
           {/* Engine label */}
           <p style={{ ...MONO, fontSize: 9, textTransform: 'uppercase' as const, letterSpacing: '0.2em', color: 'rgba(111,155,198,0.5)', margin: '7px 0 0' }}>SCAN ENGINE</p>
 
-          {/* Two-vein SVG — paths provide mpath reference, beads travel along them */}
+          {/* Static vein paths — one engine, two surfaces */}
           <svg
-            className="surf-veins"
+            className="ts-veins"
             viewBox="0 0 900 120"
             width="100%"
             height="120"
             preserveAspectRatio="xMidYMid meet"
+            overflow="visible"
             aria-hidden
-            style={{ display: 'block', overflow: 'visible' }}
+            style={{ display: 'block' }}
           >
             <defs>
-              <filter id="ts-bead-glow" x="-300%" y="-300%" width="700%" height="700%">
-                <feGaussianBlur stdDeviation="5" result="blur"/>
+              <filter id="vein-glow" x="-50%" y="-100%" width="200%" height="300%">
+                <feGaussianBlur in="SourceGraphic" stdDeviation="2.5" result="blur"/>
                 <feMerge>
                   <feMergeNode in="blur"/>
+                  <feMergeNode in="SourceGraphic"/>
                 </feMerge>
               </filter>
             </defs>
-
-            {/* mpath references — invisible */}
-            <path id="ts-path-db"  d="M 450,0 C 340,35 180,80 150,120" stroke="none" fill="none" />
-            <path id="ts-path-api" d="M 450,0 C 560,35 720,80 750,120" stroke="none" fill="none" />
-
-            {/* Dashboard bead — primary */}
-            <circle className="surf-bead" r="2" fill="#6F9BC6" filter="url(#ts-bead-glow)">
-              <animateMotion dur="2s" repeatCount="indefinite" begin="0s" keyPoints="0;1" keyTimes="0;1" calcMode="spline" keySplines="0.4 0 0.6 1">
-                <mpath href="#ts-path-db"/>
-              </animateMotion>
-              <animate attributeName="opacity" values="0;0;0.95;0.95;0" keyTimes="0;0.05;0.15;0.85;1" dur="2s" repeatCount="indefinite" begin="0s"/>
-            </circle>
-
-            {/* Dashboard bead — trail */}
-            <circle className="surf-bead" r="2" fill="#6F9BC6" filter="url(#ts-bead-glow)">
-              <animateMotion dur="2s" repeatCount="indefinite" begin="0.15s" keyPoints="0;1" keyTimes="0;1" calcMode="spline" keySplines="0.4 0 0.6 1">
-                <mpath href="#ts-path-db"/>
-              </animateMotion>
-              <animate attributeName="opacity" values="0;0;0.4;0.4;0" keyTimes="0;0.05;0.15;0.85;1" dur="2s" repeatCount="indefinite" begin="0.15s"/>
-            </circle>
-
-            {/* API bead — primary */}
-            <circle className="surf-bead" r="2" fill="#9D8CFF" filter="url(#ts-bead-glow)">
-              <animateMotion dur="2s" repeatCount="indefinite" begin="0.8s" keyPoints="0;1" keyTimes="0;1" calcMode="spline" keySplines="0.4 0 0.6 1">
-                <mpath href="#ts-path-api"/>
-              </animateMotion>
-              <animate attributeName="opacity" values="0;0;0.95;0.95;0" keyTimes="0;0.05;0.15;0.85;1" dur="2s" repeatCount="indefinite" begin="0.8s"/>
-            </circle>
-
-            {/* API bead — trail */}
-            <circle className="surf-bead" r="2" fill="#9D8CFF" filter="url(#ts-bead-glow)">
-              <animateMotion dur="2s" repeatCount="indefinite" begin="0.95s" keyPoints="0;1" keyTimes="0;1" calcMode="spline" keySplines="0.4 0 0.6 1">
-                <mpath href="#ts-path-api"/>
-              </animateMotion>
-              <animate attributeName="opacity" values="0;0;0.4;0.4;0" keyTimes="0;0.05;0.15;0.85;1" dur="2s" repeatCount="indefinite" begin="0.95s"/>
-            </circle>
+            <path
+              d="M 450,0 C 442,18 418,42 370,62 C 310,86 220,105 150,116"
+              stroke="#6F9BC6"
+              strokeWidth="0.8"
+              fill="none"
+              opacity="0.55"
+              filter="url(#vein-glow)"
+              vectorEffect="non-scaling-stroke"
+            />
+            <path
+              d="M 450,0 C 458,18 482,42 530,62 C 590,86 680,105 750,116"
+              stroke="#9D8CFF"
+              strokeWidth="0.8"
+              fill="none"
+              opacity="0.55"
+              filter="url(#vein-glow)"
+              vectorEffect="non-scaling-stroke"
+            />
           </svg>
         </div>
 
@@ -669,7 +631,7 @@ function TwoSurfaceSection() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6" style={{ alignItems: 'stretch' }}>
 
           {/* DASHBOARD — steel blue */}
-          <div className="wd-panel ts-card-db" style={{
+          <div className="wd-panel" style={{
             display: 'flex', flexDirection: 'column',
             borderTop: '1px solid rgba(111,155,198,0.4)',
             borderLeft: '1px solid rgba(111,155,198,0.12)',
@@ -706,7 +668,7 @@ function TwoSurfaceSection() {
           </div>
 
           {/* API — purple */}
-          <div className="wd-panel ts-card-api" style={{
+          <div className="wd-panel" style={{
             display: 'flex', flexDirection: 'column',
             borderTop: '1px solid rgba(157,140,255,0.4)',
             borderLeft: '1px solid rgba(157,140,255,0.12)',
@@ -843,10 +805,10 @@ function StatsBand() {
                 <span style={{ ...MONO, fontSize: 9, color: 'rgba(111,155,198,0.35)' }}>SCORE DISTRIBUTION · 4,812 SITES</span>
                 <span style={{ ...MONO, fontSize: 9, color: 'rgba(111,155,198,0.35)' }}>SCORE 100</span>
               </div>
-              <svg viewBox="0 0 800 160" width="100%" height="160" preserveAspectRatio="none" aria-hidden style={{ display: 'block' }}>
+              <svg viewBox="0 -20 800 180" width="100%" height="160" preserveAspectRatio="none" overflow="visible" aria-hidden style={{ display: 'block' }}>
                 <defs>
-                  <filter id="sbGlow" x="-20%" y="-60%" width="140%" height="220%">
-                    <feGaussianBlur stdDeviation="1.2" result="blur"/>
+                  <filter id="sbGlow" x="-20%" y="-80%" width="140%" height="280%">
+                    <feGaussianBlur stdDeviation="2.0" result="blur"/>
                     <feMerge>
                       <feMergeNode in="blur"/>
                       <feMergeNode in="SourceGraphic"/>
@@ -856,14 +818,15 @@ function StatsBand() {
                 <line x1="200" y1="10" x2="200" y2="148" stroke="rgba(111,155,198,0.04)" strokeWidth="0.75" />
                 <line x1="400" y1="10" x2="400" y2="148" stroke="rgba(111,155,198,0.04)" strokeWidth="0.75" />
                 <line x1="600" y1="10" x2="600" y2="148" stroke="rgba(111,155,198,0.04)" strokeWidth="0.75" />
-                <path d="M 0,158 C 40,158 80,155 140,145 C 200,132 260,108 320,82 C 370,60 410,20 464,10 C 510,2 540,8 580,28 C 630,52 680,95 730,128 C 770,150 790,157 800,158" fill="none" stroke="#6F9BC6" strokeWidth="1.0" strokeOpacity="0.7" filter="url(#sbGlow)" />
-                <line x1="464" y1="12" x2="464" y2="148" stroke="rgba(255,255,255,0.1)" strokeWidth="0.75" />
-                <text x="464" y="155" textAnchor="middle" fontFamily="IBM Plex Mono, monospace" fontSize="7" fill="rgba(255,255,255,0.15)">AVG 58</text>
+                <path d="M 0,158 C 40,158 80,155 140,145 C 200,132 260,108 320,82 C 370,60 410,20 464,10 C 510,2 540,8 580,28 C 630,52 680,95 730,128 C 770,150 790,157 800,158" fill="none" stroke="rgba(140,180,220,1.0)" strokeWidth="1.0" filter="url(#sbGlow)" />
+                <line x1="464" y1="12" x2="464" y2="148" stroke="rgba(255,255,255,0.08)" strokeWidth="0.75" />
+                <text x="464" y="155" textAnchor="middle" fontFamily="IBM Plex Mono, monospace" fontSize="7" fill="rgba(255,255,255,0.12)">AVG 58</text>
                 <g className="sb-marker-enter">
-                  <line x1="504" y1="10" x2="504" y2="148" stroke="rgba(111,155,198,0.5)" strokeWidth="0.75" strokeDasharray="3 3" />
-                  <circle cx="504" cy="22" r="2" fill="#6F9BC6" opacity="0.6" />
-                  <text x="504" y="7" textAnchor="middle" fontFamily="IBM Plex Mono, monospace" fontSize="9" fontWeight="400" fill="rgba(111,155,198,0.8)">YOUR SITE</text>
-                  <text x="504" y="158" textAnchor="middle" fontFamily="IBM Plex Mono, monospace" fontSize="9" fontWeight="400" fill="rgba(111,155,198,0.8)">63rd pct</text>
+                  <line x1="520" y1="-12" x2="520" y2="148" stroke="rgba(140,180,220,0.8)" strokeWidth="0.75" strokeDasharray="3 2" />
+                  <circle cx="520" cy="22" r="6" fill="rgba(140,180,220,0.15)" />
+                  <circle cx="520" cy="22" r="3" fill="rgba(140,180,220,1.0)" />
+                  <text x="520" y="-12" textAnchor="middle" fontFamily="IBM Plex Mono, monospace" fontSize="11" fontWeight="600" fill="rgba(140,180,220,0.9)">YOUR SITE</text>
+                  <text x="520" y="158" textAnchor="middle" fontFamily="IBM Plex Mono, monospace" fontSize="11" fontWeight="700" fill="rgba(140,180,220,1.0)">63rd pct</text>
                 </g>
                 <text x="200" y="158" textAnchor="middle" fontFamily="IBM Plex Mono, monospace" fontSize="7" fill="rgba(111,155,198,0.2)">25</text>
                 <text x="400" y="158" textAnchor="middle" fontFamily="IBM Plex Mono, monospace" fontSize="7" fill="rgba(111,155,198,0.2)">50</text>
@@ -909,24 +872,24 @@ const PLANS = [
     href: '/signup?plan=starter',
   },
   {
-    tier: 'AGENCY',
+    tier: 'PRO',
     price: { monthly: '$149', annual: '$119' },
     period: { monthly: '/ month', annual: '/ mo · billed annually' },
-    economy: '$1.49/scan + 100 API calls bundled',
+    economy: '$1.49/scan effective rate',
     economyColor: '#00C48C',
-    features: ['100 scans / month', 'Unlimited client workspaces', 'White-label report links', 'Multi-page scanning (3 pages)', 'PDF export with your logo', '3 team seats', '100 bundled API calls'],
+    features: ['100 scans / month', 'Unlimited client workspaces', 'White-label report links', 'Multi-page scanning (3 pages)', 'PDF export with your logo', '3 team seats'],
     cta: 'START TRIAL →',
-    href: '/signup?plan=agency',
+    href: '/signup?plan=pro',
   },
   {
-    tier: 'ENTERPRISE',
+    tier: 'SCALE',
     price: { monthly: '$499', annual: '$399' },
     period: { monthly: '/ month', annual: '/ mo · billed annually' },
     economy: 'custom rate · dedicated support',
     economyColor: '#6E7587',
-    features: ['500 scans / month', 'Everything in Agency', '10 team seats', 'White-label subdomain', 'Scan scheduling + alerts', 'Slack notifications'],
+    features: ['500 scans / month', 'Everything in Pro', '10 team seats', 'White-label subdomain', 'Scan scheduling + alerts', 'Slack notifications'],
     cta: 'START TRIAL →',
-    href: '/signup?plan=enterprise',
+    href: '/signup?plan=scale',
   },
 ] as const
 
@@ -1031,20 +994,51 @@ function PricingSection() {
         </div>
 
         {/* Full pricing link */}
-        <div style={{ textAlign: 'center', marginBottom: 16 }}>
+        <div style={{ textAlign: 'center', marginBottom: 24 }}>
           <Link href="/pricing" style={{ ...MONO, fontSize: 11, color: '#6F9BC6', textDecoration: 'none', letterSpacing: 1 }}>
             See full pricing &amp; comparison →
           </Link>
         </div>
 
-        {/* API access link */}
-        <div style={{ textAlign: 'center', paddingTop: 8 }}>
-          <Link
-            href="/developers#pricing"
-            style={{ ...MONO, fontSize: 11, letterSpacing: 1.5, textTransform: 'uppercase' as const, color: '#9D8CFF', textDecoration: 'none', borderBottom: '0.5px solid rgba(157,140,255,0.35)', paddingBottom: 2 }}
-          >
-            API access → see developer pricing
-          </Link>
+        {/* API callout band */}
+        <style>{`
+          @media (max-width: 767px) { .pricing-api-band { flex-direction: column !important; align-items: flex-start !important; } }
+        `}</style>
+        <div
+          className="wd-panel pricing-api-band"
+          style={{
+            background: '#0A0E18',
+            padding: '24px 32px',
+            borderTop: '0.5px solid rgba(157,140,255,0.15)',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap' as const,
+            gap: 20,
+          }}
+        >
+          <div>
+            <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase' as const, letterSpacing: '0.18em', color: '#9D8CFF', margin: '0 0 6px' }}>FOR DEVELOPERS</p>
+            <p style={{ ...DISP, fontSize: 18, fontWeight: 700, color: '#E6E9EE', margin: '0 0 4px' }}>Build with the API</p>
+            <p style={{ ...SANS, fontSize: 14, color: '#9398A8', margin: 0 }}>
+              POST a URL, get structured JSON. 307 checks.{' '}
+              <span style={{ ...MONO, fontSize: 12, color: '#9D8CFF' }}>Playground free · paid from $29/mo</span>
+            </p>
+          </div>
+          <div style={{ display: 'flex', gap: 12, flexShrink: 0 }}>
+            <Link
+              href="/pricing"
+              style={{ ...MONO, fontSize: 12, color: '#9D8CFF', border: '1px solid rgba(157,140,255,0.5)', padding: '10px 20px', background: 'transparent', textDecoration: 'none', display: 'inline-block' }}
+            >
+              See API pricing →
+            </Link>
+            <Link
+              href="/developer"
+              style={{ ...MONO, fontSize: 12, color: '#9D8CFF', border: '1px solid rgba(157,140,255,0.5)', padding: '10px 20px', background: 'transparent', textDecoration: 'none', display: 'inline-block' }}
+            >
+              Get API key →
+            </Link>
+          </div>
         </div>
 
       </div>

@@ -145,7 +145,7 @@ function HeroSection() {
   return (
     <section className="scanline-texture min-h-screen pt-[120px] pb-20 px-8 relative overflow-hidden">
 
-      {/* Full-bleed ambient blooms — green behind the JSON panel, purple lower-left */}
+      {/* Ambient blooms */}
       <div
         aria-hidden
         style={{
@@ -153,10 +153,19 @@ function HeroSection() {
           inset: 0,
           pointerEvents: 'none',
           zIndex: 0,
-          background:
-            'radial-gradient(ellipse 1200px 800px at 75% 50%, rgba(111,155,198,0.07) 0%, transparent 60%), radial-gradient(ellipse 800px 600px at 20% 80%, rgba(128,128,192,0.06) 0%, transparent 55%)',
+          background: [
+            'radial-gradient(ellipse 1000px 800px at 50% 30%, rgba(111,155,198,0.05) 0%, transparent 60%)',
+            'radial-gradient(ellipse 600px 400px at 50% 90%, rgba(111,155,198,0.03) 0%, transparent 55%)',
+            'radial-gradient(ellipse 1200px 800px at 75% 50%, rgba(111,155,198,0.07) 0%, transparent 60%)',
+            'radial-gradient(ellipse 800px 600px at 20% 80%, rgba(128,128,192,0.06) 0%, transparent 55%)',
+          ].join(', '),
         }}
       />
+      {/* Corner ticks */}
+      <div aria-hidden style={{ position: 'absolute', top: 20, left: 20, width: 14, height: 14, borderTop: '0.5px solid rgba(111,155,198,0.15)', borderLeft: '0.5px solid rgba(111,155,198,0.15)', pointerEvents: 'none', zIndex: 1 }} />
+      <div aria-hidden style={{ position: 'absolute', top: 20, right: 20, width: 14, height: 14, borderTop: '0.5px solid rgba(111,155,198,0.15)', borderRight: '0.5px solid rgba(111,155,198,0.15)', pointerEvents: 'none', zIndex: 1 }} />
+      <div aria-hidden style={{ position: 'absolute', bottom: 20, left: 20, width: 14, height: 14, borderBottom: '0.5px solid rgba(111,155,198,0.15)', borderLeft: '0.5px solid rgba(111,155,198,0.15)', pointerEvents: 'none', zIndex: 1 }} />
+      <div aria-hidden style={{ position: 'absolute', bottom: 20, right: 20, width: 14, height: 14, borderBottom: '0.5px solid rgba(111,155,198,0.15)', borderRight: '0.5px solid rgba(111,155,198,0.15)', pointerEvents: 'none', zIndex: 1 }} />
 
       <div className="max-w-[1280px] mx-auto flex gap-16 items-start relative z-10">
 
@@ -370,9 +379,9 @@ function HowItWorksSection() {
       <div aria-hidden style={{
         position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0,
         background: [
-          'radial-gradient(ellipse 480px 700px at 16% 70%, rgba(111,155,198,0.06) 0%, transparent 60%)',
+          'radial-gradient(ellipse 480px 700px at 16% 70%, rgba(111,155,198,0.08) 0%, transparent 60%)',
           'radial-gradient(ellipse 480px 700px at 50% 70%, rgba(128,128,192,0.05) 0%, transparent 60%)',
-          'radial-gradient(ellipse 480px 700px at 84% 70%, rgba(0,196,140,0.05) 0%, transparent 60%)',
+          'radial-gradient(ellipse 480px 700px at 84% 70%, rgba(0,196,140,0.06) 0%, transparent 60%)',
         ].join(', '),
       }} />
 
@@ -714,8 +723,8 @@ function TwoSurfaceSection() {
 
 const CORPUS_STATS = [
   { value: '4,800+', label: 'Sites scanned',        color: '#E6E9EE' },
-  { value: '58',     label: 'Average score',         color: '#6F9BC6' },
-  { value: '23',     label: 'Avg findings per site', color: '#6F9BC6' },
+  { value: '58',     label: 'Average score',         color: 'rgba(111,155,198,0.45)' },
+  { value: '23',     label: 'Avg findings per site', color: 'rgba(111,155,198,0.45)' },
   { value: '76%',    label: 'No above-fold proof',   color: '#E8635F' },
 ] as const
 
@@ -785,8 +794,9 @@ function StatsBand() {
         </div>
 
         {/* RIGHT COLUMN — curve + stats */}
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ overflow: 'hidden' }}>
+        <div style={{ flex: 1, minWidth: 0, position: 'relative' }}>
+          <div aria-hidden style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0, background: 'radial-gradient(ellipse 300px 200px at 65% 40%, rgba(111,155,198,0.08) 0%, transparent 60%)' }} />
+          <div style={{ overflow: 'hidden', position: 'relative', zIndex: 1 }}>
 
             {/* Stats row */}
             <div className="sb-stats-row" style={{ display: 'flex' }}>
@@ -805,7 +815,7 @@ function StatsBand() {
                 <span style={{ ...MONO, fontSize: 9, color: 'rgba(111,155,198,0.35)' }}>SCORE DISTRIBUTION · 4,812 SITES</span>
                 <span style={{ ...MONO, fontSize: 9, color: 'rgba(111,155,198,0.35)' }}>SCORE 100</span>
               </div>
-              <svg viewBox="0 -20 800 180" width="100%" height="160" preserveAspectRatio="none" overflow="visible" aria-hidden style={{ display: 'block' }}>
+              <svg viewBox="0 -24 800 220" width="100%" height="220" preserveAspectRatio="none" overflow="visible" aria-hidden style={{ display: 'block' }}>
                 <defs>
                   <filter id="sbGlow" x="-20%" y="-80%" width="140%" height="280%">
                     <feGaussianBlur stdDeviation="2.0" result="blur"/>
@@ -815,22 +825,22 @@ function StatsBand() {
                     </feMerge>
                   </filter>
                 </defs>
-                <line x1="200" y1="10" x2="200" y2="148" stroke="rgba(111,155,198,0.04)" strokeWidth="0.75" />
-                <line x1="400" y1="10" x2="400" y2="148" stroke="rgba(111,155,198,0.04)" strokeWidth="0.75" />
-                <line x1="600" y1="10" x2="600" y2="148" stroke="rgba(111,155,198,0.04)" strokeWidth="0.75" />
-                <path d="M 0,158 C 40,158 80,155 140,145 C 200,132 260,108 320,82 C 370,60 410,20 464,10 C 510,2 540,8 580,28 C 630,52 680,95 730,128 C 770,150 790,157 800,158" fill="none" stroke="rgba(140,180,220,1.0)" strokeWidth="1.0" filter="url(#sbGlow)" />
-                <line x1="464" y1="12" x2="464" y2="148" stroke="rgba(255,255,255,0.08)" strokeWidth="0.75" />
-                <text x="464" y="155" textAnchor="middle" fontFamily="IBM Plex Mono, monospace" fontSize="7" fill="rgba(255,255,255,0.12)">AVG 58</text>
+                <line x1="200" y1="10" x2="200" y2="188" stroke="rgba(111,155,198,0.04)" strokeWidth="0.75" />
+                <line x1="400" y1="10" x2="400" y2="188" stroke="rgba(111,155,198,0.04)" strokeWidth="0.75" />
+                <line x1="600" y1="10" x2="600" y2="188" stroke="rgba(111,155,198,0.04)" strokeWidth="0.75" />
+                <path d="M 0,198 C 40,198 80,194 140,182 C 200,166 260,136 320,104 C 370,76 410,28 464,12 C 510,2 540,10 580,36 C 630,66 680,120 730,162 C 770,188 790,196 800,198" fill="none" stroke="rgba(140,180,220,1.0)" strokeWidth="1.0" filter="url(#sbGlow)" />
+                <line x1="464" y1="12" x2="464" y2="188" stroke="rgba(255,255,255,0.08)" strokeWidth="0.75" />
+                <text x="464" y="198" textAnchor="middle" fontFamily="IBM Plex Mono, monospace" fontSize="7" fill="rgba(255,255,255,0.12)">AVG 58</text>
                 <g className="sb-marker-enter">
-                  <line x1="520" y1="-12" x2="520" y2="148" stroke="rgba(140,180,220,0.8)" strokeWidth="0.75" strokeDasharray="3 2" />
+                  <line x1="520" y1="-12" x2="520" y2="188" stroke="rgba(140,180,220,0.8)" strokeWidth="0.75" strokeDasharray="3 2" />
                   <circle cx="520" cy="22" r="6" fill="rgba(140,180,220,0.15)" />
                   <circle cx="520" cy="22" r="3" fill="rgba(140,180,220,1.0)" />
                   <text x="520" y="-12" textAnchor="middle" fontFamily="IBM Plex Mono, monospace" fontSize="11" fontWeight="600" fill="rgba(140,180,220,0.9)">YOUR SITE</text>
-                  <text x="520" y="158" textAnchor="middle" fontFamily="IBM Plex Mono, monospace" fontSize="11" fontWeight="700" fill="rgba(140,180,220,1.0)">63rd pct</text>
+                  <text x="520" y="202" textAnchor="middle" fontFamily="IBM Plex Mono, monospace" fontSize="11" fontWeight="700" fill="rgba(140,180,220,1.0)">63rd pct</text>
                 </g>
-                <text x="200" y="158" textAnchor="middle" fontFamily="IBM Plex Mono, monospace" fontSize="7" fill="rgba(111,155,198,0.2)">25</text>
-                <text x="400" y="158" textAnchor="middle" fontFamily="IBM Plex Mono, monospace" fontSize="7" fill="rgba(111,155,198,0.2)">50</text>
-                <text x="600" y="158" textAnchor="middle" fontFamily="IBM Plex Mono, monospace" fontSize="7" fill="rgba(111,155,198,0.2)">75</text>
+                <text x="200" y="202" textAnchor="middle" fontFamily="IBM Plex Mono, monospace" fontSize="7" fill="rgba(111,155,198,0.2)">25</text>
+                <text x="400" y="202" textAnchor="middle" fontFamily="IBM Plex Mono, monospace" fontSize="7" fill="rgba(111,155,198,0.2)">50</text>
+                <text x="600" y="202" textAnchor="middle" fontFamily="IBM Plex Mono, monospace" fontSize="7" fill="rgba(111,155,198,0.2)">75</text>
               </svg>
             </div>
 
@@ -897,14 +907,17 @@ function PricingSection() {
   const [billing, setBilling] = useState<'monthly' | 'annual'>('monthly')
 
   return (
-    <section style={{ padding: '96px 0', borderTop: '1px solid rgba(111,155,198,0.1)', position: 'relative' }}>
+    <section style={{ padding: '96px 0', borderTop: '1px solid rgba(111,155,198,0.1)', position: 'relative', overflow: 'hidden' }}>
       {/* ambient bloom */}
-      <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0, background: 'radial-gradient(ellipse 800px 500px at 50% 30%, rgba(111,155,198,0.04) 0%, transparent 70%)' }} />
+      <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0, background: [
+        'radial-gradient(ellipse 1000px 600px at 50% 30%, rgba(111,155,198,0.04) 0%, transparent 60%)',
+        'radial-gradient(ellipse 400px 300px at 85% 80%, rgba(157,140,255,0.03) 0%, transparent 55%)',
+      ].join(', ') }} />
       {/* corner ticks */}
-      <div style={{ position: 'absolute', top: 20, left: 20, width: 14, height: 14, borderTop: '1px solid rgba(111,155,198,0.2)', borderLeft: '1px solid rgba(111,155,198,0.2)', pointerEvents: 'none', zIndex: 0 }} />
-      <div style={{ position: 'absolute', top: 20, right: 20, width: 14, height: 14, borderTop: '1px solid rgba(111,155,198,0.2)', borderRight: '1px solid rgba(111,155,198,0.2)', pointerEvents: 'none', zIndex: 0 }} />
-      <div style={{ position: 'absolute', bottom: 20, left: 20, width: 14, height: 14, borderBottom: '1px solid rgba(111,155,198,0.2)', borderLeft: '1px solid rgba(111,155,198,0.2)', pointerEvents: 'none', zIndex: 0 }} />
-      <div style={{ position: 'absolute', bottom: 20, right: 20, width: 14, height: 14, borderBottom: '1px solid rgba(111,155,198,0.2)', borderRight: '1px solid rgba(111,155,198,0.2)', pointerEvents: 'none', zIndex: 0 }} />
+      <div style={{ position: 'absolute', top: 20, left: 20, width: 14, height: 14, borderTop: '1px solid rgba(111,155,198,0.18)', borderLeft: '1px solid rgba(111,155,198,0.18)', pointerEvents: 'none', zIndex: 0 }} />
+      <div style={{ position: 'absolute', top: 20, right: 20, width: 14, height: 14, borderTop: '1px solid rgba(111,155,198,0.18)', borderRight: '1px solid rgba(111,155,198,0.18)', pointerEvents: 'none', zIndex: 0 }} />
+      <div style={{ position: 'absolute', bottom: 20, left: 20, width: 14, height: 14, borderBottom: '1px solid rgba(111,155,198,0.18)', borderLeft: '1px solid rgba(111,155,198,0.18)', pointerEvents: 'none', zIndex: 0 }} />
+      <div style={{ position: 'absolute', bottom: 20, right: 20, width: 14, height: 14, borderBottom: '1px solid rgba(111,155,198,0.18)', borderRight: '1px solid rgba(111,155,198,0.18)', pointerEvents: 'none', zIndex: 0 }} />
       <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 48px', position: 'relative', zIndex: 1 }}>
 
         <div style={{ ...MONO, fontSize: 11, textTransform: 'uppercase' as const, letterSpacing: '0.2em', color: '#6F9BC6', marginBottom: 16 }}>PLANS</div>
@@ -1068,8 +1081,9 @@ function FinalCtaSection() {
       <div aria-hidden style={{
         position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0,
         background: [
-          'radial-gradient(ellipse 600px 400px at 20% 50%, rgba(111,155,198,0.05) 0%, transparent 60%)',
-          'radial-gradient(ellipse 600px 400px at 80% 50%, rgba(157,140,255,0.05) 0%, transparent 60%)',
+          'radial-gradient(ellipse 1200px 100px at 50% 0%, rgba(111,155,198,0.06) 0%, transparent 80%)',
+          'radial-gradient(ellipse 600px 400px at 20% 50%, rgba(111,155,198,0.08) 0%, transparent 60%)',
+          'radial-gradient(ellipse 600px 400px at 80% 50%, rgba(157,140,255,0.08) 0%, transparent 60%)',
         ].join(', '),
       }} />
       <div aria-hidden style={{ position: 'absolute', top: 20, left: 20, width: 14, height: 14, borderTop: '0.5px solid rgba(111,155,198,0.2)', borderLeft: '0.5px solid rgba(111,155,198,0.2)', pointerEvents: 'none', zIndex: 1 }} />
@@ -1163,14 +1177,14 @@ const OBJECTION_CARDS = [
 
 function FaqCardsSection() {
   return (
-    <section style={{ padding: '96px 0', position: 'relative' }}>
+    <section style={{ padding: '96px 0', position: 'relative', overflow: 'hidden' }}>
       {/* ambient bloom */}
-      <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0, background: 'radial-gradient(ellipse 700px 400px at 50% 40%, rgba(111,155,198,0.05) 0%, transparent 70%)' }} />
+      <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0, background: 'radial-gradient(ellipse 800px 500px at 50% 50%, rgba(111,155,198,0.04) 0%, transparent 65%)' }} />
       {/* corner ticks */}
-      <div style={{ position: 'absolute', top: 20, left: 20, width: 14, height: 14, borderTop: '1px solid rgba(111,155,198,0.2)', borderLeft: '1px solid rgba(111,155,198,0.2)', pointerEvents: 'none', zIndex: 0 }} />
-      <div style={{ position: 'absolute', top: 20, right: 20, width: 14, height: 14, borderTop: '1px solid rgba(111,155,198,0.2)', borderRight: '1px solid rgba(111,155,198,0.2)', pointerEvents: 'none', zIndex: 0 }} />
-      <div style={{ position: 'absolute', bottom: 20, left: 20, width: 14, height: 14, borderBottom: '1px solid rgba(111,155,198,0.2)', borderLeft: '1px solid rgba(111,155,198,0.2)', pointerEvents: 'none', zIndex: 0 }} />
-      <div style={{ position: 'absolute', bottom: 20, right: 20, width: 14, height: 14, borderBottom: '1px solid rgba(111,155,198,0.2)', borderRight: '1px solid rgba(111,155,198,0.2)', pointerEvents: 'none', zIndex: 0 }} />
+      <div style={{ position: 'absolute', top: 20, left: 20, width: 14, height: 14, borderTop: '1px solid rgba(111,155,198,0.18)', borderLeft: '1px solid rgba(111,155,198,0.18)', pointerEvents: 'none', zIndex: 0 }} />
+      <div style={{ position: 'absolute', top: 20, right: 20, width: 14, height: 14, borderTop: '1px solid rgba(111,155,198,0.18)', borderRight: '1px solid rgba(111,155,198,0.18)', pointerEvents: 'none', zIndex: 0 }} />
+      <div style={{ position: 'absolute', bottom: 20, left: 20, width: 14, height: 14, borderBottom: '1px solid rgba(111,155,198,0.18)', borderLeft: '1px solid rgba(111,155,198,0.18)', pointerEvents: 'none', zIndex: 0 }} />
+      <div style={{ position: 'absolute', bottom: 20, right: 20, width: 14, height: 14, borderBottom: '1px solid rgba(111,155,198,0.18)', borderRight: '1px solid rgba(111,155,198,0.18)', pointerEvents: 'none', zIndex: 0 }} />
       <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 48px', position: 'relative', zIndex: 1 }}>
         <div style={{ textAlign: 'center', marginBottom: 48 }}>
           <div style={{ ...MONO, fontSize: 11, textTransform: 'uppercase' as const, letterSpacing: '0.2em', color: '#6F9BC6', marginBottom: 16 }}>OBJECTIONS</div>

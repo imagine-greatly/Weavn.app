@@ -348,7 +348,7 @@ export default function PricingPage() {
 
         <div style={{ position: 'relative', zIndex: 1, maxWidth: 1280, margin: '0 auto', padding: '64px 32px 80px' }}>
           <p style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.18em', color: '#6F9BC6', margin: '0 0 12px' }}>
-            DASHBOARD PLANS · FOR FOUNDERS &amp; AGENCIES
+            DASHBOARD PLANS
           </p>
           <p style={{ ...SANS, fontSize: 15, color: '#9398A8', maxWidth: 560, lineHeight: 1.65, margin: '0 0 32px' }}>
             Diagnose your site or run client audits. Full report interface, score trending, white-label exports.

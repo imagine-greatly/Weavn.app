@@ -1055,176 +1055,59 @@ function PricingSection() {
 // ── Final CTA ─────────────────────────────────────────────────────────────────
 
 function FinalCtaSection() {
-  const [focused, setFocused] = useState(false)
-
   return (
     <section style={{
       position: 'relative',
       overflow: 'hidden',
-      padding: '96px 0',
-      background: '#050810',
-      borderTop: '0.5px solid rgba(111,155,198,0.25)',
+      borderTop: '0.5px solid rgba(111,155,198,0.15)',
+      minHeight: 280,
+      display: 'flex',
+      alignItems: 'center',
     }}>
       <style>{`
-        @keyframes scan-pulse {
-          0%, 100% { box-shadow: 0 0 0 0 rgba(111,155,198,0.3); }
-          50%       { box-shadow: 0 0 0 8px rgba(111,155,198,0); }
+        @media (max-width: 767px) {
+          .final-cta-segments { flex-direction: column !important; }
+          .final-cta-left { border-right: none !important; border-bottom: 0.5px solid rgba(255,255,255,0.06) !important; }
         }
-        .scan-btn-pulse { animation: scan-pulse 2.5s ease-in-out infinite; }
-        @media (prefers-reduced-motion: reduce) { .scan-btn-pulse { animation: none; } }
       `}</style>
 
-      {/* Ambient blooms — steel blue, lower-center primary / upper-center echo */}
       <div aria-hidden style={{
         position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0,
         background: [
-          'radial-gradient(ellipse 1100px 600px at 50% 95%, rgba(111,155,198,0.07) 0%, transparent 65%)',
-          'radial-gradient(ellipse 700px 350px at 50% 5%,  rgba(111,155,198,0.03) 0%, transparent 60%)',
+          'radial-gradient(ellipse 600px 400px at 20% 50%, rgba(111,155,198,0.05) 0%, transparent 60%)',
+          'radial-gradient(ellipse 600px 400px at 80% 50%, rgba(157,140,255,0.05) 0%, transparent 60%)',
         ].join(', '),
       }} />
+      <div aria-hidden style={{ position: 'absolute', top: 20, left: 20, width: 14, height: 14, borderTop: '0.5px solid rgba(111,155,198,0.2)', borderLeft: '0.5px solid rgba(111,155,198,0.2)', pointerEvents: 'none', zIndex: 1 }} />
+      <div aria-hidden style={{ position: 'absolute', top: 20, right: 20, width: 14, height: 14, borderTop: '0.5px solid rgba(111,155,198,0.2)', borderRight: '0.5px solid rgba(111,155,198,0.2)', pointerEvents: 'none', zIndex: 1 }} />
+      <div aria-hidden style={{ position: 'absolute', bottom: 20, left: 20, width: 14, height: 14, borderBottom: '0.5px solid rgba(111,155,198,0.2)', borderLeft: '0.5px solid rgba(111,155,198,0.2)', pointerEvents: 'none', zIndex: 1 }} />
+      <div aria-hidden style={{ position: 'absolute', bottom: 20, right: 20, width: 14, height: 14, borderBottom: '0.5px solid rgba(111,155,198,0.2)', borderRight: '0.5px solid rgba(111,155,198,0.2)', pointerEvents: 'none', zIndex: 1 }} />
 
-      {/* Corner ticks — instrument framing */}
-      <div aria-hidden style={{ position: 'absolute', top: 20, left: 20, width: 14, height: 14, borderTop: '0.5px solid rgba(111,155,198,0.25)', borderLeft: '0.5px solid rgba(111,155,198,0.25)', pointerEvents: 'none', zIndex: 1 }} />
-      <div aria-hidden style={{ position: 'absolute', top: 20, right: 20, width: 14, height: 14, borderTop: '0.5px solid rgba(111,155,198,0.25)', borderRight: '0.5px solid rgba(111,155,198,0.25)', pointerEvents: 'none', zIndex: 1 }} />
-      <div aria-hidden style={{ position: 'absolute', bottom: 20, left: 20, width: 14, height: 14, borderBottom: '0.5px solid rgba(111,155,198,0.25)', borderLeft: '0.5px solid rgba(111,155,198,0.25)', pointerEvents: 'none', zIndex: 1 }} />
-      <div aria-hidden style={{ position: 'absolute', bottom: 20, right: 20, width: 14, height: 14, borderBottom: '0.5px solid rgba(111,155,198,0.25)', borderRight: '0.5px solid rgba(111,155,198,0.25)', pointerEvents: 'none', zIndex: 1 }} />
+      <div style={{ position: 'relative', zIndex: 1, display: 'flex', width: '100%' }} className="final-cta-segments">
 
-      <div style={{ position: 'relative', zIndex: 1, maxWidth: 720, margin: '0 auto', padding: '0 48px', textAlign: 'center' }}>
-
-        {/* Wordmark — closing signature/seal */}
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, margin: '0 0 12px' }}>
-          <WebdocMark size={40} animated={false} />
-          <p style={{ ...DISP, fontWeight: 700, fontSize: 20, letterSpacing: '-0.02em', color: '#E6E9EE', margin: 0, lineHeight: 1 }}>
-            webdoc<span style={{ color: '#6F9BC6' }}>.ai</span>
-          </p>
-        </div>
-        <div aria-hidden style={{ height: '0.5px', background: 'linear-gradient(to right, transparent, rgba(111,155,198,0.3), transparent)', maxWidth: 240, margin: '0 auto 44px' }} />
-
-        {/* Kicker */}
-        <p style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, color: '#6F9BC6', margin: '0 0 16px' }}>
-          RUN A DIAGNOSTIC
-        </p>
-
-        {/* Headline */}
-        <h2 style={{ ...DISP, fontWeight: 700, fontSize: 40, lineHeight: 1.1, color: '#E6E9EE', margin: '0 0 14px', letterSpacing: '-0.5px' }}>
-          307 checks. Your score<br />in 90 seconds.
-        </h2>
-
-        {/* Subcopy — instrument voice, mono */}
-        <p style={{ ...MONO, fontSize: 12, color: '#6E7587', lineHeight: 2, margin: '0 0 36px' }}>
-          Ranked findings · estimated lift · AI-rewritten copy.<br />
-          Benchmarked against 4,800+ sites in your vertical.
-        </p>
-
-        {/* API status bar — terminal motif, echoes hero status pill */}
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 12,
-          ...MONO,
-          fontSize: 12,
-          background: 'rgba(255,255,255,0.02)',
-          border: '0.5px solid rgba(255,255,255,0.08)',
-          padding: '8px 14px',
-          marginBottom: 10,
-          flexWrap: 'wrap',
-          textAlign: 'left',
-        }}>
-          <span className="status-dot" style={{ width: 7, height: 7, borderRadius: '50%', background: '#00C48C', flexShrink: 0 }} />
-          <span style={{ color: '#9398A8' }}>api.webdocai.com</span>
-          <span style={{ color: '#6E7587' }}>·</span>
-          <span style={{ color: '#6F9BC6' }}>POST /v1/scan</span>
-          <span style={{ color: '#6E7587' }}>·</span>
-          <span style={{ color: '#6F9BC6' }}>→ 200 OK</span>
+        {/* LEFT — Dashboard */}
+        <div className="final-cta-left" style={{ flex: 1, padding: '64px 56px', borderRight: '0.5px solid rgba(255,255,255,0.06)' }}>
+          <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#6E7587', margin: '0 0 12px' }}>RESULTS WITHOUT CODE</p>
+          <h2 style={{ ...DISP, fontSize: 24, fontWeight: 700, color: '#E6E9EE', lineHeight: 1.3, margin: '0 0 8px' }}>
+            Scan your site. Track your score. Send client reports.
+          </h2>
+          <p style={{ ...SANS, fontSize: 14, color: '#9398A8', margin: '0 0 28px' }}>No API key required. Free to start.</p>
+          <Link href="/scan" style={{ ...MONO, fontSize: 12, color: '#6F9BC6', border: '1px solid rgba(111,155,198,0.5)', padding: '11px 24px', background: 'transparent', textDecoration: 'none', display: 'inline-block' }}>
+            Open dashboard →
+          </Link>
         </div>
 
-        {/* Field label — terminal voice */}
-        <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: 1.5, color: '#6E7587', textAlign: 'left', margin: '0 0 5px' }}>
-          POST /api/v1/scan
-        </p>
-
-        {/* Scan input — https:// prefix, hero terminal motif, graduated focus glow */}
-        <div style={{
-          display: 'flex',
-          background: '#0A0E18',
-          borderTop: `1px solid ${focused ? 'rgba(111,155,198,0.6)' : 'rgba(255,255,255,0.1)'}`,
-          borderLeft: `1px solid ${focused ? 'rgba(111,155,198,0.3)' : 'rgba(255,255,255,0.07)'}`,
-          borderRight: `1px solid ${focused ? 'rgba(111,155,198,0.2)' : 'rgba(255,255,255,0.04)'}`,
-          borderBottom: `1px solid ${focused ? 'rgba(111,155,198,0.15)' : 'rgba(255,255,255,0.03)'}`,
-          boxShadow: focused ? 'var(--interactive-glow-active)' : 'none',
-          transition: 'border-color 0.15s, box-shadow 0.15s',
-          marginBottom: 8,
-          textAlign: 'left',
-        }}>
-          <span style={{ ...MONO, fontSize: 12, color: '#6E7587', padding: '0 12px', display: 'flex', alignItems: 'center', flexShrink: 0, borderRight: '0.5px solid rgba(255,255,255,0.08)' }}>
-            https://
-          </span>
-          <input
-            type="text"
-            placeholder="your-site.com"
-            style={{ flex: 1, background: 'transparent', ...MONO, fontSize: 14, color: '#E6E9EE', padding: '13px 14px', border: 'none', outline: 'none' }}
-            readOnly
-            onFocus={() => setFocused(true)}
-            onBlur={() => setFocused(false)}
-            onClick={() => { window.location.href = '/scan' }}
-          />
+        {/* RIGHT — API */}
+        <div style={{ flex: 1, padding: '64px 56px' }}>
+          <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#6E7587', margin: '0 0 12px' }}>BUILD WITH THE DATA</p>
+          <h2 style={{ ...DISP, fontSize: 24, fontWeight: 700, color: '#E6E9EE', lineHeight: 1.3, margin: '0 0 8px' }}>
+            POST a URL. Get structured JSON. Same engine underneath.
+          </h2>
+          <p style={{ ...SANS, fontSize: 14, color: '#9398A8', margin: '0 0 28px' }}>25 free scans. No subscription required.</p>
+          <Link href="/developer" style={{ ...MONO, fontSize: 12, color: '#9D8CFF', border: '1px solid rgba(157,140,255,0.5)', padding: '11px 24px', background: 'transparent', textDecoration: 'none', display: 'inline-block' }}>
+            Get API key →
+          </Link>
         </div>
-
-        {/* SCAN button — steel blue interactive, zero border-radius, mono label */}
-        <Link
-          href="/scan"
-          className="scan-btn-pulse"
-          style={{
-            display: 'block',
-            ...MONO,
-            fontSize: 13,
-            fontWeight: 600,
-            letterSpacing: 1.5,
-            textTransform: 'uppercase',
-            background: 'transparent',
-            border: '1px solid rgba(111,155,198,0.5)',
-            color: '#6F9BC6',
-            padding: '14px 0',
-            textDecoration: 'none',
-            textAlign: 'center',
-            marginBottom: 12,
-          }}
-        >
-          SCAN MY SITE →
-        </Link>
-
-        {/* Example response — mini terminal output panel */}
-        <div style={{
-          background: '#0A0E18',
-          borderTop: '1px solid rgba(111,155,198,0.18)',
-          borderLeft: '1px solid rgba(255,255,255,0.06)',
-          borderRight: '1px solid rgba(255,255,255,0.04)',
-          borderBottom: '1px solid rgba(255,255,255,0.03)',
-          padding: '12px 16px',
-          marginBottom: 20,
-          textAlign: 'left',
-        }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-            <span style={{ ...MONO, fontSize: 10, color: '#6E7587', textTransform: 'uppercase', letterSpacing: 1.5 }}>EXAMPLE RESPONSE</span>
-            <span style={{ ...MONO, fontSize: 11, color: '#00C48C' }}>200 OK · 87,340ms</span>
-          </div>
-          <div style={{ height: '0.5px', background: 'rgba(255,255,255,0.05)', marginBottom: 10 }} />
-          <div style={{ ...MONO, fontSize: 11 }}>
-            <span style={{ color: '#8080c0' }}>score: </span>
-            <span style={{ color: '#6F9BC6' }}>61</span>
-            <span style={{ color: '#6E7587' }}>{'  ·  '}</span>
-            <span style={{ color: '#8080c0' }}>findings: </span>
-            <span style={{ color: '#6F9BC6' }}>23</span>
-            <span style={{ color: '#6E7587' }}>{'  ·  '}</span>
-            <span style={{ color: '#8080c0' }}>cost_usd: </span>
-            <span style={{ color: '#9398A8' }}>0.15</span>
-          </div>
-        </div>
-
-        {/* Trust line */}
-        <p style={{ ...MONO, fontSize: 11, color: '#6E7587', margin: 0, textTransform: 'uppercase', letterSpacing: 1 }}>
-          307 CHECKS · ~90 SECONDS · NO ACCOUNT REQUIRED
-        </p>
 
       </div>
     </section>

@@ -189,9 +189,10 @@ const DISP: React.CSSProperties = { fontFamily: '"Space Grotesk", sans-serif' }
 // ── Sub-components ────────────────────────────────────────────────────────────
 
 function SpecRow({ k, v }: { k: string; v: string }) {
-  const isTrue  = v === 'true'
-  const isFalse = v === 'false'
-  const vColor  = isTrue ? '#00C48C' : isFalse ? '#6E7587' : '#E6E9EE'
+  const isTrue    = v === 'true'
+  const isFalse   = v === 'false'
+  const isSpecial = v === 'dedicated' || v === 'custom'
+  const vColor    = isTrue ? '#00C48C' : isFalse ? '#6E7587' : isSpecial ? '#9D8CFF' : '#E6E9EE'
   return (
     <div style={{ display: 'flex', alignItems: 'baseline', ...MONO, fontSize: 11, marginBottom: 5 }}>
       <span style={{ color: '#8080c0', flexShrink: 0 }}>{k}</span>
@@ -235,14 +236,14 @@ export default function DevelopersPage() {
         <div aria-hidden style={{
           position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0,
           background: [
-            'radial-gradient(ellipse 1000px 700px at 50% 35%, rgba(0,196,140,0.07) 0%, transparent 60%)',
-            'radial-gradient(ellipse 500px 300px at 50% 0%, rgba(0,196,140,0.04) 0%, transparent 55%)',
+            'radial-gradient(ellipse 1000px 700px at 50% 35%, rgba(157,140,255,0.07) 0%, transparent 60%)',
+            'radial-gradient(ellipse 500px 300px at 50% 0%, rgba(157,140,255,0.04) 0%, transparent 55%)',
           ].join(', '),
         }} />
         <Ticks />
 
         <div style={{ position: 'relative', zIndex: 1, maxWidth: 896, margin: '0 auto' }}>
-          <p style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.2em', color: '#00C48C', margin: '0 0 20px' }}>
+          <p style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.2em', color: '#9D8CFF', margin: '0 0 20px' }}>
             API
           </p>
           <h1 style={{ ...DISP, fontSize: 'clamp(36px, 5vw, 56px)', fontWeight: 700, letterSpacing: '-1.5px', color: '#E6E9EE', margin: '0 0 16px', lineHeight: 1.1 }}>
@@ -256,14 +257,14 @@ export default function DevelopersPage() {
           {/* Curl block */}
           <div style={{
             maxWidth: 672, margin: '0 auto 24px',
-            borderTop: '1px solid rgba(0,196,140,0.35)',
-            borderLeft: '1px solid rgba(0,196,140,0.15)',
-            borderRight: '1px solid rgba(0,196,140,0.08)',
-            borderBottom: '1px solid rgba(0,196,140,0.05)',
-            boxShadow: '0 0 0 1px rgba(0,196,140,0.15), 0 0 40px rgba(0,196,140,0.08)',
+            borderTop: '1px solid rgba(157,140,255,0.35)',
+            borderLeft: '1px solid rgba(157,140,255,0.15)',
+            borderRight: '1px solid rgba(157,140,255,0.08)',
+            borderBottom: '1px solid rgba(157,140,255,0.05)',
+            boxShadow: '0 0 0 1px rgba(157,140,255,0.15), 0 0 40px rgba(157,140,255,0.08)',
             position: 'relative', overflow: 'hidden',
           }}>
-            <div aria-hidden style={{ position: 'absolute', inset: 0, background: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,196,140,0.015) 2px, rgba(0,196,140,0.015) 4px)', pointerEvents: 'none', zIndex: 0 }} />
+            <div aria-hidden style={{ position: 'absolute', inset: 0, background: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(157,140,255,0.015) 2px, rgba(157,140,255,0.015) 4px)', pointerEvents: 'none', zIndex: 0 }} />
             <div style={{ position: 'relative', zIndex: 1 }}>
               <CodeBlock code={CURL_CODE} language="bash" />
             </div>
@@ -272,7 +273,7 @@ export default function DevelopersPage() {
           {/* Stat pills */}
           <div style={{ display: 'flex', justifyContent: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 32 }}>
             {['307 checks', '~90s median', 'cache hits free'].map(label => (
-              <span key={label} style={{ background: 'rgba(0,196,140,0.06)', border: '0.5px solid rgba(0,196,140,0.2)', padding: '5px 12px', ...MONO, fontSize: 11, color: '#00C48C', letterSpacing: '0.05em' }}>
+              <span key={label} style={{ background: 'rgba(157,140,255,0.06)', border: '0.5px solid rgba(157,140,255,0.2)', padding: '5px 12px', ...MONO, fontSize: 11, color: '#9D8CFF', letterSpacing: '0.05em' }}>
                 {label}
               </span>
             ))}
@@ -280,7 +281,7 @@ export default function DevelopersPage() {
 
           {/* Primary + secondary CTAs */}
           <div style={{ display: 'flex', justifyContent: 'center', gap: 12, flexWrap: 'wrap' }}>
-            <Link href="/developer" style={{ ...MONO, fontSize: 13, color: '#6F9BC6', border: '1px solid rgba(111,155,198,0.5)', padding: '12px 28px', textDecoration: 'none', transition: 'all 0.15s', display: 'inline-block' }}>
+            <Link href="/developer" style={{ ...MONO, fontSize: 13, color: '#9D8CFF', border: '1px solid rgba(157,140,255,0.5)', padding: '12px 28px', textDecoration: 'none', transition: 'all 0.15s', display: 'inline-block' }}>
               GET API KEY →
             </Link>
             <Link href="/docs/api" style={{ ...MONO, fontSize: 13, color: '#6E7587', border: '0.5px solid rgba(255,255,255,0.1)', padding: '12px 28px', textDecoration: 'none', transition: 'all 0.15s', display: 'inline-block' }}>
@@ -292,15 +293,15 @@ export default function DevelopersPage() {
       <div className="section-separator" />
 
       {/* ── 2. RESPONSE SCHEMA ─────────────────────────────────────────────── */}
-      <section style={{ position: 'relative', overflow: 'hidden', borderTop: '0.5px solid rgba(0,196,140,0.2)' }}>
+      <section style={{ position: 'relative', overflow: 'hidden', borderTop: '0.5px solid rgba(157,140,255,0.2)' }}>
         <div aria-hidden style={{
           position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0,
-          background: 'radial-gradient(ellipse 1000px 700px at 50% 50%, rgba(0,196,140,0.05) 0%, transparent 60%)',
+          background: 'radial-gradient(ellipse 1000px 700px at 50% 50%, rgba(157,140,255,0.05) 0%, transparent 60%)',
         }} />
         <Ticks />
 
         <div style={{ position: 'relative', zIndex: 1, maxWidth: 896, margin: '0 auto', padding: '64px 32px 72px' }}>
-          <p style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.2em', color: '#00C48C', margin: '0 0 16px' }}>
+          <p style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.2em', color: '#9D8CFF', margin: '0 0 16px' }}>
             RESPONSE SCHEMA
           </p>
           <h2 style={{ ...DISP, fontSize: 'clamp(28px, 4vw, 44px)', fontWeight: 700, letterSpacing: '-1px', color: '#E6E9EE', margin: '0 0 40px', lineHeight: 1.15 }}>
@@ -309,11 +310,11 @@ export default function DevelopersPage() {
 
           {/* JSON panel with streaming animation */}
           <div style={{
-            borderTop: '1px solid rgba(0,196,140,0.4)',
-            borderLeft: '1px solid rgba(0,196,140,0.2)',
+            borderTop: '1px solid rgba(157,140,255,0.4)',
+            borderLeft: '1px solid rgba(157,140,255,0.2)',
             borderRight: '1px solid rgba(255,255,255,0.06)',
             borderBottom: '1px solid rgba(255,255,255,0.04)',
-            boxShadow: '0 0 0 1px rgba(0,196,140,0.12), 0 0 50px rgba(0,196,140,0.08)',
+            boxShadow: '0 0 0 1px rgba(157,140,255,0.12), 0 0 50px rgba(157,140,255,0.08)',
             background: '#080D18',
             overflow: 'hidden',
           }}>
@@ -381,89 +382,142 @@ export default function DevelopersPage() {
             API PLANS · RATE DECREASES WITH VOLUME
           </p>
 
-          {/* Rate context strip */}
-          <p style={{ ...MONO, fontSize: 12, color: '#6E7587', margin: '0 0 24px', lineHeight: 2.2 }}>
-            <span>PLAYGROUND · $0.25/scan → </span>
-            <span style={{ color: '#6F9BC6' }}>DEV · $29/mo → </span>
-            <span style={{ color: '#6F9BC6' }}>BUILDER · $99/mo → </span>
-            <span style={{ color: '#00C48C' }}>SCALE · $249/mo → </span>
-            <span style={{ color: '#9D8CFF' }}>ENTERPRISE · volume</span>
-          </p>
+          {/* Five plan cards */}
+          <style>{`
+            @media (max-width: 767px) { .dev-plans-grid { grid-template-columns: 1fr !important; } }
+          `}</style>
+          <div className="dev-plans-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 16 }}>
 
-          {/* Comparison table */}
-          <div className="wd-panel" style={{ overflowX: 'auto' }}>
-            <style>{`
-              .dev-tbl { width: 100%; border-collapse: collapse; font-family: 'IBM Plex Mono', monospace; }
-              .dev-tbl th { font-size: 10px; text-transform: uppercase; letter-spacing: 0.15em; color: #6E7587; padding: 12px 14px; text-align: center; border-bottom: 0.5px solid rgba(255,255,255,0.08); font-weight: 400; white-space: nowrap; }
-              .dev-tbl th:first-child { text-align: left; }
-              .dev-tbl td { font-size: 12px; padding: 10px 14px; text-align: center; border-bottom: 0.5px solid rgba(255,255,255,0.04); white-space: nowrap; }
-              .dev-tbl td:first-child { text-align: left; color: #9398A8; font-size: 11px; position: sticky; left: 0; background: #0A0E18; z-index: 2; }
-              .dev-tbl tr:last-child td { border-bottom: none; }
-              .dev-tbl tfoot td { border-top: 0.5px solid rgba(111,155,198,0.2); padding: 12px 14px; }
-            `}</style>
-            <table className="dev-tbl">
-              <thead>
-                <tr>
-                  <th></th>
-                  <th>PLAYGROUND</th>
-                  <th>DEV</th>
-                  <th>BUILDER</th>
-                  <th>SCALE</th>
-                  <th>ENTERPRISE</th>
-                </tr>
-                <tr>
-                  <td>pricing</td>
-                  <td><span style={{ color: '#6E7587' }}>25 free</span></td>
-                  <td><span style={{ color: '#6F9BC6' }}>$29/mo</span></td>
-                  <td><span style={{ color: '#6F9BC6' }}>$99/mo</span></td>
-                  <td><span style={{ color: '#00C48C' }}>$249/mo</span></td>
-                  <td><span style={{ color: '#9D8CFF' }}>custom</span></td>
-                </tr>
-              </thead>
-              <tbody>
-                {TABLE_ROWS.map((row, i) => (
-                  <tr key={i}>
-                    <td>{row.feature}</td>
-                    {row.values.map((v, j) => (
-                      <td key={j}><span style={{ color: cellColor(v) }}>{v}</span></td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-              <tfoot>
-                <tr>
-                  <td />
-                  {([
-                    { href: '/developer',               label: 'GET KEY' },
-                    { href: '/signup?plan=dev-api',     label: 'START DEV' },
-                    { href: '/signup?plan=builder-api', label: 'START BUILDER' },
-                    { href: '/signup?plan=scale-api',   label: 'START SCALE' },
-                    { href: 'mailto:hello@webdocai.com', label: 'TALK TO US' },
-                  ] as { href: string; label: string }[]).map(cta => (
-                    <td key={cta.href}>
-                      <Link href={cta.href} style={{ ...MONO, fontSize: 11, color: '#6F9BC6', textDecoration: 'none' }}>
-                        {cta.label} →
-                      </Link>
-                    </td>
-                  ))}
-                </tr>
-              </tfoot>
-            </table>
+            {/* PLAYGROUND */}
+            <div className="wd-panel" style={{ display: 'flex', flexDirection: 'column' }}>
+              <div style={{ padding: '20px 20px 14px', borderBottom: '0.5px solid rgba(255,255,255,0.06)' }}>
+                <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.18em', color: '#6F9BC6', margin: '0 0 6px' }}>PLAYGROUND</p>
+                <p style={{ ...MONO, fontSize: 10, color: '#6E7587', margin: '0 0 14px' }}>25 free scans · no subscription</p>
+                <p style={{ ...DISP, fontSize: 40, fontWeight: 700, color: '#E6E9EE', lineHeight: 1, margin: '0 0 4px' }}>25 free</p>
+                <p style={{ ...MONO, fontSize: 10, color: '#6F9BC6', margin: 0 }}>then $0.25/scan</p>
+              </div>
+              <div style={{ padding: '14px 20px', borderBottom: '0.5px solid rgba(255,255,255,0.06)', flexGrow: 1 }}>
+                <SpecRow k="trial_scans"    v="25 free" />
+                <SpecRow k="overage_rate"   v="$0.25/scan" />
+                <SpecRow k="async_mode"     v="false" />
+                <SpecRow k="batch_endpoint" v="false" />
+                <SpecRow k="webhooks"       v="false" />
+                <SpecRow k="rate_limits"    v="5/min" />
+              </div>
+              <div style={{ padding: '14px 20px 20px' }}>
+                <Link href="/developer" style={{ display: 'block', textAlign: 'center', ...MONO, fontSize: 12, color: '#6F9BC6', border: '1px solid rgba(111,155,198,0.5)', padding: '10px 0', textDecoration: 'none' }}>
+                  GET API KEY →
+                </Link>
+              </div>
+            </div>
+
+            {/* DEV */}
+            <div className="wd-panel" style={{ display: 'flex', flexDirection: 'column' }}>
+              <div style={{ padding: '20px 20px 14px', borderBottom: '0.5px solid rgba(255,255,255,0.06)' }}>
+                <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.18em', color: '#6F9BC6', margin: '0 0 6px' }}>DEV</p>
+                <p style={{ ...MONO, fontSize: 10, color: '#6E7587', margin: '0 0 14px' }}>300 scans/mo · async + webhooks</p>
+                <p style={{ ...DISP, fontSize: 40, fontWeight: 700, color: '#E6E9EE', lineHeight: 1, margin: '0 0 4px' }}>$29</p>
+                <p style={{ ...MONO, fontSize: 10, color: '#6F9BC6', margin: 0 }}>/mo · $0.097/scan effective</p>
+              </div>
+              <div style={{ padding: '14px 20px', borderBottom: '0.5px solid rgba(255,255,255,0.06)', flexGrow: 1 }}>
+                <SpecRow k="scans_per_month" v="300" />
+                <SpecRow k="overage_rate"    v="$0.19/scan" />
+                <SpecRow k="async_mode"      v="true" />
+                <SpecRow k="batch_endpoint"  v="false" />
+                <SpecRow k="webhooks"        v="true" />
+                <SpecRow k="rate_limits"     v="60/min" />
+              </div>
+              <div style={{ padding: '14px 20px 20px' }}>
+                <Link href="/signup?plan=dev-api" style={{ display: 'block', textAlign: 'center', ...MONO, fontSize: 12, color: '#6F9BC6', border: '1px solid rgba(111,155,198,0.5)', padding: '10px 0', textDecoration: 'none' }}>
+                  START DEV →
+                </Link>
+              </div>
+            </div>
+
+            {/* BUILDER */}
+            <div className="wd-panel" style={{ display: 'flex', flexDirection: 'column' }}>
+              <div style={{ padding: '20px 20px 14px', borderBottom: '0.5px solid rgba(255,255,255,0.06)' }}>
+                <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.18em', color: '#6F9BC6', margin: '0 0 6px' }}>BUILDER</p>
+                <p style={{ ...MONO, fontSize: 10, color: '#6E7587', margin: '0 0 14px' }}>1,000 scans/mo · batch endpoint</p>
+                <p style={{ ...DISP, fontSize: 40, fontWeight: 700, color: '#E6E9EE', lineHeight: 1, margin: '0 0 4px' }}>$99</p>
+                <p style={{ ...MONO, fontSize: 10, color: '#6F9BC6', margin: 0 }}>/mo · $0.099/scan effective</p>
+              </div>
+              <div style={{ padding: '14px 20px', borderBottom: '0.5px solid rgba(255,255,255,0.06)', flexGrow: 1 }}>
+                <SpecRow k="scans_per_month" v="1,000" />
+                <SpecRow k="overage_rate"    v="$0.17/scan" />
+                <SpecRow k="async_mode"      v="true" />
+                <SpecRow k="batch_endpoint"  v="true" />
+                <SpecRow k="webhooks"        v="true" />
+                <SpecRow k="rate_limits"     v="200/min" />
+              </div>
+              <div style={{ padding: '14px 20px 20px' }}>
+                <Link href="/signup?plan=builder-api" style={{ display: 'block', textAlign: 'center', ...MONO, fontSize: 12, color: '#6F9BC6', border: '1px solid rgba(111,155,198,0.5)', padding: '10px 0', textDecoration: 'none' }}>
+                  START BUILDER →
+                </Link>
+              </div>
+            </div>
+
+            {/* SCALE */}
+            <div className="wd-panel" style={{ display: 'flex', flexDirection: 'column' }}>
+              <div style={{ padding: '20px 20px 14px', borderBottom: '0.5px solid rgba(255,255,255,0.06)' }}>
+                <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.18em', color: '#00C48C', margin: '0 0 6px' }}>SCALE</p>
+                <p style={{ ...MONO, fontSize: 10, color: '#6E7587', margin: '0 0 14px' }}>3,000 scans/mo · dedicated limits</p>
+                <p style={{ ...DISP, fontSize: 40, fontWeight: 700, color: '#E6E9EE', lineHeight: 1, margin: '0 0 4px' }}>$249</p>
+                <p style={{ ...MONO, fontSize: 10, color: '#00C48C', margin: 0 }}>/mo · $0.083/scan effective</p>
+              </div>
+              <div style={{ padding: '14px 20px', borderBottom: '0.5px solid rgba(255,255,255,0.06)', flexGrow: 1 }}>
+                <SpecRow k="scans_per_month" v="3,000" />
+                <SpecRow k="overage_rate"    v="$0.15/scan" />
+                <SpecRow k="async_mode"      v="true" />
+                <SpecRow k="batch_endpoint"  v="true" />
+                <SpecRow k="webhooks"        v="true" />
+                <SpecRow k="rate_limits"     v="500/min" />
+              </div>
+              <div style={{ padding: '14px 20px 20px' }}>
+                <Link href="/signup?plan=scale-api" style={{ display: 'block', textAlign: 'center', ...MONO, fontSize: 12, color: '#00C48C', border: '1px solid rgba(0,196,140,0.5)', padding: '10px 0', textDecoration: 'none' }}>
+                  START SCALE →
+                </Link>
+              </div>
+            </div>
+
+            {/* ENTERPRISE */}
+            <div className="wd-panel" style={{ display: 'flex', flexDirection: 'column' }}>
+              <div style={{ padding: '20px 20px 14px', borderBottom: '0.5px solid rgba(255,255,255,0.06)' }}>
+                <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.18em', color: '#9D8CFF', margin: '0 0 6px' }}>ENTERPRISE</p>
+                <p style={{ ...MONO, fontSize: 10, color: '#6E7587', margin: '0 0 14px' }}>custom volume · SLA guarantee</p>
+                <p style={{ ...DISP, fontSize: 40, fontWeight: 700, color: '#E6E9EE', lineHeight: 1, margin: '0 0 4px' }}>Custom</p>
+                <p style={{ ...MONO, fontSize: 10, color: '#6E7587', margin: 0 }}>from $0.11/scan · dedicated infra</p>
+              </div>
+              <div style={{ padding: '14px 20px', borderBottom: '0.5px solid rgba(255,255,255,0.06)', flexGrow: 1 }}>
+                <SpecRow k="scans_per_month" v="custom" />
+                <SpecRow k="overage_rate"    v="from $0.11/scan" />
+                <SpecRow k="async_mode"      v="true" />
+                <SpecRow k="batch_endpoint"  v="true" />
+                <SpecRow k="webhooks"        v="true" />
+                <SpecRow k="rate_limits"     v="dedicated" />
+              </div>
+              <div style={{ padding: '14px 20px 20px' }}>
+                <Link href="mailto:hello@webdocai.com" style={{ display: 'block', textAlign: 'center', ...MONO, fontSize: 12, color: '#6F9BC6', border: '1px solid rgba(111,155,198,0.5)', padding: '10px 0', textDecoration: 'none' }}>
+                  TALK TO US →
+                </Link>
+              </div>
+            </div>
+
           </div>
         </div>
       </section>
       <div className="section-separator" />
 
       {/* ── 4. INCLUDED ON ALL PLANS ────────────────────────────────────────── */}
-      <section style={{ position: 'relative', overflow: 'hidden', background: '#080D18', borderTop: '0.5px solid rgba(0,196,140,0.15)', borderBottom: '0.5px solid rgba(255,255,255,0.05)' }}>
+      <section style={{ position: 'relative', overflow: 'hidden', background: '#080D18', borderTop: '0.5px solid rgba(157,140,255,0.15)', borderBottom: '0.5px solid rgba(255,255,255,0.05)' }}>
         <div aria-hidden style={{
           position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0,
-          background: 'radial-gradient(ellipse 900px 600px at 50% 50%, rgba(0,196,140,0.04) 0%, transparent 60%)',
+          background: 'radial-gradient(ellipse 900px 600px at 50% 50%, rgba(157,140,255,0.04) 0%, transparent 60%)',
         }} />
         <Ticks />
 
         <div style={{ position: 'relative', zIndex: 1, maxWidth: 1280, margin: '0 auto', padding: '64px 32px' }}>
-          <p style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.2em', color: '#00C48C', textAlign: 'center', margin: '0 0 32px' }}>
+          <p style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.2em', color: '#9D8CFF', textAlign: 'center', margin: '0 0 32px' }}>
             INCLUDED ON ALL PLANS
           </p>
 
@@ -473,15 +527,15 @@ export default function DevelopersPage() {
                 key={fact.name}
                 style={{
                   background: '#0A0E18',
-                  borderTop: '1px solid rgba(0,196,140,0.35)',
-                  borderLeft: '1px solid rgba(0,196,140,0.1)',
+                  borderTop: '1px solid rgba(157,140,255,0.35)',
+                  borderLeft: '1px solid rgba(157,140,255,0.1)',
                   borderRight: '1px solid rgba(255,255,255,0.04)',
                   borderBottom: '1px solid rgba(255,255,255,0.03)',
                   padding: '20px 22px',
                   display: 'flex', flexDirection: 'column', gap: 8,
                 }}
               >
-                <p style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#00C48C', margin: 0 }}>
+                <p style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#9D8CFF', margin: 0 }}>
                   {fact.name}
                 </p>
                 <p style={{ ...DISP, fontSize: 17, fontWeight: 600, color: '#E6E9EE', margin: 0 }}>
@@ -530,12 +584,12 @@ export default function DevelopersPage() {
       <div className="section-separator" />
 
       {/* ── 6. EXIT BAND ────────────────────────────────────────────────────── */}
-      <section style={{ position: 'relative', overflow: 'hidden', borderTop: '0.5px solid rgba(0,196,140,0.2)' }}>
+      <section style={{ position: 'relative', overflow: 'hidden', borderTop: '0.5px solid rgba(157,140,255,0.2)' }}>
         <div aria-hidden style={{
           position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0,
           background: [
             'radial-gradient(ellipse 600px 400px at 25% 50%, rgba(111,155,198,0.04) 0%, transparent 60%)',
-            'radial-gradient(ellipse 600px 400px at 75% 50%, rgba(0,196,140,0.05) 0%, transparent 60%)',
+            'radial-gradient(ellipse 600px 400px at 75% 50%, rgba(157,140,255,0.05) 0%, transparent 60%)',
           ].join(', '),
         }} />
         <Ticks />
@@ -553,10 +607,10 @@ export default function DevelopersPage() {
 
           {/* GET API KEY — primary */}
           <div style={{ flex: 1, padding: '48px 40px' }}>
-            <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#00C48C', margin: '0 0 8px' }}>Ready to build?</p>
+            <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#9D8CFF', margin: '0 0 8px' }}>Ready to build?</p>
             <p style={{ ...DISP, fontSize: 18, fontWeight: 600, color: '#E6E9EE', lineHeight: 1.3, margin: '0 0 8px' }}>25 free scans. No subscription. Start in minutes.</p>
             <p style={{ ...SANS, fontSize: 13, color: '#6E7587', margin: '0 0 20px' }}>Same engine on every plan. Build against the schema once.</p>
-            <Link href="/developer" style={{ ...MONO, fontSize: 12, color: '#00C48C', border: '1px solid rgba(0,196,140,0.5)', padding: '10px 20px', textDecoration: 'none', display: 'inline-block', transition: 'all 0.15s' }}>
+            <Link href="/developer" style={{ ...MONO, fontSize: 12, color: '#9D8CFF', border: '1px solid rgba(157,140,255,0.5)', padding: '10px 20px', textDecoration: 'none', display: 'inline-block', transition: 'all 0.15s' }}>
               GET API KEY →
             </Link>
           </div>

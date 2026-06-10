@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import Link from 'next/link'
 import { CodeBlock } from '@/components/ui/CodeBlock'
@@ -393,16 +393,16 @@ export default function ProductPage() {
       </section>
       <div className="section-separator" />
 
-      {/* ── 4. One response object — two-column JSON + annotations ───────────── */}
+      {/* ── 4. One response object — four stat panels + schema preview ───────── */}
       <section style={{ position: 'relative', overflow: 'hidden', padding: '80px 0', borderTop: '0.5px solid rgba(111,155,198,0.1)' }}>
         <div aria-hidden style={{
           position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0,
           background: 'radial-gradient(ellipse 900px 600px at 50% 50%, rgba(111,155,198,0.06) 0%, transparent 60%)',
         }} />
-        <div aria-hidden style={{ position: 'absolute', top: 20, left: 20, width: 14, height: 14, borderTop: '0.5px solid rgba(111,155,198,0.25)', borderLeft: '0.5px solid rgba(111,155,198,0.25)', pointerEvents: 'none', zIndex: 1 }} />
-        <div aria-hidden style={{ position: 'absolute', top: 20, right: 20, width: 14, height: 14, borderTop: '0.5px solid rgba(111,155,198,0.25)', borderRight: '0.5px solid rgba(111,155,198,0.25)', pointerEvents: 'none', zIndex: 1 }} />
-        <div aria-hidden style={{ position: 'absolute', bottom: 20, left: 20, width: 14, height: 14, borderBottom: '0.5px solid rgba(111,155,198,0.25)', borderLeft: '0.5px solid rgba(111,155,198,0.25)', pointerEvents: 'none', zIndex: 1 }} />
-        <div aria-hidden style={{ position: 'absolute', bottom: 20, right: 20, width: 14, height: 14, borderBottom: '0.5px solid rgba(111,155,198,0.25)', borderRight: '0.5px solid rgba(111,155,198,0.25)', pointerEvents: 'none', zIndex: 1 }} />
+        <div aria-hidden style={{ position: 'absolute', top: 20, left: 20, width: 14, height: 14, borderTop: '0.5px solid rgba(111,155,198,0.2)', borderLeft: '0.5px solid rgba(111,155,198,0.2)', pointerEvents: 'none', zIndex: 1 }} />
+        <div aria-hidden style={{ position: 'absolute', top: 20, right: 20, width: 14, height: 14, borderTop: '0.5px solid rgba(111,155,198,0.2)', borderRight: '0.5px solid rgba(111,155,198,0.2)', pointerEvents: 'none', zIndex: 1 }} />
+        <div aria-hidden style={{ position: 'absolute', bottom: 20, left: 20, width: 14, height: 14, borderBottom: '0.5px solid rgba(111,155,198,0.2)', borderLeft: '0.5px solid rgba(111,155,198,0.2)', pointerEvents: 'none', zIndex: 1 }} />
+        <div aria-hidden style={{ position: 'absolute', bottom: 20, right: 20, width: 14, height: 14, borderBottom: '0.5px solid rgba(111,155,198,0.2)', borderRight: '0.5px solid rgba(111,155,198,0.2)', pointerEvents: 'none', zIndex: 1 }} />
 
         <div style={{ position: 'relative', zIndex: 1, maxWidth: 1200, margin: '0 auto', padding: '0 48px' }}>
           <p style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.2em', color: '#6F9BC6', margin: '0 0 16px' }}>
@@ -413,334 +413,180 @@ export default function ProductPage() {
           </h2>
           <div aria-hidden style={{ height: '1px', background: 'linear-gradient(to right, transparent, rgba(111,155,198,0.3), transparent)', margin: '0 0 48px' }} />
 
-          <div style={{ display: 'flex', gap: 48 }} className="prod-schema-cols">
-            <style>{`
-              @media (max-width: 767px) { .prod-schema-cols { flex-direction: column !important; } }
-            `}</style>
+          {/* 2×2 stat grid */}
+          <style>{`
+            @media (max-width: 767px) { .prod-stat-grid { grid-template-columns: 1fr !important; } }
+          `}</style>
+          <div className="prod-stat-grid" style={{
+            display: 'grid',
+            gridTemplateColumns: '1fr 1fr',
+            gap: '1px',
+            background: 'rgba(111,155,198,0.1)',
+            marginBottom: 48,
+          }}>
 
-            {/* LEFT — JSON panel */}
-            <div style={{ flex: '0 0 55%', minWidth: 0 }}>
-              <div style={{
-                background: '#0A0E18',
-                borderTop: '1px solid rgba(157,140,255,0.35)',
-                borderLeft: '1px solid rgba(157,140,255,0.12)',
-                borderRight: '1px solid rgba(255,255,255,0.05)',
-                borderBottom: '1px solid rgba(255,255,255,0.04)',
-                overflow: 'hidden',
-              }}>
-                <div style={{ padding: '10px 16px', borderBottom: '0.5px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span style={{ width: 5, height: 5, background: '#00C48C', display: 'inline-block', flexShrink: 0 }} />
-                  <span style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, color: '#6E7587' }}>response · application/json · 200 OK</span>
-                  <span style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, color: '#00C48C', marginLeft: 'auto' }}>200 OK</span>
-                </div>
-                <div style={{ padding: '16px 20px', fontFamily: '"IBM Plex Mono", monospace', fontSize: 12, lineHeight: 1.85 }}>
-                  <div><span style={{ color: '#6E7587' }}>{'{'}</span></div>
-                  <div style={{ paddingLeft: 16 }}><span style={{ color: '#8080c0' }}>&quot;scan_id&quot;</span><span style={{ color: '#6E7587' }}>: </span><span style={{ color: '#00C48C' }}>&quot;sc_a8d3f2c1...&quot;</span><span style={{ color: '#6E7587' }}>,</span></div>
-                  <div style={{ paddingLeft: 16 }}><span style={{ color: '#8080c0' }}>&quot;url&quot;</span><span style={{ color: '#6E7587' }}>: </span><span style={{ color: '#00C48C' }}>&quot;https://your-site.com&quot;</span><span style={{ color: '#6E7587' }}>,</span></div>
-                  <div style={{ paddingLeft: 16 }}><span style={{ color: '#8080c0' }}>&quot;score&quot;</span><span style={{ color: '#6E7587' }}>: </span><span style={{ color: '#E8635F' }}>61</span><span style={{ color: '#6E7587' }}>,</span></div>
-                  <div style={{ paddingLeft: 16 }}><span style={{ color: '#8080c0' }}>&quot;severity&quot;</span><span style={{ color: '#6E7587' }}>: </span><span style={{ color: '#E8635F' }}>&quot;critical&quot;</span><span style={{ color: '#6E7587' }}>,</span></div>
-                  <div style={{ paddingLeft: 16 }}><span style={{ color: '#8080c0' }}>&quot;site_type&quot;</span><span style={{ color: '#6E7587' }}>: </span><span style={{ color: '#00C48C' }}>&quot;B2B SaaS&quot;</span><span style={{ color: '#6E7587' }}>,</span></div>
-                  <div style={{ paddingLeft: 16 }}><span style={{ color: '#8080c0' }}>&quot;percentile&quot;</span><span style={{ color: '#6E7587' }}>: </span><span style={{ color: '#6F9BC6' }}>63</span><span style={{ color: '#6E7587' }}>,</span></div>
-                  <div style={{ paddingLeft: 16 }}><span style={{ color: '#8080c0' }}>&quot;benchmark_data&quot;</span><span style={{ color: '#6E7587' }}>: {'{'}</span></div>
-                  <div style={{ paddingLeft: 32 }}><span style={{ color: '#8080c0' }}>&quot;corpus_size&quot;</span><span style={{ color: '#6E7587' }}>: </span><span style={{ color: '#6F9BC6' }}>4812</span><span style={{ color: '#6E7587' }}>,</span></div>
-                  <div style={{ paddingLeft: 32 }}><span style={{ color: '#8080c0' }}>&quot;industry_avg&quot;</span><span style={{ color: '#6E7587' }}>: </span><span style={{ color: '#6F9BC6' }}>58</span><span style={{ color: '#6E7587' }}>,</span></div>
-                  <div style={{ paddingLeft: 32 }}><span style={{ color: '#8080c0' }}>&quot;vertical&quot;</span><span style={{ color: '#6E7587' }}>: </span><span style={{ color: '#00C48C' }}>&quot;B2B SaaS&quot;</span></div>
-                  <div style={{ paddingLeft: 16 }}><span style={{ color: '#6E7587' }}>{'}'}</span><span style={{ color: '#6E7587' }}>,</span></div>
-                  <div style={{ paddingLeft: 16 }}><span style={{ color: '#8080c0' }}>&quot;findings&quot;</span><span style={{ color: '#6E7587' }}>: [</span></div>
-                  <div style={{ paddingLeft: 32 }}><span style={{ color: '#6E7587' }}>{'{'}</span></div>
-                  <div style={{ paddingLeft: 48 }}><span style={{ color: '#8080c0' }}>&quot;priority&quot;</span><span style={{ color: '#6E7587' }}>: </span><span style={{ color: '#6F9BC6' }}>1</span><span style={{ color: '#6E7587' }}>,</span></div>
-                  <div style={{ paddingLeft: 48 }}><span style={{ color: '#8080c0' }}>&quot;severity&quot;</span><span style={{ color: '#6E7587' }}>: </span><span style={{ color: '#E8635F' }}>&quot;critical&quot;</span><span style={{ color: '#6E7587' }}>,</span></div>
-                  <div style={{ paddingLeft: 48 }}><span style={{ color: '#8080c0' }}>&quot;category&quot;</span><span style={{ color: '#6E7587' }}>: </span><span style={{ color: '#00C48C' }}>&quot;value_proposition&quot;</span><span style={{ color: '#6E7587' }}>,</span></div>
-                  <div style={{ paddingLeft: 48 }}><span style={{ color: '#8080c0' }}>&quot;title&quot;</span><span style={{ color: '#6E7587' }}>: </span><span style={{ color: '#E6E9EE' }}>&quot;Hero headline is feature-led&quot;</span><span style={{ color: '#6E7587' }}>,</span></div>
-                  <div style={{ paddingLeft: 48 }}><span style={{ color: '#8080c0' }}>&quot;estimated_lift&quot;</span><span style={{ color: '#6E7587' }}>: </span><span style={{ color: '#00C48C' }}>&quot;+12-18%&quot;</span><span style={{ color: '#6E7587' }}>,</span></div>
-                  <div style={{ paddingLeft: 48 }}><span style={{ color: '#8080c0' }}>&quot;rewritten_copy&quot;</span><span style={{ color: '#6E7587' }}>: </span><span style={{ color: '#00C48C' }}>&quot;Ship projects on time.&quot;</span></div>
-                  <div style={{ paddingLeft: 32 }}><span style={{ color: '#6E7587' }}>{'}'}</span></div>
-                  <div style={{ paddingLeft: 16 }}><span style={{ color: '#6E7587' }}>]</span><span style={{ color: '#6E7587' }}>,</span></div>
-                  <div style={{ paddingLeft: 16 }}><span style={{ color: '#8080c0' }}>&quot;cost_usd&quot;</span><span style={{ color: '#6E7587' }}>: </span><span style={{ color: '#6E7587' }}>0.15</span><span style={{ color: '#6E7587' }}>,</span></div>
-                  <div style={{ paddingLeft: 16 }}><span style={{ color: '#8080c0' }}>&quot;duration_ms&quot;</span><span style={{ color: '#6E7587' }}>: </span><span style={{ color: '#6E7587' }}>87340</span></div>
-                  <div><span style={{ color: '#6E7587' }}>{'}'}</span></div>
-                </div>
-              </div>
+            {/* Panel 1 — Weighted Overall Score (red) */}
+            <div style={{ background: '#050810', padding: '32px 36px' }}>
+              <div style={{ fontFamily: '"Space Grotesk", sans-serif', fontWeight: 700, fontSize: 64, color: '#E8635F', lineHeight: 1 }}>61</div>
+              <div style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#6E7587', marginTop: 8 }}>WEIGHTED OVERALL SCORE</div>
+              <div style={{ fontFamily: '"IBM Plex Sans", sans-serif', fontSize: 14, color: '#9398A8', lineHeight: 1.6, marginTop: 12 }}>0–100. Calibrated to site type and buyer complexity. Benchmarked against 4,812 real sites in your vertical.</div>
+              <div style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, color: '#E8635F', marginTop: 12 }}>CRITICAL · score &lt; 70</div>
             </div>
 
-            {/* RIGHT — annotations */}
-            <div style={{ flex: 1 }}>
-              {([
-                { field: 'score',                    note: '0–100. Calibrated to site type and buyer complexity. Benchmarked against corpus.' },
-                { field: 'severity',                 note: 'critical when score < 70. The primary prioritization signal.' },
-                { field: 'percentile',               note: 'Your position within your exact vertical. B2B SaaS vs B2B SaaS.' },
-                { field: 'findings[].estimated_lift',note: 'Directional range per finding class. Grounded in corpus data.' },
-                { field: 'findings[].rewritten_copy',note: 'Drop-in replacement. AI-generated, evidence-grounded, ready to ship.' },
-                { field: 'cost_usd',                 note: 'Per scan. Cache hits on the same URL within 24 hours: $0.00.' },
-              ] as { field: string; note: string }[]).map((a, i, arr) => (
-                <div key={a.field}>
-                  <div style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, color: '#8080c0', marginBottom: 4 }}>{a.field}</div>
-                  <div style={{ fontFamily: '"IBM Plex Sans", sans-serif', fontSize: 13, color: '#9398A8' }}>{a.note}</div>
-                  {i < arr.length - 1 && <div style={{ height: '0.5px', background: 'rgba(255,255,255,0.05)', margin: '12px 0' }} />}
-                </div>
-              ))}
+            {/* Panel 2 — Ranked Findings (steel blue) */}
+            <div style={{ background: '#050810', padding: '32px 36px' }}>
+              <div style={{ fontFamily: '"Space Grotesk", sans-serif', fontWeight: 700, fontSize: 64, color: '#6F9BC6', lineHeight: 1 }}>23</div>
+              <div style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#6E7587', marginTop: 8 }}>RANKED FINDINGS</div>
+              <div style={{ fontFamily: '"IBM Plex Sans", sans-serif', fontSize: 14, color: '#9398A8', lineHeight: 1.6, marginTop: 12 }}>Sorted P1→P3. Each with severity, fix_effort, impact_tier, and specific evidence from the page.</div>
+              <div style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, color: '#6F9BC6', marginTop: 12 }}>P1→P3 · priority ranked</div>
+            </div>
 
-              <div style={{ marginTop: 32 }}>
-                {[
-                  'Schema never changes regardless of site type or plan',
-                  'All 307 checks map to this structure',
-                  'Cache hits return the same object at $0.00',
-                ].map(bullet => (
-                  <div key={bullet} style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, color: '#6E7587', marginBottom: 6 }}>· {bullet}</div>
-                ))}
+            {/* Panel 3 — Verified Strengths (green) */}
+            <div style={{ background: '#050810', padding: '32px 36px' }}>
+              <div style={{ fontFamily: '"Space Grotesk", sans-serif', fontWeight: 700, fontSize: 64, color: '#00C48C', lineHeight: 1 }}>5</div>
+              <div style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#6E7587', marginTop: 8 }}>VERIFIED STRENGTHS</div>
+              <div style={{ fontFamily: '"IBM Plex Sans", sans-serif', fontSize: 14, color: '#9398A8', lineHeight: 1.6, marginTop: 12 }}>What&apos;s genuinely working above average. Referenced against specific visible content — never padded.</div>
+              <div style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, color: '#00C48C', marginTop: 12 }}>above average · evidence-referenced</div>
+            </div>
+
+            {/* Panel 4 — Dimension Benchmarks (steel blue) */}
+            <div style={{ background: '#050810', padding: '32px 36px' }}>
+              <div style={{ fontFamily: '"Space Grotesk", sans-serif', fontWeight: 700, fontSize: 64, color: '#6F9BC6', lineHeight: 1 }}>7</div>
+              <div style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#6E7587', marginTop: 8 }}>DIMENSION BENCHMARKS</div>
+              <div style={{ fontFamily: '"IBM Plex Sans", sans-serif', fontSize: 14, color: '#9398A8', lineHeight: 1.6, marginTop: 12 }}>Every dimension score positioned against industry average and percentile for your site&apos;s vertical.</div>
+              <div style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, color: '#6F9BC6', marginTop: 12 }}>percentile-ranked · by vertical</div>
+            </div>
+
+          </div>
+
+          {/* Schema preview panel */}
+          <div style={{
+            background: '#0A0E18',
+            borderTop: '1px solid rgba(157,140,255,0.35)',
+            borderLeft: '1px solid rgba(157,140,255,0.12)',
+            borderRight: '1px solid rgba(255,255,255,0.05)',
+            borderBottom: '1px solid rgba(255,255,255,0.04)',
+            overflow: 'hidden',
+          }}>
+            <div style={{ padding: '10px 16px', borderBottom: '0.5px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ width: 5, height: 5, background: '#00C48C', display: 'inline-block', flexShrink: 0 }} />
+              <span style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, color: '#6E7587' }}>response · application/json · 200 OK</span>
+              <span style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, color: '#00C48C', marginLeft: 'auto' }}>200 OK</span>
+            </div>
+            <div style={{ padding: '16px 20px', fontFamily: '"IBM Plex Mono", monospace', fontSize: 12, lineHeight: 1.85 }}>
+              <div><span style={{ color: '#6E7587' }}>{'{'}</span></div>
+              <div style={{ paddingLeft: 16 }}>
+                <span style={{ color: '#8080c0' }}>&quot;score&quot;</span><span style={{ color: '#6E7587' }}>: </span><span style={{ color: '#E8635F' }}>61</span><span style={{ color: '#6E7587' }}>,</span>
               </div>
+              <div style={{ paddingLeft: 16 }}>
+                <span style={{ color: '#8080c0' }}>&quot;severity&quot;</span><span style={{ color: '#6E7587' }}>: </span><span style={{ color: '#E8635F' }}>&quot;critical&quot;</span><span style={{ color: '#6E7587' }}>,</span>
+              </div>
+              <div style={{ paddingLeft: 16 }}>
+                <span style={{ color: '#8080c0' }}>&quot;percentile&quot;</span><span style={{ color: '#6E7587' }}>: </span><span style={{ color: '#6F9BC6' }}>63</span><span style={{ color: '#6E7587' }}>,</span>
+              </div>
+              <div style={{ paddingLeft: 16 }}>
+                <span style={{ color: '#8080c0' }}>&quot;findings&quot;</span><span style={{ color: '#6E7587' }}>: [...23 items],</span>
+              </div>
+              <div style={{ paddingLeft: 16 }}>
+                <span style={{ color: '#8080c0' }}>&quot;strengths&quot;</span><span style={{ color: '#6E7587' }}>: </span><span style={{ color: '#00C48C' }}>[...5 items]</span><span style={{ color: '#6E7587' }}>,</span>
+              </div>
+              <div style={{ paddingLeft: 16 }}>
+                <span style={{ color: '#8080c0' }}>&quot;benchmark_data&quot;</span><span style={{ color: '#6E7587' }}>: {'{'}...7 dimensions{'}'}</span><span style={{ color: '#6E7587' }}>,</span>
+              </div>
+              <div style={{ paddingLeft: 16 }}>
+                <span style={{ color: '#8080c0' }}>&quot;cost_usd&quot;</span><span style={{ color: '#6E7587' }}>: 0.15</span>
+              </div>
+              <div><span style={{ color: '#6E7587' }}>{'}'}</span></div>
+            </div>
+            <div style={{ padding: '10px 20px 16px', fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, color: '#6E7587', textAlign: 'center' }}>
+              · Build against this schema once · Same structure regardless of site type or plan
             </div>
           </div>
+
         </div>
       </section>
       <div className="section-separator" />
 
-      {/* ── 5. Three Audiences — #050810 + convergence + three-lane beams ─────── */}
-      <section style={{ padding: '96px 0', position: 'relative', overflow: 'hidden', background: '#050810' }}>
-
-        <style>{`
-          @keyframes prod-beamFlow {
-            from { stroke-dashoffset: 13; }
-            to   { stroke-dashoffset: 0; }
-          }
-          @keyframes prod-coreNodeGlow {
-            0%, 100% { box-shadow: 0 0 0 1px rgba(111,155,198,0.2), 0 0 14px rgba(111,155,198,0.12), 0 0 40px rgba(111,155,198,0.05); }
-            50%       { box-shadow: 0 0 0 1px rgba(111,155,198,0.35), 0 0 22px rgba(111,155,198,0.25), 0 0 56px rgba(111,155,198,0.10); }
-          }
-          @keyframes prod-cardArrive {
-            from { opacity: 0; transform: translateY(10px); }
-            to   { opacity: 1; transform: translateY(0); }
-          }
-          @media (max-width: 639px) {
-            .prod-convergence { display: none !important; }
-          }
-          @media (prefers-reduced-motion: reduce) {
-            .prod-beam      { animation: none !important; }
-            .prod-core-node { animation: none !important; }
-            .prod-particle  { display: none !important; }
-            .prod-access-card { animation: none !important; opacity: 1 !important; transform: none !important; }
-          }
-        `}</style>
-
-        {/* Three-lane ambient blooms + engine bloom */}
+      {/* ── 5. Two-surface access ───────────────────────────────────────────── */}
+      <section style={{ position: 'relative', overflow: 'hidden', padding: '80px 0', borderTop: '0.5px solid rgba(111,155,198,0.1)' }}>
         <div aria-hidden style={{
           position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0,
           background: [
-            'radial-gradient(ellipse 500px 700px at 18% 75%, rgba(0,200,255,0.06) 0%, transparent 60%)',
-            'radial-gradient(ellipse 500px 700px at 50% 75%, rgba(157,140,255,0.05) 0%, transparent 60%)',
-            'radial-gradient(ellipse 500px 700px at 82% 75%, rgba(0,196,140,0.05) 0%, transparent 60%)',
-            'radial-gradient(ellipse 800px 400px at 50% 20%, rgba(111,155,198,0.04) 0%, transparent 55%)',
+            'radial-gradient(ellipse 900px 600px at 50% 50%, rgba(111,155,198,0.05) 0%, transparent 60%)',
+            'radial-gradient(ellipse 600px 500px at 85% 60%, rgba(157,140,255,0.04) 0%, transparent 55%)',
           ].join(', '),
         }} />
-
-        {/* Corner ticks */}
-        <div aria-hidden style={{ position: 'absolute', top: 20, left: 20, width: 14, height: 14, borderTop: '0.5px solid rgba(111,155,198,0.25)', borderLeft: '0.5px solid rgba(111,155,198,0.25)', pointerEvents: 'none', zIndex: 1 }} />
-        <div aria-hidden style={{ position: 'absolute', top: 20, right: 20, width: 14, height: 14, borderTop: '0.5px solid rgba(111,155,198,0.25)', borderRight: '0.5px solid rgba(111,155,198,0.25)', pointerEvents: 'none', zIndex: 1 }} />
-        <div aria-hidden style={{ position: 'absolute', bottom: 20, left: 20, width: 14, height: 14, borderBottom: '0.5px solid rgba(111,155,198,0.25)', borderLeft: '0.5px solid rgba(111,155,198,0.25)', pointerEvents: 'none', zIndex: 1 }} />
-        <div aria-hidden style={{ position: 'absolute', bottom: 20, right: 20, width: 14, height: 14, borderBottom: '0.5px solid rgba(111,155,198,0.25)', borderRight: '0.5px solid rgba(111,155,198,0.25)', pointerEvents: 'none', zIndex: 1 }} />
+        <div aria-hidden style={{ position: 'absolute', top: 20, left: 20, width: 14, height: 14, borderTop: '0.5px solid rgba(111,155,198,0.2)', borderLeft: '0.5px solid rgba(111,155,198,0.2)', pointerEvents: 'none', zIndex: 1 }} />
+        <div aria-hidden style={{ position: 'absolute', top: 20, right: 20, width: 14, height: 14, borderTop: '0.5px solid rgba(111,155,198,0.2)', borderRight: '0.5px solid rgba(111,155,198,0.2)', pointerEvents: 'none', zIndex: 1 }} />
+        <div aria-hidden style={{ position: 'absolute', bottom: 20, left: 20, width: 14, height: 14, borderBottom: '0.5px solid rgba(111,155,198,0.2)', borderLeft: '0.5px solid rgba(111,155,198,0.2)', pointerEvents: 'none', zIndex: 1 }} />
+        <div aria-hidden style={{ position: 'absolute', bottom: 20, right: 20, width: 14, height: 14, borderBottom: '0.5px solid rgba(111,155,198,0.2)', borderRight: '0.5px solid rgba(111,155,198,0.2)', pointerEvents: 'none', zIndex: 1 }} />
 
         <div style={{ position: 'relative', zIndex: 1, maxWidth: 1200, margin: '0 auto', padding: '0 48px' }}>
-
-          {/* Section header */}
-          <p style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, color: '#6F9BC6', margin: '0 0 18px' }}>
+          <p style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.2em', color: '#6F9BC6', margin: '0 0 16px' }}>
             ACCESS
           </p>
-          <h2 style={{ fontFamily: '"Space Grotesk", sans-serif', fontWeight: 700, fontSize: 36, lineHeight: 1.15, color: '#E6E9EE', margin: '0 0 14px', letterSpacing: '-0.5px' }}>
-            One engine. Three access points.
+          <h2 style={{ fontFamily: '"Space Grotesk", sans-serif', fontWeight: 700, fontSize: 36, color: '#E6E9EE', margin: '0 0 12px', letterSpacing: '-0.5px', lineHeight: 1.15 }}>
+            Two ways to use the same engine.
           </h2>
-          <p style={{ fontFamily: '"IBM Plex Sans", sans-serif', fontSize: 15, color: '#9398A8', maxWidth: 560, lineHeight: 1.65, margin: '0 0 40px' }}>
-            Whether you&apos;re diagnosing your own site, managing client audits, or building conversion intelligence into a product — it&apos;s the same engine underneath.
+          <p style={{ fontFamily: '"IBM Plex Sans", sans-serif', fontSize: 15, color: '#9398A8', maxWidth: 560, lineHeight: 1.65, margin: '0 0 48px' }}>
+            The scan engine and its output are identical regardless of how you access it.
           </p>
 
-          {/* Engine convergence — core node + three beams */}
-          <div className="prod-convergence" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <style>{`
+            @media (max-width: 767px) { .prod-access-grid { grid-template-columns: 1fr !important; } }
+          `}</style>
+          <div className="prod-access-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
 
-            {/* Core node */}
-            <div style={{ position: 'relative', marginBottom: 0 }}>
-              <div aria-hidden style={{ position: 'absolute', top: -5, left: -5, width: 9, height: 9, borderTop: '0.5px solid rgba(111,155,198,0.6)', borderLeft: '0.5px solid rgba(111,155,198,0.6)' }} />
-              <div aria-hidden style={{ position: 'absolute', top: -5, right: -5, width: 9, height: 9, borderTop: '0.5px solid rgba(111,155,198,0.6)', borderRight: '0.5px solid rgba(111,155,198,0.6)' }} />
-              <div aria-hidden style={{ position: 'absolute', bottom: -5, left: -5, width: 9, height: 9, borderBottom: '0.5px solid rgba(111,155,198,0.6)', borderLeft: '0.5px solid rgba(111,155,198,0.6)' }} />
-              <div aria-hidden style={{ position: 'absolute', bottom: -5, right: -5, width: 9, height: 9, borderBottom: '0.5px solid rgba(111,155,198,0.6)', borderRight: '0.5px solid rgba(111,155,198,0.6)' }} />
-              <div className="prod-core-node" style={{
-                width: 52, height: 52,
-                background: '#0A0E18',
-                border: '0.5px solid rgba(111,155,198,0.45)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                position: 'relative',
-                animation: 'prod-coreNodeGlow 3.2s ease-in-out infinite',
-              }}>
-                <div aria-hidden style={{ position: 'absolute', width: '100%', height: '0.5px', background: 'rgba(111,155,198,0.18)' }} />
-                <div aria-hidden style={{ position: 'absolute', width: '0.5px', height: '100%', background: 'rgba(111,155,198,0.18)' }} />
-                <div style={{ width: 7, height: 7, background: '#6F9BC6', position: 'relative', zIndex: 1 }} />
-              </div>
-            </div>
-
-            <p style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.2em', color: 'rgba(111,155,198,0.45)', margin: '7px 0 0' }}>
-              SCAN ENGINE
-            </p>
-
-            {/* Three beams — organic cubic bezier + animateMotion particles */}
-            <div style={{ position: 'relative', width: '100%', paddingBottom: '10%', marginTop: 4 }} aria-hidden>
-              <svg
-                viewBox="0 0 100 10"
-                width="100%"
-                height="100%"
-                style={{ position: 'absolute', top: 0, left: 0, overflow: 'visible', display: 'block' }}
-              >
-                <defs>
-                  <path id="prod-path-c" d="M 50,0 C 44,2.5 26,5.8 16,10" />
-                  <path id="prod-path-p" d="M 50,0 C 50,3.3 50,6.7 50,10" />
-                  <path id="prod-path-g" d="M 50,0 C 56,2.5 74,5.8 84,10" />
-                </defs>
-
-                {/* Beam strokes */}
-                <path className="prod-beam" d="M 50,0 C 44,2.5 26,5.8 16,10" stroke="rgba(0,200,255,0.5)"   strokeWidth="1" fill="none" vectorEffect="non-scaling-stroke" pathLength="100" strokeDasharray="8 5" style={{ animation: 'prod-beamFlow 1.8s linear infinite' }} />
-                <path className="prod-beam" d="M 50,0 C 50,3.3 50,6.7 50,10" stroke="rgba(157,140,255,0.5)" strokeWidth="1" fill="none" vectorEffect="non-scaling-stroke" pathLength="100" strokeDasharray="8 5" style={{ animation: 'prod-beamFlow 1.8s linear infinite', animationDelay: '0.35s' }} />
-                <path className="prod-beam" d="M 50,0 C 56,2.5 74,5.8 84,10" stroke="rgba(0,196,140,0.5)"   strokeWidth="1" fill="none" vectorEffect="non-scaling-stroke" pathLength="100" strokeDasharray="8 5" style={{ animation: 'prod-beamFlow 1.8s linear infinite', animationDelay: '0.7s' }} />
-
-                {/* Particles: cyan lane */}
-                <circle className="prod-particle" r="0.7" fill="rgba(0,200,255,0.95)">
-                  <animateMotion dur="1.6s" repeatCount="indefinite" begin="0s"><mpath href="#prod-path-c" /></animateMotion>
-                </circle>
-                <circle className="prod-particle" r="0.45" fill="rgba(0,200,255,0.55)">
-                  <animateMotion dur="1.6s" repeatCount="indefinite" begin="0.8s"><mpath href="#prod-path-c" /></animateMotion>
-                </circle>
-
-                {/* Particles: purple lane */}
-                <circle className="prod-particle" r="0.7" fill="rgba(157,140,255,0.95)">
-                  <animateMotion dur="1.6s" repeatCount="indefinite" begin="0.35s"><mpath href="#prod-path-p" /></animateMotion>
-                </circle>
-                <circle className="prod-particle" r="0.45" fill="rgba(157,140,255,0.55)">
-                  <animateMotion dur="1.6s" repeatCount="indefinite" begin="1.15s"><mpath href="#prod-path-p" /></animateMotion>
-                </circle>
-
-                {/* Particles: green lane */}
-                <circle className="prod-particle" r="0.7" fill="rgba(0,196,140,0.95)">
-                  <animateMotion dur="1.6s" repeatCount="indefinite" begin="0.7s"><mpath href="#prod-path-g" /></animateMotion>
-                </circle>
-                <circle className="prod-particle" r="0.45" fill="rgba(0,196,140,0.55)">
-                  <animateMotion dur="1.6s" repeatCount="indefinite" begin="1.5s"><mpath href="#prod-path-g" /></animateMotion>
-                </circle>
-              </svg>
-            </div>
-
-          </div>
-
-          {/* Three equal-weight cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4" style={{ alignItems: 'stretch' }}>
-
-            {/* Founders / cyan */}
-            <div className="wd-panel prod-access-card" style={{
-              display: 'flex', flexDirection: 'column',
-              borderTop: '1px solid rgba(0,200,255,0.3)',
-              borderLeft: '1px solid rgba(0,200,255,0.12)',
-              boxShadow: '0 0 0 1px rgba(0,200,255,0.1), 0 0 28px rgba(0,200,255,0.07)',
-              animation: 'prod-cardArrive 0.55s ease-out both',
-              animationDelay: '0.15s',
-            }}>
-              <div style={{ padding: '24px 24px 16px', borderBottom: '0.5px solid rgba(255,255,255,0.06)' }}>
-                <p style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 10, textTransform: 'uppercase', letterSpacing: 1.5, color: '#00C8FF', margin: '0 0 10px' }}>For founders</p>
-                <h3 style={{ fontFamily: '"Space Grotesk", sans-serif', fontWeight: 700, fontSize: 22, color: '#E6E9EE', margin: '0 0 10px', lineHeight: 1.25 }}>Diagnose your site.</h3>
-                <p style={{ fontFamily: '"IBM Plex Sans", sans-serif', fontSize: 14, color: '#9398A8', lineHeight: 1.6, margin: 0 }}>
-                  Paste your URL. Get a full conversion audit in 90 seconds — score, ranked findings, strengths, and how you compare against your category. Free to start.
-                </p>
-              </div>
-              <div style={{ padding: '20px 24px', background: 'rgba(0,200,255,0.02)', flexGrow: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
-                <ScoreRing score={61} size="md" animate={true} label="CONVERSION SCORE" />
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 6, textAlign: 'center' }}>
-                  <p style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 12, margin: 0 }}>
-                    <span style={{ color: '#6E7587' }}>critical: </span>
-                    <span style={{ color: '#E8635F' }}>hero headline is feature-led</span>
-                  </p>
-                  <p style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 12, margin: 0 }}>
-                    <span style={{ color: '#6E7587' }}>lift: </span>
-                    <span style={{ color: '#00C48C' }}>+12–18% with rewrite</span>
-                  </p>
-                </div>
-              </div>
-              <div style={{ padding: '16px 24px 24px', borderTop: '0.5px solid rgba(255,255,255,0.06)' }}>
-                <Link href="/scan" style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, color: '#00C8FF', border: '1px solid rgba(0,200,255,0.5)', padding: '10px 14px', display: 'block', textAlign: 'center', textDecoration: 'none', background: 'transparent' }}>
-                  Scan my site free →
-                </Link>
-                <p style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 10, color: '#6E7587', textAlign: 'center', marginTop: 8, marginBottom: 0 }}>Free · No account required</p>
-              </div>
-            </div>
-
-            {/* Agencies / purple */}
-            <div className="wd-panel prod-access-card" style={{
-              display: 'flex', flexDirection: 'column',
-              borderTop: '1px solid rgba(157,140,255,0.3)',
-              borderLeft: '1px solid rgba(157,140,255,0.12)',
-              boxShadow: '0 0 0 1px rgba(157,140,255,0.1), 0 0 28px rgba(157,140,255,0.08)',
-              animation: 'prod-cardArrive 0.55s ease-out both',
-              animationDelay: '0.3s',
-            }}>
-              <div style={{ padding: '24px 24px 16px', borderBottom: '0.5px solid rgba(255,255,255,0.06)' }}>
-                <p style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 10, textTransform: 'uppercase', letterSpacing: 1.5, color: '#9D8CFF', margin: '0 0 10px' }}>For agencies</p>
-                <h3 style={{ fontFamily: '"Space Grotesk", sans-serif', fontWeight: 700, fontSize: 22, color: '#E6E9EE', margin: '0 0 10px', lineHeight: 1.25 }}>Manage client audits.</h3>
-                <p style={{ fontFamily: '"IBM Plex Sans", sans-serif', fontSize: 14, color: '#9398A8', lineHeight: 1.6, margin: 0 }}>
-                  Client workspaces, white-label report links, multi-page scanning. Show up to every call with data, not opinions.
-                </p>
-              </div>
-              <div style={{ padding: '20px 24px', background: 'rgba(157,140,255,0.025)', flexGrow: 1 }}>
-                <div style={{ background: '#050810', border: '0.5px solid rgba(157,140,255,0.18)', padding: '12px 14px', boxShadow: '0 0 16px rgba(157,140,255,0.06)' }}>
-                  <p style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 9, textTransform: 'uppercase', letterSpacing: 1.5, color: '#6E7587', margin: '0 0 3px' }}>PREPARED FOR</p>
-                  <p style={{ fontFamily: '"Space Grotesk", sans-serif', fontWeight: 500, fontSize: 14, color: '#E6E9EE', margin: '0 0 10px' }}>Acme Inc.</p>
-                  <div style={{ borderTop: '0.5px solid rgba(255,255,255,0.06)', paddingTop: 8 }}>
-                    {[
-                      { k: 'score', v: '61', vc: '#E8635F' },
-                      { k: 'findings', v: '23', vc: '#6F9BC6' },
-                    ].map(r => (
-                      <div key={r.k} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                        <span style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, color: '#6E7587' }}>{r.k}</span>
-                        <span style={{ fontFamily: '"Space Grotesk", sans-serif', fontWeight: 500, fontSize: 13, color: r.vc }}>{r.v}</span>
-                      </div>
-                    ))}
+            {/* Dashboard */}
+            <div className="wd-panel" style={{ padding: '32px', borderTop: '1px solid rgba(111,155,198,0.4)', display: 'flex', flexDirection: 'column' }}>
+              <p style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#6F9BC6', margin: '0 0 12px' }}>DASHBOARD</p>
+              <h3 style={{ fontFamily: '"Space Grotesk", sans-serif', fontWeight: 700, fontSize: 22, color: '#E6E9EE', margin: '0 0 12px' }}>Results without writing code.</h3>
+              <p style={{ fontFamily: '"IBM Plex Sans", sans-serif', fontSize: 14, color: '#9398A8', lineHeight: 1.65, margin: '0 0 24px', flexGrow: 1 }}>
+                Scan any site from the dashboard. See your score, ranked findings, AI-rewritten copy, and how you benchmark against your vertical. Track over time. Send white-label reports to clients.
+              </p>
+              <div style={{ marginBottom: 24 }}>
+                {([
+                  { k: 'interface',        v: 'dashboard' },
+                  { k: 'account_required', v: 'false (first scan)' },
+                  { k: 'white_label',      v: 'pro+' },
+                  { k: 'scans_from',       v: '$0 free' },
+                ] as { k: string; v: string }[]).map(s => (
+                  <div key={s.k} style={{ display: 'flex', alignItems: 'baseline', fontFamily: '"IBM Plex Mono", monospace', fontSize: 12, marginBottom: 6 }}>
+                    <span style={{ color: '#8080c0', flexShrink: 0 }}>{s.k}</span>
+                    <span style={{ color: '#6E7587', margin: '0 3px' }}>:</span>
+                    <span style={{ color: '#E6E9EE' }}>{s.v}</span>
                   </div>
-                </div>
+                ))}
               </div>
-              <div style={{ padding: '16px 24px 24px', borderTop: '0.5px solid rgba(255,255,255,0.06)' }}>
-                <Link href="/pricing" style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, color: '#9D8CFF', border: '1px solid rgba(157,140,255,0.5)', padding: '10px 14px', display: 'block', textAlign: 'center', textDecoration: 'none', background: 'transparent' }}>
-                  See agency plans →
-                </Link>
-                <p style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 10, color: '#6E7587', textAlign: 'center', marginTop: 8, marginBottom: 0 }}>From $149/mo · 14-day trial</p>
-              </div>
+              <Link href="/scan" style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 12, color: '#6F9BC6', border: '1px solid rgba(111,155,198,0.5)', padding: '11px 20px', textDecoration: 'none', display: 'inline-block', background: 'transparent' }}>
+                Open dashboard →
+              </Link>
             </div>
 
-            {/* Developers / green */}
-            <div className="wd-panel prod-access-card" style={{
-              display: 'flex', flexDirection: 'column',
-              borderTop: '1px solid rgba(0,196,140,0.28)',
-              borderLeft: '1px solid rgba(0,196,140,0.1)',
-              boxShadow: '0 0 0 1px rgba(0,196,140,0.1), 0 0 28px rgba(0,196,140,0.07)',
-              animation: 'prod-cardArrive 0.55s ease-out both',
-              animationDelay: '0.45s',
-            }}>
-              <div style={{ padding: '24px 24px 16px', borderBottom: '0.5px solid rgba(255,255,255,0.06)' }}>
-                <p style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 10, textTransform: 'uppercase', letterSpacing: 1.5, color: '#00C48C', margin: '0 0 10px' }}>For developers</p>
-                <h3 style={{ fontFamily: '"Space Grotesk", sans-serif', fontWeight: 700, fontSize: 22, color: '#E6E9EE', margin: '0 0 10px', lineHeight: 1.25 }}>Build with it.</h3>
-                <p style={{ fontFamily: '"IBM Plex Sans", sans-serif', fontSize: 14, color: '#9398A8', lineHeight: 1.6, margin: 0 }}>
-                  POST a URL, get structured JSON. Batch endpoint, async mode, webhooks. Integrate conversion intelligence into your product in an afternoon.
-                </p>
+            {/* API */}
+            <div className="wd-panel" style={{ padding: '32px', borderTop: '1px solid rgba(157,140,255,0.4)', display: 'flex', flexDirection: 'column' }}>
+              <p style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#9D8CFF', margin: '0 0 12px' }}>API</p>
+              <h3 style={{ fontFamily: '"Space Grotesk", sans-serif', fontWeight: 700, fontSize: 22, color: '#E6E9EE', margin: '0 0 12px' }}>Build conversion intelligence into anything.</h3>
+              <p style={{ fontFamily: '"IBM Plex Sans", sans-serif', fontSize: 14, color: '#9398A8', lineHeight: 1.65, margin: '0 0 24px', flexGrow: 1 }}>
+                POST any URL, get structured JSON. Integrate the scan engine into your product, pipeline, or automation. Batch endpoint, async mode, webhooks. No dashboard required.
+              </p>
+              <div style={{ marginBottom: 24 }}>
+                {([
+                  { k: 'endpoint',    v: 'POST /api/v1/scan' },
+                  { k: 'response',    v: 'structured JSON' },
+                  { k: 'trial_scans', v: '25 free' },
+                  { k: 'async_mode',  v: 'true' },
+                ] as { k: string; v: string }[]).map(s => (
+                  <div key={s.k} style={{ display: 'flex', alignItems: 'baseline', fontFamily: '"IBM Plex Mono", monospace', fontSize: 12, marginBottom: 6 }}>
+                    <span style={{ color: '#8080c0', flexShrink: 0 }}>{s.k}</span>
+                    <span style={{ color: '#6E7587', margin: '0 3px' }}>:</span>
+                    <span style={{ color: s.v === 'true' ? '#00C48C' : s.v.startsWith('POST') ? '#9D8CFF' : '#E6E9EE' }}>{s.v}</span>
+                  </div>
+                ))}
               </div>
-              <div style={{ padding: '20px 24px', background: 'rgba(0,196,140,0.02)', flexGrow: 1 }}>
-                <div style={{ background: '#050810', border: '0.5px solid rgba(0,196,140,0.14)', padding: '12px 14px', boxShadow: '0 0 16px rgba(0,196,140,0.05)' }}>
-                  <pre style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 12, lineHeight: 1.7, margin: 0, overflow: 'hidden', color: '#9398A8' }}>
-                    {'{'}{'\n'}
-                    {'  '}<span style={{ color: '#8080c0' }}>&quot;score&quot;</span>{': '}<span style={{ color: '#E8635F' }}>61</span>{','}{'\n'}
-                    {'  '}<span style={{ color: '#6F9BC6' }}>&quot;severity&quot;</span>{': '}<span style={{ color: '#E8635F' }}>&quot;critical&quot;</span>{','}{'\n'}
-                    {'  '}<span style={{ color: '#8080c0' }}>&quot;findings&quot;</span>{': '}<span style={{ color: '#6F9BC6' }}>23</span>{'\n'}
-                    {'}'}
-                  </pre>
-                </div>
-                <p style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, color: '#6E7587', margin: '10px 0 0' }}>full schema · 307 checks · $0.15/scan</p>
-              </div>
-              <div style={{ padding: '16px 24px 24px', borderTop: '0.5px solid rgba(255,255,255,0.06)' }}>
-                <Link href="/developers" style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, color: '#6F9BC6', border: '1px solid rgba(111,155,198,0.5)', padding: '10px 14px', display: 'block', textAlign: 'center', textDecoration: 'none', background: 'transparent' }}>
-                  Get API key →
-                </Link>
-                <p style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 10, color: '#6E7587', textAlign: 'center', marginTop: 8, marginBottom: 0 }}>$0.15/scan · No monthly fee</p>
-              </div>
+              <Link href="/developers" style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 12, color: '#9D8CFF', border: '1px solid rgba(157,140,255,0.5)', padding: '11px 20px', textDecoration: 'none', display: 'inline-block', background: 'transparent' }}>
+                Get API key →
+              </Link>
             </div>
 
           </div>

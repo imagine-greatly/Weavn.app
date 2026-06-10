@@ -12,15 +12,15 @@ type CellVal =
 
 interface TableRow {
   feature: string
-  free: CellVal
+  free:    CellVal
   starter: CellVal
-  pro: CellVal
-  scale: CellVal
+  pro:     CellVal
+  scale:   CellVal
 }
 
 interface TableGroup {
   label: string
-  rows: TableRow[]
+  rows:  TableRow[]
 }
 
 // ── Tokens ────────────────────────────────────────────────────────────────────
@@ -29,97 +29,103 @@ const MONO: React.CSSProperties = { fontFamily: '"IBM Plex Mono", monospace' }
 const SANS: React.CSSProperties = { fontFamily: '"IBM Plex Sans", sans-serif' }
 const DISP: React.CSSProperties = { fontFamily: '"Space Grotesk", sans-serif' }
 
-// ── Spec data ─────────────────────────────────────────────────────────────────
+// ── Static tier data ──────────────────────────────────────────────────────────
 
-type SpecEntry = { k: string; v: string }
+const DASH_TIERS = [
+  {
+    tier:    'FREE',
+    monthly:  0,
+    annual:   0,
+    economy: 'free to start',
+    diff:    'See your score. Top findings. No account required.',
+    spec:    '3 scans per month · full 307-check audit · no credit card',
+    cta:     'TRY FREE →',
+    href:    '/scan',
+  },
+  {
+    tier:    'STARTER',
+    monthly:  49,
+    annual:   39,
+    economy: '$2.45/scan effective',
+    diff:    'Full findings ranked by conversion lift. Score trending.',
+    spec:    '20 scans/month · 30-day history · email support · CSV export',
+    cta:     'START TRIAL →',
+    href:    '/signup?plan=starter',
+  },
+  {
+    tier:    'PRO',
+    monthly:  149,
+    annual:   119,
+    economy: '$1.49/scan effective',
+    diff:    'Client workspaces. White-label reports. Your logo.',
+    spec:    '100 scans/month · unlimited history · 3 team seats · PDF export · 100 API calls bundled',
+    cta:     'START TRIAL →',
+    href:    '/signup?plan=pro',
+  },
+  {
+    tier:    'SCALE',
+    monthly:  499,
+    annual:   399,
+    economy: 'custom rate · dedicated support',
+    diff:    '500 scans. 10 seats. Custom subdomain. Scheduled scans.',
+    spec:    '500 scans/month · white-label subdomain · Slack notifications · priority support',
+    cta:     'START TRIAL →',
+    href:    '/signup?plan=scale',
+  },
+] as const
 
-const DASH_SPECS: Record<string, SpecEntry[]> = {
-  free: [
-    { k: 'scans_per_month',      v: '3' },
-    { k: 'report_history',       v: '7d' },
-    { k: 'team_seats',           v: '1' },
-    { k: 'white_label',          v: 'false' },
-    { k: 'client_workspaces',    v: 'false' },
-    { k: 'priority_processing',  v: 'false' },
-  ],
-  starter: [
-    { k: 'scans_per_month',      v: '20' },
-    { k: 'report_history',       v: '30d' },
-    { k: 'team_seats',           v: '1' },
-    { k: 'white_label',          v: 'false' },
-    { k: 'client_workspaces',    v: 'false' },
-    { k: 'priority_processing',  v: 'true' },
-  ],
-  pro: [
-    { k: 'scans_per_month',      v: '100' },
-    { k: 'report_history',       v: 'unlimited' },
-    { k: 'team_seats',           v: '3' },
-    { k: 'white_label',          v: 'true' },
-    { k: 'client_workspaces',    v: 'true' },
-    { k: 'priority_processing',  v: 'true' },
-  ],
-  scale: [
-    { k: 'scans_per_month',      v: '500' },
-    { k: 'report_history',       v: 'unlimited' },
-    { k: 'team_seats',           v: 'unlimited' },
-    { k: 'white_label',          v: 'true' },
-    { k: 'client_workspaces',    v: 'true' },
-    { k: 'priority_processing',  v: 'true' },
-  ],
-}
+const API_TIERS = [
+  {
+    tier:         'DEV',
+    price:        '$29/mo',
+    economy:      '$0.097/scan effective',
+    economyColor: '#6F9BC6',
+    diff:         '300 scans/month. Async mode. Webhooks.',
+    spec:         'async_mode: true · webhooks: true · $0.19/scan overage · 60 req/min',
+    cta:          'START DEV →',
+    href:         '/signup?plan=dev-api',
+    ctaColor:     '#9D8CFF',
+    ctaBorder:    'rgba(157,140,255,0.4)',
+  },
+  {
+    tier:         'BUILDER',
+    price:        '$99/mo',
+    economy:      '$0.099/scan effective',
+    economyColor: '#6F9BC6',
+    diff:         '1,000 scans. Batch endpoint. 10 URLs per request.',
+    spec:         'batch_endpoint: true · async_mode: true · webhooks: true · 200 req/min',
+    cta:          'START BUILDER →',
+    href:         '/signup?plan=builder-api',
+    ctaColor:     '#9D8CFF',
+    ctaBorder:    'rgba(157,140,255,0.4)',
+  },
+  {
+    tier:         'SCALE',
+    price:        '$249/mo',
+    economy:      '$0.083/scan effective',
+    economyColor: '#00C48C',
+    diff:         '3,000 scans. Dedicated rate limits. Priority processing.',
+    spec:         'rate_limits: dedicated · 500 req/min · all batch + async features',
+    cta:          'START SCALE →',
+    href:         '/signup?plan=scale-api',
+    ctaColor:     '#00C48C',
+    ctaBorder:    'rgba(0,196,140,0.4)',
+  },
+  {
+    tier:         'ENTERPRISE',
+    price:        'custom',
+    economy:      'from $0.11/scan · SLA guarantee',
+    economyColor: '#6F9BC6',
+    diff:         'Custom volume. Dedicated infrastructure. SLA.',
+    spec:         'custom rate limits · invoice billing · dedicated support · custom integrations',
+    cta:          'TALK TO US →',
+    href:         'mailto:hello@webdocai.com',
+    ctaColor:     '#9D8CFF',
+    ctaBorder:    'rgba(157,140,255,0.4)',
+  },
+] as const
 
-const API_SPECS: Record<string, SpecEntry[]> = {
-  playground: [
-    { k: 'trial_scans',       v: '25 free' },
-    { k: 'then',              v: '$0.25/scan' },
-    { k: 'async_mode',        v: 'false' },
-    { k: 'batch_endpoint',    v: 'false' },
-    { k: 'webhooks',          v: 'false' },
-    { k: 'rate_limits',       v: 'standard' },
-  ],
-  dev: [
-    { k: 'scans_per_month',   v: '300' },
-    { k: 'overage_rate',      v: '$0.19/scan' },
-    { k: 'async_mode',        v: 'true' },
-    { k: 'batch_endpoint',    v: 'false' },
-    { k: 'webhooks',          v: 'true' },
-    { k: 'rate_limits',       v: 'standard' },
-  ],
-  builder: [
-    { k: 'scans_per_month',   v: '1,000' },
-    { k: 'overage_rate',      v: '$0.17/scan' },
-    { k: 'async_mode',        v: 'true' },
-    { k: 'batch_endpoint',    v: 'true' },
-    { k: 'webhooks',          v: 'true' },
-    { k: 'rate_limits',       v: 'standard' },
-  ],
-  scale: [
-    { k: 'scans_per_month',   v: '3,000' },
-    { k: 'overage_rate',      v: '$0.15/scan' },
-    { k: 'async_mode',        v: 'true' },
-    { k: 'batch_endpoint',    v: 'true' },
-    { k: 'webhooks',          v: 'true' },
-    { k: 'rate_limits',       v: 'dedicated' },
-  ],
-  enterprise: [
-    { k: 'scans_per_month',   v: 'custom' },
-    { k: 'overage_rate',      v: 'from $0.11/scan' },
-    { k: 'async_mode',        v: 'true' },
-    { k: 'batch_endpoint',    v: 'true' },
-    { k: 'webhooks',          v: 'true' },
-    { k: 'rate_limits',       v: 'dedicated' },
-  ],
-}
-
-const RATE_POINTS = [
-  { label: 'PLAYGROUND', price: '$0.25', color: '#6F9BC6' },
-  { label: 'DEV',        price: '$0.19', color: '#6F9BC6' },
-  { label: 'BUILDER',    price: '$0.17', color: '#6F9BC6' },
-  { label: 'SCALE',      price: '$0.15', color: '#00C48C' },
-  { label: 'ENTERPRISE', price: '$0.11', color: '#00C48C' },
-]
-
-// ── Static data ───────────────────────────────────────────────────────────────
+// ── FAQ data ──────────────────────────────────────────────────────────────────
 
 const FAQ_CARDS = [
   {
@@ -159,6 +165,8 @@ const FAQ_CARDS = [
     dataColor: '#6F9BC6',
   },
 ]
+
+// ── Feature matrix data ───────────────────────────────────────────────────────
 
 const TABLE_GROUPS: TableGroup[] = [
   {
@@ -277,27 +285,14 @@ function Cell({ val }: { val: CellVal }): JSX.Element {
   return <span style={{ color: '#9398A8' }}>{val.value}</span>
 }
 
-function SpecRow({ k, v }: { k: string; v: string }) {
-  const isTrue  = v === 'true'
-  const isFalse = v === 'false'
-  const vColor  = isTrue ? '#00C48C' : isFalse ? '#6E7587' : '#E6E9EE'
-  return (
-    <div style={{ display: 'flex', alignItems: 'baseline', ...MONO, fontSize: 11, marginBottom: 5 }}>
-      <span style={{ color: '#8080c0', flexShrink: 0 }}>{k}</span>
-      <span style={{ color: '#6E7587', margin: '0 3px' }}>:</span>
-      <span style={{ color: vColor }}>{v}</span>
-    </div>
-  )
-}
-
 function Ticks() {
   const b = '0.5px solid rgba(111,155,198,0.2)'
   return (
     <>
-      <div aria-hidden style={{ position:'absolute', top:20, left:20,   width:14, height:14, borderTop:b, borderLeft:b,   pointerEvents:'none', zIndex:1 }} />
-      <div aria-hidden style={{ position:'absolute', top:20, right:20,  width:14, height:14, borderTop:b, borderRight:b,  pointerEvents:'none', zIndex:1 }} />
-      <div aria-hidden style={{ position:'absolute', bottom:20, left:20,  width:14, height:14, borderBottom:b, borderLeft:b,  pointerEvents:'none', zIndex:1 }} />
-      <div aria-hidden style={{ position:'absolute', bottom:20, right:20, width:14, height:14, borderBottom:b, borderRight:b, pointerEvents:'none', zIndex:1 }} />
+      <div aria-hidden style={{ position: 'absolute', top: 20,    left: 20,  width: 14, height: 14, borderTop: b,    borderLeft: b,   pointerEvents: 'none', zIndex: 1 }} />
+      <div aria-hidden style={{ position: 'absolute', top: 20,    right: 20, width: 14, height: 14, borderTop: b,    borderRight: b,  pointerEvents: 'none', zIndex: 1 }} />
+      <div aria-hidden style={{ position: 'absolute', bottom: 20, left: 20,  width: 14, height: 14, borderBottom: b, borderLeft: b,   pointerEvents: 'none', zIndex: 1 }} />
+      <div aria-hidden style={{ position: 'absolute', bottom: 20, right: 20, width: 14, height: 14, borderBottom: b, borderRight: b,  pointerEvents: 'none', zIndex: 1 }} />
     </>
   )
 }
@@ -305,165 +300,371 @@ function Ticks() {
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function PricingPage() {
-  const [isAnnual,  setIsAnnual]  = useState(false)
+  const [surface,   setSurface]   = useState<'dashboard' | 'api'>('dashboard')
+  const [billing,   setBilling]   = useState<'monthly' | 'annual'>('monthly')
   const [showTable, setShowTable] = useState(false)
 
-  const price   = (m: number) => isAnnual ? Math.round(m * 0.8) : m
-  const savings = (m: number) => Math.round(m * 0.2 * 12)
+  const isAnnual = billing === 'annual'
+  const savings  = (m: number) => Math.round(m * 0.2 * 12)
+
+  const isDash = surface === 'dashboard'
+  const isApi  = surface === 'api'
 
   return (
     <main style={{ minHeight: '100vh' }}>
+      <style>{`
+        .tier-row {
+          display: grid;
+          grid-template-columns: 200px 1fr auto;
+          align-items: center;
+          padding: 24px 32px;
+          background: #050810;
+          transition: background 0.15s;
+          cursor: default;
+        }
+        .tier-row:hover { background: #080D18; }
+        .tier-center { padding: 0 48px; }
+        @media (max-width: 767px) {
+          .pricing-switcher { flex-direction: column !important; width: 100% !important; }
+          .pricing-switcher button { padding: 14px 24px !important; width: 100% !important; }
+          .tier-row { grid-template-columns: 1fr !important; padding: 20px 24px !important; }
+          .tier-center { padding: 12px 0 !important; }
+          .tier-right { padding-top: 4px; }
+        }
+      `}</style>
 
-      {/* ── 1. HERO ─────────────────────────────────────────────────────────── */}
-      <section style={{ position: 'relative', overflow: 'hidden', padding: '96px 32px 72px', textAlign: 'center' }}>
+      {/* ── 1. HERO + SURFACE SWITCHER ──────────────────────────────────────── */}
+      <section style={{ position: 'relative', overflow: 'hidden', padding: '80px 48px 0', textAlign: 'center' }}>
         <div aria-hidden style={{
           position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0,
-          background: 'radial-gradient(ellipse 900px 600px at 50% 40%, rgba(111,155,198,0.07) 0%, transparent 65%)',
+          background: 'radial-gradient(ellipse 900px 500px at 50% 30%, rgba(111,155,198,0.06) 0%, transparent 60%)',
         }} />
         <Ticks />
-        <div style={{ position: 'relative', zIndex: 1, maxWidth: 896, margin: '0 auto' }}>
-          <p style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.2em', color: '#6F9BC6', margin: '0 0 20px' }}>
+
+        <div style={{ position: 'relative', zIndex: 1 }}>
+          <p style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.2em', color: '#6F9BC6', margin: '0 0 16px' }}>
             PRICING
           </p>
-          <h1 style={{ ...DISP, fontSize: 'clamp(36px, 5vw, 56px)', fontWeight: 700, letterSpacing: '-1.5px', color: '#E6E9EE', margin: '0 0 16px', lineHeight: 1.1 }}>
-            Dashboard pricing. No contracts.
+          <h1 style={{ ...DISP, fontSize: 'clamp(36px, 5vw, 52px)', fontWeight: 700, color: '#E6E9EE', margin: '0 0 40px', lineHeight: 1.1 }}>
+            Access the engine.
           </h1>
-          <p style={{ ...SANS, fontSize: 16, lineHeight: 1.65, color: '#9398A8', maxWidth: 560, margin: '0 auto' }}>
-            Scan without writing code. Four tiers. Same 307-check engine regardless of plan. Cancel anytime.
-          </p>
+
+          {/* Surface switcher */}
+          <div style={{ display: 'flex', justifyContent: 'center', paddingBottom: 0 }}>
+            <div
+              className="pricing-switcher"
+              style={{
+                display: 'inline-flex',
+                background: '#080D18',
+                border: '0.5px solid rgba(255,255,255,0.08)',
+                padding: 4,
+                gap: 0,
+              }}
+            >
+              {/* DASHBOARD button */}
+              <button
+                onClick={() => setSurface('dashboard')}
+                style={{
+                  padding: '16px 48px',
+                  border: 'none',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                  borderRadius: 0,
+                  textAlign: 'center',
+                  background: isDash ? 'rgba(111,155,198,0.1)' : 'transparent',
+                  boxShadow: isDash ? 'inset 0 0 0 0.5px rgba(111,155,198,0.4)' : 'none',
+                }}
+              >
+                <div style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.18em', color: isDash ? '#6F9BC6' : '#6E7587', marginBottom: 4 }}>
+                  DASHBOARD
+                </div>
+                <div style={{ ...SANS, fontSize: 13, color: isDash ? '#9398A8' : '#4d5566' }}>
+                  Results without code
+                </div>
+              </button>
+
+              {/* API button */}
+              <button
+                onClick={() => setSurface('api')}
+                style={{
+                  padding: '16px 48px',
+                  border: 'none',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                  borderRadius: 0,
+                  textAlign: 'center',
+                  background: isApi ? 'rgba(157,140,255,0.1)' : 'transparent',
+                  boxShadow: isApi ? 'inset 0 0 0 0.5px rgba(157,140,255,0.4)' : 'none',
+                }}
+              >
+                <div style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.18em', color: isApi ? '#9D8CFF' : '#6E7587', marginBottom: 4 }}>
+                  API
+                </div>
+                <div style={{ ...SANS, fontSize: 13, color: isApi ? '#9398A8' : '#4d5566' }}>
+                  Build with the data
+                </div>
+              </button>
+            </div>
+          </div>
         </div>
       </section>
-      <div className="section-separator" />
 
-      {/* ── 2. DASHBOARD PLANS ──────────────────────────────────────────────── */}
-      <section style={{ position: 'relative', overflow: 'hidden', borderTop: '0.5px solid rgba(111,155,198,0.12)' }}>
+      {/* ── 2. TIER DISPLAY ─────────────────────────────────────────────────── */}
+      <section style={{ padding: '48px', minHeight: 500, position: 'relative' }}>
+
+        {/* Atmosphere — shifts between steel blue (dashboard) and purple (api) */}
         <div aria-hidden style={{
           position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0,
-          background: [
-            'radial-gradient(ellipse 1000px 700px at 38% 50%, rgba(111,155,198,0.05) 0%, transparent 60%)',
-            'radial-gradient(ellipse 600px 400px at 80% 30%, rgba(0,200,255,0.03) 0%, transparent 55%)',
-          ].join(', '),
+          transition: 'opacity 0.3s',
+          background: isDash
+            ? 'radial-gradient(ellipse 900px 600px at 50% 30%, rgba(111,155,198,0.05) 0%, transparent 60%)'
+            : 'radial-gradient(ellipse 900px 600px at 50% 30%, rgba(157,140,255,0.05) 0%, transparent 60%)',
         }} />
-        <Ticks />
 
-        <div style={{ position: 'relative', zIndex: 1, maxWidth: 1280, margin: '0 auto', padding: '64px 32px 80px' }}>
-          <p style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.18em', color: '#6F9BC6', margin: '0 0 12px' }}>
-            DASHBOARD PLANS
-          </p>
-          <p style={{ ...SANS, fontSize: 15, color: '#9398A8', maxWidth: 560, lineHeight: 1.65, margin: '0 0 32px' }}>
-            Diagnose your site or run client audits. Full report interface, score trending, white-label exports.
-          </p>
+        <div style={{ position: 'relative', zIndex: 1, maxWidth: 1100, margin: '0 auto' }}>
 
-          {/* Billing toggle */}
-          <div style={{ display: 'inline-flex', alignItems: 'center', background: '#0A0E18', border: '0.5px solid rgba(255,255,255,0.08)', padding: 3, marginBottom: 40 }}>
-            <button
-              onClick={() => setIsAnnual(false)}
-              style={{ ...MONO, fontSize: 13, padding: '7px 18px', background: !isAnnual ? 'rgba(111,155,198,0.12)' : 'transparent', color: !isAnnual ? '#6F9BC6' : '#6E7587', border: 'none', cursor: 'pointer', transition: 'all 0.15s' }}
-            >
-              Monthly
-            </button>
-            <button
-              onClick={() => setIsAnnual(true)}
-              style={{ ...MONO, fontSize: 13, padding: '7px 18px', background: isAnnual ? 'rgba(111,155,198,0.12)' : 'transparent', color: isAnnual ? '#6F9BC6' : '#6E7587', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, transition: 'all 0.15s' }}
-            >
-              Annual
-              <span style={{ ...MONO, fontSize: 10, background: 'rgba(111,155,198,0.12)', color: '#6F9BC6', padding: '2px 6px', letterSpacing: '0.05em' }}>
-                SAVE 20%
-              </span>
-            </button>
-          </div>
+          {/* ── DASHBOARD SURFACE ── */}
+          {isDash && (
+            <>
+              {/* Billing toggle */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 32, justifyContent: 'center' }}>
+                <span style={{ ...MONO, fontSize: 11, color: '#6E7587' }}>Monthly</span>
+                <button
+                  onClick={() => setBilling(b => b === 'monthly' ? 'annual' : 'monthly')}
+                  aria-label="Toggle billing period"
+                  style={{
+                    width: 40, height: 22,
+                    background: isAnnual ? 'rgba(111,155,198,0.3)' : 'rgba(255,255,255,0.08)',
+                    border: '0.5px solid rgba(111,155,198,0.3)',
+                    cursor: 'pointer',
+                    position: 'relative',
+                    borderRadius: 0,
+                    transition: 'background 0.2s',
+                    padding: 0,
+                    flexShrink: 0,
+                  }}
+                >
+                  <div style={{
+                    position: 'absolute',
+                    top: 3,
+                    left: isAnnual ? 21 : 2,
+                    width: 16,
+                    height: 16,
+                    background: isAnnual ? '#6F9BC6' : 'rgba(255,255,255,0.35)',
+                    transition: 'left 0.2s, background 0.2s',
+                  }} />
+                </button>
+                <span style={{ ...MONO, fontSize: 11, color: '#6E7587' }}>Annual</span>
+                {isAnnual && (
+                  <span style={{ ...MONO, fontSize: 10, color: '#00C48C', background: 'rgba(0,196,140,0.1)', padding: '2px 8px' }}>
+                    SAVE 20%
+                  </span>
+                )}
+              </div>
 
-          {isAnnual && (
-            <p style={{ ...MONO, fontSize: 11, color: '#6E7587', margin: '-28px 0 32px', lineHeight: 1.8 }}>
-              <span style={{ color: '#00C48C' }}>save ${savings(49)}/yr on Starter</span>
-              {' · '}
-              <span style={{ color: '#00C48C' }}>save ${savings(149)}/yr on Pro</span>
-              {' · '}
-              <span style={{ color: '#00C48C' }}>save ${savings(499)}/yr on Scale</span>
-            </p>
+              {/* Annual savings callout */}
+              {isAnnual && (
+                <p style={{ ...MONO, fontSize: 11, color: '#6E7587', textAlign: 'center', margin: '-16px 0 24px' }}>
+                  <span style={{ color: '#00C48C' }}>save ${savings(49)}/yr on Starter</span>
+                  {' · '}
+                  <span style={{ color: '#00C48C' }}>save ${savings(149)}/yr on Pro</span>
+                  {' · '}
+                  <span style={{ color: '#00C48C' }}>save ${savings(499)}/yr on Scale</span>
+                </p>
+              )}
+
+              {/* Tier rows */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 1, background: 'rgba(111,155,198,0.08)' }}>
+                {DASH_TIERS.map(t => (
+                  <div key={t.tier} className="tier-row">
+                    {/* LEFT — tier name + price */}
+                    <div style={{ minWidth: 0 }}>
+                      <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#6F9BC6', margin: '0 0 4px' }}>
+                        {t.tier}
+                      </p>
+                      <p style={{ ...DISP, fontSize: 36, fontWeight: 700, color: '#E6E9EE', lineHeight: 1, margin: 0 }}>
+                        {t.monthly === 0 ? '$0' : `$${isAnnual ? t.annual : t.monthly}`}
+                        {t.monthly > 0 && (
+                          <span style={{ ...MONO, fontSize: 12, color: '#6E7587', fontWeight: 400, marginLeft: 4 }}>/mo</span>
+                        )}
+                      </p>
+                      <p style={{ ...MONO, fontSize: 10, color: '#6F9BC6', margin: '4px 0 0' }}>
+                        {t.economy}
+                      </p>
+                    </div>
+
+                    {/* CENTER — differentiator + spec */}
+                    <div className="tier-center">
+                      <p style={{ ...SANS, fontSize: 15, fontWeight: 500, color: '#E6E9EE', margin: '0 0 8px' }}>
+                        {t.diff}
+                      </p>
+                      <p style={{ ...MONO, fontSize: 11, color: '#6E7587', margin: 0 }}>
+                        {t.spec}
+                      </p>
+                    </div>
+
+                    {/* RIGHT — CTA */}
+                    <div className="tier-right">
+                      <Link
+                        href={t.href}
+                        style={{
+                          ...MONO,
+                          fontSize: 12,
+                          color: '#6F9BC6',
+                          border: '1px solid rgba(111,155,198,0.4)',
+                          padding: '11px 28px',
+                          textDecoration: 'none',
+                          display: 'inline-block',
+                          background: 'transparent',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        {t.cta}
+                      </Link>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <p style={{ ...MONO, fontSize: 11, color: '#6E7587', textAlign: 'center', marginTop: 24 }}>
+                All plans include: full 307-check audit · AI-rewritten copy · corpus benchmarking · cache hits free
+              </p>
+            </>
           )}
 
-          {/* Dashboard tier cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4" style={{ alignItems: 'stretch' }}>
-
-            {/* FREE */}
-            <div className="wd-panel" style={{ display: 'flex', flexDirection: 'column' }}>
-              <div style={{ padding: '20px 20px 14px', borderBottom: '0.5px solid rgba(255,255,255,0.06)' }}>
-                <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.18em', color: '#6F9BC6', margin: '0 0 6px' }}>FREE</p>
-                <p style={{ ...MONO, fontSize: 10, color: '#6E7587', margin: '0 0 14px' }}>3 scans · no account</p>
-                <p style={{ ...DISP, fontSize: 40, fontWeight: 700, color: '#E6E9EE', lineHeight: 1, margin: '0 0 4px' }}>$0</p>
-                <p style={{ ...MONO, fontSize: 10, color: '#6E7587', margin: 0 }}>forever free</p>
-              </div>
-              <div style={{ padding: '14px 20px', borderBottom: '0.5px solid rgba(255,255,255,0.06)', flexGrow: 1 }}>
-                {DASH_SPECS.free.map(s => <SpecRow key={s.k} k={s.k} v={s.v} />)}
-              </div>
-              <div style={{ padding: '14px 20px 20px' }}>
-                <Link href="/scan" style={{ display: 'block', textAlign: 'center', ...MONO, fontSize: 12, color: '#6F9BC6', border: '1px solid rgba(111,155,198,0.5)', padding: '10px 0', textDecoration: 'none', transition: 'all 0.15s' }}>
-                  START FREE →
+          {/* ── API SURFACE ── */}
+          {isApi && (
+            <>
+              {/* Playground hero panel */}
+              <div style={{
+                background: 'rgba(157,140,255,0.04)',
+                border: '0.5px solid rgba(157,140,255,0.2)',
+                padding: '32px 40px',
+                marginBottom: 24,
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                gap: 32,
+                flexWrap: 'wrap',
+              }}>
+                <div>
+                  <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.18em', color: '#9D8CFF', margin: '0 0 8px' }}>
+                    START HERE
+                  </p>
+                  <p style={{ ...DISP, fontSize: 32, fontWeight: 700, color: '#E6E9EE', margin: '0 0 8px', lineHeight: 1.1 }}>
+                    25 free scans.
+                  </p>
+                  <p style={{ ...SANS, fontSize: 15, color: '#9398A8', margin: 0, maxWidth: 480 }}>
+                    No subscription. No credit card. Full JSON response on every scan. Rate limited to 5 requests/min.
+                  </p>
+                </div>
+                <Link
+                  href="/developer"
+                  style={{
+                    ...MONO,
+                    fontSize: 13,
+                    color: '#9D8CFF',
+                    border: '1px solid rgba(157,140,255,0.5)',
+                    padding: '14px 32px',
+                    background: 'transparent',
+                    borderRadius: 0,
+                    textDecoration: 'none',
+                    whiteSpace: 'nowrap',
+                    flexShrink: 0,
+                  }}
+                >
+                  GET API KEY →
                 </Link>
               </div>
-            </div>
 
-            {/* STARTER */}
-            <div className="wd-panel" style={{ display: 'flex', flexDirection: 'column' }}>
-              <div style={{ padding: '32px 32px 14px', borderBottom: '0.5px solid rgba(255,255,255,0.06)' }}>
-                <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.18em', color: '#6F9BC6', margin: '0 0 6px' }}>STARTER</p>
-                <p style={{ ...MONO, fontSize: 10, color: '#6E7587', margin: '0 0 14px' }}>20 scans/mo · single user</p>
-                <p style={{ ...DISP, fontSize: 40, fontWeight: 700, color: '#E6E9EE', lineHeight: 1, margin: '0 0 4px' }}>${price(49)}</p>
-                <p style={{ ...MONO, fontSize: 10, color: '#6F9BC6', margin: 0 }}>$2.45/scan effective</p>
+              {/* Rate context */}
+              <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.18em', color: '#6E7587', marginBottom: 16, textAlign: 'center' }}>
+                PAID PLANS · RATE DECREASES WITH VOLUME
+              </p>
+              <div style={{ maxWidth: 600, margin: '0 auto 32px' }}>
+                <div style={{ position: 'relative', height: 3, background: 'linear-gradient(to right, rgba(111,155,198,0.4), rgba(0,196,140,0.7))' }}>
+                  {[0, 25, 50, 75, 100].map((pct, i) => (
+                    <div
+                      key={i}
+                      style={{
+                        position: 'absolute',
+                        top: -4,
+                        left: pct === 100 ? 'calc(100% - 0.5px)' : `${pct}%`,
+                        width: '0.5px',
+                        height: 11,
+                        background: 'rgba(255,255,255,0.3)',
+                      }}
+                    />
+                  ))}
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6 }}>
+                  {(['PLAYGROUND', 'DEV', 'BUILDER', 'SCALE', 'ENTERPRISE'] as const).map(label => (
+                    <span key={label} style={{ ...MONO, fontSize: 9, color: '#6E7587' }}>{label}</span>
+                  ))}
+                </div>
               </div>
-              <div style={{ padding: '14px 32px', borderBottom: '0.5px solid rgba(255,255,255,0.06)', flexGrow: 1 }}>
-                {DASH_SPECS.starter.map(s => <SpecRow key={s.k} k={s.k} v={s.v} />)}
-              </div>
-              <div style={{ padding: '14px 32px 32px' }}>
-                <Link href="/signup?plan=starter" style={{ display: 'block', textAlign: 'center', ...MONO, fontSize: 12, color: '#6F9BC6', border: '1px solid rgba(111,155,198,0.5)', padding: '10px 0', textDecoration: 'none', transition: 'all 0.15s' }}>
-                  START FREE TRIAL →
-                </Link>
-              </div>
-            </div>
 
-            {/* PRO */}
-            <div className="wd-panel" style={{ display: 'flex', flexDirection: 'column' }}>
-              <div style={{ padding: '20px 20px 14px', borderBottom: '0.5px solid rgba(255,255,255,0.06)' }}>
-                <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.18em', color: '#6F9BC6', margin: '0 0 6px' }}>PRO</p>
-                <p style={{ ...MONO, fontSize: 10, color: '#6E7587', margin: '0 0 14px' }}>100 scans/mo · client workspaces</p>
-                <p style={{ ...DISP, fontSize: 40, fontWeight: 700, color: '#E6E9EE', lineHeight: 1, margin: '0 0 4px' }}>${price(149)}</p>
-                <p style={{ ...MONO, fontSize: 10, color: '#6F9BC6', margin: 0 }}>$1.49/scan effective</p>
-              </div>
-              <div style={{ padding: '14px 20px', borderBottom: '0.5px solid rgba(255,255,255,0.06)', flexGrow: 1 }}>
-                {DASH_SPECS.pro.map(s => <SpecRow key={s.k} k={s.k} v={s.v} />)}
-              </div>
-              <div style={{ padding: '14px 20px 20px' }}>
-                <Link href="/signup?plan=pro" style={{ display: 'block', textAlign: 'center', ...MONO, fontSize: 12, color: '#6F9BC6', border: '1px solid rgba(111,155,198,0.5)', padding: '10px 0', textDecoration: 'none', transition: 'all 0.15s' }}>
-                  START FREE TRIAL →
-                </Link>
-              </div>
-            </div>
+              {/* API tier rows */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 1, background: 'rgba(157,140,255,0.08)' }}>
+                {API_TIERS.map(t => (
+                  <div key={t.tier} className="tier-row">
+                    {/* LEFT */}
+                    <div style={{ minWidth: 0 }}>
+                      <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#9D8CFF', margin: '0 0 4px' }}>
+                        {t.tier}
+                      </p>
+                      <p style={{ ...DISP, fontSize: 36, fontWeight: 700, color: '#E6E9EE', lineHeight: 1, margin: 0 }}>
+                        {t.price}
+                      </p>
+                      <p style={{ ...MONO, fontSize: 10, color: t.economyColor, margin: '4px 0 0' }}>
+                        {t.economy}
+                      </p>
+                    </div>
 
-            {/* SCALE */}
-            <div className="wd-panel" style={{ display: 'flex', flexDirection: 'column' }}>
-              <div style={{ padding: '20px 20px 14px', borderBottom: '0.5px solid rgba(255,255,255,0.06)' }}>
-                <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.18em', color: '#6F9BC6', margin: '0 0 6px' }}>SCALE</p>
-                <p style={{ ...MONO, fontSize: 10, color: '#6E7587', margin: '0 0 14px' }}>500 scans/mo · dedicated support</p>
-                <p style={{ ...DISP, fontSize: 40, fontWeight: 700, color: '#E6E9EE', lineHeight: 1, margin: '0 0 4px' }}>${price(499)}</p>
-                <p style={{ ...MONO, fontSize: 10, color: '#6E7587', margin: 0 }}>custom rate · dedicated support</p>
-              </div>
-              <div style={{ padding: '14px 20px', borderBottom: '0.5px solid rgba(255,255,255,0.06)', flexGrow: 1 }}>
-                {DASH_SPECS.scale.map(s => <SpecRow key={s.k} k={s.k} v={s.v} />)}
-              </div>
-              <div style={{ padding: '14px 20px 20px' }}>
-                <Link href="mailto:hello@webdocai.com" style={{ display: 'block', textAlign: 'center', ...MONO, fontSize: 12, color: '#6F9BC6', border: '1px solid rgba(111,155,198,0.5)', padding: '10px 0', textDecoration: 'none', transition: 'all 0.15s' }}>
-                  TALK TO US →
-                </Link>
-              </div>
-            </div>
+                    {/* CENTER */}
+                    <div className="tier-center">
+                      <p style={{ ...SANS, fontSize: 15, fontWeight: 500, color: '#E6E9EE', margin: '0 0 8px' }}>
+                        {t.diff}
+                      </p>
+                      <p style={{ ...MONO, fontSize: 11, color: '#6E7587', margin: 0 }}>
+                        {t.spec}
+                      </p>
+                    </div>
 
-          </div>
+                    {/* RIGHT */}
+                    <div className="tier-right">
+                      <Link
+                        href={t.href}
+                        style={{
+                          ...MONO,
+                          fontSize: 12,
+                          color: t.ctaColor,
+                          border: `1px solid ${t.ctaBorder}`,
+                          padding: '11px 28px',
+                          textDecoration: 'none',
+                          display: 'inline-block',
+                          background: 'transparent',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        {t.cta}
+                      </Link>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <p style={{ ...MONO, fontSize: 11, color: '#6E7587', textAlign: 'center', marginTop: 24 }}>
+                All API plans include: full JSON schema · cache hits free · async mode · webhook delivery · same 307-check engine
+              </p>
+            </>
+          )}
+
         </div>
       </section>
       <div className="section-separator" />
 
-      {/* ── 3. FEATURE MATRIX ──────────────────────────────────────────────── */}
+      {/* ── 3. FEATURE MATRIX (always visible) ──────────────────────────────── */}
       <section style={{ position: 'relative', overflow: 'hidden' }}>
         <div aria-hidden style={{
           position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0,
@@ -475,12 +676,31 @@ export default function PricingPage() {
         }} />
         <Ticks />
 
-        <div style={{ position: 'relative', zIndex: 1, maxWidth: 1280, margin: '0 auto', padding: '48px 32px 64px' }}>
+        <div style={{ position: 'relative', zIndex: 1, maxWidth: 1100, margin: '0 auto', padding: '48px 32px 64px' }}>
+          <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.18em', color: '#6F9BC6', textAlign: 'center', margin: '0 0 8px' }}>
+            FEATURE MATRIX · DASHBOARD PLANS
+          </p>
           <button
             onClick={() => setShowTable(v => !v)}
-            style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.18em', color: '#6F9BC6', cursor: 'pointer', width: '100%', textAlign: 'center', background: 'transparent', border: 'none', padding: '8px 0', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
+            style={{
+              ...MONO,
+              fontSize: 11,
+              textTransform: 'uppercase',
+              letterSpacing: '0.18em',
+              color: '#6F9BC6',
+              cursor: 'pointer',
+              width: '100%',
+              textAlign: 'center',
+              background: 'transparent',
+              border: 'none',
+              padding: '8px 0',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 8,
+            }}
           >
-            FEATURE MATRIX
+            {showTable ? 'COLLAPSE' : 'EXPAND COMPARISON'}
             <span style={{ color: '#6E7587', fontSize: 10 }}>{showTable ? '▲' : '▼'}</span>
           </button>
 
@@ -491,7 +711,19 @@ export default function PricingPage() {
                   <tr>
                     <th style={{ textAlign: 'left', padding: '12px 16px 12px 0', width: '36%' }} />
                     {(['FREE', 'STARTER', 'PRO', 'SCALE'] as const).map(plan => (
-                      <th key={plan} style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.12em', color: '#6F9BC6', textAlign: 'center', padding: '12px 16px', fontWeight: 400 }}>
+                      <th
+                        key={plan}
+                        style={{
+                          ...MONO,
+                          fontSize: 10,
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.12em',
+                          color: '#6F9BC6',
+                          textAlign: 'center',
+                          padding: '12px 16px',
+                          fontWeight: 400,
+                        }}
+                      >
                         {plan}
                       </th>
                     ))}
@@ -504,7 +736,9 @@ export default function PricingPage() {
                   {TABLE_GROUPS.flatMap((group, gi) => [
                     <tr key={`g-${gi}`}>
                       <td colSpan={5} style={{ paddingTop: 28, paddingBottom: 8 }}>
-                        <span style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.12em', color: '#6E7587' }}>{group.label}</span>
+                        <span style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.12em', color: '#6E7587' }}>
+                          {group.label}
+                        </span>
                       </td>
                     </tr>,
                     ...group.rows.map((row, ri) => (
@@ -528,7 +762,7 @@ export default function PricingPage() {
       </section>
       <div className="section-separator" />
 
-      {/* ── 5. FAQ ──────────────────────────────────────────────────────────── */}
+      {/* ── 4. FAQ (always visible) ──────────────────────────────────────────── */}
       <section style={{ position: 'relative', overflow: 'hidden' }}>
         <div aria-hidden style={{
           position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0,
@@ -554,7 +788,7 @@ export default function PricingPage() {
       </section>
       <div className="section-separator" />
 
-      {/* ── 5. EXIT BAND ────────────────────────────────────────────────────── */}
+      {/* ── 5. EXIT BAND (always visible) ───────────────────────────────────── */}
       <section style={{ position: 'relative', overflow: 'hidden', borderTop: '0.5px solid rgba(111,155,198,0.15)' }}>
         <div aria-hidden style={{
           position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0,

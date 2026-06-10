@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import ScoreRing from '@/components/ui/ScoreRing'
 import ResponseAnnotatorSection from '@/components/sections/ResponseAnnotatorSection'
+import WebdocMark from '@/components/ui/WebdocMark'
 
 // ── Syntax-highlighted JSON primitives ──────────────────────────────────────
 
@@ -590,50 +591,7 @@ function TwoSurfaceSection() {
         {/* Engine convergence visual */}
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: 40 }}>
 
-          {/* Core node */}
-          <div style={{ position: 'relative', width: 70, height: 70, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-
-            {/* Rotating tick-mark frame */}
-            <div className="surf-core-spin" aria-hidden style={{
-              position: 'absolute', width: 54, height: 54,
-              animation: 'surf-core-rot 20s linear infinite',
-            }}>
-              <div style={{ position: 'absolute', top: 0, left: 0,     width: 9, height: 9, borderTop:    '0.5px solid rgba(111,155,198,0.5)', borderLeft:   '0.5px solid rgba(111,155,198,0.5)' }} />
-              <div style={{ position: 'absolute', top: 0, right: 0,    width: 9, height: 9, borderTop:    '0.5px solid rgba(111,155,198,0.5)', borderRight:  '0.5px solid rgba(111,155,198,0.5)' }} />
-              <div style={{ position: 'absolute', bottom: 0, left: 0,  width: 9, height: 9, borderBottom: '0.5px solid rgba(111,155,198,0.5)', borderLeft:   '0.5px solid rgba(111,155,198,0.5)' }} />
-              <div style={{ position: 'absolute', bottom: 0, right: 0, width: 9, height: 9, borderBottom: '0.5px solid rgba(111,155,198,0.5)', borderRight:  '0.5px solid rgba(111,155,198,0.5)' }} />
-            </div>
-
-            {/* Three offset organic rings */}
-            <div className="surf-ring" aria-hidden style={{
-              position: 'absolute', width: 22, height: 22,
-              border: '0.5px solid rgba(111,155,198,0.6)',
-              background: 'rgba(111,155,198,0.06)',
-              transform: 'translate(-3px, -2px)',
-              animation: 'surf-ring-blue 2.4s ease-in-out infinite',
-            }} />
-            <div className="surf-ring" aria-hidden style={{
-              position: 'absolute', width: 22, height: 22,
-              border: '0.5px solid rgba(157,140,255,0.6)',
-              background: 'rgba(157,140,255,0.06)',
-              transform: 'translate(2px, 3px)',
-              animation: 'surf-ring-purp 2.8s ease-in-out infinite',
-            }} />
-            <div className="surf-ring" aria-hidden style={{
-              position: 'absolute', width: 20, height: 20,
-              border: '0.5px solid rgba(0,196,140,0.55)',
-              background: 'rgba(0,196,140,0.06)',
-              transform: 'translate(0px, -1px)',
-              animation: 'surf-ring-green 3.2s ease-in-out infinite 0.4s',
-            }} />
-
-            {/* Center bright point */}
-            <div style={{
-              width: 6, height: 6,
-              background: 'radial-gradient(circle, rgba(255,255,255,0.9) 0%, rgba(111,155,198,0.8) 40%, transparent 100%)',
-              position: 'relative', zIndex: 2,
-            }} />
-          </div>
+          <WebdocMark size={80} animated={true} />
 
           {/* Engine label */}
           <p style={{ ...MONO, fontSize: 9, textTransform: 'uppercase' as const, letterSpacing: '0.2em', color: 'rgba(111,155,198,0.5)', margin: '7px 0 0' }}>SCAN ENGINE</p>
@@ -1095,9 +1053,12 @@ function FinalCtaSection() {
       <div style={{ position: 'relative', zIndex: 1, maxWidth: 720, margin: '0 auto', padding: '0 48px', textAlign: 'center' }}>
 
         {/* Wordmark — closing signature/seal */}
-        <p style={{ ...DISP, fontWeight: 700, fontSize: 20, letterSpacing: '-0.02em', color: '#E6E9EE', margin: '0 0 12px', lineHeight: 1 }}>
-          webdoc<span style={{ color: '#6F9BC6' }}>.ai</span>
-        </p>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, margin: '0 0 12px' }}>
+          <WebdocMark size={40} animated={false} />
+          <p style={{ ...DISP, fontWeight: 700, fontSize: 20, letterSpacing: '-0.02em', color: '#E6E9EE', margin: 0, lineHeight: 1 }}>
+            webdoc<span style={{ color: '#6F9BC6' }}>.ai</span>
+          </p>
+        </div>
         <div aria-hidden style={{ height: '0.5px', background: 'linear-gradient(to right, transparent, rgba(111,155,198,0.3), transparent)', maxWidth: 240, margin: '0 auto 44px' }} />
 
         {/* Kicker */}

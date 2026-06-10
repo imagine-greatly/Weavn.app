@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import WebdocMark from "@/components/ui/WebdocMark";
 
 function FooterLink({ href, children }: { href: string; children: React.ReactNode }) {
   return (
@@ -38,13 +39,7 @@ export default function SiteFooter() {
       <div className="mx-auto grid max-w-[1100px] gap-12 md:grid-cols-2 lg:grid-cols-3">
         <div>
           <Link href="/" className="inline-flex items-center gap-2" aria-label="WebDoc home" style={{ textDecoration: "none" }}>
-            <img
-              src="/webdocai_logo_definitive.svg"
-              alt="webdocai"
-              width={32}
-              height={32}
-              style={{ display: 'block', flexShrink: 0 }}
-            />
+            <WebdocMark size={28} animated={false} />
             <span
               style={{
                 fontFamily: "var(--font-jetbrains-mono), var(--font-space-mono), monospace",

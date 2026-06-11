@@ -1604,8 +1604,7 @@ function FinalCtaSection() {
 export default function DashboardPage() {
   const [upgradeLinkHovered, setUpgradeLinkHovered] = useState(false)
   return (
-    // instrument-grid: fine (64px) + macro (320px) grid from globals.css, same as homepage
-    <main className="instrument-grid" style={{ minHeight:'100vh' }}>
+    <main style={{ minHeight:'100vh' }}>
       <HeroSection />
       <OutputSection />
       <AIRewriteSection />

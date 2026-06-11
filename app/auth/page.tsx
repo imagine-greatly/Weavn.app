@@ -320,14 +320,6 @@ function AuthPageContent() {
               "radial-gradient(ellipse 400px 500px at 80% 85%, rgba(157,140,255,0.05) 0%, transparent 55%)",
             ].join(", "),
           }} />
-          <div aria-hidden style={{
-            position: "absolute", inset: 0, pointerEvents: "none",
-            backgroundImage: [
-              "repeating-linear-gradient(rgba(111,155,198,0.025) 1px, transparent 1px)",
-              "repeating-linear-gradient(90deg, rgba(111,155,198,0.025) 1px, transparent 1px)",
-            ].join(", "),
-            backgroundSize: "52px 52px",
-          }} />
           {/* Corner ticks */}
           {[
             { top: 24,    left: 24,    borderTop: "0.5px solid rgba(111,155,198,0.25)", borderLeft:   "0.5px solid rgba(111,155,198,0.25)" },

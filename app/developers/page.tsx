@@ -405,8 +405,6 @@ function HowItWorksSection() {
             minHeight: 320, display: 'flex', flexDirection: 'column',
             position: 'relative', overflow: 'hidden',
           }}>
-            {/* Scanline texture */}
-            <div aria-hidden style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 1, background: 'repeating-linear-gradient(0deg,rgba(0,0,0,0.035) 0px,rgba(0,0,0,0.035) 1px,transparent 1px,transparent 2px)' }} />
             <div style={{ padding: '10px 14px', borderBottom: '0.5px solid rgba(111,155,198,0.1)', display: 'flex', alignItems: 'center', gap: 8 }}>
               <span style={{ width: 6, height: 6, background: '#00C48C', display: 'inline-block', flexShrink: 0 }} />
               <span style={{ ...MONO, fontSize: 10, color: '#6E7587', textTransform: 'uppercase', letterSpacing: '0.15em' }}>terminal · curl</span>
@@ -546,7 +544,6 @@ export default function DevelopersPage() {
             boxShadow: '0 0 0 1px rgba(157,140,255,0.15), 0 0 40px rgba(157,140,255,0.08)',
             position: 'relative', overflow: 'hidden',
           }}>
-            <div aria-hidden style={{ position: 'absolute', inset: 0, background: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(157,140,255,0.015) 2px, rgba(157,140,255,0.015) 4px)', pointerEvents: 'none', zIndex: 0 }} />
             <div style={{ position: 'relative', zIndex: 1 }}>
               <CodeBlock code={CURL_CODE} language="bash" />
             </div>

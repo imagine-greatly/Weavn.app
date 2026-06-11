@@ -1,11 +1,7 @@
 import type { Metadata } from "next";
 import { JetBrains_Mono, Orbitron, Space_Grotesk, Space_Mono } from "next/font/google";
 import "./globals.css";
-import AnimatedBackground from "@/components/AnimatedBackground";
-import BackgroundField from "@/components/BackgroundField";
-import GrainOverlay from "@/components/GrainOverlay";
 import Navbar from "@/components/Navbar";
-import PersistentSiteAmbient from "@/components/PersistentSiteAmbient";
 
 const orbitron = Orbitron({
   weight: ["700", "900"],
@@ -77,55 +73,47 @@ export default function RootLayout({
       <body
         className={`min-h-screen text-[var(--text-primary)] antialiased relative font-sans ${orbitron.variable} ${spaceGrotesk.variable} ${spaceMono.variable} ${jetbrainsMono.variable}`}
       >
-        <AnimatedBackground />
-        <BackgroundField />
-        <PersistentSiteAmbient />
-        <GrainOverlay />
-        {/* Global fixed bloom orbs — ambient light sources fixed to viewport */}
         <div
-          aria-hidden
+          aria-hidden={true}
           style={{
             position: 'fixed',
             inset: 0,
-            zIndex: -10,
+            zIndex: -1,
             pointerEvents: 'none',
             overflow: 'hidden',
           }}
         >
-          {/* Orb 1: top center, steel blue, large and soft */}
           <div
             style={{
               position: 'absolute',
               top: '-300px',
               left: '50%',
               transform: 'translateX(-50%)',
-              width: '1600px',
-              height: '1200px',
-              background: 'radial-gradient(ellipse at center, rgba(111, 155, 198, 0.09) 0%, rgba(111, 155, 198, 0.027) 40%, rgba(111, 155, 198, 0.02) 65%, transparent 85%)',
+              width: '1400px',
+              height: '1000px',
+              background: 'radial-gradient(ellipse at 50% 30%, rgba(111,155,198,0.12) 0%, rgba(111,155,198,0.04) 45%, transparent 70%)',
               pointerEvents: 'none',
             }}
           />
-          {/* Orb 2: bottom right, pale green */}
           <div
             style={{
               position: 'absolute',
               bottom: '-200px',
               right: '-300px',
-              width: '1200px',
-              height: '1200px',
-              background: 'radial-gradient(ellipse at center, rgba(0, 196, 140, 0.05) 0%, rgba(0, 196, 140, 0.015) 40%, rgba(0, 196, 140, 0.02) 65%, transparent 85%)',
+              width: '900px',
+              height: '900px',
+              background: 'radial-gradient(ellipse at center, rgba(0,196,140,0.05) 0%, transparent 65%)',
               pointerEvents: 'none',
             }}
           />
-          {/* Orb 3: bottom left, pale purple, very faint */}
           <div
             style={{
               position: 'absolute',
               bottom: '-100px',
               left: '-200px',
-              width: '1000px',
-              height: '1000px',
-              background: 'radial-gradient(ellipse at center, rgba(157, 140, 255, 0.04) 0%, rgba(157, 140, 255, 0.012) 40%, rgba(157, 140, 255, 0.02) 65%, transparent 85%)',
+              width: '700px',
+              height: '700px',
+              background: 'radial-gradient(ellipse at center, rgba(157,140,255,0.04) 0%, transparent 65%)',
               pointerEvents: 'none',
             }}
           />

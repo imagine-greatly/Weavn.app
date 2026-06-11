@@ -9,7 +9,6 @@ interface SectionShellProps {
   bloomPosition?: string
   intensity?:     Intensity
   ticks?:         boolean
-  gridLines?:     boolean
   borderTop?:     boolean
   className?:     string
   style?:         CSSProperties
@@ -38,7 +37,6 @@ export default function SectionShell({
   bloomPosition = '50% 50%',
   intensity = 'low',
   ticks = true,
-  gridLines = false,
   borderTop = false,
   className,
   style,
@@ -65,22 +63,6 @@ export default function SectionShell({
             position: 'absolute', inset: 0,
             pointerEvents: 'none', zIndex: 0,
             background: `radial-gradient(ellipse 900px 600px at ${bloomPosition}, rgba(${rgba},${opacity}) 0%, transparent 65%)`,
-          }}
-        />
-      )}
-
-      {/* Instrument grid */}
-      {gridLines && (
-        <div
-          aria-hidden
-          style={{
-            position: 'absolute', inset: 0,
-            pointerEvents: 'none', zIndex: 0,
-            backgroundImage: [
-              'linear-gradient(rgba(111,155,198,0.03) 1px, transparent 1px)',
-              'linear-gradient(90deg, rgba(111,155,198,0.03) 1px, transparent 1px)',
-            ].join(', '),
-            backgroundSize: '60px 60px',
           }}
         />
       )}

@@ -355,7 +355,7 @@ function FooterSection() {
 
 export default function HomePage() {
   return (
-    <main className="bg-background-base min-h-screen instrument-grid">
+    <main className="bg-background-base min-h-screen">
       <NavBar />
       <HeroForkSection />
       <TrustStrip />

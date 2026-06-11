@@ -1,12 +1,8 @@
 @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap');
 
 /* FOUC guard — must precede Tailwind so the first paint is dark (DESIGN_SYSTEM.md base #050810). */
-html {
-  background-color: #050810;
-  min-height: 100vh;
-}
-body {
-  min-height: 100vh;
+html, body {
+  background: #050810;
 }
 
 @tailwind base;
@@ -104,14 +100,6 @@ body {
     font-family: var(--font-stack-sans);
     @apply antialiased;
     color: var(--text-primary);
-    /* Instrument grid — fine (64px) + macro (320px) divisions */
-    background-image:
-      linear-gradient(rgba(111,155,198,0.06) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(111,155,198,0.06) 1px, transparent 1px),
-      linear-gradient(rgba(111,155,198,0.03) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(111,155,198,0.03) 1px, transparent 1px);
-    background-size: 64px 64px, 64px 64px, 320px 320px, 320px 320px;
-    background-position: center center;
   }
 
   h1, h2, h3, h4, h5, h6, .font-display {
@@ -494,11 +482,6 @@ body {
 @keyframes scrollRight {
   from { transform: translateX(-50%); }
   to { transform: translateX(0); }
-}
-
-@keyframes gridPan {
-  from { transform: translateX(0); }
-  to { transform: translateX(36px); }
 }
 
 @keyframes nodePulse {
@@ -1295,28 +1278,6 @@ svg path { fill: none !important; }
 }
 @media (prefers-reduced-motion: reduce) {
   .status-dot { animation: none; }
-}
-
-/* ── Instrument grid on homepage main ──────────────────────────────────────── */
-/* Applied via .instrument-grid class on <main> so the grid shows through */
-.instrument-grid {
-  background-image:
-    linear-gradient(rgba(111,155,198,0.06) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(111,155,198,0.06) 1px, transparent 1px),
-    linear-gradient(rgba(111,155,198,0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(111,155,198,0.03) 1px, transparent 1px);
-  background-size: 64px 64px, 64px 64px, 320px 320px, 320px 320px;
-  background-position: center center;
-}
-
-.scanline-texture {
-  background-image: repeating-linear-gradient(
-    0deg,
-    transparent,
-    transparent 2px,
-    rgba(0, 200, 255, 0.01) 2px,
-    rgba(0, 200, 255, 0.01) 4px
-  );
 }
 
 ::-webkit-scrollbar { width: 4px; height: 4px; }

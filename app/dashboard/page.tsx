@@ -487,63 +487,89 @@ function AIRewriteSection() {
   )
 }
 
-// ── Section 4 — Report Anatomy ────────────────────────────────────────────────
+// ── Section 4 — Grounding Proof ───────────────────────────────────────────────
 
-const REPORT_ROWS = [
-  { name: 'Conversion score', content: 'A 0–100 weighted composite across all 307 checks. Below 70 is flagged critical.' },
-  { name: 'Percentile rank', content: 'Where your score sits against real sites in your exact vertical — not a generic industry average.' },
-  { name: 'Ranked findings', content: 'Every failing check listed by priority. P1 down to P-whatever. Each one includes evidence, severity, and estimated conversion lift.' },
-  { name: 'Evidence per finding', content: 'The specific element on your page that triggered the finding — what was present, absent, or misplaced.' },
-  { name: 'Fix per finding', content: 'A plain-English description of exactly what to change and why. No interpretation required.' },
-  { name: 'AI-rewritten copy', content: 'Drop-in replacement headlines, CTAs, and value propositions for every critical finding. Ready to hand to a designer.' },
-]
-
-function ReportAnatomySection() {
+function GroundingProofSection() {
   return (
     <section style={{ padding:'80px 48px',borderTop:'0.5px solid rgba(111,155,198,0.1)',position:'relative',overflow:'visible' }}>
+      <style>{`@media(max-width:639px){.d-ground-cols{flex-direction:column!important}}`}</style>
       <div style={{ maxWidth:1000,margin:'0 auto' }}>
-        <p style={{ ...MONO,fontSize:11,textTransform:'uppercase',letterSpacing:'0.2em',color:STEEL,margin:'0 0 16px' }}>
-          INSIDE THE REPORT
+        <p style={{ ...MONO,fontSize:11,textTransform:'uppercase',letterSpacing:'0.2em',color:INK_MUT,margin:'0 0 16px' }}>
+          HOW IT STAYS HONEST
         </p>
         <h2 style={{ ...DISP,fontWeight:700,fontSize:'clamp(28px,4vw,44px)',color:INK_PRI,letterSpacing:'-0.5px',margin:'0 0 16px',lineHeight:1.1 }}>
-          Everything in one place. Nothing to interpret.
+          Every finding cites evidence. No evidence, no finding.
         </h2>
         <p style={{ ...SANS,fontSize:15,color:INK_SEC,lineHeight:1.65,maxWidth:580,margin:'0 0 40px' }}>
-          Every webdoc report has the same structure. You always know what you&apos;re looking at and what to do with it.
+          The model cannot surface a finding without grounding it in something specific and visible on your page. Findings that fail validation are dropped before they reach you. This is not a preference — it is enforced at the model level.
         </p>
 
-        {/* Report anatomy diagram — STATIC ILLUSTRATION */}
-        <div style={{ display:'flex', gap:0, alignItems:'flex-start', marginBottom:32, flexWrap:'wrap' }}>
-          {/* Left column — score ring */}
-          <div style={{ flex:'0 0 35%', minWidth:180, display:'flex', flexDirection:'column', alignItems:'center', paddingRight:32, paddingTop:8 }}>
-            <svg width="100" height="100" viewBox="0 0 100 100">
-              <circle cx="50" cy="50" r="40" stroke="rgba(111,155,198,0.12)" strokeWidth="4" fill="none" />
-              <circle cx="50" cy="50" r="40" stroke={CRIT} strokeWidth="4" strokeDasharray="251.33" strokeDashoffset="97.97" strokeLinecap="round" fill="none" transform="rotate(-90 50 50)" />
-              <text x="50" y="61" textAnchor="middle" fill={CRIT} style={{ fontFamily:'"Space Grotesk",sans-serif', fontSize:26, fontWeight:700 }}>61</text>
-            </svg>
-            <div style={{ textAlign:'center', marginTop:8 }}>
-              <span style={{ ...MONO, fontSize:8, color:CRIT, border:`0.5px solid ${CRIT}`, padding:'1px 5px', textTransform:'uppercase', letterSpacing:'0.08em' }}>CRITICAL</span>
-            </div>
-            <p style={{ ...MONO, fontSize:9, color:INK_MUT, textAlign:'center', margin:'8px 0 0', lineHeight:1.5 }}>63rd pct · B2B SaaS</p>
-            <div style={{ width:1, height:40, background:'rgba(111,155,198,0.2)', margin:'12px auto 0' }} />
-            <p style={{ ...MONO, fontSize:8, color:INK_MUT, textAlign:'center', margin:'8px 0 0', textTransform:'uppercase', letterSpacing:'0.12em' }}>YOUR REPORT</p>
-          </div>
-          {/* Right column — six component boxes */}
-          <div style={{ flex:'1 1 65%', minWidth:220 }}>
-            {REPORT_ROWS.map((row, i) => (
-              <div key={row.name} style={{ display:'flex', alignItems:'center', marginBottom: i < REPORT_ROWS.length - 1 ? 16 : 0 }}>
-                <div style={{ width:40, height:1, background:'rgba(111,155,198,0.08)', flexShrink:0 }} />
-                <div style={{ flex:1, borderLeft:'2px solid rgba(111,155,198,0.2)', paddingLeft:16 }}>
-                  <p style={{ ...DISP, fontSize:14, fontWeight:500, color:INK_PRI, margin:'0 0 2px' }}>{row.name}</p>
-                  <p style={{ ...SANS, fontSize:12, color:INK_MUT, margin:0, lineHeight:1.55 }}>{row.content}</p>
-                </div>
+        {/* Demonstration panel — STATIC ILLUSTRATION */}
+        <div style={{ background:'rgba(8,12,22,0.9)', border:'1px solid rgba(111,155,198,0.12)', boxShadow:'inset 0 1px 0 0 rgba(111,155,198,0.15)', marginBottom:0 }}>
+          <div className="d-ground-cols" style={{ display:'flex' }}>
+
+            {/* Left — evidence output */}
+            <div style={{ flex:1, padding:28, background:'rgba(0,0,0,0.2)', borderRight:'0.5px solid rgba(111,155,198,0.1)' }}>
+              <p style={{ ...MONO,fontSize:9,textTransform:'uppercase',letterSpacing:'0.18em',color:INK_MUT,margin:'0 0 16px' }}>EVIDENCE ON YOUR PAGE</p>
+              <div style={{ display:'flex',flexDirection:'column',gap:3 }}>
+                {[
+                  { key:'h1_text',         val:'"The project management\\ntool built for remote\\nteams."', string:true },
+                  { key:'location',        val:'above_fold',      string:false },
+                  { key:'char_count',      val:'47',              string:false },
+                  { key:'classification',  val:'"feature_led"',   string:true  },
+                  { key:'outcome_statement', val:'false',         string:false },
+                  { key:'benefit_visible', val:'false',           string:false },
+                  { key:'above_fold',      val:'true',            string:false },
+                ].map((line, li) => (
+                  <div key={li} style={{ display:'flex',gap:8,alignItems:'flex-start' }}>
+                    <span style={{ ...MONO,fontSize:11,color:'rgba(111,155,198,0.5)',width:16,flexShrink:0,textAlign:'right',marginTop:1 }}>{li+1}</span>
+                    <span style={{ ...MONO,fontSize:11,lineHeight:1.55 }}>
+                      <span style={{ color:STEEL }}>{line.key}</span>
+                      <span style={{ color:INK_MUT }}>: </span>
+                      <span style={{ color: line.string ? LIFT_GREEN : 'rgba(239,178,62,0.85)' }}>{line.val}</span>
+                    </span>
+                  </div>
+                ))}
               </div>
-            ))}
+            </div>
+
+            {/* Right — finding produced */}
+            <div style={{ flex:1, padding:28 }}>
+              <p style={{ ...MONO,fontSize:9,textTransform:'uppercase',letterSpacing:'0.18em',color:INK_MUT,margin:'0 0 16px' }}>FINDING SURFACED</p>
+              <div style={{ background:'rgba(232,99,95,0.04)', border:'0.5px solid rgba(232,99,95,0.2)', borderLeft:'2px solid rgba(232,99,95,0.45)', padding:16 }}>
+                <div style={{ display:'flex',alignItems:'flex-start',justifyContent:'space-between',marginBottom:8,gap:12 }}>
+                  <div style={{ display:'flex',alignItems:'center',gap:10 }}>
+                    <span style={{ ...MONO,fontSize:10,color:CRIT,border:`0.5px solid rgba(232,99,95,0.35)`,padding:'2px 8px',textTransform:'uppercase',letterSpacing:'0.1em' }}>CRITICAL</span>
+                    <span style={{ ...DISP,fontWeight:600,fontSize:14,color:INK_PRI }}>Hero headline is feature-led, not outcome-led</span>
+                  </div>
+                  <span style={{ ...MONO,fontSize:11,color:LIFT_GREEN,whiteSpace:'nowrap',flexShrink:0,textShadow:'0 0 8px rgba(0,196,140,0.4)' }}>EST. LIFT +12–18%</span>
+                </div>
+                <div style={{ height:1,background:'rgba(255,255,255,0.06)',marginBottom:10 }} />
+                <p style={{ ...MONO,fontSize:9,textTransform:'uppercase',letterSpacing:'0.15em',color:INK_MUT,margin:'0 0 5px' }}>EVIDENCE</p>
+                <p style={{ ...SANS,fontSize:13,color:INK_SEC,margin:'0 0 12px',lineHeight:1.55 }}>
+                  Your H1 reads: &ldquo;The project management tool built for remote teams.&rdquo; This describes the product, not the outcome. No benefit statement above the fold.
+                </p>
+                <p style={{ ...MONO,fontSize:9,textTransform:'uppercase',letterSpacing:'0.15em',color:INK_MUT,margin:'0 0 5px' }}>FIX</p>
+                <p style={{ ...SANS,fontSize:13,color:INK_SEC,margin:0,lineHeight:1.55 }}>
+                  Rewrite the headline to lead with the outcome the visitor gets, not the feature you built.
+                </p>
+              </div>
+            </div>
+
+          </div>
+
+          {/* Grounding rule strip */}
+          <div style={{ borderTop:'0.5px solid rgba(111,155,198,0.1)',padding:'14px 28px',display:'flex',justifyContent:'center',gap:16,flexWrap:'wrap' }}>
+            <span style={{ ...MONO,fontSize:10,color:STEEL }}>grounding_rule: cite_visible_content_or_fail</span>
+            <span style={{ ...MONO,fontSize:10,color:INK_MUT }}>·</span>
+            <span style={{ ...MONO,fontSize:10,color:STEEL }}>findings_dropped_without_evidence: true</span>
+            <span style={{ ...MONO,fontSize:10,color:INK_MUT }}>·</span>
+            <span style={{ ...MONO,fontSize:10,color:STEEL }}>validation: enforced_at_model_level</span>
           </div>
         </div>
 
-        <p style={{ ...MONO,fontSize:11,color:INK_MUT,textAlign:'center',margin:0 }}>
-          Delivered in dashboard · exportable as PDF · shareable via link
+        <p style={{ ...SANS,fontSize:13,color:INK_MUT,textAlign:'center',margin:'16px 0 0',lineHeight:1.6 }}>
+          You will never see a finding that isn&apos;t traceable to something real on your page.
         </p>
       </div>
     </section>
@@ -768,52 +794,180 @@ const PIPELINE_STEPS = [
   },
 ]
 
+// SVG zigzag path — same stroke style as homepage branch lines (var(--interactive), strokeWidth 1.5, cubic bezier S-curves)
+// ViewBox 0 0 1000 2680 | slot=460px | left-card center x=230, right-card center x=770, midpoint x=500
+// Step centers y: 190, 650, 1110, 1570, 2030, 2490 | Nodes y: 420, 880, 1340, 1800, 2260
+const PIPELINE_SNAKE = 'M 230 190 C 230 420 500 190 500 420 C 500 650 770 420 770 650 C 770 880 500 650 500 880 C 500 1110 230 880 230 1110 C 230 1340 500 1110 500 1340 C 500 1570 770 1340 770 1570 C 770 1800 500 1570 500 1800 C 500 2030 230 1800 230 2030 C 230 2260 500 2030 500 2260 C 500 2490 770 2260 770 2490'
+
+const PIPELINE_NODES = [
+  { cx: 500, cy: 420,  bright: true  }, // between step 01 → 02; step 02 is the key differentiator
+  { cx: 500, cy: 880,  bright: false },
+  { cx: 500, cy: 1340, bright: false },
+  { cx: 500, cy: 1800, bright: false },
+  { cx: 500, cy: 2260, bright: false },
+]
+
+const PIPELINE_FAIL = new Set([3, 8, 13, 18, 22, 26, 28])
+
+function StepAnim({ idx }: { idx: number }) {
+  if (idx === 0) return (
+    <div style={{ marginTop: 16 }}>
+      <span style={{ ...MONO, fontSize: 12, color: LIFT_GREEN }}>https://acme-saas.com</span>
+      <span className="pl-cursor" style={{ ...MONO, fontSize: 12, color: LIFT_GREEN }}>|</span>
+    </div>
+  )
+  if (idx === 1) return (
+    <div style={{ marginTop: 16, position: 'relative', width: 160, height: 80, border: '1px solid rgba(111,155,198,0.2)', overflow: 'hidden' }}>
+      <div style={{ position: 'absolute', top: 12, left: 10, width: '70%', height: 5, background: 'rgba(111,155,198,0.12)' }} />
+      <div style={{ position: 'absolute', top: 24, left: 10, width: '85%', height: 4, background: 'rgba(111,155,198,0.07)' }} />
+      <div style={{ position: 'absolute', top: 36, left: 10, width: '55%', height: 4, background: 'rgba(111,155,198,0.07)' }} />
+      <div className="pl-scan" style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 1, background: 'rgba(111,155,198,0.45)' }} />
+    </div>
+  )
+  if (idx === 2) return (
+    <div style={{ marginTop: 16, display: 'grid', gridTemplateColumns: 'repeat(6, 8px)', gap: 4 }}>
+      {Array.from({ length: 30 }).map((_, si) => (
+        <div key={si} className="pl-check" style={{
+          width: 8, height: 8,
+          background: 'rgba(111,155,198,0.15)',
+          animationDelay: `${si * 0.067}s`,
+          '--target-bg': PIPELINE_FAIL.has(si) ? 'rgba(232,99,95,0.7)' : 'rgba(0,196,140,0.7)',
+        } as React.CSSProperties} />
+      ))}
+    </div>
+  )
+  if (idx === 3) return (
+    <div style={{ marginTop: 16 }}>
+      {[
+        { label: 'P1', w: '90%', c: 'rgba(232,99,95,0.7)' },
+        { label: 'P2', w: '70%', c: 'rgba(239,178,62,0.7)' },
+        { label: 'P3', w: '55%', c: 'rgba(239,178,62,0.7)' },
+      ].map((b, bi) => (
+        <div key={bi} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+          <span style={{ ...MONO, fontSize: 9, color: INK_MUT, width: 16, flexShrink: 0 }}>{b.label}</span>
+          <div style={{ flex: 1, height: 6, background: 'rgba(111,155,198,0.08)' }}>
+            <div className="pl-bar" style={{
+              height: '100%', background: b.c,
+              animationDelay: `${bi * 0.25}s`,
+              '--bar-w': b.w,
+            } as React.CSSProperties} />
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+  if (idx === 4) return (
+    <div style={{ marginTop: 16 }}>
+      <p className="pl-orig" style={{ ...SANS, fontSize: 12, fontStyle: 'italic', color: INK_MUT, margin: '0 0 6px', lineHeight: 1.4 }}>
+        &ldquo;The project management tool...&rdquo;
+      </p>
+      <p className="pl-rewrite" style={{ ...SANS, fontSize: 12, color: LIFT_GREEN, margin: 0, lineHeight: 1.4 }}>
+        &ldquo;Ship projects on time...&rdquo;
+      </p>
+    </div>
+  )
+  return (
+    <div style={{ marginTop: 16 }}>
+      <svg width="140" height="60" viewBox="0 0 140 60" aria-hidden>
+        <path d="M 0 56 C 25 56 45 48 58 36 C 68 27 73 15 80 10 C 87 5 91 9 96 18 C 106 36 122 54 140 56" fill="none" stroke="rgba(111,155,198,0.4)" strokeWidth="1.2" strokeLinecap="round" />
+        <line x1="80" y1="2" x2="80" y2="56" stroke="rgba(111,155,198,0.2)" strokeWidth="0.75" strokeDasharray="3 2" />
+        <text x="80" y="10" textAnchor="middle" fontFamily='"IBM Plex Mono",monospace' fontSize="7" fill="rgba(111,155,198,0.5)">63rd pct</text>
+        <circle className="pl-pulse" cx="80" cy="14" r="4" fill="rgba(111,155,198,0.7)" />
+      </svg>
+    </div>
+  )
+}
+
 function HowItWorksSection() {
   return (
-    <section style={{ padding:'80px 48px',borderTop:'0.5px solid rgba(111,155,198,0.1)',position:'relative',overflow:'visible' }}>
-      <div style={{ maxWidth:1000,margin:'0 auto' }}>
-        <p style={{ ...MONO,fontSize:11,textTransform:'uppercase',letterSpacing:'0.2em',color:STEEL,margin:'0 0 16px' }}>
+    <section style={{ padding: '80px 48px', borderTop: '0.5px solid rgba(111,155,198,0.1)', position: 'relative', overflow: 'visible' }}>
+      <style>{`
+        @keyframes pl-blink    { 0%,49%{opacity:1} 50%,100%{opacity:0} }
+        @keyframes pl-scan     { 0%{top:0px} 100%{top:77px} }
+        @keyframes pl-check    { 0%{background:rgba(111,155,198,0.15)} 50%,80%{background:var(--target-bg)} 100%{background:rgba(111,155,198,0.15)} }
+        @keyframes pl-bar      { 0%,100%{width:0} 55%,80%{width:var(--bar-w)} }
+        @keyframes pl-orig     { 0%{opacity:1} 38%,100%{opacity:0} }
+        @keyframes pl-rewrite  { 0%,33%{opacity:0} 72%,100%{opacity:1} }
+        @keyframes pl-pulse    { 0%,100%{transform:scale(1)} 50%{transform:scale(1.4)} }
+        @keyframes pl-flow     { to{stroke-dashoffset:-520} }
+        @media (prefers-reduced-motion: no-preference) {
+          .pl-cursor  { animation: pl-blink   1s   step-end    infinite }
+          .pl-scan    { animation: pl-scan    2.5s ease-in-out infinite }
+          .pl-check   { animation: pl-check   2.2s ease-out    infinite }
+          .pl-bar     { animation: pl-bar     2.5s ease-out    infinite }
+          .pl-orig    { animation: pl-orig    3s   ease-in-out infinite }
+          .pl-rewrite { animation: pl-rewrite 3s   ease-in-out infinite }
+          .pl-pulse   { transform-box:fill-box; transform-origin:center; animation:pl-pulse 2s ease-in-out infinite }
+          .pl-flow    { animation: pl-flow    4s   linear      infinite }
+        }
+        @media (max-width:767px) {
+          .d-pl-wrap  { height:auto!important }
+          .d-pl-step  { position:static!important; width:100%!important; margin-bottom:24px!important; left:auto!important; top:auto!important }
+          .d-pl-svg   { display:none!important }
+        }
+      `}</style>
+
+      <div style={{ maxWidth: 1000, margin: '0 auto' }}>
+        <p style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.2em', color: STEEL, margin: '0 0 16px' }}>
           THE PROCESS
         </p>
-        <h2 style={{ ...DISP,fontWeight:700,fontSize:'clamp(28px,4vw,44px)',color:INK_PRI,letterSpacing:'-0.5px',margin:'0 0 48px',lineHeight:1.1 }}>
+        <h2 style={{ ...DISP, fontWeight: 700, fontSize: 'clamp(28px,4vw,44px)', color: INK_PRI, letterSpacing: '-0.5px', margin: '0 0 48px', lineHeight: 1.1 }}>
           What happens when you paste a URL.
         </h2>
 
-        {/* Vertical pipeline */}
-        <div style={{ position:'relative' }}>
-          {/* Connector line */}
-          <div style={{ position:'absolute',left:7,top:8,bottom:8,width:2,background:'rgba(111,155,198,0.2)',zIndex:0 }} />
+        {/* Staggered zigzag pipeline */}
+        <div className="d-pl-wrap" style={{ position: 'relative', height: 2680 }}>
 
-          {PIPELINE_STEPS.map((step, i) => (
-            <div key={step.num} style={{ position:'relative',display:'flex',gap:24,alignItems:'flex-start',marginBottom: i < PIPELINE_STEPS.length - 1 ? 48 : 0 }}>
-              {/* Node on connector line */}
-              <div style={{ flexShrink:0,width:16,display:'flex',justifyContent:'center',paddingTop:5,zIndex:1 }}>
-                <div style={{
-                  width:10,height:10,borderRadius:'50%',
-                  background: step.bright ? 'rgba(111,155,198,0.7)' : 'rgba(111,155,198,0.2)',
-                  border: `1px solid ${step.bright ? 'rgba(111,155,198,0.9)' : 'rgba(111,155,198,0.35)'}`,
-                  flexShrink:0,
-                }} />
-              </div>
-              {/* Step content — full width */}
-              <div style={{ flex:1,minWidth:0,paddingBottom:4 }}>
-                <p style={{ ...MONO,fontSize:11,fontWeight:500,color:'rgba(111,155,198,0.7)',margin:'0 0 6px',letterSpacing:'0.08em' }}>{step.num}</p>
-                <p style={{ ...DISP,fontSize:18,fontWeight:700,color:INK_PRI,margin:'0 0 10px',lineHeight:1.2 }}>{step.title}</p>
-                <p style={{ ...SANS,fontSize:14,color:INK_SEC,lineHeight:1.65,margin:0,maxWidth:640 }}>{step.desc}</p>
+          {/* SVG connector — same stroke style as homepage branch lines */}
+          <svg className="d-pl-svg" aria-hidden
+            style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 0 }}
+            viewBox="0 0 1000 2680"
+            preserveAspectRatio="none"
+          >
+            {/* Base path */}
+            <path d={PIPELINE_SNAKE} stroke="rgba(111,155,198,1)" strokeWidth="1.5" strokeLinecap="round" fill="none" opacity="0.5" />
+            {/* Traveling dash overlay */}
+            <path className="pl-flow" d={PIPELINE_SNAKE} stroke="rgba(111,155,198,0.5)" strokeWidth="1.5" strokeLinecap="round" strokeDasharray="6 20" fill="none" />
+            {/* Inflection nodes */}
+            {PIPELINE_NODES.map((n, ni) => (
+              <circle key={ni} cx={n.cx} cy={n.cy} r="5" fill={n.bright ? 'rgba(111,155,198,0.9)' : 'rgba(111,155,198,0.5)'} />
+            ))}
+          </svg>
+
+          {/* Step cards */}
+          {PIPELINE_STEPS.map((step, i) => {
+            const isLeft = i % 2 === 0
+            return (
+              <div key={step.num} className="d-pl-step" style={{
+                position: 'absolute',
+                top: i * 460,
+                left: isLeft ? 0 : '54%',
+                width: '46%',
+                minHeight: 380,
+                zIndex: 1,
+                background: 'rgba(111,155,198,0.03)',
+                border: '1px solid rgba(111,155,198,0.12)',
+                boxShadow: 'inset 0 1px 0 0 rgba(111,155,198,0.15)',
+                padding: '28px 32px',
+              }}>
+                <p style={{ ...MONO, fontSize: 32, fontWeight: 500, color: 'rgba(111,155,198,0.7)', margin: '0 0 12px', lineHeight: 1, letterSpacing: '-0.02em' }}>{step.num}</p>
+                <p style={{ ...DISP, fontSize: 20, fontWeight: 700, color: INK_PRI, margin: '0 0 10px', lineHeight: 1.2 }}>{step.title}</p>
+                <p style={{ ...SANS, fontSize: 15, color: INK_SEC, lineHeight: 1.65, margin: 0, maxWidth: 400 }}>{step.desc}</p>
                 {step.tag && (
-                  <p style={{ ...MONO,fontSize:10,color:INK_MUT,margin:'8px 0 0',letterSpacing:'0.04em',lineHeight:1.5 }}>{step.tag}</p>
+                  <p style={{ ...MONO, fontSize: 10, color: INK_MUT, margin: '8px 0 0', letterSpacing: '0.04em', lineHeight: 1.5 }}>{step.tag}</p>
                 )}
+                <StepAnim idx={i} />
               </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
 
         {/* Footer */}
-        <div style={{ marginTop:40,borderTop:'0.5px solid rgba(111,155,198,0.1)',paddingTop:24,textAlign:'center' }}>
-          <p style={{ ...SANS,fontSize:14,color:INK_MUT,margin:'0 0 10px',lineHeight:1.65 }}>
+        <div style={{ marginTop: 40, borderTop: '0.5px solid rgba(111,155,198,0.1)', paddingTop: 24, textAlign: 'center' }}>
+          <p style={{ ...SANS, fontSize: 14, color: INK_MUT, margin: '0 0 10px', lineHeight: 1.65 }}>
             Total time from URL to full report: approximately 90 seconds.
           </p>
-          <p style={{ ...MONO,fontSize:10,color:INK_MUT,margin:0,opacity:0.6 }}>
+          <p style={{ ...MONO, fontSize: 10, color: INK_MUT, margin: 0, opacity: 0.6 }}>
             No technical knowledge required — paste a URL, read the report, fix what matters.
           </p>
         </div>
@@ -1047,20 +1201,31 @@ function WhyDifferentSection() {
 
 // ── Section 11 — Multi-Site / Scale ──────────────────────────────────────────
 
-const SINGLE_SITE_FEATURES = [
-  'Full conversion audit per scan',
-  'Score + percentile against your vertical',
-  'Plain-English fixes + AI copy rewrites',
-  'Monthly scan cadence on Starter',
+const AGENCY_CAPS = [
+  {
+    title: 'White-label PDF export',
+    desc: 'Every report exports as a branded PDF with your agency name, logo, and color. Hand it to a client — webdoc never appears.',
+  },
+  {
+    title: 'Client management dashboard',
+    desc: 'All client sites in one view. Score history, scan dates, finding trends. Know which clients need attention without opening every report.',
+  },
+  {
+    title: '100 API calls bundled',
+    desc: 'Programmatically trigger scans, pull results into your own tools, or automate client onboarding. 100 calls included per month.',
+  },
+  {
+    title: 'Vertical-matched benchmarks per client',
+    desc: "Each client's score is benchmarked against their exact vertical. E-commerce client gets e-commerce comparisons. Makes the audit more defensible.",
+  },
 ]
 
-const MULTI_SITE_FEATURES = [
-  "White-label PDF — your brand, not webdoc's",
-  'Scan history and score tracking per site',
-  '100 API calls bundled for workflow integration',
-  'Vertical-matched benchmarks per client site',
-  'Evidence-backed findings — nothing vague in a client meeting',
-  'Plain-English output — hand it to a client without translation',
+const REPORT_FINDINGS = [
+  { p:'P1', sev:'CRITICAL', sevColor:CRIT,     sevBorder:'rgba(232,99,95,0.4)',   title:'Hero headline is feature-led, not outcome-led',     lift:'+12–18%' },
+  { p:'P2', sev:'HIGH',     sevColor:HIGH_AMB, sevBorder:'rgba(239,178,62,0.4)',  title:'No above-fold social proof',                        lift:'+8–11%'  },
+  { p:'P3', sev:'HIGH',     sevColor:HIGH_AMB, sevBorder:'rgba(239,178,62,0.4)',  title:'Dual primary CTAs create decision paralysis',       lift:'+6–9%'   },
+  { p:'P4', sev:'HIGH',     sevColor:HIGH_AMB, sevBorder:'rgba(239,178,62,0.4)',  title:'Pricing not visible without scrolling',             lift:'+5–8%'   },
+  { p:'P5', sev:'LOW',      sevColor:INK_MUT,  sevBorder:'rgba(110,117,135,0.4)', title:'Missing favicon — minor trust signal',              lift:'+1–2%'   },
 ]
 
 function MultiSiteSection() {
@@ -1070,128 +1235,119 @@ function MultiSiteSection() {
       borderTop: '0.5px solid rgba(111,155,198,0.1)',
       position: 'relative',
       overflow: 'visible',
-      background: 'radial-gradient(ellipse 1000px 500px at 50% 50%, rgba(157, 140, 255, 0.04) 0%, transparent 70%)',
+      background: 'radial-gradient(ellipse 1000px 500px at 50% 50%, rgba(157,140,255,0.04) 0%, transparent 70%)',
     }}>
-      <style>{`@media(max-width:767px){.d-scale-cols{flex-direction:column!important}.d-scale-divider{display:none!important}}`}</style>
+      <style>{`
+        @media(max-width:767px){.d-agency-cap-grid{grid-template-columns:1fr!important}}
+        @media(max-width:639px){.d-report-meta{flex-direction:column!important;gap:8px!important}.d-report-table-row{flex-wrap:wrap!important}}
+      `}</style>
       <div style={{ maxWidth: 1000, margin: '0 auto' }}>
         <p style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.2em', color: INK_MUT, margin: '0 0 16px' }}>
           AT SCALE
         </p>
         <h2 style={{ ...DISP, fontWeight: 700, fontSize: 'clamp(28px,4vw,44px)', color: INK_PRI, letterSpacing: '-0.5px', margin: '0 0 16px', lineHeight: 1.1 }}>
-          Running audits for more than one site?
+          Run client audits. Deliver branded reports. Track every site.
         </h2>
-        <p style={{ ...SANS, fontSize: 15, color: INK_SEC, lineHeight: 1.65, maxWidth: 580, margin: '0 0 40px' }}>
-          The dashboard handles multiple sites natively. Each site gets its own report, score history, and benchmarks. White-label the output and it&apos;s ready to hand to a client.
+        <p style={{ ...SANS, fontSize: 15, color: INK_SEC, lineHeight: 1.65, maxWidth: 600, margin: '0 0 40px' }}>
+          The Agency plan turns webdoc into a client-facing audit tool. Scan any site, deliver a white-label report under your brand, and track score history per client — all from one dashboard.
         </p>
 
-        {/* Two use-case columns */}
-        <div className="d-scale-cols" style={{ display: 'flex', gap: 0, marginBottom: 40 }}>
-          {/* Single site */}
-          <div style={{ flex: 1, minWidth: 0, paddingRight: 32 }}>
-            <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.18em', color: INK_MUT, margin: '0 0 12px' }}>
-              SINGLE SITE OWNER
-            </p>
-            <p style={{ ...SANS, fontSize: 14, color: INK_MUT, margin: '0 0 20px', lineHeight: 1.65 }}>
-              Scan your site. Get the report. Fix what matters. Free to start, upgrade when you need more scans or the full report.
-            </p>
-            <div>
-              {SINGLE_SITE_FEATURES.map(f => (
-                <p key={f} style={{ ...SANS, fontSize: 13, color: INK_SEC, margin: '0 0 8px', lineHeight: 1.5 }}>· {f}</p>
-              ))}
-            </div>
-          </div>
-
-          {/* Vertical divider */}
-          <div className="d-scale-divider" style={{ width: 1, background: 'rgba(157,140,255,0.15)', flexShrink: 0 }} />
-
-          {/* Multi-site */}
-          <div style={{ flex: 1, minWidth: 0, paddingLeft: 32 }}>
-            <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.18em', color: 'rgba(157,140,255,0.75)', margin: '0 0 12px' }}>
-              MULTI-SITE / CLIENT WORK
-            </p>
-            <p style={{ ...SANS, fontSize: 14, color: INK_MUT, margin: '0 0 20px', lineHeight: 1.65 }}>
-              Run audits across multiple sites. Deliver white-label reports. Track score history per client. The dashboard handles all of it.
-            </p>
-            <div style={{ borderLeft: '2px solid rgba(157,140,255,0.25)', paddingLeft: 16 }}>
-              {MULTI_SITE_FEATURES.map(f => (
-                <p key={f} style={{ ...SANS, fontSize: 13, color: INK_SEC, margin: '0 0 8px', lineHeight: 1.5 }}>· {f}</p>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* White-label mock panel — STATIC ILLUSTRATION */}
+        {/* White-label report mock — STATIC ILLUSTRATION */}
         <div style={{
-          background: 'rgba(8,12,22,0.95)',
+          background: 'rgba(6,9,18,0.95)',
           border: '1px solid rgba(157,140,255,0.2)',
-          padding: 28,
+          boxShadow: '0 0 60px rgba(157,140,255,0.06), inset 0 1px 0 0 rgba(157,140,255,0.15)',
           marginBottom: 12,
         }}>
-          {/* Header row */}
-          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:16, flexWrap:'wrap', gap:16 }}>
+          {/* Report header */}
+          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'28px 32px', borderBottom:'1px solid rgba(157,140,255,0.1)', flexWrap:'wrap', gap:16 }}>
             <div style={{ display:'flex', alignItems:'center', gap:16 }}>
-              {/* Logo placeholder */}
-              <div style={{ width:48, height:48, background:'rgba(157,140,255,0.15)', border:'1px solid rgba(157,140,255,0.3)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
-                <span style={{ ...MONO, fontSize:14, fontWeight:700, color:'rgba(157,140,255,0.9)' }}>AC</span>
+              <div style={{ width:52, height:52, background:'rgba(157,140,255,0.15)', border:'1px solid rgba(157,140,255,0.3)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+                <span style={{ ...MONO, fontSize:18, fontWeight:700, color:'rgba(157,140,255,0.9)' }}>AC</span>
               </div>
               <div>
-                <p style={{ ...DISP, fontSize:20, fontWeight:700, color:INK_PRI, margin:'0 0 2px' }}>ACME AGENCY</p>
-                <p style={{ ...SANS, fontSize:13, color:INK_MUT, margin:'0 0 3px' }}>Conversion Audit Report</p>
-                <p style={{ ...MONO, fontSize:10, color:INK_MUT, margin:0 }}>acme-client.com · June 2026 · B2B SaaS</p>
+                <p style={{ ...DISP, fontSize:22, fontWeight:700, color:INK_PRI, margin:'0 0 3px' }}>ACME AGENCY</p>
+                <p style={{ ...SANS, fontSize:13, color:INK_MUT, margin:0 }}>Conversion Audit Report · Prepared for Client</p>
               </div>
             </div>
-            {/* Score ring 56px */}
             <div style={{ textAlign:'center', flexShrink:0 }}>
-              <svg width="56" height="56" viewBox="0 0 56 56">
-                <circle cx="28" cy="28" r="22" stroke="rgba(111,155,198,0.12)" strokeWidth="3" fill="none" />
-                <circle cx="28" cy="28" r="22" stroke={CRIT} strokeWidth="3" strokeDasharray="138.23" strokeDashoffset="53.91" strokeLinecap="round" fill="none" transform="rotate(-90 28 28)" />
-                <text x="28" y="33" textAnchor="middle" fill={CRIT} style={{ fontFamily:'"Space Grotesk",sans-serif', fontSize:12, fontWeight:700 }}>61</text>
+              <svg width="72" height="72" viewBox="0 0 72 72">
+                <circle cx="36" cy="36" r="28" stroke="rgba(111,155,198,0.12)" strokeWidth="3.5" fill="none" />
+                <circle cx="36" cy="36" r="28" stroke={CRIT} strokeWidth="3.5" strokeDasharray="175.93" strokeDashoffset="68.61" strokeLinecap="round" fill="none" transform="rotate(-90 36 36)" />
+                <text x="36" y="44" textAnchor="middle" fill={CRIT} style={{ fontFamily:'"Space Grotesk",sans-serif', fontSize:22, fontWeight:700 }}>61</text>
               </svg>
               <div style={{ marginTop:4 }}>
-                <span style={{ ...MONO, fontSize:8, color:CRIT, border:`0.5px solid ${CRIT}`, padding:'1px 4px', textTransform:'uppercase', letterSpacing:'0.08em' }}>CRITICAL</span>
+                <span style={{ ...MONO, fontSize:8, color:CRIT, border:`0.5px solid ${CRIT}`, padding:'1px 5px', textTransform:'uppercase', letterSpacing:'0.08em' }}>CRITICAL</span>
               </div>
-              <p style={{ ...MONO, fontSize:9, color:INK_MUT, margin:'4px 0 0' }}>63rd percentile</p>
+              <p style={{ ...MONO, fontSize:9, color:INK_MUT, margin:'4px 0 0' }}>63rd percentile · B2B SaaS</p>
             </div>
           </div>
-          <div style={{ height:1, background:'rgba(157,140,255,0.12)', marginBottom:16 }} />
-          {/* Three mini finding rows */}
-          {[
-            { sev:'CRITICAL', sevColor:CRIT, sevBorder:'rgba(232,99,95,0.4)', title:'Hero headline is feature-led', lift:'+12–18%' },
-            { sev:'HIGH', sevColor:HIGH_AMB, sevBorder:'rgba(239,178,62,0.4)', title:'No above-fold social proof', lift:'+8–11%' },
-            { sev:'HIGH', sevColor:HIGH_AMB, sevBorder:'rgba(239,178,62,0.4)', title:'Dual primary CTAs create decision paralysis', lift:'+6–9%' },
-          ].map((f, fi) => (
-            <div key={fi} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:8, paddingBottom: fi < 2 ? 10 : 0, borderBottom: fi < 2 ? '0.5px solid rgba(157,140,255,0.08)' : 'none', marginBottom: fi < 2 ? 10 : 0 }}>
-              <div style={{ display:'flex', alignItems:'center', gap:6 }}>
-                <span style={{ ...MONO, fontSize:8, color:f.sevColor, border:`0.5px solid ${f.sevBorder}`, padding:'1px 5px', textTransform:'uppercase', letterSpacing:'0.08em', flexShrink:0 }}>{f.sev}</span>
-                <span style={{ ...DISP, fontSize:13, fontWeight:500, color:INK_PRI }}>{f.title}</span>
+
+          {/* Meta row */}
+          <div className="d-report-meta" style={{ display:'flex', padding:'12px 32px', background:'rgba(157,140,255,0.03)', borderBottom:'1px solid rgba(157,140,255,0.08)', gap:0 }}>
+            {[
+              { label:'CLIENT SITE', val:'acme-client.com' },
+              { label:'SCAN DATE',   val:'June 11, 2026' },
+              { label:'VERTICAL',    val:'B2B SaaS' },
+              { label:'FINDINGS',    val:'23 total · 4 critical' },
+            ].map((m, mi, arr) => (
+              <div key={mi} style={{ flex:1, paddingRight:16, paddingLeft: mi > 0 ? 16 : 0, borderLeft: mi > 0 ? '1px solid rgba(157,140,255,0.1)' : 'none' }}>
+                <p style={{ ...MONO, fontSize:8, textTransform:'uppercase', letterSpacing:'0.15em', color:INK_MUT, margin:'0 0 2px' }}>{m.label}</p>
+                <p style={{ ...MONO, fontSize:11, color:INK_SEC, margin:0 }}>{m.val}</p>
               </div>
-              <span style={{ ...MONO, fontSize:10, color:LIFT_GREEN, flexShrink:0 }}>{f.lift}</span>
+            ))}
+          </div>
+
+          {/* Findings table */}
+          <div style={{ padding:'0 32px 28px' }}>
+            {/* Table header */}
+            <div style={{ display:'grid', gridTemplateColumns:'40px 80px 1fr 80px 100px', gap:12, padding:'12px 0', borderBottom:'1px solid rgba(157,140,255,0.12)', marginBottom:4 }}>
+              {['PRIORITY','SEVERITY','FINDING','EST. LIFT','STATUS'].map(h => (
+                <p key={h} style={{ ...MONO, fontSize:8, textTransform:'uppercase', letterSpacing:'0.15em', color:INK_MUT, margin:0 }}>{h}</p>
+              ))}
             </div>
-          ))}
-          <p style={{ ...MONO, fontSize:10, color:INK_MUT, margin:'12px 0 0', fontStyle:'italic' }}>+ 20 more findings · full report · evidence + fixes included</p>
+            {REPORT_FINDINGS.map((f, fi) => (
+              <div key={fi} style={{ display:'grid', gridTemplateColumns:'40px 80px 1fr 80px 100px', gap:12, padding:'10px 0', borderBottom:'0.5px solid rgba(255,255,255,0.04)', alignItems:'center' }}>
+                <p style={{ ...MONO, fontSize:11, color:INK_MUT, margin:0 }}>{f.p}</p>
+                <span style={{ ...MONO, fontSize:8, color:f.sevColor, border:`0.5px solid ${f.sevBorder}`, padding:'2px 6px', textTransform:'uppercase', letterSpacing:'0.08em', justifySelf:'start' }}>{f.sev}</span>
+                <p style={{ ...DISP, fontSize:13, fontWeight:500, color:INK_PRI, margin:0, lineHeight:1.3 }}>{f.title}</p>
+                <p style={{ ...MONO, fontSize:11, color:LIFT_GREEN, margin:0 }}>{f.lift}</p>
+                <p style={{ ...MONO, fontSize:9, color:LIFT_GREEN, margin:0 }}>FIX INCLUDED</p>
+              </div>
+            ))}
+            <p style={{ ...MONO, fontSize:10, color:INK_MUT, margin:'12px 0 0', fontStyle:'italic', textAlign:'center' }}>+ 18 more findings in full report</p>
+          </div>
+
+          {/* Report footer */}
+          <div style={{ display:'flex', justifyContent:'space-between', padding:'16px 32px', borderTop:'1px solid rgba(157,140,255,0.08)', background:'rgba(157,140,255,0.02)', flexWrap:'wrap', gap:8 }}>
+            <p style={{ ...MONO, fontSize:9, color:INK_MUT, margin:0 }}>ACME AGENCY · Conversion Intelligence</p>
+            <p style={{ ...MONO, fontSize:9, color:INK_MUT, margin:0 }}>Powered by webdoc · 307 checks · verified findings</p>
+            <p style={{ ...MONO, fontSize:9, color:INK_MUT, margin:0 }}>CONFIDENTIAL · acme-client.com</p>
+          </div>
         </div>
-        <p style={{ ...MONO, fontSize: 10, color: INK_MUT, margin: '0 0 32px' }}>
-          This is what your client receives. Your name. Your branding. webdoc never appears.
+
+        <p style={{ ...SANS, fontSize:13, color:INK_MUT, textAlign:'center', margin:'0 0 40px', fontStyle:'italic', lineHeight:1.6 }}>
+          This is what your client receives. Your name, your branding. webdoc never appears in the deliverable.
         </p>
 
+        {/* Capability grid */}
+        <div className="d-agency-cap-grid" style={{ display:'grid', gridTemplateColumns:'repeat(2,1fr)', gap:24, marginBottom:40 }}>
+          {AGENCY_CAPS.map(cap => (
+            <div key={cap.title} style={{ borderLeft:'2px solid rgba(157,140,255,0.25)', paddingLeft:16 }}>
+              <p style={{ ...DISP, fontSize:15, fontWeight:600, color:INK_PRI, margin:'0 0 6px' }}>{cap.title}</p>
+              <p style={{ ...SANS, fontSize:13, color:INK_MUT, margin:0, lineHeight:1.6 }}>{cap.desc}</p>
+            </div>
+          ))}
+        </div>
+
         {/* CTA row */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap' }}>
-          <a
-            href="#pricing"
-            style={{
-              ...MONO, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.1em',
-              color: 'rgba(157, 140, 255, 0.75)',
-              border: '0.5px solid rgba(157, 140, 255, 0.3)',
-              padding: '10px 16px',
-              textDecoration: 'none',
-              display: 'inline-block',
-            }}
-          >
-            SEE MULTI-SITE PLANS →
-          </a>
-          <p style={{ ...MONO, fontSize: 11, color: INK_MUT, margin: 0 }}>
-            Agency plan · $149/mo · includes 100 API calls
-          </p>
+        <div style={{ display:'flex', alignItems:'center', gap:20, flexWrap:'wrap' }}>
+          <a href="#pricing" style={{
+            ...MONO, fontSize:12, textTransform:'uppercase', letterSpacing:'0.1em',
+            color:'rgba(157,140,255,0.75)', border:'0.5px solid rgba(157,140,255,0.3)',
+            padding:'10px 16px', textDecoration:'none', display:'inline-block',
+          }}>SEE AGENCY PLAN →</a>
+          <p style={{ ...MONO, fontSize:11, color:INK_MUT, margin:0 }}>Agency plan · $149/mo · white-label included · 100 API calls</p>
         </div>
       </div>
     </section>
@@ -1553,7 +1709,7 @@ export default function DashboardPage() {
       <HeroSection />
       <OutputSection />
       <AIRewriteSection />
-      <ReportAnatomySection />
+      <GroundingProofSection />
       <VerticalShowcaseSection />
       <WhatWeCheckSection />
       <HowItWorksSection />

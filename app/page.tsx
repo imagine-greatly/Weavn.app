@@ -52,8 +52,8 @@ function NavBar() {
 
 // Door cards sit in a 2-col grid inside the 880px container (gap 24px), so the
 // card top-centers land at x≈214 and x≈666 in the 880-wide viewBox.
-const FORK_LEFT_PATH = 'M 440 0 C 440 38 330 52 214 102'
-const FORK_RIGHT_PATH = 'M 440 0 C 440 38 550 52 666 102'
+const FORK_LEFT_PATH = 'M 440 0 C 440 40 214 80 214 110'
+const FORK_RIGHT_PATH = 'M 440 0 C 440 40 666 80 666 110'
 
 const FOUNDER_LINES = [
   'Plain-English fixes, ranked by conversion impact',

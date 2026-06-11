@@ -104,9 +104,9 @@ function HeroSection() {
           top: '-200px',
           left: '50%',
           transform: 'translateX(-50%)',
-          width: '1000px',
-          height: '800px',
-          background: 'radial-gradient(ellipse at 50% 35%, rgba(111, 155, 198, 0.22) 0%, rgba(111, 155, 198, 0.10) 30%, rgba(111, 155, 198, 0.03) 60%, transparent 75%)',
+          width: '1600px',
+          height: '1200px',
+          background: 'radial-gradient(ellipse at 50% 35%, rgba(111, 155, 198, 0.22) 0%, rgba(111, 155, 198, 0.066) 40%, rgba(111, 155, 198, 0.02) 65%, transparent 85%)',
           pointerEvents: 'none',
           zIndex: 0,
           borderRadius: '50%',
@@ -243,9 +243,9 @@ function OutputSection() {
           top: '-100px',
           left: '50%',
           transform: 'translateX(-50%)',
-          width: '800px',
-          height: '600px',
-          background: 'radial-gradient(ellipse at 50% 50%, rgba(111, 155, 198, 0.08) 0%, transparent 65%)',
+          width: '1400px',
+          height: '900px',
+          background: 'radial-gradient(ellipse at 50% 50%, rgba(111, 155, 198, 0.08) 0%, rgba(111, 155, 198, 0.024) 40%, rgba(111, 155, 198, 0.02) 65%, transparent 85%)',
           pointerEvents: 'none',
           zIndex: 0,
           borderRadius: '50%',
@@ -296,9 +296,9 @@ function OutputSection() {
                   top: '50%',
                   left: '50%',
                   transform: 'translate(-50%, -50%)',
-                  width: '160px',
-                  height: '160px',
-                  background: 'radial-gradient(ellipse at center, rgba(232, 99, 95, 0.22) 0%, rgba(232, 99, 95, 0.08) 55%, transparent 72%)',
+                  width: '220px',
+                  height: '220px',
+                  background: 'radial-gradient(ellipse at center, rgba(232, 99, 95, 0.22) 0%, rgba(232, 99, 95, 0.066) 40%, rgba(232, 99, 95, 0.02) 65%, transparent 85%)',
                   pointerEvents: 'none',
                   zIndex: 0,
                   borderRadius: '50%',
@@ -317,7 +317,7 @@ function OutputSection() {
             </div>
           </div>
 
-          {/* Finding cards — 4C: staggered entry */}
+          {/* Finding cards — 4C: staggered entry. Card 0 is fully expanded (static illustration). */}
           <div style={{ display:'flex',flexDirection:'column',gap:12 }}>
             {MOCK_FINDINGS.map((f, i) => (
               <motion.div
@@ -345,6 +345,7 @@ function OutputSection() {
                       : 'inset 0 1px 0 0 rgba(239, 178, 62, 0.1)',
                 }}
               >
+                {/* A) Header row — severity badge, title, lift — same for all cards */}
                 <div style={{ display:'flex',alignItems:'flex-start',justifyContent:'space-between',marginBottom:8,gap:12,flexWrap:'wrap' }}>
                   <div style={{ display:'flex',alignItems:'center',gap:10,flexWrap:'wrap' }}>
                     <span style={{
@@ -360,7 +361,47 @@ function OutputSection() {
                     EST. LIFT {f.lift}
                   </span>
                 </div>
-                <p style={{ ...SANS,fontSize:13,color:INK_SEC,margin:0,lineHeight:1.55 }}>{f.desc}</p>
+                {i === 0 ? (
+                  // Expanded first finding — static illustration showing full report detail level
+                  <>
+                    {/* B) Evidence row */}
+                    <div style={{ borderLeft:'2px solid rgba(232,99,95,0.3)',paddingLeft:12,marginBottom:12 }}>
+                      <p style={{ ...MONO,fontSize:9,textTransform:'uppercase',letterSpacing:'0.15em',color:INK_MUT,margin:'0 0 5px' }}>EVIDENCE</p>
+                      <p style={{ ...MONO,fontSize:12,color:INK_SEC,margin:0,lineHeight:1.55 }}>
+                        Your H1 reads: &ldquo;The project management tool built for remote teams.&rdquo; This describes the product, not the outcome. No benefit statement above the fold.
+                      </p>
+                    </div>
+                    {/* C) Fix row */}
+                    <div style={{ marginBottom:14 }}>
+                      <p style={{ ...MONO,fontSize:9,textTransform:'uppercase',letterSpacing:'0.15em',color:INK_MUT,margin:'0 0 5px' }}>FIX</p>
+                      <p style={{ ...SANS,fontSize:13,color:INK_SEC,margin:0,lineHeight:1.55 }}>
+                        Rewrite the headline to lead with the outcome the visitor gets, not the feature you built. What does the user achieve? Lead with that.
+                      </p>
+                    </div>
+                    {/* D) Mini copy preview — static illustration */}
+                    <div style={{ display:'flex',borderTop:'0.5px solid rgba(255,255,255,0.06)',marginBottom:14 }}>
+                      <div style={{ flex:1,padding:'10px 12px 10px 0',borderRight:'0.5px solid rgba(255,255,255,0.06)' }}>
+                        <p style={{ ...MONO,fontSize:9,textTransform:'uppercase',letterSpacing:'0.15em',color:INK_MUT,margin:'0 0 6px' }}>ORIGINAL</p>
+                        <p style={{ ...SANS,fontSize:12,fontStyle:'italic',color:INK_MUT,margin:0,lineHeight:1.5 }}>
+                          &ldquo;The project management tool built for remote teams.&rdquo;
+                        </p>
+                      </div>
+                      <div style={{ flex:1,padding:'10px 0 10px 12px',borderLeft:'1px solid rgba(0, 196, 140, 0.2)' }}>
+                        <p style={{ ...MONO,fontSize:9,textTransform:'uppercase',letterSpacing:'0.15em',color:'rgba(0, 196, 140, 0.9)',margin:'0 0 6px' }}>REWRITTEN</p>
+                        <p style={{ ...SANS,fontSize:12,color:INK_PRI,margin:0,lineHeight:1.5 }}>
+                          &ldquo;Ship projects on time, every time — no matter where your team works.&rdquo;
+                        </p>
+                      </div>
+                    </div>
+                    {/* E) Footer note */}
+                    <p style={{ ...MONO,fontSize:10,color:INK_MUT,margin:0 }}>
+                      2 additional findings not shown · full report includes all findings with evidence + fixes
+                    </p>
+                  </>
+                ) : (
+                  // Compact summary — cards 2 and 3
+                  <p style={{ ...SANS,fontSize:13,color:INK_SEC,margin:0,lineHeight:1.55 }}>{f.desc}</p>
+                )}
               </motion.div>
             ))}
           </div>
@@ -458,9 +499,9 @@ function WhatWeCheckSection() {
           top: '-60px',
           left: '50%',
           transform: 'translateX(-50%)',
-          width: '900px',
-          height: '450px',
-          background: 'radial-gradient(ellipse at center, rgba(111, 155, 198, 0.07) 0%, transparent 65%)',
+          width: '1400px',
+          height: '700px',
+          background: 'radial-gradient(ellipse at center, rgba(111, 155, 198, 0.07) 0%, rgba(111, 155, 198, 0.021) 40%, rgba(111, 155, 198, 0.02) 65%, transparent 85%)',
           pointerEvents: 'none',
           zIndex: 0,
         }}
@@ -505,6 +546,31 @@ function WhatWeCheckSection() {
         <p style={{ ...MONO,fontSize:11,color:'rgba(111, 155, 198, 0.6)',margin:0,textShadow:'0 0 8px rgba(111, 155, 198, 0.2)' }}>
           307 checks across 27 categories — every scan, every plan.
         </p>
+        {/* Example findings by category — static illustration */}
+        <p style={{ ...MONO,fontSize:9,textTransform:'uppercase',letterSpacing:'0.18em',color:INK_MUT,margin:'32px 0 16px' }}>
+          EXAMPLE FINDINGS BY CATEGORY
+        </p>
+        <style>{`@media(max-width:767px){.d-scope-examples{grid-template-columns:1fr!important}}`}</style>
+        <div className="d-scope-examples" style={{ display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:12,margin:'0 0 16px' }}>
+          <div style={{ background:SURFACE,borderTop:'1px solid rgba(255,255,255,0.1)',borderLeft:'1px solid rgba(255,255,255,0.07)',borderRight:'1px solid rgba(255,255,255,0.04)',borderBottom:'1px solid rgba(255,255,255,0.03)',padding:16,boxShadow:'inset 0 1px 0 0 rgba(111, 155, 198, 0.1)' }}>
+            <span style={{ ...MONO,fontSize:9,border:'0.5px solid rgba(111,155,198,0.25)',color:STEEL,padding:'2px 8px',textTransform:'uppercase',letterSpacing:'0.1em',display:'inline-block',margin:'0 0 10px' }}>VALUE PROPOSITION</span>
+            <p style={{ ...DISP,fontSize:13,fontWeight:600,color:INK_PRI,margin:'0 0 6px',lineHeight:1.35 }}>Hero headline describes features, not outcomes</p>
+            <p style={{ ...MONO,fontSize:11,color:INK_MUT,margin:0 }}>Affects 12–18% conversion lift when corrected</p>
+          </div>
+          <div style={{ background:SURFACE,borderTop:'1px solid rgba(255,255,255,0.1)',borderLeft:'1px solid rgba(255,255,255,0.07)',borderRight:'1px solid rgba(255,255,255,0.04)',borderBottom:'1px solid rgba(255,255,255,0.03)',padding:16,boxShadow:'inset 0 1px 0 0 rgba(111, 155, 198, 0.1)' }}>
+            <span style={{ ...MONO,fontSize:9,border:'0.5px solid rgba(111,155,198,0.25)',color:STEEL,padding:'2px 8px',textTransform:'uppercase',letterSpacing:'0.1em',display:'inline-block',margin:'0 0 10px' }}>SOCIAL PROOF</span>
+            <p style={{ ...DISP,fontSize:13,fontWeight:600,color:INK_PRI,margin:'0 0 6px',lineHeight:1.35 }}>No testimonials visible above 800px fold</p>
+            <p style={{ ...MONO,fontSize:11,color:INK_MUT,margin:0 }}>73% of high-converting sites show social proof above fold</p>
+          </div>
+          <div style={{ background:SURFACE,borderTop:'1px solid rgba(255,255,255,0.1)',borderLeft:'1px solid rgba(255,255,255,0.07)',borderRight:'1px solid rgba(255,255,255,0.04)',borderBottom:'1px solid rgba(255,255,255,0.03)',padding:16,boxShadow:'inset 0 1px 0 0 rgba(111, 155, 198, 0.1)' }}>
+            <span style={{ ...MONO,fontSize:9,border:'0.5px solid rgba(111,155,198,0.25)',color:STEEL,padding:'2px 8px',textTransform:'uppercase',letterSpacing:'0.1em',display:'inline-block',margin:'0 0 10px' }}>CTA CLARITY</span>
+            <p style={{ ...DISP,fontSize:13,fontWeight:600,color:INK_PRI,margin:'0 0 6px',lineHeight:1.35 }}>Two competing primary CTAs above fold</p>
+            <p style={{ ...MONO,fontSize:11,color:INK_MUT,margin:0 }}>Single focused CTA outperforms split CTAs in 73% of variants</p>
+          </div>
+        </div>
+        <p style={{ ...MONO,fontSize:11,color:INK_MUT,margin:0 }}>
+          Every category produces findings like these — grounded in what&apos;s actually on your page.
+        </p>
       </div>
     </section>
   )
@@ -522,9 +588,9 @@ function QuoteSection() {
           top: '-40px',
           left: '50%',
           transform: 'translateX(-50%)',
-          width: '600px',
-          height: '300px',
-          background: 'radial-gradient(ellipse at center, rgba(111, 155, 198, 0.07) 0%, transparent 65%)',
+          width: '1000px',
+          height: '500px',
+          background: 'radial-gradient(ellipse at center, rgba(111, 155, 198, 0.07) 0%, rgba(111, 155, 198, 0.021) 40%, rgba(111, 155, 198, 0.02) 65%, transparent 85%)',
           pointerEvents: 'none',
           zIndex: 0,
         }}
@@ -635,6 +701,26 @@ function HowItWorksSection() {
                   {step.techTag}
                 </p>
               )}
+              {i === 2 && (
+                // static illustration — mini report hierarchy preview showing "ranked" means priority-ordered with lift numbers
+                <div style={{ marginTop:16,background:'rgba(5,8,16,0.6)',borderTop:'0.5px solid rgba(255,255,255,0.08)',borderLeft:'0.5px solid rgba(255,255,255,0.06)',borderRight:'0.5px solid rgba(255,255,255,0.04)',borderBottom:'0.5px solid rgba(255,255,255,0.03)',padding:'12px 14px' }}>
+                  <div style={{ display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:6 }}>
+                    <span style={{ ...MONO,fontSize:10,color:CRIT }}>P1 · CRITICAL</span>
+                    <span style={{ ...MONO,fontSize:10,color:LIFT_GREEN,textShadow:'0 0 6px rgba(0, 196, 140, 0.3)' }}>+12–18%</span>
+                  </div>
+                  <div style={{ display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:6 }}>
+                    <span style={{ ...MONO,fontSize:10,color:HIGH_AMB }}>P2 · HIGH</span>
+                    <span style={{ ...MONO,fontSize:10,color:'rgba(0, 196, 140, 0.6)' }}>+8–11%</span>
+                  </div>
+                  <div style={{ display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:8 }}>
+                    <span style={{ ...MONO,fontSize:10,color:HIGH_AMB }}>P3 · HIGH</span>
+                    <span style={{ ...MONO,fontSize:10,color:'rgba(0, 196, 140, 0.6)' }}>+6–9%</span>
+                  </div>
+                  <p style={{ ...MONO,fontSize:9,color:INK_MUT,margin:0,letterSpacing:'0.04em' }}>
+                    ranked by conversion impact · fixes included
+                  </p>
+                </div>
+              )}
             </motion.div>
           ))}
         </div>
@@ -707,9 +793,9 @@ function WhyDifferentSection() {
           top: '-80px',
           left: '50%',
           transform: 'translateX(-50%)',
-          width: '1000px',
-          height: '500px',
-          background: 'radial-gradient(ellipse at center, rgba(111, 155, 198, 0.05) 0%, transparent 65%)',
+          width: '1400px',
+          height: '700px',
+          background: 'radial-gradient(ellipse at center, rgba(111, 155, 198, 0.05) 0%, rgba(111, 155, 198, 0.015) 40%, rgba(111, 155, 198, 0.02) 65%, transparent 85%)',
           pointerEvents: 'none',
           zIndex: 0,
         }}
@@ -960,9 +1046,9 @@ function FinalCtaSection() {
           top: '-120px',
           left: '50%',
           transform: 'translateX(-50%)',
-          width: '800px',
-          height: '600px',
-          background: 'radial-gradient(ellipse at 50% 40%, rgba(111, 155, 198, 0.20) 0%, rgba(111, 155, 198, 0.08) 40%, transparent 68%)',
+          width: '1600px',
+          height: '1000px',
+          background: 'radial-gradient(ellipse at 50% 40%, rgba(111, 155, 198, 0.20) 0%, rgba(111, 155, 198, 0.06) 40%, rgba(111, 155, 198, 0.02) 65%, transparent 85%)',
           pointerEvents: 'none',
           zIndex: 0,
           borderRadius: '50%',

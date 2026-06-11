@@ -89,9 +89,9 @@ export default function RootLayout({
               top: '-300px',
               left: '50%',
               transform: 'translateX(-50%)',
-              width: '1200px',
-              height: '900px',
-              background: 'radial-gradient(ellipse at center, rgba(111, 155, 198, 0.09) 0%, rgba(111, 155, 198, 0.03) 50%, transparent 72%)',
+              width: '1600px',
+              height: '1200px',
+              background: 'radial-gradient(ellipse at center, rgba(111, 155, 198, 0.09) 0%, rgba(111, 155, 198, 0.027) 40%, rgba(111, 155, 198, 0.02) 65%, transparent 85%)',
               pointerEvents: 'none',
             }}
           />
@@ -101,9 +101,9 @@ export default function RootLayout({
               position: 'absolute',
               bottom: '-200px',
               right: '-300px',
-              width: '700px',
-              height: '700px',
-              background: 'radial-gradient(ellipse at center, rgba(0, 196, 140, 0.05) 0%, transparent 65%)',
+              width: '1200px',
+              height: '1200px',
+              background: 'radial-gradient(ellipse at center, rgba(0, 196, 140, 0.05) 0%, rgba(0, 196, 140, 0.015) 40%, rgba(0, 196, 140, 0.02) 65%, transparent 85%)',
               pointerEvents: 'none',
             }}
           />
@@ -113,9 +113,9 @@ export default function RootLayout({
               position: 'absolute',
               bottom: '-100px',
               left: '-200px',
-              width: '500px',
-              height: '500px',
-              background: 'radial-gradient(ellipse at center, rgba(157, 140, 255, 0.04) 0%, transparent 65%)',
+              width: '1000px',
+              height: '1000px',
+              background: 'radial-gradient(ellipse at center, rgba(157, 140, 255, 0.04) 0%, rgba(157, 140, 255, 0.012) 40%, rgba(157, 140, 255, 0.02) 65%, transparent 85%)',
               pointerEvents: 'none',
             }}
           />

@@ -159,7 +159,7 @@ export default function LandingDiagnosticChecks() {
         <ScrollReveal variant="card">
           <div className="mt-12 text-center">
             <Link
-              href="/how-it-works"
+              href="/dashboard"
               className="font-mono text-[12px] uppercase tracking-[2px] transition-colors duration-200 hover:text-white"
               style={{ color: "var(--cyan)" }}
             >

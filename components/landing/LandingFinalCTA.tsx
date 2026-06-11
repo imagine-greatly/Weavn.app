@@ -308,7 +308,7 @@ export default function LandingFinalCTA({ url, onUrlChange, autoFocus }: Props) 
           >
             {[
               { label: "PRODUCT", href: "/product" },
-              { label: "HOW IT WORKS", href: "/how-it-works" },
+              { label: "DASHBOARD", href: "/dashboard" },
               { label: "PRICING", href: "/dashboard" },
               { label: "DOCS", href: "/docs" },
             ].map((link) => (

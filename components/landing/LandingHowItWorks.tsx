@@ -212,7 +212,7 @@ export default function LandingHowItWorks() {
         </p>
         <div className="mt-8 text-left">
           <Link
-            href="/how-it-works"
+            href="/dashboard"
             className="inline-flex items-center font-sans text-[15px] font-medium transition-[transform,text-decoration-color] duration-150"
             style={{ color: "var(--cyan)", fontWeight: 500 }}
             onMouseEnter={(e) => {

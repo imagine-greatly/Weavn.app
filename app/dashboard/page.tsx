@@ -4,37 +4,47 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import ScoreRing from '@/components/ui/ScoreRing'
-import WebdocMark from '@/components/ui/WebdocMark'
+import LandingCorpusStats from '@/components/LandingCorpusStats'
 
-// ── Style tokens ──────────────────────────────────────────────────────────────
-
+// ── Style constants — all hex values sourced from existing tokens
+// in tailwind.config.ts and globals.css. No new hex values introduced.
 const MONO: React.CSSProperties = { fontFamily: '"IBM Plex Mono", monospace' }
 const SANS: React.CSSProperties = { fontFamily: '"IBM Plex Sans", sans-serif' }
 const DISP: React.CSSProperties = { fontFamily: '"Space Grotesk", sans-serif' }
 
+const STEEL      = '#6F9BC6'   // --interactive (tailwind: interactive, accent-primary)
+const CRIT       = '#E8635F'   // --sev-critical / --data-critical
+const HIGH_AMB   = '#EFB23E'   // --sev-high
+const LIFT_GREEN = '#00C48C'   // --json-string / engine-developers
+const INK_PRI    = '#E6E9EE'   // --ink-primary
+const INK_SEC    = '#9398A8'   // --ink-secondary
+const INK_MUT    = '#6E7587'   // --ink-muted
+const SURFACE    = '#0A0E18'   // --surface
+const BG_BASE    = '#050810'   // --bg / bg-base
+
 // ── Shared chrome ─────────────────────────────────────────────────────────────
 
 function Ticks() {
-  const b = '0.5px solid rgba(111,155,198,0.2)'
+  const b = '0.5px solid rgba(111,155,198,0.18)'
   return (
     <>
-      <div aria-hidden style={{ position: 'absolute', top: 20, left: 20, width: 14, height: 14, borderTop: b, borderLeft: b, pointerEvents: 'none', zIndex: 1 }} />
-      <div aria-hidden style={{ position: 'absolute', top: 20, right: 20, width: 14, height: 14, borderTop: b, borderRight: b, pointerEvents: 'none', zIndex: 1 }} />
-      <div aria-hidden style={{ position: 'absolute', bottom: 20, left: 20, width: 14, height: 14, borderBottom: b, borderLeft: b, pointerEvents: 'none', zIndex: 1 }} />
-      <div aria-hidden style={{ position: 'absolute', bottom: 20, right: 20, width: 14, height: 14, borderBottom: b, borderRight: b, pointerEvents: 'none', zIndex: 1 }} />
+      <div aria-hidden style={{ position:'absolute',top:20,left:20,width:14,height:14,borderTop:b,borderLeft:b,pointerEvents:'none',zIndex:1 }} />
+      <div aria-hidden style={{ position:'absolute',top:20,right:20,width:14,height:14,borderTop:b,borderRight:b,pointerEvents:'none',zIndex:1 }} />
+      <div aria-hidden style={{ position:'absolute',bottom:20,left:20,width:14,height:14,borderBottom:b,borderLeft:b,pointerEvents:'none',zIndex:1 }} />
+      <div aria-hidden style={{ position:'absolute',bottom:20,right:20,width:14,height:14,borderBottom:b,borderRight:b,pointerEvents:'none',zIndex:1 }} />
     </>
   )
 }
 
-// ── Section 1 — Hero with working scan input ─────────────────────────────────
+// ── Section 1 — Hero ─────────────────────────────────────────────────────────
 
-function HeroScanSection() {
+function HeroSection() {
   const [scanUrl, setScanUrl] = useState('')
   const [isScanning, setIsScanning] = useState(false)
   const [scanError, setScanError] = useState('')
   const router = useRouter()
 
-  // Inbound links (auth redirect, dashboard rescan) arrive as /dashboard?url=…
+  // Inbound links (auth redirect, rescan) arrive as /dashboard?url=…
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const url = params.get('url')
@@ -71,66 +81,45 @@ function HeroScanSection() {
   }
 
   return (
-    <section id="hero" style={{ padding: '96px 48px', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
-      <style>{`
-        @keyframes dash-pulse-dot { 0%,100%{opacity:1} 50%{opacity:0.35} }
-        @media (prefers-reduced-motion: reduce) { .dash-pulse { animation: none !important; } }
-      `}</style>
-
-      {/* Atmosphere */}
+    <section
+      id="scan"
+      style={{
+        minHeight: '80vh',
+        display: 'flex',
+        alignItems: 'center',
+        padding: '112px 48px 80px',
+        textAlign: 'center',
+        position: 'relative',
+        overflow: 'hidden',
+      }}
+    >
       <div aria-hidden style={{
-        position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0,
-        background: 'radial-gradient(ellipse 1000px 700px at 50% 35%, rgba(111,155,198,0.06) 0%, transparent 60%)',
+        position:'absolute',inset:0,pointerEvents:'none',zIndex:0,
+        background:'radial-gradient(ellipse 1000px 700px at 50% 35%, rgba(111,155,198,0.06) 0%, transparent 60%)',
       }} />
       <Ticks />
-
-      <div style={{ position: 'relative', zIndex: 1, maxWidth: 720, margin: '0 auto' }}>
-
-        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 20 }}>
-          <WebdocMark size={64} animated={true} />
-        </div>
-
-        <p style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.2em', color: '#6F9BC6', margin: '0 0 16px' }}>
-          FOR FOUNDERS &amp; MARKETERS
+      <div style={{ position:'relative',zIndex:1,maxWidth:680,margin:'0 auto',width:'100%' }}>
+        <p style={{ ...MONO,fontSize:11,textTransform:'uppercase',letterSpacing:'0.2em',color:STEEL,margin:'0 0 20px' }}>
+          FOR FOUNDERS &amp; TEAMS
         </p>
-
-        <h1 style={{ ...DISP, fontSize: 'clamp(36px,5vw,56px)', fontWeight: 700, color: '#E6E9EE', letterSpacing: '-0.5px', margin: '0 0 20px', lineHeight: 1.1 }}>
-          Find out exactly what&apos;s stopping your site from converting.
+        <h1 style={{ ...DISP,fontSize:'clamp(36px,5vw,58px)',fontWeight:700,color:INK_PRI,letterSpacing:'-0.04em',margin:'0 0 24px',lineHeight:1.08 }}>
+          Find out exactly what&apos;s stopping visitors from converting.
         </h1>
-
-        <p style={{ ...SANS, fontSize: 16, color: '#9398A8', lineHeight: 1.65, maxWidth: 560, margin: '0 auto 40px' }}>
-          Paste your URL. In 90 seconds you get a score, a ranked list of what to fix, and AI-rewritten copy — ready to use. No technical knowledge required.
+        <p style={{ ...SANS,fontSize:17,color:INK_SEC,lineHeight:1.65,maxWidth:580,margin:'0 auto 44px' }}>
+          Paste your URL. Get a 0–100 score, every conversion problem ranked by impact, AI-rewritten copy, and benchmarks against real sites in your vertical — in about 90 seconds.
         </p>
 
-        <div style={{ maxWidth: 620, margin: '0 auto', textAlign: 'left' }}>
-
-          {/* Status bar */}
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: 12,
-            ...MONO, fontSize: 12,
-            background: 'rgba(255,255,255,0.02)',
-            border: '0.5px solid rgba(255,255,255,0.08)',
-            padding: '8px 14px', marginBottom: 10, flexWrap: 'wrap',
-          }}>
-            <span className="dash-pulse" style={{ width: 7, height: 7, borderRadius: '50%', background: '#00C48C', flexShrink: 0, display: 'inline-block', animation: 'dash-pulse-dot 1.8s ease-in-out infinite' }} />
-            <span style={{ color: '#9398A8' }}>scan engine online</span>
-            <span style={{ color: '#6E7587' }}>·</span>
-            <span style={{ color: '#6F9BC6' }}>307 checks</span>
-            <span style={{ color: '#6E7587' }}>·</span>
-            <span style={{ color: '#6F9BC6' }}>results in ~90 seconds</span>
-          </div>
-
-          {/* Scan input */}
-          <div style={{ display: 'flex', flexWrap: 'wrap' }}>
+        <div style={{ maxWidth:560,margin:'0 auto',textAlign:'left' }}>
+          <div style={{ display:'flex',flexWrap:'wrap' }}>
             <div style={{
-              display: 'flex', flex: '1 1 320px',
-              background: '#0A0E18',
-              borderTop: '1px solid rgba(255,255,255,0.1)',
-              borderLeft: '1px solid rgba(255,255,255,0.07)',
-              borderRight: '1px solid rgba(255,255,255,0.04)',
-              borderBottom: '1px solid rgba(255,255,255,0.03)',
+              display:'flex',flex:'1 1 280px',
+              background:SURFACE,
+              borderTop:'1px solid rgba(255,255,255,0.1)',
+              borderLeft:'1px solid rgba(255,255,255,0.07)',
+              borderRight:'1px solid rgba(255,255,255,0.04)',
+              borderBottom:'1px solid rgba(255,255,255,0.03)',
             }}>
-              <span style={{ ...MONO, fontSize: 12, color: '#6E7587', padding: '0 12px', display: 'flex', alignItems: 'center', flexShrink: 0, borderRight: '0.5px solid rgba(255,255,255,0.08)' }}>
+              <span style={{ ...MONO,fontSize:12,color:INK_MUT,padding:'0 12px',display:'flex',alignItems:'center',flexShrink:0,borderRight:'0.5px solid rgba(255,255,255,0.08)' }}>
                 https://
               </span>
               <input
@@ -139,109 +128,239 @@ function HeroScanSection() {
                 onChange={e => setScanUrl(e.target.value)}
                 onKeyDown={e => { if (e.key === 'Enter') void handleScan() }}
                 placeholder="your-site.com"
-                style={{ flex: 1, minWidth: 0, background: 'transparent', ...MONO, fontSize: 14, color: '#E6E9EE', padding: '13px 14px', border: 'none', outline: 'none', borderRadius: 0 }}
+                style={{ flex:1,minWidth:0,background:'transparent',...MONO,fontSize:14,color:INK_PRI,padding:'14px',border:'none',outline:'none',borderRadius:0 }}
               />
             </div>
             <button
               onClick={() => void handleScan()}
               disabled={isScanning || !scanUrl}
               style={{
-                ...MONO, fontSize: 13, fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase',
-                background: 'transparent', border: '1px solid rgba(111,155,198,0.5)', color: '#6F9BC6',
-                padding: '13px 24px', cursor: isScanning || !scanUrl ? 'not-allowed' : 'pointer',
-                borderRadius: 0, opacity: isScanning || !scanUrl ? 0.6 : 1, whiteSpace: 'nowrap',
-                transition: 'all 0.15s',
+                ...MONO,fontSize:13,fontWeight:600,letterSpacing:'0.1em',textTransform:'uppercase',
+                background:'transparent',
+                border:`1px solid ${isScanning || !scanUrl ? 'rgba(111,155,198,0.3)' : 'rgba(111,155,198,0.5)'}`,
+                color:isScanning || !scanUrl ? 'rgba(111,155,198,0.4)' : STEEL,
+                padding:'14px 24px',cursor:isScanning || !scanUrl ? 'not-allowed' : 'pointer',
+                borderRadius:0,whiteSpace:'nowrap',transition:'all 0.15s',
               }}
             >
-              {isScanning ? 'SCANNING…' : 'SCAN MY SITE →'}
+              {isScanning ? 'SCANNING…' : 'SCAN MY SITE FREE →'}
             </button>
           </div>
           {scanError && (
-            <p style={{ ...MONO, fontSize: 11, color: '#E8635F', margin: '8px 0 0' }}>{scanError}</p>
+            <p style={{ ...MONO,fontSize:11,color:CRIT,margin:'8px 0 0' }}>{scanError}</p>
           )}
-
-          {/* Example result line */}
-          <div style={{
-            background: '#0A0E18',
-            borderTop: '1px solid rgba(111,155,198,0.18)',
-            borderLeft: '1px solid rgba(255,255,255,0.06)',
-            borderRight: '1px solid rgba(255,255,255,0.04)',
-            borderBottom: '1px solid rgba(255,255,255,0.03)',
-            padding: '12px 16px', marginTop: 8,
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-              <span style={{ ...MONO, fontSize: 10, color: '#6E7587', textTransform: 'uppercase', letterSpacing: '0.15em' }}>EXAMPLE RESULT</span>
-              <span style={{ ...MONO, fontSize: 10, color: '#00C48C' }}>complete</span>
-            </div>
-            <p style={{ ...MONO, fontSize: 11, margin: 0, lineHeight: 1.7 }}>
-              <span style={{ color: '#E8635F' }}>61/100</span>
-              <span style={{ color: '#6E7587' }}> · </span>
-              <span style={{ color: '#6F9BC6' }}>23 issues found</span>
-              <span style={{ color: '#6E7587' }}> · </span>
-              <span style={{ color: '#9398A8' }}>ranked by impact</span>
-              <span style={{ color: '#6E7587' }}> · </span>
-              <span style={{ color: '#00C48C' }}>copy rewrites included</span>
-            </p>
-          </div>
-
-          {/* Trust line */}
-          <p style={{ ...MONO, fontSize: 11, color: '#6E7587', textAlign: 'center', margin: '16px 0 0' }}>
-            Free scan · no account required · no credit card
+          <p style={{ ...MONO,fontSize:11,color:INK_MUT,textAlign:'center',margin:'14px 0 0' }}>
+            No account required.
           </p>
         </div>
-
       </div>
     </section>
   )
 }
 
-// ── Section 2 — What you get ──────────────────────────────────────────────────
+// ── Section 2 — The Output ────────────────────────────────────────────────────
+// STATIC MOCK — hardcoded illustration, not a live scan.
 
-const WHAT_YOU_GET = [
-  {
-    number: '61',
-    color: '#E8635F',
-    label: 'YOUR CONVERSION SCORE',
-    body: 'A single number from 0–100 that tells you how well your site is set up to turn visitors into customers. Benchmarked against 4,812 real sites in your exact industry.',
-    detail: 'Below 70 is critical. Most sites score between 45–65.',
-  },
-  {
-    number: '23',
-    color: '#6F9BC6',
-    label: 'RANKED ISSUES',
-    body: "Every problem on your site, ranked by how much it's likely costing you. The highest-impact issues come first. Each one includes what we found, why it matters, and how to fix it.",
-    detail: 'Ranked by estimated revenue impact — fix the top 3 first.',
-  },
-  {
-    number: '+',
-    color: '#00C48C',
-    label: 'REWRITTEN COPY',
-    body: 'For every headline or copy problem we find, we write you a replacement — ready to drop into your site. No copywriter needed. Based on what actually converts in your industry.',
-    detail: 'Drop-in replacements. Evidence-grounded. Ready to use.',
-  },
-] as const
+type MockFinding = {
+  severity: string
+  severityColor: string
+  bg: string
+  border: string
+  title: string
+  desc: string
+  lift: string
+}
 
-function WhatYouGetSection() {
+const MOCK_FINDINGS: MockFinding[] = [
+  {
+    severity: 'CRITICAL',
+    severityColor: CRIT,
+    bg: 'rgba(232,99,95,0.04)',
+    border: 'rgba(232,99,95,0.2)',
+    title: 'Hero headline is feature-led, not outcome-led',
+    desc: 'Your headline describes what the product does, not what the visitor gets. Outcome-led headlines convert 12–18% better on average.',
+    lift: '+12–18%',
+  },
+  {
+    severity: 'HIGH',
+    severityColor: HIGH_AMB,
+    bg: 'rgba(239,178,62,0.04)',
+    border: 'rgba(239,178,62,0.2)',
+    title: 'No above-fold social proof',
+    desc: 'Testimonials and trust signals are buried at 2,400px. Visitors are making trust decisions before they reach them.',
+    lift: '+8–11%',
+  },
+  {
+    severity: 'HIGH',
+    severityColor: HIGH_AMB,
+    bg: 'rgba(239,178,62,0.04)',
+    border: 'rgba(239,178,62,0.2)',
+    title: 'Dual primary CTAs create decision paralysis',
+    desc: 'Two competing primary actions above the fold split attention. A single focused CTA outperforms in 73% of tested variants.',
+    lift: '+6–9%',
+  },
+]
+
+function OutputSection() {
   return (
-    <section style={{ padding: '80px 48px', borderTop: '0.5px solid rgba(111,155,198,0.1)', position: 'relative', overflow: 'hidden' }}>
-      <style>{`
-        @media (max-width: 767px) { .dash-wyg-grid { grid-template-columns: 1fr !important; } }
-      `}</style>
-      <div style={{ maxWidth: 1200, margin: '0 auto' }}>
-        <p style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.2em', color: '#6F9BC6', margin: '0 0 16px' }}>
+    <section style={{ padding:'80px 48px',borderTop:'0.5px solid rgba(111,155,198,0.1)',position:'relative',overflow:'hidden' }}>
+      <style>{`@media(max-width:639px){.d-rewrite-cols{flex-direction:column!important}}`}</style>
+      <div aria-hidden style={{ position:'absolute',inset:0,pointerEvents:'none',zIndex:0, background:'radial-gradient(ellipse 800px 500px at 50% 50%, rgba(111,155,198,0.04) 0%, transparent 60%)' }} />
+      <div style={{ maxWidth:1000,margin:'0 auto',position:'relative',zIndex:1 }}>
+        <p style={{ ...MONO,fontSize:11,textTransform:'uppercase',letterSpacing:'0.2em',color:STEEL,margin:'0 0 16px' }}>
           WHAT YOU GET
         </p>
-        <h2 style={{ ...DISP, fontWeight: 700, fontSize: 'clamp(28px,4vw,40px)', color: '#E6E9EE', margin: 0, lineHeight: 1.15, letterSpacing: '-0.5px' }}>
-          A complete picture of why visitors aren&apos;t converting.
+        <h2 style={{ ...DISP,fontWeight:700,fontSize:'clamp(28px,4vw,44px)',color:INK_PRI,letterSpacing:'-0.5px',margin:'0 0 16px',lineHeight:1.1 }}>
+          A report that tells you exactly what to fix.
         </h2>
+        <p style={{ ...SANS,fontSize:15,color:INK_SEC,lineHeight:1.65,maxWidth:640,margin:'0 0 48px' }}>
+          Not a generic score. Not vague suggestions. Specific findings grounded in what&apos;s actually on your page, ranked by estimated conversion impact, with plain-English fixes and AI-rewritten copy ready to drop in.
+        </p>
 
-        <div className="dash-wyg-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 32, marginTop: 48 }}>
-          {WHAT_YOU_GET.map(col => (
-            <div key={col.label}>
-              <div style={{ ...DISP, fontSize: 64, fontWeight: 700, color: col.color, lineHeight: 1 }}>{col.number}</div>
-              <div style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.12em', color: '#6E7587', marginTop: 8 }}>{col.label}</div>
-              <p style={{ ...SANS, fontSize: 15, color: '#9398A8', lineHeight: 1.65, marginTop: 16, marginBottom: 0 }}>{col.body}</p>
-              <p style={{ ...MONO, fontSize: 11, color: col.color, marginTop: 12, marginBottom: 0 }}>{col.detail}</p>
+        {/* Mock report card — static illustration */}
+        <div style={{
+          background:SURFACE,
+          borderTop:'1px solid rgba(255,255,255,0.12)',
+          borderLeft:'1px solid rgba(255,255,255,0.08)',
+          borderRight:'1px solid rgba(255,255,255,0.04)',
+          borderBottom:'1px solid rgba(255,255,255,0.03)',
+          padding:32,
+        }}>
+          {/* Label */}
+          <div style={{ display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:24,flexWrap:'wrap',gap:8 }}>
+            <p style={{ ...MONO,fontSize:9,textTransform:'uppercase',letterSpacing:'0.15em',color:'rgba(111,155,198,0.35)',margin:0 }}>
+              EXAMPLE SCAN RESULT — STATIC ILLUSTRATION
+            </p>
+            <p style={{ ...MONO,fontSize:9,color:LIFT_GREEN,margin:0 }}>acme-saas.com</p>
+          </div>
+
+          {/* Score row */}
+          <div style={{ display:'flex',alignItems:'center',gap:20,marginBottom:28,paddingBottom:24,borderBottom:'0.5px solid rgba(255,255,255,0.06)',flexWrap:'wrap' }}>
+            <ScoreRing score={61} size="lg" animate={false} />
+            <div>
+              <p style={{ ...MONO,fontSize:11,color:INK_MUT,margin:'0 0 6px' }}>63rd percentile · B2B SaaS</p>
+              <p style={{ ...SANS,fontSize:13,color:INK_SEC,margin:0,lineHeight:1.5,maxWidth:480 }}>
+                61 sites out of 100 in your category score higher. Your top 3 fixes could move you to the 78th percentile.
+              </p>
+            </div>
+          </div>
+
+          {/* Finding cards */}
+          <div style={{ display:'flex',flexDirection:'column',gap:12,marginBottom:28 }}>
+            {MOCK_FINDINGS.map((f, i) => (
+              <div key={i} style={{ background:f.bg,border:`0.5px solid ${f.border}`,padding:16 }}>
+                <div style={{ display:'flex',alignItems:'flex-start',justifyContent:'space-between',marginBottom:8,gap:12,flexWrap:'wrap' }}>
+                  <div style={{ display:'flex',alignItems:'center',gap:10,flexWrap:'wrap' }}>
+                    <span style={{
+                      ...MONO,fontSize:10,color:f.severityColor,
+                      border:`0.5px solid ${f.border}`,
+                      padding:'2px 8px',textTransform:'uppercase',letterSpacing:'0.1em',flexShrink:0,
+                    }}>
+                      {f.severity}
+                    </span>
+                    <span style={{ ...DISP,fontWeight:600,fontSize:14,color:INK_PRI }}>{f.title}</span>
+                  </div>
+                  <span style={{ ...MONO,fontSize:11,color:LIFT_GREEN,whiteSpace:'nowrap',flexShrink:0 }}>
+                    EST. LIFT {f.lift}
+                  </span>
+                </div>
+                <p style={{ ...SANS,fontSize:13,color:INK_SEC,margin:0,lineHeight:1.55 }}>{f.desc}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* AI rewrite card */}
+          <div>
+            <p style={{ ...MONO,fontSize:9,textTransform:'uppercase',letterSpacing:'0.15em',color:INK_MUT,margin:'0 0 12px' }}>
+              AI-REWRITTEN COPY
+            </p>
+            <div className="d-rewrite-cols" style={{ display:'flex',gap:0 }}>
+              <div style={{
+                flex:1,padding:16,
+                borderTop:'1px solid rgba(255,255,255,0.08)',
+                borderLeft:'1px solid rgba(255,255,255,0.06)',
+                borderBottom:'1px solid rgba(255,255,255,0.04)',
+                borderRight:'0.5px solid rgba(111,155,198,0.08)',
+              }}>
+                <p style={{ ...MONO,fontSize:9,textTransform:'uppercase',letterSpacing:'0.15em',color:INK_MUT,margin:'0 0 10px' }}>
+                  ORIGINAL
+                </p>
+                <p style={{ ...SANS,fontSize:14,color:INK_SEC,margin:0,lineHeight:1.55 }}>
+                  &ldquo;The project management tool built for remote teams.&rdquo;
+                </p>
+              </div>
+              <div style={{
+                flex:1,padding:16,
+                borderTop:'1px solid rgba(255,255,255,0.08)',
+                borderRight:'1px solid rgba(255,255,255,0.06)',
+                borderBottom:'1px solid rgba(255,255,255,0.04)',
+                borderLeft:'0.5px solid rgba(0,196,140,0.2)',
+              }}>
+                <p style={{ ...MONO,fontSize:9,textTransform:'uppercase',letterSpacing:'0.15em',color:LIFT_GREEN,margin:'0 0 10px' }}>
+                  REWRITTEN
+                </p>
+                <p style={{ ...SANS,fontSize:14,color:INK_PRI,margin:0,lineHeight:1.55 }}>
+                  &ldquo;Ship projects on time, every time — no matter where your team works.&rdquo;
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+// ── Section 3 — How It Works ──────────────────────────────────────────────────
+
+type HowStep = { num: string; title: string; desc: string }
+
+const HOW_STEPS: HowStep[] = [
+  {
+    num: '01',
+    title: 'Paste your URL',
+    desc: 'Drop any publicly accessible URL into the scan field. No installation, no code, no browser extension.',
+  },
+  {
+    num: '02',
+    title: 'We render your live page',
+    desc: 'webdoc loads your actual page in a real browser — the same thing your visitors see, above-the-fold layout and all. Not cached text. Not a scrape. Your live site.',
+  },
+  {
+    num: '03',
+    title: 'Get your ranked report',
+    desc: 'In about 90 seconds you receive a full conversion audit — every finding ranked by estimated impact, plain-English fixes, AI-rewritten copy, and your percentile against real sites in your vertical.',
+  },
+]
+
+function HowItWorksSection() {
+  return (
+    <section style={{ padding:'80px 48px',borderTop:'0.5px solid rgba(111,155,198,0.1)',position:'relative',overflow:'hidden' }}>
+      <style>{`@media(max-width:767px){.d-hiw-grid{grid-template-columns:1fr!important}}`}</style>
+      <div style={{ maxWidth:1200,margin:'0 auto' }}>
+        <p style={{ ...MONO,fontSize:11,textTransform:'uppercase',letterSpacing:'0.2em',color:STEEL,margin:'0 0 16px' }}>
+          THE PROCESS
+        </p>
+        <h2 style={{ ...DISP,fontWeight:700,fontSize:'clamp(28px,4vw,44px)',color:INK_PRI,letterSpacing:'-0.5px',margin:'0 0 48px',lineHeight:1.1 }}>
+          Three steps. No technical knowledge required.
+        </h2>
+        <div className="d-hiw-grid" style={{ display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:24 }}>
+          {HOW_STEPS.map(step => (
+            <div key={step.num} style={{
+              background:SURFACE,
+              borderTop:'1px solid rgba(255,255,255,0.1)',
+              borderLeft:'1px solid rgba(255,255,255,0.07)',
+              borderRight:'1px solid rgba(255,255,255,0.04)',
+              borderBottom:'1px solid rgba(255,255,255,0.03)',
+              padding:24,
+            }}>
+              <p style={{ ...MONO,fontSize:20,color:'rgba(111,155,198,0.25)',margin:'0 0 16px',fontWeight:700 }}>
+                {step.num}
+              </p>
+              <p style={{ ...DISP,fontSize:18,fontWeight:600,color:INK_PRI,margin:'0 0 12px',lineHeight:1.25 }}>
+                {step.title}
+              </p>
+              <p style={{ ...SANS,fontSize:14,color:INK_SEC,lineHeight:1.65,margin:0 }}>{step.desc}</p>
             </div>
           ))}
         </div>
@@ -250,335 +369,238 @@ function WhatYouGetSection() {
   )
 }
 
-// ── Section 3 — Example scan result ───────────────────────────────────────────
+// ── Section 4 — Why Different ─────────────────────────────────────────────────
 
-const EXAMPLE_ISSUES = [
-  { name: 'Hero headline is feature-led',         severity: 'CRITICAL', color: '#E8635F' },
-  { name: 'No social proof above the fold',       severity: 'HIGH',     color: 'rgba(232,99,95,0.7)' },
-  { name: 'CTA copy is generic',                  severity: 'HIGH',     color: 'rgba(232,99,95,0.7)' },
-  { name: 'Value proposition buried',             severity: 'MEDIUM',   color: '#6E7587' },
-  { name: 'Mobile nav broken on small screens',   severity: 'MEDIUM',   color: '#6E7587' },
-] as const
+type ObjectionCard = { q: string; a: string; tag: string }
 
-function ExampleResultSection() {
+const OBJECTIONS: ObjectionCard[] = [
+  {
+    q: "How do I know it's not hallucinating?",
+    a: "Every finding must cite specific visible content — what's present, absent, or misplaced on your actual page. The model cannot pass a check without grounding it in evidence. Findings that fail validation are dropped before they reach you. You will never see a finding that isn't traceable to something real on your page.",
+    tag: 'grounding rule: cite visible content or fail',
+  },
+  {
+    q: 'Why not just paste my URL into ChatGPT?',
+    a: "A language model sees the text you paste, not your live page. webdoc renders the full DOM in headless Chrome, reads your above-the-fold layout, measures element positions, runs 307 structured checks against conversion best practices, and returns ranked output with estimated lift numbers. ChatGPT returns a chat response. This returns a report.",
+    tag: '307 checks · rendered DOM · ranked output · not a chat response',
+  },
+]
+
+function WhyDifferentSection() {
   return (
-    <section style={{ padding: '80px 48px', borderTop: '0.5px solid rgba(111,155,198,0.1)', background: 'rgba(111,155,198,0.02)', position: 'relative', overflow: 'hidden' }}>
-      <style>{`
-        @media (max-width: 767px) { .dash-example-grid { grid-template-columns: 1fr !important; } }
-      `}</style>
-      <div style={{ maxWidth: 1200, margin: '0 auto' }}>
-        <p style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.2em', color: '#6F9BC6', margin: '0 0 16px' }}>
-          EXAMPLE RESULT
+    <section style={{ padding:'80px 48px',borderTop:'0.5px solid rgba(111,155,198,0.1)',position:'relative',overflow:'hidden' }}>
+      <style>{`@media(max-width:767px){.d-diff-grid{grid-template-columns:1fr!important}}`}</style>
+      <div aria-hidden style={{ position:'absolute',inset:0,pointerEvents:'none',zIndex:0, background:'radial-gradient(ellipse 800px 500px at 50% 50%, rgba(111,155,198,0.04) 0%, transparent 65%)' }} />
+      <Ticks />
+      <div style={{ maxWidth:1200,margin:'0 auto',position:'relative',zIndex:1 }}>
+        <p style={{ ...MONO,fontSize:11,textTransform:'uppercase',letterSpacing:'0.2em',color:STEEL,margin:'0 0 16px' }}>
+          THE DIFFERENCE
         </p>
-        <h2 style={{ ...DISP, fontWeight: 700, fontSize: 'clamp(28px,4vw,40px)', color: '#E6E9EE', margin: '0 0 12px', lineHeight: 1.15, letterSpacing: '-0.5px' }}>
-          Here&apos;s what you&apos;ll see after scanning your site.
+        <h2 style={{ ...DISP,fontWeight:700,fontSize:'clamp(28px,4vw,44px)',color:INK_PRI,letterSpacing:'-0.5px',margin:'0 0 48px',lineHeight:1.1 }}>
+          Built for founders with money on the line.
         </h2>
-        <p style={{ ...SANS, fontSize: 15, color: '#9398A8', marginBottom: 48, marginTop: 0 }}>
-          This is a real audit result for acme-saas.com — a B2B SaaS site.
-        </p>
-
-        <div className="dash-example-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 48, alignItems: 'start' }}>
-
-          {/* LEFT — score + top finding */}
-          <div className="wd-panel" style={{ padding: 28 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 20, marginBottom: 24 }}>
-              <ScoreRing score={61} size="lg" />
-              <div>
-                <div style={{ ...DISP, fontSize: 18, fontWeight: 700, color: '#E6E9EE' }}>acme-saas.com</div>
-                <div style={{ ...MONO, fontSize: 11, color: '#6E7587', marginTop: 4 }}>B2B SaaS · scanned June 2026</div>
-                <div style={{ ...MONO, fontSize: 11, color: '#6F9BC6', marginTop: 4 }}>63rd percentile in B2B SaaS</div>
-              </div>
+        <div className="d-diff-grid" style={{ display:'grid',gridTemplateColumns:'repeat(2,1fr)',gap:24 }}>
+          {OBJECTIONS.map(card => (
+            <div key={card.q} style={{
+              background:SURFACE,
+              borderTop:'1px solid rgba(255,255,255,0.12)',
+              borderLeft:'1px solid rgba(255,255,255,0.08)',
+              borderRight:'1px solid rgba(255,255,255,0.04)',
+              borderBottom:'1px solid rgba(255,255,255,0.03)',
+              padding:28,
+            }}>
+              <p style={{ ...DISP,fontWeight:600,fontSize:17,color:INK_PRI,margin:'0 0 14px',lineHeight:1.35 }}>{card.q}</p>
+              <p style={{ ...SANS,fontSize:14,color:INK_SEC,lineHeight:1.7,margin:'0 0 16px' }}>{card.a}</p>
+              <p style={{ ...MONO,fontSize:11,color:STEEL,margin:0 }}>{card.tag}</p>
             </div>
-
-            <div style={{ height: '0.5px', background: 'rgba(255,255,255,0.06)', marginBottom: 20 }} />
-
-            <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#6E7587', margin: '0 0 12px' }}>
-              TOP ISSUE FOUND
-            </p>
-            <div style={{ background: 'rgba(232,99,95,0.04)', border: '0.5px solid rgba(232,99,95,0.2)', padding: 16 }}>
-              <p style={{ ...MONO, fontSize: 10, color: '#E8635F', margin: 0 }}>
-                CRITICAL · estimated +12–18% lift if fixed
-              </p>
-              <p style={{ ...SANS, fontSize: 15, fontWeight: 600, color: '#E6E9EE', marginTop: 8, marginBottom: 0 }}>
-                Your headline talks about your product, not your customer&apos;s outcome
-              </p>
-              <p style={{ ...SANS, fontSize: 13, color: '#9398A8', marginTop: 8, marginBottom: 0, lineHeight: 1.5 }}>
-                We found: &lsquo;Advanced analytics platform for modern teams&rsquo; — this describes what you built, not what your customer gets. Visitors can&apos;t quickly understand if this is for them.
-              </p>
-              <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.12em', color: '#00C48C', marginTop: 12, marginBottom: 0 }}>
-                SUGGESTED REWRITE
-              </p>
-              <p style={{ ...SANS, fontSize: 14, color: '#00C48C', marginTop: 6, marginBottom: 0, fontStyle: 'italic' }}>
-                &ldquo;See exactly which campaigns drive revenue — in one dashboard.&rdquo;
-              </p>
-            </div>
-          </div>
-
-          {/* RIGHT — what else is in the report */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-
-            <div className="wd-panel" style={{ padding: 20 }}>
-              <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#6E7587', margin: '0 0 8px' }}>
-                23 ISSUES RANKED BY IMPACT
-              </p>
-              {EXAMPLE_ISSUES.map(issue => (
-                <div key={issue.name} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 12, padding: '6px 0', borderBottom: '0.5px solid rgba(255,255,255,0.04)' }}>
-                  <span style={{ ...SANS, fontSize: 13, color: '#9398A8' }}>{issue.name}</span>
-                  <span style={{ ...MONO, fontSize: 10, color: issue.color, flexShrink: 0 }}>{issue.severity}</span>
-                </div>
-              ))}
-              <p style={{ ...MONO, fontSize: 10, color: '#6F9BC6', margin: '10px 0 0' }}>
-                + 18 more issues in your full report
-              </p>
-            </div>
-
-            <div className="wd-panel" style={{ padding: 20 }}>
-              <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#6E7587', margin: '0 0 8px' }}>
-                HOW YOU COMPARE
-              </p>
-              <p style={{ ...SANS, fontSize: 14, color: '#9398A8', lineHeight: 1.5, margin: 0 }}>
-                Your score of 61 puts you in the 63rd percentile of B2B SaaS sites. The average site in your category scores 58. The top 25% score above 78.
-              </p>
-              <p style={{ ...MONO, fontSize: 11, color: '#6F9BC6', marginTop: 8, marginBottom: 0 }}>
-                Compared against 4,812 real sites · not a generic average
-              </p>
-            </div>
-
-            <div className="wd-panel" style={{ padding: 20 }}>
-              <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#6E7587', margin: '0 0 8px' }}>
-                5 THINGS WORKING WELL
-              </p>
-              <p style={{ ...SANS, fontSize: 14, color: '#9398A8', lineHeight: 1.5, margin: 0 }}>
-                We also flag what&apos;s genuinely above average — so you know what not to change while you fix the problems.
-              </p>
-              <p style={{ ...MONO, fontSize: 11, color: '#00C48C', marginTop: 8, marginBottom: 0 }}>
-                Evidence-referenced · never padded
-              </p>
-            </div>
-
-          </div>
+          ))}
         </div>
       </div>
     </section>
   )
 }
 
-// ── Section 4 — Pricing (dashboard tiers, mirrored from /pricing) ────────────
+// ── Section 5 — Benchmarks ────────────────────────────────────────────────────
+// Renders the existing LandingCorpusStats component which includes the bell curve,
+// corpus stats, and percentile visualization.
 
-type FeatVal = string | boolean
+// ── Section 6 — Pricing ───────────────────────────────────────────────────────
+// TODO: wire paid-tier CTAs to Stripe checkout once plan IDs are confirmed
+// Currently links to auth with plan query param for post-auth routing.
 
-function FVal({ v }: { v: FeatVal }) {
-  if (v === true)        return <span style={{ ...MONO, fontSize: 11, color: '#00C48C' }}>✓</span>
-  if (v === false)       return <span style={{ ...MONO, fontSize: 11, color: 'rgba(255,255,255,0.2)' }}>—</span>
-  if (v === 'unlimited') return <span style={{ ...MONO, fontSize: 11, color: '#00C48C' }}>{v}</span>
-  if (v === 'dedicated') return <span style={{ ...MONO, fontSize: 11, color: '#9D8CFF' }}>{v}</span>
-  if (v === 'custom')    return <span style={{ ...MONO, fontSize: 11, color: '#6F9BC6' }}>{v}</span>
-  return <span style={{ ...MONO, fontSize: 11, color: '#E6E9EE' }}>{v}</span>
+type PricingCard = {
+  name: string
+  kicker?: string
+  price: string
+  priceSub: string
+  highlight: boolean
+  features: string[]
+  cta: string
+  ctaHref: string
+  ctaFilled: boolean
 }
 
-const DASH_FEATS: Array<{ key: string; values: [FeatVal, FeatVal, FeatVal, FeatVal] }> = [
-  { key: 'scans / month',       values: ['3',       '20',       '100',       '500']       },
-  { key: 'report history',      values: ['7 days',  '30 days',  'unlimited', 'unlimited'] },
-  { key: 'findings depth',      values: ['full',    'full',     'full',      'full']      },
-  { key: 'AI rewritten copy',   values: [true,      true,       true,        true]        },
-  { key: 'corpus benchmark',    values: [true,      true,       true,        true]        },
-  { key: 'score trending',      values: [false,     true,       true,        true]        },
-  { key: 'CSV export',          values: [false,     true,       true,        true]        },
-  { key: 'team seats',          values: ['1',       '1',        '3',         '10']        },
-  { key: 'white label',         values: [false,     false,      true,        true]        },
-  { key: 'client workspaces',   values: [false,     false,      true,        true]        },
-  { key: 'priority processing', values: [false,     true,       true,        true]        },
-  { key: 'email support',       values: [false,     true,       true,        true]        },
-  { key: 'custom subdomain',    values: [false,     false,      false,       true]        },
-  { key: 'scheduled scans',     values: [false,     false,      false,       true]        },
-  { key: 'Slack notifications', values: [false,     false,      false,       true]        },
-]
-
-const DASH_CARDS = [
+const PRICING_CARDS: PricingCard[] = [
   {
-    tier: 'FREE',
-    monthly: 0, annual: 0,
-    economyMonthly: 'forever free',
-    economyAnnual:  'forever free',
-    bestFor: 'Founders who want to see their score and top findings before committing.',
-    cta: 'TRY FREE →', ctaHref: '/auth?surface=dashboard',
-    isScale: false,
+    name: 'Free',
+    price: '$0',
+    priceSub: 'no credit card',
+    highlight: false,
+    features: [
+      '3 scans per month',
+      'Score + top 3 findings',
+      'Benchmarked against corpus',
+    ],
+    cta: 'Start free →',
+    ctaHref: '/auth?surface=dashboard',
+    ctaFilled: false,
   },
   {
-    tier: 'STARTER',
-    monthly: 49, annual: 39,
-    economyMonthly: '$2.45/scan effective',
-    economyAnnual:  '$1.95/scan · billed annually',
-    bestFor: 'Solo founders and marketers running regular audits and tracking score over time.',
-    cta: 'START TRIAL →', ctaHref: '/auth?surface=dashboard&plan=starter',
-    isScale: false,
+    name: 'Starter',
+    kicker: 'MOST POPULAR',
+    price: '$49/mo',
+    priceSub: 'month-to-month',
+    highlight: true,
+    features: [
+      'Unlimited scans',
+      'Full report — all findings ranked',
+      'AI-rewritten copy included',
+      'Cancel anytime',
+    ],
+    cta: 'Get started →',
+    ctaHref: '/auth?surface=dashboard&plan=starter',
+    ctaFilled: true,
   },
   {
-    tier: 'PRO',
-    monthly: 149, annual: 119,
-    economyMonthly: '$1.49/scan effective',
-    economyAnnual:  '$1.19/scan · billed annually',
-    bestFor: 'Agencies and consultants delivering audits to clients with white-label reports.',
-    cta: 'START TRIAL →', ctaHref: '/auth?surface=dashboard&plan=pro',
-    isScale: false,
+    name: 'Agency',
+    price: '$149/mo',
+    priceSub: 'month-to-month',
+    highlight: false,
+    features: [
+      'Everything in Starter',
+      'White-label PDF reports',
+      '100 API calls bundled',
+      'Client management dashboard',
+    ],
+    cta: 'Get started →',
+    ctaHref: '/auth?surface=dashboard&plan=agency',
+    ctaFilled: false,
   },
   {
-    tier: 'SCALE',
-    monthly: 499, annual: 399,
-    economyMonthly: 'custom rate · priority support',
-    economyAnnual:  'billed annually · priority support',
-    bestFor: 'Teams running high-volume audits with custom branding and dedicated infrastructure.',
-    cta: 'START TRIAL →', ctaHref: '/auth?surface=dashboard&plan=scale',
-    isScale: true,
+    name: 'Enterprise',
+    price: '$499/mo',
+    priceSub: 'annual billing',
+    highlight: false,
+    features: [
+      'Everything in Agency',
+      'Dedicated scan capacity',
+      'SLA + priority support',
+      'Custom vertical benchmarks',
+    ],
+    cta: 'Talk to us →',
+    ctaHref: '/contact',
+    ctaFilled: false,
   },
 ]
 
 function PricingSection() {
-  const [billing, setBilling] = useState<'monthly' | 'annual'>('monthly')
-  const isAnnual = billing === 'annual'
-
   return (
-    <section style={{ padding: '80px 48px', borderTop: '0.5px solid rgba(111,155,198,0.1)', position: 'relative', overflow: 'hidden' }}>
+    <section style={{ padding:'80px 48px',borderTop:'0.5px solid rgba(111,155,198,0.1)',position:'relative',overflow:'hidden' }}>
       <style>{`
-        @media (max-width: 767px) { .dash-pricing-grid { grid-template-columns: 1fr !important; } }
+        @media(max-width:1023px){.d-price-grid{grid-template-columns:repeat(2,1fr)!important}}
+        @media(max-width:639px){.d-price-grid{grid-template-columns:1fr!important}}
       `}</style>
-      <div style={{ maxWidth: 1200, margin: '0 auto' }}>
-        <p style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.2em', color: '#6F9BC6', margin: '0 0 16px' }}>
-          PRICING
+      <div style={{ maxWidth:1200,margin:'0 auto' }}>
+        <p style={{ ...MONO,fontSize:11,textTransform:'uppercase',letterSpacing:'0.2em',color:STEEL,margin:'0 0 16px' }}>
+          DASHBOARD PLANS
         </p>
-        <h2 style={{ ...DISP, fontWeight: 700, fontSize: 'clamp(28px,4vw,40px)', color: '#E6E9EE', margin: '0 0 12px', lineHeight: 1.15, letterSpacing: '-0.5px' }}>
+        <h2 style={{ ...DISP,fontWeight:700,fontSize:'clamp(28px,4vw,44px)',color:INK_PRI,letterSpacing:'-0.5px',margin:'0 0 12px',lineHeight:1.1 }}>
           Start free. Upgrade when you need more.
         </h2>
-        <p style={{ ...SANS, fontSize: 15, color: '#9398A8', marginBottom: 48, marginTop: 0 }}>
-          No contracts. Cancel anytime. Same 307-check audit on every plan.
+        <p style={{ ...SANS,fontSize:15,color:INK_SEC,margin:'0 0 48px' }}>
+          Every plan runs the same 307-check engine. No feature-gated diagnostics.
         </p>
-
-        {/* Billing toggle */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 32, justifyContent: 'center' }}>
-          <span style={{ ...MONO, fontSize: 11, color: '#6E7587' }}>Monthly</span>
-          <button
-            onClick={() => setBilling(b => b === 'monthly' ? 'annual' : 'monthly')}
-            aria-label="Toggle billing period"
-            style={{
-              width: 40, height: 22,
-              background: isAnnual ? 'rgba(111,155,198,0.3)' : 'rgba(255,255,255,0.08)',
-              border: '0.5px solid rgba(111,155,198,0.3)',
-              cursor: 'pointer',
-              position: 'relative',
-              borderRadius: 0,
-              transition: 'background 0.2s',
-              padding: 0,
-              flexShrink: 0,
-            }}
-          >
-            <div style={{
-              position: 'absolute',
-              top: 3,
-              left: isAnnual ? 21 : 2,
-              width: 16,
-              height: 16,
-              background: isAnnual ? '#6F9BC6' : 'rgba(255,255,255,0.35)',
-              transition: 'left 0.2s, background 0.2s',
-            }} />
-          </button>
-          <span style={{ ...MONO, fontSize: 11, color: '#6E7587' }}>Annual</span>
-          {isAnnual && (
-            <span style={{ ...MONO, fontSize: 10, color: '#00C48C', background: 'rgba(0,196,140,0.1)', padding: '2px 8px' }}>
-              SAVE 20%
-            </span>
-          )}
-        </div>
-
-        {/* Card grid */}
-        <div className="dash-pricing-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
-          {DASH_CARDS.map((card, ci) => {
-            const accentColor = card.isScale ? 'rgba(0,196,140,0.5)' : 'rgba(111,155,198,0.5)'
-            const tierColor   = card.isScale ? '#00C48C' : '#6F9BC6'
-            const ctaBorder   = card.isScale ? 'rgba(0,196,140,0.45)' : 'rgba(111,155,198,0.45)'
-            const ctaColor    = card.isScale ? '#00C48C' : '#6F9BC6'
-            const price   = card.monthly === 0 ? '$0' : `$${isAnnual ? card.annual : card.monthly}`
-            const economy = isAnnual ? card.economyAnnual : card.economyMonthly
-            return (
-              <div key={card.tier} style={{ background: '#0A0E18', border: '0.5px solid rgba(255,255,255,0.08)', position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-                <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 1, background: accentColor }} />
-                <div style={{ padding: '24px 24px 20px', borderBottom: '0.5px solid rgba(255,255,255,0.06)' }}>
-                  <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.18em', color: tierColor, margin: '0 0 8px' }}>{card.tier}</p>
-                  <p style={{ ...DISP, fontSize: 42, fontWeight: 700, color: '#E6E9EE', lineHeight: 1, margin: '0 0 4px' }}>{price}</p>
-                  <p style={{ ...MONO, fontSize: 10, color: tierColor, margin: '0 0 16px' }}>{economy}</p>
-                  <p style={{ ...SANS, fontSize: 13, color: '#9398A8', lineHeight: 1.5, margin: '0 0 20px' }}>{card.bestFor}</p>
-                  <Link
-                    href={card.ctaHref}
-                    style={{
-                      display: 'block', textAlign: 'center', padding: '11px',
-                      ...MONO, fontSize: 12,
-                      textTransform: 'uppercase', letterSpacing: '0.12em',
-                      textDecoration: 'none', color: ctaColor,
-                      border: `1px solid ${ctaBorder}`, background: 'transparent',
-                      boxSizing: 'border-box', width: '100%',
-                    }}
-                  >{card.cta}</Link>
-                </div>
-                <div style={{ padding: '20px 24px', flexGrow: 1 }}>
-                  {DASH_FEATS.map((row, ri) => (
-                    <div
-                      key={row.key}
-                      style={{
-                        display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start',
-                        padding: '9px 0',
-                        borderBottom: ri < DASH_FEATS.length - 1 ? '0.5px solid rgba(255,255,255,0.04)' : 'none',
-                      }}
-                    >
-                      <span style={{ ...MONO, fontSize: 11, color: '#9398A8' }}>{row.key}</span>
-                      <FVal v={row.values[ci]} />
-                    </div>
-                  ))}
-                </div>
+        <div className="d-price-grid" style={{ display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:16 }}>
+          {PRICING_CARDS.map(card => (
+            <div key={card.name} style={{
+              background:SURFACE,
+              borderTop: card.highlight ? `2px solid ${STEEL}` : '1px solid rgba(255,255,255,0.1)',
+              borderLeft: `1px solid ${card.highlight ? 'rgba(111,155,198,0.3)' : 'rgba(255,255,255,0.07)'}`,
+              borderRight:'1px solid rgba(255,255,255,0.04)',
+              borderBottom:'1px solid rgba(255,255,255,0.03)',
+              padding:24,
+              display:'flex',flexDirection:'column',
+            }}>
+              {card.kicker && (
+                <p style={{ ...MONO,fontSize:9,textTransform:'uppercase',letterSpacing:'0.15em',color:STEEL,margin:'0 0 8px' }}>
+                  {card.kicker}
+                </p>
+              )}
+              <p style={{ ...MONO,fontSize:11,textTransform:'uppercase',letterSpacing:'0.12em',color:STEEL,margin:'0 0 8px' }}>
+                {card.name}
+              </p>
+              <p style={{ ...DISP,fontSize:36,fontWeight:700,color:INK_PRI,lineHeight:1,margin:'0 0 4px' }}>
+                {card.price}
+              </p>
+              <p style={{ ...MONO,fontSize:10,color:INK_MUT,margin:'0 0 20px' }}>{card.priceSub}</p>
+              <div style={{ flex:1,marginBottom:20 }}>
+                {card.features.map((f, i) => (
+                  <p key={i} style={{ ...SANS,fontSize:13,color:INK_SEC,margin:'0 0 8px',lineHeight:1.45 }}>
+                    · {f}
+                  </p>
+                ))}
               </div>
-            )
-          })}
+              <Link
+                href={card.ctaHref}
+                style={{
+                  display:'block',textAlign:'center',padding:'11px',
+                  ...MONO,fontSize:12,textTransform:'uppercase',letterSpacing:'0.12em',
+                  textDecoration:'none',
+                  color: card.ctaFilled ? BG_BASE : STEEL,
+                  background: card.ctaFilled ? STEEL : 'transparent',
+                  border:`1px solid ${STEEL}`,
+                }}
+              >
+                {card.cta}
+              </Link>
+            </div>
+          ))}
         </div>
-
-        <p style={{ ...MONO, fontSize: 11, color: '#6E7587', textAlign: 'center', marginTop: 24, marginBottom: 0 }}>
-          All plans include: full audit · AI-rewritten copy · corpus benchmarking · cache hits free
-        </p>
       </div>
     </section>
   )
 }
 
-// ── Section 5 — Bottom CTA ────────────────────────────────────────────────────
+// ── Section 7 — Final CTA ─────────────────────────────────────────────────────
 
-function BottomCtaSection() {
+function FinalCtaSection() {
   return (
-    <section style={{ padding: '80px 48px', borderTop: '0.5px solid rgba(111,155,198,0.1)', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
+    <section style={{ padding:'96px 48px',textAlign:'center',position:'relative',overflow:'hidden',borderTop:'0.5px solid rgba(111,155,198,0.1)' }}>
       <div aria-hidden style={{
-        position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0,
-        background: 'radial-gradient(ellipse 900px 500px at 50% 50%, rgba(111,155,198,0.06) 0%, transparent 60%)',
+        position:'absolute',inset:0,pointerEvents:'none',zIndex:0,
+        background:'radial-gradient(ellipse 800px 500px at 50% 50%, rgba(111,155,198,0.06) 0%, transparent 60%)',
       }} />
       <Ticks />
-
-      <div style={{ position: 'relative', zIndex: 1 }}>
-        <h2 style={{ ...DISP, fontSize: 32, fontWeight: 700, color: '#E6E9EE', margin: '0 0 16px', letterSpacing: '-0.5px' }}>
-          Ready to see what&apos;s holding your site back?
+      <div style={{ position:'relative',zIndex:1 }}>
+        <h2 style={{ ...DISP,fontWeight:700,fontSize:'clamp(28px,4vw,44px)',color:INK_PRI,letterSpacing:'-0.5px',margin:'0 0 32px',lineHeight:1.1 }}>
+          Ready to find out what&apos;s killing your conversions?
         </h2>
-        <p style={{ ...SANS, fontSize: 15, color: '#9398A8', margin: '0 0 32px' }}>
-          Free scan. No account required. Results in 90 seconds.
-        </p>
-
-        <div style={{ display: 'flex', justifyContent: 'center', gap: 16, flexWrap: 'wrap' }}>
-          <a href="#hero" style={{ ...MONO, fontSize: 12, color: '#6F9BC6', border: '1px solid rgba(111,155,198,0.5)', padding: '12px 28px', textDecoration: 'none', display: 'inline-block', background: 'transparent' }}>
-            Scan my site free →
-          </a>
-          <Link href="/product" style={{ ...MONO, fontSize: 12, color: '#6E7587', border: '0.5px solid rgba(255,255,255,0.1)', padding: '12px 28px', textDecoration: 'none', display: 'inline-block', background: 'transparent' }}>
-            See how the engine works →
-          </Link>
-        </div>
-
-        <p style={{ ...MONO, fontSize: 11, color: '#6E7587', marginTop: 24, marginBottom: 0 }}>
-          Building with the API?{' '}
-          <Link href="/developers" style={{ color: '#9D8CFF', textDecoration: 'none' }}>
-            See developer pricing →
-          </Link>
+        <a
+          href="#scan"
+          style={{
+            display:'inline-block',
+            ...MONO,fontSize:13,fontWeight:600,letterSpacing:'0.1em',textTransform:'uppercase',
+            background:'transparent',
+            border:'1px solid rgba(111,155,198,0.5)',
+            color:STEEL,
+            padding:'14px 32px',
+            textDecoration:'none',
+          }}
+        >
+          SCAN MY SITE FREE →
+        </a>
+        <p style={{ ...MONO,fontSize:11,color:INK_MUT,marginTop:16,marginBottom:0 }}>
+          No account required. Results in ~90 seconds.
         </p>
       </div>
     </section>
@@ -587,14 +609,16 @@ function BottomCtaSection() {
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 
-export default function DashboardLandingPage() {
+export default function DashboardPage() {
   return (
-    <main style={{ minHeight: '100vh', background: '#050810' }}>
-      <HeroScanSection />
-      <WhatYouGetSection />
-      <ExampleResultSection />
+    <main style={{ minHeight:'100vh',background:BG_BASE }}>
+      <HeroSection />
+      <OutputSection />
+      <HowItWorksSection />
+      <WhyDifferentSection />
+      <LandingCorpusStats />
       <PricingSection />
-      <BottomCtaSection />
+      <FinalCtaSection />
     </main>
   )
 }

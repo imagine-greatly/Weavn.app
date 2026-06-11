@@ -91,14 +91,26 @@ function HeroSection() {
         padding: '112px 48px 80px',
         textAlign: 'center',
         position: 'relative',
-        overflow: 'hidden',
+        overflow: 'visible',
       }}
     >
-      {/* 4A: Hero bloom — breathing radial at 4% opacity */}
-      <div aria-hidden className="bloom-breathe" style={{
-        position:'absolute',inset:0,pointerEvents:'none',zIndex:0,
-        background:'radial-gradient(ellipse 1000px 700px at 50% 35%, rgba(111,155,198,0.04) 0%, transparent 60%)',
-      }} />
+      {/* Hero bloom */}
+      <div
+        aria-hidden="true"
+        style={{
+          position: 'absolute',
+          top: '-200px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          width: '1000px',
+          height: '800px',
+          background: 'radial-gradient(ellipse at 50% 40%, rgba(111, 155, 198, 0.15) 0%, rgba(111, 155, 198, 0.06) 40%, transparent 68%)',
+          pointerEvents: 'none',
+          zIndex: 0,
+          borderRadius: '50%',
+          animation: 'bloom-breathe 5s ease-in-out infinite',
+        }}
+      />
       <Ticks />
       <div style={{ position:'relative',zIndex:1,maxWidth:680,margin:'0 auto',width:'100%' }}>
         <p style={{ ...MONO,fontSize:11,textTransform:'uppercase',letterSpacing:'0.2em',color:STEEL,margin:'0 0 20px' }}>
@@ -208,8 +220,22 @@ function OutputSection() {
   const ringInView = useInView(ringRef, { once: true, margin: '-80px' })
 
   return (
-    <section style={{ padding:'80px 48px',borderTop:'0.5px solid rgba(111,155,198,0.1)',position:'relative',overflow:'hidden' }}>
-      <div aria-hidden style={{ position:'absolute',inset:0,pointerEvents:'none',zIndex:0, background:'radial-gradient(ellipse 800px 500px at 50% 50%, rgba(111,155,198,0.04) 0%, transparent 60%)' }} />
+    <section style={{ padding:'80px 48px',borderTop:'0.5px solid rgba(111,155,198,0.1)',position:'relative',overflow:'visible' }}>
+      <div
+        aria-hidden="true"
+        style={{
+          position: 'absolute',
+          top: '-100px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          width: '800px',
+          height: '600px',
+          background: 'radial-gradient(ellipse at 50% 50%, rgba(111, 155, 198, 0.08) 0%, transparent 65%)',
+          pointerEvents: 'none',
+          zIndex: 0,
+          borderRadius: '50%',
+        }}
+      />
       <div style={{ maxWidth:1000,margin:'0 auto',position:'relative',zIndex:1 }}>
         <p style={{ ...MONO,fontSize:11,textTransform:'uppercase',letterSpacing:'0.2em',color:STEEL,margin:'0 0 16px' }}>
           WHAT YOU GET
@@ -246,12 +272,24 @@ function OutputSection() {
           {/* Score row — 4B: ring draws in when scrolled into view */}
           <div style={{ display:'flex',alignItems:'center',gap:20,marginBottom:28,paddingBottom:24,borderBottom:'0.5px solid rgba(255,255,255,0.06)',flexWrap:'wrap' }}>
             <div ref={ringRef} style={{ position:'relative' }}>
-              {/* Ring-pulse glow — coral radial that pulses behind the score ring */}
-              <div aria-hidden className={ringInView ? 'ring-pulse-anim' : ''} style={{
-                position:'absolute', inset:-16, borderRadius:'50%', pointerEvents:'none',
-                background:'radial-gradient(ellipse at center, rgba(232,99,95,0.18) 0%, transparent 70%)',
-              }} />
-              <div style={{ filter:'drop-shadow(0 0 12px rgba(232,99,95,0.2))', position:'relative' }}>
+              {/* Ring-pulse glow */}
+              <div
+                aria-hidden="true"
+                style={{
+                  position: 'absolute',
+                  top: '50%',
+                  left: '50%',
+                  transform: 'translate(-50%, -50%)',
+                  width: '220px',
+                  height: '220px',
+                  background: 'radial-gradient(ellipse at center, rgba(232, 99, 95, 0.35) 0%, rgba(232, 99, 95, 0.1) 50%, transparent 70%)',
+                  pointerEvents: 'none',
+                  zIndex: 0,
+                  borderRadius: '50%',
+                  animation: 'ring-pulse 4s ease-in-out infinite',
+                }}
+              />
+              <div style={{ filter:'drop-shadow(0 0 12px rgba(232,99,95,0.2))', position:'relative', zIndex: 1 }}>
                 <ScoreRing score={61} size="lg" animate={ringInView} />
               </div>
             </div>
@@ -304,7 +342,7 @@ function OutputSection() {
 
 function AIRewriteSection() {
   return (
-    <section style={{ padding:'80px 48px',borderTop:'0.5px solid rgba(111,155,198,0.1)',position:'relative',overflow:'hidden' }}>
+    <section style={{ padding:'80px 48px',borderTop:'0.5px solid rgba(111,155,198,0.1)',position:'relative',overflow:'visible' }}>
       <style>{`@media(max-width:639px){.d-rewrite-cols{flex-direction:column!important}}`}</style>
       <div style={{ maxWidth:1000,margin:'0 auto' }}>
         <p style={{ ...MONO,fontSize:11,textTransform:'uppercase',letterSpacing:'0.2em',color:STEEL,margin:'0 0 16px' }}>
@@ -339,11 +377,18 @@ function AIRewriteSection() {
             <div style={{
               flex:1,padding:28,position:'relative',
             }}>
-              {/* 4D: Green bloom behind the rewritten copy column */}
-              <div aria-hidden style={{
-                position:'absolute',inset:0,pointerEvents:'none',
-                background:'radial-gradient(ellipse 200px 150px at 50% 50%, rgba(0,196,140,0.05) 0%, transparent 70%)',
-              }} />
+              {/* AI rewrite bloom */}
+              <div
+                aria-hidden="true"
+                style={{
+                  position: 'absolute',
+                  inset: '-20px',
+                  background: 'radial-gradient(ellipse at 50% 50%, rgba(0, 196, 140, 0.1) 0%, transparent 70%)',
+                  pointerEvents: 'none',
+                  zIndex: 0,
+                  borderRadius: '8px',
+                }}
+              />
               <p style={{ position:'relative',...MONO,fontSize:10,textTransform:'uppercase',letterSpacing:'0.18em',color:LIFT_GREEN,margin:'0 0 14px' }}>
                 REWRITTEN
               </p>
@@ -368,7 +413,7 @@ const CHECK_PILLS = [
 
 function WhatWeCheckSection() {
   return (
-    <section style={{ padding:'80px 48px',borderTop:'0.5px solid rgba(111,155,198,0.1)',position:'relative',overflow:'hidden' }}>
+    <section style={{ padding:'80px 48px',borderTop:'0.5px solid rgba(111,155,198,0.1)',position:'relative',overflow:'visible' }}>
       <div style={{ maxWidth:1000,margin:'0 auto' }}>
         <p style={{ ...MONO,fontSize:11,textTransform:'uppercase',letterSpacing:'0.2em',color:STEEL,margin:'0 0 16px' }}>
           SCOPE
@@ -464,7 +509,7 @@ const HOW_STEPS: HowStep[] = [
 
 function HowItWorksSection() {
   return (
-    <section style={{ padding:'80px 48px',borderTop:'0.5px solid rgba(111,155,198,0.1)',position:'relative',overflow:'hidden' }}>
+    <section style={{ padding:'80px 48px',borderTop:'0.5px solid rgba(111,155,198,0.1)',position:'relative',overflow:'visible' }}>
       <style>{`@media(max-width:767px){.d-hiw-grid{grid-template-columns:1fr!important}}`}</style>
       <div style={{ maxWidth:1200,margin:'0 auto' }}>
         <p style={{ ...MONO,fontSize:11,textTransform:'uppercase',letterSpacing:'0.2em',color:STEEL,margin:'0 0 16px' }}>
@@ -564,9 +609,23 @@ const OBJECTIONS: ObjectionCard[] = [
 
 function WhyDifferentSection() {
   return (
-    <section style={{ padding:'80px 48px',borderTop:'0.5px solid rgba(111,155,198,0.1)',position:'relative',overflow:'hidden' }}>
+    <section style={{ padding:'80px 48px',borderTop:'0.5px solid rgba(111,155,198,0.1)',position:'relative',overflow:'visible' }}>
       <style>{`@media(max-width:767px){.d-diff-grid{grid-template-columns:1fr!important}}`}</style>
-      <div aria-hidden style={{ position:'absolute',inset:0,pointerEvents:'none',zIndex:0, background:'radial-gradient(ellipse 800px 500px at 50% 50%, rgba(111,155,198,0.04) 0%, transparent 65%)' }} />
+      <div
+        aria-hidden="true"
+        style={{
+          position: 'absolute',
+          top: '-80px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          width: '700px',
+          height: '500px',
+          background: 'radial-gradient(ellipse at 50% 50%, rgba(111, 155, 198, 0.07) 0%, transparent 65%)',
+          pointerEvents: 'none',
+          zIndex: 0,
+          borderRadius: '50%',
+        }}
+      />
       <Ticks />
       <div style={{ maxWidth:1200,margin:'0 auto',position:'relative',zIndex:1 }}>
         <p style={{ ...MONO,fontSize:11,textTransform:'uppercase',letterSpacing:'0.2em',color:STEEL,margin:'0 0 16px' }}>
@@ -687,7 +746,7 @@ const PRICING_CARDS: PricingCard[] = [
 
 function PricingSection() {
   return (
-    <section id="pricing" style={{ padding:'80px 48px',borderTop:'0.5px solid rgba(111,155,198,0.1)',position:'relative',overflow:'hidden' }}>
+    <section id="pricing" style={{ padding:'80px 48px',borderTop:'0.5px solid rgba(111,155,198,0.1)',position:'relative',overflow:'visible' }}>
       <style>{`
         @media(max-width:1023px){.d-price-grid{grid-template-columns:repeat(2,1fr)!important}}
         @media(max-width:639px){.d-price-grid{grid-template-columns:1fr!important}}
@@ -765,12 +824,24 @@ function PricingSection() {
 
 function FinalCtaSection() {
   return (
-    <section style={{ padding:'96px 48px',textAlign:'center',position:'relative',overflow:'hidden',borderTop:'0.5px solid rgba(111,155,198,0.1)' }}>
-      {/* 4L: Final CTA bloom — breathes with the section */}
-      <div aria-hidden className="bloom-breathe" style={{
-        position:'absolute',inset:0,pointerEvents:'none',zIndex:0,
-        background:'radial-gradient(ellipse 800px 500px at 50% 50%, rgba(111,155,198,0.06) 0%, transparent 60%)',
-      }} />
+    <section style={{ padding:'96px 48px',textAlign:'center',position:'relative',overflow:'visible',borderTop:'0.5px solid rgba(111,155,198,0.1)' }}>
+      {/* Final CTA bloom */}
+      <div
+        aria-hidden="true"
+        style={{
+          position: 'absolute',
+          top: '-120px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          width: '800px',
+          height: '600px',
+          background: 'radial-gradient(ellipse at 50% 40%, rgba(111, 155, 198, 0.12) 0%, rgba(111, 155, 198, 0.05) 45%, transparent 68%)',
+          pointerEvents: 'none',
+          zIndex: 0,
+          borderRadius: '50%',
+          animation: 'bloom-breathe 6s ease-in-out infinite',
+        }}
+      />
       <Ticks />
       <div style={{ position:'relative',zIndex:1 }}>
         <h2 style={{ ...DISP,fontWeight:700,fontSize:'clamp(28px,4vw,44px)',color:INK_PRI,letterSpacing:'-0.5px',margin:'0 0 32px',lineHeight:1.1 }}>

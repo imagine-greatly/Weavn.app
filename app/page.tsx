@@ -97,10 +97,10 @@ function HeroForkSection() {
       <div className="relative z-10 max-w-[880px] mx-auto">
 
         {/* Headline */}
-        <h1 className="font-display font-extrabold text-center text-[clamp(38px,5.5vw,64px)] leading-[1.06] tracking-[-0.04em] text-text-primary m-0">
+        <h1 className="font-display font-extrabold text-center text-[clamp(28px,4.4vw,48px)] leading-[1.06] tracking-[-0.04em] text-text-primary m-0">
           Website intelligence, delivered as an API.
         </h1>
-        <h2 className="font-display font-bold text-center text-[clamp(24px,3.8vw,48px)] leading-[1.1] tracking-[-0.035em] text-text-primary/70 m-0">
+        <h2 className="font-display font-bold text-center text-[clamp(18px,3.0vw,36px)] leading-[1.1] tracking-[-0.035em] text-text-primary/70 m-0">
           307 checks. One endpoint. 90 seconds.
         </h2>
 
@@ -119,8 +119,6 @@ function HeroForkSection() {
         <svg className="hidden md:block w-full mt-2" viewBox="0 0 880 110" height="110" aria-hidden>
           <path d={FORK_LEFT_PATH} stroke="var(--interactive)" strokeWidth="1.5" fill="none" opacity="0.5" />
           <path d={FORK_RIGHT_PATH} stroke="var(--data-impact)" strokeWidth="1.5" fill="none" opacity="0.5" />
-          <rect x="211" y="99" width="6" height="6" fill="var(--interactive)" />
-          <rect x="663" y="99" width="6" height="6" fill="var(--data-impact)" />
           <g className="fork-pulse">
             <rect x="-1.5" y="-1.5" width="3" height="3" fill="var(--interactive)" opacity="0.45">
               <animateMotion dur="2.2s" repeatCount="indefinite" path={FORK_LEFT_PATH} />
@@ -135,7 +133,6 @@ function HeroForkSection() {
         <div className="flex md:hidden justify-center mt-2 mb-0">
           <svg width="8" height="56" viewBox="0 0 8 56" aria-hidden>
             <line x1="4" y1="0" x2="4" y2="48" stroke="var(--interactive)" strokeWidth="1.5" opacity="0.5" />
-            <rect x="1" y="48" width="6" height="6" fill="var(--interactive)" />
             <g className="fork-pulse">
               <rect x="-1.5" y="-1.5" width="3" height="3" fill="var(--interactive)" opacity="0.45">
                 <animateMotion dur="2.2s" repeatCount="indefinite" path="M 4 0 L 4 48" />

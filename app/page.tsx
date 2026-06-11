@@ -98,12 +98,15 @@ function HeroForkSection() {
 
         {/* Headline */}
         <h1 className="font-display font-extrabold text-center text-[clamp(38px,5.5vw,64px)] leading-[1.06] tracking-[-0.04em] text-text-primary m-0">
-          The conversion audit API.
+          Website intelligence, delivered as an API.
         </h1>
+        <h2 className="font-display font-bold text-center text-[clamp(24px,3.8vw,48px)] leading-[1.1] tracking-[-0.035em] text-text-primary/70 m-0">
+          307 checks. One endpoint. 90 seconds.
+        </h2>
 
         {/* Subhead */}
         <p className="font-body text-lg text-text-secondary leading-relaxed text-center max-w-[600px] mx-auto mt-5 mb-0">
-          Paste any URL. Get a 0–100 score, 307 ranked findings, AI-rewritten copy, and corpus benchmarks — in about 90 seconds. No account required.
+          Paste any URL. Get a 0–100 score, ranked fixes, AI-rewritten copy, and vertical benchmarks.
         </p>
 
         {/* Scan-engine glyph */}
@@ -115,14 +118,14 @@ function HeroForkSection() {
         {/* Fork connectors — wide inverted Y (md+) */}
         <svg className="hidden md:block w-full mt-2" viewBox="0 0 880 110" height="110" aria-hidden>
           <path d={FORK_LEFT_PATH} stroke="var(--interactive)" strokeWidth="1.5" fill="none" opacity="0.5" />
-          <path d={FORK_RIGHT_PATH} stroke="var(--engine-developers)" strokeWidth="1.5" fill="none" opacity="0.5" />
+          <path d={FORK_RIGHT_PATH} stroke="var(--data-impact)" strokeWidth="1.5" fill="none" opacity="0.5" />
           <rect x="211" y="99" width="6" height="6" fill="var(--interactive)" />
-          <rect x="663" y="99" width="6" height="6" fill="var(--engine-developers)" />
+          <rect x="663" y="99" width="6" height="6" fill="var(--data-impact)" />
           <g className="fork-pulse">
             <rect x="-1.5" y="-1.5" width="3" height="3" fill="var(--interactive)" opacity="0.45">
               <animateMotion dur="2.2s" repeatCount="indefinite" path={FORK_LEFT_PATH} />
             </rect>
-            <rect x="-1.5" y="-1.5" width="3" height="3" fill="var(--engine-developers)" opacity="0.45">
+            <rect x="-1.5" y="-1.5" width="3" height="3" fill="var(--data-impact)" opacity="0.45">
               <animateMotion dur="2.2s" repeatCount="indefinite" path={FORK_RIGHT_PATH} />
             </rect>
           </g>
@@ -161,9 +164,9 @@ function HeroForkSection() {
             </Link>
           </div>
 
-          {/* Developers door — green */}
-          <div className="bg-surface border border-background-border border-t-engine-developers/40 flex flex-col p-7">
-            <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-engine-developers m-0 mb-3">FOR DEVELOPERS</p>
+          {/* Developers door — pale purple */}
+          <div className="bg-surface border border-background-border border-t-data-impact/40 flex flex-col p-7">
+            <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-data-impact m-0 mb-3">FOR DEVELOPERS</p>
             <h2 className="font-display font-bold text-2xl leading-tight text-text-primary m-0 mb-4">Build with the data</h2>
             <div className="flex-1">
               {DEVELOPER_LINES.map(line => (
@@ -172,7 +175,7 @@ function HeroForkSection() {
             </div>
             <Link
               href="/auth?surface=api"
-              className="font-mono text-xs text-engine-developers border border-engine-developers/50 px-6 py-3 block text-center no-underline mt-6"
+              className="font-mono text-xs text-data-impact border border-data-impact/50 px-6 py-3 block text-center no-underline mt-6"
             >
               Get API key →
             </Link>
@@ -186,11 +189,12 @@ function HeroForkSection() {
 
 // ── Trust strip ──────────────────────────────────────────────────────────────
 
+// TODO: make corpus stats dynamic from a DB/API call (corpus_size: 4812, avg_score: 58, pct_missing_above_fold_proof: 76)
 function TrustStrip() {
   return (
     <section className="border-y border-background-border py-4 px-8">
       <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-interactive text-center m-0">
-        307 CHECKS · GROUNDED IN VISIBLE CONTENT · NO SYNTHETIC DATA · BENCHMARKED BY VERTICAL
+        4,812 SITES SCANNED · AVG SCORE 58 · 76% MISSING ABOVE-FOLD PROOF · CORPUS UPDATED WEEKLY
       </p>
     </section>
   )
@@ -239,7 +243,7 @@ function FooterSection() {
             webdoc<span className="text-[#6F9BC6]">.ai</span>
           </Link>
           <p className="font-body text-sm text-text-secondary mt-3 max-w-xs leading-relaxed">
-            The conversion audit API. 307 checks, ranked findings, AI-rewritten copy. One endpoint.
+            The conversion audit API. 307 checks, ranked fixes, AI-rewritten copy. One endpoint.
           </p>
         </div>
         <div>

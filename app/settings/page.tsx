@@ -1,5 +1,7 @@
 ﻿"use client";
 
+export const dynamic = "force-dynamic";
+
 import { useEffect, useMemo, useState, type CSSProperties, type MouseEvent } from "react";
 import { useRouter } from "next/navigation";
 import { getSupabaseBrowserClient } from "@/lib/supabaseBrowser";

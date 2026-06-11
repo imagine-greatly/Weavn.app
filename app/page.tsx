@@ -74,12 +74,32 @@ function HeroForkSection() {
         .fork-pulse { display: none; }
         @media (prefers-reduced-motion: no-preference) {
           .fork-pulse { display: initial; }
+          .hero-bloom       { animation: bloom-breathe 8s ease-in-out infinite; }
+          .engine-glyph     { animation: engine-breathe 3s ease-in-out infinite; }
+          .branch-path      { stroke-dasharray: 1000; stroke-dashoffset: 1000;
+                              animation: branch-draw-hp 1.4s cubic-bezier(0.4,0,0.2,1) 0.4s forwards; }
+          @keyframes branch-draw-hp {
+            to { stroke-dashoffset: 0; }
+          }
+          .door-card-l      { animation: card-rise 0.6s ease-out 0.25s both; }
+          .door-card-r      { animation: card-rise 0.6s ease-out 0.45s both; }
+          .door-card-founder:hover {
+            box-shadow: 0 0 40px rgba(111,155,198,0.1), inset 0 1px 0 rgba(111,155,198,0.15);
+            transition: box-shadow 0.35s ease;
+          }
+          .door-card-developer:hover {
+            box-shadow: 0 0 40px rgba(157,140,255,0.1), inset 0 1px 0 rgba(157,140,255,0.15);
+            transition: box-shadow 0.35s ease;
+          }
+          .door-cta-founder:hover  { box-shadow: 0 0 24px rgba(111,155,198,0.25); }
+          .door-cta-developer:hover { box-shadow: 0 0 24px rgba(157,140,255,0.25); }
         }
       `}</style>
 
       {/* Hero bloom — 800×600 steel-blue radial at top-center, bleeds into section below */}
       <div
         aria-hidden
+        className="hero-bloom"
         style={{
           position: 'absolute',
           top: 0,
@@ -115,14 +135,16 @@ function HeroForkSection() {
 
         {/* Scan-engine glyph */}
         <div className="flex flex-col items-center mt-12">
-          <WebdocMark size={150} />
+          <div className="engine-glyph" style={{ display: 'inline-block' }}>
+            <WebdocMark size={150} />
+          </div>
           <p className="font-mono text-[10px] uppercase tracking-[0.25em] text-interactive/60 mt-3 mb-0">THE SCAN ENGINE</p>
         </div>
 
         {/* Fork connectors — wide inverted Y (md+) */}
         <svg className="hidden md:block w-full mt-2" viewBox="0 0 880 110" height="110" aria-hidden>
-          <path d={FORK_LEFT_PATH} stroke="var(--interactive)" strokeWidth="1.5" fill="none" opacity="0.5" />
-          <path d={FORK_RIGHT_PATH} stroke="var(--data-impact)" strokeWidth="1.5" fill="none" opacity="0.5" />
+          <path className="branch-path" d={FORK_LEFT_PATH} stroke="var(--interactive)" strokeWidth="1.5" fill="none" opacity="0.5" />
+          <path className="branch-path" d={FORK_RIGHT_PATH} stroke="var(--data-impact)" strokeWidth="1.5" fill="none" opacity="0.5" style={{ animationDelay: '0.55s' }} />
           <g className="fork-pulse">
             <rect x="-1.5" y="-1.5" width="3" height="3" fill="var(--interactive)" opacity="0.45">
               <animateMotion dur="2.2s" repeatCount="indefinite" path={FORK_LEFT_PATH} />
@@ -149,7 +171,7 @@ function HeroForkSection() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
           {/* Founders door — steel blue */}
-          <div className="bg-surface border border-background-border border-t-interactive/40 flex flex-col p-7">
+          <div className="door-card-l door-card-founder bg-surface border border-background-border border-t-interactive/40 flex flex-col p-7">
             <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-interactive m-0 mb-3">FOR FOUNDERS &amp; TEAMS</p>
             <h2 className="font-display font-bold text-2xl leading-tight text-text-primary m-0 mb-4">See exactly what to fix</h2>
             <div className="flex-1">
@@ -159,14 +181,14 @@ function HeroForkSection() {
             </div>
             <Link
               href="/dashboard"
-              className="font-mono text-xs text-interactive border border-interactive/50 px-6 py-3 block text-center no-underline mt-6"
+              className="door-cta-founder font-mono text-xs text-interactive border border-interactive/50 px-6 py-3 block text-center no-underline mt-6 transition-shadow duration-300"
             >
               See what&apos;s killing your conversions →
             </Link>
           </div>
 
           {/* Developers door — pale purple */}
-          <div className="bg-surface border border-background-border border-t-data-impact/40 flex flex-col p-7">
+          <div className="door-card-r door-card-developer bg-surface border border-background-border border-t-data-impact/40 flex flex-col p-7">
             <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-data-impact m-0 mb-3">FOR DEVELOPERS</p>
             <h2 className="font-display font-bold text-2xl leading-tight text-text-primary m-0 mb-4">Build with the data</h2>
             <div className="flex-1">
@@ -176,7 +198,7 @@ function HeroForkSection() {
             </div>
             <Link
               href="/auth?surface=api"
-              className="font-mono text-xs text-data-impact border border-data-impact/50 px-6 py-3 block text-center no-underline mt-6"
+              className="door-cta-developer font-mono text-xs text-data-impact border border-data-impact/50 px-6 py-3 block text-center no-underline mt-6 transition-shadow duration-300"
             >
               Explore the API →
             </Link>

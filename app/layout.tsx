@@ -71,6 +71,20 @@ export default function RootLayout({
         <BackgroundField />
         <PersistentSiteAmbient />
         <GrainOverlay />
+        {/* Global fixed bloom — two atmospheric orbs, pink/coral top-right + steel-blue bottom-left */}
+        <div
+          aria-hidden
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 1,
+            pointerEvents: 'none',
+            background: [
+              'radial-gradient(ellipse 600px 600px at 80% 15%, rgba(232,99,95,0.025) 0%, transparent 65%)',
+              'radial-gradient(ellipse 500px 500px at 15% 85%, rgba(111,155,198,0.03) 0%, transparent 65%)',
+            ].join(', '),
+          }}
+        />
         <div className="relative z-10 layout-page-clip">
           <Navbar />
           <div className="pt-16">{children}</div>

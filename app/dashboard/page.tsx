@@ -1,8 +1,9 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { motion, useInView } from 'framer-motion'
 import ScoreRing from '@/components/ui/ScoreRing'
 import LandingCorpusStats from '@/components/LandingCorpusStats'
 
@@ -93,8 +94,8 @@ function HeroSection() {
         overflow: 'hidden',
       }}
     >
-      {/* Atmosphere: steel blue radial bloom behind hero content at 4% opacity */}
-      <div aria-hidden style={{
+      {/* 4A: Hero bloom — breathing radial at 4% opacity */}
+      <div aria-hidden className="bloom-breathe" style={{
         position:'absolute',inset:0,pointerEvents:'none',zIndex:0,
         background:'radial-gradient(ellipse 1000px 700px at 50% 35%, rgba(111,155,198,0.04) 0%, transparent 60%)',
       }} />
@@ -203,6 +204,9 @@ const MOCK_FINDINGS: MockFinding[] = [
 ]
 
 function OutputSection() {
+  const ringRef = useRef<HTMLDivElement>(null)
+  const ringInView = useInView(ringRef, { once: true, margin: '-80px' })
+
   return (
     <section style={{ padding:'80px 48px',borderTop:'0.5px solid rgba(111,155,198,0.1)',position:'relative',overflow:'hidden' }}>
       <div aria-hidden style={{ position:'absolute',inset:0,pointerEvents:'none',zIndex:0, background:'radial-gradient(ellipse 800px 500px at 50% 50%, rgba(111,155,198,0.04) 0%, transparent 60%)' }} />
@@ -239,11 +243,17 @@ function OutputSection() {
             <p style={{ ...MONO,fontSize:9,color:LIFT_GREEN,margin:0 }}>acme-saas.com</p>
           </div>
 
-          {/* Score row */}
+          {/* Score row — 4B: ring draws in when scrolled into view */}
           <div style={{ display:'flex',alignItems:'center',gap:20,marginBottom:28,paddingBottom:24,borderBottom:'0.5px solid rgba(255,255,255,0.06)',flexWrap:'wrap' }}>
-            {/* Atmosphere: sev-critical drop-shadow on score ring makes the critical score feel urgent */}
-            <div style={{ filter:'drop-shadow(0 0 12px rgba(232,99,95,0.2))' }}>
-              <ScoreRing score={61} size="lg" animate={false} />
+            <div ref={ringRef} style={{ position:'relative' }}>
+              {/* Ring-pulse glow — coral radial that pulses behind the score ring */}
+              <div aria-hidden className={ringInView ? 'ring-pulse-anim' : ''} style={{
+                position:'absolute', inset:-16, borderRadius:'50%', pointerEvents:'none',
+                background:'radial-gradient(ellipse at center, rgba(232,99,95,0.18) 0%, transparent 70%)',
+              }} />
+              <div style={{ filter:'drop-shadow(0 0 12px rgba(232,99,95,0.2))', position:'relative' }}>
+                <ScoreRing score={61} size="lg" animate={ringInView} />
+              </div>
             </div>
             <div>
               <p style={{ ...MONO,fontSize:11,color:INK_MUT,margin:'0 0 6px' }}>63rd percentile · B2B SaaS</p>
@@ -253,10 +263,17 @@ function OutputSection() {
             </div>
           </div>
 
-          {/* Finding cards */}
+          {/* Finding cards — 4C: staggered entry */}
           <div style={{ display:'flex',flexDirection:'column',gap:12 }}>
             {MOCK_FINDINGS.map((f, i) => (
-              <div key={i} style={{ background:f.bg,border:`0.5px solid ${f.border}`,padding:16 }}>
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: '-30px' }}
+                transition={{ duration: 0.45, delay: i * 0.1, ease: 'easeOut' }}
+                style={{ background:f.bg,border:`0.5px solid ${f.border}`,padding:16 }}
+              >
                 <div style={{ display:'flex',alignItems:'flex-start',justifyContent:'space-between',marginBottom:8,gap:12,flexWrap:'wrap' }}>
                   <div style={{ display:'flex',alignItems:'center',gap:10,flexWrap:'wrap' }}>
                     <span style={{
@@ -273,7 +290,7 @@ function OutputSection() {
                   </span>
                 </div>
                 <p style={{ ...SANS,fontSize:13,color:INK_SEC,margin:0,lineHeight:1.55 }}>{f.desc}</p>
-              </div>
+              </motion.div>
             ))}
           </div>
         </div>
@@ -320,12 +337,17 @@ function AIRewriteSection() {
               </p>
             </div>
             <div style={{
-              flex:1,padding:28,
+              flex:1,padding:28,position:'relative',
             }}>
-              <p style={{ ...MONO,fontSize:10,textTransform:'uppercase',letterSpacing:'0.18em',color:LIFT_GREEN,margin:'0 0 14px' }}>
+              {/* 4D: Green bloom behind the rewritten copy column */}
+              <div aria-hidden style={{
+                position:'absolute',inset:0,pointerEvents:'none',
+                background:'radial-gradient(ellipse 200px 150px at 50% 50%, rgba(0,196,140,0.05) 0%, transparent 70%)',
+              }} />
+              <p style={{ position:'relative',...MONO,fontSize:10,textTransform:'uppercase',letterSpacing:'0.18em',color:LIFT_GREEN,margin:'0 0 14px' }}>
                 REWRITTEN
               </p>
-              <p style={{ ...SANS,fontSize:17,color:INK_PRI,margin:0,lineHeight:1.55 }}>
+              <p style={{ position:'relative',...SANS,fontSize:17,color:INK_PRI,margin:0,lineHeight:1.55 }}>
                 &ldquo;Ship projects on time, every time — no matter where your team works.&rdquo;
               </p>
             </div>
@@ -357,16 +379,25 @@ function WhatWeCheckSection() {
         <p style={{ ...SANS,fontSize:15,color:INK_SEC,lineHeight:1.65,maxWidth:580,margin:'0 0 32px' }}>
           The engine checks every element a visitor encounters from the moment they land — not just your headline and CTA. If it affects whether someone converts, it&apos;s in the audit.
         </p>
+        {/* 4E: Pills stagger in */}
         <div style={{ display:'flex',flexWrap:'wrap',gap:8,margin:'0 0 24px' }}>
-          {CHECK_PILLS.map(pill => (
-            <span key={pill} style={{
-              ...SANS,fontSize:13,color:INK_SEC,
-              background:SURFACE,
-              border:'0.5px solid rgba(111,155,198,0.15)',
-              padding:'6px 12px',
-            }}>
+          {CHECK_PILLS.map((pill, i) => (
+            <motion.span
+              key={pill}
+              initial={{ opacity: 0, scale: 0.82 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true, margin: '-40px' }}
+              transition={{ duration: 0.3, delay: i * 0.045, ease: 'easeOut' }}
+              style={{
+                ...SANS,fontSize:13,color:INK_SEC,
+                background:SURFACE,
+                border:'0.5px solid rgba(111,155,198,0.15)',
+                padding:'6px 12px',
+                display:'inline-block',
+              }}
+            >
               {pill}
-            </span>
+            </motion.span>
           ))}
         </div>
         <p style={{ ...MONO,fontSize:11,color:INK_MUT,margin:0 }}>
@@ -382,7 +413,14 @@ function WhatWeCheckSection() {
 function QuoteSection() {
   return (
     <section style={{ padding:'80px 48px',borderTop:'0.5px solid rgba(111,155,198,0.1)',textAlign:'center' }}>
-      <div style={{ maxWidth:680,margin:'0 auto' }}>
+      {/* 4F: Quote fades up */}
+      <motion.div
+        initial={{ opacity: 0, y: 24 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: '-60px' }}
+        transition={{ duration: 0.65, ease: 'easeOut' }}
+        style={{ maxWidth:680,margin:'0 auto' }}
+      >
         <p style={{
           ...SANS,
           fontStyle:'italic',
@@ -396,7 +434,7 @@ function QuoteSection() {
         <p style={{ ...MONO,fontSize:11,color:INK_MUT,margin:0,letterSpacing:'0.1em' }}>
           — FOUNDER, B2B SAAS · VERIFIED SCAN
         </p>
-      </div>
+      </motion.div>
     </section>
   )
 }
@@ -435,16 +473,23 @@ function HowItWorksSection() {
         <h2 style={{ ...DISP,fontWeight:700,fontSize:'clamp(28px,4vw,44px)',color:INK_PRI,letterSpacing:'-0.5px',margin:'0 0 48px',lineHeight:1.1 }}>
           Three steps. No technical knowledge required.
         </h2>
+        {/* 4G: Step cards stagger in */}
         <div className="d-hiw-grid" style={{ display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:24 }}>
-          {HOW_STEPS.map(step => (
-            <div key={step.num} style={{
-              background:SURFACE,
-              borderTop:'1px solid rgba(255,255,255,0.1)',
-              borderLeft:'1px solid rgba(255,255,255,0.07)',
-              borderRight:'1px solid rgba(255,255,255,0.04)',
-              borderBottom:'1px solid rgba(255,255,255,0.03)',
-              padding:24,
-            }}>
+          {HOW_STEPS.map((step, i) => (
+            <motion.div
+              key={step.num}
+              initial={{ opacity: 0, y: 32 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: '-50px' }}
+              transition={{ duration: 0.5, delay: i * 0.12, ease: 'easeOut' }}
+              style={{
+                background:SURFACE,
+                borderTop:'1px solid rgba(255,255,255,0.1)',
+                borderLeft:'1px solid rgba(255,255,255,0.07)',
+                borderRight:'1px solid rgba(255,255,255,0.04)',
+                borderBottom:'1px solid rgba(255,255,255,0.03)',
+                padding:24,
+              }}>
               <p style={{ ...MONO,fontSize:20,color:'rgba(111,155,198,0.25)',margin:'0 0 16px',fontWeight:700 }}>
                 {step.num}
               </p>
@@ -457,7 +502,7 @@ function HowItWorksSection() {
                   {step.techTag}
                 </p>
               )}
-            </div>
+            </motion.div>
           ))}
         </div>
       </div>
@@ -530,20 +575,28 @@ function WhyDifferentSection() {
         <h2 style={{ ...DISP,fontWeight:700,fontSize:'clamp(28px,4vw,44px)',color:INK_PRI,letterSpacing:'-0.5px',margin:'0 0 48px',lineHeight:1.1 }}>
           Built for founders with money on the line.
         </h2>
+        {/* 4H: FAQ cards stagger in + hover glow */}
         <div className="d-diff-grid" style={{ display:'grid',gridTemplateColumns:'repeat(2,1fr)',gap:24 }}>
-          {OBJECTIONS.map(card => (
-            <div key={card.q} style={{
-              background:SURFACE,
-              borderTop:'1px solid rgba(255,255,255,0.12)',
-              borderLeft:'1px solid rgba(255,255,255,0.08)',
-              borderRight:'1px solid rgba(255,255,255,0.04)',
-              borderBottom:'1px solid rgba(255,255,255,0.03)',
-              padding:28,
-            }}>
+          {OBJECTIONS.map((card, i) => (
+            <motion.div
+              key={card.q}
+              initial={{ opacity: 0, y: 24 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: '-40px' }}
+              transition={{ duration: 0.5, delay: i * 0.07, ease: 'easeOut' }}
+              whileHover={{ boxShadow: '0 0 32px rgba(111,155,198,0.08), inset 0 1px 0 rgba(111,155,198,0.12)' }}
+              style={{
+                background:SURFACE,
+                borderTop:'1px solid rgba(255,255,255,0.12)',
+                borderLeft:'1px solid rgba(255,255,255,0.08)',
+                borderRight:'1px solid rgba(255,255,255,0.04)',
+                borderBottom:'1px solid rgba(255,255,255,0.03)',
+                padding:28,
+              }}>
               <p style={{ ...DISP,fontWeight:600,fontSize:17,color:INK_PRI,margin:'0 0 14px',lineHeight:1.35 }}>{card.q}</p>
               <p style={{ ...SANS,fontSize:14,color:INK_SEC,lineHeight:1.7,margin:'0 0 16px' }}>{card.a}</p>
               <p style={{ ...MONO,fontSize:11,color:STEEL,margin:0 }}>{card.tag}</p>
-            </div>
+            </motion.div>
           ))}
         </div>
       </div>
@@ -649,17 +702,25 @@ function PricingSection() {
         <p style={{ ...SANS,fontSize:15,color:INK_SEC,margin:'0 0 48px' }}>
           Every plan runs the same 307-check engine. No feature-gated diagnostics.
         </p>
+        {/* 4K: Pricing cards stagger in; Starter gets permanent glow */}
         <div className="d-price-grid" style={{ display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:16 }}>
-          {PRICING_CARDS.map(card => (
-            <div key={card.name} style={{
-              background:SURFACE,
-              borderTop: card.highlight ? `2px solid ${STEEL}` : '1px solid rgba(255,255,255,0.1)',
-              borderLeft: `1px solid ${card.highlight ? 'rgba(111,155,198,0.3)' : 'rgba(255,255,255,0.07)'}`,
-              borderRight:'1px solid rgba(255,255,255,0.04)',
-              borderBottom:'1px solid rgba(255,255,255,0.03)',
-              padding:24,
-              display:'flex',flexDirection:'column',
-            }}>
+          {PRICING_CARDS.map((card, i) => (
+            <motion.div
+              key={card.name}
+              initial={{ opacity: 0, y: 24 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: '-40px' }}
+              transition={{ duration: 0.5, delay: i * 0.1, ease: 'easeOut' }}
+              style={{
+                background:SURFACE,
+                borderTop: card.highlight ? `2px solid ${STEEL}` : '1px solid rgba(255,255,255,0.1)',
+                borderLeft: `1px solid ${card.highlight ? 'rgba(111,155,198,0.3)' : 'rgba(255,255,255,0.07)'}`,
+                borderRight:'1px solid rgba(255,255,255,0.04)',
+                borderBottom:'1px solid rgba(255,255,255,0.03)',
+                padding:24,
+                display:'flex',flexDirection:'column',
+                boxShadow: card.highlight ? '0 0 48px rgba(111,155,198,0.09), inset 0 0 0 1px rgba(111,155,198,0.08)' : undefined,
+              }}>
               {card.kicker && (
                 <p style={{ ...MONO,fontSize:9,textTransform:'uppercase',letterSpacing:'0.15em',color:STEEL,margin:'0 0 8px' }}>
                   {card.kicker}
@@ -692,7 +753,7 @@ function PricingSection() {
               >
                 {card.cta}
               </Link>
-            </div>
+            </motion.div>
           ))}
         </div>
       </div>
@@ -705,7 +766,8 @@ function PricingSection() {
 function FinalCtaSection() {
   return (
     <section style={{ padding:'96px 48px',textAlign:'center',position:'relative',overflow:'hidden',borderTop:'0.5px solid rgba(111,155,198,0.1)' }}>
-      <div aria-hidden style={{
+      {/* 4L: Final CTA bloom — breathes with the section */}
+      <div aria-hidden className="bloom-breathe" style={{
         position:'absolute',inset:0,pointerEvents:'none',zIndex:0,
         background:'radial-gradient(ellipse 800px 500px at 50% 50%, rgba(111,155,198,0.06) 0%, transparent 60%)',
       }} />

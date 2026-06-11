@@ -1,18 +1,55 @@
-// Former homepage "Not an average. A percentile." corpus section, including the
-// benchmark bell-curve visualization — removed from / in the fork-first redesign.
-// Kept intact for reuse on the founder/developer deep pages in a later session.
+'use client'
+
+import { useEffect, useRef, useState } from 'react'
+import { motion, useInView } from 'framer-motion'
 
 const MONO = { fontFamily: "'IBM Plex Mono', monospace" }
 const SANS = { fontFamily: "'IBM Plex Sans', sans-serif" }
 const DISP = { fontFamily: "'Space Grotesk', sans-serif" }
 
+function useCountUp(target: number, inView: boolean, duration = 1200) {
+  const [count, setCount] = useState(0)
+  useEffect(() => {
+    if (!inView) return
+    let start: number | null = null
+    let frame: number
+    function step(ts: number) {
+      if (!start) start = ts
+      const progress = Math.min((ts - start) / duration, 1)
+      setCount(Math.floor(progress * target))
+      if (progress < 1) frame = requestAnimationFrame(step)
+      else setCount(target)
+    }
+    frame = requestAnimationFrame(step)
+    return () => cancelAnimationFrame(frame)
+  }, [inView, target, duration])
+  return count
+}
+
+const BELL_PATH = 'M 0,276 C 60,276 140,275 240,272 C 320,269 400,262 490,248 C 560,237 610,218 660,192 C 710,165 740,132 770,100 C 795,73 810,48 830,28 C 848,10 862,3 878,8 C 894,13 908,32 925,58 C 945,88 965,122 995,158 C 1025,192 1065,224 1120,246 C 1175,262 1250,271 1340,275 C 1390,276 1420,276 1440,276'
+const BELL_FILL = BELL_PATH + ' L 1440,280 L 0,280 Z'
+
 export default function LandingCorpusStats() {
+  const sectionRef = useRef<HTMLElement>(null)
+  const svgRef = useRef<SVGSVGElement>(null)
+  const inView = useInView(sectionRef, { once: true, margin: '-80px' })
+
+  // Count-up for each stat
+  const count4800 = useCountUp(4800, inView, 1400)
+  const count58   = useCountUp(58,   inView, 1000)
+  const count23   = useCountUp(23,   inView, 900)
+  const count76   = useCountUp(76,   inView, 1100)
+
+  const statDisplay = [
+    { raw: count4800, label: 'SITES SCANNED',      color: '#E6E9EE',              format: (n: number) => n >= 4800 ? '4,800+' : n.toLocaleString() },
+    { raw: count58,   label: 'AVERAGE SCORE',       color: 'rgba(111,155,198,0.32)', format: (n: number) => String(n) },
+    { raw: count23,   label: 'AVG FINDINGS',        color: 'rgba(111,155,198,0.32)', format: (n: number) => String(n) },
+    { raw: count76,   label: 'NO ABOVE-FOLD PROOF', color: '#E8635F',              format: (n: number) => n + '%' },
+  ]
+
   return (
-    <section style={{ position: 'relative', overflow: 'hidden', padding: '96px 0 0 0', borderTop: '0.5px solid rgba(111,155,198,0.12)' }}>
+    <section ref={sectionRef} style={{ position: 'relative', overflow: 'hidden', padding: '96px 0 0 0', borderTop: '0.5px solid rgba(111,155,198,0.12)' }}>
       <style>{`
-        @keyframes sb-marker-in { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
-        .sb-marker-enter { animation: sb-marker-in 0.6s ease-out 0.4s both; }
-        @media (prefers-reduced-motion: reduce) { .sb-marker-enter { animation:none; opacity:1; transform:none; } }
         @media (max-width: 767px) {
           .sb-stat-strip { flex-wrap: wrap !important; }
           .sb-stat-strip > .sb-stat-cell { flex: 0 0 50% !important; min-width: 0; }
@@ -40,7 +77,12 @@ export default function LandingCorpusStats() {
       <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 48px 48px', position: 'relative', zIndex: 1 }}>
 
         {/* Kicker + headline + subcopy */}
-        <div style={{ maxWidth: 680 }}>
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          animate={inView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.6, ease: 'easeOut' }}
+          style={{ maxWidth: 680 }}
+        >
           <p style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.2em', color: '#6F9BC6', margin: '0 0 16px' }}>
             CORPUS DATA
           </p>
@@ -50,9 +92,9 @@ export default function LandingCorpusStats() {
           <p style={{ ...SANS, fontSize: 15, color: '#9398A8', lineHeight: 1.65, margin: 0 }}>
             Every score is positioned against real sites in your exact vertical — not a generic industry average. B2B SaaS vs B2B SaaS. Ecommerce vs ecommerce. The corpus grows with every scan.
           </p>
-        </div>
+        </motion.div>
 
-        {/* Instrument strip */}
+        {/* Instrument strip — count-up numbers */}
         <div
           className="sb-stat-strip"
           style={{
@@ -64,25 +106,30 @@ export default function LandingCorpusStats() {
             borderBottom: '0.5px solid rgba(111,155,198,0.12)',
           }}
         >
-          {([
-            { value: '4,800+', label: 'SITES SCANNED',      color: '#E6E9EE' },
-            { value: '58',     label: 'AVERAGE SCORE',       color: 'rgba(111,155,198,0.32)' },
-            { value: '23',     label: 'AVG FINDINGS',        color: 'rgba(111,155,198,0.32)' },
-            { value: '76%',    label: 'NO ABOVE-FOLD PROOF', color: '#E8635F' },
-          ] as { value: string; label: string; color: string }[]).map(s => (
-            <div
+          {statDisplay.map((s, i) => (
+            <motion.div
               key={s.label}
               className="sb-stat-cell"
+              initial={{ opacity: 0, y: 16 }}
+              animate={inView ? { opacity: 1, y: 0 } : {}}
+              transition={{ duration: 0.5, delay: 0.2 + i * 0.08, ease: 'easeOut' }}
               style={{ flex: 1, padding: '20px 28px', borderRight: '0.5px solid rgba(111,155,198,0.08)' }}
             >
-              <div style={{ ...DISP, fontSize: 40, fontWeight: 700, color: s.color, lineHeight: 1 }}>{s.value}</div>
-              <div style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.12em', color: 'rgba(111,155,198,0.25)', marginTop: 6 }}>{s.label}</div>
-            </div>
+              <div style={{ ...DISP, fontSize: 40, fontWeight: 700, color: s.color, lineHeight: 1 }}>
+                {s.format(s.raw)}
+              </div>
+              <div style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.12em', color: 'rgba(111,155,198,0.25)', marginTop: 6 }}>
+                {s.label}
+              </div>
+            </motion.div>
           ))}
 
           {/* Corpus facts cell */}
-          <div
+          <motion.div
             className="sb-corpus-cell"
+            initial={{ opacity: 0, y: 16 }}
+            animate={inView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.5, delay: 0.52, ease: 'easeOut' }}
             style={{ flex: '0 0 240px', padding: '20px 28px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 6, borderLeft: '0.5px solid rgba(111,155,198,0.1)' }}
           >
             <p style={{ ...MONO, fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.15em', color: 'rgba(111,155,198,0.35)', margin: '0 0 8px' }}>CORPUS</p>
@@ -97,7 +144,7 @@ export default function LandingCorpusStats() {
                 <span style={{ color: row.vc }}>{row.v}</span>
               </div>
             ))}
-          </div>
+          </motion.div>
         </div>
       </div>
 
@@ -114,8 +161,9 @@ export default function LandingCorpusStats() {
         zIndex: 0,
       }} />
 
-      {/* ── FULL-BLEED CURVE ── */}
+      {/* ── FULL-BLEED CURVE — sequential draw animation ── */}
       <svg
+        ref={svgRef}
         className="sb-curve-svg"
         width="100%"
         height="280"
@@ -165,48 +213,78 @@ export default function LandingCorpusStats() {
           </filter>
         </defs>
 
-        {/* 1. Zone fill */}
-        <path
-          d="M 0,276 C 60,276 140,275 240,272 C 320,269 400,262 490,248 C 560,237 610,218 660,192 C 710,165 740,132 770,100 C 795,73 810,48 830,28 C 848,10 862,3 878,8 C 894,13 908,32 925,58 C 945,88 965,122 995,158 C 1025,192 1065,224 1120,246 C 1175,262 1250,271 1340,275 C 1390,276 1420,276 1440,276 L 1440,280 L 0,280 Z"
+        {/* Step 1: Zone fill fades in */}
+        <motion.path
+          d={BELL_FILL}
           fill="url(#sbZoneGrad)"
           stroke="none"
+          initial={{ opacity: 0 }}
+          animate={inView ? { opacity: 1 } : {}}
+          transition={{ duration: 0.5, delay: 0.1 }}
         />
 
-        {/* 2. Gridlines at 25 / 50 / 75 */}
-        <line x1="360"  y1="20" x2="360"  y2="270" stroke="rgba(111,155,198,0.04)" strokeWidth="0.75" />
-        <line x1="720"  y1="20" x2="720"  y2="270" stroke="rgba(111,155,198,0.04)" strokeWidth="0.75" />
-        <line x1="1080" y1="20" x2="1080" y2="270" stroke="rgba(111,155,198,0.04)" strokeWidth="0.75" />
+        {/* Gridlines at 25 / 50 / 75 — step 2 */}
+        <motion.g
+          initial={{ opacity: 0 }}
+          animate={inView ? { opacity: 1 } : {}}
+          transition={{ duration: 0.4, delay: 0.35 }}
+        >
+          <line x1="360"  y1="20" x2="360"  y2="270" stroke="rgba(111,155,198,0.04)" strokeWidth="0.75" />
+          <line x1="720"  y1="20" x2="720"  y2="270" stroke="rgba(111,155,198,0.04)" strokeWidth="0.75" />
+          <line x1="1080" y1="20" x2="1080" y2="270" stroke="rgba(111,155,198,0.04)" strokeWidth="0.75" />
+        </motion.g>
 
-        {/* 3. Curve fill */}
-        <path
-          d="M 0,276 C 60,276 140,275 240,272 C 320,269 400,262 490,248 C 560,237 610,218 660,192 C 710,165 740,132 770,100 C 795,73 810,48 830,28 C 848,10 862,3 878,8 C 894,13 908,32 925,58 C 945,88 965,122 995,158 C 1025,192 1065,224 1120,246 C 1175,262 1250,271 1340,275 C 1390,276 1420,276 1440,276 L 1440,280 L 0,280 Z"
+        {/* Step 3: Curve fill fades in */}
+        <motion.path
+          d={BELL_FILL}
           fill="url(#sbCurveFill)"
           stroke="none"
+          initial={{ opacity: 0 }}
+          animate={inView ? { opacity: 1 } : {}}
+          transition={{ duration: 0.6, delay: 0.5 }}
         />
 
-        {/* 4. Curve stroke — horizontal color gradient + glow */}
-        <path
-          d="M 0,276 C 60,276 140,275 240,272 C 320,269 400,262 490,248 C 560,237 610,218 660,192 C 710,165 740,132 770,100 C 795,73 810,48 830,28 C 848,10 862,3 878,8 C 894,13 908,32 925,58 C 945,88 965,122 995,158 C 1025,192 1065,224 1120,246 C 1175,262 1250,271 1340,275 C 1390,276 1420,276 1440,276"
+        {/* Step 4: Curve stroke draws in (pathLength animation) */}
+        <motion.path
+          d={BELL_PATH}
           fill="none"
           stroke="url(#sbCurveStroke)"
           strokeWidth="1.2"
           filter="url(#sbCurveGlow)"
           vectorEffect="non-scaling-stroke"
+          initial={{ pathLength: 0, opacity: 0 }}
+          animate={inView ? { pathLength: 1, opacity: 1 } : {}}
+          transition={{ pathLength: { duration: 1.6, delay: 0.7, ease: 'easeInOut' }, opacity: { duration: 0.3, delay: 0.7 } }}
         />
 
-        {/* 5. AVG 58 marker */}
-        <line x1="862" y1="20" x2="862" y2="260" stroke="rgba(255,255,255,0.06)" strokeWidth="0.75" />
-        <text x="862" y="270" textAnchor="middle" fontFamily="IBM Plex Mono, monospace" fontSize="9" fill="rgba(255,255,255,0.15)">AVG 58</text>
+        {/* AVG 58 marker */}
+        <motion.g
+          initial={{ opacity: 0 }}
+          animate={inView ? { opacity: 1 } : {}}
+          transition={{ duration: 0.4, delay: 1.1 }}
+        >
+          <line x1="862" y1="20" x2="862" y2="260" stroke="rgba(255,255,255,0.06)" strokeWidth="0.75" />
+          <text x="862" y="270" textAnchor="middle" fontFamily="IBM Plex Mono, monospace" fontSize="9" fill="rgba(255,255,255,0.15)">AVG 58</text>
+        </motion.g>
 
-        {/* 6. Zone boundary lines */}
-        <line x1="360"  y1="40" x2="360"  y2="260" stroke="rgba(232,99,95,0.06)"  strokeWidth="0.75" />
-        <line x1="1150" y1="40" x2="1150" y2="260" stroke="rgba(0,196,140,0.06)" strokeWidth="0.75" />
-        {/* 6. Zone boundary labels */}
-        <text x="360"  y="270" textAnchor="middle" fontFamily="IBM Plex Mono, monospace" fontSize="9" fill="rgba(232,99,95,0.35)">BOTTOM 25%</text>
-        <text x="1150" y="270" textAnchor="middle" fontFamily="IBM Plex Mono, monospace" fontSize="9" fill="rgba(0,196,140,0.35)">TOP 25%</text>
+        {/* Zone boundary lines + labels */}
+        <motion.g
+          initial={{ opacity: 0 }}
+          animate={inView ? { opacity: 1 } : {}}
+          transition={{ duration: 0.4, delay: 1.2 }}
+        >
+          <line x1="360"  y1="40" x2="360"  y2="260" stroke="rgba(232,99,95,0.06)"  strokeWidth="0.75" />
+          <line x1="1150" y1="40" x2="1150" y2="260" stroke="rgba(0,196,140,0.06)" strokeWidth="0.75" />
+          <text x="360"  y="270" textAnchor="middle" fontFamily="IBM Plex Mono, monospace" fontSize="9" fill="rgba(232,99,95,0.35)">BOTTOM 25%</text>
+          <text x="1150" y="270" textAnchor="middle" fontFamily="IBM Plex Mono, monospace" fontSize="9" fill="rgba(0,196,140,0.35)">TOP 25%</text>
+        </motion.g>
 
-        {/* 7. YOUR SITE marker at x=980, curve y≈135 */}
-        <g className="sb-marker-enter">
+        {/* YOUR SITE marker — step 4: drops in last */}
+        <motion.g
+          initial={{ opacity: 0, y: -10 }}
+          animate={inView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.5, delay: 1.4, ease: 'easeOut' }}
+        >
           <line
             x1="980" y1="0" x2="980" y2="260"
             stroke="rgba(140,180,220,0.7)"
@@ -221,17 +299,23 @@ export default function LandingCorpusStats() {
             <text x="0" y="-16" textAnchor="middle" fontFamily="IBM Plex Mono, monospace" fontSize="15" fontWeight="700" fill="rgba(140,180,220,1.0)">63rd pct</text>
             <line x1="0" y1="0" x2="0" y2="143" stroke="rgba(140,180,220,0.2)" strokeWidth="0.5" />
           </g>
-        </g>
+        </motion.g>
 
-        {/* 8. Score axis labels */}
-        <text x="0"    y="278" textAnchor="start"  fontFamily="IBM Plex Mono, monospace" fontSize="9" fill="rgba(111,155,198,0.2)">0</text>
-        <text x="360"  y="278" textAnchor="middle" fontFamily="IBM Plex Mono, monospace" fontSize="9" fill="rgba(111,155,198,0.2)">25</text>
-        <text x="720"  y="278" textAnchor="middle" fontFamily="IBM Plex Mono, monospace" fontSize="9" fill="rgba(111,155,198,0.2)">50</text>
-        <text x="1080" y="278" textAnchor="middle" fontFamily="IBM Plex Mono, monospace" fontSize="9" fill="rgba(111,155,198,0.2)">75</text>
-        <text x="1440" y="278" textAnchor="end"    fontFamily="IBM Plex Mono, monospace" fontSize="9" fill="rgba(111,155,198,0.2)">100</text>
+        {/* Score axis labels */}
+        <motion.g
+          initial={{ opacity: 0 }}
+          animate={inView ? { opacity: 1 } : {}}
+          transition={{ duration: 0.4, delay: 0.9 }}
+        >
+          <text x="0"    y="278" textAnchor="start"  fontFamily="IBM Plex Mono, monospace" fontSize="9" fill="rgba(111,155,198,0.2)">0</text>
+          <text x="360"  y="278" textAnchor="middle" fontFamily="IBM Plex Mono, monospace" fontSize="9" fill="rgba(111,155,198,0.2)">25</text>
+          <text x="720"  y="278" textAnchor="middle" fontFamily="IBM Plex Mono, monospace" fontSize="9" fill="rgba(111,155,198,0.2)">50</text>
+          <text x="1080" y="278" textAnchor="middle" fontFamily="IBM Plex Mono, monospace" fontSize="9" fill="rgba(111,155,198,0.2)">75</text>
+          <text x="1440" y="278" textAnchor="end"    fontFamily="IBM Plex Mono, monospace" fontSize="9" fill="rgba(111,155,198,0.2)">100</text>
+        </motion.g>
       </svg>
 
-      {/* 9. Bottom caption */}
+      {/* Bottom caption */}
       <div style={{ textAlign: 'center', padding: '12px 0 32px', position: 'relative', zIndex: 1 }}>
         <p style={{ ...MONO, fontSize: 10, color: 'rgba(111,155,198,0.3)', margin: 0 }}>
           Benchmarked against sites in your exact vertical · no synthetic data · updated weekly

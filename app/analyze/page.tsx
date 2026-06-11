@@ -9,7 +9,7 @@ function AnalyzeRedirect() {
   useEffect(() => {
     const url = params.get("url");
     if (url) {
-      const path = `/scan?url=${encodeURIComponent(url)}`;
+      const path = `/dashboard?url=${encodeURIComponent(url)}`;
       console.log("[scan-nav] router.replace (from /analyze)", path);
       router.replace(path);
             } else {

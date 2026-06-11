@@ -84,7 +84,7 @@ export async function POST(req: NextRequest) {
         },
       ],
       mode: 'subscription',
-      success_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?upgraded=true`,
+      success_url: `${process.env.NEXT_PUBLIC_APP_URL}/app/dashboard?upgraded=true`,
       cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/pricing?cancelled=true`,
       metadata: { supabase_user_id: user.id, plan: requestedPlan },
       subscription_data: {

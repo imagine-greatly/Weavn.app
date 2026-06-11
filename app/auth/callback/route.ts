@@ -79,9 +79,9 @@ export async function GET(request: NextRequest) {
   if (pendingUrlCookie?.value) {
     const raw = decodeURIComponent(pendingUrlCookie.value);
     const normalized = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
-    destination = `/scan?url=${encodeURIComponent(normalized)}`;
+    destination = `/dashboard?url=${encodeURIComponent(normalized)}`;
   } else {
-    destination = "/dashboard";
+    destination = "/app/dashboard";
   }
 
   const response = NextResponse.redirect(new URL(destination, requestUrl.origin));

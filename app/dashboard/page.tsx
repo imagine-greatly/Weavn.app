@@ -1,731 +1,600 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import ScoreRing from '@/components/ui/ScoreRing'
-import Stat from '@/components/ui/Stat'
+import WebdocMark from '@/components/ui/WebdocMark'
 
-// ── Design tokens ─────────────────────────────────────────────────────────────
-const T = {
-  jsonKey:    '#8080c0',
-  jsonStr:    '#00C48C',
-  jsonMetric: '#6F9BC6',
-  sevCrit:    '#E8635F',
-  sevHigh:    '#EFB23E',
-  inkPrimary: '#E6E9EE',
-  inkSec:     '#9398A8',
-  inkTert:    '#8E8EA0',
-  inkMuted:   '#6E7587',
-  bg:         '#050810',
-  surface:    '#0A0E18',
-  sidebarBg:  '#06090F',
-  zone3bg:    '#07090F',
-} as const
+// ── Style tokens ──────────────────────────────────────────────────────────────
 
-function scoreBandColor(n: number): string {
-  if (n >= 70) return T.jsonStr
-  if (n >= 50) return T.sevHigh
-  return T.sevCrit
-}
+const MONO: React.CSSProperties = { fontFamily: '"IBM Plex Mono", monospace' }
+const SANS: React.CSSProperties = { fontFamily: '"IBM Plex Sans", sans-serif' }
+const DISP: React.CSSProperties = { fontFamily: '"Space Grotesk", sans-serif' }
 
-function severityColor(s: string): string {
-  if (s === 'critical') return T.sevCrit
-  if (s === 'high')     return T.sevHigh
-  if (s === 'medium')   return T.jsonMetric
-  return T.inkMuted
-}
+// ── Shared chrome ─────────────────────────────────────────────────────────────
 
-// ── Types ─────────────────────────────────────────────────────────────────────
-type Priority = 1 | 2 | 3
-
-interface Finding {
-  id: string
-  title: string
-  severity: 'critical' | 'high' | 'medium' | 'low'
-  category: string
-  explanation: string
-  recommendation: string
-  priority: Priority
-  estimated_lift: string
-  fix_effort: 'low' | 'medium' | 'high'
-  percentile: number
-  industry_avg: string
-  rewritten_copy: { headline: string; cta_primary: string }
-}
-
-interface DimensionScore {
-  key: string
-  label: string
-  score: number
-  industry_avg: number
-  percentile: number
-}
-
-interface ScanHistoryEntry {
-  date: string
-  score: number
-  findings: number
-  duration_ms: number
-  cost: string
-}
-
-interface ReportLink {
-  url: string
-  generated: string
-  active: boolean
-}
-
-interface Client {
-  id: string
-  name: string
-  domain: string
-  score: number
-  delta: number | null
-  lastScan: string
-  lastScanRelative: string
-  nextScan: string
-  frequency: 'Weekly' | 'Monthly' | 'Off'
-  site_type: string
-  industry: string
-  percentile: number
-  topFinding: { title: string; severity: string } | null
-  findings: Finding[]
-  dimension_scores: DimensionScore[]
-  strengths: string[]
-  scan_history: ScanHistoryEntry[]
-  report_links: ReportLink[]
-}
-
-// ── Shared mock findings ──────────────────────────────────────────────────────
-const SHARED_FINDINGS: Finding[] = [
-  {
-    id: 'MSG-001', priority: 1, severity: 'critical', category: 'MESSAGE_CLARITY',
-    title: 'Hero headline is product-focused, not outcome-focused',
-    explanation: 'Current headline names the product category but communicates zero user benefit. Outcome-led headlines convert 23% better across SaaS landing pages.',
-    recommendation: 'Rewrite to lead with the result the user experiences. Name the transformation, not the tool.',
-    estimated_lift: '+18–24%', fix_effort: 'low', percentile: 12, industry_avg: '58%',
-    rewritten_copy: { headline: 'Find what\'s costing you conversions. Fix it today.', cta_primary: 'Scan my site free →' },
-  },
-  {
-    id: 'TRS-001', priority: 1, severity: 'high', category: 'TRUST_SIGNALS',
-    title: 'No social proof visible in first viewport',
-    explanation: 'Zero trust signals appear above the fold. Trust signals below the fold are ignored by 76% of visitors who bounce before scrolling.',
-    recommendation: 'Move at least one trust signal above the fold. Customer count or a sharp single testimonial.',
-    estimated_lift: '+12–16%', fix_effort: 'low', percentile: 22, industry_avg: '63%',
-    rewritten_copy: { headline: '1,200+ teams have run their site through this.', cta_primary: 'Join them →' },
-  },
-  {
-    id: 'CTA-001', priority: 1, severity: 'high', category: 'CONVERSION_ARCHITECTURE',
-    title: 'Primary CTA copy is generic',
-    explanation: 'CTA reads "Get Started" — one of the 5 lowest-performing CTA patterns. Generic verbs underperform specific action CTAs by 14–32%.',
-    recommendation: 'Replace with a specific outcome CTA matching exactly what happens when they click.',
-    estimated_lift: '+14–22%', fix_effort: 'low', percentile: 18, industry_avg: '61%',
-    rewritten_copy: { headline: 'Get your full conversion audit free', cta_primary: 'Scan my site — 90 seconds →' },
-  },
-  {
-    id: 'TRS-002', priority: 2, severity: 'medium', category: 'TRUST_SIGNALS',
-    title: 'No risk reversal near primary CTA',
-    explanation: 'No friction reducer within 100px of the primary CTA. Risk reversals placed near the CTA reduce click hesitation by 8–15%.',
-    recommendation: 'Add a one-line friction reducer directly below the button.',
-    estimated_lift: '+8–12%', fix_effort: 'low', percentile: 41, industry_avg: '55%',
-    rewritten_copy: { headline: 'Your full audit — no signup, just a URL.', cta_primary: 'Run free audit →' },
-  },
-  {
-    id: 'OBJ-001', priority: 3, severity: 'medium', category: 'OBJECTION_HANDLING',
-    title: 'No objection handling on pricing page',
-    explanation: 'Pricing page lists features and price but provides zero objection handling.',
-    recommendation: 'Add a 3-item FAQ below pricing addressing the top objections.',
-    estimated_lift: '+4–8%', fix_effort: 'medium', percentile: 44, industry_avg: '50%',
-    rewritten_copy: { headline: 'The diagnostic your ad spend deserves.', cta_primary: 'Start free →' },
-  },
-]
-
-const SHARED_DIMS: DimensionScore[] = [
-  { key: 'conversion_architecture', label: 'Conversion Arch.',    score: 48, industry_avg: 62, percentile: 21 },
-  { key: 'trust_signals',           label: 'Trust Signals',        score: 55, industry_avg: 61, percentile: 38 },
-  { key: 'message_clarity',         label: 'Message Clarity',      score: 52, industry_avg: 65, percentile: 29 },
-  { key: 'traffic_readiness',       label: 'Traffic Readiness',    score: 71, industry_avg: 58, percentile: 73 },
-  { key: 'technical_foundation',    label: 'Technical Foundation', score: 68, industry_avg: 63, percentile: 61 },
-  { key: 'objection_handling',      label: 'Objection Handling',   score: 44, industry_avg: 53, percentile: 18 },
-  { key: 'offer_clarity',           label: 'Offer Clarity',        score: 72, industry_avg: 60, percentile: 76 },
-]
-
-const SHARED_STRENGTHS = [
-  'Page load speed in top 15% — under 1.8s on mobile',
-  'SSL certificate valid, HTTPS enforced, no mixed content',
-  'OpenGraph metadata complete — social previews render correctly',
-  'Schema markup present — Google can extract business entity data',
-]
-
-const SHARED_SCAN_HISTORY: ScanHistoryEntry[] = [
-  { date: 'Jun 8, 2026',  score: 61, findings: 5, duration_ms: 87340, cost: '$0.15' },
-  { date: 'Jun 1, 2026',  score: 58, findings: 7, duration_ms: 91200, cost: '$0.15' },
-  { date: 'May 21, 2026', score: 53, findings: 9, duration_ms: 84500, cost: '$0.15' },
-  { date: 'May 9, 2026',  score: 51, findings: 10, duration_ms: 88100, cost: '$0.15' },
-]
-
-const SHARED_LINKS: ReportLink[] = [
-  { url: 'webdocai.com/r/a3x9f1', generated: 'Jun 3, 2026', active: true },
-  { url: 'webdocai.com/r/b2k8m4', generated: 'May 15, 2026', active: false },
-]
-
-// ── Client data ───────────────────────────────────────────────────────────────
-const CLIENTS: Client[] = [
-  {
-    id: 'buildspace', name: 'Buildspace',    domain: 'buildspace.so',      score: 48, delta: -3,
-    lastScan: 'Jun 1, 2026', lastScanRelative: '1 week ago', nextScan: 'Jul 1, 2026', frequency: 'Monthly',
-    site_type: 'B2B SAAS', industry: 'B2B SaaS', percentile: 14,
-    topFinding: { title: 'Hero headline product-focused, not outcome-focused', severity: 'critical' },
-    findings: SHARED_FINDINGS, dimension_scores: SHARED_DIMS, strengths: SHARED_STRENGTHS,
-    scan_history: SHARED_SCAN_HISTORY, report_links: SHARED_LINKS,
-  },
-  {
-    id: 'pika', name: 'Pika',           domain: 'pika.art',           score: 55, delta: null,
-    lastScan: 'May 20, 2026', lastScanRelative: '2 weeks ago', nextScan: '—', frequency: 'Off',
-    site_type: 'B2C CREATIVE', industry: 'B2C SaaS', percentile: 31,
-    topFinding: { title: 'No social proof visible in first viewport', severity: 'high' },
-    findings: SHARED_FINDINGS, dimension_scores: SHARED_DIMS, strengths: SHARED_STRENGTHS,
-    scan_history: SHARED_SCAN_HISTORY, report_links: [],
-  },
-  {
-    id: 'tally', name: 'Tally',          domain: 'tally.so',           score: 66, delta: -2,
-    lastScan: 'Jun 1, 2026', lastScanRelative: '1 week ago', nextScan: 'Jul 1, 2026', frequency: 'Monthly',
-    site_type: 'PRODUCTIVITY', industry: 'Productivity SaaS', percentile: 48,
-    topFinding: { title: 'Primary CTA copy is generic', severity: 'high' },
-    findings: SHARED_FINDINGS, dimension_scores: SHARED_DIMS, strengths: SHARED_STRENGTHS,
-    scan_history: SHARED_SCAN_HISTORY, report_links: SHARED_LINKS,
-  },
-  {
-    id: 'acme', name: 'Acme SaaS',     domain: 'acme-saas.com',      score: 61, delta: 8,
-    lastScan: 'Jun 1, 2026', lastScanRelative: '1 week ago', nextScan: 'Jun 10, 2026', frequency: 'Weekly',
-    site_type: 'B2B SAAS', industry: 'B2B SaaS', percentile: 34,
-    topFinding: { title: 'Hero headline product-focused, not outcome-focused', severity: 'critical' },
-    findings: SHARED_FINDINGS, dimension_scores: SHARED_DIMS, strengths: SHARED_STRENGTHS,
-    scan_history: SHARED_SCAN_HISTORY, report_links: SHARED_LINKS,
-  },
-  {
-    id: 'techflow', name: 'TechFlow',      domain: 'techflow.io',        score: 74, delta: 3,
-    lastScan: 'Jun 1, 2026', lastScanRelative: '1 week ago', nextScan: 'Jun 10, 2026', frequency: 'Weekly',
-    site_type: 'B2B SAAS', industry: 'B2B SaaS', percentile: 67,
-    topFinding: { title: 'No risk reversal near primary CTA', severity: 'medium' },
-    findings: SHARED_FINDINGS, dimension_scores: SHARED_DIMS, strengths: SHARED_STRENGTHS,
-    scan_history: SHARED_SCAN_HISTORY, report_links: SHARED_LINKS,
-  },
-  {
-    id: 'loops', name: 'Loops',          domain: 'loops.so',           score: 79, delta: 5,
-    lastScan: 'Jun 1, 2026', lastScanRelative: '1 week ago', nextScan: 'Jun 10, 2026', frequency: 'Weekly',
-    site_type: 'EMAIL SAAS', industry: 'Marketing SaaS', percentile: 72,
-    topFinding: { title: 'No objection handling on pricing page', severity: 'medium' },
-    findings: SHARED_FINDINGS, dimension_scores: SHARED_DIMS, strengths: SHARED_STRENGTHS,
-    scan_history: SHARED_SCAN_HISTORY, report_links: SHARED_LINKS,
-  },
-  {
-    id: 'lemonsqueezy', name: 'Lemon Squeezy', domain: 'lemonsqueezy.com', score: 82, delta: 11,
-    lastScan: 'Jun 1, 2026', lastScanRelative: '1 week ago', nextScan: 'Jun 10, 2026', frequency: 'Weekly',
-    site_type: 'PAYMENTS', industry: 'Fintech SaaS', percentile: 79,
-    topFinding: null,
-    findings: SHARED_FINDINGS, dimension_scores: SHARED_DIMS, strengths: SHARED_STRENGTHS,
-    scan_history: SHARED_SCAN_HISTORY, report_links: SHARED_LINKS,
-  },
-  {
-    id: 'mintlify', name: 'Mintlify',      domain: 'mintlify.com',       score: 91, delta: 4,
-    lastScan: 'Jun 1, 2026', lastScanRelative: '1 week ago', nextScan: 'Jun 10, 2026', frequency: 'Weekly',
-    site_type: 'DEV TOOLS', industry: 'Developer SaaS', percentile: 94,
-    topFinding: null,
-    findings: SHARED_FINDINGS, dimension_scores: SHARED_DIMS, strengths: SHARED_STRENGTHS,
-    scan_history: SHARED_SCAN_HISTORY, report_links: SHARED_LINKS,
-  },
-]
-
-// Sort worst-first
-const SORTED_CLIENTS = [...CLIENTS].sort((a, b) => a.score - b.score)
-
-// ── Priority labels + pills ───────────────────────────────────────────────────
-const P_LABEL: Record<Priority, string> = {
-  1: 'P1 — FIX THIS WEEK',
-  2: 'P2 — FIX THIS MONTH',
-  3: 'P3 — WHEN YOU CAN',
-}
-
-const P_PILL: Record<Priority, { bg: string; color: string; text: string }> = {
-  1: { bg: 'rgba(232,99,95,0.13)',   color: '#E8635F', text: 'P1 CRITICAL' },
-  2: { bg: 'rgba(239,178,62,0.13)',  color: '#EFB23E', text: 'P2 HIGH'     },
-  3: { bg: 'rgba(111,155,198,0.13)', color: '#6F9BC6', text: 'P3 MEDIUM'   },
-}
-
-// ── Portfolio stats ───────────────────────────────────────────────────────────
-const BELOW_AVG = CLIENTS.filter(c => c.score < 70).length
-const AVG_SCORE = Math.round(CLIENTS.reduce((acc, c) => acc + c.score, 0) / CLIENTS.length)
-
-// ── Main export ───────────────────────────────────────────────────────────────
-export default function AgencyDashboard() {
-  const [selectedClientId, setSelectedClientId] = useState<string | null>(null)
-  const [selectedFindingId, setSelectedFindingId] = useState<string | null>(null)
-  const [search, setSearch] = useState('')
-  const [linkCopied, setLinkCopied] = useState<string | null>(null)
-  const [shareClicked, setShareClicked] = useState(false)
-
-  const selectedClient = CLIENTS.find(c => c.id === selectedClientId) ?? null
-
-  function selectClient(id: string) {
-    const client = CLIENTS.find(c => c.id === id)
-    if (!client) return
-    setSelectedClientId(id)
-    const firstP1 = client.findings.find(f => f.priority === 1)?.id ?? client.findings[0]?.id ?? null
-    setSelectedFindingId(firstP1)
-  }
-
-  function copyLink(url: string) {
-    navigator.clipboard.writeText(url).then(() => {
-      setLinkCopied(url)
-      setTimeout(() => setLinkCopied(null), 1500)
-    })
-  }
-
-  function handleShare() {
-    setShareClicked(true)
-    setTimeout(() => setShareClicked(false), 1500)
-  }
-
-  const filteredSorted = SORTED_CLIENTS.filter(c =>
-    !search || c.domain.toLowerCase().includes(search.toLowerCase()) || c.name.toLowerCase().includes(search.toLowerCase())
+function Ticks() {
+  const b = '0.5px solid rgba(111,155,198,0.2)'
+  return (
+    <>
+      <div aria-hidden style={{ position: 'absolute', top: 20, left: 20, width: 14, height: 14, borderTop: b, borderLeft: b, pointerEvents: 'none', zIndex: 1 }} />
+      <div aria-hidden style={{ position: 'absolute', top: 20, right: 20, width: 14, height: 14, borderTop: b, borderRight: b, pointerEvents: 'none', zIndex: 1 }} />
+      <div aria-hidden style={{ position: 'absolute', bottom: 20, left: 20, width: 14, height: 14, borderBottom: b, borderLeft: b, pointerEvents: 'none', zIndex: 1 }} />
+      <div aria-hidden style={{ position: 'absolute', bottom: 20, right: 20, width: 14, height: 14, borderBottom: b, borderRight: b, pointerEvents: 'none', zIndex: 1 }} />
+    </>
   )
+}
 
-  const selectedFinding = selectedClient?.findings.find(f => f.id === selectedFindingId) ?? null
-  const grouped = selectedClient
-    ? ([1, 2, 3] as Priority[])
-        .map(p => ({ priority: p, findings: selectedClient.findings.filter(f => f.priority === p) }))
-        .filter(g => g.findings.length > 0)
-    : []
+// ── Section 1 — Hero with working scan input ─────────────────────────────────
 
-  const SIDEBAR_W = 280
+function HeroScanSection() {
+  const [scanUrl, setScanUrl] = useState('')
+  const [isScanning, setIsScanning] = useState(false)
+  const [scanError, setScanError] = useState('')
+  const router = useRouter()
+
+  // Inbound links (auth redirect, dashboard rescan) arrive as /dashboard?url=…
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const url = params.get('url')
+    if (url) setScanUrl(url.replace(/^https?:\/\//i, ''))
+  }, [])
+
+  const handleScan = async () => {
+    if (!scanUrl || isScanning) return
+    setScanError('')
+    setIsScanning(true)
+    try {
+      const target = /^https?:\/\//i.test(scanUrl) ? scanUrl : `https://${scanUrl}`
+      const res = await fetch('/api/scan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: target }),
+      })
+      if (res.status === 401) {
+        if (typeof sessionStorage !== 'undefined') sessionStorage.setItem('pendingUrl', target)
+        router.push('/auth?surface=dashboard')
+        return
+      }
+      const data = await res.json()
+      if (data.reportId) {
+        router.push(`/reports/${data.reportId}`)
+      } else if (data.error) {
+        setScanError(data.error)
+      }
+    } catch {
+      setScanError('Scan failed. Please try again.')
+    } finally {
+      setIsScanning(false)
+    }
+  }
 
   return (
-    <div style={{ minHeight: 'calc(100vh - 4rem)', display: 'flex' }}>
+    <section id="hero" style={{ padding: '96px 48px', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
+      <style>{`
+        @keyframes dash-pulse-dot { 0%,100%{opacity:1} 50%{opacity:0.35} }
+        @media (prefers-reduced-motion: reduce) { .dash-pulse { animation: none !important; } }
+      `}</style>
 
-      {/* ── SIDEBAR ─────────────────────────────────────────────────────────── */}
-      <aside style={{
-        position: 'fixed',
-        left: 0,
-        top: '4rem',
-        height: 'calc(100vh - 4rem)',
-        width: SIDEBAR_W,
-        background: T.sidebarBg,
-        borderRight: '0.5px solid rgba(255,255,255,0.06)',
-        zIndex: 40,
-        display: 'flex',
-        flexDirection: 'column',
-      }}>
-        {/* Header */}
-        <div style={{ padding: '20px 16px', borderBottom: '0.5px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
-          <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.15em', color: T.inkMuted }}>CLIENTS</span>
-          <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 10, background: 'rgba(111,155,198,0.1)', color: T.jsonMetric, padding: '2px 8px' }}>{CLIENTS.length}</span>
+      {/* Atmosphere */}
+      <div aria-hidden style={{
+        position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0,
+        background: 'radial-gradient(ellipse 1000px 700px at 50% 35%, rgba(111,155,198,0.06) 0%, transparent 60%)',
+      }} />
+      <Ticks />
+
+      <div style={{ position: 'relative', zIndex: 1, maxWidth: 720, margin: '0 auto' }}>
+
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 20 }}>
+          <WebdocMark size={64} animated={true} />
         </div>
 
-        {/* Search */}
-        <div style={{ padding: '12px 16px', borderBottom: '0.5px solid rgba(255,255,255,0.05)', flexShrink: 0 }}>
-          <input
-            type="text"
-            placeholder="search clients…"
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            style={{
-              width: '100%', boxSizing: 'border-box',
-              background: 'rgba(255,255,255,0.03)',
-              border: '0.5px solid rgba(255,255,255,0.08)',
-              fontFamily: "'IBM Plex Mono',monospace", fontSize: 12, color: T.inkSec,
-              padding: '8px 12px', outline: 'none', borderRadius: 0,
-            }}
-          />
-        </div>
+        <p style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.2em', color: '#6F9BC6', margin: '0 0 16px' }}>
+          FOR FOUNDERS &amp; MARKETERS
+        </p>
 
-        {/* New client */}
-        <div style={{ padding: '12px 16px', borderBottom: '0.5px solid rgba(255,255,255,0.06)', flexShrink: 0 }}>
-          <button style={{
-            width: '100%', border: `0.5px solid ${T.jsonStr}`, color: T.jsonStr,
-            background: 'transparent', fontFamily: "'IBM Plex Mono',monospace", fontSize: 12,
-            padding: '9px', cursor: 'pointer', borderRadius: 0, textAlign: 'center',
+        <h1 style={{ ...DISP, fontSize: 'clamp(36px,5vw,56px)', fontWeight: 700, color: '#E6E9EE', letterSpacing: '-0.5px', margin: '0 0 20px', lineHeight: 1.1 }}>
+          Find out exactly what&apos;s stopping your site from converting.
+        </h1>
+
+        <p style={{ ...SANS, fontSize: 16, color: '#9398A8', lineHeight: 1.65, maxWidth: 560, margin: '0 auto 40px' }}>
+          Paste your URL. In 90 seconds you get a score, a ranked list of what to fix, and AI-rewritten copy — ready to use. No technical knowledge required.
+        </p>
+
+        <div style={{ maxWidth: 620, margin: '0 auto', textAlign: 'left' }}>
+
+          {/* Status bar */}
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 12,
+            ...MONO, fontSize: 12,
+            background: 'rgba(255,255,255,0.02)',
+            border: '0.5px solid rgba(255,255,255,0.08)',
+            padding: '8px 14px', marginBottom: 10, flexWrap: 'wrap',
           }}>
-            + NEW CLIENT
-          </button>
+            <span className="dash-pulse" style={{ width: 7, height: 7, borderRadius: '50%', background: '#00C48C', flexShrink: 0, display: 'inline-block', animation: 'dash-pulse-dot 1.8s ease-in-out infinite' }} />
+            <span style={{ color: '#9398A8' }}>scan engine online</span>
+            <span style={{ color: '#6E7587' }}>·</span>
+            <span style={{ color: '#6F9BC6' }}>307 checks</span>
+            <span style={{ color: '#6E7587' }}>·</span>
+            <span style={{ color: '#6F9BC6' }}>results in ~90 seconds</span>
+          </div>
+
+          {/* Scan input */}
+          <div style={{ display: 'flex', flexWrap: 'wrap' }}>
+            <div style={{
+              display: 'flex', flex: '1 1 320px',
+              background: '#0A0E18',
+              borderTop: '1px solid rgba(255,255,255,0.1)',
+              borderLeft: '1px solid rgba(255,255,255,0.07)',
+              borderRight: '1px solid rgba(255,255,255,0.04)',
+              borderBottom: '1px solid rgba(255,255,255,0.03)',
+            }}>
+              <span style={{ ...MONO, fontSize: 12, color: '#6E7587', padding: '0 12px', display: 'flex', alignItems: 'center', flexShrink: 0, borderRight: '0.5px solid rgba(255,255,255,0.08)' }}>
+                https://
+              </span>
+              <input
+                type="text"
+                value={scanUrl}
+                onChange={e => setScanUrl(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') void handleScan() }}
+                placeholder="your-site.com"
+                style={{ flex: 1, minWidth: 0, background: 'transparent', ...MONO, fontSize: 14, color: '#E6E9EE', padding: '13px 14px', border: 'none', outline: 'none', borderRadius: 0 }}
+              />
+            </div>
+            <button
+              onClick={() => void handleScan()}
+              disabled={isScanning || !scanUrl}
+              style={{
+                ...MONO, fontSize: 13, fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase',
+                background: 'transparent', border: '1px solid rgba(111,155,198,0.5)', color: '#6F9BC6',
+                padding: '13px 24px', cursor: isScanning || !scanUrl ? 'not-allowed' : 'pointer',
+                borderRadius: 0, opacity: isScanning || !scanUrl ? 0.6 : 1, whiteSpace: 'nowrap',
+                transition: 'all 0.15s',
+              }}
+            >
+              {isScanning ? 'SCANNING…' : 'SCAN MY SITE →'}
+            </button>
+          </div>
+          {scanError && (
+            <p style={{ ...MONO, fontSize: 11, color: '#E8635F', margin: '8px 0 0' }}>{scanError}</p>
+          )}
+
+          {/* Example result line */}
+          <div style={{
+            background: '#0A0E18',
+            borderTop: '1px solid rgba(111,155,198,0.18)',
+            borderLeft: '1px solid rgba(255,255,255,0.06)',
+            borderRight: '1px solid rgba(255,255,255,0.04)',
+            borderBottom: '1px solid rgba(255,255,255,0.03)',
+            padding: '12px 16px', marginTop: 8,
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+              <span style={{ ...MONO, fontSize: 10, color: '#6E7587', textTransform: 'uppercase', letterSpacing: '0.15em' }}>EXAMPLE RESULT</span>
+              <span style={{ ...MONO, fontSize: 10, color: '#00C48C' }}>complete</span>
+            </div>
+            <p style={{ ...MONO, fontSize: 11, margin: 0, lineHeight: 1.7 }}>
+              <span style={{ color: '#E8635F' }}>61/100</span>
+              <span style={{ color: '#6E7587' }}> · </span>
+              <span style={{ color: '#6F9BC6' }}>23 issues found</span>
+              <span style={{ color: '#6E7587' }}> · </span>
+              <span style={{ color: '#9398A8' }}>ranked by impact</span>
+              <span style={{ color: '#6E7587' }}> · </span>
+              <span style={{ color: '#00C48C' }}>copy rewrites included</span>
+            </p>
+          </div>
+
+          {/* Trust line */}
+          <p style={{ ...MONO, fontSize: 11, color: '#6E7587', textAlign: 'center', margin: '16px 0 0' }}>
+            Free scan · no account required · no credit card
+          </p>
         </div>
 
-        {/* Client list */}
-        <div style={{ flex: 1, overflowY: 'auto' }}>
-          {filteredSorted.map(c => {
-            const sel = c.id === selectedClientId
-            const ind = c.score < 50 ? T.sevCrit : c.score < 70 ? T.sevHigh : null
-            return (
-              <div
-                key={c.id}
-                onClick={() => selectClient(c.id)}
-                style={{
-                  padding: '12px 16px',
-                  borderBottom: '0.5px solid rgba(255,255,255,0.04)',
-                  borderLeft: sel ? `2px solid rgba(0,196,140,0.4)` : '2px solid transparent',
-                  background: sel ? 'rgba(0,196,140,0.03)' : 'transparent',
-                  cursor: 'pointer',
-                  display: 'flex', alignItems: 'center', gap: 10,
-                  transition: 'background 0.1s',
-                }}
-                onMouseEnter={e => { if (!sel) (e.currentTarget as HTMLDivElement).style.background = 'rgba(255,255,255,0.02)' }}
-                onMouseLeave={e => { if (!sel) (e.currentTarget as HTMLDivElement).style.background = 'transparent' }}
-              >
-                <ScoreRing score={c.score} size="sm" animate={false} />
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 13, color: T.inkPrimary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.domain}</div>
-                  <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 10, color: T.inkMuted }}>Last scan: {c.lastScanRelative}</div>
+      </div>
+    </section>
+  )
+}
+
+// ── Section 2 — What you get ──────────────────────────────────────────────────
+
+const WHAT_YOU_GET = [
+  {
+    number: '61',
+    color: '#E8635F',
+    label: 'YOUR CONVERSION SCORE',
+    body: 'A single number from 0–100 that tells you how well your site is set up to turn visitors into customers. Benchmarked against 4,812 real sites in your exact industry.',
+    detail: 'Below 70 is critical. Most sites score between 45–65.',
+  },
+  {
+    number: '23',
+    color: '#6F9BC6',
+    label: 'RANKED ISSUES',
+    body: "Every problem on your site, ranked by how much it's likely costing you. The highest-impact issues come first. Each one includes what we found, why it matters, and how to fix it.",
+    detail: 'Ranked by estimated revenue impact — fix the top 3 first.',
+  },
+  {
+    number: '+',
+    color: '#00C48C',
+    label: 'REWRITTEN COPY',
+    body: 'For every headline or copy problem we find, we write you a replacement — ready to drop into your site. No copywriter needed. Based on what actually converts in your industry.',
+    detail: 'Drop-in replacements. Evidence-grounded. Ready to use.',
+  },
+] as const
+
+function WhatYouGetSection() {
+  return (
+    <section style={{ padding: '80px 48px', borderTop: '0.5px solid rgba(111,155,198,0.1)', position: 'relative', overflow: 'hidden' }}>
+      <style>{`
+        @media (max-width: 767px) { .dash-wyg-grid { grid-template-columns: 1fr !important; } }
+      `}</style>
+      <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+        <p style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.2em', color: '#6F9BC6', margin: '0 0 16px' }}>
+          WHAT YOU GET
+        </p>
+        <h2 style={{ ...DISP, fontWeight: 700, fontSize: 'clamp(28px,4vw,40px)', color: '#E6E9EE', margin: 0, lineHeight: 1.15, letterSpacing: '-0.5px' }}>
+          A complete picture of why visitors aren&apos;t converting.
+        </h2>
+
+        <div className="dash-wyg-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 32, marginTop: 48 }}>
+          {WHAT_YOU_GET.map(col => (
+            <div key={col.label}>
+              <div style={{ ...DISP, fontSize: 64, fontWeight: 700, color: col.color, lineHeight: 1 }}>{col.number}</div>
+              <div style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.12em', color: '#6E7587', marginTop: 8 }}>{col.label}</div>
+              <p style={{ ...SANS, fontSize: 15, color: '#9398A8', lineHeight: 1.65, marginTop: 16, marginBottom: 0 }}>{col.body}</p>
+              <p style={{ ...MONO, fontSize: 11, color: col.color, marginTop: 12, marginBottom: 0 }}>{col.detail}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+// ── Section 3 — Example scan result ───────────────────────────────────────────
+
+const EXAMPLE_ISSUES = [
+  { name: 'Hero headline is feature-led',         severity: 'CRITICAL', color: '#E8635F' },
+  { name: 'No social proof above the fold',       severity: 'HIGH',     color: 'rgba(232,99,95,0.7)' },
+  { name: 'CTA copy is generic',                  severity: 'HIGH',     color: 'rgba(232,99,95,0.7)' },
+  { name: 'Value proposition buried',             severity: 'MEDIUM',   color: '#6E7587' },
+  { name: 'Mobile nav broken on small screens',   severity: 'MEDIUM',   color: '#6E7587' },
+] as const
+
+function ExampleResultSection() {
+  return (
+    <section style={{ padding: '80px 48px', borderTop: '0.5px solid rgba(111,155,198,0.1)', background: 'rgba(111,155,198,0.02)', position: 'relative', overflow: 'hidden' }}>
+      <style>{`
+        @media (max-width: 767px) { .dash-example-grid { grid-template-columns: 1fr !important; } }
+      `}</style>
+      <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+        <p style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.2em', color: '#6F9BC6', margin: '0 0 16px' }}>
+          EXAMPLE RESULT
+        </p>
+        <h2 style={{ ...DISP, fontWeight: 700, fontSize: 'clamp(28px,4vw,40px)', color: '#E6E9EE', margin: '0 0 12px', lineHeight: 1.15, letterSpacing: '-0.5px' }}>
+          Here&apos;s what you&apos;ll see after scanning your site.
+        </h2>
+        <p style={{ ...SANS, fontSize: 15, color: '#9398A8', marginBottom: 48, marginTop: 0 }}>
+          This is a real audit result for acme-saas.com — a B2B SaaS site.
+        </p>
+
+        <div className="dash-example-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 48, alignItems: 'start' }}>
+
+          {/* LEFT — score + top finding */}
+          <div className="wd-panel" style={{ padding: 28 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 20, marginBottom: 24 }}>
+              <ScoreRing score={61} size="lg" />
+              <div>
+                <div style={{ ...DISP, fontSize: 18, fontWeight: 700, color: '#E6E9EE' }}>acme-saas.com</div>
+                <div style={{ ...MONO, fontSize: 11, color: '#6E7587', marginTop: 4 }}>B2B SaaS · scanned June 2026</div>
+                <div style={{ ...MONO, fontSize: 11, color: '#6F9BC6', marginTop: 4 }}>63rd percentile in B2B SaaS</div>
+              </div>
+            </div>
+
+            <div style={{ height: '0.5px', background: 'rgba(255,255,255,0.06)', marginBottom: 20 }} />
+
+            <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#6E7587', margin: '0 0 12px' }}>
+              TOP ISSUE FOUND
+            </p>
+            <div style={{ background: 'rgba(232,99,95,0.04)', border: '0.5px solid rgba(232,99,95,0.2)', padding: 16 }}>
+              <p style={{ ...MONO, fontSize: 10, color: '#E8635F', margin: 0 }}>
+                CRITICAL · estimated +12–18% lift if fixed
+              </p>
+              <p style={{ ...SANS, fontSize: 15, fontWeight: 600, color: '#E6E9EE', marginTop: 8, marginBottom: 0 }}>
+                Your headline talks about your product, not your customer&apos;s outcome
+              </p>
+              <p style={{ ...SANS, fontSize: 13, color: '#9398A8', marginTop: 8, marginBottom: 0, lineHeight: 1.5 }}>
+                We found: &lsquo;Advanced analytics platform for modern teams&rsquo; — this describes what you built, not what your customer gets. Visitors can&apos;t quickly understand if this is for them.
+              </p>
+              <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.12em', color: '#00C48C', marginTop: 12, marginBottom: 0 }}>
+                SUGGESTED REWRITE
+              </p>
+              <p style={{ ...SANS, fontSize: 14, color: '#00C48C', marginTop: 6, marginBottom: 0, fontStyle: 'italic' }}>
+                &ldquo;See exactly which campaigns drive revenue — in one dashboard.&rdquo;
+              </p>
+            </div>
+          </div>
+
+          {/* RIGHT — what else is in the report */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+
+            <div className="wd-panel" style={{ padding: 20 }}>
+              <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#6E7587', margin: '0 0 8px' }}>
+                23 ISSUES RANKED BY IMPACT
+              </p>
+              {EXAMPLE_ISSUES.map(issue => (
+                <div key={issue.name} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 12, padding: '6px 0', borderBottom: '0.5px solid rgba(255,255,255,0.04)' }}>
+                  <span style={{ ...SANS, fontSize: 13, color: '#9398A8' }}>{issue.name}</span>
+                  <span style={{ ...MONO, fontSize: 10, color: issue.color, flexShrink: 0 }}>{issue.severity}</span>
                 </div>
-                {ind && <div style={{ width: 5, height: 5, background: ind, flexShrink: 0 }} />}
+              ))}
+              <p style={{ ...MONO, fontSize: 10, color: '#6F9BC6', margin: '10px 0 0' }}>
+                + 18 more issues in your full report
+              </p>
+            </div>
+
+            <div className="wd-panel" style={{ padding: 20 }}>
+              <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#6E7587', margin: '0 0 8px' }}>
+                HOW YOU COMPARE
+              </p>
+              <p style={{ ...SANS, fontSize: 14, color: '#9398A8', lineHeight: 1.5, margin: 0 }}>
+                Your score of 61 puts you in the 63rd percentile of B2B SaaS sites. The average site in your category scores 58. The top 25% score above 78.
+              </p>
+              <p style={{ ...MONO, fontSize: 11, color: '#6F9BC6', marginTop: 8, marginBottom: 0 }}>
+                Compared against 4,812 real sites · not a generic average
+              </p>
+            </div>
+
+            <div className="wd-panel" style={{ padding: 20 }}>
+              <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#6E7587', margin: '0 0 8px' }}>
+                5 THINGS WORKING WELL
+              </p>
+              <p style={{ ...SANS, fontSize: 14, color: '#9398A8', lineHeight: 1.5, margin: 0 }}>
+                We also flag what&apos;s genuinely above average — so you know what not to change while you fix the problems.
+              </p>
+              <p style={{ ...MONO, fontSize: 11, color: '#00C48C', marginTop: 8, marginBottom: 0 }}>
+                Evidence-referenced · never padded
+              </p>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+// ── Section 4 — Pricing (dashboard tiers, mirrored from /pricing) ────────────
+
+type FeatVal = string | boolean
+
+function FVal({ v }: { v: FeatVal }) {
+  if (v === true)        return <span style={{ ...MONO, fontSize: 11, color: '#00C48C' }}>✓</span>
+  if (v === false)       return <span style={{ ...MONO, fontSize: 11, color: 'rgba(255,255,255,0.2)' }}>—</span>
+  if (v === 'unlimited') return <span style={{ ...MONO, fontSize: 11, color: '#00C48C' }}>{v}</span>
+  if (v === 'dedicated') return <span style={{ ...MONO, fontSize: 11, color: '#9D8CFF' }}>{v}</span>
+  if (v === 'custom')    return <span style={{ ...MONO, fontSize: 11, color: '#6F9BC6' }}>{v}</span>
+  return <span style={{ ...MONO, fontSize: 11, color: '#E6E9EE' }}>{v}</span>
+}
+
+const DASH_FEATS: Array<{ key: string; values: [FeatVal, FeatVal, FeatVal, FeatVal] }> = [
+  { key: 'scans / month',       values: ['3',       '20',       '100',       '500']       },
+  { key: 'report history',      values: ['7 days',  '30 days',  'unlimited', 'unlimited'] },
+  { key: 'findings depth',      values: ['full',    'full',     'full',      'full']      },
+  { key: 'AI rewritten copy',   values: [true,      true,       true,        true]        },
+  { key: 'corpus benchmark',    values: [true,      true,       true,        true]        },
+  { key: 'score trending',      values: [false,     true,       true,        true]        },
+  { key: 'CSV export',          values: [false,     true,       true,        true]        },
+  { key: 'team seats',          values: ['1',       '1',        '3',         '10']        },
+  { key: 'white label',         values: [false,     false,      true,        true]        },
+  { key: 'client workspaces',   values: [false,     false,      true,        true]        },
+  { key: 'priority processing', values: [false,     true,       true,        true]        },
+  { key: 'email support',       values: [false,     true,       true,        true]        },
+  { key: 'custom subdomain',    values: [false,     false,      false,       true]        },
+  { key: 'scheduled scans',     values: [false,     false,      false,       true]        },
+  { key: 'Slack notifications', values: [false,     false,      false,       true]        },
+]
+
+const DASH_CARDS = [
+  {
+    tier: 'FREE',
+    monthly: 0, annual: 0,
+    economyMonthly: 'forever free',
+    economyAnnual:  'forever free',
+    bestFor: 'Founders who want to see their score and top findings before committing.',
+    cta: 'TRY FREE →', ctaHref: '/auth?surface=dashboard',
+    isScale: false,
+  },
+  {
+    tier: 'STARTER',
+    monthly: 49, annual: 39,
+    economyMonthly: '$2.45/scan effective',
+    economyAnnual:  '$1.95/scan · billed annually',
+    bestFor: 'Solo founders and marketers running regular audits and tracking score over time.',
+    cta: 'START TRIAL →', ctaHref: '/auth?surface=dashboard&plan=starter',
+    isScale: false,
+  },
+  {
+    tier: 'PRO',
+    monthly: 149, annual: 119,
+    economyMonthly: '$1.49/scan effective',
+    economyAnnual:  '$1.19/scan · billed annually',
+    bestFor: 'Agencies and consultants delivering audits to clients with white-label reports.',
+    cta: 'START TRIAL →', ctaHref: '/auth?surface=dashboard&plan=pro',
+    isScale: false,
+  },
+  {
+    tier: 'SCALE',
+    monthly: 499, annual: 399,
+    economyMonthly: 'custom rate · priority support',
+    economyAnnual:  'billed annually · priority support',
+    bestFor: 'Teams running high-volume audits with custom branding and dedicated infrastructure.',
+    cta: 'START TRIAL →', ctaHref: '/auth?surface=dashboard&plan=scale',
+    isScale: true,
+  },
+]
+
+function PricingSection() {
+  const [billing, setBilling] = useState<'monthly' | 'annual'>('monthly')
+  const isAnnual = billing === 'annual'
+
+  return (
+    <section style={{ padding: '80px 48px', borderTop: '0.5px solid rgba(111,155,198,0.1)', position: 'relative', overflow: 'hidden' }}>
+      <style>{`
+        @media (max-width: 767px) { .dash-pricing-grid { grid-template-columns: 1fr !important; } }
+      `}</style>
+      <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+        <p style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.2em', color: '#6F9BC6', margin: '0 0 16px' }}>
+          PRICING
+        </p>
+        <h2 style={{ ...DISP, fontWeight: 700, fontSize: 'clamp(28px,4vw,40px)', color: '#E6E9EE', margin: '0 0 12px', lineHeight: 1.15, letterSpacing: '-0.5px' }}>
+          Start free. Upgrade when you need more.
+        </h2>
+        <p style={{ ...SANS, fontSize: 15, color: '#9398A8', marginBottom: 48, marginTop: 0 }}>
+          No contracts. Cancel anytime. Same 307-check audit on every plan.
+        </p>
+
+        {/* Billing toggle */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 32, justifyContent: 'center' }}>
+          <span style={{ ...MONO, fontSize: 11, color: '#6E7587' }}>Monthly</span>
+          <button
+            onClick={() => setBilling(b => b === 'monthly' ? 'annual' : 'monthly')}
+            aria-label="Toggle billing period"
+            style={{
+              width: 40, height: 22,
+              background: isAnnual ? 'rgba(111,155,198,0.3)' : 'rgba(255,255,255,0.08)',
+              border: '0.5px solid rgba(111,155,198,0.3)',
+              cursor: 'pointer',
+              position: 'relative',
+              borderRadius: 0,
+              transition: 'background 0.2s',
+              padding: 0,
+              flexShrink: 0,
+            }}
+          >
+            <div style={{
+              position: 'absolute',
+              top: 3,
+              left: isAnnual ? 21 : 2,
+              width: 16,
+              height: 16,
+              background: isAnnual ? '#6F9BC6' : 'rgba(255,255,255,0.35)',
+              transition: 'left 0.2s, background 0.2s',
+            }} />
+          </button>
+          <span style={{ ...MONO, fontSize: 11, color: '#6E7587' }}>Annual</span>
+          {isAnnual && (
+            <span style={{ ...MONO, fontSize: 10, color: '#00C48C', background: 'rgba(0,196,140,0.1)', padding: '2px 8px' }}>
+              SAVE 20%
+            </span>
+          )}
+        </div>
+
+        {/* Card grid */}
+        <div className="dash-pricing-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
+          {DASH_CARDS.map((card, ci) => {
+            const accentColor = card.isScale ? 'rgba(0,196,140,0.5)' : 'rgba(111,155,198,0.5)'
+            const tierColor   = card.isScale ? '#00C48C' : '#6F9BC6'
+            const ctaBorder   = card.isScale ? 'rgba(0,196,140,0.45)' : 'rgba(111,155,198,0.45)'
+            const ctaColor    = card.isScale ? '#00C48C' : '#6F9BC6'
+            const price   = card.monthly === 0 ? '$0' : `$${isAnnual ? card.annual : card.monthly}`
+            const economy = isAnnual ? card.economyAnnual : card.economyMonthly
+            return (
+              <div key={card.tier} style={{ background: '#0A0E18', border: '0.5px solid rgba(255,255,255,0.08)', position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+                <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 1, background: accentColor }} />
+                <div style={{ padding: '24px 24px 20px', borderBottom: '0.5px solid rgba(255,255,255,0.06)' }}>
+                  <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.18em', color: tierColor, margin: '0 0 8px' }}>{card.tier}</p>
+                  <p style={{ ...DISP, fontSize: 42, fontWeight: 700, color: '#E6E9EE', lineHeight: 1, margin: '0 0 4px' }}>{price}</p>
+                  <p style={{ ...MONO, fontSize: 10, color: tierColor, margin: '0 0 16px' }}>{economy}</p>
+                  <p style={{ ...SANS, fontSize: 13, color: '#9398A8', lineHeight: 1.5, margin: '0 0 20px' }}>{card.bestFor}</p>
+                  <Link
+                    href={card.ctaHref}
+                    style={{
+                      display: 'block', textAlign: 'center', padding: '11px',
+                      ...MONO, fontSize: 12,
+                      textTransform: 'uppercase', letterSpacing: '0.12em',
+                      textDecoration: 'none', color: ctaColor,
+                      border: `1px solid ${ctaBorder}`, background: 'transparent',
+                      boxSizing: 'border-box', width: '100%',
+                    }}
+                  >{card.cta}</Link>
+                </div>
+                <div style={{ padding: '20px 24px', flexGrow: 1 }}>
+                  {DASH_FEATS.map((row, ri) => (
+                    <div
+                      key={row.key}
+                      style={{
+                        display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start',
+                        padding: '9px 0',
+                        borderBottom: ri < DASH_FEATS.length - 1 ? '0.5px solid rgba(255,255,255,0.04)' : 'none',
+                      }}
+                    >
+                      <span style={{ ...MONO, fontSize: 11, color: '#9398A8' }}>{row.key}</span>
+                      <FVal v={row.values[ci]} />
+                    </div>
+                  ))}
+                </div>
               </div>
             )
           })}
         </div>
 
-        {/* Footer */}
-        <div style={{ padding: 16, borderTop: '0.5px solid rgba(255,255,255,0.06)', background: T.sidebarBg, flexShrink: 0 }}>
-          <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 11, color: T.inkMuted }}>
-            Agency · Pro&nbsp;&nbsp;
-            <span style={{ color: T.jsonMetric, cursor: 'pointer' }}>Upgrade →</span>
-          </div>
+        <p style={{ ...MONO, fontSize: 11, color: '#6E7587', textAlign: 'center', marginTop: 24, marginBottom: 0 }}>
+          All plans include: full audit · AI-rewritten copy · corpus benchmarking · cache hits free
+        </p>
+      </div>
+    </section>
+  )
+}
+
+// ── Section 5 — Bottom CTA ────────────────────────────────────────────────────
+
+function BottomCtaSection() {
+  return (
+    <section style={{ padding: '80px 48px', borderTop: '0.5px solid rgba(111,155,198,0.1)', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
+      <div aria-hidden style={{
+        position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0,
+        background: 'radial-gradient(ellipse 900px 500px at 50% 50%, rgba(111,155,198,0.06) 0%, transparent 60%)',
+      }} />
+      <Ticks />
+
+      <div style={{ position: 'relative', zIndex: 1 }}>
+        <h2 style={{ ...DISP, fontSize: 32, fontWeight: 700, color: '#E6E9EE', margin: '0 0 16px', letterSpacing: '-0.5px' }}>
+          Ready to see what&apos;s holding your site back?
+        </h2>
+        <p style={{ ...SANS, fontSize: 15, color: '#9398A8', margin: '0 0 32px' }}>
+          Free scan. No account required. Results in 90 seconds.
+        </p>
+
+        <div style={{ display: 'flex', justifyContent: 'center', gap: 16, flexWrap: 'wrap' }}>
+          <a href="#hero" style={{ ...MONO, fontSize: 12, color: '#6F9BC6', border: '1px solid rgba(111,155,198,0.5)', padding: '12px 28px', textDecoration: 'none', display: 'inline-block', background: 'transparent' }}>
+            Scan my site free →
+          </a>
+          <Link href="/product" style={{ ...MONO, fontSize: 12, color: '#6E7587', border: '0.5px solid rgba(255,255,255,0.1)', padding: '12px 28px', textDecoration: 'none', display: 'inline-block', background: 'transparent' }}>
+            See how the engine works →
+          </Link>
         </div>
-      </aside>
 
-      {/* ── MAIN CONTENT ────────────────────────────────────────────────────── */}
-      <main style={{ marginLeft: SIDEBAR_W, flex: 1, minHeight: 'calc(100vh - 4rem)', overflowY: 'auto', position: 'relative' }}>
+        <p style={{ ...MONO, fontSize: 11, color: '#6E7587', marginTop: 24, marginBottom: 0 }}>
+          Building with the API?{' '}
+          <Link href="/developers" style={{ color: '#9D8CFF', textDecoration: 'none' }}>
+            See developer pricing →
+          </Link>
+        </p>
+      </div>
+    </section>
+  )
+}
 
-        {!selectedClient ? (
-          /* ── PORTFOLIO VIEW ─────────────────────────────────────────────── */
-          <>
-            {/* Faint bloom */}
-            <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 1200px 800px at 50% 40%, rgba(111,155,198,0.04) 0%, transparent 60%)', pointerEvents: 'none', zIndex: 0 }} />
+// ── Page ──────────────────────────────────────────────────────────────────────
 
-            <div style={{ position: 'relative', zIndex: 1 }}>
-              {/* Portfolio header */}
-              <div style={{ padding: '32px 32px 0' }}>
-                <h1 style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: 28, color: T.inkPrimary, marginBottom: 4 }}>Portfolio overview</h1>
-                <p style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 11, color: T.inkMuted }}>
-                  {CLIENTS.length} clients · updated 1 week ago
-                </p>
-              </div>
-
-              {/* Portfolio stats */}
-              <div style={{ padding: '24px 32px', borderBottom: '0.5px solid rgba(255,255,255,0.06)', display: 'flex', gap: 48 }}>
-                <Stat value={CLIENTS.length} label="Total clients" verdict="neutral" />
-                <Stat value={BELOW_AVG} label="Below average" verdict="problem-count" />
-                <Stat value={AVG_SCORE} label="Avg score" verdict="score" />
-              </div>
-
-              {/* Client grid */}
-              <div style={{ padding: 32, display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
-                {SORTED_CLIENTS.map(c => {
-                  const accentColor = c.score < 50 ? T.sevCrit : c.score < 70 ? T.sevHigh : T.jsonStr
-                  const sc = c.topFinding ? severityColor(c.topFinding.severity) : T.inkMuted
-                  return (
-                    <div
-                      key={c.id}
-                      onClick={() => selectClient(c.id)}
-                      className="wd-panel"
-                      style={{ cursor: 'pointer', display: 'flex', padding: 0, transition: 'box-shadow 0.15s', overflow: 'hidden' }}
-                      onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = '0 0 0 1px rgba(255,255,255,0.08)' }}
-                      onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = 'none' }}
-                    >
-                      {/* Left accent */}
-                      <div style={{ width: 4, background: accentColor, flexShrink: 0 }} />
-
-                      {/* Content */}
-                      <div style={{ flex: 1, padding: '18px 18px 18px 18px' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
-                          <div>
-                            <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 14, color: T.inkPrimary }}>{c.domain}</div>
-                            <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 10, color: T.jsonMetric, marginTop: 3 }}>{c.site_type}</div>
-                          </div>
-                          <ScoreRing score={c.score} size="sm" animate={false} />
-                        </div>
-
-                        <div style={{ padding: '12px 0', borderTop: '0.5px solid rgba(255,255,255,0.05)', borderBottom: '0.5px solid rgba(255,255,255,0.05)', marginBottom: 12 }}>
-                          <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 11, color: T.jsonMetric }}>{c.percentile}th of {c.industry} sites</div>
-                          <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 10, color: T.inkMuted }}>Scanned {c.lastScanRelative}</div>
-                        </div>
-
-                        {c.topFinding && (
-                          <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 12 }}>
-                            <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 9, background: `${sc}1a`, color: sc, padding: '2px 5px' }}>{c.topFinding.severity.toUpperCase()}</span>
-                            <span style={{ fontFamily: "'IBM Plex Sans',sans-serif", fontSize: 13, color: T.inkSec, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>{c.topFinding.title}</span>
-                          </div>
-                        )}
-
-                        <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 11, color: T.jsonStr }}>VIEW REPORT →</div>
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
-          </>
-        ) : (
-          /* ── CLIENT VIEW ────────────────────────────────────────────────── */
-          <div>
-            {/* Client header (sticky within main scroll) */}
-            <div style={{
-              position: 'sticky', top: 0, zIndex: 30,
-              background: T.sidebarBg, borderBottom: '0.5px solid rgba(255,255,255,0.06)',
-              padding: '24px 32px',
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                {/* Left */}
-                <div>
-                  <h2 style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: 20, color: T.inkPrimary, marginBottom: 2 }}>{selectedClient.name}</h2>
-                  <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 12, color: T.jsonStr }}>{selectedClient.domain}</div>
-                  <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 10, color: T.inkMuted, marginTop: 2 }}>
-                    {selectedClient.site_type} · Scanned {selectedClient.lastScanRelative}
-                  </div>
-                </div>
-
-                {/* Center */}
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-                  <ScoreRing score={selectedClient.score} size="md" animate={true} />
-                  <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 11, color: T.jsonMetric }}>
-                    {selectedClient.percentile}th of {selectedClient.industry} sites
-                  </span>
-                </div>
-
-                {/* Right */}
-                <div>
-                  <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
-                    <button style={{ background: 'transparent', border: `0.5px solid ${T.jsonMetric}`, color: T.jsonMetric, fontFamily: "'IBM Plex Mono',monospace", fontSize: 12, padding: '8px 14px', cursor: 'pointer', borderRadius: 0 }}>
-                      RESCAN →
-                    </button>
-                    <button
-                      onClick={handleShare}
-                      style={{ background: shareClicked ? 'rgba(0,196,140,0.8)' : T.jsonStr, color: T.bg, fontFamily: "'IBM Plex Mono',monospace", fontSize: 12, padding: '8px 14px', cursor: 'pointer', border: 'none', borderRadius: 0, transition: 'background 0.2s' }}
-                    >
-                      {shareClicked ? 'Link copied!' : 'SHARE REPORT →'}
-                    </button>
-                    <button style={{ background: 'transparent', border: 'none', color: T.inkMuted, fontFamily: "'IBM Plex Mono',monospace", fontSize: 11, cursor: 'pointer', borderRadius: 0 }}>
-                      DELETE CLIENT
-                    </button>
-                  </div>
-                  <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 10, color: T.inkMuted, textAlign: 'right' }}>
-                    Report link valid for 30 days · no webdoc branding
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Two columns */}
-            <div style={{ padding: '0 32px 32px', display: 'grid', gridTemplateColumns: '55fr 45fr', alignItems: 'start' }}>
-
-              {/* Left column */}
-              <div style={{ padding: '32px 32px 32px 0' }}>
-                {/* Findings */}
-                {grouped.map((group, gi) => (
-                  <div key={group.priority}>
-                    <div style={{
-                      fontFamily: "'IBM Plex Mono',monospace", fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.15em', color: T.inkMuted,
-                      padding: gi === 0 ? '0 0 10px' : '16px 0 10px',
-                      borderTop: gi === 0 ? 'none' : '0.5px solid rgba(255,255,255,0.05)',
-                    }}>
-                      {P_LABEL[group.priority]}
-                    </div>
-                    {group.findings.map(f => {
-                      const sel = f.id === selectedFindingId
-                      const sc = severityColor(f.severity)
-                      return (
-                        <div
-                          key={f.id}
-                          onClick={() => setSelectedFindingId(f.id)}
-                          onMouseEnter={e => { if (!sel) (e.currentTarget as HTMLDivElement).style.background = 'rgba(255,255,255,0.02)' }}
-                          onMouseLeave={e => { if (!sel) (e.currentTarget as HTMLDivElement).style.background = 'transparent' }}
-                          style={{
-                            cursor: 'pointer',
-                            borderBottom: '0.5px solid rgba(255,255,255,0.04)',
-                            borderLeft: sel ? '3px solid rgba(128,128,192,0.4)' : `3px solid ${sc}`,
-                            background: sel ? 'rgba(128,128,192,0.04)' : 'transparent',
-                            padding: '14px 16px',
-                            transition: 'background 0.1s',
-                          }}
-                        >
-                          <div style={{ fontFamily: "'IBM Plex Sans',sans-serif", fontSize: 15, fontWeight: 500, color: T.inkPrimary, marginBottom: 4 }}>{f.title}</div>
-                          <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-                            <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 11, color: T.jsonKey }}>{f.category}</span>
-                            <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 9, background: `${sc}1a`, color: sc, padding: '2px 6px' }}>{f.severity.toUpperCase()}</span>
-                            <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 11, color: T.jsonStr }}>{f.estimated_lift}</span>
-                          </div>
-                        </div>
-                      )
-                    })}
-                  </div>
-                ))}
-
-                {/* Dimensions */}
-                <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.15em', color: T.inkMuted, padding: '32px 0 16px' }}>DIMENSION SCORES</div>
-                {selectedClient.dimension_scores.map(dim => {
-                  const dc = scoreBandColor(dim.score)
-                  const pct = dim.percentile >= 50 ? `top ${100 - dim.percentile}%` : `bottom ${dim.percentile}%`
-                  return (
-                    <div key={dim.key} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '8px 0', borderBottom: '0.5px solid rgba(255,255,255,0.04)' }}>
-                      <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 12, color: T.inkMuted, width: 140, flexShrink: 0 }}>{dim.label}</span>
-                      <div style={{ flex: 1, height: 5, background: 'rgba(255,255,255,0.06)', position: 'relative' }}>
-                        <div style={{ height: '100%', width: `${dim.score}%`, background: dc }} />
-                        <div style={{ position: 'absolute', top: 0, left: `${dim.industry_avg}%`, width: 1.5, height: '100%', background: 'rgba(255,255,255,0.3)' }} />
-                      </div>
-                      <span style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 500, fontSize: 13, color: dc, width: 28, textAlign: 'right' }}>{dim.score}</span>
-                      <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 10, color: T.inkMuted, width: 80, textAlign: 'right' }}>{pct}</span>
-                    </div>
-                  )
-                })}
-
-                {/* Strengths */}
-                <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.15em', color: T.inkMuted, padding: '32px 0 16px' }}>VERIFIED STRENGTHS</div>
-                {selectedClient.strengths.map((s, i) => (
-                  <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '8px 0', borderBottom: '0.5px solid rgba(255,255,255,0.04)' }}>
-                    <div style={{ width: 5, height: 5, background: T.jsonStr, flexShrink: 0, marginTop: 3 }} />
-                    <span style={{ fontFamily: "'IBM Plex Sans',sans-serif", fontSize: 14, color: T.inkSec }}>{s}</span>
-                  </div>
-                ))}
-
-                {/* Scan history table */}
-                <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.15em', color: T.inkMuted, padding: '32px 0 16px' }}>SCAN HISTORY</div>
-                <div className="wd-panel" style={{ padding: 0 }}>
-                  {/* Header row */}
-                  <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 0.8fr 0.6fr 1fr 0.6fr 0.6fr', padding: '10px 16px', background: 'rgba(255,255,255,0.02)', borderBottom: '0.5px solid rgba(255,255,255,0.06)' }}>
-                    {['DATE', 'SCORE', 'FINDINGS', 'DURATION', 'COST', 'ACTIONS'].map(h => (
-                      <span key={h} style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.1em', color: T.inkMuted }}>{h}</span>
-                    ))}
-                  </div>
-                  {selectedClient.scan_history.map((s, i) => {
-                    const sc = scoreBandColor(s.score)
-                    return (
-                      <div key={i} style={{ display: 'grid', gridTemplateColumns: '1.5fr 0.8fr 0.6fr 1fr 0.6fr 0.6fr', padding: '12px 16px', borderBottom: '0.5px solid rgba(255,255,255,0.03)', alignItems: 'center' }}>
-                        <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 12, color: T.inkSec }}>{s.date}</span>
-                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                          <svg width={20} height={20} viewBox="0 0 20 20" style={{ flexShrink: 0 }}>
-                            <circle cx={10} cy={10} r={8} fill="none" stroke={sc} strokeWidth={1.5} />
-                          </svg>
-                          <span style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 600, fontSize: 14, color: sc }}>{s.score}</span>
-                        </span>
-                        <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 12, color: T.sevHigh }}>{s.findings}</span>
-                        <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 12, color: T.jsonMetric }}>{s.duration_ms.toLocaleString()}ms</span>
-                        <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 12, color: T.inkTert }}>{s.cost}</span>
-                        <button style={{ background: 'transparent', border: 'none', fontFamily: "'IBM Plex Mono',monospace", fontSize: 11, color: T.jsonStr, cursor: 'pointer', padding: 0, textAlign: 'left' }}>View →</button>
-                      </div>
-                    )
-                  })}
-                </div>
-              </div>
-
-              {/* Right column — finding detail */}
-              <div style={{
-                background: T.zone3bg,
-                borderTop: '1px solid rgba(128,128,192,0.25)',
-                borderLeft: '0.5px solid rgba(128,128,192,0.1)',
-                boxShadow: 'inset 0 0 40px rgba(128,128,192,0.06), 0 0 60px rgba(128,128,192,0.04)',
-                padding: 28,
-                position: 'sticky',
-                top: '7rem',
-                alignSelf: 'start',
-              }}>
-                {!selectedFinding ? (
-                  <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 12, color: T.inkMuted, textAlign: 'center', paddingTop: 60 }}>Select a finding from the list.</div>
-                ) : (() => {
-                  const f = selectedFinding
-                  const sc = severityColor(f.severity)
-                  const pp = P_PILL[f.priority]
-                  return (
-                    <div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                          <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 10, padding: '3px 9px', background: pp.bg, color: pp.color }}>{pp.text}</span>
-                          <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 12, color: T.jsonKey }}>{f.category}</span>
-                        </div>
-                        <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 12, color: T.jsonMetric }}>fix_effort: {f.fix_effort}</span>
-                      </div>
-
-                      <h3 style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 600, fontSize: 22, color: T.inkPrimary, lineHeight: 1.2, marginBottom: 20 }}>{f.title}</h3>
-
-                      <div style={{ padding: 16, background: 'rgba(255,255,255,0.02)', borderLeft: '2px solid rgba(111,155,198,0.3)', marginBottom: 16 }}>
-                        <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.1em', color: T.inkMuted, marginBottom: 8 }}>EVIDENCE FROM PAGE</div>
-                        <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 13, color: T.inkSec, lineHeight: 1.65 }}>{f.explanation}</div>
-                      </div>
-
-                      <div style={{ padding: 16, background: 'rgba(255,255,255,0.02)', borderLeft: '2px solid rgba(0,196,140,0.3)', marginBottom: 16 }}>
-                        <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.1em', color: T.inkMuted, marginBottom: 8 }}>RECOMMENDED FIX</div>
-                        <div style={{ fontFamily: "'IBM Plex Sans',sans-serif", fontSize: 15, color: T.inkSec, lineHeight: 1.65 }}>{f.recommendation}</div>
-                      </div>
-
-                      <div style={{ padding: '16px 0', borderTop: '0.5px solid rgba(255,255,255,0.06)', borderBottom: '0.5px solid rgba(255,255,255,0.06)', display: 'flex', gap: 24, flexWrap: 'wrap', marginBottom: 16 }}>
-                        {([
-                          { label: 'estimated_lift', value: f.estimated_lift,     color: T.jsonStr    },
-                          { label: 'percentile',      value: `${f.percentile}th`, color: T.jsonMetric },
-                          { label: 'industry_avg',    value: f.industry_avg,      color: T.jsonMetric },
-                          { label: 'severity',        value: f.severity,          color: sc           },
-                        ] as { label: string; value: string; color: string }[]).map(m => (
-                          <div key={m.label}>
-                            <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 10, color: T.inkMuted }}>{m.label}</div>
-                            <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 500, fontSize: 15, color: m.color }}>{m.value}</div>
-                          </div>
-                        ))}
-                      </div>
-
-                      <div style={{ padding: 16, background: 'rgba(0,196,140,0.03)', borderTop: '1px solid rgba(0,196,140,0.12)' }}>
-                        <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.1em', color: T.inkMuted, marginBottom: 12 }}>REWRITTEN COPY · INCLUDED IN RESPONSE</div>
-                        <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start', marginBottom: 10 }}>
-                          <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 11, color: T.inkMuted, flexShrink: 0 }}>headline:</span>
-                          <span style={{ fontFamily: "'IBM Plex Sans',sans-serif", fontSize: 16, color: T.jsonStr, fontWeight: 500 }}>{f.rewritten_copy.headline}</span>
-                        </div>
-                        <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start', marginBottom: 14 }}>
-                          <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 11, color: T.inkMuted, flexShrink: 0 }}>cta_primary:</span>
-                          <span style={{ fontFamily: "'IBM Plex Sans',sans-serif", fontSize: 14, color: T.jsonStr }}>{f.rewritten_copy.cta_primary}</span>
-                        </div>
-                      </div>
-                    </div>
-                  )
-                })()}
-              </div>
-            </div>
-
-            {/* Report links */}
-            <div style={{ padding: '0 32px 48px' }}>
-              <div className="section-separator" style={{ marginBottom: 32 }} />
-              <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.15em', color: T.inkMuted, marginBottom: 16 }}>SHARED REPORTS</div>
-              <div className="wd-panel" style={{ padding: 0 }}>
-                {selectedClient.report_links.length === 0 ? (
-                  <div style={{ padding: '20px 16px', fontFamily: "'IBM Plex Mono',monospace", fontSize: 12, color: T.inkMuted }}>No report links generated yet.</div>
-                ) : selectedClient.report_links.map((link, i) => (
-                  <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderBottom: '0.5px solid rgba(255,255,255,0.04)' }}>
-                    <div>
-                      <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 12, color: T.jsonStr }}>{link.url}</div>
-                      <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 10, color: T.inkMuted }}>{link.generated}</div>
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                        <span style={{ display: 'inline-block', width: 5, height: 5, borderRadius: '50%', background: link.active ? T.jsonStr : T.inkMuted }} />
-                        <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 10, color: link.active ? T.jsonStr : T.inkMuted }}>{link.active ? 'Active' : 'Expired'}</span>
-                      </span>
-                      <button
-                        onClick={() => copyLink(link.url)}
-                        style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 11, color: linkCopied === link.url ? T.jsonStr : T.jsonMetric, background: 'transparent', border: 'none', cursor: 'pointer', padding: 0 }}
-                      >
-                        {linkCopied === link.url ? 'Copied ✓' : 'Copy →'}
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Empty state — no clients */}
-        {CLIENTS.length === 0 && (
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: 'calc(100vh - 4rem)', gap: 12 }}>
-            <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 11, textTransform: 'uppercase', color: T.jsonMetric }}>PORTFOLIO EMPTY</div>
-            <h2 style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: 24, color: T.inkPrimary }}>Add your first client.</h2>
-            <p style={{ fontFamily: "'IBM Plex Sans',sans-serif", fontSize: 14, color: T.inkSec }}>Paste any URL. Run a scan. Get a full diagnostic.</p>
-          </div>
-        )}
-
-      </main>
-    </div>
+export default function DashboardLandingPage() {
+  return (
+    <main style={{ minHeight: '100vh', background: '#050810' }}>
+      <HeroScanSection />
+      <WhatYouGetSection />
+      <ExampleResultSection />
+      <PricingSection />
+      <BottomCtaSection />
+    </main>
   )
 }

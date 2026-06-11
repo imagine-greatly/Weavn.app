@@ -50,7 +50,7 @@ function buildScanRedirect(): string {
       const raw = decodeURIComponent(match[1]);
       document.cookie = "pendingUrl=;path=/;max-age=0";
       const normalized = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
-      return `/scan?url=${encodeURIComponent(normalized)}`;
+      return `/dashboard?url=${encodeURIComponent(normalized)}`;
     }
   }
   if (typeof sessionStorage !== "undefined") {
@@ -58,10 +58,10 @@ function buildScanRedirect(): string {
     if (raw) {
       sessionStorage.removeItem("pendingUrl");
       const normalized = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
-      return `/scan?url=${encodeURIComponent(normalized)}`;
+      return `/dashboard?url=${encodeURIComponent(normalized)}`;
     }
   }
-  return "/dashboard";
+  return "/app/dashboard";
 }
 
 // ── Sub-components ────────────────────────────────────────────────────────────

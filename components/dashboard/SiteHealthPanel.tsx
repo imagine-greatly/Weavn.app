@@ -293,7 +293,7 @@ export default function SiteHealthPanel({
             <button
               type="button"
               onClick={() => {
-                const path = `/scan?url=${encodeURIComponent(`https://${effectiveDomain}`)}&rescan=true`;
+                const path = `/dashboard?url=${encodeURIComponent(`https://${effectiveDomain}`)}&rescan=true`;
                 console.log("[scan-nav] window.location.href", path);
                 window.location.href = path;
               }}

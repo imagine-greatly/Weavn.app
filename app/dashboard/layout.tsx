@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Dashboard",
-  description: "Your diagnostic reports, scores, and resolutions.",
+  title: "Scan your site",
+  description:
+    "Paste your URL. Get a conversion score, a ranked list of what to fix, and AI-rewritten copy in 90 seconds. No technical knowledge required.",
 };
 
-export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+export default function DashboardLandingLayout({ children }: { children: React.ReactNode }) {
   return children;
 }

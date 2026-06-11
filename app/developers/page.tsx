@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { CodeBlock } from '@/components/ui/CodeBlock'
 
@@ -287,6 +288,220 @@ const API_CARDS_DEF = [
   },
 ]
 
+// ── Three-panel pipeline (INPUT / PROCESSING / OUTPUT) ───────────────────────
+
+const HIW_SCAN_CATS = [
+  'hero_section', 'value_proposition', 'trust_credibility',
+  'cta_conversion', 'social_proof', 'benchmark_positioning',
+  'copy_effectiveness', 'mobile_experience', 'trust_signals',
+]
+
+const HIW_JSON_LINES: { delay: number; indent: boolean; content: React.ReactNode }[] = [
+  { delay: 0.1,  indent: false, content: <span style={{ color: '#6E7587' }}>{'{'}</span> },
+  { delay: 0.3,  indent: true,  content: <><span style={{ color: '#8080c0' }}>&quot;score&quot;</span><span style={{ color: '#9398A8' }}>: </span><span style={{ color: '#E8635F' }}>61</span><span style={{ color: '#6E7587' }}>,</span></> },
+  { delay: 0.5,  indent: true,  content: <><span style={{ color: '#8080c0' }}>&quot;severity&quot;</span><span style={{ color: '#9398A8' }}>: </span><span style={{ color: '#E8635F' }}>&quot;critical&quot;</span><span style={{ color: '#6E7587' }}>,</span></> },
+  { delay: 0.7,  indent: true,  content: <><span style={{ color: '#8080c0' }}>&quot;percentile&quot;</span><span style={{ color: '#9398A8' }}>: </span><span style={{ color: '#6F9BC6' }}>63</span><span style={{ color: '#6E7587' }}>,</span></> },
+  { delay: 0.9,  indent: true,  content: <><span style={{ color: '#8080c0' }}>&quot;findings&quot;</span><span style={{ color: '#9398A8' }}>: </span><span style={{ color: '#6F9BC6' }}>23</span><span style={{ color: '#6E7587' }}>,</span></> },
+  { delay: 1.1,  indent: true,  content: <><span style={{ color: '#8080c0' }}>&quot;industry&quot;</span><span style={{ color: '#9398A8' }}>: </span><span style={{ color: '#00C48C' }}>&quot;B2B SaaS&quot;</span><span style={{ color: '#6E7587' }}>,</span></> },
+  { delay: 1.3,  indent: true,  content: <><span style={{ color: '#8080c0' }}>&quot;cost_usd&quot;</span><span style={{ color: '#9398A8' }}>: </span><span style={{ color: '#9398A8' }}>0.15</span></> },
+  { delay: 1.5,  indent: false, content: <span style={{ color: '#6E7587' }}>{'}'}</span> },
+]
+
+function HowItWorksSection() {
+  const [litIdx, setLitIdx] = useState(0)
+
+  useEffect(() => {
+    const t = setInterval(() => setLitIdx(i => (i + 1) % HIW_SCAN_CATS.length), 400)
+    return () => clearInterval(t)
+  }, [])
+
+  return (
+    <section style={{ padding: '96px 0', position: 'relative', overflow: 'hidden', background: '#050810' }}>
+      <style>{`
+        @keyframes hiw-cursor-blink { 0%,49%{opacity:1} 50%,100%{opacity:0} }
+        @keyframes hiw-flow { from{left:-22%} to{left:112%} }
+        @keyframes hiw-json-line { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:translateY(0)} }
+        @media (prefers-reduced-motion: reduce) {
+          .hiw-cursor{animation:none!important}
+          .hiw-flow-dot{display:none!important}
+          .hiw-json-line{animation:none!important;opacity:1!important;transform:none!important}
+        }
+      `}</style>
+
+      {/* Three-lane ambient blooms */}
+      <div aria-hidden style={{
+        position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0,
+        background: [
+          'radial-gradient(ellipse 480px 700px at 16% 70%, rgba(111,155,198,0.08) 0%, transparent 60%)',
+          'radial-gradient(ellipse 480px 700px at 50% 70%, rgba(128,128,192,0.05) 0%, transparent 60%)',
+          'radial-gradient(ellipse 480px 700px at 84% 70%, rgba(0,196,140,0.06) 0%, transparent 60%)',
+        ].join(', '),
+      }} />
+
+      {/* Corner ticks */}
+      <div aria-hidden style={{ position: 'absolute', top: 20, left: 20, width: 14, height: 14, borderTop: '0.5px solid rgba(111,155,198,0.25)', borderLeft: '0.5px solid rgba(111,155,198,0.25)', pointerEvents: 'none', zIndex: 1 }} />
+      <div aria-hidden style={{ position: 'absolute', top: 20, right: 20, width: 14, height: 14, borderTop: '0.5px solid rgba(111,155,198,0.25)', borderRight: '0.5px solid rgba(111,155,198,0.25)', pointerEvents: 'none', zIndex: 1 }} />
+      <div aria-hidden style={{ position: 'absolute', bottom: 20, left: 20, width: 14, height: 14, borderBottom: '0.5px solid rgba(111,155,198,0.25)', borderLeft: '0.5px solid rgba(111,155,198,0.25)', pointerEvents: 'none', zIndex: 1 }} />
+      <div aria-hidden style={{ position: 'absolute', bottom: 20, right: 20, width: 14, height: 14, borderBottom: '0.5px solid rgba(111,155,198,0.25)', borderRight: '0.5px solid rgba(111,155,198,0.25)', pointerEvents: 'none', zIndex: 1 }} />
+
+      <div style={{ position: 'relative', zIndex: 1, maxWidth: 1200, margin: '0 auto', padding: '0 48px' }}>
+
+        {/* Header */}
+        <p style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, color: '#6F9BC6', margin: '0 0 16px' }}>
+          HOW THE ENGINE WORKS
+        </p>
+        <h2 style={{ ...DISP, fontWeight: 700, fontSize: 36, lineHeight: 1.15, color: '#E6E9EE', margin: '0 0 10px', letterSpacing: '-0.5px' }}>
+          Three steps. One structured response.
+        </h2>
+        <p style={{ ...MONO, fontSize: 12, color: '#6E7587', margin: '0 0 48px', letterSpacing: '0.04em' }}>
+          One POST request. 307 checks fire in sequence across 27 categories. Structured JSON returns.
+        </p>
+
+        {/* Step connector row with traveling highlight */}
+        <div style={{ position: 'relative', marginBottom: 28 }}>
+          <div className="hidden sm:block" style={{ position: 'absolute', top: 15, left: '16%', right: '16%', height: 1, background: 'rgba(111,155,198,0.12)', overflow: 'hidden' }}>
+            <div className="hiw-flow-dot" style={{
+              position: 'absolute', top: 0, height: '100%', width: '22%',
+              background: 'linear-gradient(to right, transparent, rgba(111,155,198,0.55), transparent)',
+              animation: 'hiw-flow 2.2s linear infinite',
+            }} />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+            {([
+              { num: '01', label: 'INPUT',      accent: '#6F9BC6', aRgba: '111,155,198' },
+              { num: '02', label: 'PROCESSING', accent: '#9D8CFF', aRgba: '157,140,255' },
+              { num: '03', label: 'OUTPUT',     accent: '#00C48C', aRgba: '0,196,140'   },
+            ] as const).map(s => (
+              <div key={s.num} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+                <div style={{
+                  ...MONO, fontSize: 12, color: s.accent,
+                  background: '#050810',
+                  border: `0.5px solid rgba(${s.aRgba},0.3)`,
+                  padding: '5px 12px',
+                  letterSpacing: '0.15em',
+                  position: 'relative', zIndex: 1,
+                }}>
+                  {s.num}
+                </div>
+                <div style={{ ...MONO, fontSize: 10, color: s.accent, textTransform: 'uppercase', letterSpacing: '0.18em', opacity: 0.65 }}>
+                  {s.label}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Three equal panels */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+
+          {/* Panel 01 — INPUT */}
+          <div style={{
+            background: '#0A0E18',
+            borderTop: '1px solid rgba(111,155,198,0.42)',
+            borderLeft: '1px solid rgba(111,155,198,0.14)',
+            borderRight: '1px solid rgba(111,155,198,0.07)',
+            borderBottom: '1px solid rgba(111,155,198,0.05)',
+            boxShadow: '0 0 0 1px rgba(111,155,198,0.1), 0 0 24px rgba(111,155,198,0.07)',
+            minHeight: 320, display: 'flex', flexDirection: 'column',
+            position: 'relative', overflow: 'hidden',
+          }}>
+            {/* Scanline texture */}
+            <div aria-hidden style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 1, background: 'repeating-linear-gradient(0deg,rgba(0,0,0,0.035) 0px,rgba(0,0,0,0.035) 1px,transparent 1px,transparent 2px)' }} />
+            <div style={{ padding: '10px 14px', borderBottom: '0.5px solid rgba(111,155,198,0.1)', display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ width: 6, height: 6, background: '#00C48C', display: 'inline-block', flexShrink: 0 }} />
+              <span style={{ ...MONO, fontSize: 10, color: '#6E7587', textTransform: 'uppercase', letterSpacing: '0.15em' }}>terminal · curl</span>
+            </div>
+            <div style={{ padding: '16px', flexGrow: 1, position: 'relative', zIndex: 2 }}>
+              <pre style={{ ...MONO, fontSize: 12, lineHeight: 1.85, margin: 0, color: '#9398A8', whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>
+                <span style={{ color: '#00C8FF' }}>curl</span>{' -X POST \\\n'}
+                {'  https://webdocai.com/api/v1/scan \\\n'}
+                {'  -H '}<span style={{ color: '#8080c0' }}>&quot;Authorization: Bearer </span><span style={{ color: '#E8635F' }}>wdoc_live_••••</span><span style={{ color: '#8080c0' }}>&quot;</span>{' \\\n'}
+                {'  -d '}<span style={{ color: '#8080c0' }}>&apos;&#123;&quot;url&quot;: &quot;</span><span style={{ color: '#00C48C' }}>https://your-site.com</span><span style={{ color: '#8080c0' }}>&quot;&#125;&apos;</span>
+                <span className="hiw-cursor" style={{ display: 'inline-block', width: 7, height: 13, background: '#6F9BC6', verticalAlign: 'text-bottom', marginLeft: 3, animation: 'hiw-cursor-blink 1s step-end infinite' }} />
+              </pre>
+            </div>
+            <div style={{ padding: '0 14px 14px', display: 'flex', gap: 6, flexWrap: 'wrap', position: 'relative', zIndex: 2 }}>
+              {[{ l: '307 checks', c: '#00C48C' }, { l: '27 categories', c: '#6F9BC6' }, { l: '~90s median', c: '#6E7587' }].map(x => (
+                <span key={x.l} style={{ ...MONO, fontSize: 10, color: x.c, background: 'rgba(255,255,255,0.03)', border: '0.5px solid rgba(255,255,255,0.07)', padding: '4px 8px' }}>{x.l}</span>
+              ))}
+            </div>
+          </div>
+
+          {/* Panel 02 — PROCESSING */}
+          <div style={{
+            background: '#0A0E18',
+            borderTop: '1px solid rgba(157,140,255,0.42)',
+            borderLeft: '1px solid rgba(157,140,255,0.12)',
+            borderRight: '1px solid rgba(157,140,255,0.06)',
+            borderBottom: '1px solid rgba(157,140,255,0.04)',
+            boxShadow: '0 0 0 1px rgba(157,140,255,0.08), 0 0 24px rgba(157,140,255,0.07)',
+            minHeight: 320, display: 'flex', flexDirection: 'column',
+            position: 'relative', overflow: 'hidden',
+          }}>
+            <div style={{ padding: '10px 14px', borderBottom: '0.5px solid rgba(157,140,255,0.1)', display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#00C48C', display: 'inline-block', flexShrink: 0 }} />
+              <span style={{ ...MONO, fontSize: 10, color: '#6E7587', textTransform: 'uppercase', letterSpacing: '0.15em' }}>SCANNING</span>
+              <span style={{ ...MONO, fontSize: 10, color: '#9D8CFF', marginLeft: 'auto' }}>ai · 307 checks</span>
+            </div>
+            <div style={{ padding: '14px', flexGrow: 1, display: 'flex', flexDirection: 'column', gap: 9 }}>
+              {HIW_SCAN_CATS.map((name, i) => {
+                const isLit = i <= litIdx
+                return (
+                  <div key={name} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ width: 5, height: 5, flexShrink: 0, display: 'inline-block', background: isLit ? '#00C48C' : 'rgba(110,117,135,0.2)', transition: 'background 0.18s' }} />
+                    <span style={{ ...MONO, fontSize: 11, color: isLit ? '#9398A8' : '#3B4257', transition: 'color 0.18s' }}>{name}</span>
+                  </div>
+                )
+              })}
+            </div>
+            <div style={{ padding: '10px 14px 14px' }}>
+              <span style={{ ...MONO, fontSize: 11, color: '#404860' }}>running 307 checks · 27 categories</span>
+              <span style={{ ...MONO, fontSize: 11, color: '#9D8CFF' }}> ···</span>
+            </div>
+          </div>
+
+          {/* Panel 03 — OUTPUT */}
+          <div style={{
+            background: '#0A0E18',
+            borderTop: '1px solid rgba(0,196,140,0.42)',
+            borderLeft: '1px solid rgba(0,196,140,0.12)',
+            borderRight: '1px solid rgba(0,196,140,0.06)',
+            borderBottom: '1px solid rgba(0,196,140,0.04)',
+            boxShadow: '0 0 0 1px rgba(0,196,140,0.08), 0 0 24px rgba(0,196,140,0.07)',
+            minHeight: 320, display: 'flex', flexDirection: 'column',
+          }}>
+            <div style={{ padding: '10px 14px', borderBottom: '0.5px solid rgba(0,196,140,0.1)', display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ width: 6, height: 6, background: '#00C48C', display: 'inline-block', flexShrink: 0 }} />
+              <span style={{ ...MONO, fontSize: 10, color: '#6E7587', textTransform: 'uppercase', letterSpacing: '0.15em' }}>response.json</span>
+              <span style={{ ...MONO, fontSize: 10, color: '#00C48C', marginLeft: 'auto' }}>200 OK</span>
+            </div>
+            <div style={{ padding: '14px 16px', flexGrow: 1 }}>
+              {HIW_JSON_LINES.map((line, i) => (
+                <div
+                  key={i}
+                  className="hiw-json-line"
+                  style={{
+                    ...MONO, fontSize: 12, lineHeight: 1.9,
+                    paddingLeft: line.indent ? 16 : 0,
+                    opacity: 0,
+                    animation: `hiw-json-line 0.3s ease-out ${line.delay}s both`,
+                  }}
+                >
+                  {line.content}
+                </div>
+              ))}
+            </div>
+            <div style={{ padding: '0 16px 14px' }}>
+              <p style={{ ...MONO, fontSize: 11, color: '#404860', margin: 0 }}>Build against this schema once. Every URL returns identical structure.</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+  )
+}
+
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function DevelopersPage() {
@@ -317,8 +532,8 @@ export default function DevelopersPage() {
             One endpoint. Structured output. Per scan.
           </h1>
           <p style={{ ...SANS, fontSize: 16, lineHeight: 1.65, color: '#9398A8', maxWidth: 600, margin: '0 auto 32px' }}>
-            POST any URL. Get score, ranked findings, benchmarks, and AI-rewritten copy as structured JSON.
-            307 checks. No dashboard required.
+            POST any URL. 307 checks fire. Structured JSON returns in ~90 seconds.
+            The same engine that powers the dashboard — raw, unfiltered, ready to build with.
           </p>
 
           {/* Curl block */}
@@ -357,6 +572,10 @@ export default function DevelopersPage() {
           </div>
         </div>
       </section>
+      <div className="section-separator" />
+
+      {/* ── 1b. HOW THE ENGINE WORKS — INPUT / PROCESSING / OUTPUT ───────────── */}
+      <HowItWorksSection />
       <div className="section-separator" />
 
       {/* ── 2. RESPONSE SCHEMA ─────────────────────────────────────────────── */}
@@ -428,6 +647,31 @@ export default function DevelopersPage() {
                 · {fact}
               </span>
             ))}
+          </div>
+
+          {/* The finding object — full shape */}
+          <div className="wd-panel" style={{ borderTop: '1px solid rgba(157,140,255,0.4)', padding: 0, overflow: 'hidden', marginTop: 32 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', borderBottom: '0.5px solid rgba(255,255,255,0.06)' }}>
+              <span style={{ width: 5, height: 5, background: '#9D8CFF', flexShrink: 0, display: 'inline-block' }} />
+              <span style={{ ...MONO, fontSize: 11, color: '#6E7587' }}>findings[0] · full object shape</span>
+            </div>
+            <div style={{ padding: '16px 20px', ...MONO, fontSize: 12, lineHeight: 1.85 }}>
+              <div><Muted c="{" /></div>
+              <div style={{ paddingLeft: 16 }}><K c="priority" /><Muted c=": " /><N c="1" /><Muted c="," /></div>
+              <div style={{ paddingLeft: 16 }}><K c="severity" /><Muted c=": " /><span style={{ color: '#E8635F' }}>&quot;critical&quot;</span><Muted c="," /></div>
+              <div style={{ paddingLeft: 16 }}><K c="category" /><Muted c=": " /><S c="value_proposition" /><Muted c="," /></div>
+              <div style={{ paddingLeft: 16 }}><K c="title" /><Muted c=": " /><span style={{ color: '#E6E9EE' }}>&quot;Hero headline is feature-led, not outcome-led&quot;</span><Muted c="," /></div>
+              <div style={{ paddingLeft: 16 }}><K c="evidence" /><Muted c=": " /><span style={{ color: '#6E7587' }}>&quot;Found: &apos;Advanced analytics platform&apos;&quot;</span><Muted c="," /></div>
+              <div style={{ paddingLeft: 16 }}><K c="estimated_lift" /><Muted c=": " /><S c="+12-18%" /><Muted c="," /></div>
+              <div style={{ paddingLeft: 16 }}><K c="fix" /><Muted c=": " /><span style={{ color: '#6E7587' }}>&quot;Rewrite to lead with customer outcome&quot;</span><Muted c="," /></div>
+              <div style={{ paddingLeft: 16 }}><K c="rewritten_copy" /><Muted c=": " /><S c="See revenue impact in one dashboard." /><Muted c="," /></div>
+              <div style={{ paddingLeft: 16 }}><K c="fix_effort" /><Muted c=": " /><S c="low" /><Muted c="," /></div>
+              <div style={{ paddingLeft: 16 }}><K c="impact_tier" /><Muted c=": " /><span style={{ color: '#6F9BC6' }}>&quot;P1&quot;</span></div>
+              <div><Muted c="}" /></div>
+            </div>
+            <p style={{ ...MONO, fontSize: 10, color: '#6E7587', margin: 0, padding: '0 20px 14px' }}>
+              Every finding in every scan returns this exact shape.
+            </p>
           </div>
         </div>
       </section>
@@ -567,6 +811,13 @@ export default function DevelopersPage() {
               </div>
             ))}
           </div>
+
+          <p style={{ ...MONO, fontSize: 11, color: '#6E7587', textAlign: 'center', marginTop: 40, marginBottom: 0 }}>
+            Want to understand what fires under the hood?{' '}
+            <Link href="/product" style={{ color: '#9D8CFF', textDecoration: 'none' }}>
+              See the engine →
+            </Link>
+          </p>
         </div>
       </section>
       <div className="section-separator" />

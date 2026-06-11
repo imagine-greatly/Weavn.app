@@ -14,7 +14,7 @@ import WebdocMark from "@/components/ui/WebdocMark";
  */
 
 const CENTER_LINKS = [
-  { label: "HOW IT WORKS", href: "/product" },
+  { label: "HOW IT WORKS", href: "/dashboard" },
   { label: "PRICING", href: "/pricing" },
   { label: "API", href: "/developers" },
   { label: "DOCS", href: "/docs/api" },
@@ -124,7 +124,7 @@ export default function Navbar() {
     setShowNameModal(false);
   }
 
-  if (pathname === "/scan" || pathname.startsWith("/reports/")) return null;
+  if (pathname.startsWith("/reports/")) return null;
 
   return (
     <>
@@ -232,7 +232,7 @@ export default function Navbar() {
         )}
         <div className="hidden items-center gap-4 md:flex">
           <a
-            href={isLoggedIn ? "/dashboard" : "/auth?surface=dashboard"}
+            href={isLoggedIn ? "/app/dashboard" : "/auth?surface=dashboard"}
             className={`${ctaButtonClass} shrink-0`}
             style={{ ...ctaOutlineStyle, textDecoration: "none" }}
             onMouseEnter={(e) => {
@@ -440,7 +440,7 @@ export default function Navbar() {
               </Link>
             )}
             <a
-              href={isLoggedIn ? "/dashboard" : "/auth?surface=dashboard"}
+              href={isLoggedIn ? "/app/dashboard" : "/auth?surface=dashboard"}
               className={`${navCtaTypography} flex min-h-[48px] items-center justify-center px-4 py-3`}
               style={{ ...ctaOutlineStyle, textDecoration: "none", width: "100%" }}
               onClick={() => setMobileMenuOpen(false)}

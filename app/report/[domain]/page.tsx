@@ -172,7 +172,7 @@ export default function ReportPage() {
       <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center">
         <div className="text-center">
           <p className="font-mono text-sm text-text-tertiary mb-4">No scan data found.</p>
-          <a href="/scan" className="font-mono text-xs text-cyan-DEFAULT hover:underline">
+          <a href="/dashboard" className="font-mono text-xs text-cyan-DEFAULT hover:underline">
             ← Run a scan
           </a>
         </div>
@@ -186,7 +186,7 @@ export default function ReportPage() {
     <ReportLayout
       domain={domain}
       payload={payload}
-      onRescan={() => router.push('/scan')}
+      onRescan={() => router.push('/dashboard')}
     />
   )
 }

@@ -1,10 +1,9 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import ScoreRing from '@/components/ui/ScoreRing'
-import ResponseAnnotatorSection from '@/components/sections/ResponseAnnotatorSection'
 import WebdocMark from '@/components/ui/WebdocMark'
 
 // ── Syntax-highlighted JSON primitives ──────────────────────────────────────
@@ -388,224 +387,11 @@ function HeroSection() {
   )
 }
 
-// ── How It Works ─────────────────────────────────────────────────────────────
+// ── Style tokens ─────────────────────────────────────────────────────────────
 
 const MONO = { fontFamily: "'IBM Plex Mono', monospace" }
 const SANS = { fontFamily: "'IBM Plex Sans', sans-serif" }
 const DISP = { fontFamily: "'Space Grotesk', sans-serif" }
-
-const HIW_SCAN_CATS = [
-  'hero_section', 'value_proposition', 'trust_credibility',
-  'cta_conversion', 'social_proof', 'benchmark_positioning',
-  'copy_effectiveness', 'mobile_experience', 'trust_signals',
-]
-
-const HIW_JSON_LINES: { delay: number; indent: boolean; content: React.ReactNode }[] = [
-  { delay: 0.1,  indent: false, content: <span style={{ color: '#6E7587' }}>{'{'}</span> },
-  { delay: 0.3,  indent: true,  content: <><span style={{ color: '#8080c0' }}>&quot;score&quot;</span><span style={{ color: '#9398A8' }}>: </span><span style={{ color: '#E8635F' }}>61</span><span style={{ color: '#6E7587' }}>,</span></> },
-  { delay: 0.5,  indent: true,  content: <><span style={{ color: '#8080c0' }}>&quot;severity&quot;</span><span style={{ color: '#9398A8' }}>: </span><span style={{ color: '#E8635F' }}>&quot;critical&quot;</span><span style={{ color: '#6E7587' }}>,</span></> },
-  { delay: 0.7,  indent: true,  content: <><span style={{ color: '#8080c0' }}>&quot;percentile&quot;</span><span style={{ color: '#9398A8' }}>: </span><span style={{ color: '#6F9BC6' }}>63</span><span style={{ color: '#6E7587' }}>,</span></> },
-  { delay: 0.9,  indent: true,  content: <><span style={{ color: '#8080c0' }}>&quot;findings&quot;</span><span style={{ color: '#9398A8' }}>: </span><span style={{ color: '#6F9BC6' }}>23</span><span style={{ color: '#6E7587' }}>,</span></> },
-  { delay: 1.1,  indent: true,  content: <><span style={{ color: '#8080c0' }}>&quot;industry&quot;</span><span style={{ color: '#9398A8' }}>: </span><span style={{ color: '#00C48C' }}>&quot;B2B SaaS&quot;</span><span style={{ color: '#6E7587' }}>,</span></> },
-  { delay: 1.3,  indent: true,  content: <><span style={{ color: '#8080c0' }}>&quot;cost_usd&quot;</span><span style={{ color: '#9398A8' }}>: </span><span style={{ color: '#9398A8' }}>0.15</span></> },
-  { delay: 1.5,  indent: false, content: <span style={{ color: '#6E7587' }}>{'}'}</span> },
-]
-
-function HowItWorksSection() {
-  const [litIdx, setLitIdx] = useState(0)
-
-  useEffect(() => {
-    const t = setInterval(() => setLitIdx(i => (i + 1) % HIW_SCAN_CATS.length), 400)
-    return () => clearInterval(t)
-  }, [])
-
-  return (
-    <section style={{ padding: '96px 0', position: 'relative', overflow: 'hidden', background: '#050810' }}>
-      <style>{`
-        @keyframes hiw-cursor-blink { 0%,49%{opacity:1} 50%,100%{opacity:0} }
-        @keyframes hiw-flow { from{left:-22%} to{left:112%} }
-        @keyframes hiw-json-line { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:translateY(0)} }
-        @media (prefers-reduced-motion: reduce) {
-          .hiw-cursor{animation:none!important}
-          .hiw-flow-dot{display:none!important}
-          .hiw-json-line{animation:none!important;opacity:1!important;transform:none!important}
-        }
-      `}</style>
-
-      {/* Three-lane ambient blooms */}
-      <div aria-hidden style={{
-        position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0,
-        background: [
-          'radial-gradient(ellipse 480px 700px at 16% 70%, rgba(111,155,198,0.08) 0%, transparent 60%)',
-          'radial-gradient(ellipse 480px 700px at 50% 70%, rgba(128,128,192,0.05) 0%, transparent 60%)',
-          'radial-gradient(ellipse 480px 700px at 84% 70%, rgba(0,196,140,0.06) 0%, transparent 60%)',
-        ].join(', '),
-      }} />
-
-      {/* Corner ticks */}
-      <div aria-hidden style={{ position: 'absolute', top: 20, left: 20, width: 14, height: 14, borderTop: '0.5px solid rgba(111,155,198,0.25)', borderLeft: '0.5px solid rgba(111,155,198,0.25)', pointerEvents: 'none', zIndex: 1 }} />
-      <div aria-hidden style={{ position: 'absolute', top: 20, right: 20, width: 14, height: 14, borderTop: '0.5px solid rgba(111,155,198,0.25)', borderRight: '0.5px solid rgba(111,155,198,0.25)', pointerEvents: 'none', zIndex: 1 }} />
-      <div aria-hidden style={{ position: 'absolute', bottom: 20, left: 20, width: 14, height: 14, borderBottom: '0.5px solid rgba(111,155,198,0.25)', borderLeft: '0.5px solid rgba(111,155,198,0.25)', pointerEvents: 'none', zIndex: 1 }} />
-      <div aria-hidden style={{ position: 'absolute', bottom: 20, right: 20, width: 14, height: 14, borderBottom: '0.5px solid rgba(111,155,198,0.25)', borderRight: '0.5px solid rgba(111,155,198,0.25)', pointerEvents: 'none', zIndex: 1 }} />
-
-      <div style={{ position: 'relative', zIndex: 1, maxWidth: 1200, margin: '0 auto', padding: '0 48px' }}>
-
-        {/* Header */}
-        <p style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, color: '#6F9BC6', margin: '0 0 16px' }}>
-          THE PIPELINE
-        </p>
-        <h2 style={{ ...DISP, fontWeight: 700, fontSize: 36, lineHeight: 1.15, color: '#E6E9EE', margin: '0 0 10px', letterSpacing: '-0.5px' }}>
-          Three steps. One structured response.
-        </h2>
-        <p style={{ ...MONO, fontSize: 12, color: '#6E7587', margin: '0 0 48px', letterSpacing: '0.04em' }}>
-          One POST request. 307 checks fire in sequence. Structured JSON returns.
-        </p>
-
-        {/* Step connector row with traveling highlight */}
-        <div style={{ position: 'relative', marginBottom: 28 }}>
-          <div className="hidden sm:block" style={{ position: 'absolute', top: 15, left: '16%', right: '16%', height: 1, background: 'rgba(111,155,198,0.12)', overflow: 'hidden' }}>
-            <div className="hiw-flow-dot" style={{
-              position: 'absolute', top: 0, height: '100%', width: '22%',
-              background: 'linear-gradient(to right, transparent, rgba(111,155,198,0.55), transparent)',
-              animation: 'hiw-flow 2.2s linear infinite',
-            }} />
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-            {([
-              { num: '01', label: 'INPUT',      accent: '#6F9BC6', aRgba: '111,155,198' },
-              { num: '02', label: 'PROCESSING', accent: '#9D8CFF', aRgba: '157,140,255' },
-              { num: '03', label: 'OUTPUT',     accent: '#00C48C', aRgba: '0,196,140'   },
-            ] as const).map(s => (
-              <div key={s.num} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
-                <div style={{
-                  ...MONO, fontSize: 12, color: s.accent,
-                  background: '#050810',
-                  border: `0.5px solid rgba(${s.aRgba},0.3)`,
-                  padding: '5px 12px',
-                  letterSpacing: '0.15em',
-                  position: 'relative', zIndex: 1,
-                }}>
-                  {s.num}
-                </div>
-                <div style={{ ...MONO, fontSize: 10, color: s.accent, textTransform: 'uppercase', letterSpacing: '0.18em', opacity: 0.65 }}>
-                  {s.label}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Three equal panels */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-
-          {/* Panel 01 — INPUT */}
-          <div style={{
-            background: '#0A0E18',
-            borderTop: '1px solid rgba(111,155,198,0.42)',
-            borderLeft: '1px solid rgba(111,155,198,0.14)',
-            borderRight: '1px solid rgba(111,155,198,0.07)',
-            borderBottom: '1px solid rgba(111,155,198,0.05)',
-            boxShadow: '0 0 0 1px rgba(111,155,198,0.1), 0 0 24px rgba(111,155,198,0.07)',
-            minHeight: 320, display: 'flex', flexDirection: 'column',
-            position: 'relative', overflow: 'hidden',
-          }}>
-            {/* Scanline texture */}
-            <div aria-hidden style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 1, background: 'repeating-linear-gradient(0deg,rgba(0,0,0,0.035) 0px,rgba(0,0,0,0.035) 1px,transparent 1px,transparent 2px)' }} />
-            <div style={{ padding: '10px 14px', borderBottom: '0.5px solid rgba(111,155,198,0.1)', display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ width: 6, height: 6, background: '#00C48C', display: 'inline-block', flexShrink: 0 }} />
-              <span style={{ ...MONO, fontSize: 10, color: '#6E7587', textTransform: 'uppercase', letterSpacing: '0.15em' }}>terminal · curl</span>
-            </div>
-            <div style={{ padding: '16px', flexGrow: 1, position: 'relative', zIndex: 2 }}>
-              <pre style={{ ...MONO, fontSize: 12, lineHeight: 1.85, margin: 0, color: '#9398A8', whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>
-                <span style={{ color: '#00C8FF' }}>curl</span>{' -X POST \\\n'}
-                {'  https://webdocai.com/api/v1/scan \\\n'}
-                {'  -H '}<span style={{ color: '#8080c0' }}>&quot;Authorization: Bearer </span><span style={{ color: '#E8635F' }}>wdoc_live_••••</span><span style={{ color: '#8080c0' }}>&quot;</span>{' \\\n'}
-                {'  -d '}<span style={{ color: '#8080c0' }}>&apos;&#123;&quot;url&quot;: &quot;</span><span style={{ color: '#00C48C' }}>https://your-site.com</span><span style={{ color: '#8080c0' }}>&quot;&#125;&apos;</span>
-                <span className="hiw-cursor" style={{ display: 'inline-block', width: 7, height: 13, background: '#6F9BC6', verticalAlign: 'text-bottom', marginLeft: 3, animation: 'hiw-cursor-blink 1s step-end infinite' }} />
-              </pre>
-            </div>
-            <div style={{ padding: '0 14px 14px', display: 'flex', gap: 6, flexWrap: 'wrap', position: 'relative', zIndex: 2 }}>
-              {[{ l: '307 checks', c: '#00C48C' }, { l: '27 categories', c: '#6F9BC6' }, { l: '~90s median', c: '#6E7587' }].map(x => (
-                <span key={x.l} style={{ ...MONO, fontSize: 10, color: x.c, background: 'rgba(255,255,255,0.03)', border: '0.5px solid rgba(255,255,255,0.07)', padding: '4px 8px' }}>{x.l}</span>
-              ))}
-            </div>
-          </div>
-
-          {/* Panel 02 — PROCESSING */}
-          <div style={{
-            background: '#0A0E18',
-            borderTop: '1px solid rgba(157,140,255,0.42)',
-            borderLeft: '1px solid rgba(157,140,255,0.12)',
-            borderRight: '1px solid rgba(157,140,255,0.06)',
-            borderBottom: '1px solid rgba(157,140,255,0.04)',
-            boxShadow: '0 0 0 1px rgba(157,140,255,0.08), 0 0 24px rgba(157,140,255,0.07)',
-            minHeight: 320, display: 'flex', flexDirection: 'column',
-            position: 'relative', overflow: 'hidden',
-          }}>
-            <div style={{ padding: '10px 14px', borderBottom: '0.5px solid rgba(157,140,255,0.1)', display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#00C48C', display: 'inline-block', flexShrink: 0 }} />
-              <span style={{ ...MONO, fontSize: 10, color: '#6E7587', textTransform: 'uppercase', letterSpacing: '0.15em' }}>SCANNING</span>
-              <span style={{ ...MONO, fontSize: 10, color: '#9D8CFF', marginLeft: 'auto' }}>ai · 307 checks</span>
-            </div>
-            <div style={{ padding: '14px', flexGrow: 1, display: 'flex', flexDirection: 'column', gap: 9 }}>
-              {HIW_SCAN_CATS.map((name, i) => {
-                const isLit = i <= litIdx
-                return (
-                  <div key={name} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span style={{ width: 5, height: 5, flexShrink: 0, display: 'inline-block', background: isLit ? '#00C48C' : 'rgba(110,117,135,0.2)', transition: 'background 0.18s' }} />
-                    <span style={{ ...MONO, fontSize: 11, color: isLit ? '#9398A8' : '#3B4257', transition: 'color 0.18s' }}>{name}</span>
-                  </div>
-                )
-              })}
-            </div>
-            <div style={{ padding: '10px 14px 14px' }}>
-              <span style={{ ...MONO, fontSize: 11, color: '#404860' }}>running 307 checks · 27 categories</span>
-              <span style={{ ...MONO, fontSize: 11, color: '#9D8CFF' }}> ···</span>
-            </div>
-          </div>
-
-          {/* Panel 03 — OUTPUT */}
-          <div style={{
-            background: '#0A0E18',
-            borderTop: '1px solid rgba(0,196,140,0.42)',
-            borderLeft: '1px solid rgba(0,196,140,0.12)',
-            borderRight: '1px solid rgba(0,196,140,0.06)',
-            borderBottom: '1px solid rgba(0,196,140,0.04)',
-            boxShadow: '0 0 0 1px rgba(0,196,140,0.08), 0 0 24px rgba(0,196,140,0.07)',
-            minHeight: 320, display: 'flex', flexDirection: 'column',
-          }}>
-            <div style={{ padding: '10px 14px', borderBottom: '0.5px solid rgba(0,196,140,0.1)', display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ width: 6, height: 6, background: '#00C48C', display: 'inline-block', flexShrink: 0 }} />
-              <span style={{ ...MONO, fontSize: 10, color: '#6E7587', textTransform: 'uppercase', letterSpacing: '0.15em' }}>response.json</span>
-              <span style={{ ...MONO, fontSize: 10, color: '#00C48C', marginLeft: 'auto' }}>200 OK</span>
-            </div>
-            <div style={{ padding: '14px 16px', flexGrow: 1 }}>
-              {HIW_JSON_LINES.map((line, i) => (
-                <div
-                  key={i}
-                  className="hiw-json-line"
-                  style={{
-                    ...MONO, fontSize: 12, lineHeight: 1.9,
-                    paddingLeft: line.indent ? 16 : 0,
-                    opacity: 0,
-                    animation: `hiw-json-line 0.3s ease-out ${line.delay}s both`,
-                  }}
-                >
-                  {line.content}
-                </div>
-              ))}
-            </div>
-            <div style={{ padding: '0 16px 14px' }}>
-              <p style={{ ...MONO, fontSize: 11, color: '#404860', margin: 0 }}>Build against this schema once. Every URL returns identical structure.</p>
-            </div>
-          </div>
-
-        </div>
-      </div>
-    </section>
-  )
-}
-
 
 // ── Two Surface ──────────────────────────────────────────────────────────────
 
@@ -707,29 +493,25 @@ function TwoSurfaceSection() {
               <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase' as const, letterSpacing: 1.5, color: '#6F9BC6', margin: '0 0 10px' }}>Dashboard</p>
               <h3 style={{ ...DISP, fontWeight: 700, fontSize: 22, color: '#E6E9EE', margin: '0 0 10px', lineHeight: 1.25 }}>Results without code.</h3>
               <p style={{ ...SANS, fontSize: 14, color: '#9398A8', lineHeight: 1.6, margin: 0 }}>
-                Scan your site, track your score, send client reports. Full conversion audit in 90 seconds. No API key required.
+                Paste your URL. See your score. Get a ranked list of exactly what to fix — written in plain English. No technical knowledge required.
               </p>
             </div>
             <div style={{ padding: '20px 24px', flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
-              {([
-                { k: 'interface',         v: 'dashboard' },
-                { k: 'scans_per_month',   v: '3 free → 500' },
-                { k: 'white_label',       v: 'pro+' },
-                { k: 'client_workspaces', v: 'pro+' },
-                { k: 'account_required',  v: 'false (first scan)' },
-              ] as { k: string; v: string }[]).map(s => (
-                <div key={s.k} style={{ display: 'flex', alignItems: 'baseline', ...MONO, fontSize: 11, marginBottom: 6 }}>
-                  <span style={{ color: '#8080c0', flexShrink: 0 }}>{s.k}</span>
-                  <span style={{ color: '#6E7587', margin: '0 3px' }}>:</span>
-                  <span style={{ color: s.v === 'dashboard' ? '#00C48C' : '#E6E9EE' }}>{s.v}</span>
-                </div>
+              {[
+                'Full conversion audit in 90 seconds',
+                'Findings ranked by revenue impact',
+                'AI-rewritten copy included',
+              ].map(line => (
+                <p key={line} style={{ ...SANS, fontSize: 13, color: '#9398A8', margin: '0 0 8px' }}>
+                  · {line}
+                </p>
               ))}
             </div>
             <div style={{ padding: '16px 24px 24px', borderTop: '0.5px solid rgba(255,255,255,0.06)' }}>
-              <Link href="/scan" style={{ ...MONO, fontSize: 11, color: '#6F9BC6', border: '1px solid rgba(111,155,198,0.5)', padding: '10px 14px', display: 'block', textAlign: 'center' as const, textDecoration: 'none', background: 'transparent' }}>
-                Open dashboard →
+              <Link href="/dashboard" style={{ ...MONO, fontSize: 11, color: '#6F9BC6', border: '1px solid rgba(111,155,198,0.5)', padding: '10px 14px', display: 'block', textAlign: 'center' as const, textDecoration: 'none', background: 'transparent' }}>
+                See how it works →
               </Link>
-              <p style={{ ...MONO, fontSize: 10, color: '#6E7587', textAlign: 'center' as const, marginTop: 8, marginBottom: 0 }}>Free to start · from $49/mo</p>
+              <p style={{ ...MONO, fontSize: 10, color: '#6E7587', textAlign: 'center' as const, marginTop: 8, marginBottom: 0 }}>Free to start · no credit card</p>
             </div>
           </div>
 
@@ -744,7 +526,7 @@ function TwoSurfaceSection() {
               <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase' as const, letterSpacing: 1.5, color: '#9D8CFF', margin: '0 0 10px' }}>API</p>
               <h3 style={{ ...DISP, fontWeight: 700, fontSize: 22, color: '#E6E9EE', margin: '0 0 10px', lineHeight: 1.25 }}>Build with the data.</h3>
               <p style={{ ...SANS, fontSize: 14, color: '#9398A8', lineHeight: 1.6, margin: 0 }}>
-                POST any URL. Get structured JSON — score, findings, benchmarks, rewritten copy. Same engine. No dashboard required.
+                POST any URL. Get structured JSON back — score, ranked findings, benchmarks, rewritten copy. Integrate conversion intelligence into anything you build.
               </p>
             </div>
             <div style={{ padding: '20px 24px', flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
@@ -1001,362 +783,6 @@ function StatsBand() {
   )
 }
 
-// ── Pricing ─────────────────────────────────────────────────────────────────
-
-function PricingSection() {
-  const [surface, setSurface] = useState<'dashboard' | 'api'>('dashboard')
-  const [billing, setBilling] = useState<'monthly' | 'annual'>('monthly')
-
-  const isDash = surface === 'dashboard'
-  const isAnnual = billing === 'annual'
-
-  return (
-    <section style={{ padding: '96px 0', borderTop: '1px solid rgba(111,155,198,0.1)', position: 'relative', overflow: 'hidden' }}>
-      <style>{`
-        .ps-tier-row {
-          background: #050810;
-          display: grid;
-          grid-template-columns: 180px 1fr auto;
-          align-items: center;
-          padding: 22px 28px;
-          transition: background 0.15s;
-        }
-        .ps-tier-row:hover { background: #080D18; }
-        @media (max-width: 767px) {
-          .ps-switcher { flex-direction: column !important; }
-          .ps-switcher button { padding: 12px 32px !important; width: 100% !important; }
-          .ps-tier-row { grid-template-columns: 1fr !important; padding: 18px 20px !important; }
-          .ps-tier-center { padding: 10px 0 !important; }
-          .ps-tier-right { padding-top: 4px; }
-        }
-      `}</style>
-
-      {/* Atmosphere — shifts with surface */}
-      <div aria-hidden style={{
-        position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0,
-        transition: 'opacity 0.3s',
-        background: isDash
-          ? 'radial-gradient(ellipse 900px 500px at 50% 30%, rgba(111,155,198,0.05) 0%, transparent 60%)'
-          : 'radial-gradient(ellipse 900px 500px at 50% 30%, rgba(157,140,255,0.05) 0%, transparent 60%)',
-      }} />
-      {/* Corner ticks */}
-      <div aria-hidden style={{ position: 'absolute', top: 20, left: 20, width: 14, height: 14, borderTop: '0.5px solid rgba(111,155,198,0.18)', borderLeft: '0.5px solid rgba(111,155,198,0.18)', pointerEvents: 'none', zIndex: 1 }} />
-      <div aria-hidden style={{ position: 'absolute', top: 20, right: 20, width: 14, height: 14, borderTop: '0.5px solid rgba(111,155,198,0.18)', borderRight: '0.5px solid rgba(111,155,198,0.18)', pointerEvents: 'none', zIndex: 1 }} />
-      <div aria-hidden style={{ position: 'absolute', bottom: 20, left: 20, width: 14, height: 14, borderBottom: '0.5px solid rgba(111,155,198,0.18)', borderLeft: '0.5px solid rgba(111,155,198,0.18)', pointerEvents: 'none', zIndex: 1 }} />
-      <div aria-hidden style={{ position: 'absolute', bottom: 20, right: 20, width: 14, height: 14, borderBottom: '0.5px solid rgba(111,155,198,0.18)', borderRight: '0.5px solid rgba(111,155,198,0.18)', pointerEvents: 'none', zIndex: 1 }} />
-
-      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 48px', position: 'relative', zIndex: 1 }}>
-
-        {/* Section header */}
-        <p style={{ ...MONO, fontSize: 11, textTransform: 'uppercase' as const, letterSpacing: '0.2em', color: '#6F9BC6', margin: '0 0 16px', textAlign: 'center' as const }}>PLANS</p>
-        <h2 style={{ ...DISP, fontWeight: 700, fontSize: 'clamp(32px,4vw,44px)', lineHeight: 1.1, color: '#E6E9EE', margin: '0 0 40px', textAlign: 'center' as const }}>
-          One engine. Two ways to pay.
-        </h2>
-
-        {/* Surface switcher */}
-        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 48 }}>
-          <div
-            className="ps-switcher"
-            style={{
-              display: 'inline-flex',
-              background: '#080D18',
-              border: '0.5px solid rgba(255,255,255,0.08)',
-              padding: 4,
-              gap: 0,
-            }}
-          >
-            <button
-              onClick={() => setSurface('dashboard')}
-              style={{
-                padding: '14px 40px',
-                border: 'none',
-                cursor: 'pointer',
-                borderRadius: 0,
-                textAlign: 'center' as const,
-                transition: 'all 0.2s',
-                background: isDash ? 'rgba(111,155,198,0.12)' : 'transparent',
-                boxShadow: isDash ? 'inset 0 0 0 0.5px rgba(111,155,198,0.45)' : 'none',
-              }}
-            >
-              <div style={{ ...MONO, fontSize: 10, textTransform: 'uppercase' as const, letterSpacing: '0.18em', color: isDash ? '#6F9BC6' : '#6E7587', marginBottom: 4 }}>DASHBOARD</div>
-              <div style={{ ...SANS, fontSize: 12, color: isDash ? '#9398A8' : '#4d5566' }}>Results without code</div>
-            </button>
-            <button
-              onClick={() => setSurface('api')}
-              style={{
-                padding: '14px 40px',
-                border: 'none',
-                cursor: 'pointer',
-                borderRadius: 0,
-                textAlign: 'center' as const,
-                transition: 'all 0.2s',
-                background: !isDash ? 'rgba(157,140,255,0.12)' : 'transparent',
-                boxShadow: !isDash ? 'inset 0 0 0 0.5px rgba(157,140,255,0.45)' : 'none',
-              }}
-            >
-              <div style={{ ...MONO, fontSize: 10, textTransform: 'uppercase' as const, letterSpacing: '0.18em', color: !isDash ? '#9D8CFF' : '#6E7587', marginBottom: 4 }}>API</div>
-              <div style={{ ...SANS, fontSize: 12, color: !isDash ? '#9398A8' : '#4d5566' }}>Build with the data</div>
-            </button>
-          </div>
-        </div>
-
-        {/* ── DASHBOARD SURFACE ── */}
-        {isDash && (
-          <>
-            {/* Billing toggle */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginBottom: 32 }}>
-              <span style={{ ...MONO, fontSize: 11, color: isAnnual ? '#6E7587' : '#E6E9EE' }}>Monthly</span>
-              <button
-                onClick={() => setBilling(b => b === 'monthly' ? 'annual' : 'monthly')}
-                aria-label="Toggle billing period"
-                style={{
-                  width: 44, height: 24,
-                  background: 'rgba(111,155,198,0.15)',
-                  border: '0.5px solid rgba(111,155,198,0.3)',
-                  cursor: 'pointer',
-                  position: 'relative',
-                  borderRadius: 0,
-                  transition: 'background 0.2s',
-                  padding: 0,
-                  flexShrink: 0,
-                }}
-              >
-                <div style={{
-                  position: 'absolute',
-                  top: 3,
-                  left: isAnnual ? 25 : 3,
-                  width: 16,
-                  height: 16,
-                  background: '#6F9BC6',
-                  transition: 'left 0.2s',
-                }} />
-              </button>
-              <span style={{ ...MONO, fontSize: 11, color: isAnnual ? '#E6E9EE' : '#6E7587' }}>Annual</span>
-              {isAnnual && (
-                <span style={{ ...MONO, fontSize: 10, color: '#00C48C', background: 'rgba(0,196,140,0.08)', border: '0.5px solid rgba(0,196,140,0.3)', padding: '2px 8px', marginLeft: 4 }}>
-                  SAVE 20%
-                </span>
-              )}
-            </div>
-
-            {/* Dashboard tier rows */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 1, background: 'rgba(111,155,198,0.08)' }}>
-              {([
-                {
-                  tier: 'FREE',
-                  price: '$0',
-                  economy: 'forever free',
-                  diff: 'See your score. Full findings. No account required.',
-                  spec: '3 scans per month · full 307-check audit · no credit card',
-                  cta: 'TRY FREE →',
-                  href: '/auth?surface=dashboard',
-                },
-                {
-                  tier: 'STARTER',
-                  price: isAnnual ? '$39' : '$49',
-                  economy: isAnnual ? '$1.95/scan · billed annually' : '$2.45/scan effective',
-                  diff: 'Full findings ranked by conversion lift. Score trending.',
-                  spec: '20 scans/month · 30-day history · CSV export · email support',
-                  cta: 'START TRIAL →',
-                  href: '/auth?surface=dashboard&plan=starter',
-                },
-                {
-                  tier: 'PRO',
-                  price: isAnnual ? '$119' : '$149',
-                  economy: isAnnual ? '$1.19/scan · billed annually' : '$1.49/scan effective',
-                  diff: 'Client workspaces. White-label reports. Your logo.',
-                  spec: '100 scans/month · unlimited history · 3 team seats · PDF export',
-                  cta: 'START TRIAL →',
-                  href: '/auth?surface=dashboard&plan=pro',
-                },
-                {
-                  tier: 'SCALE',
-                  price: isAnnual ? '$399' : '$499',
-                  economy: isAnnual ? 'billed annually · dedicated support' : 'custom rate · dedicated support',
-                  diff: '500 scans. 10 seats. Custom subdomain. Scheduled scans.',
-                  spec: '500 scans/month · white-label subdomain · priority support · Slack notifications',
-                  cta: 'START TRIAL →',
-                  href: '/auth?surface=dashboard&plan=scale',
-                },
-              ] as const).map(t => (
-                <div key={t.tier} className="ps-tier-row">
-                  <div>
-                    <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase' as const, letterSpacing: '0.15em', color: '#6F9BC6', margin: '0 0 4px' }}>{t.tier}</p>
-                    <p style={{ ...DISP, fontSize: 34, fontWeight: 700, color: '#E6E9EE', lineHeight: 1, margin: 0 }}>
-                      {t.price}
-                      {t.tier !== 'FREE' && <span style={{ ...MONO, fontSize: 11, color: '#6E7587', fontWeight: 400, marginLeft: 3 }}>/mo</span>}
-                    </p>
-                    <p style={{ ...MONO, fontSize: 10, color: '#6F9BC6', margin: '4px 0 0' }}>{t.economy}</p>
-                  </div>
-                  <div className="ps-tier-center" style={{ padding: '0 40px' }}>
-                    <p style={{ ...SANS, fontSize: 15, fontWeight: 500, color: '#E6E9EE', margin: '0 0 6px' }}>{t.diff}</p>
-                    <p style={{ ...MONO, fontSize: 11, color: '#6E7587', margin: 0 }}>{t.spec}</p>
-                  </div>
-                  <div className="ps-tier-right">
-                    <Link
-                      href={t.href}
-                      style={{
-                        ...MONO,
-                        fontSize: 11,
-                        color: '#6F9BC6',
-                        border: '1px solid rgba(111,155,198,0.4)',
-                        padding: '10px 24px',
-                        textDecoration: 'none',
-                        display: 'inline-block',
-                        background: 'transparent',
-                        whiteSpace: 'nowrap' as const,
-                      }}
-                    >
-                      {t.cta}
-                    </Link>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <p style={{ ...MONO, fontSize: 11, color: '#6E7587', textAlign: 'center' as const, marginTop: 20, marginBottom: 0 }}>
-              All plans include full 307-check audit · AI-rewritten copy · corpus benchmarking · cache hits free ·{' '}
-              <Link href="/pricing" style={{ color: '#6F9BC6', textDecoration: 'none' }}>See full pricing →</Link>
-            </p>
-          </>
-        )}
-
-        {/* ── API SURFACE ── */}
-        {!isDash && (
-          <>
-            {/* Playground hero panel */}
-            <div className="wd-panel" style={{
-              borderTop: '1px solid rgba(157,140,255,0.4)',
-              padding: '28px 32px',
-              marginBottom: 20,
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              background: 'rgba(157,140,255,0.03)',
-            }}>
-              <div>
-                <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase' as const, letterSpacing: '0.18em', color: '#9D8CFF', marginBottom: 8, marginTop: 0 }}>START FREE</p>
-                <p style={{ ...DISP, fontSize: 28, fontWeight: 700, color: '#E6E9EE', marginBottom: 6, marginTop: 0 }}>25 free scans.</p>
-                <p style={{ ...SANS, fontSize: 14, color: '#9398A8', margin: 0 }}>No subscription. No credit card. Full JSON on every scan.</p>
-              </div>
-              <Link
-                href="/auth?surface=api"
-                style={{
-                  ...MONO,
-                  fontSize: 12,
-                  color: '#9D8CFF',
-                  border: '1px solid rgba(157,140,255,0.5)',
-                  padding: '12px 28px',
-                  background: 'transparent',
-                  textDecoration: 'none',
-                  whiteSpace: 'nowrap' as const,
-                  flexShrink: 0,
-                }}
-              >
-                GET API KEY →
-              </Link>
-            </div>
-
-            {/* API tier rows */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 1, background: 'rgba(157,140,255,0.06)' }}>
-              {([
-                {
-                  tier: 'DEV',
-                  tierColor: '#9D8CFF',
-                  price: '$29',
-                  economy: '/mo · 300 scans',
-                  economyColor: '#6F9BC6',
-                  diff: 'Async mode. Webhooks. Build your first integration.',
-                  spec: '300 scans/month · $0.19/scan overage · webhooks: true · 60 req/min',
-                  cta: 'START →',
-                  href: '/auth?surface=api&plan=dev',
-                  ctaColor: '#9D8CFF',
-                  ctaBorder: 'rgba(157,140,255,0.4)',
-                },
-                {
-                  tier: 'BUILDER',
-                  tierColor: '#9D8CFF',
-                  price: '$99',
-                  economy: '/mo · 1,000 scans',
-                  economyColor: '#6F9BC6',
-                  diff: 'Batch endpoint. 10 URLs per request. Ship faster.',
-                  spec: '1,000 scans/month · batch_endpoint: true · $0.17/scan overage · 200 req/min',
-                  cta: 'START →',
-                  href: '/auth?surface=api&plan=builder',
-                  ctaColor: '#9D8CFF',
-                  ctaBorder: 'rgba(157,140,255,0.4)',
-                },
-                {
-                  tier: 'SCALE',
-                  tierColor: '#00C48C',
-                  price: '$249',
-                  economy: '/mo · 3,000 scans · best value',
-                  economyColor: '#00C48C',
-                  diff: '3,000 scans. Dedicated rate limits. Priority processing.',
-                  spec: '3,000 scans/month · rate_limits: dedicated · $0.15/scan overage · 500 req/min',
-                  cta: 'START →',
-                  href: '/auth?surface=api&plan=scale',
-                  ctaColor: '#00C48C',
-                  ctaBorder: 'rgba(0,196,140,0.4)',
-                },
-                {
-                  tier: 'ENTERPRISE',
-                  tierColor: '#00C48C',
-                  price: 'Custom',
-                  economy: 'from $0.11/scan · SLA',
-                  economyColor: '#6F9BC6',
-                  diff: 'Custom volume. Dedicated infrastructure. SLA guarantee.',
-                  spec: 'custom rate limits · invoice billing · dedicated support · custom integrations',
-                  cta: 'TALK →',
-                  href: 'mailto:hello@webdocai.com',
-                  ctaColor: '#00C48C',
-                  ctaBorder: 'rgba(0,196,140,0.4)',
-                },
-              ] as const).map(t => (
-                <div key={t.tier} className="ps-tier-row">
-                  <div>
-                    <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase' as const, letterSpacing: '0.15em', color: t.tierColor, margin: '0 0 4px' }}>{t.tier}</p>
-                    <p style={{ ...DISP, fontSize: 34, fontWeight: 700, color: '#E6E9EE', lineHeight: 1, margin: 0 }}>{t.price}</p>
-                    <p style={{ ...MONO, fontSize: 10, color: t.economyColor, margin: '4px 0 0' }}>{t.economy}</p>
-                  </div>
-                  <div className="ps-tier-center" style={{ padding: '0 40px' }}>
-                    <p style={{ ...SANS, fontSize: 15, fontWeight: 500, color: '#E6E9EE', margin: '0 0 6px' }}>{t.diff}</p>
-                    <p style={{ ...MONO, fontSize: 11, color: '#6E7587', margin: 0 }}>{t.spec}</p>
-                  </div>
-                  <div className="ps-tier-right">
-                    <Link
-                      href={t.href}
-                      style={{
-                        ...MONO,
-                        fontSize: 11,
-                        color: t.ctaColor,
-                        border: `1px solid ${t.ctaBorder}`,
-                        padding: '10px 24px',
-                        textDecoration: 'none',
-                        display: 'inline-block',
-                        background: 'transparent',
-                        whiteSpace: 'nowrap' as const,
-                      }}
-                    >
-                      {t.cta}
-                    </Link>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <p style={{ ...MONO, fontSize: 11, color: '#6E7587', textAlign: 'center' as const, marginTop: 20, marginBottom: 0 }}>
-              All API plans include full JSON schema · cache hits free · async mode · same 307-check engine ·{' '}
-              <Link href="/developers" style={{ color: '#9D8CFF', textDecoration: 'none' }}>Full API docs →</Link>
-            </p>
-          </>
-        )}
-
-      </div>
-    </section>
-  )
-}
-
 // ── Final CTA ─────────────────────────────────────────────────────────────────
 
 function FinalCtaSection() {
@@ -1395,11 +821,11 @@ function FinalCtaSection() {
         <div className="final-cta-left" style={{ flex: 1, padding: '64px 56px', borderRight: '0.5px solid rgba(255,255,255,0.06)' }}>
           <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#6E7587', margin: '0 0 12px' }}>RESULTS WITHOUT CODE</p>
           <h2 style={{ ...DISP, fontSize: 24, fontWeight: 700, color: '#E6E9EE', lineHeight: 1.3, margin: '0 0 8px' }}>
-            Scan your site. Track your score. Send client reports.
+            Start scanning your site.
           </h2>
-          <p style={{ ...SANS, fontSize: 14, color: '#9398A8', margin: '0 0 28px' }}>No API key required. Free to start.</p>
-          <Link href="/scan" style={{ ...MONO, fontSize: 12, color: '#6F9BC6', border: '1px solid rgba(111,155,198,0.5)', padding: '11px 24px', background: 'transparent', textDecoration: 'none', display: 'inline-block' }}>
-            Open dashboard →
+          <p style={{ ...SANS, fontSize: 14, color: '#9398A8', margin: '0 0 28px' }}>Free audit. No account required. See your score in 90 seconds.</p>
+          <Link href="/dashboard" style={{ ...MONO, fontSize: 12, color: '#6F9BC6', border: '1px solid rgba(111,155,198,0.5)', padding: '11px 24px', background: 'transparent', textDecoration: 'none', display: 'inline-block' }}>
+            Scan my site →
           </Link>
         </div>
 
@@ -1587,15 +1013,9 @@ export default function HomePage() {
       <NavBar />
       <HeroSection />
       <div className="section-separator" />
-      <ResponseAnnotatorSection />
-      <div className="section-separator" />
-      <HowItWorksSection />
-      <div className="section-separator" />
-      <StatsBand />
-      <div className="section-separator" />
       <TwoSurfaceSection />
       <div className="section-separator" />
-      <PricingSection />
+      <StatsBand />
       <div className="section-separator" />
       <FaqCardsSection />
       <div className="section-separator" />

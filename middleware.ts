@@ -2,8 +2,9 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 function isProtectedPath(pathname: string): boolean {
-  if (pathname === "/dashboard") return true;
-  if (pathname.startsWith("/dashboard/")) return true;
+  // Everything under /app/* is the authenticated product zone.
+  if (pathname === "/app") return true;
+  if (pathname.startsWith("/app/")) return true;
   if (pathname === "/analyze") return true;
   if (pathname.startsWith("/analyze/")) return true;
   if (pathname.startsWith("/report")) return true;
@@ -50,16 +51,14 @@ export async function middleware(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const pathname = request.nextUrl.pathname;
-  const hasActiveScanUrl = Boolean(request.nextUrl.searchParams.get("url")?.trim());
 
-  // Scan route routing: only allow when scan has explicit active state (`?url=`).
+  // Legacy scan route: the scan surface now lives at /dashboard (public marketing page).
   if (pathname === "/scan" || pathname.startsWith("/scan/")) {
-    if (!hasActiveScanUrl) {
-      const target = user ? "/dashboard" : "/";
-      const redirect = NextResponse.redirect(new URL(target, request.url));
-      mergeCookies(supabaseResponse, redirect);
-      return redirect;
-    }
+    const target = new URL("/dashboard", request.url);
+    target.search = request.nextUrl.search;
+    const redirect = NextResponse.redirect(target);
+    mergeCookies(supabaseResponse, redirect);
+    return redirect;
   }
 
   if (!user && isProtectedPath(pathname)) {
@@ -74,8 +73,8 @@ export async function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     "/",
-    "/dashboard",
-    "/dashboard/:path*",
+    "/app",
+    "/app/:path*",
     "/analyze",
     "/analyze/:path*",
     "/scan",

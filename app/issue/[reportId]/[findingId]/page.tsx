@@ -1337,7 +1337,7 @@ export default function IssuePage() {
         </div>
         <button
           type="button"
-          onClick={() => router.push("/dashboard")}
+          onClick={() => router.push("/app/dashboard")}
           style={{
             background: "transparent",
             border: "1px solid var(--border-default)",

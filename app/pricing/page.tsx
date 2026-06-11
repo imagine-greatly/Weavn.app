@@ -40,7 +40,7 @@ const DASH_TIERS = [
     diff:    'See your score. Top findings. No account required.',
     spec:    '3 scans per month · full 307-check audit · no credit card',
     cta:     'TRY FREE →',
-    href:    '/scan',
+    href:    '/dashboard',
   },
   {
     tier:    'STARTER',
@@ -609,7 +609,7 @@ export default function PricingPage() {
             <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#6E7587', margin: '0 0 8px' }}>Not sure where to start?</p>
             <p style={{ ...DISP, fontSize: 15, color: '#E6E9EE', fontWeight: 600, margin: '0 0 6px' }}>Try a free scan. No account required.</p>
             <p style={{ ...MONO, fontSize: 11, color: '#6E7587', margin: '0 0 20px' }}>3 free scans · no credit card</p>
-            <Link href="/scan" style={{ ...MONO, fontSize: 12, color: '#6F9BC6', border: '1px solid rgba(111,155,198,0.5)', padding: '10px 20px', textDecoration: 'none', display: 'inline-block', transition: 'all 0.15s' }}>
+            <Link href="/dashboard" style={{ ...MONO, fontSize: 12, color: '#6F9BC6', border: '1px solid rgba(111,155,198,0.5)', padding: '10px 20px', textDecoration: 'none', display: 'inline-block', transition: 'all 0.15s' }}>
               Scan my site →
             </Link>
           </div>

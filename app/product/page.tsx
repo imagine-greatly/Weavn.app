@@ -1,9 +1,13 @@
 ﻿'use client'
 
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { CodeBlock } from '@/components/ui/CodeBlock'
 import { Stat } from '@/components/ui/Stat'
 import { ScoreRing } from '@/components/ui/ScoreRing'
+
+const MONO = { fontFamily: "'IBM Plex Mono', monospace" }
+const DISP = { fontFamily: "'Space Grotesk', sans-serif" }
 
 // ── Data ──────────────────────────────────────────────────────────────────────
 
@@ -118,6 +122,220 @@ const PIPELINE_STEPS: PipelineStep[] = [
   },
 ]
 
+// ── Three-panel pipeline (INPUT / PROCESSING / OUTPUT) ───────────────────────
+
+const HIW_SCAN_CATS = [
+  'hero_section', 'value_proposition', 'trust_credibility',
+  'cta_conversion', 'social_proof', 'benchmark_positioning',
+  'copy_effectiveness', 'mobile_experience', 'trust_signals',
+]
+
+const HIW_JSON_LINES: { delay: number; indent: boolean; content: React.ReactNode }[] = [
+  { delay: 0.1,  indent: false, content: <span style={{ color: '#6E7587' }}>{'{'}</span> },
+  { delay: 0.3,  indent: true,  content: <><span style={{ color: '#8080c0' }}>&quot;score&quot;</span><span style={{ color: '#9398A8' }}>: </span><span style={{ color: '#E8635F' }}>61</span><span style={{ color: '#6E7587' }}>,</span></> },
+  { delay: 0.5,  indent: true,  content: <><span style={{ color: '#8080c0' }}>&quot;severity&quot;</span><span style={{ color: '#9398A8' }}>: </span><span style={{ color: '#E8635F' }}>&quot;critical&quot;</span><span style={{ color: '#6E7587' }}>,</span></> },
+  { delay: 0.7,  indent: true,  content: <><span style={{ color: '#8080c0' }}>&quot;percentile&quot;</span><span style={{ color: '#9398A8' }}>: </span><span style={{ color: '#6F9BC6' }}>63</span><span style={{ color: '#6E7587' }}>,</span></> },
+  { delay: 0.9,  indent: true,  content: <><span style={{ color: '#8080c0' }}>&quot;findings&quot;</span><span style={{ color: '#9398A8' }}>: </span><span style={{ color: '#6F9BC6' }}>23</span><span style={{ color: '#6E7587' }}>,</span></> },
+  { delay: 1.1,  indent: true,  content: <><span style={{ color: '#8080c0' }}>&quot;industry&quot;</span><span style={{ color: '#9398A8' }}>: </span><span style={{ color: '#00C48C' }}>&quot;B2B SaaS&quot;</span><span style={{ color: '#6E7587' }}>,</span></> },
+  { delay: 1.3,  indent: true,  content: <><span style={{ color: '#8080c0' }}>&quot;cost_usd&quot;</span><span style={{ color: '#9398A8' }}>: </span><span style={{ color: '#9398A8' }}>0.15</span></> },
+  { delay: 1.5,  indent: false, content: <span style={{ color: '#6E7587' }}>{'}'}</span> },
+]
+
+function HowItWorksSection() {
+  const [litIdx, setLitIdx] = useState(0)
+
+  useEffect(() => {
+    const t = setInterval(() => setLitIdx(i => (i + 1) % HIW_SCAN_CATS.length), 400)
+    return () => clearInterval(t)
+  }, [])
+
+  return (
+    <section style={{ padding: '96px 0', position: 'relative', overflow: 'hidden', background: '#050810' }}>
+      <style>{`
+        @keyframes hiw-cursor-blink { 0%,49%{opacity:1} 50%,100%{opacity:0} }
+        @keyframes hiw-flow { from{left:-22%} to{left:112%} }
+        @keyframes hiw-json-line { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:translateY(0)} }
+        @media (prefers-reduced-motion: reduce) {
+          .hiw-cursor{animation:none!important}
+          .hiw-flow-dot{display:none!important}
+          .hiw-json-line{animation:none!important;opacity:1!important;transform:none!important}
+        }
+      `}</style>
+
+      {/* Three-lane ambient blooms */}
+      <div aria-hidden style={{
+        position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0,
+        background: [
+          'radial-gradient(ellipse 480px 700px at 16% 70%, rgba(111,155,198,0.08) 0%, transparent 60%)',
+          'radial-gradient(ellipse 480px 700px at 50% 70%, rgba(128,128,192,0.05) 0%, transparent 60%)',
+          'radial-gradient(ellipse 480px 700px at 84% 70%, rgba(0,196,140,0.06) 0%, transparent 60%)',
+        ].join(', '),
+      }} />
+
+      {/* Corner ticks */}
+      <div aria-hidden style={{ position: 'absolute', top: 20, left: 20, width: 14, height: 14, borderTop: '0.5px solid rgba(111,155,198,0.25)', borderLeft: '0.5px solid rgba(111,155,198,0.25)', pointerEvents: 'none', zIndex: 1 }} />
+      <div aria-hidden style={{ position: 'absolute', top: 20, right: 20, width: 14, height: 14, borderTop: '0.5px solid rgba(111,155,198,0.25)', borderRight: '0.5px solid rgba(111,155,198,0.25)', pointerEvents: 'none', zIndex: 1 }} />
+      <div aria-hidden style={{ position: 'absolute', bottom: 20, left: 20, width: 14, height: 14, borderBottom: '0.5px solid rgba(111,155,198,0.25)', borderLeft: '0.5px solid rgba(111,155,198,0.25)', pointerEvents: 'none', zIndex: 1 }} />
+      <div aria-hidden style={{ position: 'absolute', bottom: 20, right: 20, width: 14, height: 14, borderBottom: '0.5px solid rgba(111,155,198,0.25)', borderRight: '0.5px solid rgba(111,155,198,0.25)', pointerEvents: 'none', zIndex: 1 }} />
+
+      <div style={{ position: 'relative', zIndex: 1, maxWidth: 1200, margin: '0 auto', padding: '0 48px' }}>
+
+        {/* Header */}
+        <p style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, color: '#6F9BC6', margin: '0 0 16px' }}>
+          THE PIPELINE
+        </p>
+        <h2 style={{ ...DISP, fontWeight: 700, fontSize: 36, lineHeight: 1.15, color: '#E6E9EE', margin: '0 0 10px', letterSpacing: '-0.5px' }}>
+          Three steps. One structured response.
+        </h2>
+        <p style={{ ...MONO, fontSize: 12, color: '#6E7587', margin: '0 0 48px', letterSpacing: '0.04em' }}>
+          One POST request. 307 checks fire in sequence. Structured JSON returns.
+        </p>
+
+        {/* Step connector row with traveling highlight */}
+        <div style={{ position: 'relative', marginBottom: 28 }}>
+          <div className="hidden sm:block" style={{ position: 'absolute', top: 15, left: '16%', right: '16%', height: 1, background: 'rgba(111,155,198,0.12)', overflow: 'hidden' }}>
+            <div className="hiw-flow-dot" style={{
+              position: 'absolute', top: 0, height: '100%', width: '22%',
+              background: 'linear-gradient(to right, transparent, rgba(111,155,198,0.55), transparent)',
+              animation: 'hiw-flow 2.2s linear infinite',
+            }} />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+            {([
+              { num: '01', label: 'INPUT',      accent: '#6F9BC6', aRgba: '111,155,198' },
+              { num: '02', label: 'PROCESSING', accent: '#9D8CFF', aRgba: '157,140,255' },
+              { num: '03', label: 'OUTPUT',     accent: '#00C48C', aRgba: '0,196,140'   },
+            ] as const).map(s => (
+              <div key={s.num} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+                <div style={{
+                  ...MONO, fontSize: 12, color: s.accent,
+                  background: '#050810',
+                  border: `0.5px solid rgba(${s.aRgba},0.3)`,
+                  padding: '5px 12px',
+                  letterSpacing: '0.15em',
+                  position: 'relative', zIndex: 1,
+                }}>
+                  {s.num}
+                </div>
+                <div style={{ ...MONO, fontSize: 10, color: s.accent, textTransform: 'uppercase', letterSpacing: '0.18em', opacity: 0.65 }}>
+                  {s.label}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Three equal panels */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+
+          {/* Panel 01 — INPUT */}
+          <div style={{
+            background: '#0A0E18',
+            borderTop: '1px solid rgba(111,155,198,0.42)',
+            borderLeft: '1px solid rgba(111,155,198,0.14)',
+            borderRight: '1px solid rgba(111,155,198,0.07)',
+            borderBottom: '1px solid rgba(111,155,198,0.05)',
+            boxShadow: '0 0 0 1px rgba(111,155,198,0.1), 0 0 24px rgba(111,155,198,0.07)',
+            minHeight: 320, display: 'flex', flexDirection: 'column',
+            position: 'relative', overflow: 'hidden',
+          }}>
+            {/* Scanline texture */}
+            <div aria-hidden style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 1, background: 'repeating-linear-gradient(0deg,rgba(0,0,0,0.035) 0px,rgba(0,0,0,0.035) 1px,transparent 1px,transparent 2px)' }} />
+            <div style={{ padding: '10px 14px', borderBottom: '0.5px solid rgba(111,155,198,0.1)', display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ width: 6, height: 6, background: '#00C48C', display: 'inline-block', flexShrink: 0 }} />
+              <span style={{ ...MONO, fontSize: 10, color: '#6E7587', textTransform: 'uppercase', letterSpacing: '0.15em' }}>terminal · curl</span>
+            </div>
+            <div style={{ padding: '16px', flexGrow: 1, position: 'relative', zIndex: 2 }}>
+              <pre style={{ ...MONO, fontSize: 12, lineHeight: 1.85, margin: 0, color: '#9398A8', whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>
+                <span style={{ color: '#00C8FF' }}>curl</span>{' -X POST \\\n'}
+                {'  https://webdocai.com/api/v1/scan \\\n'}
+                {'  -H '}<span style={{ color: '#8080c0' }}>&quot;Authorization: Bearer </span><span style={{ color: '#E8635F' }}>wdoc_live_••••</span><span style={{ color: '#8080c0' }}>&quot;</span>{' \\\n'}
+                {'  -d '}<span style={{ color: '#8080c0' }}>&apos;&#123;&quot;url&quot;: &quot;</span><span style={{ color: '#00C48C' }}>https://your-site.com</span><span style={{ color: '#8080c0' }}>&quot;&#125;&apos;</span>
+                <span className="hiw-cursor" style={{ display: 'inline-block', width: 7, height: 13, background: '#6F9BC6', verticalAlign: 'text-bottom', marginLeft: 3, animation: 'hiw-cursor-blink 1s step-end infinite' }} />
+              </pre>
+            </div>
+            <div style={{ padding: '0 14px 14px', display: 'flex', gap: 6, flexWrap: 'wrap', position: 'relative', zIndex: 2 }}>
+              {[{ l: '307 checks', c: '#00C48C' }, { l: '27 categories', c: '#6F9BC6' }, { l: '~90s median', c: '#6E7587' }].map(x => (
+                <span key={x.l} style={{ ...MONO, fontSize: 10, color: x.c, background: 'rgba(255,255,255,0.03)', border: '0.5px solid rgba(255,255,255,0.07)', padding: '4px 8px' }}>{x.l}</span>
+              ))}
+            </div>
+          </div>
+
+          {/* Panel 02 — PROCESSING */}
+          <div style={{
+            background: '#0A0E18',
+            borderTop: '1px solid rgba(157,140,255,0.42)',
+            borderLeft: '1px solid rgba(157,140,255,0.12)',
+            borderRight: '1px solid rgba(157,140,255,0.06)',
+            borderBottom: '1px solid rgba(157,140,255,0.04)',
+            boxShadow: '0 0 0 1px rgba(157,140,255,0.08), 0 0 24px rgba(157,140,255,0.07)',
+            minHeight: 320, display: 'flex', flexDirection: 'column',
+            position: 'relative', overflow: 'hidden',
+          }}>
+            <div style={{ padding: '10px 14px', borderBottom: '0.5px solid rgba(157,140,255,0.1)', display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#00C48C', display: 'inline-block', flexShrink: 0 }} />
+              <span style={{ ...MONO, fontSize: 10, color: '#6E7587', textTransform: 'uppercase', letterSpacing: '0.15em' }}>SCANNING</span>
+              <span style={{ ...MONO, fontSize: 10, color: '#9D8CFF', marginLeft: 'auto' }}>ai · 307 checks</span>
+            </div>
+            <div style={{ padding: '14px', flexGrow: 1, display: 'flex', flexDirection: 'column', gap: 9 }}>
+              {HIW_SCAN_CATS.map((name, i) => {
+                const isLit = i <= litIdx
+                return (
+                  <div key={name} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ width: 5, height: 5, flexShrink: 0, display: 'inline-block', background: isLit ? '#00C48C' : 'rgba(110,117,135,0.2)', transition: 'background 0.18s' }} />
+                    <span style={{ ...MONO, fontSize: 11, color: isLit ? '#9398A8' : '#3B4257', transition: 'color 0.18s' }}>{name}</span>
+                  </div>
+                )
+              })}
+            </div>
+            <div style={{ padding: '10px 14px 14px' }}>
+              <span style={{ ...MONO, fontSize: 11, color: '#404860' }}>running 307 checks · 27 categories</span>
+              <span style={{ ...MONO, fontSize: 11, color: '#9D8CFF' }}> ···</span>
+            </div>
+          </div>
+
+          {/* Panel 03 — OUTPUT */}
+          <div style={{
+            background: '#0A0E18',
+            borderTop: '1px solid rgba(0,196,140,0.42)',
+            borderLeft: '1px solid rgba(0,196,140,0.12)',
+            borderRight: '1px solid rgba(0,196,140,0.06)',
+            borderBottom: '1px solid rgba(0,196,140,0.04)',
+            boxShadow: '0 0 0 1px rgba(0,196,140,0.08), 0 0 24px rgba(0,196,140,0.07)',
+            minHeight: 320, display: 'flex', flexDirection: 'column',
+          }}>
+            <div style={{ padding: '10px 14px', borderBottom: '0.5px solid rgba(0,196,140,0.1)', display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ width: 6, height: 6, background: '#00C48C', display: 'inline-block', flexShrink: 0 }} />
+              <span style={{ ...MONO, fontSize: 10, color: '#6E7587', textTransform: 'uppercase', letterSpacing: '0.15em' }}>response.json</span>
+              <span style={{ ...MONO, fontSize: 10, color: '#00C48C', marginLeft: 'auto' }}>200 OK</span>
+            </div>
+            <div style={{ padding: '14px 16px', flexGrow: 1 }}>
+              {HIW_JSON_LINES.map((line, i) => (
+                <div
+                  key={i}
+                  className="hiw-json-line"
+                  style={{
+                    ...MONO, fontSize: 12, lineHeight: 1.9,
+                    paddingLeft: line.indent ? 16 : 0,
+                    opacity: 0,
+                    animation: `hiw-json-line 0.3s ease-out ${line.delay}s both`,
+                  }}
+                >
+                  {line.content}
+                </div>
+              ))}
+            </div>
+            <div style={{ padding: '0 16px 14px' }}>
+              <p style={{ ...MONO, fontSize: 11, color: '#404860', margin: 0 }}>Build against this schema once. Every URL returns identical structure.</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+  )
+}
+
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function ProductPage() {
@@ -133,18 +351,24 @@ export default function ProductPage() {
         <div aria-hidden style={{ position: 'absolute', bottom: 20, right: 20, width: 14, height: 14, borderBottom: '0.5px solid rgba(111,155,198,0.25)', borderRight: '0.5px solid rgba(111,155,198,0.25)', pointerEvents: 'none', zIndex: 1 }} />
 
         <div style={{ position: 'relative', zIndex: 1 }}>
-          <div className="section-label mb-4">ENGINE</div>
+          <div className="section-label mb-4">THE ENGINE</div>
           <h1
             className="section-headline mb-6 mx-auto"
             style={{ fontSize: 'clamp(36px, 5vw, 56px)', letterSpacing: '-1.5px', maxWidth: 900 }}
           >
-            307 checks. One response.
+            307 checks. 90 seconds. One structured response.
           </h1>
           <p className="section-subhead max-w-2xl mx-auto">
-            webdoc is a conversion audit API. POST any URL, get structured JSON in under 90 seconds.
-            Every scan runs 307 diagnostic checks across 27 categories, classified by site type, scored
-            against a corpus of real sites.
+            Everything that happens between POST and 200 OK — and why it produces a score you can trust.
           </p>
+          <div style={{ display: 'flex', gap: 24, justifyContent: 'center', marginTop: 24, flexWrap: 'wrap' }}>
+            <Link href="/dashboard" style={{ ...MONO, fontSize: 11, color: '#6F9BC6', textDecoration: 'none' }}>
+              ← Back to how it works
+            </Link>
+            <Link href="/developers" style={{ ...MONO, fontSize: 11, color: '#9D8CFF', textDecoration: 'none' }}>
+              See the API →
+            </Link>
+          </div>
           {/* Colored stat row — 307 cyan / 27 steel blue / 7 purple */}
           <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '0 64px', marginTop: 48 }}>
             {([
@@ -165,7 +389,11 @@ export default function ProductPage() {
       </section>
       <div className="section-separator" />
 
-      {/* ── 2. Diagnostic Coverage — transparent + purple bloom ──────────────── */}
+      {/* ── 2. The pipeline — INPUT / PROCESSING / OUTPUT ─────────────────────── */}
+      <HowItWorksSection />
+      <div className="section-separator" />
+
+      {/* ── 2b. Diagnostic Coverage — transparent + purple bloom ──────────────── */}
       <section
         className="max-w-7xl mx-auto px-8 pb-20"
         style={{ position: 'relative', overflow: 'hidden' }}
@@ -558,7 +786,7 @@ export default function ProductPage() {
                   </div>
                 ))}
               </div>
-              <Link href="/scan" style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 12, color: '#6F9BC6', border: '1px solid rgba(111,155,198,0.5)', padding: '11px 20px', textDecoration: 'none', display: 'inline-block', background: 'transparent' }}>
+              <Link href="/dashboard" style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 12, color: '#6F9BC6', border: '1px solid rgba(111,155,198,0.5)', padding: '11px 20px', textDecoration: 'none', display: 'inline-block', background: 'transparent' }}>
                 Open dashboard →
               </Link>
             </div>
@@ -594,29 +822,26 @@ export default function ProductPage() {
       </section>
       <div className="section-separator" />
 
-      {/* ── 6. Final CTA — #050810 + steel-blue bloom + instrument framing ─────── */}
+      {/* ── 6. Final CTA — two equal exit segments ─────────────────────────────── */}
       <section style={{
         position: 'relative',
         overflow: 'hidden',
-        padding: '96px 0',
         background: '#050810',
         borderTop: '0.5px solid rgba(111,155,198,0.25)',
       }}>
         <style>{`
-          @keyframes prod-scan-pulse {
-            0%, 100% { box-shadow: 0 0 0 0 rgba(111,155,198,0.3); }
-            50%       { box-shadow: 0 0 0 8px rgba(111,155,198,0); }
+          @media (max-width: 767px) {
+            .prod-exit-segments { flex-direction: column !important; }
+            .prod-exit-left { border-right: none !important; border-bottom: 0.5px solid rgba(255,255,255,0.06) !important; }
           }
-          .prod-scan-btn { animation: prod-scan-pulse 2.5s ease-in-out infinite; }
-          @media (prefers-reduced-motion: reduce) { .prod-scan-btn { animation: none; } }
         `}</style>
 
         {/* Ambient bloom */}
         <div aria-hidden style={{
           position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0,
           background: [
-            'radial-gradient(ellipse 1200px 650px at 50% 95%, rgba(111,155,198,0.09) 0%, transparent 65%)',
-            'radial-gradient(ellipse 800px 400px at 50% 5%,  rgba(111,155,198,0.04) 0%, transparent 60%)',
+            'radial-gradient(ellipse 600px 400px at 22% 50%, rgba(111,155,198,0.07) 0%, transparent 60%)',
+            'radial-gradient(ellipse 600px 400px at 78% 50%, rgba(157,140,255,0.07) 0%, transparent 60%)',
           ].join(', '),
         }} />
 
@@ -626,125 +851,30 @@ export default function ProductPage() {
         <div aria-hidden style={{ position: 'absolute', bottom: 20, left: 20, width: 14, height: 14, borderBottom: '0.5px solid rgba(111,155,198,0.25)', borderLeft: '0.5px solid rgba(111,155,198,0.25)', pointerEvents: 'none', zIndex: 1 }} />
         <div aria-hidden style={{ position: 'absolute', bottom: 20, right: 20, width: 14, height: 14, borderBottom: '0.5px solid rgba(111,155,198,0.25)', borderRight: '0.5px solid rgba(111,155,198,0.25)', pointerEvents: 'none', zIndex: 1 }} />
 
-        <div style={{ position: 'relative', zIndex: 1, maxWidth: 720, margin: '0 auto', padding: '0 48px', textAlign: 'center' }}>
+        <div className="prod-exit-segments" style={{ position: 'relative', zIndex: 1, display: 'flex' }}>
 
-          {/* Wordmark presence */}
-          <p style={{ fontFamily: '"Space Grotesk", sans-serif', fontWeight: 700, fontSize: 20, letterSpacing: '-0.02em', color: '#E6E9EE', margin: '0 0 12px', lineHeight: 1 }}>
-            webdoc<span style={{ color: '#6F9BC6' }}>.ai</span>
-          </p>
-          <div aria-hidden style={{ height: '0.5px', background: 'linear-gradient(to right, transparent, rgba(111,155,198,0.3), transparent)', maxWidth: 240, margin: '0 auto 44px' }} />
-
-          {/* Mono kicker */}
-          <p style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, color: '#6F9BC6', margin: '0 0 16px' }}>
-            RUN A DIAGNOSTIC
-          </p>
-
-          <h2 style={{ fontFamily: '"Space Grotesk", sans-serif', fontWeight: 700, fontSize: 'clamp(28px, 4vw, 40px)', lineHeight: 1.1, color: '#E6E9EE', margin: '0 0 14px', letterSpacing: '-0.5px' }}>
-            See it run on your site.
-          </h2>
-
-          <p style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 12, color: '#6E7587', lineHeight: 2, margin: '0 0 36px' }}>
-            Free scan · no account required · results in 90 seconds.
-          </p>
-
-          {/* Status bar */}
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: 12,
-            fontFamily: '"IBM Plex Mono", monospace', fontSize: 12,
-            background: 'rgba(255,255,255,0.02)',
-            border: '0.5px solid rgba(255,255,255,0.08)',
-            padding: '8px 14px', marginBottom: 10, flexWrap: 'wrap', textAlign: 'left',
-          }}>
-            <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#00C48C', flexShrink: 0, display: 'inline-block' }} />
-            <span style={{ color: '#9398A8' }}>api.webdocai.com</span>
-            <span style={{ color: '#6E7587' }}>·</span>
-            <span style={{ color: '#6F9BC6' }}>POST /v1/scan</span>
-            <span style={{ color: '#6E7587' }}>·</span>
-            <span style={{ color: '#6F9BC6' }}>→ 200 OK</span>
+          {/* LEFT — Dashboard */}
+          <div className="prod-exit-left" style={{ flex: 1, padding: '64px 56px', borderRight: '0.5px solid rgba(255,255,255,0.06)' }}>
+            <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#6E7587', margin: '0 0 12px' }}>USING THE DASHBOARD?</p>
+            <h2 style={{ ...DISP, fontSize: 22, fontWeight: 700, color: '#E6E9EE', lineHeight: 1.3, margin: '0 0 8px' }}>
+              See what a scan returns in plain English.
+            </h2>
+            <p style={{ fontFamily: '"IBM Plex Sans", sans-serif', fontSize: 14, color: '#9398A8', margin: '0 0 28px' }}>Score, ranked fixes, rewritten copy — no code required.</p>
+            <Link href="/dashboard" style={{ ...MONO, fontSize: 12, color: '#6F9BC6', border: '1px solid rgba(111,155,198,0.5)', padding: '11px 24px', background: 'transparent', textDecoration: 'none', display: 'inline-block' }}>
+              How it works →
+            </Link>
           </div>
 
-          {/* Field label */}
-          <p style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 10, textTransform: 'uppercase', letterSpacing: 1.5, color: '#6E7587', textAlign: 'left', margin: '0 0 5px' }}>
-            POST /api/v1/scan
-          </p>
-
-          {/* Scan input — terminal motif */}
-          <div style={{
-            display: 'flex',
-            background: '#0A0E18',
-            borderTop: '1px solid rgba(255,255,255,0.1)',
-            borderLeft: '1px solid rgba(255,255,255,0.07)',
-            borderRight: '1px solid rgba(255,255,255,0.04)',
-            borderBottom: '1px solid rgba(255,255,255,0.03)',
-            marginBottom: 8, textAlign: 'left',
-          }}>
-            <span style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 12, color: '#6E7587', padding: '0 12px', display: 'flex', alignItems: 'center', flexShrink: 0, borderRight: '0.5px solid rgba(255,255,255,0.08)' }}>
-              https://
-            </span>
-            <input
-              type="text"
-              placeholder="your-site.com"
-              readOnly
-              onClick={() => { window.location.href = '/scan' }}
-              style={{ flex: 1, background: 'transparent', fontFamily: '"IBM Plex Mono", monospace', fontSize: 14, color: '#E6E9EE', padding: '13px 14px', border: 'none', outline: 'none', cursor: 'pointer' }}
-            />
-          </div>
-
-          {/* SCAN button — steel blue, full-width, mono label */}
-          <Link
-            href="/scan"
-            className="prod-scan-btn"
-            style={{
-              display: 'block',
-              fontFamily: '"IBM Plex Mono", monospace',
-              fontSize: 13,
-              fontWeight: 600,
-              letterSpacing: 1.5,
-              textTransform: 'uppercase',
-              background: 'transparent',
-              border: '1px solid rgba(111,155,198,0.5)',
-              color: '#6F9BC6',
-              padding: '14px 0',
-              textDecoration: 'none',
-              textAlign: 'center',
-              marginBottom: 12,
-            }}
-          >
-            SCAN MY SITE →
-          </Link>
-
-          {/* Example response */}
-          <div style={{
-            background: '#0A0E18',
-            borderTop: '1px solid rgba(111,155,198,0.18)',
-            borderLeft: '1px solid rgba(255,255,255,0.06)',
-            borderRight: '1px solid rgba(255,255,255,0.04)',
-            borderBottom: '1px solid rgba(255,255,255,0.03)',
-            padding: '12px 16px',
-            marginBottom: 20,
-            textAlign: 'left',
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-              <span style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 10, color: '#6E7587', textTransform: 'uppercase', letterSpacing: 1.5 }}>EXAMPLE RESPONSE</span>
-              <span style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 10, color: '#00C48C' }}>200 OK</span>
-            </div>
-            <div style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, lineHeight: 1.7 }}>
-              <span style={{ color: '#8080C0' }}>score</span>
-              <span style={{ color: '#6E7587' }}>: </span>
-              <span style={{ color: '#E8635F' }}>61</span>
-              <span style={{ color: '#6E7587' }}> · </span>
-              <span style={{ color: '#8080C0' }}>findings</span>
-              <span style={{ color: '#6E7587' }}>: </span>
-              <span style={{ color: '#6F9BC6' }}>23</span>
-              <span style={{ color: '#6E7587' }}> · </span>
-              <span style={{ color: '#8080C0' }}>industry</span>
-              <span style={{ color: '#6E7587' }}>: </span>
-              <span style={{ color: '#6F9BC6' }}>&quot;saas&quot;</span>
-              <span style={{ color: '#6E7587' }}> · </span>
-              <span style={{ color: '#8080C0' }}>cost_usd</span>
-              <span style={{ color: '#6E7587' }}>: </span>
-              <span style={{ color: '#9398A8' }}>0.15</span>
-            </div>
+          {/* RIGHT — API */}
+          <div style={{ flex: 1, padding: '64px 56px' }}>
+            <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#6E7587', margin: '0 0 12px' }}>BUILDING WITH THE API?</p>
+            <h2 style={{ ...DISP, fontSize: 22, fontWeight: 700, color: '#E6E9EE', lineHeight: 1.3, margin: '0 0 8px' }}>
+              Full endpoint reference and schema.
+            </h2>
+            <p style={{ fontFamily: '"IBM Plex Sans", sans-serif', fontSize: 14, color: '#9398A8', margin: '0 0 28px' }}>Plans, rate limits, async mode, batch endpoint.</p>
+            <Link href="/developers" style={{ ...MONO, fontSize: 12, color: '#9D8CFF', border: '1px solid rgba(157,140,255,0.5)', padding: '11px 24px', background: 'transparent', textDecoration: 'none', display: 'inline-block' }}>
+              API docs →
+            </Link>
           </div>
 
         </div>

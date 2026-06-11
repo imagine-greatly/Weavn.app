@@ -87,10 +87,10 @@ export default function LandingHero({ url, onUrlChange, autoFocus }: Props) {
     const supabase = getSupabaseBrowserClient();
     const { data: { session } } = await supabase.auth.getSession();
     if (session) {
-      router.push(`/scan?url=${encodeURIComponent(result.url)}`);
+      router.push(`/dashboard?url=${encodeURIComponent(result.url)}`);
     } else {
       document.cookie = `pendingUrl=${encodeURIComponent(result.url)};path=/;max-age=300;SameSite=Lax`;
-      router.push("/auth?tab=signup&next=/scan");
+      router.push("/auth?tab=signup&next=/dashboard");
     }
   }
 

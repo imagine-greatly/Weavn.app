@@ -131,7 +131,7 @@ export default function ResetPasswordPage() {
       }
       setDoneMessage(true);
       window.setTimeout(() => {
-        window.location.replace("/dashboard");
+        window.location.replace("/app/dashboard");
       }, 2000);
     } catch (caught: unknown) {
       setSubmitError(caught instanceof Error ? caught.message : "Something went wrong. Please try again.");

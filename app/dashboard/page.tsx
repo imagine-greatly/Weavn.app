@@ -485,6 +485,36 @@ const OBJECTIONS: ObjectionCard[] = [
     a: "Every finding comes with a severity rank, a one-sentence plain-English description, a concrete fix, and drop-in replacement copy. There's nothing to interpret. Work down the list from priority 1. Most founders ship the top three fixes in an afternoon.",
     tag: 'ranked by impact · fix included · copy ready to paste',
   },
+  {
+    q: "Will it work on my site? It's built on Webflow / Squarespace / Framer.",
+    a: "webdoc renders your live page in headless Chrome — it sees what a browser sees, not your CMS. Webflow, Squarespace, Framer, Shopify, WordPress, Next.js, custom stacks — if it's publicly accessible and loads in a browser, we can scan it. The only sites we can't scan are ones behind a login wall or that actively block automated access.",
+    tag: 'renders in headless chrome · stack-agnostic · publicly accessible pages only',
+  },
+  {
+    q: "How is the score calculated? What does 61 actually mean?",
+    a: "Every check returns a pass, fail, or partial result. Fails are weighted by their estimated conversion impact — a broken value proposition costs more points than a missing favicon. The final score is a weighted composite across all 307 checks. A score of 61 means your page is passing the majority of checks but has meaningful conversion gaps, particularly in high-weight categories. Scores below 70 are flagged as critical — the data shows a strong correlation between sub-70 scores and above-average bounce rates in the corpus.",
+    tag: 'weighted by conversion impact · not a vanity metric · corpus-calibrated',
+  },
+  {
+    q: "What if I disagree with a finding?",
+    a: "Every finding cites the specific visible evidence it's based on — what element was present, absent, or misplaced, and why that matters for conversion. If you read a finding and think the evidence is wrong, the fix is simple: look at your page and check. The grounding rule means the model cannot invent evidence. If the finding cites something that isn't there, that's a bug — use the feedback flag in the report and we'll investigate. In practice, the findings founders disagree with most are the ones that turn out to be most accurate.",
+    tag: 'every finding cites evidence · flaggable · grounded or dropped',
+  },
+  {
+    q: "How often should I scan?",
+    a: "Scan whenever you ship a meaningful change — new hero, new CTA, new pricing, new landing page. For most founders on Starter that means once or twice a month. Free plan gives you three scans a month which covers most iteration cycles. Scanning the same unchanged page repeatedly won't change your findings — the engine reads what's there, not what was there last week. The corpus updates weekly so your percentile can shift even without a rescan as new sites are benchmarked.",
+    tag: 'scan on meaningful changes · corpus updates weekly · not a set-and-forget tool',
+  },
+  {
+    q: "Is this just for SaaS? I run an e-commerce store.",
+    a: "The engine classifies your site type automatically — SaaS, e-commerce, agency, creator, marketplace — and applies the relevant check subset for your category. A Shopify product page gets different diagnostics than a B2B SaaS pricing page. The corpus benchmarks are also segmented by vertical so your percentile is always against comparable sites, not a mixed average. E-commerce, SaaS, agencies, and creator sites are all actively represented in the corpus.",
+    tag: 'auto-classified · vertical-specific checks · e-comm and SaaS both supported',
+  },
+  {
+    q: "What happens after I scan? Do I need to stay subscribed?",
+    a: "Your report is saved and accessible any time you log in. If you cancel your subscription your existing reports don't disappear — you keep read access to everything you've already scanned. You only need an active plan to run new scans. Free plan users keep their three monthly scans indefinitely with no expiry on past reports. There's no lock-in — the report is yours.",
+    tag: 'reports persist · no lock-in · cancel anytime',
+  },
 ]
 
 function WhyDifferentSection() {
@@ -500,7 +530,7 @@ function WhyDifferentSection() {
         <h2 style={{ ...DISP,fontWeight:700,fontSize:'clamp(28px,4vw,44px)',color:INK_PRI,letterSpacing:'-0.5px',margin:'0 0 48px',lineHeight:1.1 }}>
           Built for founders with money on the line.
         </h2>
-        <div className="d-diff-grid" style={{ display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:24 }}>
+        <div className="d-diff-grid" style={{ display:'grid',gridTemplateColumns:'repeat(2,1fr)',gap:24 }}>
           {OBJECTIONS.map(card => (
             <div key={card.q} style={{
               background:SURFACE,

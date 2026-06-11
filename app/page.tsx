@@ -838,8 +838,8 @@ function StatsBand() {
         >
           {([
             { value: '4,800+', label: 'SITES SCANNED',      color: '#E6E9EE' },
-            { value: '58',     label: 'AVERAGE SCORE',       color: 'rgba(111,155,198,0.5)' },
-            { value: '23',     label: 'AVG FINDINGS',        color: 'rgba(111,155,198,0.5)' },
+            { value: '58',     label: 'AVERAGE SCORE',       color: 'rgba(111,155,198,0.32)' },
+            { value: '23',     label: 'AVG FINDINGS',        color: 'rgba(111,155,198,0.32)' },
             { value: '76%',    label: 'NO ABOVE-FOLD PROOF', color: '#E8635F' },
           ] as { value: string; label: string; color: string }[]).map(s => (
             <div
@@ -848,7 +848,7 @@ function StatsBand() {
               style={{ flex: 1, padding: '20px 28px', borderRight: '0.5px solid rgba(111,155,198,0.08)' }}
             >
               <div style={{ ...DISP, fontSize: 40, fontWeight: 700, color: s.color, lineHeight: 1 }}>{s.value}</div>
-              <div style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.12em', color: '#6E7587', marginTop: 6 }}>{s.label}</div>
+              <div style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.12em', color: 'rgba(111,155,198,0.25)', marginTop: 6 }}>{s.label}</div>
             </div>
           ))}
 
@@ -926,7 +926,7 @@ function StatsBand() {
 
         {/* 1. Zone fill */}
         <path
-          d="M 0,275 C 120,275 280,272 480,258 C 620,248 680,220 740,168 C 780,130 800,60 830,28 C 855,6 870,4 895,18 C 920,32 940,68 970,108 C 1010,160 1060,210 1160,245 C 1280,268 1380,274 1440,275 L 1440,280 L 0,280 Z"
+          d="M 0,276 C 60,276 140,275 240,272 C 320,269 400,262 490,248 C 560,237 610,218 660,192 C 710,165 740,132 770,100 C 795,73 810,48 830,28 C 848,10 862,3 878,8 C 894,13 908,32 925,58 C 945,88 965,122 995,158 C 1025,192 1065,224 1120,246 C 1175,262 1250,271 1340,275 C 1390,276 1420,276 1440,276 L 1440,280 L 0,280 Z"
           fill="url(#sbZoneGrad)"
           stroke="none"
         />
@@ -938,14 +938,14 @@ function StatsBand() {
 
         {/* 3. Curve fill */}
         <path
-          d="M 0,275 C 120,275 280,272 480,258 C 620,248 680,220 740,168 C 780,130 800,60 830,28 C 855,6 870,4 895,18 C 920,32 940,68 970,108 C 1010,160 1060,210 1160,245 C 1280,268 1380,274 1440,275 L 1440,280 L 0,280 Z"
+          d="M 0,276 C 60,276 140,275 240,272 C 320,269 400,262 490,248 C 560,237 610,218 660,192 C 710,165 740,132 770,100 C 795,73 810,48 830,28 C 848,10 862,3 878,8 C 894,13 908,32 925,58 C 945,88 965,122 995,158 C 1025,192 1065,224 1120,246 C 1175,262 1250,271 1340,275 C 1390,276 1420,276 1440,276 L 1440,280 L 0,280 Z"
           fill="url(#sbCurveFill)"
           stroke="none"
         />
 
         {/* 4. Curve stroke — horizontal color gradient + glow */}
         <path
-          d="M 0,275 C 120,275 280,272 480,258 C 620,248 680,220 740,168 C 780,130 800,60 830,28 C 855,6 870,4 895,18 C 920,32 940,68 970,108 C 1010,160 1060,210 1160,245 C 1280,268 1380,274 1440,275"
+          d="M 0,276 C 60,276 140,275 240,272 C 320,269 400,262 490,248 C 560,237 610,218 660,192 C 710,165 740,132 770,100 C 795,73 810,48 830,28 C 848,10 862,3 878,8 C 894,13 908,32 925,58 C 945,88 965,122 995,158 C 1025,192 1065,224 1120,246 C 1175,262 1250,271 1340,275 C 1390,276 1420,276 1440,276"
           fill="none"
           stroke="url(#sbCurveStroke)"
           strokeWidth="1.2"
@@ -954,8 +954,8 @@ function StatsBand() {
         />
 
         {/* 5. AVG 58 marker */}
-        <line x1="830" y1="20" x2="830" y2="260" stroke="rgba(255,255,255,0.06)" strokeWidth="0.75" />
-        <text x="830" y="270" textAnchor="middle" fontFamily="IBM Plex Mono, monospace" fontSize="9" fill="rgba(255,255,255,0.15)">AVG 58</text>
+        <line x1="862" y1="20" x2="862" y2="260" stroke="rgba(255,255,255,0.06)" strokeWidth="0.75" />
+        <text x="862" y="270" textAnchor="middle" fontFamily="IBM Plex Mono, monospace" fontSize="9" fill="rgba(255,255,255,0.15)">AVG 58</text>
 
         {/* 6. Zone boundary lines */}
         <line x1="360"  y1="40" x2="360"  y2="260" stroke="rgba(232,99,95,0.06)"  strokeWidth="0.75" />
@@ -964,21 +964,21 @@ function StatsBand() {
         <text x="360"  y="270" textAnchor="middle" fontFamily="IBM Plex Mono, monospace" fontSize="9" fill="rgba(232,99,95,0.35)">BOTTOM 25%</text>
         <text x="1150" y="270" textAnchor="middle" fontFamily="IBM Plex Mono, monospace" fontSize="9" fill="rgba(0,196,140,0.35)">TOP 25%</text>
 
-        {/* 7. YOUR SITE marker at x=960, curve y≈108 */}
+        {/* 7. YOUR SITE marker at x=980, curve y≈135 */}
         <g className="sb-marker-enter">
           <line
-            x1="960" y1="0" x2="960" y2="260"
+            x1="980" y1="0" x2="980" y2="260"
             stroke="rgba(140,180,220,0.7)"
             strokeWidth="1.2"
             strokeDasharray="4 3"
           />
-          <circle cx="960" cy="108" r="8" fill="rgba(140,180,220,0.15)" filter="url(#sbMarkerGlow)" />
-          <circle cx="960" cy="108" r="3" fill="rgba(140,180,220,0.9)" />
-          <g transform="translate(960, -8)">
+          <circle cx="980" cy="135" r="8" fill="rgba(140,180,220,0.15)" filter="url(#sbMarkerGlow)" />
+          <circle cx="980" cy="135" r="3" fill="rgba(140,180,220,0.9)" />
+          <g transform="translate(980, -8)">
             <rect x="-56" y="-50" width="112" height="44" fill="#080D18" stroke="rgba(140,180,220,0.35)" strokeWidth="0.5" />
             <text x="0" y="-34" textAnchor="middle" fontFamily="IBM Plex Mono, monospace" fontSize="8"  fill="rgba(140,180,220,0.55)" letterSpacing="0.12em">YOUR SITE</text>
             <text x="0" y="-16" textAnchor="middle" fontFamily="IBM Plex Mono, monospace" fontSize="15" fontWeight="700" fill="rgba(140,180,220,1.0)">63rd pct</text>
-            <line x1="0" y1="0" x2="0" y2="116" stroke="rgba(140,180,220,0.2)" strokeWidth="0.5" />
+            <line x1="0" y1="0" x2="0" y2="143" stroke="rgba(140,180,220,0.2)" strokeWidth="0.5" />
           </g>
         </g>
 

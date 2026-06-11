@@ -74,6 +74,75 @@ const DASH_TIERS = [
   },
 ] as const
 
+// ── Card data ─────────────────────────────────────────────────────────────────
+
+type FeatVal2 = string | boolean
+
+function FVal({ v }: { v: FeatVal2 }) {
+  if (v === true)        return <span style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, color: '#00C48C' }}>✓</span>
+  if (v === false)       return <span style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, color: 'rgba(255,255,255,0.2)' }}>—</span>
+  if (v === 'unlimited') return <span style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, color: '#00C48C' }}>{v}</span>
+  if (v === 'dedicated') return <span style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, color: '#9D8CFF' }}>{v}</span>
+  if (v === 'custom')    return <span style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, color: '#6F9BC6' }}>{v}</span>
+  return <span style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, color: '#E6E9EE' }}>{v}</span>
+}
+
+const DASH_FEATS: Array<{ key: string; values: [FeatVal2, FeatVal2, FeatVal2, FeatVal2] }> = [
+  { key: 'scans / month',       values: ['3',       '20',       '100',       '500']       },
+  { key: 'report history',      values: ['7 days',  '30 days',  'unlimited', 'unlimited'] },
+  { key: 'findings depth',      values: ['full',    'full',     'full',      'full']      },
+  { key: 'AI rewritten copy',   values: [true,      true,       true,        true]        },
+  { key: 'corpus benchmark',    values: [true,      true,       true,        true]        },
+  { key: 'score trending',      values: [false,     true,       true,        true]        },
+  { key: 'CSV export',          values: [false,     true,       true,        true]        },
+  { key: 'team seats',          values: ['1',       '1',        '3',         '10']        },
+  { key: 'white label',         values: [false,     false,      true,        true]        },
+  { key: 'client workspaces',   values: [false,     false,      true,        true]        },
+  { key: 'priority processing', values: [false,     true,       true,        true]        },
+  { key: 'email support',       values: [false,     true,       true,        true]        },
+  { key: 'custom subdomain',    values: [false,     false,      false,       true]        },
+  { key: 'scheduled scans',     values: [false,     false,      false,       true]        },
+  { key: 'Slack notifications', values: [false,     false,      false,       true]        },
+]
+
+const DASH_CARDS = [
+  {
+    tier: 'FREE',
+    monthly: 0, annual: 0,
+    economyMonthly: 'forever free',
+    economyAnnual:  'forever free',
+    bestFor: 'Founders who want to see their score and top findings before committing.',
+    cta: 'TRY FREE →', ctaHref: '/auth?surface=dashboard',
+    isScale: false,
+  },
+  {
+    tier: 'STARTER',
+    monthly: 49, annual: 39,
+    economyMonthly: '$2.45/scan effective',
+    economyAnnual:  '$1.95/scan · billed annually',
+    bestFor: 'Solo founders and marketers running regular audits and tracking score over time.',
+    cta: 'START TRIAL →', ctaHref: '/auth?surface=dashboard&plan=starter',
+    isScale: false,
+  },
+  {
+    tier: 'PRO',
+    monthly: 149, annual: 119,
+    economyMonthly: '$1.49/scan effective',
+    economyAnnual:  '$1.19/scan · billed annually',
+    bestFor: 'Agencies and consultants delivering audits to clients with white-label reports.',
+    cta: 'START TRIAL →', ctaHref: '/auth?surface=dashboard&plan=pro',
+    isScale: false,
+  },
+  {
+    tier: 'SCALE',
+    monthly: 499, annual: 399,
+    economyMonthly: 'custom rate · priority support',
+    economyAnnual:  'billed annually · priority support',
+    bestFor: 'Teams running high-volume audits with custom branding and dedicated infrastructure.',
+    cta: 'START TRIAL →', ctaHref: '/auth?surface=dashboard&plan=scale',
+    isScale: true,
+  },
+]
 
 // ── FAQ data ──────────────────────────────────────────────────────────────────
 
@@ -259,21 +328,8 @@ export default function PricingPage() {
   return (
     <main style={{ minHeight: '100vh' }}>
       <style>{`
-        .tier-row {
-          display: grid;
-          grid-template-columns: 200px 1fr auto;
-          align-items: center;
-          padding: 24px 32px;
-          background: #050810;
-          transition: background 0.15s;
-          cursor: default;
-        }
-        .tier-row:hover { background: #080D18; }
-        .tier-center { padding: 0 48px; }
         @media (max-width: 767px) {
-          .tier-row { grid-template-columns: 1fr !important; padding: 20px 24px !important; }
-          .tier-center { padding: 12px 0 !important; }
-          .tier-right { padding-top: 4px; }
+          .pricing-cards-grid { grid-template-columns: 1fr !important; }
         }
       `}</style>
 
@@ -355,60 +411,59 @@ export default function PricingPage() {
             </p>
           )}
 
-          {/* Tier rows */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 1, background: 'rgba(111,155,198,0.08)' }}>
-            {DASH_TIERS.map(t => (
-              <div key={t.tier} className="tier-row">
-                {/* LEFT — tier name + price */}
-                <div style={{ minWidth: 0 }}>
-                  <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#6F9BC6', margin: '0 0 4px' }}>
-                    {t.tier}
-                  </p>
-                  <p style={{ ...DISP, fontSize: 36, fontWeight: 700, color: '#E6E9EE', lineHeight: 1, margin: 0 }}>
-                    {t.monthly === 0 ? '$0' : `$${isAnnual ? t.annual : t.monthly}`}
-                    {t.monthly > 0 && (
-                      <span style={{ ...MONO, fontSize: 12, color: '#6E7587', fontWeight: 400, marginLeft: 4 }}>/mo</span>
-                    )}
-                  </p>
-                  <p style={{ ...MONO, fontSize: 10, color: '#6F9BC6', margin: '4px 0 0' }}>
-                    {t.economy}
-                  </p>
+          {/* Card grid */}
+          <div
+            className="pricing-cards-grid"
+            style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 24 }}
+          >
+            {DASH_CARDS.map((card, ci) => {
+              const accentColor = card.isScale ? 'rgba(0,196,140,0.5)' : 'rgba(111,155,198,0.5)'
+              const tierColor   = card.isScale ? '#00C48C' : '#6F9BC6'
+              const ctaBorder   = card.isScale ? 'rgba(0,196,140,0.45)' : 'rgba(111,155,198,0.45)'
+              const ctaColor    = card.isScale ? '#00C48C' : '#6F9BC6'
+              const price   = card.monthly === 0 ? '$0' : `$${isAnnual ? card.annual : card.monthly}`
+              const economy = isAnnual ? card.economyAnnual : card.economyMonthly
+              return (
+                <div key={card.tier} style={{ background: '#0A0E18', border: '0.5px solid rgba(255,255,255,0.08)', position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+                  <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 1, background: accentColor }} />
+                  <div style={{ padding: '24px 24px 20px', borderBottom: '0.5px solid rgba(255,255,255,0.06)' }}>
+                    <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.18em', color: tierColor, margin: '0 0 8px' }}>{card.tier}</p>
+                    <p style={{ ...DISP, fontSize: 42, fontWeight: 700, color: '#E6E9EE', lineHeight: 1, margin: '0 0 4px' }}>{price}</p>
+                    <p style={{ ...MONO, fontSize: 10, color: tierColor, margin: '0 0 16px' }}>{economy}</p>
+                    <p style={{ ...SANS, fontSize: 13, color: '#9398A8', lineHeight: 1.5, margin: '0 0 20px' }}>{card.bestFor}</p>
+                    <Link
+                      href={card.ctaHref}
+                      style={{
+                        display: 'block', textAlign: 'center', padding: '11px',
+                        fontFamily: '"IBM Plex Mono", monospace', fontSize: 12,
+                        textTransform: 'uppercase', letterSpacing: '0.12em',
+                        textDecoration: 'none', color: ctaColor,
+                        border: `1px solid ${ctaBorder}`, background: 'transparent',
+                        boxSizing: 'border-box', width: '100%',
+                      }}
+                    >{card.cta}</Link>
+                  </div>
+                  <div style={{ padding: '20px 24px', flexGrow: 1 }}>
+                    {DASH_FEATS.map((row, ri) => (
+                      <div
+                        key={row.key}
+                        style={{
+                          display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start',
+                          padding: '9px 0',
+                          borderBottom: ri < DASH_FEATS.length - 1 ? '0.5px solid rgba(255,255,255,0.04)' : 'none',
+                        }}
+                      >
+                        <span style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, color: '#9398A8' }}>{row.key}</span>
+                        <FVal v={row.values[ci]} />
+                      </div>
+                    ))}
+                  </div>
                 </div>
-
-                {/* CENTER — differentiator + spec */}
-                <div className="tier-center">
-                  <p style={{ ...SANS, fontSize: 15, fontWeight: 500, color: '#E6E9EE', margin: '0 0 8px' }}>
-                    {t.diff}
-                  </p>
-                  <p style={{ ...MONO, fontSize: 11, color: '#6E7587', margin: 0 }}>
-                    {t.spec}
-                  </p>
-                </div>
-
-                {/* RIGHT — CTA */}
-                <div className="tier-right">
-                  <Link
-                    href={t.href}
-                    style={{
-                      ...MONO,
-                      fontSize: 12,
-                      color: '#6F9BC6',
-                      border: '1px solid rgba(111,155,198,0.4)',
-                      padding: '11px 28px',
-                      textDecoration: 'none',
-                      display: 'inline-block',
-                      background: 'transparent',
-                      whiteSpace: 'nowrap',
-                    }}
-                  >
-                    {t.cta}
-                  </Link>
-                </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
 
-          <p style={{ ...MONO, fontSize: 11, color: '#6E7587', textAlign: 'center', marginTop: 24 }}>
+          <p style={{ ...MONO, fontSize: 11, color: '#6E7587', textAlign: 'center', marginTop: 0 }}>
             All plans include: full 307-check audit · AI-rewritten copy · corpus benchmarking · cache hits free
           </p>
 

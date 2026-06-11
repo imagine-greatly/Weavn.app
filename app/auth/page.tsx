@@ -288,6 +288,13 @@ function AuthPageContent() {
       <style>{`
         .auth-input::placeholder { color: #6E7587; font-family: "IBM Plex Mono", monospace; font-size: 12px; opacity: 1; }
         @keyframes authPulseDot { 0%,100%{opacity:1} 50%{opacity:0.3} }
+        @keyframes ct1 { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+        @keyframes ct2 { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+        @keyframes ct3 { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+        @keyframes ct4 { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+        @media (prefers-reduced-motion: reduce) {
+          .ct-trace { animation: none !important; stroke-dashoffset: 0; }
+        }
         @media (max-width: 767px) {
           .auth-root     { flex-direction: column !important; }
           .auth-left     { display: none !important; }
@@ -330,6 +337,59 @@ function AuthPageContent() {
             ].join(", "),
             backgroundSize: "52px 52px",
           }} />
+          {/* Circuit traces */}
+          <svg
+            aria-hidden
+            viewBox="0 0 600 900"
+            preserveAspectRatio="xMidYMid slice"
+            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", pointerEvents: "none", zIndex: 0, overflow: "hidden" }}
+          >
+            <path className="ct-trace" d="M 52,104 H 260 V 52 H 416 V 156 H 520 V 312 H 364 V 416 H 208 V 520" fill="none" stroke="#6F9BC6" strokeWidth="0.6" opacity="0.3" strokeDasharray="1" pathLength="1" style={{ animation: 'ct1 8s linear 0s infinite' }} />
+            <path className="ct-trace" d="M 0,312 H 156 V 208 H 312 V 364 H 468 V 260 H 572 V 468 H 416 V 572" fill="none" stroke="#9D8CFF" strokeWidth="0.6" opacity="0.2" strokeDasharray="1" pathLength="1" style={{ animation: 'ct2 10s linear 2s infinite' }} />
+            <path className="ct-trace" d="M 364,0 V 156 H 520 V 52 H 572 V 260 H 468 V 364 H 572 V 520" fill="none" stroke="#6F9BC6" strokeWidth="0.5" opacity="0.18" strokeDasharray="1" pathLength="1" style={{ animation: 'ct3 7s linear 4s infinite' }} />
+            <path className="ct-trace" d="M 104,572 H 312 V 468 H 208 V 624 H 416 V 520 H 520 V 676" fill="none" stroke="#00C48C" strokeWidth="0.5" opacity="0.13" strokeDasharray="1" pathLength="1" style={{ animation: 'ct4 9s linear 1s infinite' }} />
+            <rect x="51" y="103" width="2" height="2" fill="#6F9BC6" opacity="0.25"/>
+            <rect x="259" y="103" width="2" height="2" fill="#6F9BC6" opacity="0.25"/>
+            <rect x="259" y="51" width="2" height="2" fill="#6F9BC6" opacity="0.25"/>
+            <rect x="415" y="51" width="2" height="2" fill="#6F9BC6" opacity="0.25"/>
+            <rect x="415" y="155" width="2" height="2" fill="#6F9BC6" opacity="0.25"/>
+            <rect x="519" y="155" width="2" height="2" fill="#6F9BC6" opacity="0.25"/>
+            <rect x="519" y="311" width="2" height="2" fill="#6F9BC6" opacity="0.25"/>
+            <rect x="363" y="311" width="2" height="2" fill="#6F9BC6" opacity="0.25"/>
+            <rect x="363" y="415" width="2" height="2" fill="#6F9BC6" opacity="0.25"/>
+            <rect x="207" y="415" width="2" height="2" fill="#6F9BC6" opacity="0.25"/>
+            <rect x="207" y="519" width="2" height="2" fill="#6F9BC6" opacity="0.25"/>
+            <rect x="-1" y="311" width="2" height="2" fill="#9D8CFF" opacity="0.18"/>
+            <rect x="155" y="311" width="2" height="2" fill="#9D8CFF" opacity="0.18"/>
+            <rect x="155" y="207" width="2" height="2" fill="#9D8CFF" opacity="0.18"/>
+            <rect x="311" y="207" width="2" height="2" fill="#9D8CFF" opacity="0.18"/>
+            <rect x="311" y="363" width="2" height="2" fill="#9D8CFF" opacity="0.18"/>
+            <rect x="467" y="363" width="2" height="2" fill="#9D8CFF" opacity="0.18"/>
+            <rect x="467" y="259" width="2" height="2" fill="#9D8CFF" opacity="0.18"/>
+            <rect x="571" y="259" width="2" height="2" fill="#9D8CFF" opacity="0.18"/>
+            <rect x="571" y="467" width="2" height="2" fill="#9D8CFF" opacity="0.18"/>
+            <rect x="415" y="467" width="2" height="2" fill="#9D8CFF" opacity="0.18"/>
+            <rect x="415" y="571" width="2" height="2" fill="#9D8CFF" opacity="0.18"/>
+            <rect x="363" y="-1" width="2" height="2" fill="#6F9BC6" opacity="0.15"/>
+            <rect x="363" y="155" width="2" height="2" fill="#6F9BC6" opacity="0.15"/>
+            <rect x="519" y="155" width="2" height="2" fill="#6F9BC6" opacity="0.15"/>
+            <rect x="519" y="51" width="2" height="2" fill="#6F9BC6" opacity="0.15"/>
+            <rect x="571" y="51" width="2" height="2" fill="#6F9BC6" opacity="0.15"/>
+            <rect x="571" y="259" width="2" height="2" fill="#6F9BC6" opacity="0.15"/>
+            <rect x="467" y="259" width="2" height="2" fill="#6F9BC6" opacity="0.15"/>
+            <rect x="467" y="363" width="2" height="2" fill="#6F9BC6" opacity="0.15"/>
+            <rect x="571" y="363" width="2" height="2" fill="#6F9BC6" opacity="0.15"/>
+            <rect x="571" y="519" width="2" height="2" fill="#6F9BC6" opacity="0.15"/>
+            <rect x="103" y="571" width="2" height="2" fill="#00C48C" opacity="0.11"/>
+            <rect x="311" y="571" width="2" height="2" fill="#00C48C" opacity="0.11"/>
+            <rect x="311" y="467" width="2" height="2" fill="#00C48C" opacity="0.11"/>
+            <rect x="207" y="467" width="2" height="2" fill="#00C48C" opacity="0.11"/>
+            <rect x="207" y="623" width="2" height="2" fill="#00C48C" opacity="0.11"/>
+            <rect x="415" y="623" width="2" height="2" fill="#00C48C" opacity="0.11"/>
+            <rect x="415" y="519" width="2" height="2" fill="#00C48C" opacity="0.11"/>
+            <rect x="519" y="519" width="2" height="2" fill="#00C48C" opacity="0.11"/>
+            <rect x="519" y="675" width="2" height="2" fill="#00C48C" opacity="0.11"/>
+          </svg>
           {/* Corner ticks */}
           {[
             { top: 24,    left: 24,    borderTop: "0.5px solid rgba(111,155,198,0.25)", borderLeft:   "0.5px solid rgba(111,155,198,0.25)" },

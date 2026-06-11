@@ -220,6 +220,73 @@ function S({ c }: { c: string }) { return <span style={{ color: '#00C48C' }}>&qu
 function N({ c }: { c: string }) { return <span style={{ color: '#6F9BC6' }}>{c}</span> }
 function Muted({ c }: { c: string }) { return <span style={{ color: '#6E7587' }}>{c}</span> }
 
+// ── API card data ─────────────────────────────────────────────────────────────
+
+type FeatValApi = string | boolean
+
+function FValApi({ v }: { v: FeatValApi }) {
+  if (v === true)        return <span style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, color: '#00C48C' }}>✓</span>
+  if (v === false)       return <span style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, color: 'rgba(255,255,255,0.2)' }}>—</span>
+  if (v === 'unlimited') return <span style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, color: '#00C48C' }}>{v}</span>
+  if (v === 'dedicated') return <span style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, color: '#9D8CFF' }}>{v}</span>
+  if (v === 'custom')    return <span style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, color: '#6F9BC6' }}>{v}</span>
+  return <span style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, color: '#E6E9EE' }}>{v}</span>
+}
+
+const API_FEATS: Array<{ key: string; values: [FeatValApi, FeatValApi, FeatValApi, FeatValApi, FeatValApi] }> = [
+  { key: 'trial scans',      values: ['25',        false,        false,        false,        false]         },
+  { key: 'overage rate',     values: ['$0.25/scan','$0.19/scan', '$0.17/scan', '$0.15/scan', 'from $0.11']  },
+  { key: 'scans / month',    values: [false,        '300',        '1,000',      '3,000',      'custom']      },
+  { key: 'async mode',       values: [false,        true,         true,         true,         true]          },
+  { key: 'batch endpoint',   values: [false,        false,        true,         true,         true]          },
+  { key: 'webhooks',         values: [false,        true,         true,         true,         true]          },
+  { key: 'rate limits',      values: ['5/min',      '60/min',     '200/min',    '500/min',    'dedicated']   },
+  { key: 'JSON response',    values: [true,         true,         true,         true,         true]          },
+  { key: 'cache hits free',  values: [true,         true,         true,         true,         true]          },
+  { key: 'support',          values: ['docs only',  'email',      'email',      'priority email', 'dedicated'] },
+  { key: 'dedicated limits', values: [false,        false,        false,        true,         true]          },
+  { key: 'SLA guarantee',    values: [false,        false,        false,        false,        true]          },
+  { key: 'invoice billing',  values: [false,        false,        false,        false,        true]          },
+]
+
+const API_CARDS_DEF = [
+  {
+    tier: 'PLAYGROUND', tierColor: '#9D8CFF',
+    price: '25 free', economy: 'then $0.25/scan', economyColor: '#9D8CFF',
+    bestFor: 'Developers evaluating the API before building. No commitment required.',
+    cta: 'GET API KEY →', ctaHref: '/auth?surface=api',
+    accentColor: 'rgba(157,140,255,0.5)', ctaBorderColor: 'rgba(157,140,255,0.45)', ctaColor: '#9D8CFF',
+  },
+  {
+    tier: 'DEV', tierColor: '#9D8CFF',
+    price: '$29', economy: '/mo · 300 scans', economyColor: '#9D8CFF',
+    bestFor: 'Solo developers integrating conversion intelligence into their first product.',
+    cta: 'START DEV →', ctaHref: '/auth?surface=api&plan=dev',
+    accentColor: 'rgba(157,140,255,0.5)', ctaBorderColor: 'rgba(157,140,255,0.45)', ctaColor: '#9D8CFF',
+  },
+  {
+    tier: 'BUILDER', tierColor: '#9D8CFF',
+    price: '$99', economy: '/mo · 1,000 scans', economyColor: '#9D8CFF',
+    bestFor: 'Teams building audit pipelines or integrating webdoc into client workflows.',
+    cta: 'START BUILDER →', ctaHref: '/auth?surface=api&plan=builder',
+    accentColor: 'rgba(157,140,255,0.5)', ctaBorderColor: 'rgba(157,140,255,0.45)', ctaColor: '#9D8CFF',
+  },
+  {
+    tier: 'SCALE', tierColor: '#00C48C',
+    price: '$249', economy: '/mo · 3,000 scans · best value', economyColor: '#00C48C',
+    bestFor: 'High-volume integrations and teams that need dedicated infrastructure and rate limits.',
+    cta: 'START SCALE →', ctaHref: '/auth?surface=api&plan=scale',
+    accentColor: 'rgba(0,196,140,0.5)', ctaBorderColor: 'rgba(0,196,140,0.45)', ctaColor: '#00C48C',
+  },
+  {
+    tier: 'ENTERPRISE', tierColor: '#00C48C',
+    price: 'Custom', economy: 'from $0.11/scan · SLA', economyColor: '#00C48C',
+    bestFor: 'Organizations requiring custom volume, SLA guarantees, and dedicated support.',
+    cta: 'TALK TO US →', ctaHref: 'mailto:hello@webdocai.com',
+    accentColor: 'rgba(0,196,140,0.5)', ctaBorderColor: 'rgba(0,196,140,0.45)', ctaColor: '#00C48C',
+  },
+]
+
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function DevelopersPage() {
@@ -387,122 +454,43 @@ export default function DevelopersPage() {
             @media (max-width: 767px) { .dev-plans-grid { grid-template-columns: 1fr !important; } }
           `}</style>
           <div className="dev-plans-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 16 }}>
-
-            {/* PLAYGROUND */}
-            <div className="wd-panel" style={{ display: 'flex', flexDirection: 'column' }}>
-              <div style={{ padding: '20px 20px 14px', borderBottom: '0.5px solid rgba(255,255,255,0.06)' }}>
-                <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.18em', color: '#6F9BC6', margin: '0 0 6px' }}>PLAYGROUND</p>
-                <p style={{ ...MONO, fontSize: 10, color: '#6E7587', margin: '0 0 14px' }}>25 free scans · no subscription</p>
-                <p style={{ ...DISP, fontSize: 40, fontWeight: 700, color: '#E6E9EE', lineHeight: 1, margin: '0 0 4px' }}>25 free</p>
-                <p style={{ ...MONO, fontSize: 10, color: '#6F9BC6', margin: 0 }}>then $0.25/scan</p>
+            {API_CARDS_DEF.map((card, ci) => (
+              <div key={card.tier} style={{ background: '#0A0E18', border: '0.5px solid rgba(255,255,255,0.08)', position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+                <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 1, background: card.accentColor }} />
+                <div style={{ padding: '24px 24px 20px', borderBottom: '0.5px solid rgba(255,255,255,0.06)' }}>
+                  <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.18em', color: card.tierColor, margin: '0 0 8px' }}>{card.tier}</p>
+                  <p style={{ ...DISP, fontSize: 42, fontWeight: 700, color: '#E6E9EE', lineHeight: 1, margin: '0 0 4px' }}>{card.price}</p>
+                  <p style={{ ...MONO, fontSize: 10, color: card.economyColor, margin: '0 0 16px' }}>{card.economy}</p>
+                  <p style={{ ...SANS, fontSize: 13, color: '#9398A8', lineHeight: 1.5, margin: '0 0 20px' }}>{card.bestFor}</p>
+                  <Link
+                    href={card.ctaHref}
+                    style={{
+                      display: 'block', textAlign: 'center', padding: '11px',
+                      fontFamily: '"IBM Plex Mono", monospace', fontSize: 12,
+                      textTransform: 'uppercase', letterSpacing: '0.12em',
+                      textDecoration: 'none', color: card.ctaColor,
+                      border: `1px solid ${card.ctaBorderColor}`, background: 'transparent',
+                      boxSizing: 'border-box', width: '100%',
+                    }}
+                  >{card.cta}</Link>
+                </div>
+                <div style={{ padding: '20px 24px', flexGrow: 1 }}>
+                  {API_FEATS.map((row, ri) => (
+                    <div
+                      key={row.key}
+                      style={{
+                        display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start',
+                        padding: '9px 0',
+                        borderBottom: ri < API_FEATS.length - 1 ? '0.5px solid rgba(255,255,255,0.04)' : 'none',
+                      }}
+                    >
+                      <span style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, color: '#9398A8' }}>{row.key}</span>
+                      <FValApi v={row.values[ci]} />
+                    </div>
+                  ))}
+                </div>
               </div>
-              <div style={{ padding: '14px 20px', borderBottom: '0.5px solid rgba(255,255,255,0.06)', flexGrow: 1 }}>
-                <SpecRow k="trial_scans"    v="25 free" />
-                <SpecRow k="overage_rate"   v="$0.25/scan" />
-                <SpecRow k="async_mode"     v="false" />
-                <SpecRow k="batch_endpoint" v="false" />
-                <SpecRow k="webhooks"       v="false" />
-                <SpecRow k="rate_limits"    v="5/min" />
-              </div>
-              <div style={{ padding: '14px 20px 20px' }}>
-                <Link href="/auth?surface=api" style={{ display: 'block', textAlign: 'center', ...MONO, fontSize: 12, color: '#6F9BC6', border: '1px solid rgba(111,155,198,0.5)', padding: '10px 0', textDecoration: 'none' }}>
-                  GET API KEY →
-                </Link>
-              </div>
-            </div>
-
-            {/* DEV */}
-            <div className="wd-panel" style={{ display: 'flex', flexDirection: 'column' }}>
-              <div style={{ padding: '20px 20px 14px', borderBottom: '0.5px solid rgba(255,255,255,0.06)' }}>
-                <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.18em', color: '#6F9BC6', margin: '0 0 6px' }}>DEV</p>
-                <p style={{ ...MONO, fontSize: 10, color: '#6E7587', margin: '0 0 14px' }}>300 scans/mo · async + webhooks</p>
-                <p style={{ ...DISP, fontSize: 40, fontWeight: 700, color: '#E6E9EE', lineHeight: 1, margin: '0 0 4px' }}>$29</p>
-                <p style={{ ...MONO, fontSize: 10, color: '#6F9BC6', margin: 0 }}>/mo · $0.097/scan effective</p>
-              </div>
-              <div style={{ padding: '14px 20px', borderBottom: '0.5px solid rgba(255,255,255,0.06)', flexGrow: 1 }}>
-                <SpecRow k="scans_per_month" v="300" />
-                <SpecRow k="overage_rate"    v="$0.19/scan" />
-                <SpecRow k="async_mode"      v="true" />
-                <SpecRow k="batch_endpoint"  v="false" />
-                <SpecRow k="webhooks"        v="true" />
-                <SpecRow k="rate_limits"     v="60/min" />
-              </div>
-              <div style={{ padding: '14px 20px 20px' }}>
-                <Link href="/auth?surface=api&plan=dev" style={{ display: 'block', textAlign: 'center', ...MONO, fontSize: 12, color: '#6F9BC6', border: '1px solid rgba(111,155,198,0.5)', padding: '10px 0', textDecoration: 'none' }}>
-                  START DEV →
-                </Link>
-              </div>
-            </div>
-
-            {/* BUILDER */}
-            <div className="wd-panel" style={{ display: 'flex', flexDirection: 'column' }}>
-              <div style={{ padding: '20px 20px 14px', borderBottom: '0.5px solid rgba(255,255,255,0.06)' }}>
-                <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.18em', color: '#6F9BC6', margin: '0 0 6px' }}>BUILDER</p>
-                <p style={{ ...MONO, fontSize: 10, color: '#6E7587', margin: '0 0 14px' }}>1,000 scans/mo · batch endpoint</p>
-                <p style={{ ...DISP, fontSize: 40, fontWeight: 700, color: '#E6E9EE', lineHeight: 1, margin: '0 0 4px' }}>$99</p>
-                <p style={{ ...MONO, fontSize: 10, color: '#6F9BC6', margin: 0 }}>/mo · $0.099/scan effective</p>
-              </div>
-              <div style={{ padding: '14px 20px', borderBottom: '0.5px solid rgba(255,255,255,0.06)', flexGrow: 1 }}>
-                <SpecRow k="scans_per_month" v="1,000" />
-                <SpecRow k="overage_rate"    v="$0.17/scan" />
-                <SpecRow k="async_mode"      v="true" />
-                <SpecRow k="batch_endpoint"  v="true" />
-                <SpecRow k="webhooks"        v="true" />
-                <SpecRow k="rate_limits"     v="200/min" />
-              </div>
-              <div style={{ padding: '14px 20px 20px' }}>
-                <Link href="/auth?surface=api&plan=builder" style={{ display: 'block', textAlign: 'center', ...MONO, fontSize: 12, color: '#6F9BC6', border: '1px solid rgba(111,155,198,0.5)', padding: '10px 0', textDecoration: 'none' }}>
-                  START BUILDER →
-                </Link>
-              </div>
-            </div>
-
-            {/* SCALE */}
-            <div className="wd-panel" style={{ display: 'flex', flexDirection: 'column' }}>
-              <div style={{ padding: '20px 20px 14px', borderBottom: '0.5px solid rgba(255,255,255,0.06)' }}>
-                <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.18em', color: '#00C48C', margin: '0 0 6px' }}>SCALE</p>
-                <p style={{ ...MONO, fontSize: 10, color: '#6E7587', margin: '0 0 14px' }}>3,000 scans/mo · dedicated limits</p>
-                <p style={{ ...DISP, fontSize: 40, fontWeight: 700, color: '#E6E9EE', lineHeight: 1, margin: '0 0 4px' }}>$249</p>
-                <p style={{ ...MONO, fontSize: 10, color: '#00C48C', margin: 0 }}>/mo · $0.083/scan effective</p>
-              </div>
-              <div style={{ padding: '14px 20px', borderBottom: '0.5px solid rgba(255,255,255,0.06)', flexGrow: 1 }}>
-                <SpecRow k="scans_per_month" v="3,000" />
-                <SpecRow k="overage_rate"    v="$0.15/scan" />
-                <SpecRow k="async_mode"      v="true" />
-                <SpecRow k="batch_endpoint"  v="true" />
-                <SpecRow k="webhooks"        v="true" />
-                <SpecRow k="rate_limits"     v="500/min" />
-              </div>
-              <div style={{ padding: '14px 20px 20px' }}>
-                <Link href="/auth?surface=api&plan=scale" style={{ display: 'block', textAlign: 'center', ...MONO, fontSize: 12, color: '#00C48C', border: '1px solid rgba(0,196,140,0.5)', padding: '10px 0', textDecoration: 'none' }}>
-                  START SCALE →
-                </Link>
-              </div>
-            </div>
-
-            {/* ENTERPRISE */}
-            <div className="wd-panel" style={{ display: 'flex', flexDirection: 'column' }}>
-              <div style={{ padding: '20px 20px 14px', borderBottom: '0.5px solid rgba(255,255,255,0.06)' }}>
-                <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.18em', color: '#9D8CFF', margin: '0 0 6px' }}>ENTERPRISE</p>
-                <p style={{ ...MONO, fontSize: 10, color: '#6E7587', margin: '0 0 14px' }}>custom volume · SLA guarantee</p>
-                <p style={{ ...DISP, fontSize: 40, fontWeight: 700, color: '#E6E9EE', lineHeight: 1, margin: '0 0 4px' }}>Custom</p>
-                <p style={{ ...MONO, fontSize: 10, color: '#6E7587', margin: 0 }}>from $0.11/scan · dedicated infra</p>
-              </div>
-              <div style={{ padding: '14px 20px', borderBottom: '0.5px solid rgba(255,255,255,0.06)', flexGrow: 1 }}>
-                <SpecRow k="scans_per_month" v="custom" />
-                <SpecRow k="overage_rate"    v="from $0.11/scan" />
-                <SpecRow k="async_mode"      v="true" />
-                <SpecRow k="batch_endpoint"  v="true" />
-                <SpecRow k="webhooks"        v="true" />
-                <SpecRow k="rate_limits"     v="dedicated" />
-              </div>
-              <div style={{ padding: '14px 20px 20px' }}>
-                <Link href="mailto:hello@webdocai.com" style={{ display: 'block', textAlign: 'center', ...MONO, fontSize: 12, color: '#6F9BC6', border: '1px solid rgba(111,155,198,0.5)', padding: '10px 0', textDecoration: 'none' }}>
-                  TALK TO US →
-                </Link>
-              </div>
-            </div>
-
+            ))}
           </div>
         </div>
       </section>

@@ -1299,17 +1299,6 @@ svg path { fill: none !important; }
   .status-dot { animation: none; }
 }
 
-/* ── Score ring ambient glow pulse ─────────────────────────────────────────── */
-@media (prefers-reduced-motion: no-preference) {
-  @keyframes score-pulse {
-    0%, 100% { opacity: 0.2; }
-    50% { opacity: 0.5; }
-  }
-  .score-ring-glow {
-    animation: score-pulse 3s ease-in-out infinite;
-  }
-}
-
 /* ── Instrument grid on homepage main ──────────────────────────────────────── */
 /* Applied via .instrument-grid class on <main> so the grid shows through */
 .instrument-grid {

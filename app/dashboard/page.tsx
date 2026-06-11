@@ -90,16 +90,13 @@ function HeroSection() {
         padding: '112px 48px 80px',
         textAlign: 'center',
         position: 'relative',
-        overflow: 'visible',
+        overflow: 'hidden',
       }}
     >
-      {/* Hero bloom — 800×600 steel-blue radial at top-center, bleeds into section below */}
+      {/* Atmosphere: steel blue radial bloom behind hero content at 4% opacity */}
       <div aria-hidden style={{
-        position:'absolute',
-        top:0, left:'50%', transform:'translateX(-50%)',
-        width:800, height:600,
-        background:'radial-gradient(ellipse at center, rgba(111,155,198,0.06) 0%, transparent 70%)',
-        pointerEvents:'none', zIndex:0,
+        position:'absolute',inset:0,pointerEvents:'none',zIndex:0,
+        background:'radial-gradient(ellipse 1000px 700px at 50% 35%, rgba(111,155,198,0.04) 0%, transparent 60%)',
       }} />
       <Ticks />
       <div style={{ position:'relative',zIndex:1,maxWidth:680,margin:'0 auto',width:'100%' }}>
@@ -207,7 +204,7 @@ const MOCK_FINDINGS: MockFinding[] = [
 
 function OutputSection() {
   return (
-    <section style={{ padding:'80px 48px',borderTop:'0.5px solid rgba(111,155,198,0.1)',position:'relative',overflow:'hidden',background:'#0A0D1A' }}>
+    <section style={{ padding:'80px 48px',borderTop:'0.5px solid rgba(111,155,198,0.1)',position:'relative',overflow:'hidden' }}>
       <div aria-hidden style={{ position:'absolute',inset:0,pointerEvents:'none',zIndex:0, background:'radial-gradient(ellipse 800px 500px at 50% 50%, rgba(111,155,198,0.04) 0%, transparent 60%)' }} />
       <div style={{ maxWidth:1000,margin:'0 auto',position:'relative',zIndex:1 }}>
         <p style={{ ...MONO,fontSize:11,textTransform:'uppercase',letterSpacing:'0.2em',color:STEEL,margin:'0 0 16px' }}>
@@ -244,22 +241,8 @@ function OutputSection() {
 
           {/* Score row */}
           <div style={{ display:'flex',alignItems:'center',gap:20,marginBottom:28,paddingBottom:24,borderBottom:'0.5px solid rgba(255,255,255,0.06)',flexWrap:'wrap' }}>
-            {/* Score ring with ambient glow — drop-shadow on ring + pulsing radial behind */}
-            <div style={{ position:'relative', filter:'drop-shadow(0 0 12px rgba(232,99,95,0.2))' }}>
-              <div
-                aria-hidden
-                className="score-ring-glow"
-                style={{
-                  position:'absolute',
-                  top:'50%', left:'50%',
-                  transform:'translate(-50%,-50%)',
-                  width:120, height:120,
-                  borderRadius:'50%',
-                  background:'radial-gradient(ellipse at center, rgba(232,99,95,0.20) 0%, transparent 70%)',
-                  pointerEvents:'none',
-                  zIndex:-1,
-                }}
-              />
+            {/* Atmosphere: sev-critical drop-shadow on score ring makes the critical score feel urgent */}
+            <div style={{ filter:'drop-shadow(0 0 12px rgba(232,99,95,0.2))' }}>
               <ScoreRing score={61} size="lg" animate={false} />
             </div>
             <div>
@@ -273,16 +256,7 @@ function OutputSection() {
           {/* Finding cards */}
           <div style={{ display:'flex',flexDirection:'column',gap:12 }}>
             {MOCK_FINDINGS.map((f, i) => (
-              <div key={i} style={{
-              background:f.bg,
-              border:`0.5px solid ${f.border}`,
-              padding:16,
-              boxShadow: f.severity === 'CRITICAL'
-                ? 'inset 0 1px 0 0 rgba(232,99,95,0.15)'
-                : f.severity === 'HIGH'
-                ? 'inset 0 1px 0 0 rgba(239,178,62,0.15)'
-                : 'inset 0 1px 0 0 rgba(111,155,198,0.15)',
-            }}>
+              <div key={i} style={{ background:f.bg,border:`0.5px solid ${f.border}`,padding:16 }}>
                 <div style={{ display:'flex',alignItems:'flex-start',justifyContent:'space-between',marginBottom:8,gap:12,flexWrap:'wrap' }}>
                   <div style={{ display:'flex',alignItems:'center',gap:10,flexWrap:'wrap' }}>
                     <span style={{
@@ -372,7 +346,7 @@ const CHECK_PILLS = [
 
 function WhatWeCheckSection() {
   return (
-    <section style={{ padding:'80px 48px',borderTop:'0.5px solid rgba(111,155,198,0.1)',position:'relative',overflow:'hidden',background:'#0A0D1A' }}>
+    <section style={{ padding:'80px 48px',borderTop:'0.5px solid rgba(111,155,198,0.1)',position:'relative',overflow:'hidden' }}>
       <div style={{ maxWidth:1000,margin:'0 auto' }}>
         <p style={{ ...MONO,fontSize:11,textTransform:'uppercase',letterSpacing:'0.2em',color:STEEL,margin:'0 0 16px' }}>
           SCOPE
@@ -452,7 +426,7 @@ const HOW_STEPS: HowStep[] = [
 
 function HowItWorksSection() {
   return (
-    <section style={{ padding:'80px 48px',borderTop:'0.5px solid rgba(111,155,198,0.1)',position:'relative',overflow:'hidden',background:'#0A0D1A' }}>
+    <section style={{ padding:'80px 48px',borderTop:'0.5px solid rgba(111,155,198,0.1)',position:'relative',overflow:'hidden' }}>
       <style>{`@media(max-width:767px){.d-hiw-grid{grid-template-columns:1fr!important}}`}</style>
       <div style={{ maxWidth:1200,margin:'0 auto' }}>
         <p style={{ ...MONO,fontSize:11,textTransform:'uppercase',letterSpacing:'0.2em',color:STEEL,margin:'0 0 16px' }}>
@@ -565,7 +539,6 @@ function WhyDifferentSection() {
               borderRight:'1px solid rgba(255,255,255,0.04)',
               borderBottom:'1px solid rgba(255,255,255,0.03)',
               padding:28,
-              boxShadow:'inset 0 1px 0 0 rgba(111,155,198,0.15)',
             }}>
               <p style={{ ...DISP,fontWeight:600,fontSize:17,color:INK_PRI,margin:'0 0 14px',lineHeight:1.35 }}>{card.q}</p>
               <p style={{ ...SANS,fontSize:14,color:INK_SEC,lineHeight:1.7,margin:'0 0 16px' }}>{card.a}</p>
@@ -731,7 +704,7 @@ function PricingSection() {
 
 function FinalCtaSection() {
   return (
-    <section style={{ padding:'96px 48px',textAlign:'center',position:'relative',overflow:'hidden',borderTop:'0.5px solid rgba(111,155,198,0.1)',background:'#0A0D1A' }}>
+    <section style={{ padding:'96px 48px',textAlign:'center',position:'relative',overflow:'hidden',borderTop:'0.5px solid rgba(111,155,198,0.1)' }}>
       <div aria-hidden style={{
         position:'absolute',inset:0,pointerEvents:'none',zIndex:0,
         background:'radial-gradient(ellipse 800px 500px at 50% 50%, rgba(111,155,198,0.06) 0%, transparent 60%)',
@@ -776,15 +749,12 @@ export default function DashboardPage() {
       <QuoteSection />
       <HowItWorksSection />
       <WhyDifferentSection />
-      {/* Section 8 — even: secondary surface bg wraps benchmarks + scroll CTA */}
-      <div style={{ background:'#0A0D1A' }}>
-        <LandingCorpusStats />
-        {/* Benchmarks CTA — smooth-scroll hook from corpus section into pricing */}
-        <div style={{ textAlign:'center',padding:'0 48px 56px' }}>
-          <a href="#pricing" style={{ ...MONO,fontSize:11,color:STEEL,textDecoration:'none',letterSpacing:'0.08em' }}>
-            Upgrade to see what separates the top quartile in your vertical from everyone else.
-          </a>
-        </div>
+      <LandingCorpusStats />
+      {/* Benchmarks CTA — smooth-scroll hook from corpus section into pricing */}
+      <div style={{ textAlign:'center',padding:'0 48px 56px',background:BG_BASE }}>
+        <a href="#pricing" style={{ ...MONO,fontSize:11,color:STEEL,textDecoration:'none',letterSpacing:'0.08em' }}>
+          Upgrade to see what separates the top quartile in your vertical from everyone else.
+        </a>
       </div>
       <PricingSection />
       <FinalCtaSection />

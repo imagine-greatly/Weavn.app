@@ -191,80 +191,87 @@ function HeroSection() {
 
         {/* Right column — static scan preview panel, hidden below md */}
         {/* STATIC ILLUSTRATION */}
-        <div className="d-hero-right" style={{ flex:'0 0 380px',width:380 }}>
+        <div className="d-hero-right" style={{ flex:'0 0 420px', width:420, alignSelf:'stretch', display:'flex', flexDirection:'column' }}>
           <div style={{
-            background: 'rgba(111, 155, 198, 0.03)',
-            boxShadow: 'inset 0 1px 0 0 rgba(111, 155, 198, 0.15), 0 0 0 1px rgba(111, 155, 198, 0.08)',
+            background: 'rgba(8,12,22,0.9)',
+            border: '1px solid rgba(111,155,198,0.15)',
+            boxShadow: 'inset 0 1px 0 0 rgba(111,155,198,0.2), 0 0 0 1px rgba(111,155,198,0.06)',
             padding: 24,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 16,
+            flex: 1,
           }}>
             {/* Header row */}
-            <div style={{ display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:12 }}>
-              <p style={{ ...MONO,fontSize:9,textTransform:'uppercase',letterSpacing:'0.18em',color:'rgba(111,155,198,0.45)',margin:0 }}>
-                EXAMPLE SCAN RESULT
-              </p>
-              <p style={{ ...MONO,fontSize:9,color:LIFT_GREEN,margin:0 }}>acme-saas.com</p>
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+              <p style={{ ...MONO, fontSize:9, textTransform:'uppercase', letterSpacing:'0.18em', color:'rgba(111,155,198,0.45)', margin:0 }}>LIVE SCAN RESULT</p>
+              <p style={{ ...MONO, fontSize:9, color:LIFT_GREEN, margin:0 }}>acme-saas.com</p>
             </div>
-
-            {/* Divider */}
-            <div style={{ height:1,background:'rgba(111,155,198,0.1)',margin:'0 0 16px' }} />
-
-            {/* Score + context row */}
-            <div style={{ display:'flex',gap:16,alignItems:'flex-start',marginBottom:16 }}>
-              {/* Score ring — 56px diameter */}
+            <div style={{ height:1, background:'rgba(111,155,198,0.1)' }} />
+            {/* Score ring + context */}
+            <div style={{ display:'flex', gap:16, alignItems:'flex-start' }}>
               <div style={{ flexShrink:0 }}>
-                <svg width="56" height="56" viewBox="0 0 56 56">
-                  <circle cx="28" cy="28" r="22" stroke="rgba(111,155,198,0.12)" strokeWidth="3" fill="none" />
-                  <circle
-                    cx="28" cy="28" r="22"
-                    stroke={CRIT}
-                    strokeWidth="3"
-                    strokeDasharray="138.23"
-                    strokeDashoffset="55.76"
-                    strokeLinecap="round"
-                    fill="none"
-                    transform="rotate(-90 28 28)"
-                  />
-                  <text x="28" y="33" textAnchor="middle" fill={CRIT} style={{ fontFamily:'"Space Grotesk",sans-serif',fontSize:12,fontWeight:700 }}>61</text>
+                <svg width="96" height="96" viewBox="0 0 96 96">
+                  <circle cx="48" cy="48" r="38" stroke="rgba(111,155,198,0.12)" strokeWidth="4" fill="none" />
+                  <circle cx="48" cy="48" r="38" stroke={CRIT} strokeWidth="4" strokeDasharray="238.76" strokeDashoffset="93.12" strokeLinecap="round" fill="none" transform="rotate(-90 48 48)" />
+                  <text x="48" y="59" textAnchor="middle" fill={CRIT} style={{ fontFamily:'"Space Grotesk",sans-serif', fontSize:28, fontWeight:700 }}>61</text>
                 </svg>
-                <div style={{ textAlign:'center',marginTop:4 }}>
-                  <span style={{ ...MONO,fontSize:8,color:CRIT,border:`0.5px solid ${CRIT}`,padding:'1px 5px',textTransform:'uppercase',letterSpacing:'0.08em' }}>
-                    CRITICAL
-                  </span>
+                <div style={{ textAlign:'center', marginTop:4 }}>
+                  <span style={{ ...MONO, fontSize:8, color:CRIT, border:`0.5px solid ${CRIT}`, padding:'1px 5px', textTransform:'uppercase', letterSpacing:'0.08em' }}>CRITICAL</span>
                 </div>
               </div>
-              {/* Context */}
-              <div>
-                <p style={{ ...MONO,fontSize:10,color:'rgba(111,155,198,0.7)',margin:'0 0 4px',lineHeight:1.4 }}>
-                  63rd percentile · B2B SaaS
-                </p>
-                <p style={{ ...SANS,fontSize:11,color:INK_MUT,margin:0,lineHeight:1.5 }}>
-                  37 sites in your category score higher
-                </p>
+              <div style={{ paddingTop:8 }}>
+                <p style={{ ...MONO, fontSize:10, color:'rgba(111,155,198,0.7)', margin:'0 0 2px' }}>63rd percentile</p>
+                <p style={{ ...MONO, fontSize:9, color:INK_MUT, margin:'0 0 8px' }}>B2B SaaS</p>
+                <p style={{ ...SANS, fontSize:11, color:INK_MUT, margin:0, lineHeight:1.5 }}>37 sites score higher in your category</p>
               </div>
             </div>
-
-            {/* Divider */}
-            <div style={{ height:1,background:'rgba(111,155,198,0.1)',margin:'0 0 14px' }} />
-
-            {/* Two finding rows */}
-            <div style={{ display:'flex',alignItems:'center',gap:8,marginBottom:10 }}>
-              <span style={{ ...MONO,fontSize:8,color:CRIT,border:`0.5px solid rgba(232,99,95,0.4)`,padding:'1px 5px',textTransform:'uppercase',letterSpacing:'0.08em',flexShrink:0 }}>CRITICAL</span>
-              <span style={{ ...DISP,fontSize:12,fontWeight:500,color:INK_PRI,flex:1,lineHeight:1.3 }}>Hero headline is feature-led</span>
-              <span style={{ ...MONO,fontSize:10,color:LIFT_GREEN,flexShrink:0 }}>+12–18%</span>
+            <div style={{ height:1, background:'rgba(111,155,198,0.1)' }} />
+            {/* Three finding rows */}
+            <div style={{ display:'flex', flexDirection:'column' }}>
+              {/* Finding 1 — CRITICAL */}
+              <div style={{ paddingBottom:10, borderBottom:'0.5px solid rgba(255,255,255,0.05)', marginBottom:10 }}>
+                <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', marginBottom:4, gap:8 }}>
+                  <div style={{ display:'flex', alignItems:'flex-start', gap:6, flex:1, minWidth:0 }}>
+                    <span style={{ ...MONO, fontSize:8, color:CRIT, border:`0.5px solid rgba(232,99,95,0.4)`, padding:'1px 5px', textTransform:'uppercase', letterSpacing:'0.08em', flexShrink:0, marginTop:2 }}>CRITICAL</span>
+                    <span style={{ ...DISP, fontSize:12, fontWeight:500, color:INK_PRI, lineHeight:1.3 }}>Hero headline is feature-led, not outcome-led</span>
+                  </div>
+                  <span style={{ ...MONO, fontSize:10, color:LIFT_GREEN, flexShrink:0 }}>+12–18%</span>
+                </div>
+                <p style={{ ...SANS, fontSize:11, fontStyle:'italic', color:INK_MUT, margin:'0 0 2px', lineHeight:1.4 }}>Your H1 describes the product, not the outcome</p>
+                <p style={{ ...MONO, fontSize:9, color:INK_MUT, margin:0 }}>fix: rewrite to outcome-led · AI copy included</p>
+              </div>
+              {/* Finding 2 — HIGH */}
+              <div style={{ paddingBottom:10, borderBottom:'0.5px solid rgba(255,255,255,0.05)', marginBottom:10 }}>
+                <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', marginBottom:4, gap:8 }}>
+                  <div style={{ display:'flex', alignItems:'flex-start', gap:6, flex:1, minWidth:0 }}>
+                    <span style={{ ...MONO, fontSize:8, color:HIGH_AMB, border:`0.5px solid rgba(239,178,62,0.4)`, padding:'1px 5px', textTransform:'uppercase', letterSpacing:'0.08em', flexShrink:0, marginTop:2 }}>HIGH</span>
+                    <span style={{ ...DISP, fontSize:12, fontWeight:500, color:INK_PRI, lineHeight:1.3 }}>No above-fold social proof</span>
+                  </div>
+                  <span style={{ ...MONO, fontSize:10, color:LIFT_GREEN, flexShrink:0 }}>+8–11%</span>
+                </div>
+                <p style={{ ...SANS, fontSize:11, fontStyle:'italic', color:INK_MUT, margin:'0 0 2px', lineHeight:1.4 }}>Testimonials buried at 2,400px</p>
+                <p style={{ ...MONO, fontSize:9, color:INK_MUT, margin:0 }}>fix: move one testimonial above fold</p>
+              </div>
+              {/* Finding 3 — HIGH */}
+              <div style={{ paddingBottom:2 }}>
+                <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', marginBottom:4, gap:8 }}>
+                  <div style={{ display:'flex', alignItems:'flex-start', gap:6, flex:1, minWidth:0 }}>
+                    <span style={{ ...MONO, fontSize:8, color:HIGH_AMB, border:`0.5px solid rgba(239,178,62,0.4)`, padding:'1px 5px', textTransform:'uppercase', letterSpacing:'0.08em', flexShrink:0, marginTop:2 }}>HIGH</span>
+                    <span style={{ ...DISP, fontSize:12, fontWeight:500, color:INK_PRI, lineHeight:1.3 }}>Dual primary CTAs create decision paralysis</span>
+                  </div>
+                  <span style={{ ...MONO, fontSize:10, color:LIFT_GREEN, flexShrink:0 }}>+6–9%</span>
+                </div>
+                <p style={{ ...SANS, fontSize:11, fontStyle:'italic', color:INK_MUT, margin:'0 0 2px', lineHeight:1.4 }}>Two competing CTAs split visitor attention</p>
+                <p style={{ ...MONO, fontSize:9, color:INK_MUT, margin:0 }}>fix: consolidate to single primary action</p>
+              </div>
             </div>
-            <div style={{ display:'flex',alignItems:'center',gap:8,marginBottom:14 }}>
-              <span style={{ ...MONO,fontSize:8,color:HIGH_AMB,border:`0.5px solid rgba(239,178,62,0.4)`,padding:'1px 5px',textTransform:'uppercase',letterSpacing:'0.08em',flexShrink:0 }}>HIGH</span>
-              <span style={{ ...DISP,fontSize:12,fontWeight:500,color:INK_PRI,flex:1,lineHeight:1.3 }}>No above-fold social proof</span>
-              <span style={{ ...MONO,fontSize:10,color:LIFT_GREEN,flexShrink:0 }}>+8–11%</span>
+            <div style={{ height:1, background:'rgba(111,155,198,0.1)' }} />
+            {/* Footer row */}
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+              <p style={{ ...MONO, fontSize:9, color:INK_MUT, margin:0 }}>23 findings · 4 critical · 11 high</p>
+              <p style={{ ...MONO, fontSize:9, color:LIFT_GREEN, margin:0 }}>~90s</p>
             </div>
-
-            {/* Divider */}
-            <div style={{ height:1,background:'rgba(111,155,198,0.1)',margin:'0 0 12px' }} />
-
-            {/* Footer */}
-            <p style={{ ...MONO,fontSize:9,color:INK_MUT,textAlign:'center',margin:0 }}>
-              23 findings · plain-English fixes · AI-rewritten copy
-            </p>
           </div>
         </div>
       </div>
@@ -590,26 +597,38 @@ function ReportAnatomySection() {
           Every webdoc report has the same structure. You always know what you&apos;re looking at and what to do with it.
         </p>
 
-        {/* Report section rows */}
-        <div style={{ borderLeft:'1px solid rgba(111,155,198,0.15)',marginBottom:24 }}>
-          {REPORT_ROWS.map((row, i) => (
-            <div key={row.name} style={{
-              display:'flex',gap:32,padding:'16px 24px',
-              borderBottom: i < REPORT_ROWS.length - 1 ? '0.5px solid rgba(111,155,198,0.08)' : undefined,
-              flexWrap:'wrap',
-            }}>
-              <div style={{ flex:'0 0 200px',minWidth:120 }}>
-                <p style={{ ...DISP,fontSize:14,fontWeight:500,color:INK_PRI,margin:0 }}>{row.name}</p>
-              </div>
-              <div style={{ flex:1,minWidth:200 }}>
-                <p style={{ ...SANS,fontSize:14,color:INK_MUT,margin:0,lineHeight:1.6 }}>{row.content}</p>
-              </div>
+        {/* Report anatomy diagram — STATIC ILLUSTRATION */}
+        <div style={{ display:'flex', gap:0, alignItems:'flex-start', marginBottom:32, flexWrap:'wrap' }}>
+          {/* Left column — score ring */}
+          <div style={{ flex:'0 0 35%', minWidth:180, display:'flex', flexDirection:'column', alignItems:'center', paddingRight:32, paddingTop:8 }}>
+            <svg width="100" height="100" viewBox="0 0 100 100">
+              <circle cx="50" cy="50" r="40" stroke="rgba(111,155,198,0.12)" strokeWidth="4" fill="none" />
+              <circle cx="50" cy="50" r="40" stroke={CRIT} strokeWidth="4" strokeDasharray="251.33" strokeDashoffset="97.97" strokeLinecap="round" fill="none" transform="rotate(-90 50 50)" />
+              <text x="50" y="61" textAnchor="middle" fill={CRIT} style={{ fontFamily:'"Space Grotesk",sans-serif', fontSize:26, fontWeight:700 }}>61</text>
+            </svg>
+            <div style={{ textAlign:'center', marginTop:8 }}>
+              <span style={{ ...MONO, fontSize:8, color:CRIT, border:`0.5px solid ${CRIT}`, padding:'1px 5px', textTransform:'uppercase', letterSpacing:'0.08em' }}>CRITICAL</span>
             </div>
-          ))}
+            <p style={{ ...MONO, fontSize:9, color:INK_MUT, textAlign:'center', margin:'8px 0 0', lineHeight:1.5 }}>63rd pct · B2B SaaS</p>
+            <div style={{ width:1, height:40, background:'rgba(111,155,198,0.2)', margin:'12px auto 0' }} />
+            <p style={{ ...MONO, fontSize:8, color:INK_MUT, textAlign:'center', margin:'8px 0 0', textTransform:'uppercase', letterSpacing:'0.12em' }}>YOUR REPORT</p>
+          </div>
+          {/* Right column — six component boxes */}
+          <div style={{ flex:'1 1 65%', minWidth:220 }}>
+            {REPORT_ROWS.map((row, i) => (
+              <div key={row.name} style={{ display:'flex', alignItems:'center', marginBottom: i < REPORT_ROWS.length - 1 ? 16 : 0 }}>
+                <div style={{ width:40, height:1, background:'rgba(111,155,198,0.08)', flexShrink:0 }} />
+                <div style={{ flex:1, borderLeft:'2px solid rgba(111,155,198,0.2)', paddingLeft:16 }}>
+                  <p style={{ ...DISP, fontSize:14, fontWeight:500, color:INK_PRI, margin:'0 0 2px' }}>{row.name}</p>
+                  <p style={{ ...SANS, fontSize:12, color:INK_MUT, margin:0, lineHeight:1.55 }}>{row.content}</p>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
 
-        <p style={{ ...MONO,fontSize:11,color:INK_MUT,margin:0 }}>
-          Delivered in your dashboard. Exportable as PDF. Shareable via link.
+        <p style={{ ...MONO,fontSize:11,color:INK_MUT,textAlign:'center',margin:0 }}>
+          Delivered in dashboard · exportable as PDF · shareable via link
         </p>
       </div>
     </section>
@@ -618,37 +637,38 @@ function ReportAnatomySection() {
 
 // ── Section 5 — Vertical Showcase ────────────────────────────────────────────
 
+// STATIC ILLUSTRATION
 const VERTICAL_CARDS = [
   {
     type: 'B2B SAAS',
     desc: 'Pricing pages, feature lists, trial flows, and demo CTAs — all evaluated against SaaS conversion benchmarks.',
     findings: [
-      '"Trial CTA below fold on mobile — 34% of visitors never see it"',
-      '"Feature list leads with capabilities, not outcomes"',
+      { sev: 'CRITICAL', sevColor: '#E8635F', sevBorder: 'rgba(232,99,95,0.4)', title: 'Trial CTA below fold on mobile', lift: '+8–12%', evidence: 'Primary action not visible on 375px viewport without scrolling' },
+      { sev: 'HIGH', sevColor: '#EFB23E', sevBorder: 'rgba(239,178,62,0.4)', title: 'Feature list leads with capabilities, not outcomes', lift: '+6–9%', evidence: 'Above-fold copy describes what the product does, not what the user gets' },
     ],
   },
   {
     type: 'E-COMMERCE',
     desc: 'Product pages, collection pages, cart flows — evaluated against purchase conversion patterns.',
     findings: [
-      '"No social proof on product page above add-to-cart"',
-      '"Shipping cost not visible until checkout — high abandonment signal"',
+      { sev: 'CRITICAL', sevColor: '#E8635F', sevBorder: 'rgba(232,99,95,0.4)', title: 'No social proof on product page above add-to-cart', lift: '+10–15%', evidence: 'First testimonial appears at 1,800px — below the purchase decision point' },
+      { sev: 'HIGH', sevColor: '#EFB23E', sevBorder: 'rgba(239,178,62,0.4)', title: 'Shipping cost not visible until checkout', lift: '+7–11%', evidence: 'Price anchoring incomplete — total cost unknown until final step' },
     ],
   },
   {
     type: 'AGENCY / SERVICE',
     desc: 'Service pages, case study placement, inquiry CTAs — evaluated against service business conversion patterns.',
     findings: [
-      '"No specific outcome stated — \'we help businesses grow\' is not a value proposition"',
-      '"Contact form requires 7 fields — reduces submission rate significantly"',
+      { sev: 'HIGH', sevColor: '#EFB23E', sevBorder: 'rgba(239,178,62,0.4)', title: 'No specific outcome stated in hero', lift: '+9–14%', evidence: "'We help businesses grow' is not a value proposition" },
+      { sev: 'HIGH', sevColor: '#EFB23E', sevBorder: 'rgba(239,178,62,0.4)', title: 'Contact form requires 7 fields', lift: '+6–10%', evidence: 'Industry data shows >4 fields reduces submission rate by 50%+' },
     ],
   },
   {
     type: 'CREATOR / NEWSLETTER',
     desc: 'Landing pages, opt-in forms, membership pages — evaluated against creator conversion benchmarks.',
     findings: [
-      '"No proof of content quality above the fold — what does subscribing get me?"',
-      '"Single opt-in CTA with no supporting reason to act"',
+      { sev: 'HIGH', sevColor: '#EFB23E', sevBorder: 'rgba(239,178,62,0.4)', title: 'No proof of content quality above fold', lift: '+8–12%', evidence: 'Visitor cannot evaluate what subscribing gets them before the opt-in ask' },
+      { sev: 'HIGH', sevColor: '#EFB23E', sevBorder: 'rgba(239,178,62,0.4)', title: 'Single opt-in CTA with no supporting reason to act', lift: '+5–8%', evidence: 'No social proof, sample content, or urgency signal near the CTA' },
     ],
   },
 ]
@@ -679,10 +699,21 @@ function VerticalShowcaseSection() {
               boxShadow:'inset 0 1px 0 0 rgba(111,155,198,0.08)',
             }}>
               <p style={{ ...MONO,fontSize:10,textTransform:'uppercase',letterSpacing:'0.15em',color:STEEL,margin:'0 0 8px' }}>{card.type}</p>
-              <p style={{ ...SANS,fontSize:13,color:INK_MUT,margin:'0 0 14px',lineHeight:1.55 }}>{card.desc}</p>
-              {card.findings.map(f => (
-                <p key={f} style={{ ...SANS,fontSize:12,fontStyle:'italic',color:INK_MUT,margin:'0 0 4px',lineHeight:1.5,opacity:0.75 }}>{f}</p>
-              ))}
+              <p style={{ ...SANS,fontSize:13,color:INK_MUT,margin:'0 0 16px',lineHeight:1.55 }}>{card.desc}</p>
+              <div style={{ display:'flex',flexDirection:'column',gap:10 }}>
+                {card.findings.map((f, fi) => (
+                  <div key={fi} style={{ borderLeft:`2px solid ${f.sevColor === '#E8635F' ? 'rgba(232,99,95,0.35)' : 'rgba(239,178,62,0.3)'}`, paddingLeft:10 }}>
+                    <div style={{ display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:4,gap:8 }}>
+                      <div style={{ display:'flex',alignItems:'center',gap:6 }}>
+                        <span style={{ ...MONO,fontSize:8,color:f.sevColor,border:`0.5px solid ${f.sevBorder}`,padding:'1px 4px',textTransform:'uppercase',letterSpacing:'0.08em',flexShrink:0 }}>{f.sev}</span>
+                        <span style={{ ...DISP,fontSize:12,fontWeight:500,color:INK_PRI,lineHeight:1.3 }}>{f.title}</span>
+                      </div>
+                      <span style={{ ...MONO,fontSize:9,color:LIFT_GREEN,flexShrink:0 }}>{f.lift}</span>
+                    </div>
+                    <p style={{ ...SANS,fontSize:11,color:INK_MUT,margin:0,lineHeight:1.4,opacity:0.8 }}>{f.evidence}</p>
+                  </div>
+                ))}
+              </div>
             </div>
           ))}
         </div>
@@ -698,19 +729,19 @@ function VerticalShowcaseSection() {
 // ── Section 6 — What We Check ─────────────────────────────────────────────────
 
 const SCOPE_ITEMS_LEFT = [
-  { cat: 'Value proposition', q: "Does your headline communicate a specific outcome, or just describe what you built?" },
-  { cat: 'Social proof', q: "Are testimonials visible before 800px? Are they specific or generic?" },
-  { cat: 'CTA clarity', q: "Is there one primary action above the fold, or are visitors choosing between competing options?" },
-  { cat: 'Offer structure', q: "Is your pricing, trial, or free tier visible and framed around value rather than cost?" },
-  { cat: 'Objection handling', q: "Does the page address the most common reasons someone wouldn't buy?" },
+  { cat: 'Value proposition', q: "Does your headline communicate a specific outcome, or just describe what you built?", ex: "ex: 'Hero headline is feature-led, not outcome-led · est. lift +12–18%'" },
+  { cat: 'Social proof', q: "Are testimonials visible before 800px? Are they specific or generic?", ex: "ex: 'No testimonials visible above 800px fold · est. lift +8–11%'" },
+  { cat: 'CTA clarity', q: "Is there one primary action above the fold, or are visitors choosing between competing options?", ex: "ex: 'Dual primary CTAs create decision paralysis · est. lift +6–9%'" },
+  { cat: 'Offer structure', q: "Is your pricing, trial, or free tier visible and framed around value rather than cost?", ex: "ex: 'Pricing not visible without scrolling · est. lift +5–8%'" },
+  { cat: 'Objection handling', q: "Does the page address the most common reasons someone wouldn't buy?", ex: "ex: 'No FAQ or risk-reversal above fold · est. lift +4–7%'" },
 ]
 
 const SCOPE_ITEMS_RIGHT = [
-  { cat: 'Visual hierarchy', q: "Does the eye flow naturally from headline to proof to action, or does layout compete with itself?" },
-  { cat: 'Trust signals', q: "Are security badges, guarantees, or credentials present where purchase anxiety peaks?" },
-  { cat: 'Mobile experience', q: "Does the page convert on mobile, or does it just render without breaking?" },
-  { cat: 'Load perception', q: "Does the page feel fast? Perceived load time affects conversion independent of actual speed." },
-  { cat: 'Above-fold layout', q: "What does a visitor see before scrolling? Is it enough to make them want to scroll?" },
+  { cat: 'Visual hierarchy', q: "Does the eye flow naturally from headline to proof to action, or does layout compete with itself?", ex: "ex: 'Eye tracking path broken by competing elements · est. lift +5–9%'" },
+  { cat: 'Trust signals', q: "Are security badges, guarantees, or credentials present where purchase anxiety peaks?", ex: "ex: 'No security badge near payment CTA · est. lift +3–6%'" },
+  { cat: 'Mobile experience', q: "Does the page convert on mobile, or does it just render without breaking?", ex: "ex: 'Primary CTA below fold on 375px viewport · est. lift +8–12%'" },
+  { cat: 'Load perception', q: "Does the page feel fast? Perceived load time affects conversion independent of actual speed.", ex: "ex: 'No loading state — page appears frozen for 2.1s · est. lift +4–7%'" },
+  { cat: 'Above-fold layout', q: "What does a visitor see before scrolling? Is it enough to make them want to scroll?", ex: "ex: 'Value prop, proof, and CTA not all visible before scroll · est. lift +10–15%'" },
 ]
 
 function WhatWeCheckSection() {
@@ -746,17 +777,19 @@ function WhatWeCheckSection() {
         <div className="d-scope-grid" style={{ display:'grid',gridTemplateColumns:'1fr 1fr',gap:'0 48px',marginBottom:32 }}>
           <div>
             {SCOPE_ITEMS_LEFT.map(item => (
-              <div key={item.cat} style={{ borderLeft:'1px solid rgba(111,155,198,0.2)',paddingLeft:16,marginBottom:24 }}>
+              <div key={item.cat} style={{ borderLeft:'2px solid rgba(111,155,198,0.2)',paddingLeft:16,marginBottom:32 }}>
                 <p style={{ ...DISP,fontSize:14,fontWeight:500,color:INK_PRI,margin:'0 0 4px' }}>{item.cat}</p>
-                <p style={{ ...SANS,fontSize:13,color:INK_MUT,margin:0,lineHeight:1.55 }}>{item.q}</p>
+                <p style={{ ...SANS,fontSize:13,color:INK_MUT,margin:'0 0 6px',lineHeight:1.55 }}>{item.q}</p>
+                <p style={{ ...MONO,fontSize:10,fontStyle:'italic',color:INK_MUT,margin:0,lineHeight:1.5,opacity:0.7 }}>{item.ex}</p>
               </div>
             ))}
           </div>
           <div>
             {SCOPE_ITEMS_RIGHT.map(item => (
-              <div key={item.cat} style={{ borderLeft:'1px solid rgba(111,155,198,0.2)',paddingLeft:16,marginBottom:24 }}>
+              <div key={item.cat} style={{ borderLeft:'2px solid rgba(111,155,198,0.2)',paddingLeft:16,marginBottom:32 }}>
                 <p style={{ ...DISP,fontSize:14,fontWeight:500,color:INK_PRI,margin:'0 0 4px' }}>{item.cat}</p>
-                <p style={{ ...SANS,fontSize:13,color:INK_MUT,margin:0,lineHeight:1.55 }}>{item.q}</p>
+                <p style={{ ...SANS,fontSize:13,color:INK_MUT,margin:'0 0 6px',lineHeight:1.55 }}>{item.q}</p>
+                <p style={{ ...MONO,fontSize:10,fontStyle:'italic',color:INK_MUT,margin:0,lineHeight:1.5,opacity:0.7 }}>{item.ex}</p>
               </div>
             ))}
           </div>
@@ -823,7 +856,7 @@ const PIPELINE_STEPS = [
 function HowItWorksSection() {
   return (
     <section style={{ padding:'80px 48px',borderTop:'0.5px solid rgba(111,155,198,0.1)',position:'relative',overflow:'visible' }}>
-      <div style={{ maxWidth:700,margin:'0 auto' }}>
+      <div style={{ maxWidth:1000,margin:'0 auto' }}>
         <p style={{ ...MONO,fontSize:11,textTransform:'uppercase',letterSpacing:'0.2em',color:STEEL,margin:'0 0 16px' }}>
           THE PROCESS
         </p>
@@ -837,7 +870,7 @@ function HowItWorksSection() {
           <div style={{ position:'absolute',left:7,top:8,bottom:8,width:1,background:'rgba(111,155,198,0.15)',zIndex:0 }} />
 
           {PIPELINE_STEPS.map((step, i) => (
-            <div key={step.num} style={{ position:'relative',display:'flex',gap:24,marginBottom: i < PIPELINE_STEPS.length - 1 ? 32 : 0 }}>
+            <div key={step.num} style={{ position:'relative',display:'flex',gap:24,alignItems:'flex-start',marginBottom: i < PIPELINE_STEPS.length - 1 ? 32 : 0 }}>
               {/* Node on connector line */}
               <div style={{ flexShrink:0,width:15,display:'flex',justifyContent:'center',paddingTop:4,zIndex:1 }}>
                 <div style={{
@@ -847,13 +880,83 @@ function HowItWorksSection() {
                   flexShrink:0,
                 }} />
               </div>
-              {/* Content */}
-              <div style={{ flex:1,minWidth:0,paddingBottom:4 }}>
+              {/* Text — left 60% */}
+              <div style={{ flex:'0 0 55%',minWidth:0,paddingBottom:4 }}>
                 <p style={{ ...MONO,fontSize:10,color:STEEL,margin:'0 0 4px',letterSpacing:'0.08em' }}>{step.num}</p>
                 <p style={{ ...DISP,fontSize:16,fontWeight:600,color:INK_PRI,margin:'0 0 8px',lineHeight:1.25 }}>{step.title}</p>
                 <p style={{ ...SANS,fontSize:14,color:INK_SEC,lineHeight:1.65,margin:0 }}>{step.desc}</p>
                 {step.tag && (
                   <p style={{ ...MONO,fontSize:10,color:INK_MUT,margin:'8px 0 0',letterSpacing:'0.04em',lineHeight:1.5 }}>{step.tag}</p>
+                )}
+              </div>
+              {/* Visual artifact — right 40% */}
+              {/* STATIC ILLUSTRATION */}
+              <div style={{ flex:1,minWidth:0,display:'flex',justifyContent:'flex-end' }}>
+                {i === 0 && (
+                  <div style={{ background:'rgba(10,14,24,0.8)',border:'1px solid rgba(111,155,198,0.15)',padding:'10px 14px',maxWidth:200,width:'100%' }}>
+                    <div style={{ display:'flex',alignItems:'center',gap:8 }}>
+                      <span style={{ ...MONO,fontSize:11,color:'rgba(111,155,198,0.35)',flexShrink:0 }}>https://</span>
+                      <span style={{ ...MONO,fontSize:11,color:LIFT_GREEN,flex:1 }}>acme-saas.com</span>
+                      <span style={{ ...MONO,fontSize:11,color:STEEL,flexShrink:0 }}>→</span>
+                    </div>
+                  </div>
+                )}
+                {i === 1 && (
+                  <div style={{ background:'rgba(10,14,24,0.8)',border:'1px solid rgba(111,155,198,0.15)',padding:'10px 14px',maxWidth:200,width:'100%' }}>
+                    <div style={{ display:'flex',alignItems:'center',gap:6,marginBottom:8,borderBottom:'0.5px solid rgba(111,155,198,0.1)',paddingBottom:8 }}>
+                      <span style={{ display:'inline-block',width:6,height:6,borderRadius:'50%',background:'rgba(232,99,95,0.6)' }} />
+                      <span style={{ display:'inline-block',width:6,height:6,borderRadius:'50%',background:'rgba(239,178,62,0.6)' }} />
+                      <span style={{ display:'inline-block',width:6,height:6,borderRadius:'50%',background:'rgba(0,196,140,0.6)' }} />
+                      <span style={{ ...MONO,fontSize:9,color:INK_MUT,marginLeft:4 }}>acme-saas.com</span>
+                    </div>
+                    <div style={{ display:'flex',flexDirection:'column',gap:4 }}>
+                      <div style={{ height:8,background:'rgba(111,155,198,0.15)',width:'75%' }} />
+                      <div style={{ height:6,background:'rgba(111,155,198,0.08)',width:'90%' }} />
+                      <div style={{ height:6,background:'rgba(111,155,198,0.08)',width:'60%' }} />
+                    </div>
+                    <p style={{ ...MONO,fontSize:9,color:INK_MUT,margin:'8px 0 0' }}>rendering...</p>
+                  </div>
+                )}
+                {i === 2 && (
+                  <div style={{ background:'rgba(10,14,24,0.8)',border:'1px solid rgba(111,155,198,0.15)',padding:'10px 14px',maxWidth:200,width:'100%' }}>
+                    <div style={{ display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:3,marginBottom:8 }}>
+                      {Array.from({length:16}).map((_, idx) => (
+                        <div key={idx} style={{ width:14,height:14,background: idx >= 12 ? 'rgba(232,99,95,0.5)' : 'rgba(0,196,140,0.4)',border: idx >= 12 ? '0.5px solid rgba(232,99,95,0.3)' : '0.5px solid rgba(0,196,140,0.3)' }} />
+                      ))}
+                    </div>
+                    <p style={{ ...MONO,fontSize:9,color:INK_MUT,margin:0 }}>307 checks · 23 findings</p>
+                  </div>
+                )}
+                {i === 3 && (
+                  <div style={{ background:'rgba(10,14,24,0.8)',border:'1px solid rgba(111,155,198,0.15)',padding:'10px 14px',maxWidth:200,width:'100%' }}>
+                    {[
+                      { sev:'P1 · CRITICAL', lift:'+12–18%', sevColor:CRIT },
+                      { sev:'P2 · HIGH', lift:'+8–11%', sevColor:HIGH_AMB },
+                      { sev:'P3 · HIGH', lift:'+6–9%', sevColor:HIGH_AMB },
+                    ].map((r, j) => (
+                      <div key={j} style={{ display:'flex',justifyContent:'space-between',alignItems:'center',paddingBottom: j < 2 ? 6 : 0,borderBottom: j < 2 ? '0.5px solid rgba(111,155,198,0.06)' : 'none',marginBottom: j < 2 ? 6 : 0 }}>
+                        <span style={{ ...MONO,fontSize:9,color:r.sevColor }}>{r.sev}</span>
+                        <span style={{ ...MONO,fontSize:9,color:LIFT_GREEN }}>{r.lift}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {i === 4 && (
+                  <div style={{ background:'rgba(10,14,24,0.8)',border:'1px solid rgba(111,155,198,0.15)',padding:'10px 14px',maxWidth:200,width:'100%' }}>
+                    <p style={{ ...SANS,fontSize:11,color:INK_MUT,margin:'0 0 6px',fontStyle:'italic',lineHeight:1.4,opacity:0.6 }}>&ldquo;The project management tool...&rdquo;</p>
+                    <div style={{ height:1,background:'rgba(0,196,140,0.2)',margin:'0 0 6px' }} />
+                    <p style={{ ...SANS,fontSize:11,color:LIFT_GREEN,margin:0,lineHeight:1.4 }}>&ldquo;Ship projects on time...&rdquo;</p>
+                  </div>
+                )}
+                {i === 5 && (
+                  <div style={{ background:'rgba(10,14,24,0.8)',border:'1px solid rgba(111,155,198,0.15)',padding:'10px 14px',maxWidth:200,width:'100%' }}>
+                    <svg width="100%" height="60" viewBox="0 0 160 60" preserveAspectRatio="none">
+                      <path d="M 0,56 C 30,56 55,54 75,42 C 90,33 100,18 110,10 C 120,3 130,5 140,14 C 148,20 154,32 160,56" fill="none" stroke="rgba(111,155,198,0.5)" strokeWidth="1.2" />
+                      <line x1="101" y1="0" x2="101" y2="58" stroke="rgba(111,155,198,0.3)" strokeWidth="0.75" strokeDasharray="3 2" />
+                      <circle cx="101" cy="14" r="2.5" fill="rgba(111,155,198,0.8)" />
+                      <text x="101" y="8" textAnchor="middle" fontFamily="IBM Plex Mono, monospace" fontSize="7" fill="rgba(111,155,198,0.7)">63rd pct</text>
+                    </svg>
+                  </div>
                 )}
               </div>
             </div>
@@ -913,17 +1016,14 @@ function ComparisonSection() {
           Not ChatGPT. Not Lighthouse. Not a generic audit.
         </h2>
 
-        <div className="d-compare-grid" style={{ display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:24 }}>
+        <div className="d-compare-grid" style={{ display:'grid',gridTemplateColumns:'28fr 28fr 44fr',gap:16 }}>
           {/* Column 1 — ChatGPT */}
           <div style={{
-            borderTop:'1px solid rgba(255,255,255,0.08)',
-            borderLeft:'1px solid rgba(255,255,255,0.05)',
-            borderRight:'1px solid rgba(255,255,255,0.03)',
-            borderBottom:'1px solid rgba(255,255,255,0.03)',
+            border:'1px solid rgba(255,255,255,0.08)',
             padding:24,
-            boxShadow:'inset 0 1px 0 0 rgba(255,255,255,0.06)',
+            opacity:0.65,
           }}>
-            <p style={{ ...MONO,fontSize:10,textTransform:'uppercase',letterSpacing:'0.15em',color:INK_MUT,margin:'0 0 8px' }}>CHATGPT</p>
+            <p style={{ ...MONO,fontSize:10,textTransform:'uppercase',letterSpacing:'0.15em',color:INK_MUT,margin:'0 0 8px',opacity:0.5 }}>CHATGPT</p>
             <p style={{ ...SANS,fontSize:13,color:INK_MUT,margin:'0 0 20px',lineHeight:1.5 }}>A language model with no live page access</p>
             {CHATGPT_ITEMS.map(item => (
               <p key={item} style={{ ...SANS,fontSize:13,color:INK_MUT,margin:'0 0 8px',lineHeight:1.5 }}>· {item}</p>
@@ -932,34 +1032,29 @@ function ComparisonSection() {
 
           {/* Column 2 — Lighthouse */}
           <div style={{
-            borderTop:'1px solid rgba(255,255,255,0.08)',
-            borderLeft:'1px solid rgba(255,255,255,0.05)',
-            borderRight:'1px solid rgba(255,255,255,0.03)',
-            borderBottom:'1px solid rgba(255,255,255,0.03)',
+            border:'1px solid rgba(255,255,255,0.08)',
             padding:24,
-            boxShadow:'inset 0 1px 0 0 rgba(255,255,255,0.06)',
+            opacity:0.65,
           }}>
-            <p style={{ ...MONO,fontSize:10,textTransform:'uppercase',letterSpacing:'0.15em',color:INK_MUT,margin:'0 0 8px' }}>LIGHTHOUSE / PAGESPEED</p>
+            <p style={{ ...MONO,fontSize:10,textTransform:'uppercase',letterSpacing:'0.15em',color:INK_MUT,margin:'0 0 8px',opacity:0.5 }}>LIGHTHOUSE / PAGESPEED</p>
             <p style={{ ...SANS,fontSize:13,color:INK_MUT,margin:'0 0 20px',lineHeight:1.5 }}>A technical performance tool</p>
             {LIGHTHOUSE_ITEMS.map(item => (
               <p key={item} style={{ ...SANS,fontSize:13,color:INK_MUT,margin:'0 0 8px',lineHeight:1.5 }}>· {item}</p>
             ))}
           </div>
 
-          {/* Column 3 — webdoc (elevated) */}
+          {/* Column 3 — webdoc (dominant) */}
           <div style={{
-            borderTop:'1px solid rgba(111, 155, 198, 0.4)',
-            borderLeft:'1px solid rgba(111,155,198,0.15)',
-            borderRight:'1px solid rgba(111,155,198,0.08)',
-            borderBottom:'1px solid rgba(111,155,198,0.06)',
+            background:'rgba(111,155,198,0.04)',
+            border:'1px solid rgba(111,155,198,0.35)',
+            boxShadow:'0 0 40px rgba(111,155,198,0.08), inset 0 1px 0 0 rgba(111,155,198,0.2)',
             padding:24,
-            background:'rgba(111, 155, 198, 0.03)',
-            boxShadow:'inset 0 1px 0 0 rgba(111, 155, 198, 0.18)',
           }}>
-            <p style={{ ...MONO,fontSize:10,textTransform:'uppercase',letterSpacing:'0.15em',color:STEEL,margin:'0 0 8px' }}>WEBDOC</p>
-            <p style={{ ...SANS,fontSize:13,color:INK_PRI,margin:'0 0 20px',lineHeight:1.5 }}>A structured conversion audit engine</p>
+            <p style={{ ...MONO,fontSize:9,textTransform:'uppercase',letterSpacing:'0.15em',color:STEEL,margin:'0 0 10px',border:'0.5px solid rgba(111,155,198,0.25)',padding:'3px 8px',display:'inline-block' }}>WHAT WEBDOC GIVES YOU</p>
+            <p style={{ ...MONO,fontSize:11,textTransform:'uppercase',letterSpacing:'0.15em',color:STEEL,margin:'0 0 8px' }}>WEBDOC</p>
+            <p style={{ ...SANS,fontSize:14,color:INK_PRI,margin:'0 0 20px',lineHeight:1.5 }}>A structured conversion audit engine</p>
             {WEBDOC_ITEMS.map(item => (
-              <p key={item} style={{ ...SANS,fontSize:13,color:INK_PRI,margin:'0 0 8px',lineHeight:1.5 }}>· {item}</p>
+              <p key={item} style={{ ...SANS,fontSize:14,color:INK_PRI,margin:'0 0 8px',lineHeight:1.5 }}>· {item}</p>
             ))}
           </div>
         </div>
@@ -1160,47 +1255,53 @@ function MultiSiteSection() {
 
         {/* White-label mock panel — STATIC ILLUSTRATION */}
         <div style={{
-          borderTop: '1px solid rgba(255,255,255,0.08)',
-          borderLeft: '1px solid rgba(255,255,255,0.06)',
-          borderRight: '1px solid rgba(255,255,255,0.04)',
-          borderBottom: '1px solid rgba(255,255,255,0.03)',
-          background: 'rgba(157,140,255,0.02)',
-          padding: '20px 24px',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
+          background: 'rgba(8,12,22,0.95)',
+          border: '1px solid rgba(157,140,255,0.2)',
+          padding: 28,
           marginBottom: 12,
-          flexWrap: 'wrap',
-          gap: 16,
-          boxShadow: 'inset 0 1px 0 0 rgba(157,140,255,0.08)',
         }}>
-          <div>
-            <p style={{ ...DISP, fontSize: 18, fontWeight: 600, color: INK_PRI, margin: '0 0 4px' }}>ACME AGENCY</p>
-            <p style={{ ...SANS, fontSize: 13, color: INK_MUT, margin: '0 0 6px' }}>Conversion Audit Report</p>
-            <p style={{ ...MONO, fontSize: 10, color: INK_MUT, margin: 0 }}>acme-client.com · June 2026 · B2B SaaS · 63rd percentile</p>
-          </div>
-          {/* Small score ring — 40px */}
-          <div style={{ textAlign: 'center' }}>
-            <svg width="40" height="40" viewBox="0 0 40 40">
-              <circle cx="20" cy="20" r="15" stroke="rgba(111,155,198,0.12)" strokeWidth="2.5" fill="none" />
-              <circle
-                cx="20" cy="20" r="15"
-                stroke={CRIT}
-                strokeWidth="2.5"
-                strokeDasharray="94.25"
-                strokeDashoffset="37.98"
-                strokeLinecap="round"
-                fill="none"
-                transform="rotate(-90 20 20)"
-              />
-              <text x="20" y="25" textAnchor="middle" fill={CRIT} style={{ fontFamily:'"Space Grotesk",sans-serif',fontSize:10,fontWeight:700 }}>61</text>
-            </svg>
-            <div style={{ marginTop: 4 }}>
-              <span style={{ ...MONO, fontSize: 8, color: CRIT, border: `0.5px solid ${CRIT}`, padding: '1px 4px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-                CRITICAL
-              </span>
+          {/* Header row */}
+          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:16, flexWrap:'wrap', gap:16 }}>
+            <div style={{ display:'flex', alignItems:'center', gap:16 }}>
+              {/* Logo placeholder */}
+              <div style={{ width:48, height:48, background:'rgba(157,140,255,0.15)', border:'1px solid rgba(157,140,255,0.3)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+                <span style={{ ...MONO, fontSize:14, fontWeight:700, color:'rgba(157,140,255,0.9)' }}>AC</span>
+              </div>
+              <div>
+                <p style={{ ...DISP, fontSize:20, fontWeight:700, color:INK_PRI, margin:'0 0 2px' }}>ACME AGENCY</p>
+                <p style={{ ...SANS, fontSize:13, color:INK_MUT, margin:'0 0 3px' }}>Conversion Audit Report</p>
+                <p style={{ ...MONO, fontSize:10, color:INK_MUT, margin:0 }}>acme-client.com · June 2026 · B2B SaaS</p>
+              </div>
+            </div>
+            {/* Score ring 56px */}
+            <div style={{ textAlign:'center', flexShrink:0 }}>
+              <svg width="56" height="56" viewBox="0 0 56 56">
+                <circle cx="28" cy="28" r="22" stroke="rgba(111,155,198,0.12)" strokeWidth="3" fill="none" />
+                <circle cx="28" cy="28" r="22" stroke={CRIT} strokeWidth="3" strokeDasharray="138.23" strokeDashoffset="53.91" strokeLinecap="round" fill="none" transform="rotate(-90 28 28)" />
+                <text x="28" y="33" textAnchor="middle" fill={CRIT} style={{ fontFamily:'"Space Grotesk",sans-serif', fontSize:12, fontWeight:700 }}>61</text>
+              </svg>
+              <div style={{ marginTop:4 }}>
+                <span style={{ ...MONO, fontSize:8, color:CRIT, border:`0.5px solid ${CRIT}`, padding:'1px 4px', textTransform:'uppercase', letterSpacing:'0.08em' }}>CRITICAL</span>
+              </div>
+              <p style={{ ...MONO, fontSize:9, color:INK_MUT, margin:'4px 0 0' }}>63rd percentile</p>
             </div>
           </div>
+          <div style={{ height:1, background:'rgba(157,140,255,0.12)', marginBottom:16 }} />
+          {/* Three mini finding rows */}
+          {[
+            { sev:'CRITICAL', sevColor:CRIT, sevBorder:'rgba(232,99,95,0.4)', title:'Hero headline is feature-led', lift:'+12–18%' },
+            { sev:'HIGH', sevColor:HIGH_AMB, sevBorder:'rgba(239,178,62,0.4)', title:'No above-fold social proof', lift:'+8–11%' },
+            { sev:'HIGH', sevColor:HIGH_AMB, sevBorder:'rgba(239,178,62,0.4)', title:'Dual primary CTAs', lift:'+6–9%' },
+          ].map((f, fi) => (
+            <div key={fi} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:8, paddingBottom: fi < 2 ? 10 : 0, borderBottom: fi < 2 ? '0.5px solid rgba(157,140,255,0.08)' : 'none', marginBottom: fi < 2 ? 10 : 0 }}>
+              <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+                <span style={{ ...MONO, fontSize:8, color:f.sevColor, border:`0.5px solid ${f.sevBorder}`, padding:'1px 5px', textTransform:'uppercase', letterSpacing:'0.08em', flexShrink:0 }}>{f.sev}</span>
+                <span style={{ ...DISP, fontSize:13, fontWeight:500, color:INK_PRI }}>{f.title}</span>
+              </div>
+              <span style={{ ...MONO, fontSize:10, color:LIFT_GREEN, flexShrink:0 }}>{f.lift}</span>
+            </div>
+          ))}
+          <p style={{ ...MONO, fontSize:10, color:INK_MUT, margin:'12px 0 0', fontStyle:'italic' }}>+ 20 more findings · full report · evidence + fixes included</p>
         </div>
         <p style={{ ...MONO, fontSize: 10, color: INK_MUT, margin: '0 0 32px' }}>
           This is what your client receives. Your name. Your branding. webdoc never appears.

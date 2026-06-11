@@ -196,6 +196,38 @@ function TrustStrip() {
   )
 }
 
+// ── Objection pair ────────────────────────────────────────────────────────────
+// Copy lifted verbatim from components/LandingObjectionsFaq.tsx (cards 1–2).
+
+const OBJECTION_PAIR = [
+  {
+    q: "How do I know it's not hallucinating?",
+    a: "Every finding must cite specific visible content — what's present, absent, or misplaced on your actual page. The model cannot pass a check without grounding it in evidence. Findings that fail validation are dropped before they reach you.",
+    data: 'grounding rule: cite visible content or fail',
+  },
+  {
+    q: 'Why not just paste my URL into ChatGPT?',
+    a: 'A language model sees text you paste, not your live page. webdoc renders the full DOM in headless Chrome, reads above-the-fold layout, runs 307 structured checks, and returns ranked JSON — not a chat response.',
+    data: '307 checks · rendered DOM · not a chat response',
+  },
+]
+
+function ObjectionPairSection() {
+  return (
+    <section className="py-16 px-8">
+      <div className="max-w-[880px] mx-auto grid grid-cols-1 md:grid-cols-2 gap-6">
+        {OBJECTION_PAIR.map(card => (
+          <div key={card.q} className="bg-surface border border-background-border p-7">
+            <p className="font-display font-semibold text-base text-text-primary leading-snug m-0 mb-3">{card.q}</p>
+            <p className="font-body text-sm text-text-secondary leading-relaxed m-0 mb-3">{card.a}</p>
+            <p className="font-mono text-[11px] text-interactive m-0">{card.data}</p>
+          </div>
+        ))}
+      </div>
+    </section>
+  )
+}
+
 // ── Footer ────────────────────────────────────────────────────────────────────
 
 function FooterSection() {
@@ -265,6 +297,7 @@ export default function HomePage() {
       <NavBar />
       <HeroForkSection />
       <TrustStrip />
+      <ObjectionPairSection />
       <FooterSection />
     </main>
   )

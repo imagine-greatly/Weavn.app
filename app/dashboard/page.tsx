@@ -12,8 +12,8 @@ const MONO: React.CSSProperties = { fontFamily: '"IBM Plex Mono", monospace' }
 const SANS: React.CSSProperties = { fontFamily: '"IBM Plex Sans", sans-serif' }
 const DISP: React.CSSProperties = { fontFamily: '"Space Grotesk", sans-serif' }
 
-const STEEL      = '#6F9BC6'   // --interactive (tailwind: interactive, accent-primary)
-const CRIT       = '#E8635F'   // --sev-critical / --data-critical
+const STEEL      = '#6F9BC6'   // --interactive / --accent-primary   rgb(111,155,198)
+const CRIT       = '#E8635F'   // --sev-critical / --data-critical    rgb(232,99,95)
 const HIGH_AMB   = '#EFB23E'   // --sev-high
 const LIFT_GREEN = '#00C48C'   // --json-string / engine-developers
 const INK_PRI    = '#E6E9EE'   // --ink-primary
@@ -93,9 +93,10 @@ function HeroSection() {
         overflow: 'hidden',
       }}
     >
+      {/* Atmosphere: steel blue radial bloom behind hero content at 4% opacity */}
       <div aria-hidden style={{
         position:'absolute',inset:0,pointerEvents:'none',zIndex:0,
-        background:'radial-gradient(ellipse 1000px 700px at 50% 35%, rgba(111,155,198,0.06) 0%, transparent 60%)',
+        background:'radial-gradient(ellipse 1000px 700px at 50% 35%, rgba(111,155,198,0.04) 0%, transparent 60%)',
       }} />
       <Ticks />
       <div style={{ position:'relative',zIndex:1,maxWidth:680,margin:'0 auto',width:'100%' }}>
@@ -204,7 +205,6 @@ const MOCK_FINDINGS: MockFinding[] = [
 function OutputSection() {
   return (
     <section style={{ padding:'80px 48px',borderTop:'0.5px solid rgba(111,155,198,0.1)',position:'relative',overflow:'hidden' }}>
-      <style>{`@media(max-width:639px){.d-rewrite-cols{flex-direction:column!important}}`}</style>
       <div aria-hidden style={{ position:'absolute',inset:0,pointerEvents:'none',zIndex:0, background:'radial-gradient(ellipse 800px 500px at 50% 50%, rgba(111,155,198,0.04) 0%, transparent 60%)' }} />
       <div style={{ maxWidth:1000,margin:'0 auto',position:'relative',zIndex:1 }}>
         <p style={{ ...MONO,fontSize:11,textTransform:'uppercase',letterSpacing:'0.2em',color:STEEL,margin:'0 0 16px' }}>
@@ -236,17 +236,20 @@ function OutputSection() {
 
           {/* Score row */}
           <div style={{ display:'flex',alignItems:'center',gap:20,marginBottom:28,paddingBottom:24,borderBottom:'0.5px solid rgba(255,255,255,0.06)',flexWrap:'wrap' }}>
-            <ScoreRing score={61} size="lg" animate={false} />
+            {/* Atmosphere: sev-critical drop-shadow on score ring makes the critical score feel urgent */}
+            <div style={{ filter:'drop-shadow(0 0 12px rgba(232,99,95,0.2))' }}>
+              <ScoreRing score={61} size="lg" animate={false} />
+            </div>
             <div>
               <p style={{ ...MONO,fontSize:11,color:INK_MUT,margin:'0 0 6px' }}>63rd percentile · B2B SaaS</p>
               <p style={{ ...SANS,fontSize:13,color:INK_SEC,margin:0,lineHeight:1.5,maxWidth:480 }}>
-                61 sites out of 100 in your category score higher. Your top 3 fixes could move you to the 78th percentile.
+                37 sites in your category score higher. Your top 3 fixes could move you to the 78th percentile.
               </p>
             </div>
           </div>
 
           {/* Finding cards */}
-          <div style={{ display:'flex',flexDirection:'column',gap:12,marginBottom:28 }}>
+          <div style={{ display:'flex',flexDirection:'column',gap:12 }}>
             {MOCK_FINDINGS.map((f, i) => (
               <div key={i} style={{ background:f.bg,border:`0.5px solid ${f.border}`,padding:16 }}>
                 <div style={{ display:'flex',alignItems:'flex-start',justifyContent:'space-between',marginBottom:8,gap:12,flexWrap:'wrap' }}>
@@ -268,41 +271,58 @@ function OutputSection() {
               </div>
             ))}
           </div>
+        </div>
+      </div>
+    </section>
+  )
+}
 
-          {/* AI rewrite card */}
-          <div>
-            <p style={{ ...MONO,fontSize:9,textTransform:'uppercase',letterSpacing:'0.15em',color:INK_MUT,margin:'0 0 12px' }}>
-              AI-REWRITTEN COPY
-            </p>
-            <div className="d-rewrite-cols" style={{ display:'flex',gap:0 }}>
-              <div style={{
-                flex:1,padding:16,
-                borderTop:'1px solid rgba(255,255,255,0.08)',
-                borderLeft:'1px solid rgba(255,255,255,0.06)',
-                borderBottom:'1px solid rgba(255,255,255,0.04)',
-                borderRight:'0.5px solid rgba(111,155,198,0.08)',
-              }}>
-                <p style={{ ...MONO,fontSize:9,textTransform:'uppercase',letterSpacing:'0.15em',color:INK_MUT,margin:'0 0 10px' }}>
-                  ORIGINAL
-                </p>
-                <p style={{ ...SANS,fontSize:14,color:INK_SEC,margin:0,lineHeight:1.55 }}>
-                  &ldquo;The project management tool built for remote teams.&rdquo;
-                </p>
-              </div>
-              <div style={{
-                flex:1,padding:16,
-                borderTop:'1px solid rgba(255,255,255,0.08)',
-                borderRight:'1px solid rgba(255,255,255,0.06)',
-                borderBottom:'1px solid rgba(255,255,255,0.04)',
-                borderLeft:'0.5px solid rgba(0,196,140,0.2)',
-              }}>
-                <p style={{ ...MONO,fontSize:9,textTransform:'uppercase',letterSpacing:'0.15em',color:LIFT_GREEN,margin:'0 0 10px' }}>
-                  REWRITTEN
-                </p>
-                <p style={{ ...SANS,fontSize:14,color:INK_PRI,margin:0,lineHeight:1.55 }}>
-                  &ldquo;Ship projects on time, every time — no matter where your team works.&rdquo;
-                </p>
-              </div>
+// ── Section 3 — AI-Rewritten Copy (standalone) ────────────────────────────────
+// Promoted from inside the report mock to its own full-width section.
+
+function AIRewriteSection() {
+  return (
+    <section style={{ padding:'80px 48px',borderTop:'0.5px solid rgba(111,155,198,0.1)',position:'relative',overflow:'hidden' }}>
+      <style>{`@media(max-width:639px){.d-rewrite-cols{flex-direction:column!important}}`}</style>
+      <div style={{ maxWidth:1000,margin:'0 auto' }}>
+        <p style={{ ...MONO,fontSize:11,textTransform:'uppercase',letterSpacing:'0.2em',color:STEEL,margin:'0 0 16px' }}>
+          AI-REWRITTEN COPY
+        </p>
+        <h2 style={{ ...DISP,fontWeight:700,fontSize:'clamp(28px,4vw,44px)',color:INK_PRI,letterSpacing:'-0.5px',margin:'0 0 16px',lineHeight:1.1 }}>
+          Not just what&apos;s broken. How to fix it.
+        </h2>
+        <p style={{ ...SANS,fontSize:15,color:INK_SEC,lineHeight:1.65,maxWidth:580,margin:'0 0 40px' }}>
+          Every critical finding includes a drop-in replacement — headline rewritten, CTA rewritten, copy rewritten. Ready to hand to your designer or paste directly.
+        </p>
+
+        {/* Before / after example */}
+        <div style={{
+          borderTop:'1px solid rgba(255,255,255,0.1)',
+          borderLeft:'1px solid rgba(255,255,255,0.07)',
+          borderRight:'1px solid rgba(255,255,255,0.04)',
+          borderBottom:'1px solid rgba(255,255,255,0.03)',
+        }}>
+          <div className="d-rewrite-cols" style={{ display:'flex' }}>
+            <div style={{
+              flex:1,padding:28,
+              borderRight:'0.5px solid rgba(111,155,198,0.1)',
+            }}>
+              <p style={{ ...MONO,fontSize:10,textTransform:'uppercase',letterSpacing:'0.18em',color:INK_MUT,margin:'0 0 14px' }}>
+                ORIGINAL
+              </p>
+              <p style={{ ...SANS,fontSize:17,color:INK_SEC,margin:0,lineHeight:1.55 }}>
+                &ldquo;The project management tool built for remote teams.&rdquo;
+              </p>
+            </div>
+            <div style={{
+              flex:1,padding:28,
+            }}>
+              <p style={{ ...MONO,fontSize:10,textTransform:'uppercase',letterSpacing:'0.18em',color:LIFT_GREEN,margin:'0 0 14px' }}>
+                REWRITTEN
+              </p>
+              <p style={{ ...SANS,fontSize:17,color:INK_PRI,margin:0,lineHeight:1.55 }}>
+                &ldquo;Ship projects on time, every time — no matter where your team works.&rdquo;
+              </p>
             </div>
           </div>
         </div>
@@ -311,9 +331,33 @@ function OutputSection() {
   )
 }
 
-// ── Section 3 — How It Works ──────────────────────────────────────────────────
+// ── Section 4 — Social Proof (single quote) ───────────────────────────────────
 
-type HowStep = { num: string; title: string; desc: string }
+function QuoteSection() {
+  return (
+    <section style={{ padding:'80px 48px',borderTop:'0.5px solid rgba(111,155,198,0.1)',textAlign:'center' }}>
+      <div style={{ maxWidth:680,margin:'0 auto' }}>
+        <p style={{
+          ...SANS,
+          fontStyle:'italic',
+          fontSize:'clamp(18px,2.2vw,24px)',
+          color:INK_PRI,
+          lineHeight:1.65,
+          margin:'0 0 20px',
+        }}>
+          &ldquo;I scanned our landing page expecting vague suggestions. Instead I got a ranked list of exactly what was broken and why. Fixed the top two findings in an afternoon. Our trial signup rate went up 14% the following week.&rdquo;
+        </p>
+        <p style={{ ...MONO,fontSize:11,color:INK_MUT,margin:0,letterSpacing:'0.1em' }}>
+          — FOUNDER, B2B SAAS · VERIFIED SCAN
+        </p>
+      </div>
+    </section>
+  )
+}
+
+// ── Section 5 — How It Works ──────────────────────────────────────────────────
+
+type HowStep = { num: string; title: string; desc: string; techTag?: string }
 
 const HOW_STEPS: HowStep[] = [
   {
@@ -325,6 +369,7 @@ const HOW_STEPS: HowStep[] = [
     num: '02',
     title: 'We render your live page',
     desc: 'webdoc loads your actual page in a real browser — the same thing your visitors see, above-the-fold layout and all. Not cached text. Not a scrape. Your live site.',
+    techTag: 'headless chrome · full dom render · above-fold layout measured',
   },
   {
     num: '03',
@@ -361,6 +406,11 @@ function HowItWorksSection() {
                 {step.title}
               </p>
               <p style={{ ...SANS,fontSize:14,color:INK_SEC,lineHeight:1.65,margin:0 }}>{step.desc}</p>
+              {step.techTag && (
+                <p style={{ ...MONO,fontSize:10,color:INK_MUT,margin:'12px 0 0',letterSpacing:'0.04em',lineHeight:1.5 }}>
+                  {step.techTag}
+                </p>
+              )}
             </div>
           ))}
         </div>
@@ -369,7 +419,7 @@ function HowItWorksSection() {
   )
 }
 
-// ── Section 4 — Why Different ─────────────────────────────────────────────────
+// ── Section 6 — Why Different ─────────────────────────────────────────────────
 
 type ObjectionCard = { q: string; a: string; tag: string }
 
@@ -420,13 +470,11 @@ function WhyDifferentSection() {
   )
 }
 
-// ── Section 5 — Benchmarks ────────────────────────────────────────────────────
-// Renders the existing LandingCorpusStats component which includes the bell curve,
-// corpus stats, and percentile visualization.
+// ── Section 7 — Benchmarks ────────────────────────────────────────────────────
+// Renders the existing LandingCorpusStats component (bell curve, percentile, corpus stats).
 
-// ── Section 6 — Pricing ───────────────────────────────────────────────────────
-// TODO: wire paid-tier CTAs to Stripe checkout once plan IDs are confirmed
-// Currently links to auth with plan query param for post-auth routing.
+// ── Section 8 — Pricing ───────────────────────────────────────────────────────
+// TODO: wire paid-tier CTAs to Stripe checkout once plan IDs are confirmed.
 
 type PricingCard = {
   name: string
@@ -457,7 +505,7 @@ const PRICING_CARDS: PricingCard[] = [
   },
   {
     name: 'Starter',
-    kicker: 'MOST POPULAR',
+    kicker: 'MOST FOUNDERS START HERE',
     price: '$49/mo',
     priceSub: 'month-to-month',
     highlight: true,
@@ -571,7 +619,7 @@ function PricingSection() {
   )
 }
 
-// ── Section 7 — Final CTA ─────────────────────────────────────────────────────
+// ── Section 9 — Final CTA ─────────────────────────────────────────────────────
 
 function FinalCtaSection() {
   return (
@@ -611,9 +659,12 @@ function FinalCtaSection() {
 
 export default function DashboardPage() {
   return (
-    <main style={{ minHeight:'100vh',background:BG_BASE }}>
+    // instrument-grid: fine (64px) + macro (320px) grid from globals.css, same as homepage
+    <main className="instrument-grid" style={{ minHeight:'100vh',background:BG_BASE }}>
       <HeroSection />
       <OutputSection />
+      <AIRewriteSection />
+      <QuoteSection />
       <HowItWorksSection />
       <WhyDifferentSection />
       <LandingCorpusStats />

@@ -7,12 +7,10 @@ import { Eye, EyeOff } from "lucide-react";
 import { getSupabaseBrowserClient } from "@/lib/supabaseBrowser";
 import type { ReportPayload } from "@/lib/reportSchema";
 import WebdocMark from "@/components/ui/WebdocMark";
-import ScoreRing from "@/components/ui/ScoreRing";
 
 type AuthTab = "signin" | "create";
 
 const MONO = '"IBM Plex Mono", monospace';
-const SANS = '"IBM Plex Sans", sans-serif';
 const DISP = '"Space Grotesk", sans-serif';
 
 const C = {
@@ -288,17 +286,10 @@ function AuthPageContent() {
       <style>{`
         .auth-input::placeholder { color: #6E7587; font-family: "IBM Plex Mono", monospace; font-size: 12px; opacity: 1; }
         @keyframes authPulseDot { 0%,100%{opacity:1} 50%{opacity:0.3} }
-        @keyframes ct1 { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
-        @keyframes ct2 { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
-        @keyframes ct3 { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
-        @keyframes ct4 { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
-        @media (prefers-reduced-motion: reduce) {
-          .ct-trace { animation: none !important; stroke-dashoffset: 0; }
-        }
         @media (max-width: 767px) {
           .auth-root     { flex-direction: column !important; }
-          .auth-left     { display: none !important; }
-          .auth-mobile-header { display: flex !important; }
+          .auth-left     { flex: none !important; padding: 28px 20px !important; }
+          .auth-left-top, .auth-left-divider, .auth-left-rows, .auth-left-surface, .auth-left-foot { display: none !important; }
           .auth-right    { padding: 32px 20px !important; }
         }
       `}</style>
@@ -337,59 +328,6 @@ function AuthPageContent() {
             ].join(", "),
             backgroundSize: "52px 52px",
           }} />
-          {/* Circuit traces */}
-          <svg
-            aria-hidden
-            viewBox="0 0 600 900"
-            preserveAspectRatio="xMidYMid slice"
-            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", pointerEvents: "none", zIndex: 0, overflow: "hidden" }}
-          >
-            <path className="ct-trace" d="M 52,104 H 260 V 52 H 416 V 156 H 520 V 312 H 364 V 416 H 208 V 520" fill="none" stroke="#6F9BC6" strokeWidth="0.6" opacity="0.3" strokeDasharray="1" pathLength="1" style={{ animation: 'ct1 8s linear 0s infinite' }} />
-            <path className="ct-trace" d="M 0,312 H 156 V 208 H 312 V 364 H 468 V 260 H 572 V 468 H 416 V 572" fill="none" stroke="#9D8CFF" strokeWidth="0.6" opacity="0.2" strokeDasharray="1" pathLength="1" style={{ animation: 'ct2 10s linear 2s infinite' }} />
-            <path className="ct-trace" d="M 364,0 V 156 H 520 V 52 H 572 V 260 H 468 V 364 H 572 V 520" fill="none" stroke="#6F9BC6" strokeWidth="0.5" opacity="0.18" strokeDasharray="1" pathLength="1" style={{ animation: 'ct3 7s linear 4s infinite' }} />
-            <path className="ct-trace" d="M 104,572 H 312 V 468 H 208 V 624 H 416 V 520 H 520 V 676" fill="none" stroke="#00C48C" strokeWidth="0.5" opacity="0.13" strokeDasharray="1" pathLength="1" style={{ animation: 'ct4 9s linear 1s infinite' }} />
-            <rect x="51" y="103" width="2" height="2" fill="#6F9BC6" opacity="0.25"/>
-            <rect x="259" y="103" width="2" height="2" fill="#6F9BC6" opacity="0.25"/>
-            <rect x="259" y="51" width="2" height="2" fill="#6F9BC6" opacity="0.25"/>
-            <rect x="415" y="51" width="2" height="2" fill="#6F9BC6" opacity="0.25"/>
-            <rect x="415" y="155" width="2" height="2" fill="#6F9BC6" opacity="0.25"/>
-            <rect x="519" y="155" width="2" height="2" fill="#6F9BC6" opacity="0.25"/>
-            <rect x="519" y="311" width="2" height="2" fill="#6F9BC6" opacity="0.25"/>
-            <rect x="363" y="311" width="2" height="2" fill="#6F9BC6" opacity="0.25"/>
-            <rect x="363" y="415" width="2" height="2" fill="#6F9BC6" opacity="0.25"/>
-            <rect x="207" y="415" width="2" height="2" fill="#6F9BC6" opacity="0.25"/>
-            <rect x="207" y="519" width="2" height="2" fill="#6F9BC6" opacity="0.25"/>
-            <rect x="-1" y="311" width="2" height="2" fill="#9D8CFF" opacity="0.18"/>
-            <rect x="155" y="311" width="2" height="2" fill="#9D8CFF" opacity="0.18"/>
-            <rect x="155" y="207" width="2" height="2" fill="#9D8CFF" opacity="0.18"/>
-            <rect x="311" y="207" width="2" height="2" fill="#9D8CFF" opacity="0.18"/>
-            <rect x="311" y="363" width="2" height="2" fill="#9D8CFF" opacity="0.18"/>
-            <rect x="467" y="363" width="2" height="2" fill="#9D8CFF" opacity="0.18"/>
-            <rect x="467" y="259" width="2" height="2" fill="#9D8CFF" opacity="0.18"/>
-            <rect x="571" y="259" width="2" height="2" fill="#9D8CFF" opacity="0.18"/>
-            <rect x="571" y="467" width="2" height="2" fill="#9D8CFF" opacity="0.18"/>
-            <rect x="415" y="467" width="2" height="2" fill="#9D8CFF" opacity="0.18"/>
-            <rect x="415" y="571" width="2" height="2" fill="#9D8CFF" opacity="0.18"/>
-            <rect x="363" y="-1" width="2" height="2" fill="#6F9BC6" opacity="0.15"/>
-            <rect x="363" y="155" width="2" height="2" fill="#6F9BC6" opacity="0.15"/>
-            <rect x="519" y="155" width="2" height="2" fill="#6F9BC6" opacity="0.15"/>
-            <rect x="519" y="51" width="2" height="2" fill="#6F9BC6" opacity="0.15"/>
-            <rect x="571" y="51" width="2" height="2" fill="#6F9BC6" opacity="0.15"/>
-            <rect x="571" y="259" width="2" height="2" fill="#6F9BC6" opacity="0.15"/>
-            <rect x="467" y="259" width="2" height="2" fill="#6F9BC6" opacity="0.15"/>
-            <rect x="467" y="363" width="2" height="2" fill="#6F9BC6" opacity="0.15"/>
-            <rect x="571" y="363" width="2" height="2" fill="#6F9BC6" opacity="0.15"/>
-            <rect x="571" y="519" width="2" height="2" fill="#6F9BC6" opacity="0.15"/>
-            <rect x="103" y="571" width="2" height="2" fill="#00C48C" opacity="0.11"/>
-            <rect x="311" y="571" width="2" height="2" fill="#00C48C" opacity="0.11"/>
-            <rect x="311" y="467" width="2" height="2" fill="#00C48C" opacity="0.11"/>
-            <rect x="207" y="467" width="2" height="2" fill="#00C48C" opacity="0.11"/>
-            <rect x="207" y="623" width="2" height="2" fill="#00C48C" opacity="0.11"/>
-            <rect x="415" y="623" width="2" height="2" fill="#00C48C" opacity="0.11"/>
-            <rect x="415" y="519" width="2" height="2" fill="#00C48C" opacity="0.11"/>
-            <rect x="519" y="519" width="2" height="2" fill="#00C48C" opacity="0.11"/>
-            <rect x="519" y="675" width="2" height="2" fill="#00C48C" opacity="0.11"/>
-          </svg>
           {/* Corner ticks */}
           {[
             { top: 24,    left: 24,    borderTop: "0.5px solid rgba(111,155,198,0.25)", borderLeft:   "0.5px solid rgba(111,155,198,0.25)" },
@@ -404,75 +342,70 @@ function AuthPageContent() {
           <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", height: "100%", gap: 0 }}>
 
             {/* TOP — brand identity */}
-            <div style={{ marginBottom: "auto" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 32 }}>
+            <div className="auth-left-top" style={{ marginBottom: "auto" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
                 <WebdocMark size={48} animated={false} />
                 <span style={{ fontFamily: DISP, fontSize: 24, fontWeight: 600, color: "#E6E9EE", letterSpacing: "-0.5px" }}>
                   webdoc<span style={{ color: C.blue }}>.ai</span>
                 </span>
               </div>
-              <p style={{ fontFamily: MONO, fontSize: 10, textTransform: "uppercase", letterSpacing: "0.2em", color: C.labelMuted, margin: 0 }}>
-                CONVERSION INTELLIGENCE
-              </p>
             </div>
 
-            {/* MIDDLE — scan result preview */}
-            <div
-              className="auth-left-preview"
-              style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", paddingTop: 32, paddingBottom: 16 }}
-            >
-              <p style={{ fontFamily: MONO, fontSize: 10, textTransform: "uppercase", letterSpacing: "0.18em", color: "rgba(111,155,198,0.5)", marginBottom: 16, marginTop: 0 }}>
-                WHAT YOU&apos;RE ABOUT TO UNLOCK
-              </p>
-              <div style={{
-                background: "rgba(5,8,16,0.8)",
-                border: "0.5px solid rgba(111,155,198,0.18)",
-                padding: 0,
-                overflow: "hidden",
-              }}>
-                {/* Panel header */}
-                <div style={{ padding: "10px 16px", borderBottom: "0.5px solid rgba(111,155,198,0.1)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <div aria-hidden style={{ width: 5, height: 5, borderRadius: "50%", background: C.green }} />
-                    <span style={{ fontFamily: MONO, fontSize: 10, color: C.labelMuted }}>scan complete · acme-saas.com</span>
-                  </div>
-                  <span style={{ fontFamily: MONO, fontSize: 10, color: C.green }}>200 OK</span>
-                </div>
-                {/* Panel body */}
-                <div style={{ padding: 20, display: "flex", alignItems: "flex-start", gap: 20 }}>
-                  <div style={{ flexShrink: 0, textAlign: "center" }}>
-                    <ScoreRing score={61} size="md" animate={false} />
-                    <p style={{ fontFamily: MONO, fontSize: 9, color: C.labelMuted, textAlign: "center", marginTop: 6, marginBottom: 0 }}>acme-saas.com</p>
-                  </div>
-                  <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 12 }}>
-                    <div>
-                      <p style={{ fontFamily: MONO, fontSize: 9, textTransform: "uppercase", color: C.labelMuted, marginBottom: 2, marginTop: 0 }}>PERCENTILE</p>
-                      <p style={{ fontFamily: MONO, fontSize: 16, fontWeight: 600, color: C.blue, marginBottom: 0, marginTop: 0 }}>63rd in B2B SaaS</p>
-                    </div>
-                    <div>
-                      <p style={{ fontFamily: MONO, fontSize: 9, textTransform: "uppercase", color: C.labelMuted, marginBottom: 2, marginTop: 0 }}>TOP FINDING</p>
-                      <p style={{ fontFamily: SANS, fontSize: 13, color: "#E6E9EE", lineHeight: 1.4, marginBottom: 3, marginTop: 0 }}>Hero headline is feature-led, not outcome-led</p>
-                      <p style={{ fontFamily: MONO, fontSize: 11, color: C.green, marginTop: 0, marginBottom: 0 }}>+12–18% estimated lift</p>
-                    </div>
-                    <div>
-                      <p style={{ fontFamily: MONO, fontSize: 9, textTransform: "uppercase", color: C.labelMuted, marginBottom: 2, marginTop: 0 }}>FINDINGS</p>
-                      <p style={{ fontFamily: MONO, fontSize: 13, color: C.blue, marginBottom: 0, marginTop: 0 }}>23 ranked · P1→P3</p>
-                    </div>
-                  </div>
-                </div>
-                {/* Panel footer */}
-                <div style={{ padding: "10px 16px", borderTop: "0.5px solid rgba(111,155,198,0.08)", display: "flex", justifyContent: "space-between" }}>
-                  <span style={{ fontFamily: MONO, fontSize: 9, color: C.labelMuted }}>307 checks</span>
-                  <span style={{ fontFamily: MONO, fontSize: 9, color: C.labelMuted }}>27 categories</span>
-                  <span style={{ fontFamily: MONO, fontSize: 9, color: C.labelMuted }}>87,340ms</span>
-                </div>
+            {/* MIDDLE — engine identity */}
+            <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", justifyContent: "center", flex: 1 }}>
+
+              <div style={{ display: "flex", justifyContent: "center" }}>
+                <WebdocMark size={72} animated={true} />
               </div>
-            </div>
 
-            {/* BOTTOM — reassurance */}
-            <p style={{ fontFamily: MONO, fontSize: 11, color: "rgba(111,155,198,0.4)", marginTop: 32, marginBottom: 0 }}>
-              Free to start · no credit card · cancel anytime
-            </p>
+              <p style={{ fontFamily: DISP, fontSize: 22, fontWeight: 600, color: "#E6E9EE", letterSpacing: "-0.3px", textAlign: "center", marginTop: 20, marginBottom: 0 }}>
+                webdoc<span style={{ color: C.blue }}>.ai</span>
+              </p>
+              <p style={{ fontFamily: MONO, fontSize: 10, textTransform: "uppercase", letterSpacing: "0.2em", color: "rgba(111,155,198,0.5)", textAlign: "center", marginTop: 6, marginBottom: 0 }}>
+                CONVERSION INTELLIGENCE ENGINE
+              </p>
+
+              <div className="auth-left-divider" aria-hidden style={{ height: "0.5px", background: "linear-gradient(to right, transparent, rgba(111,155,198,0.2), transparent)", margin: "32px 0" }} />
+
+              <div className="auth-left-rows" style={{ display: "flex", flexDirection: "column", gap: 0, border: "0.5px solid rgba(111,155,198,0.12)" }}>
+                {([
+                  { label: "DIAGNOSTIC CHECKS", value: "307",   color: C.blue },
+                  { label: "MEDIAN RESPONSE",   value: "~90s",  color: C.blue },
+                  { label: "SITES BENCHMARKED", value: "4,812", color: C.green },
+                ] as const).map((row, i, arr) => (
+                  <div
+                    key={row.label}
+                    style={{
+                      display: "flex", justifyContent: "space-between", alignItems: "center",
+                      padding: "14px 20px",
+                      borderBottom: i < arr.length - 1 ? "0.5px solid rgba(111,155,198,0.08)" : "none",
+                    }}
+                  >
+                    <span style={{ fontFamily: MONO, fontSize: 10, textTransform: "uppercase", letterSpacing: "0.15em", color: C.labelMuted }}>{row.label}</span>
+                    <span style={{ fontFamily: MONO, fontSize: 16, fontWeight: 600, color: row.color }}>{row.value}</span>
+                  </div>
+                ))}
+              </div>
+
+              <p className="auth-left-surface" style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.08em", textAlign: "center", marginTop: 28, marginBottom: 0 }}>
+                {surface === "api" ? (
+                  <>
+                    <span style={{ color: C.purple }}>API surface</span>
+                    <span style={{ color: C.labelMuted }}> · your key is waiting</span>
+                  </>
+                ) : (
+                  <>
+                    <span style={{ color: C.blue }}>Dashboard surface</span>
+                    <span style={{ color: C.labelMuted }}> · your score is waiting</span>
+                  </>
+                )}
+              </p>
+
+              <p className="auth-left-foot" style={{ fontFamily: MONO, fontSize: 10, color: "rgba(111,155,198,0.3)", textAlign: "center", marginTop: 32, marginBottom: 0 }}>
+                Same engine. Same 307 checks. Every plan.
+              </p>
+
+            </div>
 
           </div>
         </div>

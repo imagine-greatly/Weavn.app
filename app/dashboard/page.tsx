@@ -91,11 +91,11 @@ function HeroSection() {
         display: 'flex',
         alignItems: 'center',
         padding: '112px 48px 80px',
-        textAlign: 'center',
         position: 'relative',
         overflow: 'visible',
       }}
     >
+      <style>{`@media(max-width:767px){.d-hero-right{display:none!important}}`}</style>
       {/* Hero bloom */}
       <div
         aria-hidden="true"
@@ -114,76 +114,158 @@ function HeroSection() {
         }}
       />
       <Ticks />
-      <div style={{ position:'relative',zIndex:1,maxWidth:680,margin:'0 auto',width:'100%' }}>
-        <p style={{ ...MONO,fontSize:11,textTransform:'uppercase',letterSpacing:'0.2em',color:STEEL,margin:'0 0 20px' }}>
-          FOR ANYONE WITH A SITE TO FIX
-        </p>
-        <h1 style={{ ...DISP,fontSize:'clamp(36px,5vw,58px)',fontWeight:700,color:INK_PRI,letterSpacing:'-0.04em',margin:'0 0 24px',lineHeight:1.08 }}>
-          Find out exactly what&apos;s stopping visitors from converting.
-        </h1>
-        <p style={{ ...SANS,fontSize:17,color:INK_SEC,lineHeight:1.65,maxWidth:580,margin:'0 auto 44px' }}>
-          Paste your URL. Get a 0–100 score, every conversion problem ranked by impact, AI-rewritten copy, and benchmarks against real sites in your vertical — in about 90 seconds.
-        </p>
+      <div style={{ position:'relative',zIndex:1,maxWidth:1200,margin:'0 auto',width:'100%',display:'flex',gap:64,alignItems:'center' }}>
+        {/* Left column — hero copy + scan input */}
+        <div style={{ flex:'1 1 0',minWidth:0 }}>
+          <p style={{ ...MONO,fontSize:11,textTransform:'uppercase',letterSpacing:'0.2em',color:STEEL,margin:'0 0 20px' }}>
+            FOR ANYONE WITH A SITE TO FIX
+          </p>
+          <h1 style={{ ...DISP,fontSize:'clamp(36px,5vw,58px)',fontWeight:700,color:INK_PRI,letterSpacing:'-0.04em',margin:'0 0 24px',lineHeight:1.08 }}>
+            Find out exactly what&apos;s stopping visitors from converting.
+          </h1>
+          <p style={{ ...SANS,fontSize:17,color:INK_SEC,lineHeight:1.65,maxWidth:580,margin:'0 0 44px' }}>
+            Paste your URL. Get a 0–100 score, every conversion problem ranked by impact, AI-rewritten copy, and benchmarks against real sites in your vertical — in about 90 seconds.
+          </p>
 
-        <div style={{ maxWidth:560,margin:'0 auto',textAlign:'left' }}>
-          <div style={{ display:'flex',flexWrap:'wrap' }}>
-            <div
-              onFocus={() => setInputFocused(true)}
-              onBlur={() => setInputFocused(false)}
-              style={{
-                display:'flex',flex:'1 1 280px',
-                background:SURFACE,
-                borderTop:'1px solid rgba(255,255,255,0.1)',
-                borderLeft:'1px solid rgba(255,255,255,0.07)',
-                borderRight:'1px solid rgba(255,255,255,0.04)',
-                borderBottom:'1px solid rgba(255,255,255,0.03)',
-                transition: 'box-shadow 0.3s ease',
-                boxShadow: inputFocused
-                  ? 'inset 0 0 0 1px rgba(111, 155, 198, 0.5), 0 0 20px rgba(111, 155, 198, 0.1)'
-                  : 'inset 0 0 0 1px rgba(111, 155, 198, 0.2)',
-              }}>
-              <span style={{ ...MONO,fontSize:12,color:INK_MUT,padding:'0 12px',display:'flex',alignItems:'center',flexShrink:0,borderRight:'0.5px solid rgba(255,255,255,0.08)' }}>
-                https://
-              </span>
-              <input
-                type="text"
-                value={scanUrl}
-                onChange={e => setScanUrl(e.target.value)}
-                onKeyDown={e => { if (e.key === 'Enter') void handleScan() }}
-                placeholder="your-site.com"
-                style={{ flex:1,minWidth:0,background:'transparent',...MONO,fontSize:14,color:INK_PRI,padding:'14px',border:'none',outline:'none',borderRadius:0 }}
-              />
+          <div style={{ maxWidth:560,textAlign:'left' }}>
+            <div style={{ display:'flex',flexWrap:'wrap' }}>
+              <div
+                onFocus={() => setInputFocused(true)}
+                onBlur={() => setInputFocused(false)}
+                style={{
+                  display:'flex',flex:'1 1 280px',
+                  background:SURFACE,
+                  borderTop:'1px solid rgba(255,255,255,0.1)',
+                  borderLeft:'1px solid rgba(255,255,255,0.07)',
+                  borderRight:'1px solid rgba(255,255,255,0.04)',
+                  borderBottom:'1px solid rgba(255,255,255,0.03)',
+                  transition: 'box-shadow 0.3s ease',
+                  boxShadow: inputFocused
+                    ? 'inset 0 0 0 1px rgba(111, 155, 198, 0.5), 0 0 20px rgba(111, 155, 198, 0.1)'
+                    : 'inset 0 0 0 1px rgba(111, 155, 198, 0.2)',
+                }}>
+                <span style={{ ...MONO,fontSize:12,color:INK_MUT,padding:'0 12px',display:'flex',alignItems:'center',flexShrink:0,borderRight:'0.5px solid rgba(255,255,255,0.08)' }}>
+                  https://
+                </span>
+                <input
+                  type="text"
+                  value={scanUrl}
+                  onChange={e => setScanUrl(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter') void handleScan() }}
+                  placeholder="your-site.com"
+                  style={{ flex:1,minWidth:0,background:'transparent',...MONO,fontSize:14,color:INK_PRI,padding:'14px',border:'none',outline:'none',borderRadius:0 }}
+                />
+              </div>
+              <button
+                onClick={() => void handleScan()}
+                disabled={isScanning || !scanUrl}
+                onMouseEnter={() => setScanBtnHovered(true)}
+                onMouseLeave={() => setScanBtnHovered(false)}
+                style={{
+                  ...MONO,fontSize:13,fontWeight:600,letterSpacing:'0.1em',textTransform:'uppercase',
+                  background:'transparent',
+                  border:`1px solid ${isScanning || !scanUrl ? 'rgba(111,155,198,0.3)' : 'rgba(111,155,198,0.5)'}`,
+                  color:isScanning || !scanUrl ? 'rgba(111,155,198,0.4)' : STEEL,
+                  padding:'14px 24px',cursor:isScanning || !scanUrl ? 'not-allowed' : 'pointer',
+                  borderRadius:0,whiteSpace:'nowrap',transition:'box-shadow 0.2s ease',
+                  boxShadow: scanBtnHovered && !isScanning && scanUrl
+                    ? '0 0 24px rgba(111, 155, 198, 0.3), 0 0 0 1px rgba(111, 155, 198, 0.4)'
+                    : '0 0 16px rgba(111, 155, 198, 0.15)',
+                }}
+              >
+                {isScanning ? 'SCANNING…' : 'SCAN MY SITE FREE →'}
+              </button>
             </div>
-            <button
-              onClick={() => void handleScan()}
-              disabled={isScanning || !scanUrl}
-              onMouseEnter={() => setScanBtnHovered(true)}
-              onMouseLeave={() => setScanBtnHovered(false)}
-              style={{
-                ...MONO,fontSize:13,fontWeight:600,letterSpacing:'0.1em',textTransform:'uppercase',
-                background:'transparent',
-                border:`1px solid ${isScanning || !scanUrl ? 'rgba(111,155,198,0.3)' : 'rgba(111,155,198,0.5)'}`,
-                color:isScanning || !scanUrl ? 'rgba(111,155,198,0.4)' : STEEL,
-                padding:'14px 24px',cursor:isScanning || !scanUrl ? 'not-allowed' : 'pointer',
-                borderRadius:0,whiteSpace:'nowrap',transition:'box-shadow 0.2s ease',
-                boxShadow: scanBtnHovered && !isScanning && scanUrl
-                  ? '0 0 24px rgba(111, 155, 198, 0.3), 0 0 0 1px rgba(111, 155, 198, 0.4)'
-                  : '0 0 16px rgba(111, 155, 198, 0.15)',
-              }}
-            >
-              {isScanning ? 'SCANNING…' : 'SCAN MY SITE FREE →'}
-            </button>
+            {scanError && (
+              <p style={{ ...MONO,fontSize:11,color:CRIT,margin:'8px 0 0' }}>{scanError}</p>
+            )}
+            <p style={{ ...MONO,fontSize:11,color:INK_MUT,textAlign:'left',margin:'14px 0 0' }}>
+              No account required.
+            </p>
+            {/* TODO: wire to live Supabase scan count query when stats endpoint is available */}
+            <p style={{ ...MONO,fontSize:10,color:INK_MUT,textAlign:'left',margin:'8px 0 0',opacity:0.4 }}>
+              · 4,812 sites scanned · last scan 4 minutes ago
+            </p>
           </div>
-          {scanError && (
-            <p style={{ ...MONO,fontSize:11,color:CRIT,margin:'8px 0 0' }}>{scanError}</p>
-          )}
-          <p style={{ ...MONO,fontSize:11,color:INK_MUT,textAlign:'center',margin:'14px 0 0' }}>
-            No account required.
-          </p>
-          {/* TODO: wire to live Supabase scan count query when stats endpoint is available */}
-          <p style={{ ...MONO,fontSize:10,color:INK_MUT,textAlign:'center',margin:'8px 0 0',opacity:0.4 }}>
-            · 4,812 sites scanned · last scan 4 minutes ago
-          </p>
+        </div>
+
+        {/* Right column — static scan preview panel, hidden below md */}
+        {/* STATIC ILLUSTRATION */}
+        <div className="d-hero-right" style={{ flex:'0 0 380px',width:380 }}>
+          <div style={{
+            background: 'rgba(111, 155, 198, 0.03)',
+            boxShadow: 'inset 0 1px 0 0 rgba(111, 155, 198, 0.15), 0 0 0 1px rgba(111, 155, 198, 0.08)',
+            padding: 24,
+          }}>
+            {/* Header row */}
+            <div style={{ display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:12 }}>
+              <p style={{ ...MONO,fontSize:9,textTransform:'uppercase',letterSpacing:'0.18em',color:'rgba(111,155,198,0.45)',margin:0 }}>
+                EXAMPLE SCAN RESULT
+              </p>
+              <p style={{ ...MONO,fontSize:9,color:LIFT_GREEN,margin:0 }}>acme-saas.com</p>
+            </div>
+
+            {/* Divider */}
+            <div style={{ height:1,background:'rgba(111,155,198,0.1)',margin:'0 0 16px' }} />
+
+            {/* Score + context row */}
+            <div style={{ display:'flex',gap:16,alignItems:'flex-start',marginBottom:16 }}>
+              {/* Score ring — 56px diameter */}
+              <div style={{ flexShrink:0 }}>
+                <svg width="56" height="56" viewBox="0 0 56 56">
+                  <circle cx="28" cy="28" r="22" stroke="rgba(111,155,198,0.12)" strokeWidth="3" fill="none" />
+                  <circle
+                    cx="28" cy="28" r="22"
+                    stroke={CRIT}
+                    strokeWidth="3"
+                    strokeDasharray="138.23"
+                    strokeDashoffset="55.76"
+                    strokeLinecap="round"
+                    fill="none"
+                    transform="rotate(-90 28 28)"
+                  />
+                  <text x="28" y="33" textAnchor="middle" fill={CRIT} style={{ fontFamily:'"Space Grotesk",sans-serif',fontSize:12,fontWeight:700 }}>61</text>
+                </svg>
+                <div style={{ textAlign:'center',marginTop:4 }}>
+                  <span style={{ ...MONO,fontSize:8,color:CRIT,border:`0.5px solid ${CRIT}`,padding:'1px 5px',textTransform:'uppercase',letterSpacing:'0.08em' }}>
+                    CRITICAL
+                  </span>
+                </div>
+              </div>
+              {/* Context */}
+              <div>
+                <p style={{ ...MONO,fontSize:10,color:'rgba(111,155,198,0.7)',margin:'0 0 4px',lineHeight:1.4 }}>
+                  63rd percentile · B2B SaaS
+                </p>
+                <p style={{ ...SANS,fontSize:11,color:INK_MUT,margin:0,lineHeight:1.5 }}>
+                  37 sites in your category score higher
+                </p>
+              </div>
+            </div>
+
+            {/* Divider */}
+            <div style={{ height:1,background:'rgba(111,155,198,0.1)',margin:'0 0 14px' }} />
+
+            {/* Two finding rows */}
+            <div style={{ display:'flex',alignItems:'center',gap:8,marginBottom:10 }}>
+              <span style={{ ...MONO,fontSize:8,color:CRIT,border:`0.5px solid rgba(232,99,95,0.4)`,padding:'1px 5px',textTransform:'uppercase',letterSpacing:'0.08em',flexShrink:0 }}>CRITICAL</span>
+              <span style={{ ...DISP,fontSize:12,fontWeight:500,color:INK_PRI,flex:1,lineHeight:1.3 }}>Hero headline is feature-led</span>
+              <span style={{ ...MONO,fontSize:10,color:LIFT_GREEN,flexShrink:0 }}>+12–18%</span>
+            </div>
+            <div style={{ display:'flex',alignItems:'center',gap:8,marginBottom:14 }}>
+              <span style={{ ...MONO,fontSize:8,color:HIGH_AMB,border:`0.5px solid rgba(239,178,62,0.4)`,padding:'1px 5px',textTransform:'uppercase',letterSpacing:'0.08em',flexShrink:0 }}>HIGH</span>
+              <span style={{ ...DISP,fontSize:12,fontWeight:500,color:INK_PRI,flex:1,lineHeight:1.3 }}>No above-fold social proof</span>
+              <span style={{ ...MONO,fontSize:10,color:LIFT_GREEN,flexShrink:0 }}>+8–11%</span>
+            </div>
+
+            {/* Divider */}
+            <div style={{ height:1,background:'rgba(111,155,198,0.1)',margin:'0 0 12px' }} />
+
+            {/* Footer */}
+            <p style={{ ...MONO,fontSize:9,color:INK_MUT,textAlign:'center',margin:0 }}>
+              23 findings · plain-English fixes · AI-rewritten copy
+            </p>
+          </div>
         </div>
       </div>
     </section>
@@ -289,7 +371,7 @@ function OutputSection() {
             <p style={{ ...MONO,fontSize:9,color:LIFT_GREEN,margin:0 }}>acme-saas.com</p>
           </div>
 
-          {/* Score row — 4B: ring draws in when scrolled into view */}
+          {/* Score row — ring draws in when scrolled into view */}
           <div style={{ display:'flex',alignItems:'center',gap:20,marginBottom:28,paddingBottom:24,borderBottom:'0.5px solid rgba(255,255,255,0.06)',flexWrap:'wrap' }}>
             <div ref={ringRef} style={{ position:'relative' }}>
               {/* Ring-pulse glow */}
@@ -321,7 +403,7 @@ function OutputSection() {
             </div>
           </div>
 
-          {/* Finding cards — 4C: staggered entry. Card 0 is fully expanded (static illustration). */}
+          {/* Finding cards — staggered entry. Card 0 is fully expanded (static illustration). */}
           <div style={{ display:'flex',flexDirection:'column',gap:12 }}>
             {MOCK_FINDINGS.map((f, i) => (
               <motion.div
@@ -431,7 +513,7 @@ const REWRITE_EXAMPLES = [
   {
     type: 'VALUE PROPOSITION',
     original: 'Powerful features for modern teams',
-    rewritten: 'Everything your team needs to hit every deadline — nothing you don’t',
+    rewritten: "Everything your team needs to hit every deadline — nothing you don’t",
   },
 ] as const
 
@@ -483,16 +565,155 @@ function AIRewriteSection() {
   )
 }
 
-// ── Section 4 — What We Check ────────────────────────────────────────────────
+// ── Section 4 — Report Anatomy ────────────────────────────────────────────────
 
-const CHECK_PILLS = [
-  'Value proposition', 'Social proof', 'CTA clarity', 'Offer structure',
-  'Objection handling', 'Visual hierarchy', 'Trust signals',
-  'Mobile experience', 'Load perception', 'Above-fold layout',
+const REPORT_ROWS = [
+  { name: 'Conversion score', content: 'A 0–100 weighted composite across all 307 checks. Below 70 is flagged critical.' },
+  { name: 'Percentile rank', content: 'Where your score sits against real sites in your exact vertical — not a generic industry average.' },
+  { name: 'Ranked findings', content: 'Every failing check listed by priority. P1 down to P-whatever. Each one includes evidence, severity, and estimated conversion lift.' },
+  { name: 'Evidence per finding', content: 'The specific element on your page that triggered the finding — what was present, absent, or misplaced.' },
+  { name: 'Fix per finding', content: 'A plain-English description of exactly what to change and why. No interpretation required.' },
+  { name: 'AI-rewritten copy', content: 'Drop-in replacement headlines, CTAs, and value propositions for every critical finding. Ready to hand to a designer.' },
+]
+
+function ReportAnatomySection() {
+  return (
+    <section style={{ padding:'80px 48px',borderTop:'0.5px solid rgba(111,155,198,0.1)',position:'relative',overflow:'visible' }}>
+      <div style={{ maxWidth:1000,margin:'0 auto' }}>
+        <p style={{ ...MONO,fontSize:11,textTransform:'uppercase',letterSpacing:'0.2em',color:STEEL,margin:'0 0 16px' }}>
+          INSIDE THE REPORT
+        </p>
+        <h2 style={{ ...DISP,fontWeight:700,fontSize:'clamp(28px,4vw,44px)',color:INK_PRI,letterSpacing:'-0.5px',margin:'0 0 16px',lineHeight:1.1 }}>
+          Everything in one place. Nothing to interpret.
+        </h2>
+        <p style={{ ...SANS,fontSize:15,color:INK_SEC,lineHeight:1.65,maxWidth:580,margin:'0 0 40px' }}>
+          Every webdoc report has the same structure. You always know what you&apos;re looking at and what to do with it.
+        </p>
+
+        {/* Report section rows */}
+        <div style={{ borderLeft:'1px solid rgba(111,155,198,0.15)',marginBottom:24 }}>
+          {REPORT_ROWS.map((row, i) => (
+            <div key={row.name} style={{
+              display:'flex',gap:32,padding:'16px 24px',
+              borderBottom: i < REPORT_ROWS.length - 1 ? '0.5px solid rgba(111,155,198,0.08)' : undefined,
+              flexWrap:'wrap',
+            }}>
+              <div style={{ flex:'0 0 200px',minWidth:120 }}>
+                <p style={{ ...DISP,fontSize:14,fontWeight:500,color:INK_PRI,margin:0 }}>{row.name}</p>
+              </div>
+              <div style={{ flex:1,minWidth:200 }}>
+                <p style={{ ...SANS,fontSize:14,color:INK_MUT,margin:0,lineHeight:1.6 }}>{row.content}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <p style={{ ...MONO,fontSize:11,color:INK_MUT,margin:0 }}>
+          Delivered in your dashboard. Exportable as PDF. Shareable via link.
+        </p>
+      </div>
+    </section>
+  )
+}
+
+// ── Section 5 — Vertical Showcase ────────────────────────────────────────────
+
+const VERTICAL_CARDS = [
+  {
+    type: 'B2B SAAS',
+    desc: 'Pricing pages, feature lists, trial flows, and demo CTAs — all evaluated against SaaS conversion benchmarks.',
+    findings: [
+      '"Trial CTA below fold on mobile — 34% of visitors never see it"',
+      '"Feature list leads with capabilities, not outcomes"',
+    ],
+  },
+  {
+    type: 'E-COMMERCE',
+    desc: 'Product pages, collection pages, cart flows — evaluated against purchase conversion patterns.',
+    findings: [
+      '"No social proof on product page above add-to-cart"',
+      '"Shipping cost not visible until checkout — high abandonment signal"',
+    ],
+  },
+  {
+    type: 'AGENCY / SERVICE',
+    desc: 'Service pages, case study placement, inquiry CTAs — evaluated against service business conversion patterns.',
+    findings: [
+      '"No specific outcome stated — \'we help businesses grow\' is not a value proposition"',
+      '"Contact form requires 7 fields — reduces submission rate significantly"',
+    ],
+  },
+  {
+    type: 'CREATOR / NEWSLETTER',
+    desc: 'Landing pages, opt-in forms, membership pages — evaluated against creator conversion benchmarks.',
+    findings: [
+      '"No proof of content quality above the fold — what does subscribing get me?"',
+      '"Single opt-in CTA with no supporting reason to act"',
+    ],
+  },
+]
+
+function VerticalShowcaseSection() {
+  return (
+    <section style={{ padding:'80px 48px',borderTop:'0.5px solid rgba(111,155,198,0.1)',position:'relative',overflow:'visible' }}>
+      <style>{`@media(max-width:767px){.d-vertical-grid{grid-template-columns:1fr!important}}`}</style>
+      <div style={{ maxWidth:1000,margin:'0 auto' }}>
+        <p style={{ ...MONO,fontSize:11,textTransform:'uppercase',letterSpacing:'0.2em',color:STEEL,margin:'0 0 16px' }}>
+          WORKS FOR YOUR SITE TYPE
+        </p>
+        <h2 style={{ ...DISP,fontWeight:700,fontSize:'clamp(28px,4vw,44px)',color:INK_PRI,letterSpacing:'-0.5px',margin:'0 0 16px',lineHeight:1.1 }}>
+          The engine classifies your site automatically.
+        </h2>
+        <p style={{ ...SANS,fontSize:15,color:INK_SEC,lineHeight:1.65,maxWidth:580,margin:'0 0 40px' }}>
+          A Shopify product page gets different diagnostics than a B2B SaaS pricing page. Classification runs automatically — no configuration needed.
+        </p>
+
+        <div className="d-vertical-grid" style={{ display:'grid',gridTemplateColumns:'repeat(2,1fr)',gap:16,marginBottom:24 }}>
+          {VERTICAL_CARDS.map(card => (
+            <div key={card.type} style={{
+              borderTop:'1px solid rgba(255,255,255,0.08)',
+              borderLeft:'1px solid rgba(255,255,255,0.05)',
+              borderRight:'1px solid rgba(255,255,255,0.03)',
+              borderBottom:'1px solid rgba(255,255,255,0.03)',
+              padding:20,
+              boxShadow:'inset 0 1px 0 0 rgba(111,155,198,0.08)',
+            }}>
+              <p style={{ ...MONO,fontSize:10,textTransform:'uppercase',letterSpacing:'0.15em',color:STEEL,margin:'0 0 8px' }}>{card.type}</p>
+              <p style={{ ...SANS,fontSize:13,color:INK_MUT,margin:'0 0 14px',lineHeight:1.55 }}>{card.desc}</p>
+              {card.findings.map(f => (
+                <p key={f} style={{ ...SANS,fontSize:12,fontStyle:'italic',color:INK_MUT,margin:'0 0 4px',lineHeight:1.5,opacity:0.75 }}>{f}</p>
+              ))}
+            </div>
+          ))}
+        </div>
+
+        <p style={{ ...MONO,fontSize:11,color:INK_MUT,textAlign:'center',margin:0 }}>
+          14 verticals currently in corpus · auto-classified · no configuration required
+        </p>
+      </div>
+    </section>
+  )
+}
+
+// ── Section 6 — What We Check ─────────────────────────────────────────────────
+
+const SCOPE_ITEMS_LEFT = [
+  { cat: 'Value proposition', q: "Does your headline communicate a specific outcome, or just describe what you built?" },
+  { cat: 'Social proof', q: "Are testimonials visible before 800px? Are they specific or generic?" },
+  { cat: 'CTA clarity', q: "Is there one primary action above the fold, or are visitors choosing between competing options?" },
+  { cat: 'Offer structure', q: "Is your pricing, trial, or free tier visible and framed around value rather than cost?" },
+  { cat: 'Objection handling', q: "Does the page address the most common reasons someone wouldn't buy?" },
+]
+
+const SCOPE_ITEMS_RIGHT = [
+  { cat: 'Visual hierarchy', q: "Does the eye flow naturally from headline to proof to action, or does layout compete with itself?" },
+  { cat: 'Trust signals', q: "Are security badges, guarantees, or credentials present where purchase anxiety peaks?" },
+  { cat: 'Mobile experience', q: "Does the page convert on mobile, or does it just render without breaking?" },
+  { cat: 'Load perception', q: "Does the page feel fast? Perceived load time affects conversion independent of actual speed." },
+  { cat: 'Above-fold layout', q: "What does a visitor see before scrolling? Is it enough to make them want to scroll?" },
 ]
 
 function WhatWeCheckSection() {
-  const [hoveredPill, setHoveredPill] = useState<string | null>(null)
   return (
     <section style={{ padding:'80px 48px',borderTop:'0.5px solid rgba(111,155,198,0.1)',position:'relative',overflow:'visible' }}>
       <div
@@ -509,6 +730,7 @@ function WhatWeCheckSection() {
           zIndex: 0,
         }}
       />
+      <style>{`@media(max-width:767px){.d-scope-grid{grid-template-columns:1fr!important}}`}</style>
       <div style={{ maxWidth:1000,margin:'0 auto',position:'relative',zIndex:1 }}>
         <p style={{ ...MONO,fontSize:11,textTransform:'uppercase',letterSpacing:'0.2em',color:STEEL,margin:'0 0 16px' }}>
           SCOPE
@@ -516,177 +738,237 @@ function WhatWeCheckSection() {
         <h2 style={{ ...DISP,fontWeight:700,fontSize:'clamp(28px,4vw,44px)',color:INK_PRI,letterSpacing:'-0.5px',margin:'0 0 16px',lineHeight:1.1 }}>
           27 categories. Every conversion surface.
         </h2>
-        <p style={{ ...SANS,fontSize:15,color:INK_SEC,lineHeight:1.65,maxWidth:580,margin:'0 0 32px' }}>
+        <p style={{ ...SANS,fontSize:15,color:INK_SEC,lineHeight:1.65,maxWidth:580,margin:'0 0 40px' }}>
           The engine checks every element a visitor encounters from the moment they land — not just your headline and CTA. If it affects whether someone converts, it&apos;s in the audit.
         </p>
-        {/* 4E: Pills stagger in */}
-        <div style={{ display:'flex',flexWrap:'wrap',gap:8,margin:'0 0 24px' }}>
-          {CHECK_PILLS.map((pill, i) => (
-            <motion.span
-              key={pill}
-              initial={{ opacity: 0, scale: 0.82 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true, margin: '-40px' }}
-              transition={{ duration: 0.3, delay: i * 0.045, ease: 'easeOut' }}
-              onMouseEnter={() => setHoveredPill(pill)}
-              onMouseLeave={() => setHoveredPill(null)}
-              style={{
-                ...SANS,fontSize:13,
-                color: hoveredPill === pill ? 'rgba(255, 255, 255, 0.95)' : INK_SEC,
-                background: hoveredPill === pill ? 'rgba(111, 155, 198, 0.06)' : SURFACE,
-                border: `0.5px solid ${hoveredPill === pill ? 'rgba(111, 155, 198, 0.5)' : 'rgba(111,155,198,0.15)'}`,
-                padding:'6px 12px',
-                display:'inline-block',
-                cursor: 'default',
-                transition: 'box-shadow 0.2s ease, border-color 0.2s ease, color 0.2s ease, background 0.2s ease',
-                boxShadow: hoveredPill === pill ? '0 0 0 1px rgba(111, 155, 198, 0.2), inset 0 0 10px rgba(111, 155, 198, 0.05)' : undefined,
-              }}
-            >
-              {pill}
-            </motion.span>
-          ))}
+
+        {/* Diagnostic grid — two columns, no cards */}
+        <div className="d-scope-grid" style={{ display:'grid',gridTemplateColumns:'1fr 1fr',gap:'0 48px',marginBottom:32 }}>
+          <div>
+            {SCOPE_ITEMS_LEFT.map(item => (
+              <div key={item.cat} style={{ borderLeft:'1px solid rgba(111,155,198,0.2)',paddingLeft:16,marginBottom:24 }}>
+                <p style={{ ...DISP,fontSize:14,fontWeight:500,color:INK_PRI,margin:'0 0 4px' }}>{item.cat}</p>
+                <p style={{ ...SANS,fontSize:13,color:INK_MUT,margin:0,lineHeight:1.55 }}>{item.q}</p>
+              </div>
+            ))}
+          </div>
+          <div>
+            {SCOPE_ITEMS_RIGHT.map(item => (
+              <div key={item.cat} style={{ borderLeft:'1px solid rgba(111,155,198,0.2)',paddingLeft:16,marginBottom:24 }}>
+                <p style={{ ...DISP,fontSize:14,fontWeight:500,color:INK_PRI,margin:'0 0 4px' }}>{item.cat}</p>
+                <p style={{ ...SANS,fontSize:13,color:INK_MUT,margin:0,lineHeight:1.55 }}>{item.q}</p>
+              </div>
+            ))}
+          </div>
         </div>
-        <p style={{ ...MONO,fontSize:11,color:'rgba(111, 155, 198, 0.6)',margin:0,textShadow:'0 0 8px rgba(111, 155, 198, 0.2)' }}>
+
+        <p style={{ ...MONO,fontSize:11,color:'rgba(111, 155, 198, 0.6)',margin:'0 0 12px',textShadow:'0 0 8px rgba(111, 155, 198, 0.2)' }}>
           307 checks across 27 categories — every scan, every plan.
         </p>
-        {/* Example findings by category — static illustration */}
-        <p style={{ ...MONO,fontSize:9,textTransform:'uppercase',letterSpacing:'0.18em',color:INK_MUT,margin:'32px 0 16px' }}>
-          EXAMPLE FINDINGS BY CATEGORY
-        </p>
-        <style>{`@media(max-width:767px){.d-scope-examples{grid-template-columns:1fr!important}}`}</style>
-        <div className="d-scope-examples" style={{ display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:12,margin:'0 0 16px' }}>
-          <div style={{ background:SURFACE,borderTop:'1px solid rgba(255,255,255,0.1)',borderLeft:'1px solid rgba(255,255,255,0.07)',borderRight:'1px solid rgba(255,255,255,0.04)',borderBottom:'1px solid rgba(255,255,255,0.03)',padding:16,boxShadow:'inset 0 1px 0 0 rgba(111, 155, 198, 0.1)' }}>
-            <span style={{ ...MONO,fontSize:9,border:'0.5px solid rgba(111,155,198,0.25)',color:STEEL,padding:'2px 8px',textTransform:'uppercase',letterSpacing:'0.1em',display:'inline-block',margin:'0 0 10px' }}>VALUE PROPOSITION</span>
-            <p style={{ ...DISP,fontSize:13,fontWeight:600,color:INK_PRI,margin:'0 0 6px',lineHeight:1.35 }}>Hero headline describes features, not outcomes</p>
-            <p style={{ ...MONO,fontSize:11,color:INK_MUT,margin:0 }}>Affects 12–18% conversion lift when corrected</p>
-          </div>
-          <div style={{ background:SURFACE,borderTop:'1px solid rgba(255,255,255,0.1)',borderLeft:'1px solid rgba(255,255,255,0.07)',borderRight:'1px solid rgba(255,255,255,0.04)',borderBottom:'1px solid rgba(255,255,255,0.03)',padding:16,boxShadow:'inset 0 1px 0 0 rgba(111, 155, 198, 0.1)' }}>
-            <span style={{ ...MONO,fontSize:9,border:'0.5px solid rgba(111,155,198,0.25)',color:STEEL,padding:'2px 8px',textTransform:'uppercase',letterSpacing:'0.1em',display:'inline-block',margin:'0 0 10px' }}>SOCIAL PROOF</span>
-            <p style={{ ...DISP,fontSize:13,fontWeight:600,color:INK_PRI,margin:'0 0 6px',lineHeight:1.35 }}>No testimonials visible above 800px fold</p>
-            <p style={{ ...MONO,fontSize:11,color:INK_MUT,margin:0 }}>73% of high-converting sites show social proof above fold</p>
-          </div>
-          <div style={{ background:SURFACE,borderTop:'1px solid rgba(255,255,255,0.1)',borderLeft:'1px solid rgba(255,255,255,0.07)',borderRight:'1px solid rgba(255,255,255,0.04)',borderBottom:'1px solid rgba(255,255,255,0.03)',padding:16,boxShadow:'inset 0 1px 0 0 rgba(111, 155, 198, 0.1)' }}>
-            <span style={{ ...MONO,fontSize:9,border:'0.5px solid rgba(111,155,198,0.25)',color:STEEL,padding:'2px 8px',textTransform:'uppercase',letterSpacing:'0.1em',display:'inline-block',margin:'0 0 10px' }}>CTA CLARITY</span>
-            <p style={{ ...DISP,fontSize:13,fontWeight:600,color:INK_PRI,margin:'0 0 6px',lineHeight:1.35 }}>Two competing primary CTAs above fold</p>
-            <p style={{ ...MONO,fontSize:11,color:INK_MUT,margin:0 }}>Single focused CTA outperforms split CTAs in 73% of variants</p>
-          </div>
-        </div>
-        <p style={{ ...MONO,fontSize:11,color:INK_MUT,margin:0 }}>
-          Every category produces findings like these — grounded in what&apos;s actually on your page.
+        <p style={{ ...SANS,fontSize:13,color:INK_MUT,margin:0,lineHeight:1.65,maxWidth:640 }}>
+          Each category runs multiple checks — a single visit to &apos;social proof&apos; might fire 12 individual checks across testimonial placement, specificity, recency, and logo strip visibility.
         </p>
       </div>
     </section>
   )
 }
 
-// ── Section 5 — How It Works ──────────────────────────────────────────────────
+// ── Section 7 — How It Works ──────────────────────────────────────────────────
 
-type HowStep = { num: string; title: string; desc: string; techTag?: string }
-
-const HOW_STEPS: HowStep[] = [
+const PIPELINE_STEPS = [
   {
     num: '01',
-    title: 'Paste your URL',
-    desc: 'Drop any publicly accessible URL into the scan field. No installation, no code, no browser extension.',
+    title: 'You paste a URL',
+    desc: 'Any publicly accessible page — homepage, pricing page, landing page. No installation, no code.',
+    tag: null,
+    bright: false,
   },
   {
     num: '02',
-    title: 'We render your live page',
-    desc: 'webdoc loads your actual page in a real browser — the same thing your visitors see, above-the-fold layout and all. Not cached text. Not a scrape. Your live site.',
-    techTag: 'headless chrome · full dom render · above-fold layout measured',
+    title: 'Headless Chrome renders your page',
+    desc: 'We load your actual live page in a real browser — the same DOM your visitors see, above-the-fold layout measured.',
+    tag: 'browserless · stealth mode · full dom render · 1280×800',
+    bright: true,
   },
   {
     num: '03',
-    title: 'Get your ranked report',
-    desc: 'In about 90 seconds you receive a full conversion audit — every finding ranked by estimated impact, plain-English fixes, AI-rewritten copy, and your percentile against real sites in your vertical.',
+    title: '307 checks fire across 27 categories',
+    desc: 'Every conversion surface is evaluated — headline, CTA, social proof, trust signals, mobile layout, load perception, and more.',
+    tag: 'parallel execution · ai-grounded · citation required or finding is dropped',
+    bright: false,
+  },
+  {
+    num: '04',
+    title: 'Findings are ranked by conversion impact',
+    desc: 'Each failing check is weighted by its estimated effect on conversion rate. Priority 1 matters most.',
+    tag: 'corpus-calibrated weights · estimated lift range per finding',
+    bright: false,
+  },
+  {
+    num: '05',
+    title: 'AI generates fixes and rewrites',
+    desc: 'Every critical and high-severity finding gets a plain-English fix and drop-in replacement copy — ready to paste directly.',
+    tag: 'grounded in visible content · not a generic suggestion',
+    bright: false,
+  },
+  {
+    num: '06',
+    title: 'Report assembles with corpus benchmarks',
+    desc: 'Your score is positioned against real sites in your exact vertical. You see where you stand and what to fix first.',
+    tag: 'percentile ranking · vertical-specific · 4,812 site corpus',
+    bright: false,
   },
 ]
 
 function HowItWorksSection() {
-  const [hoveredStep, setHoveredStep] = useState<number | null>(null)
   return (
     <section style={{ padding:'80px 48px',borderTop:'0.5px solid rgba(111,155,198,0.1)',position:'relative',overflow:'visible' }}>
-      <style>{`@media(max-width:767px){.d-hiw-grid{grid-template-columns:1fr!important}}`}</style>
-      <div style={{ maxWidth:1200,margin:'0 auto' }}>
+      <div style={{ maxWidth:700,margin:'0 auto' }}>
         <p style={{ ...MONO,fontSize:11,textTransform:'uppercase',letterSpacing:'0.2em',color:STEEL,margin:'0 0 16px' }}>
           THE PROCESS
         </p>
         <h2 style={{ ...DISP,fontWeight:700,fontSize:'clamp(28px,4vw,44px)',color:INK_PRI,letterSpacing:'-0.5px',margin:'0 0 48px',lineHeight:1.1 }}>
-          Three steps. No technical knowledge required.
+          What happens when you paste a URL.
         </h2>
-        {/* 4G: Step cards stagger in */}
-        <div className="d-hiw-grid" style={{ display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:24 }}>
-          {HOW_STEPS.map((step, i) => (
-            <motion.div
-              key={step.num}
-              initial={{ opacity: 0, y: 32 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '-50px' }}
-              transition={{ duration: 0.5, delay: i * 0.12, ease: 'easeOut' }}
-              onMouseEnter={() => setHoveredStep(i)}
-              onMouseLeave={() => setHoveredStep(null)}
-              style={{
-                background: hoveredStep === i ? 'rgba(111, 155, 198, 0.04)' : 'rgba(111, 155, 198, 0.025)',
-                borderTop:'1px solid rgba(255,255,255,0.1)',
-                borderLeft: i === 1 ? '1px solid rgba(111, 155, 198, 0.2)' : '1px solid rgba(255,255,255,0.07)',
-                borderRight:'1px solid rgba(255,255,255,0.04)',
-                borderBottom:'1px solid rgba(255,255,255,0.03)',
-                padding:24,
-                transition: 'box-shadow 0.25s ease, background 0.25s ease',
-                boxShadow: hoveredStep === i
-                  ? 'inset 0 1px 0 0 rgba(111, 155, 198, 0.22), 0 0 24px rgba(111, 155, 198, 0.05)'
-                  : 'inset 0 1px 0 0 rgba(111, 155, 198, 0.12)',
-              }}>
-              <p style={{
-                ...MONO,fontSize:20,
-                color: i === 1 ? 'rgba(111,155,198,0.55)' : 'rgba(111,155,198,0.35)',
-                margin:'0 0 16px',fontWeight:700,
-                textShadow: '0 0 10px rgba(111,155,198,0.25)',
-              }}>
-                {step.num}
-              </p>
-              <p style={{ ...DISP,fontSize:18,fontWeight:600,color:INK_PRI,margin:'0 0 12px',lineHeight:1.25 }}>
-                {step.title}
-              </p>
-              <p style={{ ...SANS,fontSize:14,color:INK_SEC,lineHeight:1.65,margin:0 }}>{step.desc}</p>
-              {step.techTag && (
-                <p style={{
-                  ...MONO,fontSize:10,margin:'12px 0 0',letterSpacing:'0.04em',lineHeight:1.5,
-                  color: i === 1 ? 'rgba(111, 155, 198, 0.65)' : INK_MUT,
-                  textShadow: i === 1 ? '0 0 8px rgba(111, 155, 198, 0.2)' : undefined,
-                }}>
-                  {step.techTag}
-                </p>
-              )}
-              {i === 2 && (
-                // static illustration — mini report hierarchy preview showing "ranked" means priority-ordered with lift numbers
-                <div style={{ marginTop:16,background:'rgba(5,8,16,0.6)',borderTop:'0.5px solid rgba(255,255,255,0.08)',borderLeft:'0.5px solid rgba(255,255,255,0.06)',borderRight:'0.5px solid rgba(255,255,255,0.04)',borderBottom:'0.5px solid rgba(255,255,255,0.03)',padding:'12px 14px' }}>
-                  <div style={{ display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:6 }}>
-                    <span style={{ ...MONO,fontSize:10,color:CRIT }}>P1 · CRITICAL</span>
-                    <span style={{ ...MONO,fontSize:10,color:LIFT_GREEN,textShadow:'0 0 6px rgba(0, 196, 140, 0.3)' }}>+12–18%</span>
-                  </div>
-                  <div style={{ display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:6 }}>
-                    <span style={{ ...MONO,fontSize:10,color:HIGH_AMB }}>P2 · HIGH</span>
-                    <span style={{ ...MONO,fontSize:10,color:'rgba(0, 196, 140, 0.6)' }}>+8–11%</span>
-                  </div>
-                  <div style={{ display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:8 }}>
-                    <span style={{ ...MONO,fontSize:10,color:HIGH_AMB }}>P3 · HIGH</span>
-                    <span style={{ ...MONO,fontSize:10,color:'rgba(0, 196, 140, 0.6)' }}>+6–9%</span>
-                  </div>
-                  <p style={{ ...MONO,fontSize:9,color:INK_MUT,margin:0,letterSpacing:'0.04em' }}>
-                    ranked by conversion impact · fixes included
-                  </p>
-                </div>
-              )}
-            </motion.div>
+
+        {/* Vertical pipeline */}
+        <div style={{ position:'relative' }}>
+          {/* Connector line */}
+          <div style={{ position:'absolute',left:7,top:8,bottom:8,width:1,background:'rgba(111,155,198,0.15)',zIndex:0 }} />
+
+          {PIPELINE_STEPS.map((step, i) => (
+            <div key={step.num} style={{ position:'relative',display:'flex',gap:24,marginBottom: i < PIPELINE_STEPS.length - 1 ? 32 : 0 }}>
+              {/* Node on connector line */}
+              <div style={{ flexShrink:0,width:15,display:'flex',justifyContent:'center',paddingTop:4,zIndex:1 }}>
+                <div style={{
+                  width:10,height:10,borderRadius:'50%',
+                  background: step.bright ? 'rgba(111,155,198,0.5)' : 'rgba(111,155,198,0.2)',
+                  border: `1px solid ${step.bright ? 'rgba(111,155,198,0.7)' : 'rgba(111,155,198,0.35)'}`,
+                  flexShrink:0,
+                }} />
+              </div>
+              {/* Content */}
+              <div style={{ flex:1,minWidth:0,paddingBottom:4 }}>
+                <p style={{ ...MONO,fontSize:10,color:STEEL,margin:'0 0 4px',letterSpacing:'0.08em' }}>{step.num}</p>
+                <p style={{ ...DISP,fontSize:16,fontWeight:600,color:INK_PRI,margin:'0 0 8px',lineHeight:1.25 }}>{step.title}</p>
+                <p style={{ ...SANS,fontSize:14,color:INK_SEC,lineHeight:1.65,margin:0 }}>{step.desc}</p>
+                {step.tag && (
+                  <p style={{ ...MONO,fontSize:10,color:INK_MUT,margin:'8px 0 0',letterSpacing:'0.04em',lineHeight:1.5 }}>{step.tag}</p>
+                )}
+              </div>
+            </div>
           ))}
+        </div>
+
+        {/* Footer */}
+        <div style={{ marginTop:40,borderTop:'0.5px solid rgba(111,155,198,0.1)',paddingTop:24,textAlign:'center' }}>
+          <p style={{ ...SANS,fontSize:14,color:INK_MUT,margin:'0 0 10px',lineHeight:1.65 }}>
+            Total time from URL to full report: approximately 90 seconds.
+          </p>
+          <p style={{ ...MONO,fontSize:10,color:INK_MUT,margin:0,opacity:0.6 }}>
+            No technical knowledge required — paste a URL, read the report, fix what matters.
+          </p>
         </div>
       </div>
     </section>
   )
 }
 
-// ── Section 6 — Why Different ─────────────────────────────────────────────────
+// ── Section 8 — Comparison ────────────────────────────────────────────────────
+
+const CHATGPT_ITEMS = [
+  'Sees text you paste, not your live page',
+  'No structured checks — chat response only',
+  'No conversion benchmarks',
+  'No ranked output',
+  'Rewrite quality varies with prompt skill',
+]
+
+const LIGHTHOUSE_ITEMS = [
+  'Measures load speed and core web vitals',
+  'Not a conversion audit — no CRO checks',
+  'No findings about copy, CTA, or social proof',
+  "Score doesn't correlate with conversion rate",
+  'No fixes — just scores and flags',
+]
+
+const WEBDOC_ITEMS = [
+  'Renders your live DOM in headless Chrome',
+  '307 structured checks across 27 categories',
+  'Ranked by estimated conversion impact',
+  'Evidence cited per finding',
+  'Plain-English fix + AI-rewritten copy included',
+  'Benchmarked against real sites in your vertical',
+]
+
+function ComparisonSection() {
+  return (
+    <section style={{ padding:'80px 48px',borderTop:'0.5px solid rgba(111,155,198,0.1)',position:'relative',overflow:'visible' }}>
+      <style>{`@media(max-width:767px){.d-compare-grid{grid-template-columns:1fr!important}}`}</style>
+      <div style={{ maxWidth:1000,margin:'0 auto' }}>
+        <p style={{ ...MONO,fontSize:11,textTransform:'uppercase',letterSpacing:'0.2em',color:STEEL,margin:'0 0 16px' }}>
+          HOW IT COMPARES
+        </p>
+        <h2 style={{ ...DISP,fontWeight:700,fontSize:'clamp(28px,4vw,44px)',color:INK_PRI,letterSpacing:'-0.5px',margin:'0 0 48px',lineHeight:1.1 }}>
+          Not ChatGPT. Not Lighthouse. Not a generic audit.
+        </h2>
+
+        <div className="d-compare-grid" style={{ display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:24 }}>
+          {/* Column 1 — ChatGPT */}
+          <div style={{
+            borderTop:'1px solid rgba(255,255,255,0.08)',
+            borderLeft:'1px solid rgba(255,255,255,0.05)',
+            borderRight:'1px solid rgba(255,255,255,0.03)',
+            borderBottom:'1px solid rgba(255,255,255,0.03)',
+            padding:24,
+            boxShadow:'inset 0 1px 0 0 rgba(255,255,255,0.06)',
+          }}>
+            <p style={{ ...MONO,fontSize:10,textTransform:'uppercase',letterSpacing:'0.15em',color:INK_MUT,margin:'0 0 8px' }}>CHATGPT</p>
+            <p style={{ ...SANS,fontSize:13,color:INK_MUT,margin:'0 0 20px',lineHeight:1.5 }}>A language model with no live page access</p>
+            {CHATGPT_ITEMS.map(item => (
+              <p key={item} style={{ ...SANS,fontSize:13,color:INK_MUT,margin:'0 0 8px',lineHeight:1.5 }}>· {item}</p>
+            ))}
+          </div>
+
+          {/* Column 2 — Lighthouse */}
+          <div style={{
+            borderTop:'1px solid rgba(255,255,255,0.08)',
+            borderLeft:'1px solid rgba(255,255,255,0.05)',
+            borderRight:'1px solid rgba(255,255,255,0.03)',
+            borderBottom:'1px solid rgba(255,255,255,0.03)',
+            padding:24,
+            boxShadow:'inset 0 1px 0 0 rgba(255,255,255,0.06)',
+          }}>
+            <p style={{ ...MONO,fontSize:10,textTransform:'uppercase',letterSpacing:'0.15em',color:INK_MUT,margin:'0 0 8px' }}>LIGHTHOUSE / PAGESPEED</p>
+            <p style={{ ...SANS,fontSize:13,color:INK_MUT,margin:'0 0 20px',lineHeight:1.5 }}>A technical performance tool</p>
+            {LIGHTHOUSE_ITEMS.map(item => (
+              <p key={item} style={{ ...SANS,fontSize:13,color:INK_MUT,margin:'0 0 8px',lineHeight:1.5 }}>· {item}</p>
+            ))}
+          </div>
+
+          {/* Column 3 — webdoc (elevated) */}
+          <div style={{
+            borderTop:'1px solid rgba(111, 155, 198, 0.4)',
+            borderLeft:'1px solid rgba(111,155,198,0.15)',
+            borderRight:'1px solid rgba(111,155,198,0.08)',
+            borderBottom:'1px solid rgba(111,155,198,0.06)',
+            padding:24,
+            background:'rgba(111, 155, 198, 0.03)',
+            boxShadow:'inset 0 1px 0 0 rgba(111, 155, 198, 0.18)',
+          }}>
+            <p style={{ ...MONO,fontSize:10,textTransform:'uppercase',letterSpacing:'0.15em',color:STEEL,margin:'0 0 8px' }}>WEBDOC</p>
+            <p style={{ ...SANS,fontSize:13,color:INK_PRI,margin:'0 0 20px',lineHeight:1.5 }}>A structured conversion audit engine</p>
+            {WEBDOC_ITEMS.map(item => (
+              <p key={item} style={{ ...SANS,fontSize:13,color:INK_PRI,margin:'0 0 8px',lineHeight:1.5 }}>· {item}</p>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+// ── Section 9 — Why Different ─────────────────────────────────────────────────
 
 type ObjectionCard = { q: string; a: string; tag: string }
 
@@ -765,7 +1047,6 @@ function WhyDifferentSection() {
         <h2 style={{ ...DISP,fontWeight:700,fontSize:'clamp(28px,4vw,44px)',color:INK_PRI,letterSpacing:'-0.5px',margin:'0 0 48px',lineHeight:1.1 }}>
           Built for anyone with a site that needs to perform.
         </h2>
-        {/* 4H: FAQ cards stagger in + hover glow */}
         <div className="d-diff-grid" style={{ display:'grid',gridTemplateColumns:'repeat(2,1fr)',gap:24 }}>
           {OBJECTIONS.map((card, i) => (
             <motion.div
@@ -799,19 +1080,26 @@ function WhyDifferentSection() {
   )
 }
 
-// ── Section 7 — Benchmarks ────────────────────────────────────────────────────
+// ── Section 10 — Benchmarks ───────────────────────────────────────────────────
 // Renders the existing LandingCorpusStats component (bell curve, percentile, corpus stats).
 
-// ── Multi-Site / Scale Section ────────────────────────────────────────────────
+// ── Section 11 — Multi-Site / Scale ──────────────────────────────────────────
 
-const SCALE_FEATURES = [
-  { title: 'White-label PDF reports', desc: 'Every report exports as a branded PDF. Your name, your logo, your deliverable. Client never sees webdoc.' },
-  { title: 'Scan history per site', desc: 'Track score movement over time. Rescan after fixes ship and show the improvement. Makes for a strong client retention tool.' },
-  { title: '100 API calls bundled', desc: 'Agency plan includes 100 API calls for integrating scans into your own workflows or client onboarding.' },
-  { title: 'Vertical-matched benchmarks', desc: 'Each site is benchmarked against its own vertical — e-commerce against e-commerce, SaaS against SaaS. No mixed averages.' },
-  { title: 'Evidence-backed findings', desc: 'Every finding cites specific visible content from the page. Nothing vague to explain away in a client meeting.' },
-  { title: 'Plain-English output', desc: 'Reports are written to be read by anyone — hand them to a client, a designer, or a developer without translation.' },
-] as const
+const SINGLE_SITE_FEATURES = [
+  'Full conversion audit per scan',
+  'Score + percentile against your vertical',
+  'Plain-English fixes + AI copy rewrites',
+  'Monthly scan cadence on Starter',
+]
+
+const MULTI_SITE_FEATURES = [
+  "White-label PDF — your brand, not webdoc's",
+  'Scan history and score tracking per site',
+  '100 API calls bundled for workflow integration',
+  'Vertical-matched benchmarks per client site',
+  'Evidence-backed findings — nothing vague in a client meeting',
+  'Plain-English output — hand it to a client without translation',
+]
 
 function MultiSiteSection() {
   return (
@@ -822,7 +1110,7 @@ function MultiSiteSection() {
       overflow: 'visible',
       background: 'radial-gradient(ellipse 1000px 500px at 50% 50%, rgba(157, 140, 255, 0.04) 0%, transparent 70%)',
     }}>
-      <style>{`@media(max-width:767px){.d-scale-grid{grid-template-columns:1fr!important}}`}</style>
+      <style>{`@media(max-width:767px){.d-scale-cols{flex-direction:column!important}.d-scale-divider{display:none!important}}`}</style>
       <div style={{ maxWidth: 1000, margin: '0 auto' }}>
         <p style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.2em', color: INK_MUT, margin: '0 0 16px' }}>
           AT SCALE
@@ -833,14 +1121,92 @@ function MultiSiteSection() {
         <p style={{ ...SANS, fontSize: 15, color: INK_SEC, lineHeight: 1.65, maxWidth: 580, margin: '0 0 40px' }}>
           The dashboard handles multiple sites natively. Each site gets its own report, score history, and benchmarks. White-label the output and it&apos;s ready to hand to a client.
         </p>
-        <div className="d-scale-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 24, margin: '0 0 40px' }}>
-          {SCALE_FEATURES.map(feature => (
-            <div key={feature.title} style={{ borderLeft: '1px solid rgba(157, 140, 255, 0.2)', paddingLeft: 20 }}>
-              <p style={{ ...DISP, fontWeight: 500, fontSize: 16, color: INK_PRI, margin: '0 0 8px', lineHeight: 1.3 }}>{feature.title}</p>
-              <p style={{ ...SANS, fontSize: 14, color: INK_SEC, margin: 0, lineHeight: 1.65 }}>{feature.desc}</p>
+
+        {/* Two use-case columns */}
+        <div className="d-scale-cols" style={{ display: 'flex', gap: 0, marginBottom: 40 }}>
+          {/* Single site */}
+          <div style={{ flex: 1, minWidth: 0, paddingRight: 32 }}>
+            <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.18em', color: INK_MUT, margin: '0 0 12px' }}>
+              SINGLE SITE OWNER
+            </p>
+            <p style={{ ...SANS, fontSize: 14, color: INK_MUT, margin: '0 0 20px', lineHeight: 1.65 }}>
+              Scan your site. Get the report. Fix what matters. Free to start, upgrade when you need more scans or the full report.
+            </p>
+            <div>
+              {SINGLE_SITE_FEATURES.map(f => (
+                <p key={f} style={{ ...SANS, fontSize: 13, color: INK_SEC, margin: '0 0 8px', lineHeight: 1.5 }}>· {f}</p>
+              ))}
             </div>
-          ))}
+          </div>
+
+          {/* Vertical divider */}
+          <div className="d-scale-divider" style={{ width: 1, background: 'rgba(157,140,255,0.15)', flexShrink: 0 }} />
+
+          {/* Multi-site */}
+          <div style={{ flex: 1, minWidth: 0, paddingLeft: 32 }}>
+            <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.18em', color: 'rgba(157,140,255,0.75)', margin: '0 0 12px' }}>
+              MULTI-SITE / CLIENT WORK
+            </p>
+            <p style={{ ...SANS, fontSize: 14, color: INK_MUT, margin: '0 0 20px', lineHeight: 1.65 }}>
+              Run audits across multiple sites. Deliver white-label reports. Track score history per client. The dashboard handles all of it.
+            </p>
+            <div style={{ borderLeft: '2px solid rgba(157,140,255,0.25)', paddingLeft: 16 }}>
+              {MULTI_SITE_FEATURES.map(f => (
+                <p key={f} style={{ ...SANS, fontSize: 13, color: INK_SEC, margin: '0 0 8px', lineHeight: 1.5 }}>· {f}</p>
+              ))}
+            </div>
+          </div>
         </div>
+
+        {/* White-label mock panel — STATIC ILLUSTRATION */}
+        <div style={{
+          borderTop: '1px solid rgba(255,255,255,0.08)',
+          borderLeft: '1px solid rgba(255,255,255,0.06)',
+          borderRight: '1px solid rgba(255,255,255,0.04)',
+          borderBottom: '1px solid rgba(255,255,255,0.03)',
+          background: 'rgba(157,140,255,0.02)',
+          padding: '20px 24px',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: 12,
+          flexWrap: 'wrap',
+          gap: 16,
+          boxShadow: 'inset 0 1px 0 0 rgba(157,140,255,0.08)',
+        }}>
+          <div>
+            <p style={{ ...DISP, fontSize: 18, fontWeight: 600, color: INK_PRI, margin: '0 0 4px' }}>ACME AGENCY</p>
+            <p style={{ ...SANS, fontSize: 13, color: INK_MUT, margin: '0 0 6px' }}>Conversion Audit Report</p>
+            <p style={{ ...MONO, fontSize: 10, color: INK_MUT, margin: 0 }}>acme-client.com · June 2026 · B2B SaaS · 63rd percentile</p>
+          </div>
+          {/* Small score ring — 40px */}
+          <div style={{ textAlign: 'center' }}>
+            <svg width="40" height="40" viewBox="0 0 40 40">
+              <circle cx="20" cy="20" r="15" stroke="rgba(111,155,198,0.12)" strokeWidth="2.5" fill="none" />
+              <circle
+                cx="20" cy="20" r="15"
+                stroke={CRIT}
+                strokeWidth="2.5"
+                strokeDasharray="94.25"
+                strokeDashoffset="37.98"
+                strokeLinecap="round"
+                fill="none"
+                transform="rotate(-90 20 20)"
+              />
+              <text x="20" y="25" textAnchor="middle" fill={CRIT} style={{ fontFamily:'"Space Grotesk",sans-serif',fontSize:10,fontWeight:700 }}>61</text>
+            </svg>
+            <div style={{ marginTop: 4 }}>
+              <span style={{ ...MONO, fontSize: 8, color: CRIT, border: `0.5px solid ${CRIT}`, padding: '1px 4px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                CRITICAL
+              </span>
+            </div>
+          </div>
+        </div>
+        <p style={{ ...MONO, fontSize: 10, color: INK_MUT, margin: '0 0 32px' }}>
+          This is what your client receives. Your name. Your branding. webdoc never appears.
+        </p>
+
+        {/* CTA row */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap' }}>
           <a
             href="#pricing"
@@ -864,7 +1230,7 @@ function MultiSiteSection() {
   )
 }
 
-// ── Section 8 — Pricing ───────────────────────────────────────────────────────
+// ── Section 12 — Pricing ──────────────────────────────────────────────────────
 // TODO: wire paid-tier CTAs to Stripe checkout once plan IDs are confirmed.
 
 type PricingCard = {
@@ -887,7 +1253,7 @@ const PRICING_CARDS: PricingCard[] = [
     highlight: false,
     features: [
       '3 scans per month',
-      "Score + top 3 findings — enough to see what’s broken, not enough to fix everything",
+      "Score + top 3 findings — enough to see what's broken, not enough to fix everything",
       'Benchmarked against corpus',
     ],
     cta: 'Start free →',
@@ -1108,7 +1474,7 @@ function WhatHappensNextStrip() {
   )
 }
 
-// ── Section 9 — Final CTA ─────────────────────────────────────────────────────
+// ── Section 13 — Final CTA ────────────────────────────────────────────────────
 // Hero scan flow requires a URL before proceeding — OPTION A: duplicate URL input + handler.
 
 function FinalCtaSection() {
@@ -1239,12 +1605,15 @@ export default function DashboardPage() {
   const [upgradeLinkHovered, setUpgradeLinkHovered] = useState(false)
   return (
     // instrument-grid: fine (64px) + macro (320px) grid from globals.css, same as homepage
-    <main className="instrument-grid" style={{ minHeight:'100vh',background:BG_BASE }}>
+    <main className="instrument-grid" style={{ minHeight:'100vh' }}>
       <HeroSection />
       <OutputSection />
       <AIRewriteSection />
+      <ReportAnatomySection />
+      <VerticalShowcaseSection />
       <WhatWeCheckSection />
       <HowItWorksSection />
+      <ComparisonSection />
       <WhyDifferentSection />
       <LandingCorpusStats />
       {/* Benchmarks CTA — smooth-scroll hook from corpus section into pricing */}

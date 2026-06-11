@@ -6,7 +6,6 @@ html {
   min-height: 100vh;
 }
 body {
-  background-color: #050810;
   min-height: 100vh;
 }
 
@@ -105,7 +104,6 @@ body {
     font-family: var(--font-stack-sans);
     @apply antialiased;
     color: var(--text-primary);
-    background-color: var(--bg-base);
     /* Instrument grid — fine (64px) + macro (320px) divisions */
     background-image:
       linear-gradient(rgba(111,155,198,0.06) 1px, transparent 1px),

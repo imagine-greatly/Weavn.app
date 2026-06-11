@@ -98,35 +98,28 @@ function HeroForkSection() {
 
         {/* Headline */}
         <h1 className="font-display font-extrabold text-center text-[clamp(38px,5.5vw,64px)] leading-[1.06] tracking-[-0.04em] text-text-primary m-0">
-          Why isn&apos;t your site converting?
+          The conversion audit API.
         </h1>
 
         {/* Subhead */}
-        <p className="font-body text-lg text-text-secondary leading-relaxed text-center max-w-2xl mx-auto mt-5 mb-0">
-          Paste any URL for a full conversion audit — 307 checks, ranked fixes, benchmarked against real sites in your vertical, in about 90 seconds.
+        <p className="font-body text-lg text-text-secondary leading-relaxed text-center max-w-[600px] mx-auto mt-5 mb-0">
+          Paste any URL. Get a 0–100 score, 307 ranked findings, AI-rewritten copy, and corpus benchmarks — in about 90 seconds. No account required.
         </p>
 
         {/* Scan-engine glyph */}
         <div className="flex flex-col items-center mt-12">
-          <WebdocMark
-            size={150}
-            ringTints={{
-              outer: 'var(--engine-agencies)',
-              middle: 'var(--engine-developers)',
-              inner: 'var(--engine-founders)',
-            }}
-          />
+          <WebdocMark size={150} />
           <p className="font-mono text-[10px] uppercase tracking-[0.25em] text-interactive/60 mt-3 mb-0">THE SCAN ENGINE</p>
         </div>
 
         {/* Fork connectors — wide inverted Y (md+) */}
         <svg className="hidden md:block w-full mt-2" viewBox="0 0 880 110" height="110" aria-hidden>
-          <path d={FORK_LEFT_PATH} stroke="var(--engine-founders)" strokeWidth="1.5" fill="none" opacity="0.5" />
+          <path d={FORK_LEFT_PATH} stroke="var(--interactive)" strokeWidth="1.5" fill="none" opacity="0.5" />
           <path d={FORK_RIGHT_PATH} stroke="var(--engine-developers)" strokeWidth="1.5" fill="none" opacity="0.5" />
-          <rect x="211" y="99" width="6" height="6" fill="var(--engine-founders)" />
+          <rect x="211" y="99" width="6" height="6" fill="var(--interactive)" />
           <rect x="663" y="99" width="6" height="6" fill="var(--engine-developers)" />
           <g className="fork-pulse">
-            <rect x="-1.5" y="-1.5" width="3" height="3" fill="var(--engine-founders)" opacity="0.45">
+            <rect x="-1.5" y="-1.5" width="3" height="3" fill="var(--interactive)" opacity="0.45">
               <animateMotion dur="2.2s" repeatCount="indefinite" path={FORK_LEFT_PATH} />
             </rect>
             <rect x="-1.5" y="-1.5" width="3" height="3" fill="var(--engine-developers)" opacity="0.45">
@@ -138,10 +131,10 @@ function HeroForkSection() {
         {/* Below md — single short vertical connector to the first door */}
         <div className="flex md:hidden justify-center mt-2 mb-0">
           <svg width="8" height="56" viewBox="0 0 8 56" aria-hidden>
-            <line x1="4" y1="0" x2="4" y2="48" stroke="var(--engine-founders)" strokeWidth="1.5" opacity="0.5" />
-            <rect x="1" y="48" width="6" height="6" fill="var(--engine-founders)" />
+            <line x1="4" y1="0" x2="4" y2="48" stroke="var(--interactive)" strokeWidth="1.5" opacity="0.5" />
+            <rect x="1" y="48" width="6" height="6" fill="var(--interactive)" />
             <g className="fork-pulse">
-              <rect x="-1.5" y="-1.5" width="3" height="3" fill="var(--engine-founders)" opacity="0.45">
+              <rect x="-1.5" y="-1.5" width="3" height="3" fill="var(--interactive)" opacity="0.45">
                 <animateMotion dur="2.2s" repeatCount="indefinite" path="M 4 0 L 4 48" />
               </rect>
             </g>
@@ -151,9 +144,9 @@ function HeroForkSection() {
         {/* Door cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-          {/* Founders door — cyan */}
-          <div className="bg-surface border border-background-border border-t-engine-founders/40 flex flex-col p-7">
-            <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-engine-founders m-0 mb-3">FOR FOUNDERS &amp; TEAMS</p>
+          {/* Founders door — steel blue */}
+          <div className="bg-surface border border-background-border border-t-interactive/40 flex flex-col p-7">
+            <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-interactive m-0 mb-3">FOR FOUNDERS &amp; TEAMS</p>
             <h2 className="font-display font-bold text-2xl leading-tight text-text-primary m-0 mb-4">See exactly what to fix</h2>
             <div className="flex-1">
               {FOUNDER_LINES.map(line => (
@@ -162,7 +155,7 @@ function HeroForkSection() {
             </div>
             <Link
               href="/dashboard"
-              className="font-mono text-xs text-engine-founders border border-engine-founders/50 px-6 py-3 block text-center no-underline mt-6"
+              className="font-mono text-xs text-interactive border border-interactive/50 px-6 py-3 block text-center no-underline mt-6"
             >
               Scan my site free →
             </Link>
@@ -199,81 +192,6 @@ function TrustStrip() {
       <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-interactive text-center m-0">
         307 CHECKS · GROUNDED IN VISIBLE CONTENT · NO SYNTHETIC DATA · BENCHMARKED BY VERTICAL
       </p>
-    </section>
-  )
-}
-
-// ── Footer re-fork ────────────────────────────────────────────────────────────
-
-const MONO = { fontFamily: "'IBM Plex Mono', monospace" }
-const SANS = { fontFamily: "'IBM Plex Sans', sans-serif" }
-const DISP = { fontFamily: "'Space Grotesk', sans-serif" }
-
-function FinalCtaSection() {
-  return (
-    <section style={{
-      position: 'relative',
-      overflow: 'hidden',
-      borderTop: '0.5px solid rgba(111,155,198,0.15)',
-      minHeight: 280,
-      display: 'flex',
-      alignItems: 'center',
-    }}>
-      <style>{`
-        @media (max-width: 767px) {
-          .final-cta-segments { flex-direction: column !important; }
-          .final-cta-left { border-right: none !important; border-bottom: 0.5px solid rgba(255,255,255,0.06) !important; }
-        }
-      `}</style>
-
-      <div aria-hidden style={{
-        position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0,
-        background: [
-          'radial-gradient(ellipse 1200px 100px at 50% 0%, rgba(111,155,198,0.06) 0%, transparent 80%)',
-          'radial-gradient(ellipse 600px 400px at 20% 50%, rgba(0,200,255,0.06) 0%, transparent 60%)',
-          'radial-gradient(ellipse 600px 400px at 80% 50%, rgba(0,196,140,0.06) 0%, transparent 60%)',
-        ].join(', '),
-      }} />
-      <div aria-hidden style={{ position: 'absolute', top: 20, left: 20, width: 14, height: 14, borderTop: '0.5px solid rgba(111,155,198,0.2)', borderLeft: '0.5px solid rgba(111,155,198,0.2)', pointerEvents: 'none', zIndex: 1 }} />
-      <div aria-hidden style={{ position: 'absolute', top: 20, right: 20, width: 14, height: 14, borderTop: '0.5px solid rgba(111,155,198,0.2)', borderRight: '0.5px solid rgba(111,155,198,0.2)', pointerEvents: 'none', zIndex: 1 }} />
-      <div aria-hidden style={{ position: 'absolute', bottom: 20, left: 20, width: 14, height: 14, borderBottom: '0.5px solid rgba(111,155,198,0.2)', borderLeft: '0.5px solid rgba(111,155,198,0.2)', pointerEvents: 'none', zIndex: 1 }} />
-      <div aria-hidden style={{ position: 'absolute', bottom: 20, right: 20, width: 14, height: 14, borderBottom: '0.5px solid rgba(111,155,198,0.2)', borderRight: '0.5px solid rgba(111,155,198,0.2)', pointerEvents: 'none', zIndex: 1 }} />
-
-      <div style={{ position: 'relative', zIndex: 1, display: 'flex', width: '100%' }} className="final-cta-segments">
-
-        {/* LEFT — founders lane (cyan) */}
-        <div className="final-cta-left" style={{ flex: 1, padding: '64px 56px', borderRight: '0.5px solid rgba(255,255,255,0.06)' }}>
-          <p className="text-engine-founders/70" style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.15em', margin: '0 0 12px' }}>RESULTS WITHOUT CODE</p>
-          <h2 style={{ ...DISP, fontSize: 24, fontWeight: 700, color: '#E6E9EE', lineHeight: 1.3, margin: '0 0 8px' }}>
-            Start scanning your site.
-          </h2>
-          <p style={{ ...SANS, fontSize: 14, color: '#9398A8', margin: '0 0 28px' }}>Free audit. No account required.</p>
-          <Link
-            href="/dashboard"
-            className="font-mono text-xs text-engine-founders border border-engine-founders/50 no-underline inline-block"
-            style={{ padding: '11px 24px', background: 'transparent' }}
-          >
-            Scan my site →
-          </Link>
-        </div>
-
-        {/* RIGHT — developers lane (green) */}
-        <div style={{ flex: 1, padding: '64px 56px' }}>
-          <p className="text-engine-developers/70" style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.15em', margin: '0 0 12px' }}>BUILD WITH THE DATA</p>
-          <h2 style={{ ...DISP, fontSize: 24, fontWeight: 700, color: '#E6E9EE', lineHeight: 1.3, margin: '0 0 8px' }}>
-            POST a URL. Get structured JSON.
-          </h2>
-          <p style={{ ...SANS, fontSize: 14, color: '#9398A8', margin: '0 0 28px' }}>25 free scans, no subscription.</p>
-          <Link
-            href="/auth?surface=api"
-            className="font-mono text-xs text-engine-developers border border-engine-developers/50 no-underline inline-block"
-            style={{ padding: '11px 24px', background: 'transparent' }}
-          >
-            Get API key →
-          </Link>
-        </div>
-
-      </div>
     </section>
   )
 }
@@ -347,7 +265,6 @@ export default function HomePage() {
       <NavBar />
       <HeroForkSection />
       <TrustStrip />
-      <FinalCtaSection />
       <FooterSection />
     </main>
   )

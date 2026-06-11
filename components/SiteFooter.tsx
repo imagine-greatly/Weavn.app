@@ -65,7 +65,7 @@ export default function SiteFooter() {
           <nav className="mt-3" aria-label="Product">
             <FooterLink href="/product">Product</FooterLink>
             <FooterLink href="/how-it-works">How It Works</FooterLink>
-            <FooterLink href="/pricing">Pricing</FooterLink>
+            <FooterLink href="/dashboard">Pricing</FooterLink>
             <FooterLink href="/docs">Docs</FooterLink>
             <FooterLink href="/privacy">Privacy</FooterLink>
             <FooterLink href="/contact">Contact</FooterLink>

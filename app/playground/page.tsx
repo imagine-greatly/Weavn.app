@@ -524,13 +524,13 @@ export default function PlaygroundPage() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 32, flexWrap: 'wrap' }}>
           <span style={{ fontFamily: "'IBM Plex Sans', sans-serif", fontSize: 14, color: '#9398A8' }}>
             Need more scans?{' '}
-            <Link href="/pricing" style={{ color: '#6F9BC6', textDecoration: 'none' }}>
+            <Link href="/developers" style={{ color: '#6F9BC6', textDecoration: 'none' }}>
               See API plans →
             </Link>
           </span>
           <span style={{ fontFamily: "'IBM Plex Sans', sans-serif", fontSize: 14, color: '#9398A8' }}>
             Need a dashboard?{' '}
-            <Link href="/pricing" style={{ color: '#00C48C', textDecoration: 'none' }}>
+            <Link href="/dashboard" style={{ color: '#00C48C', textDecoration: 'none' }}>
               See agency plans →
             </Link>
           </span>

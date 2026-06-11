@@ -2310,7 +2310,7 @@ export function GrowthBlueprintFreeTier({
       {showUpgradeNudge ? (
         <p style={{ margin: "16px 0 0 0", fontFamily: REPORT_MONO, fontSize: 11, color: "#8899AA" }}>
           Full resolution roadmap unlocks with Pro diagnostic access.{" "}
-          <a href="/pricing" style={{ color: "#00C48C", textDecoration: "none" }}>→ Upgrade</a>
+          <a href="/dashboard" style={{ color: "#00C48C", textDecoration: "none" }}>→ Upgrade</a>
         </p>
       ) : null}
     </div>

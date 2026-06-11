@@ -15,8 +15,7 @@ import WebdocMark from "@/components/ui/WebdocMark";
 
 const CENTER_LINKS = [
   { label: "HOW IT WORKS", href: "/dashboard" },
-  { label: "PRICING", href: "/pricing" },
-  { label: "API", href: "/developers" },
+  { label: "DEVELOPERS", href: "/developers" },
   { label: "DOCS", href: "/docs/api" },
 ];
 

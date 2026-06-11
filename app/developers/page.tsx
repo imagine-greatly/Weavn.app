@@ -839,7 +839,7 @@ export default function DevelopersPage() {
             <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#6E7587', margin: '0 0 8px' }}>Need a full dashboard?</p>
             <p style={{ ...DISP, fontSize: 18, fontWeight: 600, color: '#E6E9EE', lineHeight: 1.3, margin: '0 0 8px' }}>Score trending. Client workspaces. White-label reports.</p>
             <p style={{ ...SANS, fontSize: 13, color: '#6E7587', margin: '0 0 20px' }}>For founders diagnosing their own site and agencies managing clients.</p>
-            <Link href="/pricing" style={{ ...MONO, fontSize: 12, color: '#6F9BC6', border: '1px solid rgba(111,155,198,0.5)', padding: '10px 20px', textDecoration: 'none', display: 'inline-block', transition: 'all 0.15s' }}>
+            <Link href="/dashboard" style={{ ...MONO, fontSize: 12, color: '#6F9BC6', border: '1px solid rgba(111,155,198,0.5)', padding: '10px 20px', textDecoration: 'none', display: 'inline-block', transition: 'all 0.15s' }}>
               See dashboard plans →
             </Link>
           </div>

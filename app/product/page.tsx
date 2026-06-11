@@ -786,7 +786,7 @@ export default function ProductPage() {
                   </div>
                 ))}
               </div>
-              <Link href="/dashboard" style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 12, color: '#6F9BC6', border: '1px solid rgba(111,155,198,0.5)', padding: '11px 20px', textDecoration: 'none', display: 'inline-block', background: 'transparent' }}>
+              <Link href="/auth?surface=dashboard" style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 12, color: '#6F9BC6', border: '1px solid rgba(111,155,198,0.5)', padding: '11px 20px', textDecoration: 'none', display: 'inline-block', background: 'transparent' }}>
                 Open dashboard →
               </Link>
             </div>
@@ -812,7 +812,7 @@ export default function ProductPage() {
                   </div>
                 ))}
               </div>
-              <Link href="/developers" style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 12, color: '#9D8CFF', border: '1px solid rgba(157,140,255,0.5)', padding: '11px 20px', textDecoration: 'none', display: 'inline-block', background: 'transparent' }}>
+              <Link href="/auth?surface=api" style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 12, color: '#9D8CFF', border: '1px solid rgba(157,140,255,0.5)', padding: '11px 20px', textDecoration: 'none', display: 'inline-block', background: 'transparent' }}>
                 Get API key →
               </Link>
             </div>

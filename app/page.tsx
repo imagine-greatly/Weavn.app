@@ -46,7 +46,7 @@ function NavBar() {
         </div>
       </div>
       <div className="flex items-center gap-4">
-        <Link href="/auth?surface=dashboard" className="font-body text-sm text-text-secondary no-underline hover:text-text-primary transition-colors duration-150">
+        <Link href="/dashboard" className="font-body text-sm text-text-secondary no-underline hover:text-text-primary transition-colors duration-150">
           Scan my site
         </Link>
         <Link
@@ -972,8 +972,8 @@ function FooterSection() {
         </div>
         <div>
           <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mb-4">GET STARTED</div>
-          <Link href="/auth?surface=dashboard" className="font-body text-sm text-text-secondary hover:text-text-primary block mb-3 no-underline">Scan my site free →</Link>
-          <Link href="/pricing" className="font-body text-sm text-text-secondary hover:text-text-primary block mb-3 no-underline">Agency plans →</Link>
+          <Link href="/dashboard" className="font-body text-sm text-text-secondary hover:text-text-primary block mb-3 no-underline">Scan my site free →</Link>
+          <Link href="/dashboard" className="font-body text-sm text-text-secondary hover:text-text-primary block mb-3 no-underline">Agency plans →</Link>
           <Link href="/auth?surface=api" className="font-body text-sm text-[#6F9BC6] hover:opacity-80 block mb-3 no-underline">Get API key →</Link>
         </div>
         <div>

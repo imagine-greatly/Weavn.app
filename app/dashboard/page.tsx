@@ -226,6 +226,11 @@ function OutputSection() {
           borderBottom:'1px solid rgba(255,255,255,0.03)',
           padding:32,
         }}>
+          {/* Bridge line — contextualizes the mock for founders */}
+          <p style={{ ...SANS,fontStyle:'italic',fontSize:13,color:INK_MUT,margin:'0 0 20px',lineHeight:1.55 }}>
+            This is exactly what your report looks like — same format, same finding structure, grounded in what&apos;s actually on your page.
+          </p>
+
           {/* Label */}
           <div style={{ display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:24,flexWrap:'wrap',gap:8 }}>
             <p style={{ ...MONO,fontSize:9,textTransform:'uppercase',letterSpacing:'0.15em',color:'rgba(111,155,198,0.35)',margin:0 }}>
@@ -331,7 +336,48 @@ function AIRewriteSection() {
   )
 }
 
-// ── Section 4 — Social Proof (single quote) ───────────────────────────────────
+// ── Section 4 — What We Check ────────────────────────────────────────────────
+
+const CHECK_PILLS = [
+  'Value proposition', 'Social proof', 'CTA clarity', 'Offer structure',
+  'Objection handling', 'Visual hierarchy', 'Trust signals',
+  'Mobile experience', 'Load perception', 'Above-fold layout',
+]
+
+function WhatWeCheckSection() {
+  return (
+    <section style={{ padding:'80px 48px',borderTop:'0.5px solid rgba(111,155,198,0.1)',position:'relative',overflow:'hidden' }}>
+      <div style={{ maxWidth:1000,margin:'0 auto' }}>
+        <p style={{ ...MONO,fontSize:11,textTransform:'uppercase',letterSpacing:'0.2em',color:STEEL,margin:'0 0 16px' }}>
+          SCOPE
+        </p>
+        <h2 style={{ ...DISP,fontWeight:700,fontSize:'clamp(28px,4vw,44px)',color:INK_PRI,letterSpacing:'-0.5px',margin:'0 0 16px',lineHeight:1.1 }}>
+          27 categories. Every conversion surface.
+        </h2>
+        <p style={{ ...SANS,fontSize:15,color:INK_SEC,lineHeight:1.65,maxWidth:580,margin:'0 0 32px' }}>
+          The engine checks every element a visitor encounters from the moment they land — not just your headline and CTA. If it affects whether someone converts, it&apos;s in the audit.
+        </p>
+        <div style={{ display:'flex',flexWrap:'wrap',gap:8,margin:'0 0 24px' }}>
+          {CHECK_PILLS.map(pill => (
+            <span key={pill} style={{
+              ...SANS,fontSize:13,color:INK_SEC,
+              background:SURFACE,
+              border:'0.5px solid rgba(111,155,198,0.15)',
+              padding:'6px 12px',
+            }}>
+              {pill}
+            </span>
+          ))}
+        </div>
+        <p style={{ ...MONO,fontSize:11,color:INK_MUT,margin:0 }}>
+          307 checks across 27 categories — every scan, every plan.
+        </p>
+      </div>
+    </section>
+  )
+}
+
+// ── Section 5 — Social Proof (single quote) ───────────────────────────────────
 
 function QuoteSection() {
   return (
@@ -434,6 +480,11 @@ const OBJECTIONS: ObjectionCard[] = [
     a: "A language model sees the text you paste, not your live page. webdoc renders the full DOM in headless Chrome, reads your above-the-fold layout, measures element positions, runs 307 structured checks against conversion best practices, and returns ranked output with estimated lift numbers. ChatGPT returns a chat response. This returns a report.",
     tag: '307 checks · rendered DOM · ranked output · not a chat response',
   },
+  {
+    q: "I already know my site has problems. I don't have time to interpret a report.",
+    a: "Every finding comes with a severity rank, a one-sentence plain-English description, a concrete fix, and drop-in replacement copy. There's nothing to interpret. Work down the list from priority 1. Most founders ship the top three fixes in an afternoon.",
+    tag: 'ranked by impact · fix included · copy ready to paste',
+  },
 ]
 
 function WhyDifferentSection() {
@@ -449,7 +500,7 @@ function WhyDifferentSection() {
         <h2 style={{ ...DISP,fontWeight:700,fontSize:'clamp(28px,4vw,44px)',color:INK_PRI,letterSpacing:'-0.5px',margin:'0 0 48px',lineHeight:1.1 }}>
           Built for founders with money on the line.
         </h2>
-        <div className="d-diff-grid" style={{ display:'grid',gridTemplateColumns:'repeat(2,1fr)',gap:24 }}>
+        <div className="d-diff-grid" style={{ display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:24 }}>
           {OBJECTIONS.map(card => (
             <div key={card.q} style={{
               background:SURFACE,
@@ -496,7 +547,7 @@ const PRICING_CARDS: PricingCard[] = [
     highlight: false,
     features: [
       '3 scans per month',
-      'Score + top 3 findings',
+      'Score + top 3 findings — enough to know what’s wrong, not enough to fix everything',
       'Benchmarked against corpus',
     ],
     cta: 'Start free →',
@@ -553,7 +604,7 @@ const PRICING_CARDS: PricingCard[] = [
 
 function PricingSection() {
   return (
-    <section style={{ padding:'80px 48px',borderTop:'0.5px solid rgba(111,155,198,0.1)',position:'relative',overflow:'hidden' }}>
+    <section id="pricing" style={{ padding:'80px 48px',borderTop:'0.5px solid rgba(111,155,198,0.1)',position:'relative',overflow:'hidden' }}>
       <style>{`
         @media(max-width:1023px){.d-price-grid{grid-template-columns:repeat(2,1fr)!important}}
         @media(max-width:639px){.d-price-grid{grid-template-columns:1fr!important}}
@@ -664,10 +715,17 @@ export default function DashboardPage() {
       <HeroSection />
       <OutputSection />
       <AIRewriteSection />
+      <WhatWeCheckSection />
       <QuoteSection />
       <HowItWorksSection />
       <WhyDifferentSection />
       <LandingCorpusStats />
+      {/* Benchmarks CTA — smooth-scroll hook from corpus section into pricing */}
+      <div style={{ textAlign:'center',padding:'0 48px 56px',background:BG_BASE }}>
+        <a href="#pricing" style={{ ...MONO,fontSize:11,color:STEEL,textDecoration:'none',letterSpacing:'0.08em' }}>
+          Upgrade to see what separates the top quartile in your vertical from everyone else.
+        </a>
+      </div>
       <PricingSection />
       <FinalCtaSection />
     </main>

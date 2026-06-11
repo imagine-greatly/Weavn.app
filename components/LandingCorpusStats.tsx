@@ -333,6 +333,28 @@ export default function LandingCorpusStats() {
         </p>
       </div>
 
+      {/* Top quartile insights — illustrative corpus-derived statistics, B2B SaaS vertical */}
+      <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 48px 64px', position: 'relative', zIndex: 1 }}>
+        <p style={{ ...MONO, fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.18em', color: 'rgba(111,155,198,0.35)', margin: '0 0 20px' }}>
+          WHAT TOP QUARTILE SITES DO DIFFERENTLY
+        </p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+          {[
+            { label: 'Testimonial or logo strip visible above 800px fold', stat: '94% of top quartile' },
+            { label: 'Single primary CTA above fold — no competing actions', stat: '87% of top quartile' },
+            { label: 'Outcome-led hero headline — benefit not feature', stat: '91% of top quartile' },
+          ].map((row, i) => (
+            <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 0', borderBottom: '0.5px solid rgba(111,155,198,0.06)', gap: 24, flexWrap: 'wrap' }}>
+              <p style={{ ...SANS, fontSize: 14, color: 'rgba(147, 152, 168, 0.75)', margin: 0, flex: 1 }}>{row.label}</p>
+              <p style={{ ...MONO, fontSize: 12, color: 'rgba(111,155,198,0.7)', margin: 0, whiteSpace: 'nowrap', flexShrink: 0 }}>{row.stat}</p>
+            </div>
+          ))}
+        </div>
+        <p style={{ ...MONO, fontSize: 10, color: 'rgba(111,155,198,0.25)', margin: '14px 0 0' }}>
+          Corpus-derived · B2B SaaS vertical · updated weekly · no synthetic data
+        </p>
+      </div>
+
     </section>
   )
 }

@@ -36,16 +36,27 @@ const jetbrainsMono = JetBrains_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "WebDoc — Website Intelligence API",
-    template: "%s — WebDoc",
+    default: "webdoc — Website Intelligence API",
+    template: "%s | webdoc",
   },
-  description:
-    "Send a URL. Get a complete conversion audit in 90 seconds. Structured JSON. REST API for developers, agencies, and AI agents.",
+  description: "The conversion audit API. 307 checks, ranked findings, AI-rewritten copy, and corpus benchmarks. One endpoint. ~90 seconds.",
+  metadataBase: new URL("https://webdocai.com"),
   openGraph: {
-    title: "WebDoc — Website Intelligence API",
-    description:
-      "Send a URL. Get a complete conversion audit in 90 seconds. Structured JSON. REST API for developers, agencies, and AI agents.",
-    url: "https://webdocai.com",
+    siteName: "webdoc",
+    type: "website",
+    locale: "en_US",
+  },
+  twitter: {
+    card: "summary_large_image",
+    creator: "@webdocai",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+    },
   },
 };
 

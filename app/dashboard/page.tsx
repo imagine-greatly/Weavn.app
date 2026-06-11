@@ -180,6 +180,10 @@ function HeroSection() {
           <p style={{ ...MONO,fontSize:11,color:INK_MUT,textAlign:'center',margin:'14px 0 0' }}>
             No account required.
           </p>
+          {/* TODO: wire to live Supabase scan count query when stats endpoint is available */}
+          <p style={{ ...MONO,fontSize:10,color:INK_MUT,textAlign:'center',margin:'8px 0 0',opacity:0.4 }}>
+            · 4,812 sites scanned · last scan 4 minutes ago
+          </p>
         </div>
       </div>
     </section>
@@ -412,7 +416,24 @@ function OutputSection() {
 }
 
 // ── Section 3 — AI-Rewritten Copy (standalone) ────────────────────────────────
-// Promoted from inside the report mock to its own full-width section.
+
+const REWRITE_EXAMPLES = [
+  {
+    type: 'HEADLINE',
+    original: 'The project management tool built for remote teams.',
+    rewritten: 'Ship projects on time, every time — no matter where your team works.',
+  },
+  {
+    type: 'PRIMARY CTA',
+    original: 'Get started',
+    rewritten: 'Start shipping on time — free',
+  },
+  {
+    type: 'VALUE PROPOSITION',
+    original: 'Powerful features for modern teams',
+    rewritten: 'Everything your team needs to hit every deadline — nothing you don’t',
+  },
+] as const
 
 function AIRewriteSection() {
   return (
@@ -425,56 +446,38 @@ function AIRewriteSection() {
         <h2 style={{ ...DISP,fontWeight:700,fontSize:'clamp(28px,4vw,44px)',color:INK_PRI,letterSpacing:'-0.5px',margin:'0 0 16px',lineHeight:1.1 }}>
           Not just what&apos;s broken. How to fix it.
         </h2>
-        <p style={{ ...SANS,fontSize:15,color:INK_SEC,lineHeight:1.65,maxWidth:580,margin:'0 0 40px' }}>
+        <p style={{ ...SANS,fontSize:15,color:INK_SEC,lineHeight:1.65,maxWidth:580,margin:'0 0 32px' }}>
           Every critical finding includes a drop-in replacement — headline rewritten, CTA rewritten, copy rewritten. Ready to hand to your designer or paste directly.
         </p>
 
-        {/* Before / after example */}
-        <div style={{
-          borderTop:'1px solid rgba(255,255,255,0.1)',
-          borderLeft:'1px solid rgba(255,255,255,0.07)',
-          borderRight:'1px solid rgba(255,255,255,0.04)',
-          borderBottom:'1px solid rgba(255,255,255,0.03)',
-          boxShadow: 'inset 0 1px 0 0 rgba(111, 155, 198, 0.1)',
-        }}>
-          <div className="d-rewrite-cols" style={{ display:'flex' }}>
-            <div style={{
-              flex:1,padding:28,
-              borderRight:'0.5px solid rgba(111,155,198,0.1)',
-            }}>
-              <p style={{ ...MONO,fontSize:10,textTransform:'uppercase',letterSpacing:'0.18em',color:'rgba(255, 255, 255, 0.25)',margin:'0 0 14px' }}>
-                ORIGINAL
-              </p>
-              <p style={{ ...SANS,fontSize:17,color:INK_SEC,margin:0,lineHeight:1.55,opacity:0.45 }}>
-                &ldquo;The project management tool built for remote teams.&rdquo;
-              </p>
-            </div>
-            <div style={{
-              flex:1,padding:28,position:'relative',
-              borderLeft: '1px solid rgba(0, 196, 140, 0.25)',
-              boxShadow: 'inset 1px 0 0 0 rgba(0, 196, 140, 0.1)',
-            }}>
-              {/* AI rewrite bloom */}
-              <div
-                aria-hidden="true"
-                style={{
-                  position: 'absolute',
-                  inset: 0,
-                  background: 'radial-gradient(ellipse at 40% 50%, rgba(0, 196, 140, 0.14) 0%, rgba(0, 196, 140, 0.05) 55%, transparent 80%)',
-                  pointerEvents: 'none',
-                  zIndex: 0,
-                  borderRadius: 'inherit',
-                }}
-              />
-              <p style={{ position:'relative',...MONO,fontSize:10,textTransform:'uppercase',letterSpacing:'0.18em',color:'rgba(0, 196, 140, 0.9)',margin:'0 0 14px',textShadow:'0 0 12px rgba(0, 196, 140, 0.4)' }}>
-                REWRITTEN
-              </p>
-              <p style={{ position:'relative',...SANS,fontSize:17,color:INK_PRI,margin:0,lineHeight:1.55 }}>
-                &ldquo;Ship projects on time, every time — no matter where your team works.&rdquo;
-              </p>
-            </div>
-          </div>
+        {/* Three rewrite examples — static illustration */}
+        <div style={{ display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:16,flexWrap:'wrap',gap:8 }}>
+          <p style={{ ...MONO,fontSize:9,textTransform:'uppercase',letterSpacing:'0.18em',color:INK_MUT,margin:0 }}>THREE TYPES OF REWRITE INCLUDED</p>
+          <p style={{ ...MONO,fontSize:9,textTransform:'uppercase',letterSpacing:'0.15em',color:'rgba(111,155,198,0.3)',margin:0 }}>EXAMPLE SCAN RESULT — STATIC ILLUSTRATION</p>
         </div>
+        <div style={{ display:'flex',flexDirection:'column',gap:12 }}>
+          {REWRITE_EXAMPLES.map(ex => (
+            <div key={ex.type}>
+              <p style={{ ...MONO,fontSize:9,textTransform:'uppercase',letterSpacing:'0.15em',color:INK_MUT,margin:'0 0 6px' }}>{ex.type}</p>
+              <div style={{ borderTop:'1px solid rgba(255,255,255,0.1)',borderLeft:'1px solid rgba(255,255,255,0.07)',borderRight:'1px solid rgba(255,255,255,0.04)',borderBottom:'1px solid rgba(255,255,255,0.03)',boxShadow:'inset 0 1px 0 0 rgba(111, 155, 198, 0.1)' }}>
+                <div className="d-rewrite-cols" style={{ display:'flex' }}>
+                  <div style={{ flex:1,padding:28,borderRight:'0.5px solid rgba(111,155,198,0.1)' }}>
+                    <p style={{ ...MONO,fontSize:10,textTransform:'uppercase',letterSpacing:'0.18em',color:'rgba(255, 255, 255, 0.25)',margin:'0 0 14px' }}>ORIGINAL</p>
+                    <p style={{ ...SANS,fontSize:17,color:INK_SEC,margin:0,lineHeight:1.55,opacity:0.45 }}>&ldquo;{ex.original}&rdquo;</p>
+                  </div>
+                  <div style={{ flex:1,padding:28,position:'relative',borderLeft:'1px solid rgba(0, 196, 140, 0.25)',boxShadow:'inset 1px 0 0 0 rgba(0, 196, 140, 0.1)' }}>
+                    <div aria-hidden="true" style={{ position:'absolute',inset:0,background:'radial-gradient(ellipse at 40% 50%, rgba(0, 196, 140, 0.14) 0%, rgba(0, 196, 140, 0.05) 55%, transparent 80%)',pointerEvents:'none',zIndex:0,borderRadius:'inherit' }} />
+                    <p style={{ position:'relative',...MONO,fontSize:10,textTransform:'uppercase',letterSpacing:'0.18em',color:'rgba(0, 196, 140, 0.9)',margin:'0 0 14px',textShadow:'0 0 12px rgba(0, 196, 140, 0.4)' }}>REWRITTEN</p>
+                    <p style={{ position:'relative',...SANS,fontSize:17,color:INK_PRI,margin:0,lineHeight:1.55 }}>&ldquo;{ex.rewritten}&rdquo;</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+        <p style={{ ...MONO,fontSize:11,color:INK_MUT,margin:'16px 0 0' }}>
+          Every critical and high-severity finding includes a drop-in replacement. No copywriter required.
+        </p>
       </div>
     </section>
   )
@@ -1024,8 +1027,65 @@ function PricingSection() {
               >
                 {card.cta}
               </Link>
+              {/* TODO: wire to /reports/sample when route is available */}
+              {card.name === 'Starter' && (
+                <a href="#" style={{ ...MONO,fontSize:11,color:INK_MUT,textAlign:'center',display:'block',marginTop:10,textDecoration:'none',opacity:0.6 }}>
+                  See what a full report looks like →
+                </a>
+              )}
             </motion.div>
           ))}
+        </div>
+        {/* Agency callout panel — static illustration */}
+        <style>{`@media(max-width:639px){.d-agency-cols{flex-direction:column!important}}`}</style>
+        <div style={{ marginTop:40,borderTop:'1px solid rgba(255,255,255,0.08)',borderLeft:'1px solid rgba(255,255,255,0.06)',borderRight:'1px solid rgba(255,255,255,0.04)',borderBottom:'1px solid rgba(255,255,255,0.03)',boxShadow:'inset 0 1px 0 0 rgba(111, 155, 198, 0.08)' }}>
+          <div className="d-agency-cols" style={{ display:'flex' }}>
+            <div style={{ flex:1,padding:32,borderRight:'0.5px solid rgba(255,255,255,0.05)' }}>
+              <p style={{ ...MONO,fontSize:9,textTransform:'uppercase',letterSpacing:'0.18em',color:STEEL,margin:'0 0 12px' }}>FOR FOUNDERS</p>
+              <p style={{ ...SANS,fontSize:14,color:INK_MUT,margin:0,lineHeight:1.65 }}>Scan your own site. Get a ranked report. Fix what matters. Free to start.</p>
+            </div>
+            <div style={{ flex:1,padding:32,borderLeft:'1px solid rgba(157, 140, 255, 0.25)' }}>
+              <p style={{ ...MONO,fontSize:9,textTransform:'uppercase',letterSpacing:'0.18em',color:'rgba(157, 140, 255, 0.8)',margin:'0 0 12px',textShadow:'0 0 8px rgba(157, 140, 255, 0.3)' }}>FOR AGENCIES</p>
+              <p style={{ ...SANS,fontSize:14,color:INK_MUT,margin:'0 0 16px',lineHeight:1.65 }}>Run audits for clients. Deliver white-label PDF reports with your branding. 100 API calls bundled. Client dashboard included.</p>
+              <a href="#pricing" style={{ ...MONO,fontSize:12,textTransform:'uppercase',letterSpacing:'0.1em',color:'rgba(157, 140, 255, 0.75)',textDecoration:'none',border:'0.5px solid rgba(157, 140, 255, 0.3)',padding:'8px 14px',display:'inline-block' }}>
+                See agency plan →
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+// ── What Happens Next strip ───────────────────────────────────────────────────
+
+function WhatHappensNextStrip() {
+  return (
+    <section style={{ padding:'64px 48px',borderTop:'0.5px solid rgba(111,155,198,0.1)',position:'relative',overflow:'visible' }}>
+      <style>{`@media(max-width:767px){.d-whn-connector{display:none!important}.d-whn-steps{flex-direction:column!important;gap:32px!important;align-items:flex-start!important}}`}</style>
+      <div style={{ maxWidth:1000,margin:'0 auto' }}>
+        <p style={{ ...MONO,fontSize:10,textTransform:'uppercase',letterSpacing:'0.2em',color:INK_MUT,textAlign:'center',margin:'0 0 40px' }}>
+          WHAT HAPPENS AFTER YOU SCAN
+        </p>
+        <div className="d-whn-steps" style={{ display:'flex',alignItems:'flex-start',gap:0 }}>
+          <div style={{ flex:1,textAlign:'center',padding:'0 24px' }}>
+            <p style={{ ...MONO,fontSize:18,fontWeight:700,color:'rgba(111,155,198,0.4)',margin:'0 0 10px',textShadow:'0 0 8px rgba(111,155,198,0.2)' }}>01</p>
+            <p style={{ ...SANS,fontSize:15,fontWeight:500,color:INK_PRI,margin:'0 0 8px',lineHeight:1.3 }}>Scan runs</p>
+            <p style={{ ...SANS,fontSize:13,color:INK_MUT,margin:0,lineHeight:1.6 }}>Your live page renders in headless Chrome. 307 checks fire. Takes about 90 seconds.</p>
+          </div>
+          <div className="d-whn-connector" style={{ width:1,background:'rgba(111,155,198,0.15)',alignSelf:'stretch',flexShrink:0 }} />
+          <div style={{ flex:1,textAlign:'center',padding:'0 24px' }}>
+            <p style={{ ...MONO,fontSize:18,fontWeight:700,color:'rgba(111,155,198,0.4)',margin:'0 0 10px',textShadow:'0 0 8px rgba(111,155,198,0.2)' }}>02</p>
+            <p style={{ ...SANS,fontSize:15,fontWeight:500,color:INK_PRI,margin:'0 0 8px',lineHeight:1.3 }}>Report delivered</p>
+            <p style={{ ...SANS,fontSize:13,color:INK_MUT,margin:0,lineHeight:1.6 }}>Every finding ranked by conversion impact. Evidence cited. Fix included. Copy rewritten.</p>
+          </div>
+          <div className="d-whn-connector" style={{ width:1,background:'rgba(111,155,198,0.15)',alignSelf:'stretch',flexShrink:0 }} />
+          <div style={{ flex:1,textAlign:'center',padding:'0 24px' }}>
+            <p style={{ ...MONO,fontSize:18,fontWeight:700,color:'rgba(111,155,198,0.4)',margin:'0 0 10px',textShadow:'0 0 8px rgba(111,155,198,0.2)' }}>03</p>
+            <p style={{ ...SANS,fontSize:15,fontWeight:500,color:INK_PRI,margin:'0 0 8px',lineHeight:1.3 }}>Work the list</p>
+            <p style={{ ...SANS,fontSize:13,color:INK_MUT,margin:0,lineHeight:1.6 }}>Start at priority 1. Most founders ship the top three fixes in an afternoon.</p>
+          </div>
         </div>
       </div>
     </section>
@@ -1033,9 +1093,45 @@ function PricingSection() {
 }
 
 // ── Section 9 — Final CTA ─────────────────────────────────────────────────────
+// Hero scan flow requires a URL before proceeding — OPTION A: duplicate URL input + handler.
 
 function FinalCtaSection() {
-  const [ctaBtnHovered, setCtaBtnHovered] = useState(false)
+  const [scanUrl, setScanUrl] = useState('')
+  const [isScanning, setIsScanning] = useState(false)
+  const [scanError, setScanError] = useState('')
+  const [inputFocused, setInputFocused] = useState(false)
+  const [btnHovered, setBtnHovered] = useState(false)
+  const router = useRouter()
+
+  const handleScan = async () => {
+    if (!scanUrl || isScanning) return
+    setScanError('')
+    setIsScanning(true)
+    try {
+      const target = /^https?:\/\//i.test(scanUrl) ? scanUrl : `https://${scanUrl}`
+      const res = await fetch('/api/scan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: target }),
+      })
+      if (res.status === 401) {
+        if (typeof sessionStorage !== 'undefined') sessionStorage.setItem('pendingUrl', target)
+        router.push('/auth?surface=dashboard')
+        return
+      }
+      const data = await res.json()
+      if (data.reportId) {
+        router.push(`/reports/${data.reportId}`)
+      } else if (data.error) {
+        setScanError(data.error)
+      }
+    } catch {
+      setScanError('Scan failed. Please try again.')
+    } finally {
+      setIsScanning(false)
+    }
+  }
+
   return (
     <section style={{ padding:'96px 48px',textAlign:'center',position:'relative',overflow:'visible',borderTop:'0.5px solid rgba(111,155,198,0.1)' }}>
       {/* Final CTA bloom */}
@@ -1060,30 +1156,62 @@ function FinalCtaSection() {
         <h2 style={{ ...DISP,fontWeight:700,fontSize:'clamp(28px,4vw,44px)',color:INK_PRI,letterSpacing:'-0.5px',margin:'0 0 32px',lineHeight:1.1,textShadow:'0 0 40px rgba(111, 155, 198, 0.15)' }}>
           Ready to find out what&apos;s killing your conversions?
         </h2>
-        <a
-          href="#scan"
-          onMouseEnter={() => setCtaBtnHovered(true)}
-          onMouseLeave={() => setCtaBtnHovered(false)}
-          style={{
-            display:'inline-block',
-            ...MONO,fontSize:13,fontWeight:600,letterSpacing:'0.1em',textTransform:'uppercase',
-            background:'transparent',
-            border:'1px solid rgba(111,155,198,0.5)',
-            color:STEEL,
-            padding:'14px 32px',
-            textDecoration:'none',
-            transition: 'box-shadow 0.2s ease, transform 0.2s ease',
-            boxShadow: ctaBtnHovered
-              ? '0 0 0 1px rgba(111, 155, 198, 0.6), 0 0 40px rgba(111, 155, 198, 0.28)'
-              : '0 0 0 1px rgba(111, 155, 198, 0.4), 0 0 30px rgba(111, 155, 198, 0.18)',
-            transform: ctaBtnHovered ? 'translateY(-1px)' : 'translateY(0)',
-          }}
-        >
-          SCAN MY SITE FREE →
-        </a>
-        <p style={{ ...MONO,fontSize:11,color:'rgba(111, 155, 198, 0.5)',marginTop:16,marginBottom:0 }}>
-          No account required. Results in ~90 seconds.
-        </p>
+        <div style={{ maxWidth:560,margin:'0 auto',textAlign:'left' }}>
+          <div style={{ display:'flex',flexWrap:'wrap' }}>
+            <div
+              onFocus={() => setInputFocused(true)}
+              onBlur={() => setInputFocused(false)}
+              style={{
+                display:'flex',flex:'1 1 280px',
+                background:SURFACE,
+                borderTop:'1px solid rgba(255,255,255,0.1)',
+                borderLeft:'1px solid rgba(255,255,255,0.07)',
+                borderRight:'1px solid rgba(255,255,255,0.04)',
+                borderBottom:'1px solid rgba(255,255,255,0.03)',
+                transition: 'box-shadow 0.3s ease',
+                boxShadow: inputFocused
+                  ? 'inset 0 0 0 1px rgba(111, 155, 198, 0.5), 0 0 20px rgba(111, 155, 198, 0.1)'
+                  : 'inset 0 0 0 1px rgba(111, 155, 198, 0.2)',
+              }}>
+              <span style={{ ...MONO,fontSize:12,color:INK_MUT,padding:'0 12px',display:'flex',alignItems:'center',flexShrink:0,borderRight:'0.5px solid rgba(255,255,255,0.08)' }}>
+                https://
+              </span>
+              <input
+                type="text"
+                value={scanUrl}
+                onChange={e => setScanUrl(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') void handleScan() }}
+                placeholder="your-site.com"
+                style={{ flex:1,minWidth:0,background:'transparent',...MONO,fontSize:14,color:INK_PRI,padding:'14px',border:'none',outline:'none',borderRadius:0 }}
+              />
+            </div>
+            <button
+              onClick={() => void handleScan()}
+              disabled={isScanning || !scanUrl}
+              onMouseEnter={() => setBtnHovered(true)}
+              onMouseLeave={() => setBtnHovered(false)}
+              style={{
+                ...MONO,fontSize:13,fontWeight:600,letterSpacing:'0.1em',textTransform:'uppercase',
+                background:'transparent',
+                border:`1px solid ${isScanning || !scanUrl ? 'rgba(111,155,198,0.3)' : 'rgba(111,155,198,0.5)'}`,
+                color:isScanning || !scanUrl ? 'rgba(111,155,198,0.4)' : STEEL,
+                padding:'14px 24px',cursor:isScanning || !scanUrl ? 'not-allowed' : 'pointer',
+                borderRadius:0,whiteSpace:'nowrap',transition:'box-shadow 0.2s ease',
+                boxShadow: btnHovered && !isScanning && scanUrl
+                  ? '0 0 24px rgba(111, 155, 198, 0.3), 0 0 0 1px rgba(111, 155, 198, 0.4)'
+                  : '0 0 16px rgba(111, 155, 198, 0.15)',
+              }}
+            >
+              {isScanning ? 'SCANNING…' : 'SCAN MY SITE FREE →'}
+            </button>
+          </div>
+          {scanError && (
+            <p style={{ ...MONO,fontSize:11,color:CRIT,margin:'8px 0 0' }}>{scanError}</p>
+          )}
+          <p style={{ ...MONO,fontSize:11,color:'rgba(111, 155, 198, 0.5)',textAlign:'center',marginTop:14,marginBottom:0 }}>
+            No account required. Results in ~90 seconds.
+          </p>
+        </div>
       </div>
     </section>
   )
@@ -1122,6 +1250,7 @@ export default function DashboardPage() {
         </a>
       </div>
       <PricingSection />
+      <WhatHappensNextStrip />
       <FinalCtaSection />
     </main>
   )

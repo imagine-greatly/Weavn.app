@@ -1,5 +1,40 @@
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import WebdocMark from '@/components/ui/WebdocMark'
+
+export const metadata: Metadata = {
+  title: "webdoc — Website Intelligence, Delivered as an API",
+  description: "307 checks. One endpoint. Your site scored in 90 seconds. Paste any URL for a full conversion audit — ranked findings, AI-rewritten copy, and vertical benchmarks. Free to start.",
+  openGraph: {
+    title: "webdoc — Website Intelligence, Delivered as an API",
+    description: "307 checks. One endpoint. 90 seconds. Conversion audit API for founders and developers.",
+    url: "https://webdocai.com",
+    siteName: "webdoc",
+    type: "website",
+    images: [
+      {
+        url: "https://webdocai.com/og/home.png",
+        width: 1200,
+        height: 630,
+        alt: "webdoc — scan engine fork showing founder and developer paths",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "webdoc — Website Intelligence, Delivered as an API",
+    description: "307 checks. One endpoint. 90 seconds. Free to start.",
+    images: ["https://webdocai.com/og/home.png"],
+    creator: "@webdocai",
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
+  alternates: {
+    canonical: "https://webdocai.com",
+  },
+}
 
 // Removed sections (curl/JSON hero, two-surface cards, corpus stats + bell curve,
 // objections FAQ) live in components/LandingCurlHero.tsx, LandingTwoSurface.tsx,

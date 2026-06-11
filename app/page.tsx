@@ -69,7 +69,7 @@ const DEVELOPER_LINES = [
 
 function HeroForkSection() {
   return (
-    <section className="scanline-texture pt-[110px] pb-20 px-8 relative overflow-hidden">
+    <section className="scanline-texture pt-[110px] pb-20 px-8 relative overflow-visible">
       <style>{`
         .fork-pulse { display: none; }
         @media (prefers-reduced-motion: no-preference) {
@@ -77,15 +77,19 @@ function HeroForkSection() {
         }
       `}</style>
 
-      {/* Ambient bloom */}
+      {/* Hero bloom — 800×600 steel-blue radial at top-center, bleeds into section below */}
       <div
         aria-hidden
         style={{
           position: 'absolute',
-          inset: 0,
+          top: 0,
+          left: '50%',
+          transform: 'translateX(-50%)',
+          width: 800,
+          height: 600,
+          background: 'radial-gradient(ellipse at center, rgba(111,155,198,0.06) 0%, transparent 70%)',
           pointerEvents: 'none',
           zIndex: 0,
-          background: 'radial-gradient(ellipse 1000px 700px at 50% 28%, rgba(111,155,198,0.05) 0%, transparent 60%)',
         }}
       />
       {/* Corner ticks */}
@@ -157,7 +161,7 @@ function HeroForkSection() {
               href="/dashboard"
               className="font-mono text-xs text-interactive border border-interactive/50 px-6 py-3 block text-center no-underline mt-6"
             >
-              Scan my site free →
+              See what&apos;s killing your conversions →
             </Link>
           </div>
 
@@ -174,7 +178,7 @@ function HeroForkSection() {
               href="/auth?surface=api"
               className="font-mono text-xs text-data-impact border border-data-impact/50 px-6 py-3 block text-center no-underline mt-6"
             >
-              Get API key →
+              Explore the API →
             </Link>
           </div>
 

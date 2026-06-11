@@ -101,6 +101,19 @@ export default function LandingCorpusStats() {
         </div>
       </div>
 
+      {/* Benchmark bloom — 600×300 steel-blue radial centered behind bell curve */}
+      <div aria-hidden style={{
+        position: 'absolute',
+        bottom: 40,
+        left: '50%',
+        transform: 'translateX(-50%)',
+        width: 600,
+        height: 300,
+        background: 'radial-gradient(ellipse at center, rgba(111,155,198,0.04) 0%, transparent 70%)',
+        pointerEvents: 'none',
+        zIndex: 0,
+      }} />
+
       {/* ── FULL-BLEED CURVE ── */}
       <svg
         className="sb-curve-svg"

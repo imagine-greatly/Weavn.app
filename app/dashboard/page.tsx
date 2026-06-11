@@ -116,7 +116,7 @@ function HeroSection() {
       <Ticks />
       <div style={{ position:'relative',zIndex:1,maxWidth:680,margin:'0 auto',width:'100%' }}>
         <p style={{ ...MONO,fontSize:11,textTransform:'uppercase',letterSpacing:'0.2em',color:STEEL,margin:'0 0 20px' }}>
-          FOR FOUNDERS &amp; TEAMS
+          FOR ANYONE WITH A SITE TO FIX
         </p>
         <h1 style={{ ...DISP,fontSize:'clamp(36px,5vw,58px)',fontWeight:700,color:INK_PRI,letterSpacing:'-0.04em',margin:'0 0 24px',lineHeight:1.08 }}>
           Find out exactly what&apos;s stopping visitors from converting.
@@ -579,52 +579,6 @@ function WhatWeCheckSection() {
   )
 }
 
-// ── Section 5 — Social Proof (single quote) ───────────────────────────────────
-
-function QuoteSection() {
-  return (
-    <section style={{ padding:'80px 48px',borderTop:'0.5px solid rgba(111,155,198,0.1)',textAlign:'center',position:'relative',overflow:'visible' }}>
-      <div
-        aria-hidden="true"
-        style={{
-          position: 'absolute',
-          top: '-40px',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          width: '1000px',
-          height: '500px',
-          background: 'radial-gradient(ellipse at center, rgba(111, 155, 198, 0.07) 0%, rgba(111, 155, 198, 0.021) 40%, rgba(111, 155, 198, 0.02) 65%, transparent 85%)',
-          pointerEvents: 'none',
-          zIndex: 0,
-        }}
-      />
-      {/* 4F: Quote fades up */}
-      <motion.div
-        initial={{ opacity: 0, y: 24 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: '-60px' }}
-        transition={{ duration: 0.65, ease: 'easeOut' }}
-        style={{ maxWidth:680,margin:'0 auto',position:'relative',zIndex:1 }}
-      >
-        <div aria-hidden style={{ position:'absolute',left:'-24px',top:0,bottom:0,width:'2px',background:'linear-gradient(to bottom, transparent, rgba(111, 155, 198, 0.4), transparent)',pointerEvents:'none' }} />
-        <p style={{
-          ...SANS,
-          fontStyle:'italic',
-          fontSize:'clamp(18px,2.2vw,24px)',
-          color:INK_PRI,
-          lineHeight:1.65,
-          margin:'0 0 20px',
-        }}>
-          &ldquo;I scanned our landing page expecting vague suggestions. Instead I got a ranked list of exactly what was broken and why. Fixed the top two findings in an afternoon. Our trial signup rate went up 14% the following week.&rdquo;
-        </p>
-        <p style={{ ...MONO,fontSize:11,color:'rgba(111, 155, 198, 0.6)',margin:0,letterSpacing:'0.1em' }}>
-          — FOUNDER, B2B SAAS · VERIFIED SCAN
-        </p>
-      </motion.div>
-    </section>
-  )
-}
-
 // ── Section 5 — How It Works ──────────────────────────────────────────────────
 
 type HowStep = { num: string; title: string; desc: string; techTag?: string }
@@ -749,7 +703,7 @@ const OBJECTIONS: ObjectionCard[] = [
   },
   {
     q: "I already know my site has problems. I don't have time to interpret a report.",
-    a: "Every finding comes with a severity rank, a one-sentence plain-English description, a concrete fix, and drop-in replacement copy. There's nothing to interpret. Work down the list from priority 1. Most founders ship the top three fixes in an afternoon.",
+    a: "Every finding comes with a severity rank, a one-sentence plain-English description, a concrete fix, and drop-in replacement copy. There's nothing to interpret. Work down the list from priority 1. Most teams ship the top three fixes in an afternoon.",
     tag: 'ranked by impact · fix included · copy ready to paste',
   },
   {
@@ -764,12 +718,12 @@ const OBJECTIONS: ObjectionCard[] = [
   },
   {
     q: "What if I disagree with a finding?",
-    a: "Every finding cites the specific visible evidence it's based on — what element was present, absent, or misplaced, and why that matters for conversion. If you read a finding and think the evidence is wrong, the fix is simple: look at your page and check. The grounding rule means the model cannot invent evidence. If the finding cites something that isn't there, that's a bug — use the feedback flag in the report and we'll investigate. In practice, the findings founders disagree with most are the ones that turn out to be most accurate.",
+    a: "Every finding cites the specific visible evidence it's based on — what element was present, absent, or misplaced, and why that matters for conversion. If you read a finding and think the evidence is wrong, the fix is simple: look at your page and check. The grounding rule means the model cannot invent evidence. If the finding cites something that isn't there, that's a bug — use the feedback flag in the report and we'll investigate. In practice, the findings that users disagree with most are the ones that turn out to be most accurate.",
     tag: 'every finding cites evidence · flaggable · grounded or dropped',
   },
   {
     q: "How often should I scan?",
-    a: "Scan whenever you ship a meaningful change — new hero, new CTA, new pricing, new landing page. For most founders on Starter that means once or twice a month. Free plan gives you three scans a month which covers most iteration cycles. Scanning the same unchanged page repeatedly won't change your findings — the engine reads what's there, not what was there last week. The corpus updates weekly so your percentile can shift even without a rescan as new sites are benchmarked.",
+    a: "Scan whenever you ship a meaningful change — new hero, new CTA, new pricing, new landing page. For most users on Starter that means once or twice a month. Free plan gives you three scans a month which covers most iteration cycles. Scanning the same unchanged page repeatedly won't change your findings — the engine reads what's there, not what was there last week. The corpus updates weekly so your percentile can shift even without a rescan as new sites are benchmarked.",
     tag: 'scan on meaningful changes · corpus updates weekly · not a set-and-forget tool',
   },
   {
@@ -809,7 +763,7 @@ function WhyDifferentSection() {
           THE DIFFERENCE
         </p>
         <h2 style={{ ...DISP,fontWeight:700,fontSize:'clamp(28px,4vw,44px)',color:INK_PRI,letterSpacing:'-0.5px',margin:'0 0 48px',lineHeight:1.1 }}>
-          Built for founders with money on the line.
+          Built for anyone with a site that needs to perform.
         </h2>
         {/* 4H: FAQ cards stagger in + hover glow */}
         <div className="d-diff-grid" style={{ display:'grid',gridTemplateColumns:'repeat(2,1fr)',gap:24 }}>
@@ -848,6 +802,68 @@ function WhyDifferentSection() {
 // ── Section 7 — Benchmarks ────────────────────────────────────────────────────
 // Renders the existing LandingCorpusStats component (bell curve, percentile, corpus stats).
 
+// ── Multi-Site / Scale Section ────────────────────────────────────────────────
+
+const SCALE_FEATURES = [
+  { title: 'White-label PDF reports', desc: 'Every report exports as a branded PDF. Your name, your logo, your deliverable. Client never sees webdoc.' },
+  { title: 'Scan history per site', desc: 'Track score movement over time. Rescan after fixes ship and show the improvement. Makes for a strong client retention tool.' },
+  { title: '100 API calls bundled', desc: 'Agency plan includes 100 API calls for integrating scans into your own workflows or client onboarding.' },
+  { title: 'Vertical-matched benchmarks', desc: 'Each site is benchmarked against its own vertical — e-commerce against e-commerce, SaaS against SaaS. No mixed averages.' },
+  { title: 'Evidence-backed findings', desc: 'Every finding cites specific visible content from the page. Nothing vague to explain away in a client meeting.' },
+  { title: 'Plain-English output', desc: 'Reports are written to be read by anyone — hand them to a client, a designer, or a developer without translation.' },
+] as const
+
+function MultiSiteSection() {
+  return (
+    <section style={{
+      padding: '80px 48px',
+      borderTop: '0.5px solid rgba(111,155,198,0.1)',
+      position: 'relative',
+      overflow: 'visible',
+      background: 'radial-gradient(ellipse 1000px 500px at 50% 50%, rgba(157, 140, 255, 0.04) 0%, transparent 70%)',
+    }}>
+      <style>{`@media(max-width:767px){.d-scale-grid{grid-template-columns:1fr!important}}`}</style>
+      <div style={{ maxWidth: 1000, margin: '0 auto' }}>
+        <p style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.2em', color: INK_MUT, margin: '0 0 16px' }}>
+          AT SCALE
+        </p>
+        <h2 style={{ ...DISP, fontWeight: 700, fontSize: 'clamp(28px,4vw,44px)', color: INK_PRI, letterSpacing: '-0.5px', margin: '0 0 16px', lineHeight: 1.1 }}>
+          Running audits for more than one site?
+        </h2>
+        <p style={{ ...SANS, fontSize: 15, color: INK_SEC, lineHeight: 1.65, maxWidth: 580, margin: '0 0 40px' }}>
+          The dashboard handles multiple sites natively. Each site gets its own report, score history, and benchmarks. White-label the output and it&apos;s ready to hand to a client.
+        </p>
+        <div className="d-scale-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 24, margin: '0 0 40px' }}>
+          {SCALE_FEATURES.map(feature => (
+            <div key={feature.title} style={{ borderLeft: '1px solid rgba(157, 140, 255, 0.2)', paddingLeft: 20 }}>
+              <p style={{ ...DISP, fontWeight: 500, fontSize: 16, color: INK_PRI, margin: '0 0 8px', lineHeight: 1.3 }}>{feature.title}</p>
+              <p style={{ ...SANS, fontSize: 14, color: INK_SEC, margin: 0, lineHeight: 1.65 }}>{feature.desc}</p>
+            </div>
+          ))}
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap' }}>
+          <a
+            href="#pricing"
+            style={{
+              ...MONO, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.1em',
+              color: 'rgba(157, 140, 255, 0.75)',
+              border: '0.5px solid rgba(157, 140, 255, 0.3)',
+              padding: '10px 16px',
+              textDecoration: 'none',
+              display: 'inline-block',
+            }}
+          >
+            SEE MULTI-SITE PLANS →
+          </a>
+          <p style={{ ...MONO, fontSize: 11, color: INK_MUT, margin: 0 }}>
+            Agency plan · $149/mo · includes 100 API calls
+          </p>
+        </div>
+      </div>
+    </section>
+  )
+}
+
 // ── Section 8 — Pricing ───────────────────────────────────────────────────────
 // TODO: wire paid-tier CTAs to Stripe checkout once plan IDs are confirmed.
 
@@ -871,7 +887,7 @@ const PRICING_CARDS: PricingCard[] = [
     highlight: false,
     features: [
       '3 scans per month',
-      'Score + top 3 findings — enough to know what’s wrong, not enough to fix everything',
+      "Score + top 3 findings — enough to see what’s broken, not enough to fix everything",
       'Benchmarked against corpus',
     ],
     cta: 'Start free →',
@@ -880,7 +896,7 @@ const PRICING_CARDS: PricingCard[] = [
   },
   {
     name: 'Starter',
-    kicker: 'MOST FOUNDERS START HERE',
+    kicker: 'WHERE MOST TEAMS START',
     price: '$49/mo',
     priceSub: 'month-to-month',
     highlight: true,
@@ -1041,7 +1057,7 @@ function PricingSection() {
         <div style={{ marginTop:40,borderTop:'1px solid rgba(255,255,255,0.08)',borderLeft:'1px solid rgba(255,255,255,0.06)',borderRight:'1px solid rgba(255,255,255,0.04)',borderBottom:'1px solid rgba(255,255,255,0.03)',boxShadow:'inset 0 1px 0 0 rgba(111, 155, 198, 0.08)' }}>
           <div className="d-agency-cols" style={{ display:'flex' }}>
             <div style={{ flex:1,padding:32,borderRight:'0.5px solid rgba(255,255,255,0.05)' }}>
-              <p style={{ ...MONO,fontSize:9,textTransform:'uppercase',letterSpacing:'0.18em',color:STEEL,margin:'0 0 12px' }}>FOR FOUNDERS</p>
+              <p style={{ ...MONO,fontSize:9,textTransform:'uppercase',letterSpacing:'0.18em',color:STEEL,margin:'0 0 12px' }}>FOR SITE OWNERS</p>
               <p style={{ ...SANS,fontSize:14,color:INK_MUT,margin:0,lineHeight:1.65 }}>Scan your own site. Get a ranked report. Fix what matters. Free to start.</p>
             </div>
             <div style={{ flex:1,padding:32,borderLeft:'1px solid rgba(157, 140, 255, 0.25)' }}>
@@ -1084,7 +1100,7 @@ function WhatHappensNextStrip() {
           <div style={{ flex:1,textAlign:'center',padding:'0 24px' }}>
             <p style={{ ...MONO,fontSize:18,fontWeight:700,color:'rgba(111,155,198,0.4)',margin:'0 0 10px',textShadow:'0 0 8px rgba(111,155,198,0.2)' }}>03</p>
             <p style={{ ...SANS,fontSize:15,fontWeight:500,color:INK_PRI,margin:'0 0 8px',lineHeight:1.3 }}>Work the list</p>
-            <p style={{ ...SANS,fontSize:13,color:INK_MUT,margin:0,lineHeight:1.6 }}>Start at priority 1. Most founders ship the top three fixes in an afternoon.</p>
+            <p style={{ ...SANS,fontSize:13,color:INK_MUT,margin:0,lineHeight:1.6 }}>Start at priority 1. Most teams ship the top three fixes in an afternoon.</p>
           </div>
         </div>
       </div>
@@ -1228,7 +1244,6 @@ export default function DashboardPage() {
       <OutputSection />
       <AIRewriteSection />
       <WhatWeCheckSection />
-      <QuoteSection />
       <HowItWorksSection />
       <WhyDifferentSection />
       <LandingCorpusStats />
@@ -1249,6 +1264,7 @@ export default function DashboardPage() {
           Upgrade to see what separates the top quartile in your vertical from everyone else.
         </a>
       </div>
+      <MultiSiteSection />
       <PricingSection />
       <WhatHappensNextStrip />
       <FinalCtaSection />

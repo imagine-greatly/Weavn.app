@@ -6,9 +6,12 @@ interface WebdocMarkProps {
   animated?: boolean
   style?: CSSProperties
   className?: string
+  /** Lane tints for the nested ring bands — outer (rings 5–4), middle (rings 3–2),
+      inner (ring 1). Cores stay white. Omit to keep the default brand colors. */
+  ringTints?: { outer: string; middle: string; inner: string }
 }
 
-export default function WebdocMark({ size = 46, animated = false, style, className }: WebdocMarkProps) {
+export default function WebdocMark({ size = 46, animated = false, style, className, ringTints }: WebdocMarkProps) {
   const rawId = useId()
   const uid = rawId.replace(/:/g, '_')
   const w = size
@@ -57,9 +60,9 @@ export default function WebdocMark({ size = 46, animated = false, style, classNa
       <polygon
         points="100,76 171.1,117 171.1,199 100,240 28.9,199 28.9,117"
         fill="none"
-        stroke="#6F9BC6"
+        stroke={ringTints ? ringTints.outer : '#6F9BC6'}
         strokeWidth="0.7"
-        opacity={animated ? undefined : 0.13}
+        opacity={animated ? undefined : ringTints ? 0.4 : 0.13}
         filter={`url(#wm-rg-${uid})`}
         className={animated ? 'wm-ring' : undefined}
         style={animated ? ({
@@ -75,9 +78,9 @@ export default function WebdocMark({ size = 46, animated = false, style, classNa
       <polygon
         points="100,108 157.2,141 157.2,207 100,240 42.8,207 42.8,141"
         fill="none"
-        stroke="#8080c0"
+        stroke={ringTints ? ringTints.outer : '#8080c0'}
         strokeWidth="0.9"
-        opacity={animated ? undefined : 0.25}
+        opacity={animated ? undefined : ringTints ? 0.55 : 0.25}
         filter={`url(#wm-rg-${uid})`}
         className={animated ? 'wm-ring' : undefined}
         style={animated ? ({
@@ -93,9 +96,9 @@ export default function WebdocMark({ size = 46, animated = false, style, classNa
       <polygon
         points="100,136 145.0,162 145.0,214 100,240 55.0,214 55.0,162"
         fill="none"
-        stroke="#6F9BC6"
+        stroke={ringTints ? ringTints.middle : '#6F9BC6'}
         strokeWidth="1.2"
-        opacity="0.42"
+        opacity={ringTints ? 0.6 : 0.42}
         filter={`url(#wm-rg-${uid})`}
       />
 
@@ -103,9 +106,9 @@ export default function WebdocMark({ size = 46, animated = false, style, classNa
       <polygon
         points="100,160 134.6,180 134.6,220 100,240 65.4,220 65.4,180"
         fill="none"
-        stroke="#00C48C"
+        stroke={ringTints ? ringTints.middle : '#00C48C'}
         strokeWidth="1.5"
-        opacity="0.62"
+        opacity={ringTints ? 0.75 : 0.62}
         filter={`url(#wm-rg-${uid})`}
       />
 
@@ -113,9 +116,9 @@ export default function WebdocMark({ size = 46, animated = false, style, classNa
       <polygon
         points="100,180 126.0,195 126.0,225 100,240 74.0,225 74.0,195"
         fill="none"
-        stroke="#8080c0"
+        stroke={ringTints ? ringTints.inner : '#8080c0'}
         strokeWidth="1.8"
-        opacity="0.82"
+        opacity={ringTints ? 0.9 : 0.82}
         filter={`url(#wm-rg-${uid})`}
       />
 

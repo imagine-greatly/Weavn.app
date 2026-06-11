@@ -10,7 +10,7 @@ export default function AnimatedBackground() {
             background-position: 50% 45%;
           }
           50% {
-            background-position: 52% 47%;
+            background-position: 52% 45%;
           }
           100% {
             background-position: 50% 45%;

@@ -238,7 +238,7 @@ function AuthPageContent() {
         setTimeout(() => {
           const next = searchParams.get("next");
           const authSurface = typeof sessionStorage !== "undefined" ? (sessionStorage.getItem("auth_surface") || "dashboard") : "dashboard";
-          window.location.replace(next ?? `/onboarding?surface=${authSurface}`);
+          window.location.replace(next ?? (authSurface === "api" ? "/playground" : "/app/dashboard"));
         }, 800);
       } else {
         setSignupEmailSent(true);

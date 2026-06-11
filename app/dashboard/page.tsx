@@ -43,6 +43,8 @@ function HeroSection() {
   const [scanUrl, setScanUrl] = useState('')
   const [isScanning, setIsScanning] = useState(false)
   const [scanError, setScanError] = useState('')
+  const [inputFocused, setInputFocused] = useState(false)
+  const [scanBtnHovered, setScanBtnHovered] = useState(false)
   const router = useRouter()
 
   // Inbound links (auth redirect, rescan) arrive as /dashboard?url=…
@@ -104,7 +106,7 @@ function HeroSection() {
           transform: 'translateX(-50%)',
           width: '1000px',
           height: '800px',
-          background: 'radial-gradient(ellipse at 50% 40%, rgba(111, 155, 198, 0.15) 0%, rgba(111, 155, 198, 0.06) 40%, transparent 68%)',
+          background: 'radial-gradient(ellipse at 50% 35%, rgba(111, 155, 198, 0.22) 0%, rgba(111, 155, 198, 0.10) 30%, rgba(111, 155, 198, 0.03) 60%, transparent 75%)',
           pointerEvents: 'none',
           zIndex: 0,
           borderRadius: '50%',
@@ -125,14 +127,21 @@ function HeroSection() {
 
         <div style={{ maxWidth:560,margin:'0 auto',textAlign:'left' }}>
           <div style={{ display:'flex',flexWrap:'wrap' }}>
-            <div style={{
-              display:'flex',flex:'1 1 280px',
-              background:SURFACE,
-              borderTop:'1px solid rgba(255,255,255,0.1)',
-              borderLeft:'1px solid rgba(255,255,255,0.07)',
-              borderRight:'1px solid rgba(255,255,255,0.04)',
-              borderBottom:'1px solid rgba(255,255,255,0.03)',
-            }}>
+            <div
+              onFocus={() => setInputFocused(true)}
+              onBlur={() => setInputFocused(false)}
+              style={{
+                display:'flex',flex:'1 1 280px',
+                background:SURFACE,
+                borderTop:'1px solid rgba(255,255,255,0.1)',
+                borderLeft:'1px solid rgba(255,255,255,0.07)',
+                borderRight:'1px solid rgba(255,255,255,0.04)',
+                borderBottom:'1px solid rgba(255,255,255,0.03)',
+                transition: 'box-shadow 0.3s ease',
+                boxShadow: inputFocused
+                  ? 'inset 0 0 0 1px rgba(111, 155, 198, 0.5), 0 0 20px rgba(111, 155, 198, 0.1)'
+                  : 'inset 0 0 0 1px rgba(111, 155, 198, 0.2)',
+              }}>
               <span style={{ ...MONO,fontSize:12,color:INK_MUT,padding:'0 12px',display:'flex',alignItems:'center',flexShrink:0,borderRight:'0.5px solid rgba(255,255,255,0.08)' }}>
                 https://
               </span>
@@ -148,13 +157,18 @@ function HeroSection() {
             <button
               onClick={() => void handleScan()}
               disabled={isScanning || !scanUrl}
+              onMouseEnter={() => setScanBtnHovered(true)}
+              onMouseLeave={() => setScanBtnHovered(false)}
               style={{
                 ...MONO,fontSize:13,fontWeight:600,letterSpacing:'0.1em',textTransform:'uppercase',
                 background:'transparent',
                 border:`1px solid ${isScanning || !scanUrl ? 'rgba(111,155,198,0.3)' : 'rgba(111,155,198,0.5)'}`,
                 color:isScanning || !scanUrl ? 'rgba(111,155,198,0.4)' : STEEL,
                 padding:'14px 24px',cursor:isScanning || !scanUrl ? 'not-allowed' : 'pointer',
-                borderRadius:0,whiteSpace:'nowrap',transition:'all 0.15s',
+                borderRadius:0,whiteSpace:'nowrap',transition:'box-shadow 0.2s ease',
+                boxShadow: scanBtnHovered && !isScanning && scanUrl
+                  ? '0 0 24px rgba(111, 155, 198, 0.3), 0 0 0 1px rgba(111, 155, 198, 0.4)'
+                  : '0 0 16px rgba(111, 155, 198, 0.15)',
               }}
             >
               {isScanning ? 'SCANNING…' : 'SCAN MY SITE FREE →'}
@@ -218,6 +232,7 @@ const MOCK_FINDINGS: MockFinding[] = [
 function OutputSection() {
   const ringRef = useRef<HTMLDivElement>(null)
   const ringInView = useInView(ringRef, { once: true, margin: '-80px' })
+  const [hoveredCard, setHoveredCard] = useState<number | null>(null)
 
   return (
     <section style={{ padding:'80px 48px',borderTop:'0.5px solid rgba(111,155,198,0.1)',position:'relative',overflow:'visible' }}>
@@ -249,12 +264,13 @@ function OutputSection() {
 
         {/* Mock report card — static illustration */}
         <div style={{
-          background:SURFACE,
+          background: 'rgba(111, 155, 198, 0.02)',
           borderTop:'1px solid rgba(255,255,255,0.12)',
           borderLeft:'1px solid rgba(255,255,255,0.08)',
           borderRight:'1px solid rgba(255,255,255,0.04)',
           borderBottom:'1px solid rgba(255,255,255,0.03)',
           padding:32,
+          boxShadow: 'inset 0 1px 0 0 rgba(111, 155, 198, 0.15), 0 0 0 1px rgba(111, 155, 198, 0.08)',
         }}>
           {/* Bridge line — contextualizes the mock for founders */}
           <p style={{ ...SANS,fontStyle:'italic',fontSize:13,color:INK_MUT,margin:'0 0 20px',lineHeight:1.55 }}>
@@ -280,21 +296,21 @@ function OutputSection() {
                   top: '50%',
                   left: '50%',
                   transform: 'translate(-50%, -50%)',
-                  width: '220px',
-                  height: '220px',
-                  background: 'radial-gradient(ellipse at center, rgba(232, 99, 95, 0.35) 0%, rgba(232, 99, 95, 0.1) 50%, transparent 70%)',
+                  width: '160px',
+                  height: '160px',
+                  background: 'radial-gradient(ellipse at center, rgba(232, 99, 95, 0.22) 0%, rgba(232, 99, 95, 0.08) 55%, transparent 72%)',
                   pointerEvents: 'none',
                   zIndex: 0,
                   borderRadius: '50%',
                   animation: 'ring-pulse 4s ease-in-out infinite',
                 }}
               />
-              <div style={{ filter:'drop-shadow(0 0 12px rgba(232,99,95,0.2))', position:'relative', zIndex: 1 }}>
+              <div style={{ filter:'drop-shadow(0 0 5px rgba(232,99,95,0.35))', position:'relative', zIndex: 1 }}>
                 <ScoreRing score={61} size="lg" animate={ringInView} />
               </div>
             </div>
             <div>
-              <p style={{ ...MONO,fontSize:11,color:INK_MUT,margin:'0 0 6px' }}>63rd percentile · B2B SaaS</p>
+              <p style={{ ...MONO,fontSize:11,color:'rgba(111, 155, 198, 0.8)',margin:'0 0 6px' }}>63rd percentile · B2B SaaS</p>
               <p style={{ ...SANS,fontSize:13,color:INK_SEC,margin:0,lineHeight:1.5,maxWidth:480 }}>
                 37 sites in your category score higher. Your top 3 fixes could move you to the 78th percentile.
               </p>
@@ -310,7 +326,24 @@ function OutputSection() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: '-30px' }}
                 transition={{ duration: 0.45, delay: i * 0.1, ease: 'easeOut' }}
-                style={{ background:f.bg,border:`0.5px solid ${f.border}`,padding:16 }}
+                onMouseEnter={() => setHoveredCard(i)}
+                onMouseLeave={() => setHoveredCard(null)}
+                style={{
+                  background: f.bg,
+                  border: `0.5px solid ${f.border}`,
+                  borderLeft: i === 0
+                    ? '2px solid rgba(232, 99, 95, 0.45)'
+                    : '2px solid rgba(239, 178, 62, 0.35)',
+                  padding: 16,
+                  transition: 'box-shadow 0.25s ease',
+                  boxShadow: hoveredCard === i
+                    ? i === 0
+                      ? 'inset 0 1px 0 0 rgba(232, 99, 95, 0.12), 0 0 0 1px rgba(232, 99, 95, 0.2), 0 0 20px rgba(232, 99, 95, 0.07)'
+                      : 'inset 0 1px 0 0 rgba(239, 178, 62, 0.1), 0 0 0 1px rgba(239, 178, 62, 0.18), 0 0 20px rgba(239, 178, 62, 0.06)'
+                    : i === 0
+                      ? 'inset 0 1px 0 0 rgba(232, 99, 95, 0.12)'
+                      : 'inset 0 1px 0 0 rgba(239, 178, 62, 0.1)',
+                }}
               >
                 <div style={{ display:'flex',alignItems:'flex-start',justifyContent:'space-between',marginBottom:8,gap:12,flexWrap:'wrap' }}>
                   <div style={{ display:'flex',alignItems:'center',gap:10,flexWrap:'wrap' }}>
@@ -323,7 +356,7 @@ function OutputSection() {
                     </span>
                     <span style={{ ...DISP,fontWeight:600,fontSize:14,color:INK_PRI }}>{f.title}</span>
                   </div>
-                  <span style={{ ...MONO,fontSize:11,color:LIFT_GREEN,whiteSpace:'nowrap',flexShrink:0 }}>
+                  <span style={{ ...MONO,fontSize:11,color:LIFT_GREEN,whiteSpace:'nowrap',flexShrink:0,textShadow:'0 0 8px rgba(0, 196, 140, 0.4)' }}>
                     EST. LIFT {f.lift}
                   </span>
                 </div>
@@ -361,35 +394,38 @@ function AIRewriteSection() {
           borderLeft:'1px solid rgba(255,255,255,0.07)',
           borderRight:'1px solid rgba(255,255,255,0.04)',
           borderBottom:'1px solid rgba(255,255,255,0.03)',
+          boxShadow: 'inset 0 1px 0 0 rgba(111, 155, 198, 0.1)',
         }}>
           <div className="d-rewrite-cols" style={{ display:'flex' }}>
             <div style={{
               flex:1,padding:28,
               borderRight:'0.5px solid rgba(111,155,198,0.1)',
             }}>
-              <p style={{ ...MONO,fontSize:10,textTransform:'uppercase',letterSpacing:'0.18em',color:INK_MUT,margin:'0 0 14px' }}>
+              <p style={{ ...MONO,fontSize:10,textTransform:'uppercase',letterSpacing:'0.18em',color:'rgba(255, 255, 255, 0.25)',margin:'0 0 14px' }}>
                 ORIGINAL
               </p>
-              <p style={{ ...SANS,fontSize:17,color:INK_SEC,margin:0,lineHeight:1.55 }}>
+              <p style={{ ...SANS,fontSize:17,color:INK_SEC,margin:0,lineHeight:1.55,opacity:0.45 }}>
                 &ldquo;The project management tool built for remote teams.&rdquo;
               </p>
             </div>
             <div style={{
               flex:1,padding:28,position:'relative',
+              borderLeft: '1px solid rgba(0, 196, 140, 0.25)',
+              boxShadow: 'inset 1px 0 0 0 rgba(0, 196, 140, 0.1)',
             }}>
               {/* AI rewrite bloom */}
               <div
                 aria-hidden="true"
                 style={{
                   position: 'absolute',
-                  inset: '-20px',
-                  background: 'radial-gradient(ellipse at 50% 50%, rgba(0, 196, 140, 0.1) 0%, transparent 70%)',
+                  inset: 0,
+                  background: 'radial-gradient(ellipse at 40% 50%, rgba(0, 196, 140, 0.14) 0%, rgba(0, 196, 140, 0.05) 55%, transparent 80%)',
                   pointerEvents: 'none',
                   zIndex: 0,
-                  borderRadius: '8px',
+                  borderRadius: 'inherit',
                 }}
               />
-              <p style={{ position:'relative',...MONO,fontSize:10,textTransform:'uppercase',letterSpacing:'0.18em',color:LIFT_GREEN,margin:'0 0 14px' }}>
+              <p style={{ position:'relative',...MONO,fontSize:10,textTransform:'uppercase',letterSpacing:'0.18em',color:'rgba(0, 196, 140, 0.9)',margin:'0 0 14px',textShadow:'0 0 12px rgba(0, 196, 140, 0.4)' }}>
                 REWRITTEN
               </p>
               <p style={{ position:'relative',...SANS,fontSize:17,color:INK_PRI,margin:0,lineHeight:1.55 }}>
@@ -412,9 +448,24 @@ const CHECK_PILLS = [
 ]
 
 function WhatWeCheckSection() {
+  const [hoveredPill, setHoveredPill] = useState<string | null>(null)
   return (
     <section style={{ padding:'80px 48px',borderTop:'0.5px solid rgba(111,155,198,0.1)',position:'relative',overflow:'visible' }}>
-      <div style={{ maxWidth:1000,margin:'0 auto' }}>
+      <div
+        aria-hidden="true"
+        style={{
+          position: 'absolute',
+          top: '-60px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          width: '900px',
+          height: '450px',
+          background: 'radial-gradient(ellipse at center, rgba(111, 155, 198, 0.07) 0%, transparent 65%)',
+          pointerEvents: 'none',
+          zIndex: 0,
+        }}
+      />
+      <div style={{ maxWidth:1000,margin:'0 auto',position:'relative',zIndex:1 }}>
         <p style={{ ...MONO,fontSize:11,textTransform:'uppercase',letterSpacing:'0.2em',color:STEEL,margin:'0 0 16px' }}>
           SCOPE
         </p>
@@ -433,19 +484,25 @@ function WhatWeCheckSection() {
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true, margin: '-40px' }}
               transition={{ duration: 0.3, delay: i * 0.045, ease: 'easeOut' }}
+              onMouseEnter={() => setHoveredPill(pill)}
+              onMouseLeave={() => setHoveredPill(null)}
               style={{
-                ...SANS,fontSize:13,color:INK_SEC,
-                background:SURFACE,
-                border:'0.5px solid rgba(111,155,198,0.15)',
+                ...SANS,fontSize:13,
+                color: hoveredPill === pill ? 'rgba(255, 255, 255, 0.95)' : INK_SEC,
+                background: hoveredPill === pill ? 'rgba(111, 155, 198, 0.06)' : SURFACE,
+                border: `0.5px solid ${hoveredPill === pill ? 'rgba(111, 155, 198, 0.5)' : 'rgba(111,155,198,0.15)'}`,
                 padding:'6px 12px',
                 display:'inline-block',
+                cursor: 'default',
+                transition: 'box-shadow 0.2s ease, border-color 0.2s ease, color 0.2s ease, background 0.2s ease',
+                boxShadow: hoveredPill === pill ? '0 0 0 1px rgba(111, 155, 198, 0.2), inset 0 0 10px rgba(111, 155, 198, 0.05)' : undefined,
               }}
             >
               {pill}
             </motion.span>
           ))}
         </div>
-        <p style={{ ...MONO,fontSize:11,color:INK_MUT,margin:0 }}>
+        <p style={{ ...MONO,fontSize:11,color:'rgba(111, 155, 198, 0.6)',margin:0,textShadow:'0 0 8px rgba(111, 155, 198, 0.2)' }}>
           307 checks across 27 categories — every scan, every plan.
         </p>
       </div>
@@ -457,15 +514,30 @@ function WhatWeCheckSection() {
 
 function QuoteSection() {
   return (
-    <section style={{ padding:'80px 48px',borderTop:'0.5px solid rgba(111,155,198,0.1)',textAlign:'center' }}>
+    <section style={{ padding:'80px 48px',borderTop:'0.5px solid rgba(111,155,198,0.1)',textAlign:'center',position:'relative',overflow:'visible' }}>
+      <div
+        aria-hidden="true"
+        style={{
+          position: 'absolute',
+          top: '-40px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          width: '600px',
+          height: '300px',
+          background: 'radial-gradient(ellipse at center, rgba(111, 155, 198, 0.07) 0%, transparent 65%)',
+          pointerEvents: 'none',
+          zIndex: 0,
+        }}
+      />
       {/* 4F: Quote fades up */}
       <motion.div
         initial={{ opacity: 0, y: 24 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: '-60px' }}
         transition={{ duration: 0.65, ease: 'easeOut' }}
-        style={{ maxWidth:680,margin:'0 auto' }}
+        style={{ maxWidth:680,margin:'0 auto',position:'relative',zIndex:1 }}
       >
+        <div aria-hidden style={{ position:'absolute',left:'-24px',top:0,bottom:0,width:'2px',background:'linear-gradient(to bottom, transparent, rgba(111, 155, 198, 0.4), transparent)',pointerEvents:'none' }} />
         <p style={{
           ...SANS,
           fontStyle:'italic',
@@ -476,7 +548,7 @@ function QuoteSection() {
         }}>
           &ldquo;I scanned our landing page expecting vague suggestions. Instead I got a ranked list of exactly what was broken and why. Fixed the top two findings in an afternoon. Our trial signup rate went up 14% the following week.&rdquo;
         </p>
-        <p style={{ ...MONO,fontSize:11,color:INK_MUT,margin:0,letterSpacing:'0.1em' }}>
+        <p style={{ ...MONO,fontSize:11,color:'rgba(111, 155, 198, 0.6)',margin:0,letterSpacing:'0.1em' }}>
           — FOUNDER, B2B SAAS · VERIFIED SCAN
         </p>
       </motion.div>
@@ -508,6 +580,7 @@ const HOW_STEPS: HowStep[] = [
 ]
 
 function HowItWorksSection() {
+  const [hoveredStep, setHoveredStep] = useState<number | null>(null)
   return (
     <section style={{ padding:'80px 48px',borderTop:'0.5px solid rgba(111,155,198,0.1)',position:'relative',overflow:'visible' }}>
       <style>{`@media(max-width:767px){.d-hiw-grid{grid-template-columns:1fr!important}}`}</style>
@@ -527,15 +600,26 @@ function HowItWorksSection() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: '-50px' }}
               transition={{ duration: 0.5, delay: i * 0.12, ease: 'easeOut' }}
+              onMouseEnter={() => setHoveredStep(i)}
+              onMouseLeave={() => setHoveredStep(null)}
               style={{
-                background:SURFACE,
+                background: hoveredStep === i ? 'rgba(111, 155, 198, 0.04)' : 'rgba(111, 155, 198, 0.025)',
                 borderTop:'1px solid rgba(255,255,255,0.1)',
-                borderLeft:'1px solid rgba(255,255,255,0.07)',
+                borderLeft: i === 1 ? '1px solid rgba(111, 155, 198, 0.2)' : '1px solid rgba(255,255,255,0.07)',
                 borderRight:'1px solid rgba(255,255,255,0.04)',
                 borderBottom:'1px solid rgba(255,255,255,0.03)',
                 padding:24,
+                transition: 'box-shadow 0.25s ease, background 0.25s ease',
+                boxShadow: hoveredStep === i
+                  ? 'inset 0 1px 0 0 rgba(111, 155, 198, 0.22), 0 0 24px rgba(111, 155, 198, 0.05)'
+                  : 'inset 0 1px 0 0 rgba(111, 155, 198, 0.12)',
               }}>
-              <p style={{ ...MONO,fontSize:20,color:'rgba(111,155,198,0.25)',margin:'0 0 16px',fontWeight:700 }}>
+              <p style={{
+                ...MONO,fontSize:20,
+                color: i === 1 ? 'rgba(111,155,198,0.55)' : 'rgba(111,155,198,0.35)',
+                margin:'0 0 16px',fontWeight:700,
+                textShadow: '0 0 10px rgba(111,155,198,0.25)',
+              }}>
                 {step.num}
               </p>
               <p style={{ ...DISP,fontSize:18,fontWeight:600,color:INK_PRI,margin:'0 0 12px',lineHeight:1.25 }}>
@@ -543,7 +627,11 @@ function HowItWorksSection() {
               </p>
               <p style={{ ...SANS,fontSize:14,color:INK_SEC,lineHeight:1.65,margin:0 }}>{step.desc}</p>
               {step.techTag && (
-                <p style={{ ...MONO,fontSize:10,color:INK_MUT,margin:'12px 0 0',letterSpacing:'0.04em',lineHeight:1.5 }}>
+                <p style={{
+                  ...MONO,fontSize:10,margin:'12px 0 0',letterSpacing:'0.04em',lineHeight:1.5,
+                  color: i === 1 ? 'rgba(111, 155, 198, 0.65)' : INK_MUT,
+                  textShadow: i === 1 ? '0 0 8px rgba(111, 155, 198, 0.2)' : undefined,
+                }}>
                   {step.techTag}
                 </p>
               )}
@@ -608,6 +696,7 @@ const OBJECTIONS: ObjectionCard[] = [
 ]
 
 function WhyDifferentSection() {
+  const [hoveredFaq, setHoveredFaq] = useState<number | null>(null)
   return (
     <section style={{ padding:'80px 48px',borderTop:'0.5px solid rgba(111,155,198,0.1)',position:'relative',overflow:'visible' }}>
       <style>{`@media(max-width:767px){.d-diff-grid{grid-template-columns:1fr!important}}`}</style>
@@ -618,12 +707,11 @@ function WhyDifferentSection() {
           top: '-80px',
           left: '50%',
           transform: 'translateX(-50%)',
-          width: '700px',
+          width: '1000px',
           height: '500px',
-          background: 'radial-gradient(ellipse at 50% 50%, rgba(111, 155, 198, 0.07) 0%, transparent 65%)',
+          background: 'radial-gradient(ellipse at center, rgba(111, 155, 198, 0.05) 0%, transparent 65%)',
           pointerEvents: 'none',
           zIndex: 0,
-          borderRadius: '50%',
         }}
       />
       <Ticks />
@@ -643,18 +731,23 @@ function WhyDifferentSection() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: '-40px' }}
               transition={{ duration: 0.5, delay: i * 0.07, ease: 'easeOut' }}
-              whileHover={{ boxShadow: '0 0 32px rgba(111,155,198,0.08), inset 0 1px 0 rgba(111,155,198,0.12)' }}
+              onMouseEnter={() => setHoveredFaq(i)}
+              onMouseLeave={() => setHoveredFaq(null)}
               style={{
-                background:SURFACE,
+                background: hoveredFaq === i ? 'rgba(111, 155, 198, 0.025)' : SURFACE,
                 borderTop:'1px solid rgba(255,255,255,0.12)',
-                borderLeft:'1px solid rgba(255,255,255,0.08)',
+                borderLeft: hoveredFaq === i ? '1px solid rgba(111, 155, 198, 0.2)' : '1px solid rgba(255,255,255,0.08)',
                 borderRight:'1px solid rgba(255,255,255,0.04)',
                 borderBottom:'1px solid rgba(255,255,255,0.03)',
                 padding:28,
+                transition: 'box-shadow 0.25s ease, border-color 0.25s ease, background 0.25s ease',
+                boxShadow: hoveredFaq === i
+                  ? 'inset 0 1px 0 0 rgba(111, 155, 198, 0.22), 0 0 0 1px rgba(111, 155, 198, 0.12), 0 0 20px rgba(111, 155, 198, 0.05)'
+                  : 'inset 0 1px 0 0 rgba(111, 155, 198, 0.1)',
               }}>
               <p style={{ ...DISP,fontWeight:600,fontSize:17,color:INK_PRI,margin:'0 0 14px',lineHeight:1.35 }}>{card.q}</p>
               <p style={{ ...SANS,fontSize:14,color:INK_SEC,lineHeight:1.7,margin:'0 0 16px' }}>{card.a}</p>
-              <p style={{ ...MONO,fontSize:11,color:STEEL,margin:0 }}>{card.tag}</p>
+              <p style={{ ...MONO,fontSize:11,color:STEEL,margin:0,textShadow:'0 0 6px rgba(111, 155, 198, 0.25)' }}>{card.tag}</p>
             </motion.div>
           ))}
         </div>
@@ -745,6 +838,29 @@ const PRICING_CARDS: PricingCard[] = [
 ]
 
 function PricingSection() {
+  const [hoveredPricing, setHoveredPricing] = useState<number | null>(null)
+  const getCardBoxShadow = (card: PricingCard, i: number): string | undefined => {
+    const hov = hoveredPricing === i
+    if (card.name === 'Starter') {
+      return hov
+        ? '0 0 0 1px rgba(111, 155, 198, 0.45), 0 0 50px rgba(111, 155, 198, 0.16), inset 0 1px 0 0 rgba(111, 155, 198, 0.25)'
+        : '0 0 0 1px rgba(111, 155, 198, 0.3), 0 0 50px rgba(111, 155, 198, 0.1), inset 0 1px 0 0 rgba(111, 155, 198, 0.25)'
+    }
+    if (card.name === 'Agency') {
+      return hov
+        ? 'inset 0 1px 0 0 rgba(157, 140, 255, 0.22), 0 0 0 1px rgba(157, 140, 255, 0.12), 0 0 20px rgba(157, 140, 255, 0.05)'
+        : 'inset 0 1px 0 0 rgba(157, 140, 255, 0.1)'
+    }
+    if (card.name === 'Enterprise') {
+      return hov
+        ? 'inset 0 1px 0 0 rgba(255, 255, 255, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.08)'
+        : 'inset 0 1px 0 0 rgba(255, 255, 255, 0.08)'
+    }
+    // Free
+    return hov
+      ? 'inset 0 1px 0 0 rgba(111, 155, 198, 0.15), 0 0 16px rgba(111, 155, 198, 0.04)'
+      : 'inset 0 1px 0 0 rgba(255, 255, 255, 0.06)'
+  }
   return (
     <section id="pricing" style={{ padding:'80px 48px',borderTop:'0.5px solid rgba(111,155,198,0.1)',position:'relative',overflow:'visible' }}>
       <style>{`
@@ -761,7 +877,6 @@ function PricingSection() {
         <p style={{ ...SANS,fontSize:15,color:INK_SEC,margin:'0 0 48px' }}>
           Every plan runs the same 307-check engine. No feature-gated diagnostics.
         </p>
-        {/* 4K: Pricing cards stagger in; Starter gets permanent glow */}
         <div className="d-price-grid" style={{ display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:16 }}>
           {PRICING_CARDS.map((card, i) => (
             <motion.div
@@ -770,31 +885,42 @@ function PricingSection() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: '-40px' }}
               transition={{ duration: 0.5, delay: i * 0.1, ease: 'easeOut' }}
+              onMouseEnter={() => setHoveredPricing(i)}
+              onMouseLeave={() => setHoveredPricing(null)}
               style={{
-                background:SURFACE,
+                background: card.name === 'Starter'
+                  ? 'rgba(111, 155, 198, 0.04)'
+                  : card.name === 'Free'
+                    ? 'rgba(255, 255, 255, 0.01)'
+                    : SURFACE,
                 borderTop: card.highlight ? `2px solid ${STEEL}` : '1px solid rgba(255,255,255,0.1)',
                 borderLeft: `1px solid ${card.highlight ? 'rgba(111,155,198,0.3)' : 'rgba(255,255,255,0.07)'}`,
                 borderRight:'1px solid rgba(255,255,255,0.04)',
                 borderBottom:'1px solid rgba(255,255,255,0.03)',
                 padding:24,
                 display:'flex',flexDirection:'column',
-                boxShadow: card.highlight ? '0 0 48px rgba(111,155,198,0.09), inset 0 0 0 1px rgba(111,155,198,0.08)' : undefined,
+                transition: 'box-shadow 0.25s ease',
+                boxShadow: getCardBoxShadow(card, i),
               }}>
               {card.kicker && (
-                <p style={{ ...MONO,fontSize:9,textTransform:'uppercase',letterSpacing:'0.15em',color:STEEL,margin:'0 0 8px' }}>
+                <p style={{ ...MONO,fontSize:9,textTransform:'uppercase',letterSpacing:'0.15em',color:STEEL,margin:'0 0 8px',textShadow:'0 0 8px rgba(111, 155, 198, 0.3)' }}>
                   {card.kicker}
                 </p>
               )}
               <p style={{ ...MONO,fontSize:11,textTransform:'uppercase',letterSpacing:'0.12em',color:STEEL,margin:'0 0 8px' }}>
                 {card.name}
               </p>
-              <p style={{ ...DISP,fontSize:36,fontWeight:700,color:INK_PRI,lineHeight:1,margin:'0 0 4px' }}>
+              <p style={{
+                ...DISP,fontSize:36,fontWeight:700,lineHeight:1,margin:'0 0 4px',
+                color: card.name === 'Free' ? 'rgba(255, 255, 255, 0.6)' : INK_PRI,
+                textShadow: card.name === 'Starter' ? '0 0 16px rgba(111, 155, 198, 0.2)' : undefined,
+              }}>
                 {card.price}
               </p>
               <p style={{ ...MONO,fontSize:10,color:INK_MUT,margin:'0 0 20px' }}>{card.priceSub}</p>
               <div style={{ flex:1,marginBottom:20 }}>
-                {card.features.map((f, i) => (
-                  <p key={i} style={{ ...SANS,fontSize:13,color:INK_SEC,margin:'0 0 8px',lineHeight:1.45 }}>
+                {card.features.map((f, j) => (
+                  <p key={j} style={{ ...SANS,fontSize:13,color:INK_SEC,margin:'0 0 8px',lineHeight:1.45 }}>
                     · {f}
                   </p>
                 ))}
@@ -823,6 +949,7 @@ function PricingSection() {
 // ── Section 9 — Final CTA ─────────────────────────────────────────────────────
 
 function FinalCtaSection() {
+  const [ctaBtnHovered, setCtaBtnHovered] = useState(false)
   return (
     <section style={{ padding:'96px 48px',textAlign:'center',position:'relative',overflow:'visible',borderTop:'0.5px solid rgba(111,155,198,0.1)' }}>
       {/* Final CTA bloom */}
@@ -835,7 +962,7 @@ function FinalCtaSection() {
           transform: 'translateX(-50%)',
           width: '800px',
           height: '600px',
-          background: 'radial-gradient(ellipse at 50% 40%, rgba(111, 155, 198, 0.12) 0%, rgba(111, 155, 198, 0.05) 45%, transparent 68%)',
+          background: 'radial-gradient(ellipse at 50% 40%, rgba(111, 155, 198, 0.20) 0%, rgba(111, 155, 198, 0.08) 40%, transparent 68%)',
           pointerEvents: 'none',
           zIndex: 0,
           borderRadius: '50%',
@@ -844,11 +971,13 @@ function FinalCtaSection() {
       />
       <Ticks />
       <div style={{ position:'relative',zIndex:1 }}>
-        <h2 style={{ ...DISP,fontWeight:700,fontSize:'clamp(28px,4vw,44px)',color:INK_PRI,letterSpacing:'-0.5px',margin:'0 0 32px',lineHeight:1.1 }}>
+        <h2 style={{ ...DISP,fontWeight:700,fontSize:'clamp(28px,4vw,44px)',color:INK_PRI,letterSpacing:'-0.5px',margin:'0 0 32px',lineHeight:1.1,textShadow:'0 0 40px rgba(111, 155, 198, 0.15)' }}>
           Ready to find out what&apos;s killing your conversions?
         </h2>
         <a
           href="#scan"
+          onMouseEnter={() => setCtaBtnHovered(true)}
+          onMouseLeave={() => setCtaBtnHovered(false)}
           style={{
             display:'inline-block',
             ...MONO,fontSize:13,fontWeight:600,letterSpacing:'0.1em',textTransform:'uppercase',
@@ -857,11 +986,16 @@ function FinalCtaSection() {
             color:STEEL,
             padding:'14px 32px',
             textDecoration:'none',
+            transition: 'box-shadow 0.2s ease, transform 0.2s ease',
+            boxShadow: ctaBtnHovered
+              ? '0 0 0 1px rgba(111, 155, 198, 0.6), 0 0 40px rgba(111, 155, 198, 0.28)'
+              : '0 0 0 1px rgba(111, 155, 198, 0.4), 0 0 30px rgba(111, 155, 198, 0.18)',
+            transform: ctaBtnHovered ? 'translateY(-1px)' : 'translateY(0)',
           }}
         >
           SCAN MY SITE FREE →
         </a>
-        <p style={{ ...MONO,fontSize:11,color:INK_MUT,marginTop:16,marginBottom:0 }}>
+        <p style={{ ...MONO,fontSize:11,color:'rgba(111, 155, 198, 0.5)',marginTop:16,marginBottom:0 }}>
           No account required. Results in ~90 seconds.
         </p>
       </div>
@@ -872,6 +1006,7 @@ function FinalCtaSection() {
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function DashboardPage() {
+  const [upgradeLinkHovered, setUpgradeLinkHovered] = useState(false)
   return (
     // instrument-grid: fine (64px) + macro (320px) grid from globals.css, same as homepage
     <main className="instrument-grid" style={{ minHeight:'100vh',background:BG_BASE }}>
@@ -885,7 +1020,18 @@ export default function DashboardPage() {
       <LandingCorpusStats />
       {/* Benchmarks CTA — smooth-scroll hook from corpus section into pricing */}
       <div style={{ textAlign:'center',padding:'0 48px 56px',background:BG_BASE }}>
-        <a href="#pricing" style={{ ...MONO,fontSize:11,color:STEEL,textDecoration:'none',letterSpacing:'0.08em' }}>
+        <a
+          href="#pricing"
+          onMouseEnter={() => setUpgradeLinkHovered(true)}
+          onMouseLeave={() => setUpgradeLinkHovered(false)}
+          style={{
+            ...MONO,fontSize:11,
+            color: upgradeLinkHovered ? 'rgba(111, 155, 198, 1)' : 'rgba(111, 155, 198, 0.7)',
+            textDecoration:'none',letterSpacing:'0.08em',
+            transition: 'color 0.2s ease',
+            textShadow: upgradeLinkHovered ? '0 0 8px rgba(111, 155, 198, 0.3)' : undefined,
+          }}
+        >
           Upgrade to see what separates the top quartile in your vertical from everyone else.
         </a>
       </div>

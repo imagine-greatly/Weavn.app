@@ -71,20 +71,55 @@ export default function RootLayout({
         <BackgroundField />
         <PersistentSiteAmbient />
         <GrainOverlay />
-        {/* Global fixed bloom — two atmospheric orbs, pink/coral top-right + steel-blue bottom-left */}
+        {/* Global fixed bloom orbs — ambient light sources fixed to viewport */}
         <div
           aria-hidden
           style={{
             position: 'fixed',
             inset: 0,
-            zIndex: 1,
+            zIndex: -10,
             pointerEvents: 'none',
-            background: [
-              'radial-gradient(ellipse 600px 600px at 80% 15%, rgba(232,99,95,0.025) 0%, transparent 65%)',
-              'radial-gradient(ellipse 500px 500px at 15% 85%, rgba(111,155,198,0.03) 0%, transparent 65%)',
-            ].join(', '),
+            overflow: 'hidden',
           }}
-        />
+        >
+          {/* Orb 1: top center, steel blue, large and soft */}
+          <div
+            style={{
+              position: 'absolute',
+              top: '-300px',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              width: '1200px',
+              height: '900px',
+              background: 'radial-gradient(ellipse at center, rgba(111, 155, 198, 0.09) 0%, rgba(111, 155, 198, 0.03) 50%, transparent 72%)',
+              pointerEvents: 'none',
+            }}
+          />
+          {/* Orb 2: bottom right, pale green */}
+          <div
+            style={{
+              position: 'absolute',
+              bottom: '-200px',
+              right: '-300px',
+              width: '700px',
+              height: '700px',
+              background: 'radial-gradient(ellipse at center, rgba(0, 196, 140, 0.05) 0%, transparent 65%)',
+              pointerEvents: 'none',
+            }}
+          />
+          {/* Orb 3: bottom left, pale purple, very faint */}
+          <div
+            style={{
+              position: 'absolute',
+              bottom: '-100px',
+              left: '-200px',
+              width: '500px',
+              height: '500px',
+              background: 'radial-gradient(ellipse at center, rgba(157, 140, 255, 0.04) 0%, transparent 65%)',
+              pointerEvents: 'none',
+            }}
+          />
+        </div>
         <div className="relative z-10 layout-page-clip">
           <Navbar />
           <div className="pt-16">{children}</div>

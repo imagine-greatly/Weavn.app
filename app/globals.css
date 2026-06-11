@@ -1351,8 +1351,8 @@ svg path { fill: none !important; }
     50%       { opacity: 1;   transform: translateX(-50%) scale(1.06); }
   }
   @keyframes ring-pulse {
-    0%, 100% { opacity: 0.3; transform: translate(-50%, -50%) scale(1); }
-    50%       { opacity: 0.8; transform: translate(-50%, -50%) scale(1.12); }
+    0%, 100% { opacity: 0.4; transform: translate(-50%, -50%) scale(1); }
+    50%       { opacity: 0.75; transform: translate(-50%, -50%) scale(1.12); }
   }
   .engine-breathe { animation: engine-breathe 3s ease-in-out infinite; }
 }

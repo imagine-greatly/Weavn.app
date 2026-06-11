@@ -56,6 +56,12 @@ export default function LandingCorpusStats() {
           .sb-stat-strip > .sb-corpus-cell { flex: 0 0 100% !important; border-right: none !important; border-top: 0.5px solid rgba(111,155,198,0.08) !important; }
           .sb-curve-svg { height: 180px !important; }
         }
+        @media (prefers-reduced-motion: no-preference) {
+          @keyframes marker-pulse {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1.0; }
+          }
+        }
       `}</style>
 
       {/* Atmosphere */}
@@ -115,7 +121,12 @@ export default function LandingCorpusStats() {
               transition={{ duration: 0.5, delay: 0.2 + i * 0.08, ease: 'easeOut' }}
               style={{ flex: 1, padding: '20px 28px', borderRight: '0.5px solid rgba(111,155,198,0.08)' }}
             >
-              <div style={{ ...DISP, fontSize: 40, fontWeight: 700, color: s.color, lineHeight: 1 }}>
+              <div style={{
+                ...DISP, fontSize: 40, fontWeight: 700, color: s.color, lineHeight: 1,
+                textShadow: s.label === 'NO ABOVE-FOLD PROOF'
+                  ? '0 0 20px rgba(232, 99, 95, 0.25)'
+                  : '0 0 20px rgba(111, 155, 198, 0.2)',
+              }}>
                 {s.format(s.raw)}
               </div>
               <div style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.12em', color: 'rgba(111,155,198,0.25)', marginTop: 6 }}>
@@ -148,15 +159,15 @@ export default function LandingCorpusStats() {
         </div>
       </div>
 
-      {/* Benchmark bloom — 600×300 steel-blue radial centered behind bell curve */}
+      {/* Benchmark bloom — centered on 63rd pct marker position */}
       <div aria-hidden style={{
         position: 'absolute',
         bottom: 40,
-        left: '50%',
+        left: '68%',
         transform: 'translateX(-50%)',
-        width: 600,
+        width: 500,
         height: 300,
-        background: 'radial-gradient(ellipse at center, rgba(111,155,198,0.04) 0%, transparent 70%)',
+        background: 'radial-gradient(ellipse at center, rgba(111,155,198,0.08) 0%, transparent 65%)',
         pointerEvents: 'none',
         zIndex: 0,
       }} />
@@ -198,7 +209,7 @@ export default function LandingCorpusStats() {
           </linearGradient>
 
           <filter id="sbCurveGlow" x="-5%" y="-60%" width="110%" height="220%">
-            <feGaussianBlur in="SourceGraphic" stdDeviation="1.8" result="blur" />
+            <feGaussianBlur in="SourceGraphic" stdDeviation="2.8" result="blur" />
             <feMerge>
               <feMergeNode in="blur" />
               <feMergeNode in="SourceGraphic" />
@@ -292,9 +303,9 @@ export default function LandingCorpusStats() {
             strokeDasharray="4 3"
           />
           <circle cx="980" cy="135" r="8" fill="rgba(140,180,220,0.15)" filter="url(#sbMarkerGlow)" />
-          <circle cx="980" cy="135" r="3" fill="rgba(140,180,220,0.9)" />
+          <circle cx="980" cy="135" r="3" fill="rgba(140,180,220,0.9)" style={{ filter:'drop-shadow(0 0 4px rgba(111,155,198,0.6))', animation:'marker-pulse 3s ease-in-out infinite' }} />
           <g transform="translate(980, -8)">
-            <rect x="-56" y="-50" width="112" height="44" fill="#080D18" stroke="rgba(140,180,220,0.35)" strokeWidth="0.5" />
+            <rect x="-56" y="-50" width="112" height="44" fill="rgba(111,155,198,0.08)" stroke="rgba(111,155,198,0.3)" strokeWidth="0.5" filter="url(#sbMarkerGlow)" />
             <text x="0" y="-34" textAnchor="middle" fontFamily="IBM Plex Mono, monospace" fontSize="8"  fill="rgba(140,180,220,0.55)" letterSpacing="0.12em">YOUR SITE</text>
             <text x="0" y="-16" textAnchor="middle" fontFamily="IBM Plex Mono, monospace" fontSize="15" fontWeight="700" fill="rgba(140,180,220,1.0)">63rd pct</text>
             <line x1="0" y1="0" x2="0" y2="143" stroke="rgba(140,180,220,0.2)" strokeWidth="0.5" />

@@ -232,7 +232,7 @@ function HeroForkSection() {
               ))}
             </div>
             <Link
-              href="/developer"
+              href="/developers"
               className="door-cta-developer font-mono text-xs text-data-impact border border-data-impact/50 px-6 py-3 block text-center no-underline mt-6 transition-shadow duration-300"
             >
               Explore the API →

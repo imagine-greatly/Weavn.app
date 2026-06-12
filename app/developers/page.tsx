@@ -778,6 +778,51 @@ export default function DevelopersPage() {
       </section>
       <div className="section-separator" />
 
+      {/* ── 1a-ii. HOW TO START — the four-step path ────────────────────────── */}
+      <section style={{ position: 'relative', overflow: 'hidden', background: '#080D18', borderTop: '0.5px solid rgba(255,255,255,0.08)' }}>
+        <div aria-hidden style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0, background: 'radial-gradient(ellipse 800px 500px at 50% 0%, rgba(157,140,255,0.04) 0%, transparent 60%)' }} />
+        <Ticks />
+        <div style={{ position: 'relative', zIndex: 1, maxWidth: 896, margin: '0 auto', padding: '64px 32px 72px' }}>
+          <p style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.2em', color: '#8080c0', margin: '0 0 16px' }}>
+            HOW TO START
+          </p>
+          <h2 style={{ ...DISP, fontSize: 'clamp(26px, 3.5vw, 38px)', fontWeight: 700, letterSpacing: '-0.5px', color: '#E6E9EE', margin: '0 0 12px', lineHeight: 1.15 }}>
+            Four steps to your first integration.
+          </h2>
+          <p style={{ ...SANS, fontSize: 15, lineHeight: 1.65, color: '#9398A8', maxWidth: 600, margin: '0 0 40px' }}>
+            Start with a key and a no-code test, then make one call and build from there.
+          </p>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+            {[
+              { n: '01', title: 'Get an API key', desc: '25 free scans, no subscription.', href: '/auth?surface=api', cta: 'Get a key →' },
+              { n: '02', title: 'Test a scan in the playground', desc: 'Run a real scan in the browser — no code required.', href: '/playground', cta: 'Open the playground →' },
+              { n: '03', title: 'Make your first call', desc: 'POST a URL with your key. The curl, Node, and Python above are complete and copy-pasteable.', href: '/docs/api', cta: 'Read the reference →' },
+              { n: '04', title: 'Build your integration', desc: 'Wire the structured response into your app, agent, or dashboard.', href: '/docs/api', cta: 'See the docs →' },
+            ].map((step, i, arr) => (
+              <div
+                key={step.n}
+                style={{
+                  display: 'flex', alignItems: 'baseline', gap: 16,
+                  padding: '18px 0',
+                  borderBottom: i < arr.length - 1 ? '0.5px solid rgba(255,255,255,0.06)' : 'none',
+                }}
+              >
+                <span style={{ ...MONO, fontSize: 12, color: '#9D8CFF', flexShrink: 0, letterSpacing: '0.1em' }}>{step.n}</span>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <p style={{ ...DISP, fontSize: 16, fontWeight: 600, color: '#E6E9EE', margin: '0 0 3px' }}>{step.title}</p>
+                  <p style={{ ...SANS, fontSize: 13, lineHeight: 1.55, color: '#6E7587', margin: 0 }}>{step.desc}</p>
+                </div>
+                <Link href={step.href} style={{ ...MONO, fontSize: 11, color: '#6F9BC6', textDecoration: 'none', flexShrink: 0, letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>
+                  {step.cta}
+                </Link>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+      <div className="section-separator" />
+
       {/* ── 1b. HOW THE ENGINE WORKS — INPUT / PROCESSING / OUTPUT ───────────── */}
       <HowItWorksSection />
       <div className="section-separator" />

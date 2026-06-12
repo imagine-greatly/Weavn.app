@@ -1269,33 +1269,38 @@ export default function DevelopersPage() {
             WHAT YOU CAN BUILD
           </p>
           <h2 style={{ ...DISP, fontSize: 'clamp(26px, 3.5vw, 38px)', fontWeight: 700, letterSpacing: '-0.5px', color: '#E6E9EE', margin: '0 0 40px', lineHeight: 1.15 }}>
-            Five integrations. One endpoint.
+            Six integrations. One endpoint.
           </h2>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {[
               {
-                title: 'CMS / site builder score badge',
+                title: 'Diagnose any Shopify or e-commerce store',
+                desc: 'A merchant enters their store URL; your app scans it and shows the conversion score with the highest-impact fixes — embedded in a Shopify app, theme, or onboarding flow.',
+                tag: 'POST /api/v1/scan · store URL',
+              },
+              {
+                title: 'Show a live conversion score in your site builder',
                 desc: 'Embed a live conversion score for any page in Webflow, Framer, or a custom CMS. Re-scan on publish; surface the delta.',
-                tag: 'POST /api/v1/scan on deploy hook',
+                tag: 'POST /api/v1/scan · on publish / deploy hook',
               },
               {
-                title: 'CRM lead audit on creation',
+                title: "Audit every new lead's website automatically",
                 desc: 'When a lead record is created, auto-scan their website. Attach the score and top findings to the deal before the first call.',
-                tag: 'triggered from CRM webhook',
+                tag: 'triggered from your CRM webhook',
               },
               {
-                title: 'Agency white-label reporting',
+                title: 'Generate white-label reports for agency clients',
                 desc: 'Batch-scan client sites on a schedule. Feed findings into your own branded report template. Deliver to clients without exposing the underlying engine.',
                 tag: 'POST /api/v1/scan/batch',
               },
               {
-                title: 'AI agent decision loop',
+                title: 'Feed conversion data straight into an AI agent',
                 desc: 'Feed scores and structured findings directly into an LLM agent. The JSON schema is stable — the agent parses it the same way every run.',
                 tag: 'structured JSON → agent context',
               },
               {
-                title: 'Prospect list bulk audit',
+                title: 'Bulk-audit a prospect list and rank by score',
                 desc: 'Upload a CSV of target domains. Batch-scan in parallel. Filter by score threshold to prioritise outreach on sites with the highest lift potential.',
                 tag: 'POST /api/v1/scan/batch → filter by score',
               },

@@ -786,7 +786,8 @@ const PIPELINE_STEPS = [
 // ViewBox 0 0 1000 2100 | slot=360px | left-card center x=230, right-card center x=770
 // Each subpath is a single cubic bezier in the 70px gap between cards only — no segments cross card interiors.
 // Segment anchors: card bottom-center → card top-center. CP1 pulls straight down from start; CP2 pulls straight up into end.
-// Card bottoms y: 290,650,1010,1370,1730 | Card tops y: 360,720,1080,1440,1800 | Node midpoints y: 325,685,1045,1405,1765
+// Layout: top=i*360, minHeight=290 → card bottoms y: 290,650,1010,1370,1730 | card tops y: 360,720,1080,1440,1800
+// CP offset = 35px (gap/2). CP1=(start_x, start_y+35), CP2=(end_x, end_y-35) → vertical tangents at both endpoints.
 const PIPELINE_SNAKE = [
   'M 230 290 C 230 325 770 325 770 360',
   'M 770 650 C 770 685 230 685 230 720',
@@ -794,14 +795,6 @@ const PIPELINE_SNAKE = [
   'M 770 1370 C 770 1405 230 1405 230 1440',
   'M 230 1730 C 230 1765 770 1765 770 1800',
 ].join(' ')
-
-const PIPELINE_NODES = [
-  { cx: 500, cy: 325,  bright: true  },
-  { cx: 500, cy: 685,  bright: false },
-  { cx: 500, cy: 1045, bright: false },
-  { cx: 500, cy: 1405, bright: false },
-  { cx: 500, cy: 1765, bright: false },
-]
 
 const PIPELINE_FAIL = new Set([3, 8, 13, 18, 22, 26, 28])
 
@@ -933,9 +926,6 @@ function HowItWorksSection() {
             preserveAspectRatio="none"
           >
             <path d={PIPELINE_SNAKE} stroke="var(--interactive)" strokeWidth="1.5" strokeLinecap="round" fill="none" opacity="0.5" />
-            {PIPELINE_NODES.map((n, ni) => (
-              <circle key={ni} cx={n.cx} cy={n.cy} r="5" fill={n.bright ? 'rgba(111,155,198,0.9)' : 'rgba(111,155,198,0.5)'} />
-            ))}
           </svg>
 
           {/* Step cards */}

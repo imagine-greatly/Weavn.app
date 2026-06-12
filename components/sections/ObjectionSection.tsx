@@ -5,7 +5,7 @@ const DISP = { fontFamily: "'Space Grotesk', sans-serif" }
 const OBJECTIONS = [
   {
     q: 'Is this just a Lighthouse score?',
-    a: 'Lighthouse measures page speed and technical performance. webdoc measures conversion — whether your headline drives action, whether your proof is above the fold, whether your CTA creates clarity or confusion. Different instrument entirely.',
+    a: 'Lighthouse measures page speed and technical performance. Weavn measures conversion — whether your headline drives action, whether your proof is above the fold, whether your CTA creates clarity or confusion. Different instrument entirely.',
     label: 'checks focused on conversion:',
     value: '307',
     valueColor: '#00C48C',
@@ -19,7 +19,7 @@ const OBJECTIONS = [
   },
   {
     q: 'Will it work on my stack?',
-    a: 'webdoc renders the full live page using headless Chrome with JavaScript execution complete before analysis begins. We see exactly what a real visitor sees — not raw HTML. Framework, CMS, or custom build: if a browser can load it, we can scan it.',
+    a: 'Weavn renders the full live page using headless Chrome with JavaScript execution complete before analysis begins. We see exactly what a real visitor sees — not raw HTML. Framework, CMS, or custom build: if a browser can load it, we can scan it.',
     label: 'renderer:',
     value: 'headless Chrome · stealth mode',
     valueColor: '#6F9BC6',

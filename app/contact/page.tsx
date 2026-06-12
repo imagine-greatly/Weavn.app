@@ -20,11 +20,11 @@ export default function ContactPage() {
         >
           For support or questions, email us at{" "}
           <a
-            href="mailto:devon@webdocai.com"
+            href="mailto:devon@weavn.app"
             className="font-mono"
             style={{ color: "#00C8FF", textDecoration: "none", fontSize: 16 }}
           >
-            devon@webdocai.com
+            devon@weavn.app
           </a>
         </p>
       </div>

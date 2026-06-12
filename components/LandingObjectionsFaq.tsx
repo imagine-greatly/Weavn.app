@@ -15,7 +15,7 @@ const OBJECTION_CARDS = [
   },
   {
     q: 'Why not just paste my URL into ChatGPT?',
-    a: 'A language model sees text you paste, not your live page. webdoc renders the full DOM in headless Chrome, reads above-the-fold layout, runs 307 structured checks, and returns ranked JSON — not a chat response.',
+    a: 'A language model sees text you paste, not your live page. Weavn renders the full DOM in headless Chrome, reads above-the-fold layout, runs 307 structured checks, and returns ranked JSON — not a chat response.',
     data: '307 checks · rendered DOM · not a chat response',
     dataColor: '#6F9BC6',
   },
@@ -27,7 +27,7 @@ const OBJECTION_CARDS = [
   },
   {
     q: 'Will it understand my site?',
-    a: 'webdoc classifies your site type — SaaS, e-commerce, agency, creator — then applies the relevant check subset. A Shopify product page and a SaaS pricing page get different diagnostics. Classification runs automatically.',
+    a: 'Weavn classifies your site type — SaaS, e-commerce, agency, creator — then applies the relevant check subset. A Shopify product page and a SaaS pricing page get different diagnostics. Classification runs automatically.',
     data: 'site types: SaaS · e-comm · agency · creator',
     dataColor: '#6F9BC6',
   },
@@ -39,7 +39,7 @@ const OBJECTION_CARDS = [
   },
   {
     q: 'Can you even scan my site?',
-    a: "If it's publicly accessible, yes. webdoc renders the live page in headless Chrome with stealth mode enabled. Works on Next.js, Webflow, Squarespace, Shopify, WordPress, and custom stacks. Sites behind login walls cannot be scanned.",
+    a: "If it's publicly accessible, yes. Weavn renders the live page in headless Chrome with stealth mode enabled. Works on Next.js, Webflow, Squarespace, Shopify, WordPress, and custom stacks. Sites behind login walls cannot be scanned.",
     data: 'requires: public URL · no login walls',
     dataColor: '#6F9BC6',
   },
@@ -51,7 +51,7 @@ const OBJECTION_CARDS = [
   },
   {
     q: 'Can I use it for client work?',
-    a: 'Yes. The Agency plan includes client workspaces, white-label report links, and 100 bundled API calls per month. Reports carry no webdoc branding. Scan any publicly accessible client URL and send them the link.',
+    a: 'Yes. The Agency plan includes client workspaces, white-label report links, and 100 bundled API calls per month. Reports carry no Weavn branding. Scan any publicly accessible client URL and send them the link.',
     data: 'agency: $149/mo · white-label · API bundled',
     dataColor: '#6F9BC6',
   },

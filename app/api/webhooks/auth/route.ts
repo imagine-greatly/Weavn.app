@@ -23,13 +23,13 @@ function buildWelcomeText(name?: string | null): string {
   return [
     `Hi${name ? ` ${name}` : ''},`,
     '',
-    'Your API key has been provisioned. Visit your developer portal to copy it: https://webdocai.com/developer',
+    'Your API key has been provisioned. Visit your developer portal to copy it: https://weavn.app/developer',
     '',
     'Your first 25 scans are free. After that, scans are $0.25 each — no subscription required.',
     '',
-    'Docs: https://webdocai.com/docs/api',
+    'Docs: https://weavn.app/docs/api',
     '',
-    '— The webdocai team',
+    '— The Weavn team',
   ].join('\n');
 }
 
@@ -96,9 +96,9 @@ export async function POST(req: NextRequest) {
       if (!resendKey || !email) return;
       const resend = new Resend(resendKey);
       await resend.emails.send({
-        from: "insights@webdocai.com",
+        from: "insights@weavn.app",
         to: email,
-        subject: "Your webdocai API key is ready",
+        subject: "Your Weavn API key is ready",
         text: buildWelcomeText(name),
       });
     } catch (err) {

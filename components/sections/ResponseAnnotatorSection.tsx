@@ -51,7 +51,7 @@ const ANNOTATIONS: { field: string; desc: string }[] = [
   },
   {
     field: 'benchmark.percentile',
-    desc: 'Where this site sits relative to all sites webdoc has scanned in the same industry.',
+    desc: 'Where this site sits relative to all sites Weavn has scanned in the same industry.',
   },
   {
     field: 'rewritten_copy',

@@ -131,7 +131,7 @@ export default function PlaygroundPage() {
 
   const targetUrl  = url || 'https://your-site.com'
   const curlCode   = [
-    `curl -X POST https://api.webdocai.com/v1/scan \\`,
+    `curl -X POST https://api.weavn.app/v1/scan \\`,
     `  -H "Authorization: Bearer wdoc_live_••••••••" \\`,
     `  -H "Content-Type: application/json" \\`,
     `  -d '{`,
@@ -230,7 +230,7 @@ export default function PlaygroundPage() {
               flexShrink: 0,
             }}
           />
-          <span style={{ color: '#9398A8' }}>api.webdocai.com</span>
+          <span style={{ color: '#9398A8' }}>api.weavn.app</span>
           <span style={{ color: '#6E7587' }}>·</span>
           <span style={{ color: '#6F9BC6' }}>v1</span>
           <span style={{ color: '#6E7587' }}>·</span>

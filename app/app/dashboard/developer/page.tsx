@@ -85,12 +85,12 @@ const INVOICES: Invoice[] = [
 ]
 
 // ── Bash code snippets ────────────────────────────────────────────────────────
-const CODE_BASIC = `curl -X POST https://webdocai.com/api/v1/scan \\
+const CODE_BASIC = `curl -X POST https://api.weavn.app/v1/scan \\
   -H "Authorization: Bearer wdoc_live_••••" \\
   -H "Content-Type: application/json" \\
   -d '{"url": "https://your-site.com"}'`
 
-const CODE_ASYNC = `curl -X POST https://webdocai.com/api/v1/scan \\
+const CODE_ASYNC = `curl -X POST https://api.weavn.app/v1/scan \\
   -H "Authorization: Bearer wdoc_live_••••" \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -99,7 +99,7 @@ const CODE_ASYNC = `curl -X POST https://webdocai.com/api/v1/scan \\
     "webhook_url": "https://your-endpoint.com/hook"
   }'`
 
-const CODE_BATCH = `curl -X POST https://webdocai.com/api/v1/scan/batch \\
+const CODE_BATCH = `curl -X POST https://api.weavn.app/v1/scan/batch \\
   -H "Authorization: Bearer wdoc_live_••••" \\
   -H "Content-Type: application/json" \\
   -d '{

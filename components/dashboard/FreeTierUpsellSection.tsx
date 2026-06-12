@@ -545,7 +545,7 @@ export default function FreeTierUpsellSection({
           {[
             {
               label: "UNLIMITED DIAGNOSTICS",
-              desc: "Scan any website. Rescan after resolutions. Track WebDoc Score movement with every improvement.",
+              desc: "Scan any website. Rescan after resolutions. Track Weavn Score movement with every improvement.",
             },
             {
               label: "ALL DIAGNOSTIC FINDINGS",

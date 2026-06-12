@@ -115,7 +115,7 @@ export default function LandingGrowthBlueprint() {
             className="mx-auto mt-3 font-mono text-[14px]"
             style={{ color: "#8899AA", lineHeight: 1.7, maxWidth: 520 }}
           >
-            Every WebDoc diagnostic generates a sequenced execution plan — what to resolve this week, what to address this month, and what high-converting sites implement at scale. Sequenced by revenue impact.
+            Every Weavn diagnostic generates a sequenced execution plan — what to resolve this week, what to address this month, and what high-converting sites implement at scale. Sequenced by revenue impact.
           </p>
         </ScrollReveal>
       </div>
@@ -200,7 +200,7 @@ export default function LandingGrowthBlueprint() {
       <ScrollReveal variant="headline" delay={0.1}>
         <div className="mx-auto mt-6 text-center" style={{ maxWidth: 860 }}>
           <p className="font-mono text-[12px]" style={{ color: "#8899AA" }}>
-            Generated automatically from every WebDoc diagnostic.
+            Generated automatically from every Weavn diagnostic.
           </p>
           <Link
             href="/auth?mode=signup"

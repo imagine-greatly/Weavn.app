@@ -51,7 +51,7 @@ function buildContext(
     return [
       `═══ SITE: ${r.domain} ═══`,
       `Scan date: ${formatDate(r.created_at)}`,
-      `WebDoc Score: ${formatWebDocScoreWithBand(hs)}`,
+      `Weavn Score: ${formatWebDocScoreWithBand(hs)}`,
       ``,
       `CATEGORY SCORES:`,
       `  Revenue impact: ${cs.psychology ?? 0}/100`,
@@ -163,7 +163,7 @@ export async function POST(req: NextRequest) {
           .map((r) => {
             const h = r.analysis?.healthScore;
             const line =
-              typeof h === "number" ? formatWebDocScoreWithBand(h) : `WebDoc Score: ${String(h ?? "Unknown")}`;
+              typeof h === "number" ? formatWebDocScoreWithBand(h) : `Weavn Score: ${String(h ?? "Unknown")}`;
             return `- ${r.domain}: ${line}`;
           })
           .join("\n")}`

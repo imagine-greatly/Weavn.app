@@ -54,7 +54,7 @@ const ENTRIES: Entry[] = [
     date: 'JUN 3, 2026',
     tags: ['NEW', 'API'],
     title: 'Website Intelligence API — public launch',
-    body: 'webdoc is now available as a fully documented API. POST any URL, get back a structured conversion audit in JSON.',
+    body: 'Weavn is now available as a fully documented API. POST any URL, get back a structured conversion audit in JSON.',
     bullets: [
       'POST /api/v1/scan — single URL scan',
       'POST /api/v1/scan/batch — up to 10 URLs',
@@ -100,7 +100,7 @@ export default function ChangelogPage() {
           What&apos;s new.
         </h1>
         <p className="font-body text-base text-text-secondary">
-          Updates, improvements, and fixes to the webdoc API and dashboard.
+          Updates, improvements, and fixes to the Weavn API and dashboard.
         </p>
 
         <div className="mt-16">

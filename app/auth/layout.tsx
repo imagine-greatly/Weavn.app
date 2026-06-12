@@ -3,8 +3,8 @@ import { Suspense } from "react";
 import PageLoadSkeleton from "@/components/PageLoadSkeleton";
 
 export const metadata: Metadata = {
-  title: "Sign in — webdoc",
-  description: "Sign in to your webdoc account to access your conversion audit reports.",
+  title: "Sign in — Weavn",
+  description: "Sign in to your Weavn account to access your conversion audit reports.",
   robots: {
     index: false,
     follow: false,

@@ -30,7 +30,7 @@ export default function SharedReportPageBanner({ domain }: SharedReportPageBanne
           maxWidth: "min(100%, 52rem)",
         }}
       >
-        This is a shared WebDoc AI report for{" "}
+        This is a shared Weavn report for{" "}
         <span style={{ color: "rgba(0,200,255,0.95)" }}>{domain}</span>
       </p>
       <Link

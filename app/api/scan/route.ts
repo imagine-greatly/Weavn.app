@@ -539,9 +539,9 @@ export async function POST(req: NextRequest) {
         const criticalCount = typeof payload.criticalCount === 'number' ? payload.criticalCount : 0;
         const resend = new Resend(process.env.RESEND_API_KEY);
         await resend.emails.send({
-          from: 'devon@webdocai.com',
+          from: 'devon@weavn.app',
           to: userEmail,
-          subject: `Your webdocai diagnostic is ready — ${domain}`,
+          subject: `Your Weavn diagnostic is ready — ${domain}`,
           html: `
 <div style="background:#080C14;padding:32px 0;margin:0;font-family:'Space Mono','Courier New',monospace;">
 <div style="max-width:600px;margin:0 auto;background:#080C14;">
@@ -550,7 +550,7 @@ export async function POST(req: NextRequest) {
   <div style="padding:32px 40px 24px;border-bottom:1px solid rgba(0,200,255,0.15);">
     <div style="display:flex;align-items:center;gap:10px;">
       <div style="width:18px;height:18px;border:2px solid #00C8FF;position:relative;flex-shrink:0;"></div>
-      <span style="color:#00C8FF;font-size:13px;letter-spacing:0.18em;font-weight:600;">webdocai</span>
+      <span style="color:#00C8FF;font-size:13px;letter-spacing:0.18em;font-weight:600;">Weavn</span>
     </div>
   </div>
 
@@ -570,7 +570,7 @@ export async function POST(req: NextRequest) {
             <p style="color:#F0F4FF;font-size:14px;margin:0;">${domain}</p>
           </td>
           <td style="vertical-align:top;text-align:right;">
-            <p style="color:rgba(136,153,170,0.6);font-size:10px;letter-spacing:0.15em;margin:0 0 4px;">WEBDOC SCORE</p>
+            <p style="color:rgba(136,153,170,0.6);font-size:10px;letter-spacing:0.15em;margin:0 0 4px;">WEAVN SCORE</p>
             <p style="color:#FF2D2D;font-size:32px;font-weight:700;margin:0;line-height:1;">${payload.healthScore ?? 0}<span style="font-size:14px;color:rgba(136,153,170,0.5);">/100</span></p>
             <p style="color:#FF2D2D;font-size:9px;letter-spacing:0.15em;margin:4px 0 0;">${(payload.healthScore ?? 0) >= 70 ? 'NEEDS WORK' : (payload.healthScore ?? 0) >= 50 ? 'AT RISK' : 'CRITICAL RISK'}</p>
           </td>
@@ -610,10 +610,10 @@ export async function POST(req: NextRequest) {
     </div>
     ` : ''}
 
-    <p style="color:rgba(136,153,170,0.55);font-size:12px;line-height:1.8;margin:0 0 28px;">webdocai ran 264 diagnostic checks across 27 categories on <strong style="color:#F0F4FF;">${domain}</strong>. Full findings ranked by revenue impact, exact resolutions, and your growth blueprint are ready to view.</p>
+    <p style="color:rgba(136,153,170,0.55);font-size:12px;line-height:1.8;margin:0 0 28px;">Weavn ran 264 diagnostic checks across 27 categories on <strong style="color:#F0F4FF;">${domain}</strong>. Full findings ranked by revenue impact, exact resolutions, and your growth blueprint are ready to view.</p>
 
     <!-- CTA -->
-    <a href="https://webdocai.com/report/${domain}" style="display:inline-block;border:1px solid #00C8FF;color:#00C8FF;font-family:'Space Mono','Courier New',monospace;font-size:11px;letter-spacing:0.2em;text-transform:uppercase;padding:14px 32px;text-decoration:none;">VIEW YOUR REPORT →</a>
+    <a href="https://weavn.app/report/${domain}" style="display:inline-block;border:1px solid #00C8FF;color:#00C8FF;font-family:'Space Mono','Courier New',monospace;font-size:11px;letter-spacing:0.2em;text-transform:uppercase;padding:14px 32px;text-decoration:none;">VIEW YOUR REPORT →</a>
 
   </div>
 
@@ -621,8 +621,8 @@ export async function POST(req: NextRequest) {
   <div style="padding:20px 40px;border-top:1px solid rgba(0,200,255,0.1);">
     <table style="width:100%;border-collapse:collapse;">
       <tr>
-        <td style="color:rgba(136,153,170,0.35);font-size:10px;letter-spacing:0.1em;">webdocai · Conversion Intelligence</td>
-        <td style="text-align:right;color:rgba(136,153,170,0.35);font-size:10px;">devon@webdocai.com</td>
+        <td style="color:rgba(136,153,170,0.35);font-size:10px;letter-spacing:0.1em;">Weavn · Conversion Intelligence</td>
+        <td style="text-align:right;color:rgba(136,153,170,0.35);font-size:10px;">devon@weavn.app</td>
       </tr>
     </table>
   </div>

@@ -38,7 +38,7 @@ export default function SiteFooter() {
       <div style={{ position: 'absolute', bottom: 20, right: 20, width: 14, height: 14, borderBottom: '1px solid rgba(111,155,198,0.2)', borderRight: '1px solid rgba(111,155,198,0.2)' }} />
       <div className="mx-auto grid max-w-[1100px] gap-12 md:grid-cols-2 lg:grid-cols-3">
         <div>
-          <Link href="/" className="inline-flex items-center gap-2" aria-label="WebDoc home" style={{ textDecoration: "none" }}>
+          <Link href="/" className="inline-flex items-center gap-2" aria-label="Weavn home" style={{ textDecoration: "none" }}>
             <WebdocMark size={36} animated={false} />
             <span
               style={{
@@ -49,8 +49,8 @@ export default function SiteFooter() {
                 display: "flex",
               }}
             >
-              <span style={{ color: "var(--text-primary)" }}>webdoc</span>
-              <span style={{ color: "#6F9BC6" }}>ai</span>
+              <span style={{ color: "var(--text-primary)" }}>Weavn</span>
+              <span style={{ color: "#6F9BC6" }}></span>
             </span>
           </Link>
           <p className="mt-3 max-w-[260px] font-sans text-[14px] font-normal" style={{ color: "#8899AA" }}>
@@ -79,7 +79,7 @@ export default function SiteFooter() {
           <nav className="mt-3" aria-label="Legal">
             <FooterLink href="/terms">Terms of Service</FooterLink>
             <FooterLink href="#">Blog (coming soon)</FooterLink>
-            <FooterLink href="mailto:devon@webdocai.com">Support</FooterLink>
+            <FooterLink href="mailto:devon@weavn.app">Support</FooterLink>
           </nav>
         </div>
 
@@ -97,7 +97,7 @@ export default function SiteFooter() {
         style={{ marginTop: 0, paddingTop: 24 }}
       >
         <p className="font-mono text-[11px]" style={{ color: "#8899AA" }}>
-          © 2026 WebDoc AI. All rights reserved.
+          © 2026 Weavn. All rights reserved.
         </p>
       </div>
     </footer>

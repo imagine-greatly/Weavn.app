@@ -6,7 +6,7 @@ import { ScrollReveal } from "@/components/ScrollReveal";
 
 const FEATURES = [
   {
-    title: "WebDoc Score timeline",
+    title: "Weavn Score timeline",
     sub: "See exactly which resolutions moved the score — and by how much.",
   },
   {
@@ -213,7 +213,7 @@ function AiAdvisorMock() {
             className="animate-fade-up font-sans text-[13px] font-normal leading-[1.6]"
             style={{ color: "var(--text-secondary)" }}
           >
-            WebDoc Score increased 23 points since the prior diagnostic. Hero copy remains feature-led. Rescan after
+            Weavn Score increased 23 points since the prior diagnostic. Hero copy remains feature-led. Rescan after
             repositioning the above-fold CTA to measure delta.
             <span className="ml-0.5 inline-block h-3.5 w-px animate-pulse align-middle" style={{ background: "var(--cyan)" }} />
           </p>

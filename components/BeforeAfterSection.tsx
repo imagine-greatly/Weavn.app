@@ -128,7 +128,7 @@ export default function BeforeAfterSection() {
             className="font-headline mt-3 text-[52px] leading-tight"
             style={{ color: "var(--text-primary)" }}
           >
-            WebDoc Score after prioritized resolutions.
+            Weavn Score after prioritized resolutions.
           </h2>
         </ScrollReveal>
       </div>
@@ -348,7 +348,7 @@ export default function BeforeAfterSection() {
         className="font-body mx-auto mt-8 max-w-[840px] text-left"
         style={{ color: "var(--text-muted)" }}
       >
-        Composite illustration. Mean WebDoc Score delta across 200 archived scans.
+        Composite illustration. Mean Weavn Score delta across 200 archived scans.
       </p>
       </div>
     </section>

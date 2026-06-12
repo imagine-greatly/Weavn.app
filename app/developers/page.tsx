@@ -7,7 +7,7 @@ import { CodeBlock } from '@/components/ui/CodeBlock'
 
 // ── Data ──────────────────────────────────────────────────────────────────────
 
-const CURL_CODE = `curl -X POST https://webdocai.com/api/v1/scan \\
+const CURL_CODE = `curl -X POST https://api.weavn.app/v1/scan \\
   -H "Authorization: Bearer wdoc_live_••••" \\
   -H "Content-Type: application/json" \\
   -d '{"url": "https://your-site.com"}'`
@@ -284,7 +284,7 @@ const API_CARDS_DEF = [
     tier: 'ENTERPRISE', tierColor: '#8080c0',
     price: 'Custom', economy: 'from $0.11/scan · SLA', economyColor: '#6F9BC6',
     bestFor: 'Organizations requiring custom volume, SLA guarantees, and dedicated support.',
-    cta: 'TALK TO US →', ctaHref: 'mailto:hello@webdocai.com',
+    cta: 'TALK TO US →', ctaHref: 'mailto:hello@weavn.app',
     accentColor: 'rgba(255,255,255,0.12)', ctaBorderColor: 'rgba(157,140,255,0.45)', ctaColor: '#9D8CFF',
   },
 ]
@@ -329,7 +329,7 @@ function TabbedCode({ compact }: { compact?: boolean }) {
         {lang === 'curl' && (
           <pre style={preStyle}>
             <span style={{ color: '#00C8FF' }}>curl</span>{' -X POST \\\n'}
-            {'  https://webdocai.com/api/v1/scan \\\n'}
+            {'  https://api.weavn.app/v1/scan \\\n'}
             {'  -H '}<span style={{ color: '#8080c0' }}>&quot;Authorization: Bearer </span><span style={{ color: '#9D8CFF' }}>wdoc_live_••••</span><span style={{ color: '#8080c0' }}>&quot;</span>{' \\\n'}
             {'  -H '}<span style={{ color: '#8080c0' }}>&quot;Content-Type: application/json&quot;</span>{' \\\n'}
             {'  -d '}<span style={{ color: '#8080c0' }}>&apos;&#123;&quot;url&quot;: &quot;</span><span style={{ color: '#00C48C' }}>https://your-site.com</span><span style={{ color: '#8080c0' }}>&quot;&#125;&apos;</span>
@@ -338,7 +338,7 @@ function TabbedCode({ compact }: { compact?: boolean }) {
         {lang === 'node' && (
           <pre style={preStyle}>
             <span style={{ color: '#8080c0' }}>const</span>{' res = '}<span style={{ color: '#8080c0' }}>await</span>{' fetch(\n'}
-            {'  '}<span style={{ color: '#00C48C' }}>&apos;https://webdocai.com/api/v1/scan&apos;</span>{',\n  {\n'}
+            {'  '}<span style={{ color: '#00C48C' }}>&apos;https://api.weavn.app/v1/scan&apos;</span>{',\n  {\n'}
             {'    '}<span style={{ color: '#8080c0' }}>method</span>{': '}<span style={{ color: '#00C48C' }}>&apos;POST&apos;</span>{',\n'}
             {'    '}<span style={{ color: '#8080c0' }}>headers</span>{': {\n'}
             {'      '}<span style={{ color: '#8080c0' }}>&apos;Authorization&apos;</span>{': '}<span style={{ color: '#00C48C' }}>&apos;Bearer </span><span style={{ color: '#9D8CFF' }}>wdoc_live_••••</span><span style={{ color: '#00C48C' }}>&apos;</span>{',\n'}
@@ -350,7 +350,7 @@ function TabbedCode({ compact }: { compact?: boolean }) {
         {lang === 'python' && (
           <pre style={preStyle}>
             <span style={{ color: '#8080c0' }}>import</span>{' requests\n\n'}
-            {'resp = requests.post(\n  '}<span style={{ color: '#00C48C' }}>&apos;https://webdocai.com/api/v1/scan&apos;</span>{',\n'}
+            {'resp = requests.post(\n  '}<span style={{ color: '#00C48C' }}>&apos;https://api.weavn.app/v1/scan&apos;</span>{',\n'}
             {'  headers={'}<span style={{ color: '#8080c0' }}>&apos;Authorization&apos;</span>{': '}<span style={{ color: '#00C48C' }}>&apos;Bearer </span><span style={{ color: '#9D8CFF' }}>wdoc_live_••••</span><span style={{ color: '#00C48C' }}>&apos;</span>{'}, \n'}
             {'  json={'}<span style={{ color: '#8080c0' }}>&apos;url&apos;</span>{': '}<span style={{ color: '#00C48C' }}>&apos;https://your-site.com&apos;</span>{'}, \n)\n'}
             {'data = resp.json()'}
@@ -650,11 +650,10 @@ export default function DevelopersPage() {
             API
           </p>
           <h1 style={{ ...DISP, fontSize: 'clamp(36px, 5vw, 56px)', fontWeight: 700, letterSpacing: '-1.5px', color: '#E6E9EE', margin: '0 0 16px', lineHeight: 1.1 }}>
-            One endpoint. Structured output. Per scan.
+            One endpoint. Any URL. Instant intelligence.
           </h1>
           <p style={{ ...SANS, fontSize: 16, lineHeight: 1.65, color: '#9398A8', maxWidth: 600, margin: '0 auto 32px' }}>
-            POST any URL. 307 checks fire. Structured JSON returns in ~90 seconds.
-            The same engine that powers the dashboard — raw, unfiltered, ready to build with.
+            POST a URL, get a weave back. Structured JSON, percentile benchmarks, ranked fixes.
           </p>
 
           {/* Tabbed code block */}

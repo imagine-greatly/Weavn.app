@@ -140,7 +140,7 @@ export default function Navbar() {
       <Link
         href="/"
         className="group flex min-w-0 flex-1 items-center"
-        aria-label="WebDoc home"
+        aria-label="Weavn home"
         style={{ textDecoration: "none", color: "inherit", gap: "10px", cursor: "pointer" }}
       >
         <WebdocMark size={52} animated={false} />
@@ -153,8 +153,8 @@ export default function Navbar() {
             display: "flex",
           }}
         >
-          <span style={{ color: "#FFFFFF" }}>webdoc</span>
-          <span style={{ color: "#6F9BC6" }}>ai</span>
+          <span style={{ color: "#FFFFFF" }}>Weavn</span>
+          <span style={{ color: "#6F9BC6" }}></span>
         </span>
       </Link>
 

@@ -22,7 +22,7 @@ export default function WebhooksDocsPage() {
       <p style={{ fontFamily: SM, fontSize: 11, color: CYAN, letterSpacing: "0.2em", marginBottom: 12 }}>API REFERENCE</p>
       <h1 style={{ fontFamily: SG, fontSize: "clamp(28px, 4vw, 44px)", fontWeight: 800, color: TEXT, letterSpacing: "-1.2px", marginBottom: 24 }}>Webhooks</h1>
       <p style={{ fontFamily: SG, fontSize: 16, color: MUTED, lineHeight: 1.8, marginBottom: 48 }}>
-        Receive a POST request to your server when a scan completes. Each delivery is signed with HMAC-SHA256 so you can verify it came from webdoc.ai.
+        Receive a POST request to your server when a scan completes. Each delivery is signed with HMAC-SHA256 so you can verify it came from weavn.app.
       </p>
 
       {/* Events */}

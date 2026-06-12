@@ -87,8 +87,8 @@ const PAST_SCANS: PastScan[] = [
 ]
 
 const SCAN: ScanData = {
-  url:         'webdocai.com',
-  domain:      'webdocai.com',
+  url:         'weavn.app',
+  domain:      'weavn.app',
   site_type:   'B2B SAAS',
   scan_date:   'Jun 8, 2026',
   duration_ms: 87340,
@@ -239,7 +239,7 @@ export default function FounderDashboard() {
 
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: 12, background: 'rgba(255,255,255,0.02)', border: '0.5px solid rgba(255,255,255,0.08)', padding: '8px 14px', marginBottom: 16 }}>
               <span style={{ display: 'inline-block', width: 7, height: 7, borderRadius: '50%', background: T.jsonStr, flexShrink: 0 }} />
-              <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 12, color: T.inkSec }}>api.webdocai.com</span>
+              <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 12, color: T.inkSec }}>api.weavn.app</span>
               <span style={{ color: T.inkMuted }}>·</span>
               <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 12, color: T.jsonMetric }}>endpoint: /v1/scan</span>
             </div>

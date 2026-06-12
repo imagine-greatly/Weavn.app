@@ -19,7 +19,7 @@ const EXAMPLES = [
 const WEBDOC_API_KEY = process.env.WEBDOC_API_KEY
 
 async function enrichProspect(domain) {
-  const res = await fetch('https://webdocai.com/api/v1/scan', {
+  const res = await fetch('https://api.weavn.app/v1/scan', {
     method: 'POST',
     headers: {
       'Authorization': \`Bearer \${WEBDOC_API_KEY}\`,
@@ -75,7 +75,7 @@ const tools = [{
 
 async function handleToolCall(toolName, toolInput) {
   if (toolName === 'scan_website') {
-    const res = await fetch('https://webdocai.com/api/v1/scan', {
+    const res = await fetch('https://api.weavn.app/v1/scan', {
       method: 'POST',
       headers: {
         'Authorization': \`Bearer \${process.env.WEBDOC_API_KEY}\`,
@@ -109,7 +109,7 @@ if (response.stop_reason === 'tool_use') {
     code: `// n8n HTTP Request node configuration:
 {
   "method": "POST",
-  "url": "https://webdocai.com/api/v1/scan",
+  "url": "https://api.weavn.app/v1/scan",
   "authentication": "headerAuth",
   "headerAuth": {
     "name": "Authorization",
@@ -147,7 +147,7 @@ const WEBDOC_API_KEY = process.env.WEBDOC_API_KEY
 const CONCURRENCY = 3 // stay under rate limits
 
 async function scanUrl(url) {
-  const res = await fetch('https://webdocai.com/api/v1/scan', {
+  const res = await fetch('https://api.weavn.app/v1/scan', {
     method: 'POST',
     headers: {
       'Authorization': \`Bearer \${WEBDOC_API_KEY}\`,

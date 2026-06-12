@@ -32,19 +32,19 @@ const jetbrainsMono = JetBrains_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "webdoc — Website Intelligence API",
-    template: "%s | webdoc",
+    default: "Weavn — Website Intelligence API",
+    template: "%s | Weavn",
   },
   description: "The conversion audit API. 307 checks, ranked findings, AI-rewritten copy, and corpus benchmarks. One endpoint. ~90 seconds.",
-  metadataBase: new URL("https://webdocai.com"),
+  metadataBase: new URL("https://weavn.app"),
   openGraph: {
-    siteName: "webdoc",
+    siteName: "Weavn",
     type: "website",
     locale: "en_US",
   },
   twitter: {
     card: "summary_large_image",
-    creator: "@webdocai",
+    creator: "@weavnapp",
   },
   robots: {
     index: true,

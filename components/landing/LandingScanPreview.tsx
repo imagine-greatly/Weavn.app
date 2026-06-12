@@ -318,7 +318,7 @@ export default function LandingScanPreview() {
             className="mx-auto mt-3 font-mono text-[14px]"
             style={{ color: "#8899AA", lineHeight: 1.7, maxWidth: 440 }}
           >
-            WebDoc performs a full diagnostic pass — identifying every structural and behavioral flaw suppressing conversions across your site.
+            Weavn performs a full diagnostic pass — identifying every structural and behavioral flaw suppressing conversions across your site.
           </p>
         </ScrollReveal>
       </div>

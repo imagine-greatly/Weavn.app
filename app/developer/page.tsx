@@ -513,7 +513,7 @@ function DocsTab() {
       curl: (
         <>
           <span className="text-cyan-DEFAULT">curl</span>
-          <span className="text-text-tertiary">{' -X POST https://webdocai.com/api/v1/scan \\\n  -H "Authorization: Bearer '}</span>
+          <span className="text-text-tertiary">{' -X POST https://api.weavn.app/v1/scan \\\n  -H "Authorization: Bearer '}</span>
           <span className="text-score-high">wdoc_live_••••</span>
           <span className="text-text-tertiary">{'" \\\n  -d \'{"url": "'}</span>
           <span className="text-score-high">https://your-site.com</span>
@@ -528,7 +528,7 @@ function DocsTab() {
       curl: (
         <>
           <span className="text-cyan-DEFAULT">curl</span>
-          <span className="text-text-tertiary">{' -X POST https://webdocai.com/api/v1/scan/batch \\\n  -H "Authorization: Bearer '}</span>
+          <span className="text-text-tertiary">{' -X POST https://api.weavn.app/v1/scan/batch \\\n  -H "Authorization: Bearer '}</span>
           <span className="text-score-high">wdoc_live_••••</span>
           <span className="text-text-tertiary">{'" \\\n  -d \'{"urls": ["'}</span>
           <span className="text-score-high">https://site-a.com</span>
@@ -545,7 +545,7 @@ function DocsTab() {
       curl: (
         <>
           <span className="text-cyan-DEFAULT">curl</span>
-          <span className="text-text-tertiary">{' https://webdocai.com/api/v1/scans/'}</span>
+          <span className="text-text-tertiary">{' https://api.weavn.app/v1/scans/'}</span>
           <span className="text-score-high">scan_01HXYZ7K2M9N3P4Q</span>
           <span className="text-text-tertiary">{' \\\n  -H "Authorization: Bearer '}</span>
           <span className="text-score-high">wdoc_live_••••</span>
@@ -709,7 +709,7 @@ export default function DeveloperPortal() {
         {/* Logo */}
         <div className="px-6 py-5 border-b border-background-border">
           <Link href="/" className="font-display font-extrabold text-sm text-text-primary no-underline">
-            webdoc<span className="text-cyan-DEFAULT">.ai</span>
+            Weavn
           </Link>
         </div>
 

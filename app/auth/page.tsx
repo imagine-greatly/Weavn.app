@@ -338,7 +338,7 @@ function AuthPageContent() {
               <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
                 <WebdocMark size={48} animated={false} />
                 <span style={{ fontFamily: DISP, fontSize: 24, fontWeight: 600, color: "#E6E9EE", letterSpacing: "-0.5px" }}>
-                  webdoc<span style={{ color: C.blue }}>.ai</span>
+                  Weavn
                 </span>
               </div>
             </div>
@@ -351,7 +351,7 @@ function AuthPageContent() {
               </div>
 
               <p style={{ fontFamily: DISP, fontSize: 22, fontWeight: 600, color: "#E6E9EE", letterSpacing: "-0.3px", textAlign: "center", marginTop: 20, marginBottom: 0 }}>
-                webdoc<span style={{ color: C.blue }}>.ai</span>
+                Weavn
               </p>
               <p style={{ fontFamily: MONO, fontSize: 10, textTransform: "uppercase", letterSpacing: "0.2em", color: "rgba(111,155,198,0.5)", textAlign: "center", marginTop: 6, marginBottom: 0 }}>
                 CONVERSION INTELLIGENCE ENGINE
@@ -443,7 +443,7 @@ function AuthPageContent() {
             >
               <WebdocMark size={36} animated={false} />
               <span style={{ fontFamily: DISP, fontSize: 20, fontWeight: 600, color: "#E6E9EE" }}>
-                webdoc<span style={{ color: C.blue }}>.ai</span>
+                Weavn
               </span>
             </div>
 
@@ -475,7 +475,7 @@ function AuthPageContent() {
 
             {/* Heading */}
             <h1 style={{ fontFamily: DISP, fontSize: 28, fontWeight: 700, color: "#E6E9EE", margin: "0 0 28px", lineHeight: 1.1 }}>
-              {isCreate ? "Start scanning." : "Welcome back."}
+              {isCreate ? "Create your account." : "Welcome back."}
             </h1>
 
             {/* Pending domain context */}

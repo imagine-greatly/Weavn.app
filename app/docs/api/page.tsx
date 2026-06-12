@@ -58,11 +58,11 @@ const NAV_GROUPS: { label: string; items: { id: string; label: string }[] }[] = 
 
 const EX: Record<string, Record<Lang, string>> = {
   introduction: {
-    curl: `curl -X POST https://webdocai.com/api/v1/scan \\
+    curl: `curl -X POST https://api.weavn.app/v1/scan \\
   -H "Authorization: Bearer wdoc_live_••••" \\
   -H "Content-Type: application/json" \\
   -d '{"url": "https://yoursite.com"}'`,
-    node: `const res = await fetch('https://webdocai.com/api/v1/scan', {
+    node: `const res = await fetch('https://api.weavn.app/v1/scan', {
   method: 'POST',
   headers: {
     'Authorization': 'Bearer wdoc_live_••••',
@@ -74,7 +74,7 @@ const data = await res.json()`,
     python: `import requests
 
 res = requests.post(
-  'https://webdocai.com/api/v1/scan',
+  'https://api.weavn.app/v1/scan',
   headers={'Authorization': 'Bearer wdoc_live_••••'},
   json={'url': 'https://yoursite.com'}
 )
@@ -83,7 +83,7 @@ data = res.json()`,
   authentication: {
     curl: `# Include in every request
 curl -H "Authorization: Bearer wdoc_live_••••" \\
-  https://webdocai.com/api/v1/scans`,
+  https://api.weavn.app/v1/scans`,
     node: `const headers = {
   'Authorization': 'Bearer wdoc_live_••••',
   'Content-Type': 'application/json',
@@ -134,7 +134,7 @@ X-RateLimit-Reset: 1717200000
     time.sleep(retry)`,
   },
   'post-scan': {
-    curl: `curl -X POST https://webdocai.com/api/v1/scan \\
+    curl: `curl -X POST https://api.weavn.app/v1/scan \\
   -H "Authorization: Bearer wdoc_live_••••" \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -146,7 +146,7 @@ X-RateLimit-Reset: 1717200000
     "pages": ["/pricing", "/about"],
     "site_type": "saas"
   }'`,
-    node: `const res = await fetch('https://webdocai.com/api/v1/scan', {
+    node: `const res = await fetch('https://api.weavn.app/v1/scan', {
   method: 'POST',
   headers: {
     'Authorization': 'Bearer wdoc_live_••••',
@@ -165,7 +165,7 @@ const { scan_id, score, findings } = await res.json()`,
     python: `import requests
 
 res = requests.post(
-  'https://webdocai.com/api/v1/scan',
+  'https://api.weavn.app/v1/scan',
   headers={'Authorization': 'Bearer wdoc_live_••••'},
   json={
     'url': 'https://yoursite.com',
@@ -179,7 +179,7 @@ res = requests.post(
 data = res.json()`,
   },
   'post-scan-batch': {
-    curl: `curl -X POST https://webdocai.com/api/v1/scan/batch \\
+    curl: `curl -X POST https://api.weavn.app/v1/scan/batch \\
   -H "Authorization: Bearer wdoc_live_••••" \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -189,7 +189,7 @@ data = res.json()`,
     ],
     "webhook_url": "https://yourapp.com/webhooks/webdoc"
   }'`,
-    node: `const res = await fetch('https://webdocai.com/api/v1/scan/batch', {
+    node: `const res = await fetch('https://api.weavn.app/v1/scan/batch', {
   method: 'POST',
   headers: {
     'Authorization': 'Bearer wdoc_live_••••',
@@ -202,7 +202,7 @@ data = res.json()`,
 })
 const { batch_id, scan_ids } = await res.json()`,
     python: `res = requests.post(
-  'https://webdocai.com/api/v1/scan/batch',
+  'https://api.weavn.app/v1/scan/batch',
   headers={'Authorization': 'Bearer wdoc_live_••••'},
   json={
     'urls': ['https://site-a.com', 'https://site-b.com'],
@@ -214,49 +214,49 @@ print(data['batch_id'])`,
   },
   'get-scans': {
     curl: `# List recent scans
-curl "https://webdocai.com/api/v1/scans" \\
+curl "https://api.weavn.app/v1/scans" \\
   -H "Authorization: Bearer wdoc_live_••••"
 
 # Filter by domain, paginate
-curl "https://webdocai.com/api/v1/scans?limit=5&url=yoursite.com" \\
+curl "https://api.weavn.app/v1/scans?limit=5&url=yoursite.com" \\
   -H "Authorization: Bearer wdoc_live_••••"`,
     node: `const res = await fetch(
-  'https://webdocai.com/api/v1/scans?limit=20',
+  'https://api.weavn.app/v1/scans?limit=20',
   { headers: { 'Authorization': 'Bearer wdoc_live_••••' } }
 )
 const { scans, next_cursor } = await res.json()`,
     python: `res = requests.get(
-  'https://webdocai.com/api/v1/scans',
+  'https://api.weavn.app/v1/scans',
   headers={'Authorization': 'Bearer wdoc_live_••••'},
   params={'limit': 20}
 )
 data = res.json()`,
   },
   'get-scans-id': {
-    curl: `curl "https://webdocai.com/api/v1/scans/wdsc_abc123" \\
+    curl: `curl "https://api.weavn.app/v1/scans/wdsc_abc123" \\
   -H "Authorization: Bearer wdoc_live_••••"`,
     node: `const scanId = 'wdsc_abc123'
 const res = await fetch(
-  \`https://webdocai.com/api/v1/scans/\${scanId}\`,
+  \`https://api.weavn.app/v1/scans/\${scanId}\`,
   { headers: { 'Authorization': 'Bearer wdoc_live_••••' } }
 )
 const scan = await res.json()`,
     python: `scan_id = 'wdsc_abc123'
 res = requests.get(
-  f'https://webdocai.com/api/v1/scans/{scan_id}',
+  f'https://api.weavn.app/v1/scans/{scan_id}',
   headers={'Authorization': 'Bearer wdoc_live_••••'}
 )
 scan = res.json()`,
   },
   'post-webhooks': {
-    curl: `curl -X POST https://webdocai.com/api/v1/webhooks \\
+    curl: `curl -X POST https://api.weavn.app/v1/webhooks \\
   -H "Authorization: Bearer wdoc_live_••••" \\
   -H "Content-Type: application/json" \\
   -d '{
     "url": "https://yourapp.com/webhooks/webdoc",
     "events": ["scan.completed", "scan.failed"]
   }'`,
-    node: `const res = await fetch('https://webdocai.com/api/v1/webhooks', {
+    node: `const res = await fetch('https://api.weavn.app/v1/webhooks', {
   method: 'POST',
   headers: {
     'Authorization': 'Bearer wdoc_live_••••',
@@ -269,7 +269,7 @@ scan = res.json()`,
 })
 const { webhook_id } = await res.json()`,
     python: `res = requests.post(
-  'https://webdocai.com/api/v1/webhooks',
+  'https://api.weavn.app/v1/webhooks',
   headers={'Authorization': 'Bearer wdoc_live_••••'},
   json={
     'url': 'https://yourapp.com/webhooks/webdoc',
@@ -280,32 +280,32 @@ data = res.json()
 print(data['webhook_id'])`,
   },
   'get-webhooks': {
-    curl: `curl "https://webdocai.com/api/v1/webhooks" \\
+    curl: `curl "https://api.weavn.app/v1/webhooks" \\
   -H "Authorization: Bearer wdoc_live_••••"`,
     node: `const res = await fetch(
-  'https://webdocai.com/api/v1/webhooks',
+  'https://api.weavn.app/v1/webhooks',
   { headers: { 'Authorization': 'Bearer wdoc_live_••••' } }
 )
 const { webhooks } = await res.json()`,
     python: `res = requests.get(
-  'https://webdocai.com/api/v1/webhooks',
+  'https://api.weavn.app/v1/webhooks',
   headers={'Authorization': 'Bearer wdoc_live_••••'}
 )
 data = res.json()`,
   },
   'delete-webhooks-id': {
     curl: `curl -X DELETE \\
-  "https://webdocai.com/api/v1/webhooks/wh_abc123" \\
+  "https://api.weavn.app/v1/webhooks/wh_abc123" \\
   -H "Authorization: Bearer wdoc_live_••••"`,
     node: `await fetch(
-  'https://webdocai.com/api/v1/webhooks/wh_abc123',
+  'https://api.weavn.app/v1/webhooks/wh_abc123',
   {
     method: 'DELETE',
     headers: { 'Authorization': 'Bearer wdoc_live_••••' },
   }
 )`,
     python: `requests.delete(
-  'https://webdocai.com/api/v1/webhooks/wh_abc123',
+  'https://api.weavn.app/v1/webhooks/wh_abc123',
   headers={'Authorization': 'Bearer wdoc_live_••••'}
 )`,
   },
@@ -810,10 +810,10 @@ export default function ApiDocsPage() {
             <Label>OVERVIEW</Label>
             <H2>API Reference · v1</H2>
             <Body>
-              The webdoc API returns a structured conversion audit for any URL. POST a URL, get back a JSON object with a score, ranked findings, AI-rewritten copy, and industry benchmarks.
+              The Weavn API returns a structured conversion audit for any URL. POST a URL, get back a JSON object with a score, ranked findings, AI-rewritten copy, and industry benchmarks.
             </Body>
             <p style={{ fontFamily: MONO, fontSize: 11, color: T3, marginBottom: 8 }}>Base URL</p>
-            <Mono>https://webdocai.com/api/v1</Mono>
+            <Mono>https://api.weavn.app/v1</Mono>
           </section>
 
           <section id="authentication" style={SB}>

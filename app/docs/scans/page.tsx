@@ -24,7 +24,7 @@ export default function ScansDocsPage() {
 
       {/* List */}
       <div style={{ border: `1px solid ${BORDER}`, borderLeft: `3px solid ${CYAN}`, borderRadius: 4, padding: "16px 24px", marginBottom: 32, fontFamily: SM, fontSize: 13, color: MUTED }}>
-        <span style={{ color: "#22c55e" }}>GET</span> https://webdocai.com/api/v1/scans
+        <span style={{ color: "#22c55e" }}>GET</span> https://api.weavn.app/v1/scans
       </div>
       <p style={{ fontFamily: SG, fontSize: 15, color: MUTED, lineHeight: 1.7, marginBottom: 24 }}>List all scans made with your API key. Supports pagination.</p>
 
@@ -66,7 +66,7 @@ export default function ScansDocsPage() {
       {/* Single */}
       <div style={{ borderTop: `1px solid ${BORDER}`, paddingTop: 48, marginTop: 16 }}>
         <div style={{ border: `1px solid ${BORDER}`, borderLeft: `3px solid ${CYAN}`, borderRadius: 4, padding: "16px 24px", marginBottom: 32, fontFamily: SM, fontSize: 13, color: MUTED }}>
-          <span style={{ color: "#22c55e" }}>GET</span> https://webdocai.com/api/v1/scans/:id
+          <span style={{ color: "#22c55e" }}>GET</span> https://api.weavn.app/v1/scans/:id
         </div>
         <p style={{ fontFamily: SG, fontSize: 15, color: MUTED, lineHeight: 1.7, marginBottom: 24 }}>
           Retrieve a single scan by ID. Returns the same shape as POST /v1/scan. Returns 404 if the scan does not exist or belongs to a different API key.

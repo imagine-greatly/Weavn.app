@@ -164,8 +164,8 @@ const SHARED_SCAN_HISTORY: ScanHistoryEntry[] = [
 ]
 
 const SHARED_LINKS: ReportLink[] = [
-  { url: 'webdocai.com/r/a3x9f1', generated: 'Jun 3, 2026', active: true },
-  { url: 'webdocai.com/r/b2k8m4', generated: 'May 15, 2026', active: false },
+  { url: 'weavn.app/r/a3x9f1', generated: 'Jun 3, 2026', active: true },
+  { url: 'weavn.app/r/b2k8m4', generated: 'May 15, 2026', active: false },
 ]
 
 // ── Client data ───────────────────────────────────────────────────────────────
@@ -506,7 +506,7 @@ export default function AgencyDashboard() {
                     </button>
                   </div>
                   <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 10, color: T.inkMuted, textAlign: 'right' }}>
-                    Report link valid for 30 days · no webdoc branding
+                    Report link valid for 30 days · no Weavn branding
                   </div>
                 </div>
               </div>

@@ -14,7 +14,7 @@ type QuoteItem = {
 const QUOTES: QuoteItem[] = [
   {
     quote:
-      "webdoc flagged that my hero headline was talking about features, not outcomes. Changed one line. Bookings doubled in two weeks.",
+      "Weavn flagged that my hero headline was talking about features, not outcomes. Changed one line. Bookings doubled in two weeks.",
     name: "Alex M.",
     handle: "@alexship",
     initials: "AM",

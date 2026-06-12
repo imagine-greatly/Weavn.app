@@ -39,7 +39,7 @@ export default function ScanDocsPage() {
       <p style={{ fontFamily: SG, fontSize: 16, color: MUTED, marginBottom: 40 }}>Run a full conversion audit on any URL. Returns structured findings, copy rewrites, and growth blueprint.</p>
 
       <div style={{ border: `1px solid ${BORDER}`, borderLeft: `3px solid ${CYAN}`, borderRadius: 4, padding: "16px 24px", marginBottom: 40, fontFamily: SM, fontSize: 13, color: MUTED }}>
-        <span style={{ color: CYAN }}>POST</span> https://webdocai.com/api/v1/scan
+        <span style={{ color: CYAN }}>POST</span> https://api.weavn.app/v1/scan
       </div>
 
       <h2 style={{ fontFamily: SG, fontSize: 20, fontWeight: 700, color: TEXT, marginBottom: 16 }}>Request parameters</h2>

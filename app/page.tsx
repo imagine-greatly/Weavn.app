@@ -3,36 +3,36 @@ import Link from 'next/link'
 import WebdocMark from '@/components/ui/WebdocMark'
 
 export const metadata: Metadata = {
-  title: "webdoc — Website Intelligence, Delivered as an API",
+  title: "Weavn — Website Intelligence, Delivered as an API",
   description: "307 checks. One endpoint. Your site scored in 90 seconds. Paste any URL for a full conversion audit — ranked findings, AI-rewritten copy, and vertical benchmarks. Free to start.",
   openGraph: {
-    title: "webdoc — Website Intelligence, Delivered as an API",
+    title: "Weavn — Website Intelligence, Delivered as an API",
     description: "307 checks. One endpoint. 90 seconds. Conversion audit API for founders and developers.",
-    url: "https://webdocai.com",
-    siteName: "webdoc",
+    url: "https://weavn.app",
+    siteName: "Weavn",
     type: "website",
     images: [
       {
-        url: "https://webdocai.com/og/home.png",
+        url: "https://weavn.app/og/home.png",
         width: 1200,
         height: 630,
-        alt: "webdoc — scan engine fork showing founder and developer paths",
+        alt: "Weavn — scan engine fork showing founder and developer paths",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "webdoc — Website Intelligence, Delivered as an API",
+    title: "Weavn — Website Intelligence, Delivered as an API",
     description: "307 checks. One endpoint. 90 seconds. Free to start.",
-    images: ["https://webdocai.com/og/home.png"],
-    creator: "@webdocai",
+    images: ["https://weavn.app/og/home.png"],
+    creator: "@weavnapp",
   },
   robots: {
     index: true,
     follow: true,
   },
   alternates: {
-    canonical: "https://webdocai.com",
+    canonical: "https://weavn.app",
   },
 }
 
@@ -47,7 +47,7 @@ function NavBar() {
     <nav className="fixed top-0 left-0 right-0 z-50 h-[52px] bg-background-base/90 backdrop-blur-md border-b border-background-border flex items-center px-8">
       <div className="flex items-center gap-8 flex-1">
         <Link href="/" className="font-display font-extrabold text-base text-text-primary no-underline">
-          webdoc<span className="text-[#6F9BC6]">.ai</span>
+          Weavn<span className="text-[#6F9BC6]"></span>
         </Link>
         <div className="flex items-center gap-6">
           {['Pricing', 'Developers', 'Docs', 'Changelog'].map(link => (
@@ -165,7 +165,7 @@ function HeroForkSection() {
 
         {/* Subhead */}
         <p className="font-body text-lg text-text-secondary leading-relaxed text-center max-w-[600px] mx-auto mt-5 mb-0">
-          Paste any URL. Get a 0–100 score, ranked fixes, AI-rewritten copy, and vertical benchmarks.
+          POST any URL. Get a weave back in 90 seconds — a 0–100 score, ranked fixes, AI-rewritten copy, and percentile benchmarks.
         </p>
 
         {/* Scan-engine glyph */}
@@ -269,7 +269,7 @@ const OBJECTION_PAIR = [
   },
   {
     q: 'Why not just paste my URL into ChatGPT?',
-    a: 'A language model sees text you paste, not your live page. webdoc renders the full DOM in headless Chrome, reads above-the-fold layout, runs 307 structured checks, and returns ranked JSON — not a chat response.',
+    a: 'A language model sees text you paste, not your live page. Weavn renders the full DOM in headless Chrome, reads above-the-fold layout, runs 307 structured checks, and returns ranked JSON — not a chat response.',
     data: '307 checks · rendered DOM · not a chat response',
   },
 ]
@@ -298,7 +298,7 @@ function FooterSection() {
       <div className="max-w-[1280px] mx-auto px-8 py-12 grid grid-cols-4 gap-8">
         <div>
           <Link href="/" className="font-display font-extrabold text-base text-text-primary no-underline">
-            webdoc<span className="text-[#6F9BC6]">.ai</span>
+            Weavn<span className="text-[#6F9BC6]"></span>
           </Link>
           <p className="font-body text-sm text-text-secondary mt-3 max-w-xs leading-relaxed">
             The conversion audit API. 307 checks, ranked fixes, AI-rewritten copy. One endpoint.
@@ -332,7 +332,7 @@ function FooterSection() {
       </div>
       <div className="border-t border-background-border">
         <div className="max-w-[1280px] mx-auto px-8 py-5 flex justify-between items-center">
-          <span className="font-mono text-xs text-text-tertiary">© 2026 webdoc.ai</span>
+          <span className="font-mono text-xs text-text-tertiary">© 2026 Weavn</span>
           <span className="font-mono text-xs">
             <span className="text-ink-muted">Built in public by Devon Morrell · </span>
             <a

@@ -179,7 +179,7 @@ export default function LandingDiagnosticChecks() {
             className="font-sans text-[17px] leading-relaxed"
             style={{ color: "var(--text-secondary)" }}
           >
-            Every scan begins where your visitors do. Webdoc analyzes your
+            Every scan begins where your visitors do. Weavn analyzes your
             above-fold experience first — hero messaging, primary CTA
             placement, and trust architecture — because that&apos;s where
             conversion decisions are made. Critical structural failures

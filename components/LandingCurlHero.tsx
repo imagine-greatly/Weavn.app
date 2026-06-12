@@ -183,7 +183,7 @@ export default function LandingCurlHero() {
           <div className="wd-panel p-4 mt-8">
             <pre className="font-mono text-sm m-0 leading-relaxed whitespace-pre-wrap">
               <span className="text-cyan-DEFAULT">curl</span>
-              <span className="text-text-tertiary">{' -X POST https://webdocai.com/api/v1/scan \\\n  -H "Authorization: Bearer '}</span>
+              <span className="text-text-tertiary">{' -X POST https://api.weavn.app/v1/scan \\\n  -H "Authorization: Bearer '}</span>
               <span className="text-score-high">wdoc_live_••••</span>
               <span className="text-text-tertiary">{'" \\\n  -d \''}</span>
               <span className="text-text-tertiary">{'{"url": "'}</span>

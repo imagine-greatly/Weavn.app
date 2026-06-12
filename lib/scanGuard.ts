@@ -174,7 +174,7 @@ export function getBlockedMessage(): BlockedScanMessage {
   return {
     headline: "Diagnostic Unavailable for This Domain.",
     body:
-      "WebDoc's diagnostic engine is built for business websites. This domain is a globally recognized platform outside the scope of our diagnostic parameters — scanning it would consume excessive resources without producing actionable findings for a site owner.\n\nIf you own a business website, enter that URL to run a full conversion diagnostic.",
+      "Weavn's diagnostic engine is built for business websites. This domain is a globally recognized platform outside the scope of our diagnostic parameters — scanning it would consume excessive resources without producing actionable findings for a site owner.\n\nIf you own a business website, enter that URL to run a full conversion diagnostic.",
     ctaPrimary: "Run Diagnostic on My Site",
     ctaSecondary: "Contact Support",
   };

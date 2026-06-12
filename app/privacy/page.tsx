@@ -1,8 +1,8 @@
 import Link from "next/link";
 
 export const metadata = {
-  title: "Privacy Policy — WebDoc AI",
-  description: "How WebDoc AI collects, stores, and uses your data.",
+  title: "Privacy Policy — Weavn",
+  description: "How Weavn collects, stores, and uses your data.",
 };
 
 const MONO = "var(--font-jetbrains-mono), var(--font-space-mono), ui-monospace, monospace";
@@ -97,7 +97,7 @@ export default function PrivacyPage() {
               marginBottom: 16,
             }}
           >
-            WEBDOC AI · LEGAL DOCUMENT
+            WEAVN · LEGAL DOCUMENT
           </div>
           <h1
             style={{
@@ -128,10 +128,10 @@ export default function PrivacyPage() {
         {/* Intro */}
         <div style={{ marginBottom: 40 }}>
           <P>
-            WebDoc AI ("WebDoc," "we," "us," or "our") operates the website diagnostic and conversion
-            intelligence platform at webdocai. This Privacy Policy explains what information we
+            Weavn ("Weavn," "we," "us," or "our") operates the website diagnostic and conversion
+            intelligence platform at weavn.app. This Privacy Policy explains what information we
             collect, how we use it, and your rights with respect to that information. By using
-            WebDoc you agree to the practices described here.
+            Weavn you agree to the practices described here.
           </P>
         </div>
 
@@ -184,7 +184,7 @@ export default function PrivacyPage() {
 
         <Section title="Outreach Communications">
           <P>
-            WebDoc may send cold outreach emails to website owners whose sites have been scanned,
+            Weavn may send cold outreach emails to website owners whose sites have been scanned,
             based on publicly available contact information associated with those domains (such as
             WHOIS records or publicly listed contact pages). These communications may include
             diagnostic summaries or offers to view the full report for their website.
@@ -203,7 +203,7 @@ export default function PrivacyPage() {
           </P>
           <P>
             We may disclose information when required by law, court order, or to protect the
-            rights, property, or safety of WebDoc, our users, or others.
+            rights, property, or safety of Weavn, our users, or others.
           </P>
         </Section>
 
@@ -239,7 +239,7 @@ export default function PrivacyPage() {
         <Section title="Security">
           <P>
             We implement commercially reasonable technical and organizational measures to protect
-            your information. No transmission over the internet is fully secure; you use WebDoc at
+            your information. No transmission over the internet is fully secure; you use Weavn at
             your own risk.
           </P>
         </Section>
@@ -247,7 +247,7 @@ export default function PrivacyPage() {
         <Section title="Changes to This Policy">
           <P>
             We may update this Privacy Policy from time to time. Material changes will be
-            communicated via email or a notice on the platform. Continued use of WebDoc after
+            communicated via email or a notice on the platform. Continued use of Weavn after
             changes take effect constitutes acceptance of the updated policy.
           </P>
         </Section>
@@ -256,10 +256,10 @@ export default function PrivacyPage() {
           <P>
             Questions about this Privacy Policy or data requests can be sent to:{" "}
             <a
-              href="mailto:privacy@webdocai.com"
+              href="mailto:privacy@weavn.app"
               style={{ color: CY, textDecoration: "none", fontFamily: MONO, fontSize: 13 }}
             >
-              privacy@webdocai.com
+              privacy@weavn.app
             </a>
           </P>
         </Section>
@@ -280,8 +280,8 @@ export default function PrivacyPage() {
             gap: 8,
           }}
         >
-          <span>WEBDOC AI · PRIVACY POLICY</span>
-          <span>© {new Date().getFullYear()} WEBDOC AI</span>
+          <span>WEAVN · PRIVACY POLICY</span>
+          <span>© {new Date().getFullYear()} WEAVN</span>
         </div>
       </main>
     </div>

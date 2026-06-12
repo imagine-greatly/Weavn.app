@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import LandingFinalCTA from "@/components/landing/LandingFinalCTA";
 
 /**
- * Docs page — technical reference for the WebDoc AI diagnostic platform.
+ * Docs page — technical reference for the Weavn AI diagnostic platform.
  * Two-column: sticky sidebar + content. DESIGN_SYSTEM.md: typography, colors.
  */
 
@@ -15,7 +15,7 @@ const NAV: { section: string; items: { label: string; id: string }[] }[] = [
     section: "GETTING STARTED",
     items: [
       { label: "Running your first diagnostic", id: "getting-your-first-scan" },
-      { label: "WebDoc Score bands", id: "understanding-your-score" },
+      { label: "Weavn Score bands", id: "understanding-your-score" },
       { label: "Interpreting diagnostic findings", id: "reading-your-report" },
     ],
   },
@@ -40,7 +40,7 @@ const NAV: { section: string; items: { label: string; id: string }[] }[] = [
     items: [
       { label: "Recommended URLs", id: "best-urls-to-scan" },
       { label: "Site models", id: "site-types-explained" },
-      { label: "Moving the WebDoc Score", id: "improving-your-score" },
+      { label: "Moving the Weavn Score", id: "improving-your-score" },
     ],
   },
   {
@@ -66,49 +66,49 @@ const PRINCIPLES = [
   {
     name: "Loss Aversion",
     definition: "Losses weigh roughly twice as heavily as equivalent gains in decision-making.",
-    applies: "Deadline and scarcity copy tied to a real constraint increases commitment when paired with a clear offer. WebDoc scores whether loss framing appears at the decision point without contradicting evidence on the page.",
+    applies: "Deadline and scarcity copy tied to a real constraint increases commitment when paired with a clear offer. Weavn scores whether loss framing appears at the decision point without contradicting evidence on the page.",
     example: "Before: 'Get 20% off.' After: '20% off through Sunday — inventory closes at midnight UTC.'",
   },
   {
     name: "Social Proof",
     definition: "Observed peer behavior reduces uncertainty about the correct next step.",
-    applies: "Logos, counts, and testimonials belong adjacent to the primary CTA and inside the first viewport when the decision happens there. WebDoc checks density and placement, not vanity metrics alone.",
+    applies: "Logos, counts, and testimonials belong adjacent to the primary CTA and inside the first viewport when the decision happens there. Weavn checks density and placement, not vanity metrics alone.",
     example: "Before: Empty hero. After: 'In use by 2,400 teams' plus one named quote above the fold.",
   },
   {
     name: "Cognitive Load Theory",
     definition: "Working memory caps how many distinct claims a visitor can process per screen.",
-    applies: "Multiple competing headlines and CTAs split attention. WebDoc flags stacks that exceed a single primary claim plus one supporting line in the hero.",
+    applies: "Multiple competing headlines and CTAs split attention. Weavn flags stacks that exceed a single primary claim plus one supporting line in the hero.",
     example: "Before: Five headlines and three buttons. After: One headline, one supporting line, one primary CTA.",
   },
   {
     name: "The 8-Second Rule",
     definition: "Orientation completes or fails inside the first eight seconds of page load.",
-    applies: "The hero must state audience, offer, and next action without scrolling on desktop and primary mobile breakpoints. WebDoc flags feature-led, vague, or below-fold heroes.",
+    applies: "The hero must state audience, offer, and next action without scrolling on desktop and primary mobile breakpoints. Weavn flags feature-led, vague, or below-fold heroes.",
     example: "Before: 'We help businesses grow.' After: 'Diagnostic scan of your marketing site — URL in, ranked findings out in under two minutes.'",
   },
   {
     name: "Benefit vs Feature Psychology",
     definition: "Buyers select outcomes; specifications support the outcome claim.",
-    applies: "Feature-only heroes underperform outcome-led copy with one measurable promise. WebDoc compares headline semantics to the stated visitor job-to-be-done.",
+    applies: "Feature-only heroes underperform outcome-led copy with one measurable promise. Weavn compares headline semantics to the stated visitor job-to-be-done.",
     example: "Before: 'AI-powered analysis engine.' After: 'Ranked conversion suppressions with quoted evidence from your live pages.'",
   },
   {
     name: "Risk Reversal",
     definition: "Visible guarantees and exit terms raise willingness to commit.",
-    applies: "Refund, trial, and cancellation language should sit within one click of the primary CTA. WebDoc scores missing risk-reversal text where the CTA requests payment or signup.",
+    applies: "Refund, trial, and cancellation language should sit within one click of the primary CTA. Weavn scores missing risk-reversal text where the CTA requests payment or signup.",
     example: "Before: 'Buy now' with no policy link. After: 'Buy now — 30-day refund linked in the subline.'",
   },
   {
     name: "Authority Bias",
     definition: "Credentials and third-party validation transfer trust to the offer.",
-    applies: "Press, certifications, and leadership bios need placement before the commitment step. WebDoc checks for authority markers in the first two viewports on key templates.",
+    applies: "Press, certifications, and leadership bios need placement before the commitment step. Weavn checks for authority markers in the first two viewports on key templates.",
     example: "Before: No markers. After: 'Featured in TechCrunch' with founder credential line and photo.",
   },
   {
     name: "The Mere Exposure Effect",
     definition: "Repeated, consistent claims increase recall and preference.",
-    applies: "The core promise should recur at hero, mid-page, and pre-CTA anchors. WebDoc flags single-mention value props on long pages.",
+    applies: "The core promise should recur at hero, mid-page, and pre-CTA anchors. Weavn flags single-mention value props on long pages.",
     example: "Before: Testimonial only in footer. After: Same quote repeated beside the hero and above the primary CTA.",
   },
 ];
@@ -264,9 +264,9 @@ export default function DocsPage() {
             </div>
           </DocSection>
 
-          <DocSection id="understanding-your-score" title="WebDoc Score bands" visible={visibleIds.has("understanding-your-score")}>
+          <DocSection id="understanding-your-score" title="Weavn Score bands" visible={visibleIds.has("understanding-your-score")}>
             <p className="mb-6 font-sans text-[15px] leading-[1.8]" style={{ color: "var(--text-secondary)" }}>
-              WebDoc Score (0–100) aggregates conversion architecture health across revenue dimensions. Each band maps to expected suppression level.
+              Weavn Score (0–100) aggregates conversion architecture health across revenue dimensions. Each band maps to expected suppression level.
             </p>
             <div className="space-y-3">
               {SCORE_RANGES.map((r) => (
@@ -295,10 +295,10 @@ export default function DocsPage() {
               The diagnostic report orders content by revenue impact. Each block below maps to a UI region.
             </p>
             <h3 className="mb-2 max-w-[min(36rem,100%)] font-sans font-extrabold" style={{ color: "var(--text-primary)", fontWeight: 800, fontSize: "clamp(18px, 1.5vw, 22px)", lineHeight: 0.98, letterSpacing: "-0.5px" }}>
-              WebDoc Score ring
+              Weavn Score ring
             </h3>
             <p className="mb-6 font-sans text-[15px] leading-[1.8]" style={{ color: "var(--text-secondary)" }}>
-              The top ring is the composite WebDoc Score across all revenue dimensions. Track this number across rescans to measure architectural movement.
+              The top ring is the composite Weavn Score across all revenue dimensions. Track this number across rescans to measure architectural movement.
             </p>
             <h3 className="mb-2 max-w-[min(36rem,100%)] font-sans font-extrabold" style={{ color: "var(--text-primary)", fontWeight: 800, fontSize: "clamp(18px, 1.5vw, 22px)", lineHeight: 0.98, letterSpacing: "-0.5px" }}>
               Revenue dimension scores
@@ -343,7 +343,7 @@ export default function DocsPage() {
 
           <DocSection id="psychology-principles-explained" title="Principles cited in findings" visible={visibleIds.has("psychology-principles-explained")}>
             <p className="mb-8 font-sans text-[15px] leading-[1.8]" style={{ color: "var(--text-secondary)" }}>
-              WebDoc attaches a named principle to each finding. Below are the eight most frequent citations and how they surface in a diagnostic scan.
+              Weavn attaches a named principle to each finding. Below are the eight most frequent citations and how they surface in a diagnostic scan.
             </p>
             <div className="space-y-10">
               {PRINCIPLES.map((p) => (
@@ -392,7 +392,7 @@ export default function DocsPage() {
               Each card ships a concrete resolution. Paste into CMS or code, or hand the text to an editor as a scoped brief.
             </p>
             <p className="font-sans text-[15px] leading-[1.8]" style={{ color: "var(--text-secondary)" }}>
-              After deployment, run another diagnostic scan to refresh WebDoc Score and verify the finding clears. Pro retains history for trend comparison.
+              After deployment, run another diagnostic scan to refresh Weavn Score and verify the finding clears. Pro retains history for trend comparison.
             </p>
           </DocSection>
 
@@ -413,14 +413,14 @@ export default function DocsPage() {
 
           <DocSection id="site-types-explained" title="Site models" visible={visibleIds.has("site-types-explained")}>
             <p className="mb-6 font-sans text-[15px] leading-[1.8]" style={{ color: "var(--text-secondary)" }}>
-              WebDoc classifies ecommerce, SaaS, service, local, and content sites, then applies model-specific weights so checks stay comparable within the archetype.
+              Weavn classifies ecommerce, SaaS, service, local, and content sites, then applies model-specific weights so checks stay comparable within the archetype.
             </p>
             <p className="font-sans text-[15px] leading-[1.8]" style={{ color: "var(--text-secondary)" }}>
               No manual model selection is required; inference uses page signals. A misclassified model still returns valid findings; emphasis strings may shift slightly.
             </p>
           </DocSection>
 
-          <DocSection id="improving-your-score" title="Moving the WebDoc Score" visible={visibleIds.has("improving-your-score")}>
+          <DocSection id="improving-your-score" title="Moving the Weavn Score" visible={visibleIds.has("improving-your-score")}>
             <p className="mb-6 font-sans text-[15px] leading-[1.8]" style={{ color: "var(--text-secondary)" }}>
               Close Critical cards, then High. Rescan after each batch. Ten- to twenty-point moves are common once the top three to five findings ship.
             </p>
@@ -431,7 +431,7 @@ export default function DocsPage() {
 
           <DocSection id="scan-history" title="Scan history" visible={visibleIds.has("scan-history")}>
             <p className="font-sans text-[15px] leading-[1.8]" style={{ color: "var(--text-secondary)" }}>
-              Pro lists every past diagnostic scan and reopens prior reports. Compare WebDoc Score before and after resolution batches.
+              Pro lists every past diagnostic scan and reopens prior reports. Compare Weavn Score before and after resolution batches.
             </p>
           </DocSection>
 

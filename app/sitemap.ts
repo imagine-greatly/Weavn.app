@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 
-const BASE = "https://webdocai.com";
+const BASE = "https://weavn.app";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   return [

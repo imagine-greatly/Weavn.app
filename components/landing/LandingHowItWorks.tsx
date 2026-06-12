@@ -104,7 +104,7 @@ const STEPS = [
   {
     n: "01",
     title: "Submit your URL",
-    body: "Enter your website URL. WebDoc ingests your landing page and up to two additional subpages (Pro) — extracting headlines, CTAs, trust signals, conversion architecture, and structural markers across every revenue dimension.",
+    body: "Enter your website URL. Weavn ingests your landing page and up to two additional subpages (Pro) — extracting headlines, CTAs, trust signals, conversion architecture, and structural markers across every revenue dimension.",
     tag: "MULTI-PAGE INGESTION",
   },
   {
@@ -116,7 +116,7 @@ const STEPS = [
   {
     n: "03",
     title: "Ranked findings. Exact resolutions.",
-    body: "You receive a full diagnostic report: WebDoc Score, every finding with evidence and revenue impact, three-tier resolution protocol, benchmark comparisons, origin analysis, and a Growth Blueprint — ranked by revenue impact.",
+    body: "You receive a full diagnostic report: Weavn Score, every finding with evidence and revenue impact, three-tier resolution protocol, benchmark comparisons, origin analysis, and a Growth Blueprint — ranked by revenue impact.",
     tag: "RANKED BY REVENUE IMPACT",
   },
 ];

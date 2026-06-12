@@ -96,7 +96,7 @@ export default function LandingCorpusStats() {
             Not an average. A percentile.
           </h2>
           <p style={{ ...SANS, fontSize: 15, color: '#9398A8', lineHeight: 1.65, margin: 0 }}>
-            Every score is positioned against real sites in your exact vertical — not a generic industry average. B2B SaaS vs B2B SaaS. Ecommerce vs ecommerce. The corpus grows with every scan.
+            Every site is ranked against hundreds of thousands of real scans. You don't get a score — you get a position.
           </p>
         </motion.div>
 

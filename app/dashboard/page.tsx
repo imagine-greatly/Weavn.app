@@ -1094,7 +1094,7 @@ const OBJECTIONS: ObjectionCard[] = [
   },
   {
     q: 'Why not just paste my URL into ChatGPT?',
-    a: "A language model sees the text you paste, not your live page. webdoc renders the full DOM in headless Chrome, reads your above-the-fold layout, measures element positions, runs 307 structured checks against conversion best practices, and returns ranked output with estimated lift numbers. ChatGPT returns a chat response. This returns a report.",
+    a: "A language model sees the text you paste, not your live page. Weavn renders the full DOM in headless Chrome, reads your above-the-fold layout, measures element positions, runs 307 structured checks against conversion best practices, and returns ranked output with estimated lift numbers. ChatGPT returns a chat response. This returns a report.",
     tag: '307 checks · rendered DOM · ranked output · not a chat response',
   },
   {
@@ -1104,7 +1104,7 @@ const OBJECTIONS: ObjectionCard[] = [
   },
   {
     q: "Will it work on my site? It's built on Webflow / Squarespace / Framer.",
-    a: "webdoc renders your live page in headless Chrome — it sees what a browser sees, not your CMS. Webflow, Squarespace, Framer, Shopify, WordPress, Next.js, custom stacks — if it's publicly accessible and loads in a browser, we can scan it. The only sites we can't scan are ones behind a login wall or that actively block automated access.",
+    a: "Weavn renders your live page in headless Chrome — it sees what a browser sees, not your CMS. Webflow, Squarespace, Framer, Shopify, WordPress, Next.js, custom stacks — if it's publicly accessible and loads in a browser, we can scan it. The only sites we can't scan are ones behind a login wall or that actively block automated access.",
     tag: 'renders in headless chrome · stack-agnostic · publicly accessible pages only',
   },
   {
@@ -1234,7 +1234,7 @@ function MultiSiteSection() {
           Run client audits. Deliver branded reports. Track every site.
         </h2>
         <p style={{ ...SANS, fontSize: 15, color: INK_SEC, lineHeight: 1.65, maxWidth: 600, margin: '0 0 40px' }}>
-          The Agency plan turns webdoc into a client-facing audit tool. Scan any site, deliver a white-label report under your brand, and track score history per client — all from one dashboard.
+          The Agency plan turns Weavn into a client-facing audit tool. Scan any site, deliver a white-label report under your brand, and track score history per client — all from one dashboard.
         </p>
 
         {/* White-label report mock — STATIC ILLUSTRATION */}
@@ -1306,13 +1306,13 @@ function MultiSiteSection() {
           {/* Report footer */}
           <div style={{ display:'flex', justifyContent:'space-between', padding:'16px 32px', borderTop:'1px solid rgba(157,140,255,0.08)', background:'rgba(157,140,255,0.02)', flexWrap:'wrap', gap:8 }}>
             <p style={{ ...MONO, fontSize:9, color:INK_MUT, margin:0 }}>ACME AGENCY · Conversion Intelligence</p>
-            <p style={{ ...MONO, fontSize:9, color:INK_MUT, margin:0 }}>Powered by webdoc · 307 checks · verified findings</p>
+            <p style={{ ...MONO, fontSize:9, color:INK_MUT, margin:0 }}>Powered by Weavn · 307 checks · verified findings</p>
             <p style={{ ...MONO, fontSize:9, color:INK_MUT, margin:0 }}>CONFIDENTIAL · acme-client.com</p>
           </div>
         </div>
 
         <p style={{ ...SANS, fontSize:13, color:INK_MUT, textAlign:'center', margin:'0 0 40px', fontStyle:'italic', lineHeight:1.6 }}>
-          This is what your client receives. Your name, your branding. webdoc never appears in the deliverable.
+          This is what your client receives. Your name, your branding. Weavn never appears in the deliverable.
         </p>
 
         {/* Capability grid */}

@@ -833,6 +833,39 @@ export default function DevelopersPage() {
             </p>
           </div>
 
+          {/* ── CHECK CATEGORIES ────────────────────────────────────────── */}
+          <div style={{ marginTop: 24 }}>
+            <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.18em', color: '#6E7587', margin: '0 0 10px' }}>
+              CHECK CATEGORIES · 27 GROUPS · 307 CHECKS
+            </p>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+              {[
+                'Hero Section', 'Trust & Credibility', 'CTA & Conversion', 'Messaging & Clarity',
+                'Social Proof', 'SEO & Metadata', 'Offer & Pricing', 'Offer Clarity',
+                'Objection Handling', 'Psychology & Persuasion', 'Specificity & Claim Quality',
+                'Competitive Differentiation', 'Navigation & UX', 'Mobile Experience',
+                'Page Speed & Technical', 'Narrative Flow', 'Page & Content Gaps',
+                'Conversion Path Expansion', 'Return Visitor & Retention', 'Email & Retention',
+                'Checkout & Purchase Friction', 'Product Page', 'E-commerce Specific',
+                'SaaS-Specific', 'Agency & Service', 'Accessibility & Inclusion',
+                'Universal & Cross-Vertical',
+              ].map(cat => (
+                <span
+                  key={cat}
+                  style={{
+                    ...MONO, fontSize: 10, color: '#6E7587',
+                    background: '#0A0E18',
+                    border: '0.5px solid rgba(255,255,255,0.07)',
+                    padding: '4px 8px',
+                  }}
+                >{cat}</span>
+              ))}
+            </div>
+            <p style={{ ...MONO, fontSize: 10, color: '#404860', margin: '10px 0 0' }}>
+              Category prefix visible in strengths[*].check_id — e.g. HERO_001, TRUST_013, CTA_016.
+            </p>
+          </div>
+
           {/* Error contract */}
           <div style={{ marginTop: 32 }}>
             <p style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.18em', color: '#8080c0', margin: '0 0 16px' }}>ERROR CONTRACT</p>

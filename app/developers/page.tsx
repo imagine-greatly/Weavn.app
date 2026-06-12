@@ -748,6 +748,36 @@ export default function DevelopersPage() {
       </section>
       <div className="section-separator" />
 
+      {/* ── 1a. ORIENTATION — plain-English on-ramp ─────────────────────────── */}
+      <section style={{ position: 'relative', overflow: 'hidden' }}>
+        <Ticks />
+        <div style={{ position: 'relative', zIndex: 1, maxWidth: 896, margin: '0 auto', padding: '64px 32px 56px' }}>
+          <p style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.2em', color: '#8080c0', margin: '0 0 16px' }}>
+            START HERE
+          </p>
+          <h2 style={{ ...DISP, fontSize: 'clamp(26px, 3.5vw, 38px)', fontWeight: 700, letterSpacing: '-0.5px', color: '#E6E9EE', margin: '0 0 16px', lineHeight: 1.15 }}>
+            You give us a URL. We give you structured data back.
+          </h2>
+          <p style={{ ...SANS, fontSize: 15, lineHeight: 1.7, color: '#9398A8', maxWidth: 680, margin: '0 0 14px' }}>
+            POST any web page and get conversion intelligence back as JSON: a 0&ndash;100 score, ranked findings with the on-page evidence behind each one, suggested fixes with rewritten copy, and percentile benchmarks for the site&apos;s vertical.
+          </p>
+          <p style={{ ...SANS, fontSize: 15, lineHeight: 1.7, color: '#9398A8', maxWidth: 680, margin: '0 0 14px' }}>
+            Drop that data into whatever you&apos;re building &mdash; a Shopify app, a CRM feature, a site builder, an AI agent, or your own dashboard. The response has the same structure on every call, so you build against it once and never revisit it.
+          </p>
+
+          {/* Build-into-anything chips */}
+          <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 8, marginTop: 24 }}>
+            <span style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.18em', color: '#6E7587', marginRight: 4 }}>BUILD INTO ANYTHING</span>
+            {['Shopify app', 'CRM widget', 'AI agent'].map(chip => (
+              <span key={chip} style={{ ...MONO, fontSize: 11, color: '#9D8CFF', background: 'rgba(157,140,255,0.06)', border: '0.5px solid rgba(157,140,255,0.28)', padding: '5px 12px' }}>
+                {chip}
+              </span>
+            ))}
+          </div>
+        </div>
+      </section>
+      <div className="section-separator" />
+
       {/* ── 1b. HOW THE ENGINE WORKS — INPUT / PROCESSING / OUTPUT ───────────── */}
       <HowItWorksSection />
       <div className="section-separator" />

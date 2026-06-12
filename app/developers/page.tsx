@@ -289,6 +289,78 @@ const API_CARDS_DEF = [
   },
 ]
 
+// ── Tabbed code block: curl / Node / Python ───────────────────────────────────
+
+function TabbedCode({ compact }: { compact?: boolean }) {
+  const [lang, setLang] = useState<'curl' | 'node' | 'python'>('curl')
+  const fs = compact ? 11 : 12
+  const preStyle: React.CSSProperties = {
+    fontFamily: '"IBM Plex Mono", monospace',
+    fontSize: fs, lineHeight: 1.85, margin: 0,
+    color: '#9398A8', whiteSpace: 'pre-wrap', wordBreak: 'break-all',
+  }
+  const TABS = [
+    { id: 'curl' as const, label: 'curl' },
+    { id: 'node' as const, label: 'Node' },
+    { id: 'python' as const, label: 'Python' },
+  ]
+  return (
+    <div>
+      <div style={{ display: 'flex', borderBottom: '0.5px solid rgba(157,140,255,0.15)' }}>
+        {TABS.map(t => (
+          <button
+            key={t.id}
+            onClick={() => setLang(t.id)}
+            style={{
+              fontFamily: '"IBM Plex Mono", monospace',
+              fontSize: 10, textTransform: 'uppercase' as const,
+              letterSpacing: '0.1em', padding: compact ? '6px 10px' : '7px 14px',
+              background: 'transparent', border: 'none',
+              borderBottom: `1.5px solid ${lang === t.id ? '#9D8CFF' : 'transparent'}`,
+              color: lang === t.id ? '#9D8CFF' : '#6E7587',
+              cursor: 'pointer', marginBottom: -1, transition: 'color 0.1s',
+            }}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+      <div style={{ padding: compact ? '12px 14px' : '14px 16px' }}>
+        {lang === 'curl' && (
+          <pre style={preStyle}>
+            <span style={{ color: '#00C8FF' }}>curl</span>{' -X POST \\\n'}
+            {'  https://webdocai.com/api/v1/scan \\\n'}
+            {'  -H '}<span style={{ color: '#8080c0' }}>&quot;Authorization: Bearer </span><span style={{ color: '#9D8CFF' }}>wdoc_live_••••</span><span style={{ color: '#8080c0' }}>&quot;</span>{' \\\n'}
+            {'  -H '}<span style={{ color: '#8080c0' }}>&quot;Content-Type: application/json&quot;</span>{' \\\n'}
+            {'  -d '}<span style={{ color: '#8080c0' }}>&apos;&#123;&quot;url&quot;: &quot;</span><span style={{ color: '#00C48C' }}>https://your-site.com</span><span style={{ color: '#8080c0' }}>&quot;&#125;&apos;</span>
+          </pre>
+        )}
+        {lang === 'node' && (
+          <pre style={preStyle}>
+            <span style={{ color: '#8080c0' }}>const</span>{' res = '}<span style={{ color: '#8080c0' }}>await</span>{' fetch(\n'}
+            {'  '}<span style={{ color: '#00C48C' }}>&apos;https://webdocai.com/api/v1/scan&apos;</span>{',\n  {\n'}
+            {'    '}<span style={{ color: '#8080c0' }}>method</span>{': '}<span style={{ color: '#00C48C' }}>&apos;POST&apos;</span>{',\n'}
+            {'    '}<span style={{ color: '#8080c0' }}>headers</span>{': {\n'}
+            {'      '}<span style={{ color: '#8080c0' }}>&apos;Authorization&apos;</span>{': '}<span style={{ color: '#00C48C' }}>&apos;Bearer </span><span style={{ color: '#9D8CFF' }}>wdoc_live_••••</span><span style={{ color: '#00C48C' }}>&apos;</span>{',\n'}
+            {'      '}<span style={{ color: '#8080c0' }}>&apos;Content-Type&apos;</span>{': '}<span style={{ color: '#00C48C' }}>&apos;application/json&apos;</span>{',\n'}
+            {'    },\n    '}<span style={{ color: '#8080c0' }}>body</span>{': JSON.stringify({ '}<span style={{ color: '#8080c0' }}>url</span>{': '}<span style={{ color: '#00C48C' }}>&apos;https://your-site.com&apos;</span>{' }),\n  },\n)\n'}
+            <span style={{ color: '#8080c0' }}>const</span>{' data = '}<span style={{ color: '#8080c0' }}>await</span>{' res.json()'}
+          </pre>
+        )}
+        {lang === 'python' && (
+          <pre style={preStyle}>
+            <span style={{ color: '#8080c0' }}>import</span>{' requests\n\n'}
+            {'resp = requests.post(\n  '}<span style={{ color: '#00C48C' }}>&apos;https://webdocai.com/api/v1/scan&apos;</span>{',\n'}
+            {'  headers={'}<span style={{ color: '#8080c0' }}>&apos;Authorization&apos;</span>{': '}<span style={{ color: '#00C48C' }}>&apos;Bearer </span><span style={{ color: '#9D8CFF' }}>wdoc_live_••••</span><span style={{ color: '#00C48C' }}>&apos;</span>{'}, \n'}
+            {'  json={'}<span style={{ color: '#8080c0' }}>&apos;url&apos;</span>{': '}<span style={{ color: '#00C48C' }}>&apos;https://your-site.com&apos;</span>{'}, \n)\n'}
+            {'data = resp.json()'}
+          </pre>
+        )}
+      </div>
+    </div>
+  )
+}
+
 // ── Three-panel pipeline (INPUT / PROCESSING / OUTPUT) ───────────────────────
 
 const HIW_SCAN_CATS = [
@@ -410,14 +482,8 @@ function HowItWorksSection() {
               <span style={{ width: 6, height: 6, background: '#00C48C', display: 'inline-block', flexShrink: 0 }} />
               <span style={{ ...MONO, fontSize: 10, color: '#6E7587', textTransform: 'uppercase', letterSpacing: '0.15em' }}>terminal · curl</span>
             </div>
-            <div style={{ padding: '16px', flexGrow: 1, position: 'relative', zIndex: 2 }}>
-              <pre style={{ ...MONO, fontSize: 12, lineHeight: 1.85, margin: 0, color: '#9398A8', whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>
-                <span style={{ color: '#00C8FF' }}>curl</span>{' -X POST \\\n'}
-                {'  https://webdocai.com/api/v1/scan \\\n'}
-                {'  -H '}<span style={{ color: '#8080c0' }}>&quot;Authorization: Bearer </span><span style={{ color: '#E8635F' }}>wdoc_live_••••</span><span style={{ color: '#8080c0' }}>&quot;</span>{' \\\n'}
-                {'  -d '}<span style={{ color: '#8080c0' }}>&apos;&#123;&quot;url&quot;: &quot;</span><span style={{ color: '#00C48C' }}>https://your-site.com</span><span style={{ color: '#8080c0' }}>&quot;&#125;&apos;</span>
-                <span className="hiw-cursor" style={{ display: 'inline-block', width: 7, height: 13, background: '#6F9BC6', verticalAlign: 'text-bottom', marginLeft: 3, animation: 'hiw-cursor-blink 1s step-end infinite' }} />
-              </pre>
+            <div style={{ flexGrow: 1, position: 'relative', zIndex: 2, overflow: 'hidden' }}>
+              <TabbedCode compact />
             </div>
             <div style={{ padding: '0 14px 14px', display: 'flex', gap: 6, flexWrap: 'wrap', position: 'relative', zIndex: 2 }}>
               {[{ l: '307 checks', c: '#00C48C' }, { l: '27 categories', c: '#6F9BC6' }, { l: '~90s median', c: '#6E7587' }].map(x => (
@@ -545,7 +611,7 @@ export default function DevelopersPage() {
             The same engine that powers the dashboard — raw, unfiltered, ready to build with.
           </p>
 
-          {/* Curl block */}
+          {/* Tabbed code block */}
           <div style={{
             maxWidth: 672, margin: '0 auto 24px',
             borderTop: '1px solid rgba(157,140,255,0.35)',
@@ -553,11 +619,10 @@ export default function DevelopersPage() {
             borderRight: '1px solid rgba(157,140,255,0.08)',
             borderBottom: '1px solid rgba(157,140,255,0.05)',
             boxShadow: '0 0 0 1px rgba(157,140,255,0.15), 0 0 40px rgba(157,140,255,0.08)',
+            background: '#080D18',
             position: 'relative', overflow: 'hidden',
           }}>
-            <div style={{ position: 'relative', zIndex: 1 }}>
-              <CodeBlock code={CURL_CODE} language="bash" />
-            </div>
+            <TabbedCode />
           </div>
 
           {/* Stat pills */}

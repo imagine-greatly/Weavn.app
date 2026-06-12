@@ -854,23 +854,36 @@ function StepAnim({ idx }: { idx: number }) {
     </div>
   )
   if (idx === 1) return (
-    <div style={{ marginTop: 12, position: 'relative', width: 160, height: 80, border: '1px solid rgba(111,155,198,0.2)', overflow: 'hidden' }}>
-      <div style={{ position: 'absolute', top: 12, left: 10, width: '70%', height: 5, background: 'rgba(111,155,198,0.12)' }} />
-      <div style={{ position: 'absolute', top: 24, left: 10, width: '85%', height: 4, background: 'rgba(111,155,198,0.07)' }} />
-      <div style={{ position: 'absolute', top: 36, left: 10, width: '55%', height: 4, background: 'rgba(111,155,198,0.07)' }} />
-      <div className="pl-scan" style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 1, background: 'rgba(111,155,198,0.45)' }} />
+    <div style={{ marginTop: 12, display: 'flex', justifyContent: 'center' }}>
+      <div style={{ position: 'relative', width: 260, height: 120, border: '1px solid rgba(111,155,198,0.2)', overflow: 'hidden' }}>
+        {/* Browser chrome strip */}
+        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 16, borderBottom: '0.5px solid rgba(111,155,198,0.12)', display: 'flex', alignItems: 'center', padding: '0 8px' }}>
+          <div style={{ flex: 1, height: 5, background: 'rgba(111,155,198,0.07)' }} />
+        </div>
+        {/* Page skeleton */}
+        <div style={{ position: 'absolute', top: 26, left: 12, width: '62%', height: 6, background: 'rgba(111,155,198,0.14)' }} />
+        <div style={{ position: 'absolute', top: 38, left: 12, width: '80%', height: 4, background: 'rgba(111,155,198,0.07)' }} />
+        <div style={{ position: 'absolute', top: 48, left: 12, width: '52%', height: 4, background: 'rgba(111,155,198,0.07)' }} />
+        <div style={{ position: 'absolute', top: 62, left: 12, right: 12, height: 1, background: 'rgba(111,155,198,0.08)' }} />
+        <div style={{ position: 'absolute', top: 71, left: 12, width: '70%', height: 4, background: 'rgba(111,155,198,0.05)' }} />
+        <div style={{ position: 'absolute', top: 81, left: 12, width: '55%', height: 4, background: 'rgba(111,155,198,0.05)' }} />
+        <div style={{ position: 'absolute', top: 95, left: 12, width: '42%', height: 4, background: 'rgba(111,155,198,0.04)' }} />
+        <div className="pl-scan" style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 1, background: 'rgba(111,155,198,0.45)' }} />
+      </div>
     </div>
   )
   if (idx === 2) return (
-    <div style={{ marginTop: 12, display: 'grid', gridTemplateColumns: 'repeat(6, 8px)', gap: 4 }}>
-      {Array.from({ length: 30 }).map((_, si) => (
-        <div key={si} className="pl-check" style={{
-          width: 8, height: 8,
-          background: 'rgba(111,155,198,0.15)',
-          animationDelay: `${si * 0.067}s`,
-          '--target-bg': PIPELINE_FAIL.has(si) ? 'rgba(232,99,95,0.7)' : 'rgba(0,196,140,0.7)',
-        } as React.CSSProperties} />
-      ))}
+    <div style={{ marginTop: 12, display: 'flex', justifyContent: 'center' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 14px)', gap: 6 }}>
+        {Array.from({ length: 30 }).map((_, si) => (
+          <div key={si} className="pl-check" style={{
+            width: 14, height: 14,
+            background: 'rgba(111,155,198,0.15)',
+            animationDelay: `${si * 0.067}s`,
+            '--target-bg': PIPELINE_FAIL.has(si) ? 'rgba(232,99,95,0.7)' : 'rgba(0,196,140,0.7)',
+          } as React.CSSProperties} />
+        ))}
+      </div>
     </div>
   )
   if (idx === 3) return (
@@ -880,9 +893,9 @@ function StepAnim({ idx }: { idx: number }) {
         { label: 'P2', w: '70%', c: 'rgba(239,178,62,0.7)' },
         { label: 'P3', w: '55%', c: 'rgba(239,178,62,0.7)' },
       ].map((b, bi) => (
-        <div key={bi} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-          <span style={{ ...MONO, fontSize: 9, color: INK_MUT, width: 16, flexShrink: 0 }}>{b.label}</span>
-          <div style={{ flex: 1, height: 6, background: 'rgba(111,155,198,0.08)' }}>
+        <div key={bi} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: bi < 2 ? 10 : 0 }}>
+          <span style={{ ...MONO, fontSize: 9, color: INK_MUT, width: 24, flexShrink: 0 }}>{b.label}</span>
+          <div style={{ flex: 1, height: 12, background: 'rgba(111,155,198,0.08)' }}>
             <div className="pl-bar" style={{
               height: '100%', background: b.c,
               animationDelay: `${bi * 0.25}s`,
@@ -904,12 +917,13 @@ function StepAnim({ idx }: { idx: number }) {
     </div>
   )
   return (
-    <div style={{ marginTop: 12 }}>
-      <svg width="140" height="60" viewBox="0 0 140 60" aria-hidden>
-        <path d="M 0 56 C 25 56 45 48 58 36 C 68 27 73 15 80 10 C 87 5 91 9 96 18 C 106 36 122 54 140 56" fill="none" stroke="rgba(111,155,198,0.4)" strokeWidth="1.2" strokeLinecap="round" />
-        <line x1="80" y1="2" x2="80" y2="56" stroke="rgba(111,155,198,0.2)" strokeWidth="0.75" strokeDasharray="3 2" />
-        <text x="80" y="10" textAnchor="middle" fontFamily='"IBM Plex Mono",monospace' fontSize="7" fill="rgba(111,155,198,0.5)">63rd pct</text>
-        <circle className="pl-pulse" cx="80" cy="14" r="4" fill="rgba(111,155,198,0.7)" />
+    <div style={{ marginTop: 12, display: 'flex', justifyContent: 'center' }}>
+      <svg width="260" height="110" viewBox="0 0 260 110" aria-hidden>
+        <line x1="0" y1="103" x2="260" y2="103" stroke="rgba(111,155,198,0.1)" strokeWidth="0.5" />
+        <path d="M 0 103 C 46 103 84 88 108 66 C 126 50 136 28 149 18 C 162 9 169 17 178 33 C 197 66 227 99 260 103" fill="none" stroke="rgba(111,155,198,0.4)" strokeWidth="1.5" strokeLinecap="round" />
+        <line x1="149" y1="4" x2="149" y2="103" stroke="rgba(111,155,198,0.2)" strokeWidth="0.75" strokeDasharray="4 3" />
+        <text x="149" y="14" textAnchor="middle" fontFamily='"IBM Plex Mono",monospace' fontSize="9" fill="rgba(111,155,198,0.5)">63rd pct</text>
+        <circle className="pl-pulse" cx="149" cy="26" r="7" fill="rgba(111,155,198,0.7)" />
       </svg>
     </div>
   )
@@ -920,7 +934,7 @@ function HowItWorksSection() {
     <section style={{ padding: '80px 48px', borderTop: '0.5px solid rgba(111,155,198,0.1)', position: 'relative', overflow: 'visible' }}>
       <style>{`
         @keyframes pl-blink    { 0%,49%{opacity:1} 50%,100%{opacity:0} }
-        @keyframes pl-scan     { 0%{top:0px} 100%{top:77px} }
+        @keyframes pl-scan     { 0%{top:0px} 100%{top:110px} }
         @keyframes pl-check    { 0%{background:rgba(111,155,198,0.15)} 50%,80%{background:var(--target-bg)} 100%{background:rgba(111,155,198,0.15)} }
         @keyframes pl-bar      { 0%,100%{width:0} 55%,80%{width:var(--bar-w)} }
         @keyframes pl-orig     { 0%{opacity:1} 38%,100%{opacity:0} }

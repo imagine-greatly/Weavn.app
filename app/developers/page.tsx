@@ -562,6 +562,52 @@ function HowItWorksSection() {
           </div>
 
         </div>
+
+        {/* ── REQUEST PARAMETERS ─────────────────────────────────────────── */}
+        <div style={{ marginTop: 32 }}>
+          <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.18em', color: '#6E7587', margin: '0 0 12px' }}>
+            REQUEST PARAMETERS · POST /api/v1/scan
+          </p>
+          <div style={{
+            borderTop: '1px solid rgba(255,255,255,0.12)',
+            borderLeft: '0.5px solid rgba(255,255,255,0.06)',
+            borderRight: '0.5px solid rgba(255,255,255,0.03)',
+            borderBottom: '0.5px solid rgba(255,255,255,0.03)',
+            background: '#0A0E18', overflow: 'hidden',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px', borderBottom: '0.5px solid rgba(255,255,255,0.06)' }}>
+              <span style={{ width: 5, height: 5, background: 'rgba(255,255,255,0.2)', display: 'inline-block', flexShrink: 0 }} />
+              <span style={{ ...MONO, fontSize: 10, color: '#6E7587', textTransform: 'uppercase', letterSpacing: '0.12em' }}>7 params · 1 required · body · application/json</span>
+            </div>
+            {[
+              { p: 'url',           type: 'string',            req: true,  def: null,      note: 'URL to scan. Scheme added if absent.' },
+              { p: 'async',         type: 'boolean',           req: false, def: 'false',   note: 'Return immediately; result POSTed to callback_url.' },
+              { p: 'callback_url',  type: 'string',            req: false, def: null,      note: 'Delivery endpoint. Required when async: true.' },
+              { p: 'pages',         type: 'number | string[]', req: false, def: '1',       note: 'Page count (1–5) or explicit path array.' },
+              { p: 'fields',        type: 'string[]',          req: false, def: 'all',     note: 'summary · findings · copy_rewrites · growth_blueprint · benchmark' },
+              { p: 'finding_limit', type: 'number',            req: false, def: '10',      note: 'Max findings returned. Range: 1–20.' },
+              { p: 'finding_depth', type: '"brief" | "full"',  req: false, def: '"full"',  note: 'Minimal vs. complete per-finding field set.' },
+            ].map((row, i, arr) => (
+              <div
+                key={row.p}
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: '140px 175px 76px 76px 1fr',
+                  padding: '8px 16px', gap: 12, alignItems: 'baseline',
+                  borderBottom: i < arr.length - 1 ? '0.5px solid rgba(255,255,255,0.04)' : 'none',
+                  ...MONO, fontSize: 11,
+                }}
+              >
+                <span style={{ color: '#8080c0' }}>{row.p}</span>
+                <span style={{ color: '#6F9BC6' }}>{row.type}</span>
+                <span style={{ color: row.req ? '#E8635F' : '#404860' }}>{row.req ? 'required' : 'optional'}</span>
+                <span style={{ color: row.def ? '#00C48C' : '#404860' }}>{row.def ?? '—'}</span>
+                <span style={{ color: '#6E7587' }}>{row.note}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
       </div>
     </section>
   )

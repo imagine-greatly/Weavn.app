@@ -819,6 +819,11 @@ export default function DevelopersPage() {
               </div>
             ))}
           </div>
+
+          {/* Accessibility note — you don't have to hand-code this */}
+          <p style={{ ...SANS, fontSize: 13, lineHeight: 1.6, color: '#6E7587', margin: '28px 0 0', maxWidth: 680, borderTop: '0.5px solid rgba(255,255,255,0.06)', paddingTop: 20 }}>
+            You don&apos;t have to hand-write any of this. The scan API is a standard REST endpoint — any HTTP client that sends a Bearer token and a JSON body works, and AI coding tools like Cursor and Claude can build against it directly.
+          </p>
         </div>
       </section>
       <div className="section-separator" />
@@ -962,6 +967,13 @@ export default function DevelopersPage() {
             <p style={{ ...SANS, fontSize: 13, lineHeight: 1.6, color: '#9398A8', margin: '0 0 20px', maxWidth: 680 }}>
               All errors return the same envelope so your handler never needs to branch on response shape — only on <span style={{ ...MONO, fontSize: 12, color: '#8080c0' }}>error.code</span>.
             </p>
+
+            {/* Plain-English lead-in — what to do when something goes wrong */}
+            <div style={{ background: '#0A0E18', borderTop: '1px solid rgba(157,140,255,0.3)', borderLeft: '0.5px solid rgba(255,255,255,0.06)', padding: '16px 20px', marginBottom: 16 }}>
+              <p style={{ ...SANS, fontSize: 14, lineHeight: 1.6, color: '#9398A8', margin: 0, maxWidth: 720 }}>
+                <span style={{ color: '#E6E9EE' }}>When something goes wrong, the response tells you exactly what failed and whether to retry.</span> Most issues are one of three things: a bad or unreachable URL, a missing or invalid API key, or a site that blocks automated scanning. The table below maps each status code to its meaning.
+              </p>
+            </div>
 
             {/* Status code table */}
             <div className="wd-panel" style={{ overflow: 'hidden', marginBottom: 16 }}>

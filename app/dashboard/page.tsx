@@ -445,6 +445,8 @@ const REWRITE_EXAMPLES = [
 function AIRewriteSection() {
   return (
     <section style={{ padding:'80px 48px',borderTop:'0.5px solid rgba(111,155,198,0.1)',position:'relative',overflow:'visible' }}>
+      {/* Section 3 atmospheric bloom */}
+      <div aria-hidden="true" style={{ position:'absolute',top:0,left:'50%',width:'1000px',height:'800px',background:'radial-gradient(ellipse at 50% 35%, rgba(111, 155, 198, 0.05) 0%, rgba(111, 155, 198, 0.015) 40%, rgba(111, 155, 198, 0.004) 65%, transparent 85%)',pointerEvents:'none',zIndex:-1,animation:'bloom-breathe 5s ease-in-out infinite' }} />
       <style>{`@media(max-width:639px){.d-rewrite-cols{flex-direction:column!important}}`}</style>
       <div style={{ maxWidth:1000,margin:'0 auto' }}>
         <p style={{ ...MONO,fontSize:11,textTransform:'uppercase',letterSpacing:'0.2em',color:STEEL,margin:'0 0 16px' }}>
@@ -690,6 +692,8 @@ const SCOPE_ITEMS_RIGHT = [
 function WhatWeCheckSection() {
   return (
     <section style={{ padding:'80px 48px',borderTop:'0.5px solid rgba(111,155,198,0.1)',position:'relative',overflow:'visible' }}>
+      {/* Section 6 atmospheric bloom */}
+      <div aria-hidden="true" style={{ position:'absolute',top:0,left:'50%',width:'1000px',height:'800px',background:'radial-gradient(ellipse at 50% 35%, rgba(111, 155, 198, 0.05) 0%, rgba(111, 155, 198, 0.015) 40%, rgba(111, 155, 198, 0.004) 65%, transparent 85%)',pointerEvents:'none',zIndex:-1,animation:'bloom-breathe 5s ease-in-out infinite' }} />
       <style>{`@media(max-width:767px){.d-scope-grid{grid-template-columns:1fr!important}}`}</style>
       <div style={{ maxWidth:1000,margin:'0 auto',position:'relative',zIndex:1 }}>
         <p style={{ ...MONO,fontSize:11,textTransform:'uppercase',letterSpacing:'0.2em',color:STEEL,margin:'0 0 16px' }}>
@@ -1134,6 +1138,8 @@ function WhyDifferentSection() {
   const [hoveredFaq, setHoveredFaq] = useState<number | null>(null)
   return (
     <section style={{ padding:'80px 48px',borderTop:'0.5px solid rgba(111,155,198,0.1)',position:'relative',overflow:'visible' }}>
+      {/* Section 9 atmospheric bloom */}
+      <div aria-hidden="true" style={{ position:'absolute',top:0,left:'50%',width:'1000px',height:'800px',background:'radial-gradient(ellipse at 50% 35%, rgba(111, 155, 198, 0.05) 0%, rgba(111, 155, 198, 0.015) 40%, rgba(111, 155, 198, 0.004) 65%, transparent 85%)',pointerEvents:'none',zIndex:-1,animation:'bloom-breathe 5s ease-in-out infinite' }} />
       <style>{`@media(max-width:767px){.d-diff-grid{grid-template-columns:1fr!important}}`}</style>
       <Ticks />
       <div style={{ maxWidth:1200,margin:'0 auto',position:'relative',zIndex:1 }}>

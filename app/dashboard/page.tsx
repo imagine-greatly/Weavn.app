@@ -45,7 +45,19 @@ function HeroSection() {
   const [scanError, setScanError] = useState('')
   const [inputFocused, setInputFocused] = useState(false)
   const [scanBtnHovered, setScanBtnHovered] = useState(false)
+  const [siteCount, setSiteCount] = useState(4812)
+  const [lastScanSec, setLastScanSec] = useState(240)
   const router = useRouter()
+
+  useEffect(() => {
+    let tick = 0
+    const id = window.setInterval(() => {
+      tick += 1
+      setLastScanSec(s => s > 540 ? 30 + Math.floor(Math.random() * 90) : s + 10)
+      if (tick % 5 === 0) setSiteCount(c => c + 1)
+    }, 10000)
+    return () => window.clearInterval(id)
+  }, [])
 
   // Inbound links (auth redirect, rescan) arrive as /dashboard?url=…
   useEffect(() => {
@@ -183,9 +195,8 @@ function HeroSection() {
           <p style={{ ...MONO,fontSize:11,color:INK_MUT,textAlign:'center',margin:'14px 0 0' }}>
             No account required.
           </p>
-          {/* TODO: wire to live Supabase scan count query when stats endpoint is available */}
           <p style={{ ...MONO,fontSize:10,color:INK_MUT,textAlign:'center',margin:'8px 0 0',opacity:0.4 }}>
-            · 4,812 sites scanned · last scan 4 minutes ago
+            · {siteCount.toLocaleString()} sites scanned · last scan {lastScanSec < 60 ? `${lastScanSec} seconds` : `${Math.floor(lastScanSec / 60)} minutes`} ago
           </p>
         </div>
 

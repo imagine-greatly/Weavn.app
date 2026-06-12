@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { CodeBlock } from '@/components/ui/CodeBlock'
 
@@ -503,6 +504,16 @@ function HowItWorksSection() {
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function DevelopersPage() {
+  const router = useRouter()
+  const [heroUrl, setHeroUrl] = useState('')
+
+  function handleRunScan() {
+    const trimmed = heroUrl.trim()
+    if (!trimmed) return
+    const url = trimmed.startsWith('http') ? trimmed : `https://${trimmed}`
+    router.push(`/playground?url=${encodeURIComponent(url)}`)
+  }
+
   return (
     <main style={{ minHeight: '100vh' }}>
       <style>{`
@@ -558,12 +569,52 @@ export default function DevelopersPage() {
             ))}
           </div>
 
-          {/* Primary + secondary CTAs */}
-          <div style={{ display: 'flex', justifyContent: 'center', gap: 12, flexWrap: 'wrap' }}>
-            <Link href="/auth?surface=api" style={{ ...MONO, fontSize: 13, color: '#9D8CFF', border: '1px solid rgba(157,140,255,0.5)', padding: '12px 28px', textDecoration: 'none', transition: 'all 0.15s', display: 'inline-block' }}>
+          {/* Primary CTA — URL input + run scan */}
+          <div style={{ maxWidth: 672, margin: '0 auto', display: 'flex', gap: 0 }}>
+            <input
+              type="url"
+              value={heroUrl}
+              onChange={e => setHeroUrl(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter') handleRunScan() }}
+              placeholder="https://your-site.com"
+              style={{
+                ...MONO, fontSize: 13, flex: 1,
+                background: 'rgba(157,140,255,0.04)',
+                border: '1px solid rgba(157,140,255,0.35)',
+                borderRight: 'none',
+                color: '#E6E9EE',
+                padding: '12px 16px',
+                outline: 'none',
+                borderRadius: 0,
+              }}
+            />
+            <button
+              onClick={handleRunScan}
+              style={{
+                ...MONO, fontSize: 12,
+                background: 'rgba(157,140,255,0.1)',
+                border: '1px solid rgba(157,140,255,0.5)',
+                color: '#9D8CFF',
+                padding: '12px 20px',
+                cursor: 'pointer',
+                borderRadius: 0,
+                whiteSpace: 'nowrap',
+                letterSpacing: '0.08em',
+                textTransform: 'uppercase',
+                transition: 'all 0.15s',
+                flexShrink: 0,
+              }}
+            >
+              RUN A LIVE SCAN →
+            </button>
+          </div>
+
+          {/* Secondary CTAs */}
+          <div style={{ display: 'flex', justifyContent: 'center', gap: 10, flexWrap: 'wrap', marginTop: 12 }}>
+            <Link href="/auth?surface=api" style={{ ...MONO, fontSize: 11, color: '#6E7587', border: '0.5px solid rgba(255,255,255,0.1)', padding: '9px 20px', textDecoration: 'none', transition: 'all 0.15s', display: 'inline-block', letterSpacing: '0.08em' }}>
               GET API KEY →
             </Link>
-            <Link href="/docs/api" style={{ ...MONO, fontSize: 13, color: '#6E7587', border: '0.5px solid rgba(255,255,255,0.1)', padding: '12px 28px', textDecoration: 'none', transition: 'all 0.15s', display: 'inline-block' }}>
+            <Link href="/docs/api" style={{ ...MONO, fontSize: 11, color: '#6E7587', border: '0.5px solid rgba(255,255,255,0.1)', padding: '9px 20px', textDecoration: 'none', transition: 'all 0.15s', display: 'inline-block', letterSpacing: '0.08em' }}>
               READ THE DOCS →
             </Link>
           </div>

@@ -1192,6 +1192,70 @@ export default function DevelopersPage() {
       </section>
       <div className="section-separator" />
 
+      {/* ── A-ii. BUILD YOUR FIRST INTEGRATION — worked example ───────────── */}
+      <section style={{ position: 'relative', overflow: 'hidden', borderTop: '0.5px solid rgba(255,255,255,0.08)' }}>
+        <div aria-hidden style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0, background: 'radial-gradient(ellipse 800px 500px at 50% 50%, rgba(40,50,80,0.025) 0%, transparent 60%)' }} />
+        <Ticks />
+        <div style={{ position: 'relative', zIndex: 1, maxWidth: 896, margin: '0 auto', padding: '64px 32px 72px' }}>
+          <p style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.2em', color: '#8080c0', margin: '0 0 16px' }}>
+            BUILD YOUR FIRST INTEGRATION
+          </p>
+          <h2 style={{ ...DISP, fontSize: 'clamp(24px, 3vw, 34px)', fontWeight: 700, letterSpacing: '-0.5px', color: '#E6E9EE', margin: '0 0 12px', lineHeight: 1.15 }}>
+            A Shopify store diagnostic, end to end.
+          </h2>
+          <p style={{ ...SANS, fontSize: 15, lineHeight: 1.65, color: '#9398A8', maxWidth: 680, margin: '0 0 40px' }}>
+            A merchant pastes their store URL into your app. Your app scans it and shows the conversion score with the top fixes. That is three moves.
+          </p>
+
+          {/* 01 — one call */}
+          <div style={{ marginBottom: 24 }}>
+            <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.18em', color: '#6E7587', margin: '0 0 10px' }}>
+              01 · ONE CALL — the merchant&apos;s URL goes to one endpoint
+            </p>
+            <div className="wd-panel" style={{ overflow: 'hidden' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 16px', borderBottom: '0.5px solid rgba(255,255,255,0.06)' }}>
+                <span style={{ width: 6, height: 6, background: '#00C48C', display: 'inline-block', flexShrink: 0 }} />
+                <span style={{ ...MONO, fontSize: 10, color: '#6E7587', textTransform: 'uppercase', letterSpacing: '0.15em' }}>terminal · curl</span>
+              </div>
+              <pre style={{ ...MONO, fontSize: 12, lineHeight: 1.85, margin: 0, padding: '14px 16px', color: '#9398A8', whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>
+                <span style={{ color: '#00C8FF' }}>curl</span>{' -X POST https://api.weavn.app/v1/scan \\\n'}
+                {'  -H '}<span style={{ color: '#8080c0' }}>&quot;Authorization: Bearer </span><span style={{ color: '#9D8CFF' }}>wdoc_live_••••</span><span style={{ color: '#8080c0' }}>&quot;</span>{' \\\n'}
+                {'  -d '}<span style={{ color: '#8080c0' }}>&apos;&#123;&quot;url&quot;: &quot;</span><span style={{ color: '#00C48C' }}>https://their-store.myshopify.com</span><span style={{ color: '#8080c0' }}>&quot;&#125;&apos;</span>
+              </pre>
+            </div>
+          </div>
+
+          {/* 02 — what comes back */}
+          <div style={{ marginBottom: 24 }}>
+            <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.18em', color: '#6E7587', margin: '0 0 10px' }}>
+              02 · WHAT COMES BACK — the structured response
+            </p>
+            <p style={{ ...SANS, fontSize: 14, lineHeight: 1.65, color: '#9398A8', margin: 0, maxWidth: 680 }}>
+              The same JSON object documented in <span style={{ ...MONO, fontSize: 12, color: '#8080c0' }}>Response Schema</span> above: a <span style={{ ...MONO, fontSize: 12, color: '#6F9BC6' }}>score</span>, a <span style={{ ...MONO, fontSize: 12, color: '#6F9BC6' }}>verdict</span>, a <span style={{ ...MONO, fontSize: 12, color: '#6F9BC6' }}>findings_summary</span> count, and a <span style={{ ...MONO, fontSize: 12, color: '#6F9BC6' }}>findings</span> array — each finding carrying its title, severity, evidence, and fix.
+            </p>
+          </div>
+
+          {/* 03 — surface it */}
+          <div style={{ marginBottom: 32 }}>
+            <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.18em', color: '#6E7587', margin: '0 0 10px' }}>
+              03 · SURFACE IT — show it to the merchant
+            </p>
+            <p style={{ ...SANS, fontSize: 14, lineHeight: 1.65, color: '#9398A8', margin: 0, maxWidth: 680 }}>
+              Render <span style={{ ...MONO, fontSize: 12, color: '#6F9BC6' }}>score</span> as the headline number, list the first few <span style={{ ...MONO, fontSize: 12, color: '#6F9BC6' }}>findings</span> as the fixes to make, and show each finding&apos;s <span style={{ ...MONO, fontSize: 12, color: '#8080c0' }}>fix</span> and <span style={{ ...MONO, fontSize: 12, color: '#8080c0' }}>rewritten_copy</span> inline. No scoring logic of your own — you display the fields, you don&apos;t compute them.
+            </p>
+          </div>
+
+          {/* handoff */}
+          <p style={{ ...MONO, fontSize: 11, color: '#6E7587', margin: 0 }}>
+            Full reference at{' '}
+            <Link href="/docs/api" style={{ color: '#6F9BC6', textDecoration: 'none' }}>/docs/api</Link>
+            {' · test it live at '}
+            <Link href="/playground" style={{ color: '#6F9BC6', textDecoration: 'none' }}>/playground</Link>.
+          </p>
+        </div>
+      </section>
+      <div className="section-separator" />
+
       {/* ── B. WHAT YOU CAN BUILD ────────────────────────────────────────── */}
       <section style={{ position: 'relative', overflow: 'hidden' }}>
         <div aria-hidden style={{

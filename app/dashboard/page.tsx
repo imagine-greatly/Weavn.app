@@ -279,22 +279,6 @@ function OutputSection() {
 
   return (
     <section style={{ padding:'80px 48px',borderTop:'0.5px solid rgba(111,155,198,0.1)',position:'relative',overflow:'visible',background:BG_BASE }}>
-      <div
-        aria-hidden="true"
-        style={{
-          position: 'absolute',
-          top: '-200px',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          width: '1600px',
-          height: '1200px',
-          background: 'radial-gradient(ellipse at 50% 35%, rgba(111, 155, 198, 0.22) 0%, rgba(111, 155, 198, 0.066) 40%, rgba(111, 155, 198, 0.02) 65%, transparent 85%)',
-          pointerEvents: 'none',
-          zIndex: 0,
-          borderRadius: '50%',
-          animation: 'bloom-breathe 5s ease-in-out infinite',
-        }}
-      />
       <div style={{ maxWidth:1000,margin:'0 auto',position:'relative',zIndex:1 }}>
         <p style={{ ...MONO,fontSize:11,textTransform:'uppercase',letterSpacing:'0.2em',color:STEEL,margin:'0 0 16px' }}>
           WHAT YOU GET
@@ -332,23 +316,6 @@ function OutputSection() {
           {/* Score row — ring draws in when scrolled into view */}
           <div style={{ display:'flex',alignItems:'center',gap:20,marginBottom:28,paddingBottom:24,borderBottom:'0.5px solid rgba(255,255,255,0.06)',flexWrap:'wrap' }}>
             <div ref={ringRef} style={{ position:'relative' }}>
-              {/* Ring-pulse glow */}
-              <div
-                aria-hidden="true"
-                style={{
-                  position: 'absolute',
-                  top: '50%',
-                  left: '50%',
-                  transform: 'translate(-50%, -50%)',
-                  width: '220px',
-                  height: '220px',
-                  background: 'radial-gradient(ellipse at center, rgba(232, 99, 95, 0.22) 0%, rgba(232, 99, 95, 0.066) 40%, rgba(232, 99, 95, 0.02) 65%, transparent 85%)',
-                  pointerEvents: 'none',
-                  zIndex: 0,
-                  borderRadius: '50%',
-                  animation: 'ring-pulse 4s ease-in-out infinite',
-                }}
-              />
               <div style={{ filter:'drop-shadow(0 0 5px rgba(232,99,95,0.35))', position:'relative', zIndex: 1 }}>
                 <ScoreRing score={61} size="lg" animate={ringInView} />
               </div>
@@ -506,7 +473,6 @@ function AIRewriteSection() {
                     <p style={{ ...SANS,fontSize:17,color:INK_SEC,margin:0,lineHeight:1.55,opacity:0.35 }}>&ldquo;{ex.original}&rdquo;</p>
                   </div>
                   <div style={{ flex:1,padding:28,position:'relative',borderLeft:'1px solid rgba(0, 196, 140, 0.25)',boxShadow:'inset 1px 0 0 0 rgba(0, 196, 140, 0.1)' }}>
-                    <div aria-hidden="true" style={{ position:'absolute',inset:0,background:'radial-gradient(ellipse at 40% 50%, rgba(0, 196, 140, 0.14) 0%, rgba(0, 196, 140, 0.05) 55%, transparent 80%)',pointerEvents:'none',zIndex:0,borderRadius:'inherit' }} />
                     <p style={{ position:'relative',...MONO,fontSize:10,textTransform:'uppercase',letterSpacing:'0.18em',color:'rgba(0, 196, 140, 0.9)',margin:'0 0 14px',textShadow:'0 0 12px rgba(0, 196, 140, 0.4)' }}>REWRITTEN</p>
                     <p style={{ position:'relative',...SANS,fontSize:17,color:INK_PRI,margin:0,lineHeight:1.55 }}>&ldquo;{ex.rewritten}&rdquo;</p>
                   </div>
@@ -724,20 +690,6 @@ const SCOPE_ITEMS_RIGHT = [
 function WhatWeCheckSection() {
   return (
     <section style={{ padding:'80px 48px',borderTop:'0.5px solid rgba(111,155,198,0.1)',position:'relative',overflow:'visible' }}>
-      <div
-        aria-hidden="true"
-        style={{
-          position: 'absolute',
-          top: '-60px',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          width: '1400px',
-          height: '700px',
-          background: 'radial-gradient(ellipse at center, rgba(111, 155, 198, 0.07) 0%, rgba(111, 155, 198, 0.021) 40%, rgba(111, 155, 198, 0.02) 65%, transparent 85%)',
-          pointerEvents: 'none',
-          zIndex: 0,
-        }}
-      />
       <style>{`@media(max-width:767px){.d-scope-grid{grid-template-columns:1fr!important}}`}</style>
       <div style={{ maxWidth:1000,margin:'0 auto',position:'relative',zIndex:1 }}>
         <p style={{ ...MONO,fontSize:11,textTransform:'uppercase',letterSpacing:'0.2em',color:STEEL,margin:'0 0 16px' }}>
@@ -1186,20 +1138,6 @@ function WhyDifferentSection() {
   return (
     <section style={{ padding:'80px 48px',borderTop:'0.5px solid rgba(111,155,198,0.1)',position:'relative',overflow:'visible' }}>
       <style>{`@media(max-width:767px){.d-diff-grid{grid-template-columns:1fr!important}}`}</style>
-      <div
-        aria-hidden="true"
-        style={{
-          position: 'absolute',
-          top: '-80px',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          width: '1400px',
-          height: '700px',
-          background: 'radial-gradient(ellipse at center, rgba(111, 155, 198, 0.05) 0%, rgba(111, 155, 198, 0.015) 40%, rgba(111, 155, 198, 0.02) 65%, transparent 85%)',
-          pointerEvents: 'none',
-          zIndex: 0,
-        }}
-      />
       <Ticks />
       <div style={{ maxWidth:1200,margin:'0 auto',position:'relative',zIndex:1 }}>
         <p style={{ ...MONO,fontSize:11,textTransform:'uppercase',letterSpacing:'0.2em',color:STEEL,margin:'0 0 16px' }}>
@@ -1280,7 +1218,6 @@ function MultiSiteSection() {
       borderTop: '0.5px solid rgba(111,155,198,0.1)',
       position: 'relative',
       overflow: 'visible',
-      background: 'radial-gradient(ellipse 1000px 500px at 50% 50%, rgba(157,140,255,0.04) 0%, transparent 70%)',
     }}>
       <style>{`
         @media(max-width:767px){.d-agency-cap-grid{grid-template-columns:1fr!important}}
@@ -1662,23 +1599,6 @@ function FinalCtaSection() {
 
   return (
     <section style={{ padding:'96px 48px',textAlign:'center',position:'relative',overflow:'visible',borderTop:'0.5px solid rgba(111,155,198,0.1)',background:BG_BASE }}>
-      {/* Final CTA bloom */}
-      <div
-        aria-hidden="true"
-        style={{
-          position: 'absolute',
-          top: '-200px',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          width: '1600px',
-          height: '1200px',
-          background: 'radial-gradient(ellipse at 50% 35%, rgba(111, 155, 198, 0.22) 0%, rgba(111, 155, 198, 0.066) 40%, rgba(111, 155, 198, 0.02) 65%, transparent 85%)',
-          pointerEvents: 'none',
-          zIndex: 0,
-          borderRadius: '50%',
-          animation: 'bloom-breathe 5s ease-in-out infinite',
-        }}
-      />
       <Ticks />
       <div style={{ position:'relative',zIndex:1 }}>
         <h2 style={{ ...DISP,fontWeight:700,fontSize:'clamp(28px,4vw,44px)',color:INK_PRI,letterSpacing:'-0.5px',margin:'0 0 32px',lineHeight:1.1,textShadow:'0 0 40px rgba(111, 155, 198, 0.15)' }}>

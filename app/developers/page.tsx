@@ -755,6 +755,7 @@ export default function DevelopersPage() {
               'Build against this schema once — it never changes',
               'Every finding cites visible page evidence',
               'Same structure regardless of site type',
+              'v1 is stable — breaking changes ship as v2',
             ].map(fact => (
               <span key={fact} style={{ ...MONO, fontSize: 11, color: '#6E7587' }}>
                 · {fact}

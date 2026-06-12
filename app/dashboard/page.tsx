@@ -794,30 +794,31 @@ const PIPELINE_STEPS = [
   },
 ]
 
-// SVG zigzag path — same stroke style as homepage branch lines (var(--interactive), strokeWidth 1.5, cubic bezier S-curves)
-// ViewBox 0 0 1000 2680 | slot=460px | left-card center x=230, right-card center x=770, midpoint x=500
-// Step centers y: 190, 650, 1110, 1570, 2030, 2490 | Nodes y: 420, 880, 1340, 1800, 2260
-const PIPELINE_SNAKE = 'M 230 190 C 230 420 500 190 500 420 C 500 650 770 420 770 650 C 770 880 500 650 500 880 C 500 1110 230 880 230 1110 C 230 1340 500 1110 500 1340 C 500 1570 770 1340 770 1570 C 770 1800 500 1570 500 1800 C 500 2030 230 1800 230 2030 C 230 2260 500 2030 500 2260 C 500 2490 770 2260 770 2490'
+// SVG connecting line — matches homepage branch-line style exactly (var(--interactive), strokeWidth 1.5, opacity 0.5, cubic bezier S-curves, no animation)
+// ViewBox 0 0 1000 2100 | slot=360px | left-card center x=230, right-card center x=770
+// L segments run inside cards (hidden behind card face, z-index 0 vs 1); C beziers are the only visible connectors, in the 70px gaps between cards.
+// Card tops y: 0,360,720,1080,1440,1800 | Card bottoms y: 290,650,1010,1370,1730,2090 | Node midpoints y: 325,685,1045,1405,1765
+const PIPELINE_SNAKE = 'M 230 0 L 230 290 C 230 325 770 325 770 360 L 770 650 C 770 685 230 685 230 720 L 230 1010 C 230 1045 770 1045 770 1080 L 770 1370 C 770 1405 230 1405 230 1440 L 230 1730 C 230 1765 770 1765 770 1800 L 770 2090'
 
 const PIPELINE_NODES = [
-  { cx: 500, cy: 420,  bright: true  }, // between step 01 → 02; step 02 is the key differentiator
-  { cx: 500, cy: 880,  bright: false },
-  { cx: 500, cy: 1340, bright: false },
-  { cx: 500, cy: 1800, bright: false },
-  { cx: 500, cy: 2260, bright: false },
+  { cx: 500, cy: 325,  bright: true  },
+  { cx: 500, cy: 685,  bright: false },
+  { cx: 500, cy: 1045, bright: false },
+  { cx: 500, cy: 1405, bright: false },
+  { cx: 500, cy: 1765, bright: false },
 ]
 
 const PIPELINE_FAIL = new Set([3, 8, 13, 18, 22, 26, 28])
 
 function StepAnim({ idx }: { idx: number }) {
   if (idx === 0) return (
-    <div style={{ marginTop: 16 }}>
+    <div style={{ marginTop: 12 }}>
       <span style={{ ...MONO, fontSize: 12, color: LIFT_GREEN }}>https://acme-saas.com</span>
       <span className="pl-cursor" style={{ ...MONO, fontSize: 12, color: LIFT_GREEN }}>|</span>
     </div>
   )
   if (idx === 1) return (
-    <div style={{ marginTop: 16, position: 'relative', width: 160, height: 80, border: '1px solid rgba(111,155,198,0.2)', overflow: 'hidden' }}>
+    <div style={{ marginTop: 12, position: 'relative', width: 160, height: 80, border: '1px solid rgba(111,155,198,0.2)', overflow: 'hidden' }}>
       <div style={{ position: 'absolute', top: 12, left: 10, width: '70%', height: 5, background: 'rgba(111,155,198,0.12)' }} />
       <div style={{ position: 'absolute', top: 24, left: 10, width: '85%', height: 4, background: 'rgba(111,155,198,0.07)' }} />
       <div style={{ position: 'absolute', top: 36, left: 10, width: '55%', height: 4, background: 'rgba(111,155,198,0.07)' }} />
@@ -825,7 +826,7 @@ function StepAnim({ idx }: { idx: number }) {
     </div>
   )
   if (idx === 2) return (
-    <div style={{ marginTop: 16, display: 'grid', gridTemplateColumns: 'repeat(6, 8px)', gap: 4 }}>
+    <div style={{ marginTop: 12, display: 'grid', gridTemplateColumns: 'repeat(6, 8px)', gap: 4 }}>
       {Array.from({ length: 30 }).map((_, si) => (
         <div key={si} className="pl-check" style={{
           width: 8, height: 8,
@@ -837,7 +838,7 @@ function StepAnim({ idx }: { idx: number }) {
     </div>
   )
   if (idx === 3) return (
-    <div style={{ marginTop: 16 }}>
+    <div style={{ marginTop: 12 }}>
       {[
         { label: 'P1', w: '90%', c: 'rgba(232,99,95,0.7)' },
         { label: 'P2', w: '70%', c: 'rgba(239,178,62,0.7)' },
@@ -857,7 +858,7 @@ function StepAnim({ idx }: { idx: number }) {
     </div>
   )
   if (idx === 4) return (
-    <div style={{ marginTop: 16 }}>
+    <div style={{ marginTop: 12 }}>
       <p className="pl-orig" style={{ ...SANS, fontSize: 12, fontStyle: 'italic', color: INK_MUT, margin: '0 0 6px', lineHeight: 1.4 }}>
         &ldquo;The project management tool...&rdquo;
       </p>
@@ -867,7 +868,7 @@ function StepAnim({ idx }: { idx: number }) {
     </div>
   )
   return (
-    <div style={{ marginTop: 16 }}>
+    <div style={{ marginTop: 12 }}>
       <svg width="140" height="60" viewBox="0 0 140 60" aria-hidden>
         <path d="M 0 56 C 25 56 45 48 58 36 C 68 27 73 15 80 10 C 87 5 91 9 96 18 C 106 36 122 54 140 56" fill="none" stroke="rgba(111,155,198,0.4)" strokeWidth="1.2" strokeLinecap="round" />
         <line x1="80" y1="2" x2="80" y2="56" stroke="rgba(111,155,198,0.2)" strokeWidth="0.75" strokeDasharray="3 2" />
@@ -889,7 +890,6 @@ function HowItWorksSection() {
         @keyframes pl-orig     { 0%{opacity:1} 38%,100%{opacity:0} }
         @keyframes pl-rewrite  { 0%,33%{opacity:0} 72%,100%{opacity:1} }
         @keyframes pl-pulse    { 0%,100%{transform:scale(1)} 50%{transform:scale(1.4)} }
-        @keyframes pl-flow     { to{stroke-dashoffset:-520} }
         @media (prefers-reduced-motion: no-preference) {
           .pl-cursor  { animation: pl-blink   1s   step-end    infinite }
           .pl-scan    { animation: pl-scan    2.5s ease-in-out infinite }
@@ -898,7 +898,6 @@ function HowItWorksSection() {
           .pl-orig    { animation: pl-orig    3s   ease-in-out infinite }
           .pl-rewrite { animation: pl-rewrite 3s   ease-in-out infinite }
           .pl-pulse   { transform-box:fill-box; transform-origin:center; animation:pl-pulse 2s ease-in-out infinite }
-          .pl-flow    { animation: pl-flow    4s   linear      infinite }
         }
         @media (max-width:767px) {
           .d-pl-wrap  { height:auto!important }
@@ -915,20 +914,16 @@ function HowItWorksSection() {
           What happens when you paste a URL.
         </h2>
 
-        {/* Staggered zigzag pipeline */}
-        <div className="d-pl-wrap" style={{ position: 'relative', height: 2680 }}>
+        {/* Step pipeline */}
+        <div className="d-pl-wrap" style={{ position: 'relative', height: 2100 }}>
 
-          {/* SVG connector — same stroke style as homepage branch lines */}
+          {/* SVG connector — top-to-bottom, matches homepage branch-line style: var(--interactive), strokeWidth 1.5, opacity 0.5, no animation */}
           <svg className="d-pl-svg" aria-hidden
             style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 0 }}
-            viewBox="0 0 1000 2680"
+            viewBox="0 0 1000 2100"
             preserveAspectRatio="none"
           >
-            {/* Base path */}
-            <path d={PIPELINE_SNAKE} stroke="rgba(111,155,198,1)" strokeWidth="1.5" strokeLinecap="round" fill="none" opacity="0.5" />
-            {/* Traveling dash overlay */}
-            <path className="pl-flow" d={PIPELINE_SNAKE} stroke="rgba(111,155,198,0.5)" strokeWidth="1.5" strokeLinecap="round" strokeDasharray="6 20" fill="none" />
-            {/* Inflection nodes */}
+            <path d={PIPELINE_SNAKE} stroke="var(--interactive)" strokeWidth="1.5" strokeLinecap="round" fill="none" opacity="0.5" />
             {PIPELINE_NODES.map((n, ni) => (
               <circle key={ni} cx={n.cx} cy={n.cy} r="5" fill={n.bright ? 'rgba(111,155,198,0.9)' : 'rgba(111,155,198,0.5)'} />
             ))}
@@ -940,21 +935,21 @@ function HowItWorksSection() {
             return (
               <div key={step.num} className="d-pl-step" style={{
                 position: 'absolute',
-                top: i * 460,
+                top: i * 360,
                 left: isLeft ? 0 : '54%',
                 width: '46%',
-                minHeight: 380,
+                minHeight: 290,
                 zIndex: 1,
                 background: 'rgba(111,155,198,0.03)',
                 border: '1px solid rgba(111,155,198,0.12)',
                 boxShadow: 'inset 0 1px 0 0 rgba(111,155,198,0.15)',
-                padding: '28px 32px',
+                padding: '20px 24px',
               }}>
-                <p style={{ ...MONO, fontSize: 32, fontWeight: 500, color: 'rgba(111,155,198,0.7)', margin: '0 0 12px', lineHeight: 1, letterSpacing: '-0.02em' }}>{step.num}</p>
-                <p style={{ ...DISP, fontSize: 20, fontWeight: 700, color: INK_PRI, margin: '0 0 10px', lineHeight: 1.2 }}>{step.title}</p>
-                <p style={{ ...SANS, fontSize: 15, color: INK_SEC, lineHeight: 1.65, margin: 0, maxWidth: 400 }}>{step.desc}</p>
+                <p style={{ ...MONO, fontSize: 24, fontWeight: 500, color: 'rgba(111,155,198,0.7)', margin: '0 0 8px', lineHeight: 1, letterSpacing: '-0.02em' }}>{step.num}</p>
+                <p style={{ ...DISP, fontSize: 17, fontWeight: 700, color: INK_PRI, margin: '0 0 8px', lineHeight: 1.2 }}>{step.title}</p>
+                <p style={{ ...SANS, fontSize: 14, color: INK_SEC, lineHeight: 1.6, margin: 0, maxWidth: 340 }}>{step.desc}</p>
                 {step.tag && (
-                  <p style={{ ...MONO, fontSize: 10, color: INK_MUT, margin: '8px 0 0', letterSpacing: '0.04em', lineHeight: 1.5 }}>{step.tag}</p>
+                  <p style={{ ...MONO, fontSize: 10, color: INK_MUT, margin: '6px 0 0', letterSpacing: '0.04em', lineHeight: 1.5 }}>{step.tag}</p>
                 )}
                 <StepAnim idx={i} />
               </div>

@@ -787,6 +787,135 @@ export default function DevelopersPage() {
               Every finding in every scan returns this exact shape.
             </p>
           </div>
+
+          {/* Error contract */}
+          <div style={{ marginTop: 32 }}>
+            <p style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.18em', color: '#9D8CFF', margin: '0 0 16px' }}>ERROR CONTRACT</p>
+            <p style={{ ...SANS, fontSize: 13, lineHeight: 1.6, color: '#9398A8', margin: '0 0 20px', maxWidth: 680 }}>
+              All errors return the same envelope so your handler never needs to branch on response shape — only on <span style={{ ...MONO, fontSize: 12, color: '#8080c0' }}>error.code</span>.
+            </p>
+
+            {/* Status code table */}
+            <div className="wd-panel" style={{ borderTop: '1px solid rgba(157,140,255,0.4)', overflow: 'hidden', marginBottom: 16 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 16px', borderBottom: '0.5px solid rgba(255,255,255,0.06)' }}>
+                <span style={{ width: 5, height: 5, background: '#9D8CFF', flexShrink: 0, display: 'inline-block' }} />
+                <span style={{ ...MONO, fontSize: 11, color: '#6E7587' }}>status codes · error.code reference</span>
+              </div>
+              <div style={{ ...MONO, fontSize: 11 }}>
+                {[
+                  { status: '400', code: 'INVALID_URL / INVALID_REQUEST', desc: 'url missing, malformed, or no valid domain', codeColor: '#8080c0' },
+                  { status: '401', code: 'AUTH_INVALID',                 desc: 'Bearer token absent, malformed, or revoked', codeColor: '#8080c0' },
+                  { status: '402', code: 'INSUFFICIENT_CREDITS',         desc: 'multi-page scan requested with no remaining credits', codeColor: '#8080c0' },
+                  { status: '422', code: 'BOT_BLOCKED',                  desc: 'site uses Cloudflare Enterprise or equivalent bot protection', codeColor: '#E8635F' },
+                  { status: '422', code: 'EXTRACTION_FAILED',            desc: 'scanner could not extract content after two attempts', codeColor: '#E8635F' },
+                  { status: '429', code: 'TRIAL_EXHAUSTED',              desc: 'free 25-scan trial exhausted — upgrade plan to continue', codeColor: '#8080c0' },
+                  { status: '500', code: 'SCAN_FAILED / INTERNAL_ERROR', desc: 'analysis or infrastructure error — safe to retry', codeColor: '#E8635F' },
+                ].map((row, i, arr) => (
+                  <div
+                    key={row.code}
+                    style={{
+                      display: 'grid', gridTemplateColumns: '52px 220px 1fr',
+                      padding: '9px 16px', gap: 16,
+                      borderBottom: i < arr.length - 1 ? '0.5px solid rgba(255,255,255,0.04)' : 'none',
+                    }}
+                  >
+                    <span style={{ color: '#6F9BC6' }}>{row.status}</span>
+                    <span style={{ color: row.codeColor }}>{row.code}</span>
+                    <span style={{ color: '#6E7587' }}>{row.desc}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Error object shape */}
+            <div className="wd-panel" style={{ borderTop: '1px solid rgba(157,140,255,0.4)', overflow: 'hidden' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 16px', borderBottom: '0.5px solid rgba(255,255,255,0.06)' }}>
+                <span style={{ width: 5, height: 5, background: '#E8635F', flexShrink: 0, display: 'inline-block' }} />
+                <span style={{ ...MONO, fontSize: 11, color: '#6E7587' }}>error response · all non-2xx</span>
+                <span style={{ ...MONO, fontSize: 11, color: '#E8635F', marginLeft: 'auto' }}>422 BOT_BLOCKED example</span>
+              </div>
+              <div style={{ padding: '14px 20px', ...MONO, fontSize: 12, lineHeight: 1.7 }}>
+                <div><Muted c="{" /></div>
+                <div style={{ paddingLeft: 16 }}><K c="error" /><Muted c=": {" /></div>
+                <div style={{ paddingLeft: 32 }}><K c="code" /><Muted c=": " /><span style={{ color: '#E8635F' }}>&quot;BOT_BLOCKED&quot;</span><Muted c="," /></div>
+                <div style={{ paddingLeft: 32 }}><K c="message" /><Muted c=": " /><span style={{ color: '#E8635F' }}>&quot;This URL uses bot protection that prevents automated access.&quot;</span><Muted c="," /></div>
+                <div style={{ paddingLeft: 32 }}><K c="status" /><Muted c=": " /><N c="422" /></div>
+                <div style={{ paddingLeft: 16 }}><Muted c="}," /></div>
+                <div style={{ paddingLeft: 16 }}><K c="blocked" /><Muted c=": " /><span style={{ color: '#00C48C' }}>true</span></div>
+                <div><Muted c="}" /></div>
+              </div>
+              <p style={{ ...MONO, fontSize: 10, color: '#6E7587', margin: 0, padding: '0 20px 12px' }}>
+                Retry 5xx. Do not retry 400/401/422 — the error is structural, not transient.
+              </p>
+            </div>
+          </div>
+
+          {/* Webhook payload */}
+          <div style={{ marginTop: 32 }}>
+            <p style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.18em', color: '#9D8CFF', margin: '0 0 16px' }}>WEBHOOK PAYLOAD</p>
+            <p style={{ ...SANS, fontSize: 13, lineHeight: 1.6, color: '#9398A8', margin: '0 0 20px', maxWidth: 680 }}>
+              Every async and batch scan delivers a <span style={{ ...MONO, fontSize: 12, color: '#8080c0' }}>POST</span> to your registered endpoint when complete. Three delivery attempts: immediate, +5 min, +30 min. Verify with the <span style={{ ...MONO, fontSize: 12, color: '#8080c0' }}>X-WebDoc-Signature</span> header (HMAC-SHA256 of body, keyed with your webhook secret).
+            </p>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* scan.completed */}
+              <div className="wd-panel" style={{ borderTop: '1px solid rgba(0,196,140,0.4)', overflow: 'hidden' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 16px', borderBottom: '0.5px solid rgba(255,255,255,0.06)' }}>
+                  <span style={{ width: 5, height: 5, background: '#00C48C', flexShrink: 0, display: 'inline-block' }} />
+                  <span style={{ ...MONO, fontSize: 11, color: '#00C48C' }}>scan.completed</span>
+                </div>
+                <div style={{ padding: '14px 20px', ...MONO, fontSize: 12, lineHeight: 1.7 }}>
+                  <div><Muted c="{" /></div>
+                  <div style={{ paddingLeft: 16 }}><K c="event" /><Muted c=": " /><S c="scan.completed" /><Muted c="," /></div>
+                  <div style={{ paddingLeft: 16 }}><K c="scan_id" /><Muted c=": " /><S c="sc_a8d3f2c1" /><Muted c="," /></div>
+                  <div style={{ paddingLeft: 16 }}><K c="url" /><Muted c=": " /><S c="https://your-site.com" /><Muted c="," /></div>
+                  <div style={{ paddingLeft: 16 }}><K c="score" /><Muted c=": " /><N c="74" /><Muted c="," /></div>
+                  <div style={{ paddingLeft: 16 }}><K c="data" /><Muted c=": {" /></div>
+                  <div style={{ paddingLeft: 32 }}><K c="domain" /><Muted c=": " /><S c="your-site.com" /><Muted c="," /></div>
+                  <div style={{ paddingLeft: 32 }}><K c="verdict" /><Muted c=": " /><S c="Good" /></div>
+                  <div style={{ paddingLeft: 16 }}><Muted c="}" /></div>
+                  <div><Muted c="}" /></div>
+                </div>
+              </div>
+
+              {/* scan.failed */}
+              <div className="wd-panel" style={{ borderTop: '1px solid rgba(232,99,95,0.4)', overflow: 'hidden' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 16px', borderBottom: '0.5px solid rgba(255,255,255,0.06)' }}>
+                  <span style={{ width: 5, height: 5, background: '#E8635F', flexShrink: 0, display: 'inline-block' }} />
+                  <span style={{ ...MONO, fontSize: 11, color: '#E8635F' }}>scan.failed</span>
+                </div>
+                <div style={{ padding: '14px 20px', ...MONO, fontSize: 12, lineHeight: 1.7 }}>
+                  <div><Muted c="{" /></div>
+                  <div style={{ paddingLeft: 16 }}><K c="event" /><Muted c=": " /><span style={{ color: '#E8635F' }}>&quot;scan.failed&quot;</span><Muted c="," /></div>
+                  <div style={{ paddingLeft: 16 }}><K c="scan_id" /><Muted c=": " /><S c="sc_a8d3f2c1" /><Muted c="," /></div>
+                  <div style={{ paddingLeft: 16 }}><K c="url" /><Muted c=": " /><S c="https://your-site.com" /><Muted c="," /></div>
+                  <div style={{ paddingLeft: 16 }}><K c="score" /><Muted c=": " /><span style={{ color: '#6E7587' }}>null</span><Muted c="," /></div>
+                  <div style={{ paddingLeft: 16 }}><K c="data" /><Muted c=": {" /></div>
+                  <div style={{ paddingLeft: 32 }}><K c="domain" /><Muted c=": " /><S c="your-site.com" /><Muted c="," /></div>
+                  <div style={{ paddingLeft: 32 }}><K c="error" /><Muted c=": " /><span style={{ color: '#E8635F' }}>&quot;bot_blocked&quot;</span><Muted c="," /></div>
+                  <div style={{ paddingLeft: 32 }}><K c="blocked" /><Muted c=": " /><span style={{ color: '#E8635F' }}>true</span><Muted c="," /></div>
+                  <div style={{ paddingLeft: 32 }}><K c="code" /><Muted c=": " /><span style={{ color: '#E8635F' }}>&quot;BOT_BLOCKED&quot;</span></div>
+                  <div style={{ paddingLeft: 16 }}><Muted c="}" /></div>
+                  <div><Muted c="}" /></div>
+                </div>
+              </div>
+            </div>
+
+            {/* Delivery headers reference */}
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 16 }}>
+              {[
+                { h: 'X-WebDoc-Event', v: 'scan.completed | scan.failed' },
+                { h: 'X-WebDoc-Signature', v: 'HMAC-SHA256 hex of body' },
+                { h: 'X-WebDoc-Attempt', v: '1 | 2 | 3' },
+              ].map(item => (
+                <div key={item.h} style={{ background: '#0A0E18', border: '0.5px solid rgba(157,140,255,0.18)', padding: '7px 12px', display: 'flex', gap: 8 }}>
+                  <span style={{ ...MONO, fontSize: 11, color: '#8080c0' }}>{item.h}</span>
+                  <span style={{ ...MONO, fontSize: 11, color: '#6E7587' }}>{item.v}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
         </div>
       </section>
       <div className="section-separator" />

@@ -16,8 +16,8 @@ const RATE_POINTS = [
   { label: 'PLAYGROUND', price: '$0.25', color: '#6F9BC6' },
   { label: 'DEV',        price: '$0.19', color: '#6F9BC6' },
   { label: 'BUILDER',    price: '$0.17', color: '#6F9BC6' },
-  { label: 'SCALE',      price: '$0.15', color: '#00C48C' },
-  { label: 'ENTERPRISE', price: '$0.11', color: '#00C48C' },
+  { label: 'SCALE',      price: '$0.15', color: '#9D8CFF' },
+  { label: 'ENTERPRISE', price: '$0.11', color: '#9D8CFF' },
 ]
 
 type SpecEntry = { k: string; v: string }
@@ -274,18 +274,18 @@ const API_CARDS_DEF = [
     accentColor: 'rgba(157,140,255,0.5)', ctaBorderColor: 'rgba(157,140,255,0.45)', ctaColor: '#9D8CFF',
   },
   {
-    tier: 'SCALE', tierColor: '#00C48C',
-    price: '$249', economy: '/mo · 3,000 scans · best value', economyColor: '#00C48C',
+    tier: 'SCALE', tierColor: '#9D8CFF',
+    price: '$249', economy: '/mo · 3,000 scans · best value', economyColor: '#9D8CFF',
     bestFor: 'High-volume integrations and teams that need dedicated infrastructure and rate limits.',
     cta: 'START SCALE →', ctaHref: '/auth?surface=api&plan=scale',
-    accentColor: 'rgba(0,196,140,0.5)', ctaBorderColor: 'rgba(0,196,140,0.45)', ctaColor: '#00C48C',
+    accentColor: 'rgba(157,140,255,0.5)', ctaBorderColor: 'rgba(157,140,255,0.45)', ctaColor: '#9D8CFF',
   },
   {
-    tier: 'ENTERPRISE', tierColor: '#00C48C',
-    price: 'Custom', economy: 'from $0.11/scan · SLA', economyColor: '#00C48C',
+    tier: 'ENTERPRISE', tierColor: '#9D8CFF',
+    price: 'Custom', economy: 'from $0.11/scan · SLA', economyColor: '#9D8CFF',
     bestFor: 'Organizations requiring custom volume, SLA guarantees, and dedicated support.',
     cta: 'TALK TO US →', ctaHref: 'mailto:hello@webdocai.com',
-    accentColor: 'rgba(0,196,140,0.5)', ctaBorderColor: 'rgba(0,196,140,0.45)', ctaColor: '#00C48C',
+    accentColor: 'rgba(157,140,255,0.5)', ctaBorderColor: 'rgba(157,140,255,0.45)', ctaColor: '#9D8CFF',
   },
 ]
 

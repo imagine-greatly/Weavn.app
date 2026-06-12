@@ -790,6 +790,176 @@ export default function DevelopersPage() {
       </section>
       <div className="section-separator" />
 
+      {/* ── A. BUILT FOR AGENTS AND AUTOMATION ──────────────────────────── */}
+      <section style={{ position: 'relative', overflow: 'hidden', background: '#080D18', borderTop: '0.5px solid rgba(157,140,255,0.2)' }}>
+        <div aria-hidden style={{
+          position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0,
+          background: 'radial-gradient(ellipse 900px 600px at 50% 50%, rgba(157,140,255,0.05) 0%, transparent 60%)',
+        }} />
+        <Ticks />
+
+        <div style={{ position: 'relative', zIndex: 1, maxWidth: 1100, margin: '0 auto', padding: '64px 32px 72px' }}>
+          <p style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.2em', color: '#9D8CFF', margin: '0 0 16px' }}>
+            BUILT FOR AGENTS AND AUTOMATION
+          </p>
+          <h2 style={{ ...DISP, fontSize: 'clamp(26px, 3.5vw, 38px)', fontWeight: 700, letterSpacing: '-0.5px', color: '#E6E9EE', margin: '0 0 12px', lineHeight: 1.15 }}>
+            Deterministic output. Every call.
+          </h2>
+          <p style={{ ...SANS, fontSize: 15, lineHeight: 1.65, color: '#9398A8', maxWidth: 680, margin: '0 0 48px' }}>
+            An agent can only act on output it can parse identically every time. The same URL always returns the same schema — scores, findings, severity, and copy rewrites — whether it runs at 3am in a batch or inline in a user flow.
+          </p>
+
+          {/* Batch loop pattern */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+            <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.18em', color: '#6E7587', margin: '0 0 16px' }}>AGENT LOOP PATTERN</p>
+
+            {/* Flow steps */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-0">
+              {[
+                {
+                  step: '01',
+                  label: 'BATCH SUBMIT',
+                  route: 'POST /api/v1/scan/batch',
+                  body: '{"urls": [...], "async": true, "webhook_url": "..."}',
+                  detail: 'Up to 10 URLs in a single request. All scan in parallel. Returns immediately with a batch_id.',
+                  accent: 'rgba(157,140,255,0.45)',
+                  accentRgba: '157,140,255',
+                },
+                {
+                  step: '02',
+                  label: 'ASYNC PROCESSING',
+                  route: 'status: pending',
+                  body: 'Each URL scanned independently. Structured JSON produced per URL. No polling required.',
+                  detail: 'The engine runs 307 checks per URL. Parallel execution — a 10-URL batch completes in roughly the same wall time as one.',
+                  accent: 'rgba(157,140,255,0.3)',
+                  accentRgba: '157,140,255',
+                },
+                {
+                  step: '03',
+                  label: 'WEBHOOK DELIVERY',
+                  route: 'event: scan.completed',
+                  body: '{"event": "scan.completed", "scan_id": "...", "score": 74, "data": {...}}',
+                  detail: 'Single structured payload delivered to your endpoint. Three delivery attempts with exponential backoff.',
+                  accent: 'rgba(0,196,140,0.35)',
+                  accentRgba: '0,196,140',
+                },
+              ].map((s, i) => (
+                <div
+                  key={s.step}
+                  style={{
+                    background: '#0A0E18',
+                    borderTop: `1px solid ${s.accent}`,
+                    borderLeft: `0.5px solid rgba(${s.accentRgba},0.12)`,
+                    borderRight: `0.5px solid rgba(${s.accentRgba},0.06)`,
+                    borderBottom: `0.5px solid rgba(${s.accentRgba},0.04)`,
+                    padding: '20px 22px',
+                    borderLeftWidth: i === 0 ? '1px' : '0.5px',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                    <span style={{ ...MONO, fontSize: 10, color: '#9D8CFF', background: 'rgba(157,140,255,0.08)', border: '0.5px solid rgba(157,140,255,0.25)', padding: '3px 8px', letterSpacing: '0.12em' }}>{s.step}</span>
+                    <span style={{ ...MONO, fontSize: 10, color: '#6E7587', textTransform: 'uppercase', letterSpacing: '0.15em' }}>{s.label}</span>
+                  </div>
+                  <p style={{ ...MONO, fontSize: 11, color: '#9D8CFF', margin: '0 0 8px', wordBreak: 'break-all' }}>{s.route}</p>
+                  <p style={{ ...SANS, fontSize: 13, lineHeight: 1.55, color: '#6E7587', margin: 0 }}>{s.detail}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Route reference */}
+          <div style={{ marginTop: 32, display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+            {[
+              { method: 'POST', path: '/api/v1/scan/batch', note: 'up to 10 URLs, parallel' },
+              { method: 'GET',  path: '/api/v1/webhooks',   note: 'list registered endpoints' },
+              { method: 'POST', path: '/api/v1/webhooks',   note: 'register endpoint, secret returned once' },
+              { method: 'DELETE', path: '/api/v1/webhooks', note: 'remove endpoint by id' },
+            ].map(r => (
+              <div
+                key={r.path + r.method}
+                style={{
+                  background: '#0A0E18',
+                  border: '0.5px solid rgba(157,140,255,0.18)',
+                  padding: '8px 14px',
+                  display: 'flex', alignItems: 'center', gap: 8,
+                }}
+              >
+                <span style={{ ...MONO, fontSize: 10, color: r.method === 'POST' ? '#9D8CFF' : r.method === 'DELETE' ? '#E8635F' : '#6F9BC6', flexShrink: 0 }}>{r.method}</span>
+                <span style={{ ...MONO, fontSize: 11, color: '#E6E9EE' }}>{r.path}</span>
+                <span style={{ ...MONO, fontSize: 10, color: '#6E7587' }}>· {r.note}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+      <div className="section-separator" />
+
+      {/* ── B. WHAT YOU CAN BUILD ────────────────────────────────────────── */}
+      <section style={{ position: 'relative', overflow: 'hidden' }}>
+        <div aria-hidden style={{
+          position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0,
+          background: 'radial-gradient(ellipse 800px 500px at 50% 50%, rgba(157,140,255,0.04) 0%, transparent 60%)',
+        }} />
+        <Ticks />
+
+        <div style={{ position: 'relative', zIndex: 1, maxWidth: 1100, margin: '0 auto', padding: '64px 32px 72px' }}>
+          <p style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.2em', color: '#9D8CFF', margin: '0 0 16px' }}>
+            WHAT YOU CAN BUILD
+          </p>
+          <h2 style={{ ...DISP, fontSize: 'clamp(26px, 3.5vw, 38px)', fontWeight: 700, letterSpacing: '-0.5px', color: '#E6E9EE', margin: '0 0 40px', lineHeight: 1.15 }}>
+            Five integrations. One endpoint.
+          </h2>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {[
+              {
+                title: 'CMS / site builder score badge',
+                desc: 'Embed a live conversion score for any page in Webflow, Framer, or a custom CMS. Re-scan on publish; surface the delta.',
+                tag: 'POST /api/v1/scan on deploy hook',
+              },
+              {
+                title: 'CRM lead audit on creation',
+                desc: 'When a lead record is created, auto-scan their website. Attach the score and top findings to the deal before the first call.',
+                tag: 'triggered from CRM webhook',
+              },
+              {
+                title: 'Agency white-label reporting',
+                desc: 'Batch-scan client sites on a schedule. Feed findings into your own branded report template. Deliver to clients without exposing the underlying engine.',
+                tag: 'POST /api/v1/scan/batch',
+              },
+              {
+                title: 'AI agent decision loop',
+                desc: 'Feed scores and structured findings directly into an LLM agent. The JSON schema is stable — the agent parses it the same way every run.',
+                tag: 'structured JSON → agent context',
+              },
+              {
+                title: 'Prospect list bulk audit',
+                desc: 'Upload a CSV of target domains. Batch-scan in parallel. Filter by score threshold to prioritise outreach on sites with the highest lift potential.',
+                tag: 'POST /api/v1/scan/batch → filter by score',
+              },
+            ].map(card => (
+              <div
+                key={card.title}
+                style={{
+                  background: '#0A0E18',
+                  borderTop: '1px solid rgba(157,140,255,0.35)',
+                  borderLeft: '0.5px solid rgba(157,140,255,0.12)',
+                  borderRight: '0.5px solid rgba(157,140,255,0.06)',
+                  borderBottom: '0.5px solid rgba(157,140,255,0.04)',
+                  padding: '20px 22px',
+                  display: 'flex', flexDirection: 'column', gap: 8,
+                }}
+              >
+                <p style={{ ...DISP, fontSize: 15, fontWeight: 600, color: '#E6E9EE', margin: 0 }}>{card.title}</p>
+                <p style={{ ...SANS, fontSize: 13, lineHeight: 1.6, color: '#9398A8', margin: 0, flexGrow: 1 }}>{card.desc}</p>
+                <p style={{ ...MONO, fontSize: 10, color: '#9D8CFF', margin: 0, paddingTop: 8, borderTop: '0.5px solid rgba(157,140,255,0.1)', letterSpacing: '0.04em' }}>{card.tag}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+      <div className="section-separator" />
+
       {/* ── 3. RATE & PLANS ────────────────────────────────────────────────── */}
       <section style={{ position: 'relative', overflow: 'hidden', borderTop: '0.5px solid rgba(111,155,198,0.15)' }}>
         <div aria-hidden style={{

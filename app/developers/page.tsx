@@ -670,6 +670,9 @@ export default function DevelopersPage() {
           }}>
             <TabbedCode />
           </div>
+          <p style={{ ...MONO, fontSize: 10, color: '#404860', textAlign: 'left', margin: '-18px 0 20px', maxWidth: 672, marginLeft: 'auto', marginRight: 'auto', padding: '0 2px' }}>
+            No official SDK — curl, Node, and Python above are complete. Any HTTP client that supports Bearer auth and JSON POST works identically.
+          </p>
 
           {/* Stat pills */}
           <div style={{ display: 'flex', justifyContent: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 32 }}>

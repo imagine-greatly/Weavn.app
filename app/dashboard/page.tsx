@@ -125,6 +125,30 @@ function HeroSection() {
         }}
       />
       <Ticks />
+      {/* GHOST_RING_START — remove this entire block to delete */}
+      <div
+        aria-hidden="true"
+        style={{
+          position: 'absolute',
+          right: '-120px',
+          top: '50%',
+          transform: 'translateY(-50%)',
+          width: 480,
+          height: 480,
+          pointerEvents: 'none',
+          zIndex: 0,
+          opacity: 0.07,
+        }}
+      >
+        <svg width="480" height="480" viewBox="0 0 480 480" aria-hidden style={{ display: 'block' }}>
+          <circle cx="240" cy="240" r="215" fill="none" stroke="rgba(111,155,198,0.4)" strokeWidth="3" />
+          <circle cx="240" cy="240" r="215" fill="none" stroke="#6F9BC6" strokeWidth="3"
+            strokeDasharray="973 378" transform="rotate(-90 240 240)" strokeLinecap="round" />
+          <text x="240" y="240" dominantBaseline="central" textAnchor="middle"
+            fill="#6F9BC6" fontFamily="'Space Grotesk', sans-serif" fontWeight={600} fontSize={38}>72</text>
+        </svg>
+      </div>
+      {/* GHOST_RING_END */}
       <div style={{ position:'relative',zIndex:1,maxWidth:800,margin:'0 auto',width:'100%',textAlign:'center' }}>
         {/* Kicker */}
         <p style={{ ...MONO,fontSize:11,textTransform:'uppercase',letterSpacing:'0.2em',color:STEEL,margin:'0 0 20px' }}>

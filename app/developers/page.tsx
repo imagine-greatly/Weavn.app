@@ -680,6 +680,19 @@ export default function DevelopersPage() {
             ))}
           </div>
 
+          {/* Playground + response size */}
+          <p style={{ ...MONO, fontSize: 10, color: '#6E7587', textAlign: 'center', margin: '0 0 24px', letterSpacing: '0.03em' }}>
+            Try live at{' '}
+            <Link href="/playground" style={{ color: '#6F9BC6', textDecoration: 'none' }}>/playground</Link>
+            {' — no client setup needed.  ·  Response size scales with '}
+            <span style={{ color: '#8080c0' }}>finding_limit</span>
+            {' (1–20) and '}
+            <span style={{ color: '#8080c0' }}>finding_depth</span>
+            {'. Use '}
+            <span style={{ color: '#8080c0' }}>fields</span>
+            {' to omit unneeded top-level blocks.'}
+          </p>
+
           {/* Primary CTA — URL input + run scan */}
           <div style={{ maxWidth: 672, margin: '0 auto', display: 'flex', gap: 0 }}>
             <input

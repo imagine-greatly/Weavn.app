@@ -16,8 +16,8 @@ const RATE_POINTS = [
   { label: 'PLAYGROUND', price: '$0.25', color: '#6F9BC6' },
   { label: 'DEV',        price: '$0.19', color: '#6F9BC6' },
   { label: 'BUILDER',    price: '$0.17', color: '#6F9BC6' },
-  { label: 'SCALE',      price: '$0.15', color: '#9D8CFF' },
-  { label: 'ENTERPRISE', price: '$0.11', color: '#9D8CFF' },
+  { label: 'SCALE',      price: '$0.15', color: '#6F9BC6' },
+  { label: 'ENTERPRISE', price: '$0.11', color: '#6F9BC6' },
 ]
 
 type SpecEntry = { k: string; v: string }
@@ -79,7 +79,7 @@ const TABLE_ROWS: { feature: string; values: string[] }[] = [
 function cellColor(v: string): string {
   if (v === '✓') return '#00C48C'
   if (v === '✗') return '#6E7587'
-  if (v === 'dedicated' || v === 'custom') return '#9D8CFF'
+  if (v === 'dedicated' || v === 'custom') return '#6F9BC6'
   if (/^\$/.test(v) || /^[\d,]/.test(v) || v.includes('/min')) return '#6F9BC6'
   return '#9398A8'
 }
@@ -194,7 +194,7 @@ function SpecRow({ k, v }: { k: string; v: string }) {
   const isTrue    = v === 'true'
   const isFalse   = v === 'false'
   const isSpecial = v === 'dedicated' || v === 'custom'
-  const vColor    = isTrue ? '#00C48C' : isFalse ? '#6E7587' : isSpecial ? '#9D8CFF' : '#E6E9EE'
+  const vColor    = isTrue ? '#00C48C' : isFalse ? '#6E7587' : isSpecial ? '#6F9BC6' : '#E6E9EE'
   return (
     <div style={{ display: 'flex', alignItems: 'baseline', ...MONO, fontSize: 11, marginBottom: 5 }}>
       <span style={{ color: '#8080c0', flexShrink: 0 }}>{k}</span>
@@ -230,7 +230,7 @@ function FValApi({ v }: { v: FeatValApi }) {
   if (v === true)        return <span style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, color: '#00C48C' }}>✓</span>
   if (v === false)       return <span style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, color: 'rgba(255,255,255,0.2)' }}>—</span>
   if (v === 'unlimited') return <span style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, color: '#00C48C' }}>{v}</span>
-  if (v === 'dedicated') return <span style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, color: '#9D8CFF' }}>{v}</span>
+  if (v === 'dedicated') return <span style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, color: '#6F9BC6' }}>{v}</span>
   if (v === 'custom')    return <span style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, color: '#6F9BC6' }}>{v}</span>
   return <span style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, color: '#E6E9EE' }}>{v}</span>
 }
@@ -253,39 +253,39 @@ const API_FEATS: Array<{ key: string; values: [FeatValApi, FeatValApi, FeatValAp
 
 const API_CARDS_DEF = [
   {
-    tier: 'PLAYGROUND', tierColor: '#9D8CFF',
-    price: '25 free', economy: 'then $0.25/scan', economyColor: '#9D8CFF',
+    tier: 'PLAYGROUND', tierColor: '#8080c0',
+    price: '25 free', economy: 'then $0.25/scan', economyColor: '#6F9BC6',
     bestFor: 'Developers evaluating the API before building. No commitment required.',
     cta: 'GET API KEY →', ctaHref: '/auth?surface=api',
-    accentColor: 'rgba(157,140,255,0.5)', ctaBorderColor: 'rgba(157,140,255,0.45)', ctaColor: '#9D8CFF',
+    accentColor: 'rgba(255,255,255,0.12)', ctaBorderColor: 'rgba(157,140,255,0.45)', ctaColor: '#9D8CFF',
   },
   {
-    tier: 'DEV', tierColor: '#9D8CFF',
-    price: '$29', economy: '/mo · 300 scans', economyColor: '#9D8CFF',
+    tier: 'DEV', tierColor: '#8080c0',
+    price: '$29', economy: '/mo · 300 scans', economyColor: '#6F9BC6',
     bestFor: 'Solo developers integrating conversion intelligence into their first product.',
     cta: 'START DEV →', ctaHref: '/auth?surface=api&plan=dev',
-    accentColor: 'rgba(157,140,255,0.5)', ctaBorderColor: 'rgba(157,140,255,0.45)', ctaColor: '#9D8CFF',
+    accentColor: 'rgba(255,255,255,0.12)', ctaBorderColor: 'rgba(157,140,255,0.45)', ctaColor: '#9D8CFF',
   },
   {
-    tier: 'BUILDER', tierColor: '#9D8CFF',
-    price: '$99', economy: '/mo · 1,000 scans', economyColor: '#9D8CFF',
+    tier: 'BUILDER', tierColor: '#8080c0',
+    price: '$99', economy: '/mo · 1,000 scans', economyColor: '#6F9BC6',
     bestFor: 'Teams building audit pipelines or integrating webdoc into client workflows.',
     cta: 'START BUILDER →', ctaHref: '/auth?surface=api&plan=builder',
-    accentColor: 'rgba(157,140,255,0.5)', ctaBorderColor: 'rgba(157,140,255,0.45)', ctaColor: '#9D8CFF',
+    accentColor: 'rgba(255,255,255,0.12)', ctaBorderColor: 'rgba(157,140,255,0.45)', ctaColor: '#9D8CFF',
   },
   {
-    tier: 'SCALE', tierColor: '#9D8CFF',
-    price: '$249', economy: '/mo · 3,000 scans · best value', economyColor: '#9D8CFF',
+    tier: 'SCALE', tierColor: '#8080c0',
+    price: '$249', economy: '/mo · 3,000 scans · best value', economyColor: '#6F9BC6',
     bestFor: 'High-volume integrations and teams that need dedicated infrastructure and rate limits.',
     cta: 'START SCALE →', ctaHref: '/auth?surface=api&plan=scale',
-    accentColor: 'rgba(157,140,255,0.5)', ctaBorderColor: 'rgba(157,140,255,0.45)', ctaColor: '#9D8CFF',
+    accentColor: 'rgba(255,255,255,0.12)', ctaBorderColor: 'rgba(157,140,255,0.45)', ctaColor: '#9D8CFF',
   },
   {
-    tier: 'ENTERPRISE', tierColor: '#9D8CFF',
-    price: 'Custom', economy: 'from $0.11/scan · SLA', economyColor: '#9D8CFF',
+    tier: 'ENTERPRISE', tierColor: '#8080c0',
+    price: 'Custom', economy: 'from $0.11/scan · SLA', economyColor: '#6F9BC6',
     bestFor: 'Organizations requiring custom volume, SLA guarantees, and dedicated support.',
     cta: 'TALK TO US →', ctaHref: 'mailto:hello@webdocai.com',
-    accentColor: 'rgba(157,140,255,0.5)', ctaBorderColor: 'rgba(157,140,255,0.45)', ctaColor: '#9D8CFF',
+    accentColor: 'rgba(255,255,255,0.12)', ctaBorderColor: 'rgba(157,140,255,0.45)', ctaColor: '#9D8CFF',
   },
 ]
 
@@ -306,7 +306,7 @@ function TabbedCode({ compact }: { compact?: boolean }) {
   ]
   return (
     <div>
-      <div style={{ display: 'flex', borderBottom: '0.5px solid rgba(157,140,255,0.15)' }}>
+      <div style={{ display: 'flex', borderBottom: '0.5px solid rgba(255,255,255,0.08)' }}>
         {TABS.map(t => (
           <button
             key={t.id}
@@ -405,9 +405,9 @@ function HowItWorksSection() {
       <div aria-hidden style={{
         position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0,
         background: [
-          'radial-gradient(ellipse 480px 700px at 16% 70%, rgba(111,155,198,0.08) 0%, transparent 60%)',
-          'radial-gradient(ellipse 480px 700px at 50% 70%, rgba(128,128,192,0.05) 0%, transparent 60%)',
-          'radial-gradient(ellipse 480px 700px at 84% 70%, rgba(0,196,140,0.06) 0%, transparent 60%)',
+          'radial-gradient(ellipse 480px 700px at 16% 70%, rgba(111,155,198,0.04) 0%, transparent 60%)',
+          'radial-gradient(ellipse 480px 700px at 50% 70%, rgba(40,50,80,0.025) 0%, transparent 60%)',
+          'radial-gradient(ellipse 480px 700px at 84% 70%, rgba(0,196,140,0.03) 0%, transparent 60%)',
         ].join(', '),
       }} />
 
@@ -442,7 +442,7 @@ function HowItWorksSection() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
             {([
               { num: '01', label: 'INPUT',      accent: '#6F9BC6', aRgba: '111,155,198' },
-              { num: '02', label: 'PROCESSING', accent: '#9D8CFF', aRgba: '157,140,255' },
+              { num: '02', label: 'PROCESSING', accent: '#8080c0', aRgba: '128,128,192' },
               { num: '03', label: 'OUTPUT',     accent: '#00C48C', aRgba: '0,196,140'   },
             ] as const).map(s => (
               <div key={s.num} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
@@ -495,18 +495,18 @@ function HowItWorksSection() {
           {/* Panel 02 — PROCESSING */}
           <div style={{
             background: '#0A0E18',
-            borderTop: '1px solid rgba(157,140,255,0.42)',
-            borderLeft: '1px solid rgba(157,140,255,0.12)',
-            borderRight: '1px solid rgba(157,140,255,0.06)',
-            borderBottom: '1px solid rgba(157,140,255,0.04)',
-            boxShadow: '0 0 0 1px rgba(157,140,255,0.08), 0 0 24px rgba(157,140,255,0.07)',
+            borderTop: '1px solid rgba(128,128,192,0.35)',
+            borderLeft: '1px solid rgba(255,255,255,0.07)',
+            borderRight: '1px solid rgba(255,255,255,0.04)',
+            borderBottom: '1px solid rgba(255,255,255,0.03)',
+            boxShadow: 'none',
             minHeight: 320, display: 'flex', flexDirection: 'column',
             position: 'relative', overflow: 'hidden',
           }}>
-            <div style={{ padding: '10px 14px', borderBottom: '0.5px solid rgba(157,140,255,0.1)', display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div style={{ padding: '10px 14px', borderBottom: '0.5px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', gap: 8 }}>
               <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#00C48C', display: 'inline-block', flexShrink: 0 }} />
               <span style={{ ...MONO, fontSize: 10, color: '#6E7587', textTransform: 'uppercase', letterSpacing: '0.15em' }}>SCANNING</span>
-              <span style={{ ...MONO, fontSize: 10, color: '#9D8CFF', marginLeft: 'auto' }}>ai · 307 checks</span>
+              <span style={{ ...MONO, fontSize: 10, color: '#6E7587', marginLeft: 'auto' }}>ai · 307 checks</span>
             </div>
             <div style={{ padding: '14px', flexGrow: 1, display: 'flex', flexDirection: 'column', gap: 9 }}>
               {HIW_SCAN_CATS.map((name, i) => {
@@ -521,7 +521,7 @@ function HowItWorksSection() {
             </div>
             <div style={{ padding: '10px 14px 14px' }}>
               <span style={{ ...MONO, fontSize: 11, color: '#404860' }}>running 307 checks · 27 categories</span>
-              <span style={{ ...MONO, fontSize: 11, color: '#9D8CFF' }}> ···</span>
+              <span style={{ ...MONO, fontSize: 11, color: '#6E7587' }}> ···</span>
             </div>
           </div>
 
@@ -600,7 +600,7 @@ export default function DevelopersPage() {
         <Ticks />
 
         <div style={{ position: 'relative', zIndex: 1, maxWidth: 896, margin: '0 auto' }}>
-          <p style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.2em', color: '#9D8CFF', margin: '0 0 20px' }}>
+          <p style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.2em', color: '#8080c0', margin: '0 0 20px' }}>
             API
           </p>
           <h1 style={{ ...DISP, fontSize: 'clamp(36px, 5vw, 56px)', fontWeight: 700, letterSpacing: '-1.5px', color: '#E6E9EE', margin: '0 0 16px', lineHeight: 1.1 }}>
@@ -614,11 +614,11 @@ export default function DevelopersPage() {
           {/* Tabbed code block */}
           <div style={{
             maxWidth: 672, margin: '0 auto 24px',
-            borderTop: '1px solid rgba(157,140,255,0.35)',
-            borderLeft: '1px solid rgba(157,140,255,0.15)',
-            borderRight: '1px solid rgba(157,140,255,0.08)',
-            borderBottom: '1px solid rgba(157,140,255,0.05)',
-            boxShadow: '0 0 0 1px rgba(157,140,255,0.15), 0 0 40px rgba(157,140,255,0.08)',
+            borderTop: '1px solid rgba(255,255,255,0.14)',
+            borderLeft: '1px solid rgba(255,255,255,0.07)',
+            borderRight: '1px solid rgba(255,255,255,0.04)',
+            borderBottom: '1px solid rgba(255,255,255,0.03)',
+            boxShadow: '0 0 0 1px rgba(255,255,255,0.06)',
             background: '#080D18',
             position: 'relative', overflow: 'hidden',
           }}>
@@ -628,7 +628,7 @@ export default function DevelopersPage() {
           {/* Stat pills */}
           <div style={{ display: 'flex', justifyContent: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 32 }}>
             {['307 checks', '~90s median', 'cache hits free'].map(label => (
-              <span key={label} style={{ background: 'rgba(157,140,255,0.06)', border: '0.5px solid rgba(157,140,255,0.2)', padding: '5px 12px', ...MONO, fontSize: 11, color: '#9D8CFF', letterSpacing: '0.05em' }}>
+              <span key={label} style={{ background: 'rgba(255,255,255,0.04)', border: '0.5px solid rgba(255,255,255,0.1)', padding: '5px 12px', ...MONO, fontSize: 11, color: '#6F9BC6', letterSpacing: '0.05em' }}>
                 {label}
               </span>
             ))}
@@ -644,8 +644,8 @@ export default function DevelopersPage() {
               placeholder="https://your-site.com"
               style={{
                 ...MONO, fontSize: 13, flex: 1,
-                background: 'rgba(157,140,255,0.04)',
-                border: '1px solid rgba(157,140,255,0.35)',
+                background: 'rgba(255,255,255,0.03)',
+                border: '1px solid rgba(255,255,255,0.12)',
                 borderRight: 'none',
                 color: '#E6E9EE',
                 padding: '12px 16px',
@@ -692,15 +692,15 @@ export default function DevelopersPage() {
       <div className="section-separator" />
 
       {/* ── 2. RESPONSE SCHEMA ─────────────────────────────────────────────── */}
-      <section style={{ position: 'relative', overflow: 'hidden', borderTop: '0.5px solid rgba(157,140,255,0.2)' }}>
+      <section style={{ position: 'relative', overflow: 'hidden', borderTop: '0.5px solid rgba(255,255,255,0.08)' }}>
         <div aria-hidden style={{
           position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0,
-          background: 'radial-gradient(ellipse 1000px 700px at 50% 50%, rgba(157,140,255,0.05) 0%, transparent 60%)',
+          background: 'radial-gradient(ellipse 1000px 700px at 50% 50%, rgba(40,50,80,0.025) 0%, transparent 60%)',
         }} />
         <Ticks />
 
         <div style={{ position: 'relative', zIndex: 1, maxWidth: 896, margin: '0 auto', padding: '64px 32px 72px' }}>
-          <p style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.2em', color: '#9D8CFF', margin: '0 0 16px' }}>
+          <p style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.2em', color: '#8080c0', margin: '0 0 16px' }}>
             RESPONSE SCHEMA
           </p>
           <h2 style={{ ...DISP, fontSize: 'clamp(28px, 4vw, 44px)', fontWeight: 700, letterSpacing: '-1px', color: '#E6E9EE', margin: '0 0 40px', lineHeight: 1.15 }}>
@@ -709,11 +709,10 @@ export default function DevelopersPage() {
 
           {/* JSON panel with streaming animation */}
           <div style={{
-            borderTop: '1px solid rgba(157,140,255,0.4)',
-            borderLeft: '1px solid rgba(157,140,255,0.2)',
-            borderRight: '1px solid rgba(255,255,255,0.06)',
-            borderBottom: '1px solid rgba(255,255,255,0.04)',
-            boxShadow: '0 0 0 1px rgba(157,140,255,0.12), 0 0 50px rgba(157,140,255,0.08)',
+            borderTop: '1px solid rgba(255,255,255,0.14)',
+            borderLeft: '1px solid rgba(255,255,255,0.07)',
+            borderRight: '1px solid rgba(255,255,255,0.04)',
+            borderBottom: '1px solid rgba(255,255,255,0.03)',
             background: '#080D18',
             overflow: 'hidden',
           }}>
@@ -764,9 +763,9 @@ export default function DevelopersPage() {
           </div>
 
           {/* The finding object — full shape */}
-          <div className="wd-panel" style={{ borderTop: '1px solid rgba(157,140,255,0.4)', padding: 0, overflow: 'hidden', marginTop: 32 }}>
+          <div className="wd-panel" style={{ padding: 0, overflow: 'hidden', marginTop: 32 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', borderBottom: '0.5px solid rgba(255,255,255,0.06)' }}>
-              <span style={{ width: 5, height: 5, background: '#9D8CFF', flexShrink: 0, display: 'inline-block' }} />
+              <span style={{ width: 5, height: 5, background: 'rgba(255,255,255,0.3)', flexShrink: 0, display: 'inline-block' }} />
               <span style={{ ...MONO, fontSize: 11, color: '#6E7587' }}>findings[0] · full object shape</span>
             </div>
             <div style={{ padding: '16px 20px', ...MONO, fontSize: 12, lineHeight: 1.85 }}>
@@ -790,15 +789,15 @@ export default function DevelopersPage() {
 
           {/* Error contract */}
           <div style={{ marginTop: 32 }}>
-            <p style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.18em', color: '#9D8CFF', margin: '0 0 16px' }}>ERROR CONTRACT</p>
+            <p style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.18em', color: '#8080c0', margin: '0 0 16px' }}>ERROR CONTRACT</p>
             <p style={{ ...SANS, fontSize: 13, lineHeight: 1.6, color: '#9398A8', margin: '0 0 20px', maxWidth: 680 }}>
               All errors return the same envelope so your handler never needs to branch on response shape — only on <span style={{ ...MONO, fontSize: 12, color: '#8080c0' }}>error.code</span>.
             </p>
 
             {/* Status code table */}
-            <div className="wd-panel" style={{ borderTop: '1px solid rgba(157,140,255,0.4)', overflow: 'hidden', marginBottom: 16 }}>
+            <div className="wd-panel" style={{ overflow: 'hidden', marginBottom: 16 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 16px', borderBottom: '0.5px solid rgba(255,255,255,0.06)' }}>
-                <span style={{ width: 5, height: 5, background: '#9D8CFF', flexShrink: 0, display: 'inline-block' }} />
+                <span style={{ width: 5, height: 5, background: 'rgba(255,255,255,0.3)', flexShrink: 0, display: 'inline-block' }} />
                 <span style={{ ...MONO, fontSize: 11, color: '#6E7587' }}>status codes · error.code reference</span>
               </div>
               <div style={{ ...MONO, fontSize: 11 }}>
@@ -828,7 +827,7 @@ export default function DevelopersPage() {
             </div>
 
             {/* Error object shape */}
-            <div className="wd-panel" style={{ borderTop: '1px solid rgba(157,140,255,0.4)', overflow: 'hidden' }}>
+            <div className="wd-panel" style={{ overflow: 'hidden' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 16px', borderBottom: '0.5px solid rgba(255,255,255,0.06)' }}>
                 <span style={{ width: 5, height: 5, background: '#E8635F', flexShrink: 0, display: 'inline-block' }} />
                 <span style={{ ...MONO, fontSize: 11, color: '#6E7587' }}>error response · all non-2xx</span>
@@ -852,7 +851,7 @@ export default function DevelopersPage() {
 
           {/* Webhook payload */}
           <div style={{ marginTop: 32 }}>
-            <p style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.18em', color: '#9D8CFF', margin: '0 0 16px' }}>WEBHOOK PAYLOAD</p>
+            <p style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.18em', color: '#8080c0', margin: '0 0 16px' }}>WEBHOOK PAYLOAD</p>
             <p style={{ ...SANS, fontSize: 13, lineHeight: 1.6, color: '#9398A8', margin: '0 0 20px', maxWidth: 680 }}>
               Every async and batch scan delivers a <span style={{ ...MONO, fontSize: 12, color: '#8080c0' }}>POST</span> to your registered endpoint when complete. Three delivery attempts: immediate, +5 min, +30 min. Verify with the <span style={{ ...MONO, fontSize: 12, color: '#8080c0' }}>X-WebDoc-Signature</span> header (HMAC-SHA256 of body, keyed with your webhook secret).
             </p>
@@ -908,7 +907,7 @@ export default function DevelopersPage() {
                 { h: 'X-WebDoc-Signature', v: 'HMAC-SHA256 hex of body' },
                 { h: 'X-WebDoc-Attempt', v: '1 | 2 | 3' },
               ].map(item => (
-                <div key={item.h} style={{ background: '#0A0E18', border: '0.5px solid rgba(157,140,255,0.18)', padding: '7px 12px', display: 'flex', gap: 8 }}>
+                <div key={item.h} style={{ background: '#0A0E18', border: '0.5px solid rgba(255,255,255,0.08)', padding: '7px 12px', display: 'flex', gap: 8 }}>
                   <span style={{ ...MONO, fontSize: 11, color: '#8080c0' }}>{item.h}</span>
                   <span style={{ ...MONO, fontSize: 11, color: '#6E7587' }}>{item.v}</span>
                 </div>
@@ -921,15 +920,15 @@ export default function DevelopersPage() {
       <div className="section-separator" />
 
       {/* ── A. BUILT FOR AGENTS AND AUTOMATION ──────────────────────────── */}
-      <section style={{ position: 'relative', overflow: 'hidden', background: '#080D18', borderTop: '0.5px solid rgba(157,140,255,0.2)' }}>
+      <section style={{ position: 'relative', overflow: 'hidden', background: '#080D18', borderTop: '0.5px solid rgba(255,255,255,0.08)' }}>
         <div aria-hidden style={{
           position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0,
-          background: 'radial-gradient(ellipse 900px 600px at 50% 50%, rgba(157,140,255,0.05) 0%, transparent 60%)',
+          background: 'radial-gradient(ellipse 900px 600px at 50% 50%, rgba(40,50,80,0.025) 0%, transparent 60%)',
         }} />
         <Ticks />
 
         <div style={{ position: 'relative', zIndex: 1, maxWidth: 1100, margin: '0 auto', padding: '64px 32px 72px' }}>
-          <p style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.2em', color: '#9D8CFF', margin: '0 0 16px' }}>
+          <p style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.2em', color: '#8080c0', margin: '0 0 16px' }}>
             BUILT FOR AGENTS AND AUTOMATION
           </p>
           <h2 style={{ ...DISP, fontSize: 'clamp(26px, 3.5vw, 38px)', fontWeight: 700, letterSpacing: '-0.5px', color: '#E6E9EE', margin: '0 0 12px', lineHeight: 1.15 }}>
@@ -987,10 +986,10 @@ export default function DevelopersPage() {
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-                    <span style={{ ...MONO, fontSize: 10, color: '#9D8CFF', background: 'rgba(157,140,255,0.08)', border: '0.5px solid rgba(157,140,255,0.25)', padding: '3px 8px', letterSpacing: '0.12em' }}>{s.step}</span>
+                    <span style={{ ...MONO, fontSize: 10, color: '#8080c0', background: 'rgba(128,128,192,0.08)', border: '0.5px solid rgba(128,128,192,0.2)', padding: '3px 8px', letterSpacing: '0.12em' }}>{s.step}</span>
                     <span style={{ ...MONO, fontSize: 10, color: '#6E7587', textTransform: 'uppercase', letterSpacing: '0.15em' }}>{s.label}</span>
                   </div>
-                  <p style={{ ...MONO, fontSize: 11, color: '#9D8CFF', margin: '0 0 8px', wordBreak: 'break-all' }}>{s.route}</p>
+                  <p style={{ ...MONO, fontSize: 11, color: '#6E7587', margin: '0 0 8px', wordBreak: 'break-all' }}>{s.route}</p>
                   <p style={{ ...SANS, fontSize: 13, lineHeight: 1.55, color: '#6E7587', margin: 0 }}>{s.detail}</p>
                 </div>
               ))}
@@ -1009,12 +1008,12 @@ export default function DevelopersPage() {
                 key={r.path + r.method}
                 style={{
                   background: '#0A0E18',
-                  border: '0.5px solid rgba(157,140,255,0.18)',
+                  border: '0.5px solid rgba(255,255,255,0.08)',
                   padding: '8px 14px',
                   display: 'flex', alignItems: 'center', gap: 8,
                 }}
               >
-                <span style={{ ...MONO, fontSize: 10, color: r.method === 'POST' ? '#9D8CFF' : r.method === 'DELETE' ? '#E8635F' : '#6F9BC6', flexShrink: 0 }}>{r.method}</span>
+                <span style={{ ...MONO, fontSize: 10, color: r.method === 'POST' ? '#8080c0' : r.method === 'DELETE' ? '#E8635F' : '#6F9BC6', flexShrink: 0 }}>{r.method}</span>
                 <span style={{ ...MONO, fontSize: 11, color: '#E6E9EE' }}>{r.path}</span>
                 <span style={{ ...MONO, fontSize: 10, color: '#6E7587' }}>· {r.note}</span>
               </div>
@@ -1028,12 +1027,12 @@ export default function DevelopersPage() {
       <section style={{ position: 'relative', overflow: 'hidden' }}>
         <div aria-hidden style={{
           position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0,
-          background: 'radial-gradient(ellipse 800px 500px at 50% 50%, rgba(157,140,255,0.04) 0%, transparent 60%)',
+          background: 'radial-gradient(ellipse 800px 500px at 50% 50%, rgba(40,50,80,0.02) 0%, transparent 60%)',
         }} />
         <Ticks />
 
         <div style={{ position: 'relative', zIndex: 1, maxWidth: 1100, margin: '0 auto', padding: '64px 32px 72px' }}>
-          <p style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.2em', color: '#9D8CFF', margin: '0 0 16px' }}>
+          <p style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.2em', color: '#8080c0', margin: '0 0 16px' }}>
             WHAT YOU CAN BUILD
           </p>
           <h2 style={{ ...DISP, fontSize: 'clamp(26px, 3.5vw, 38px)', fontWeight: 700, letterSpacing: '-0.5px', color: '#E6E9EE', margin: '0 0 40px', lineHeight: 1.15 }}>
@@ -1072,17 +1071,17 @@ export default function DevelopersPage() {
                 key={card.title}
                 style={{
                   background: '#0A0E18',
-                  borderTop: '1px solid rgba(157,140,255,0.35)',
-                  borderLeft: '0.5px solid rgba(157,140,255,0.12)',
-                  borderRight: '0.5px solid rgba(157,140,255,0.06)',
-                  borderBottom: '0.5px solid rgba(157,140,255,0.04)',
+                  borderTop: '1px solid rgba(255,255,255,0.1)',
+                  borderLeft: '0.5px solid rgba(255,255,255,0.06)',
+                  borderRight: '0.5px solid rgba(255,255,255,0.03)',
+                  borderBottom: '0.5px solid rgba(255,255,255,0.03)',
                   padding: '20px 22px',
                   display: 'flex', flexDirection: 'column', gap: 8,
                 }}
               >
                 <p style={{ ...DISP, fontSize: 15, fontWeight: 600, color: '#E6E9EE', margin: 0 }}>{card.title}</p>
                 <p style={{ ...SANS, fontSize: 13, lineHeight: 1.6, color: '#9398A8', margin: 0, flexGrow: 1 }}>{card.desc}</p>
-                <p style={{ ...MONO, fontSize: 10, color: '#9D8CFF', margin: 0, paddingTop: 8, borderTop: '0.5px solid rgba(157,140,255,0.1)', letterSpacing: '0.04em' }}>{card.tag}</p>
+                <p style={{ ...MONO, fontSize: 10, color: '#6E7587', margin: 0, paddingTop: 8, borderTop: '0.5px solid rgba(255,255,255,0.06)', letterSpacing: '0.04em' }}>{card.tag}</p>
               </div>
             ))}
           </div>
@@ -1154,15 +1153,15 @@ export default function DevelopersPage() {
       <div className="section-separator" />
 
       {/* ── 4. INCLUDED ON ALL PLANS ────────────────────────────────────────── */}
-      <section style={{ position: 'relative', overflow: 'hidden', background: '#080D18', borderTop: '0.5px solid rgba(157,140,255,0.15)', borderBottom: '0.5px solid rgba(255,255,255,0.05)' }}>
+      <section style={{ position: 'relative', overflow: 'hidden', background: '#080D18', borderTop: '0.5px solid rgba(255,255,255,0.08)', borderBottom: '0.5px solid rgba(255,255,255,0.05)' }}>
         <div aria-hidden style={{
           position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0,
-          background: 'radial-gradient(ellipse 900px 600px at 50% 50%, rgba(157,140,255,0.04) 0%, transparent 60%)',
+          background: 'radial-gradient(ellipse 900px 600px at 50% 50%, rgba(40,50,80,0.02) 0%, transparent 60%)',
         }} />
         <Ticks />
 
         <div style={{ position: 'relative', zIndex: 1, maxWidth: 1280, margin: '0 auto', padding: '64px 32px' }}>
-          <p style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.2em', color: '#9D8CFF', textAlign: 'center', margin: '0 0 32px' }}>
+          <p style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.2em', color: '#8080c0', textAlign: 'center', margin: '0 0 32px' }}>
             INCLUDED ON ALL PLANS
           </p>
 
@@ -1172,15 +1171,15 @@ export default function DevelopersPage() {
                 key={fact.name}
                 style={{
                   background: '#0A0E18',
-                  borderTop: '1px solid rgba(157,140,255,0.35)',
-                  borderLeft: '1px solid rgba(157,140,255,0.1)',
+                  borderTop: '1px solid rgba(255,255,255,0.1)',
+                  borderLeft: '1px solid rgba(255,255,255,0.06)',
                   borderRight: '1px solid rgba(255,255,255,0.04)',
                   borderBottom: '1px solid rgba(255,255,255,0.03)',
                   padding: '20px 22px',
                   display: 'flex', flexDirection: 'column', gap: 8,
                 }}
               >
-                <p style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#9D8CFF', margin: 0 }}>
+                <p style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#8080c0', margin: 0 }}>
                   {fact.name}
                 </p>
                 <p style={{ ...DISP, fontSize: 17, fontWeight: 600, color: '#E6E9EE', margin: 0 }}>
@@ -1227,7 +1226,7 @@ export default function DevelopersPage() {
 
           <p style={{ ...MONO, fontSize: 11, color: '#6E7587', textAlign: 'center', marginTop: 40, marginBottom: 0 }}>
             Want to understand what fires under the hood?{' '}
-            <Link href="/product" style={{ color: '#9D8CFF', textDecoration: 'none' }}>
+            <Link href="/product" style={{ color: '#6F9BC6', textDecoration: 'none' }}>
               See the engine →
             </Link>
           </p>
@@ -1236,12 +1235,12 @@ export default function DevelopersPage() {
       <div className="section-separator" />
 
       {/* ── 6. EXIT BAND ────────────────────────────────────────────────────── */}
-      <section style={{ position: 'relative', overflow: 'hidden', borderTop: '0.5px solid rgba(157,140,255,0.2)' }}>
+      <section style={{ position: 'relative', overflow: 'hidden', borderTop: '0.5px solid rgba(255,255,255,0.08)' }}>
         <div aria-hidden style={{
           position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0,
           background: [
-            'radial-gradient(ellipse 600px 400px at 25% 50%, rgba(111,155,198,0.04) 0%, transparent 60%)',
-            'radial-gradient(ellipse 600px 400px at 75% 50%, rgba(157,140,255,0.05) 0%, transparent 60%)',
+            'radial-gradient(ellipse 600px 400px at 25% 50%, rgba(111,155,198,0.02) 0%, transparent 60%)',
+            'radial-gradient(ellipse 600px 400px at 75% 50%, rgba(40,50,80,0.025) 0%, transparent 60%)',
           ].join(', '),
         }} />
         <Ticks />
@@ -1259,7 +1258,7 @@ export default function DevelopersPage() {
 
           {/* GET API KEY — primary */}
           <div style={{ flex: 1, padding: '48px 40px' }}>
-            <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#9D8CFF', margin: '0 0 8px' }}>Ready to build?</p>
+            <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#8080c0', margin: '0 0 8px' }}>Ready to build?</p>
             <p style={{ ...DISP, fontSize: 18, fontWeight: 600, color: '#E6E9EE', lineHeight: 1.3, margin: '0 0 8px' }}>25 free scans. No subscription. Start in minutes.</p>
             <p style={{ ...SANS, fontSize: 13, color: '#6E7587', margin: '0 0 20px' }}>Same engine on every plan. Build against the schema once.</p>
             <Link href="/auth?surface=api" style={{ ...MONO, fontSize: 12, color: '#9D8CFF', border: '1px solid rgba(157,140,255,0.5)', padding: '10px 20px', textDecoration: 'none', display: 'inline-block', transition: 'all 0.15s' }}>

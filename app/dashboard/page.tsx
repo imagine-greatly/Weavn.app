@@ -243,20 +243,21 @@ function OutputSection() {
   const [hoveredCard, setHoveredCard] = useState<number | null>(null)
 
   return (
-    <section style={{ padding:'80px 48px',borderTop:'0.5px solid rgba(111,155,198,0.1)',position:'relative',overflow:'visible' }}>
+    <section style={{ padding:'80px 48px',borderTop:'0.5px solid rgba(111,155,198,0.1)',position:'relative',overflow:'visible',background:BG_BASE }}>
       <div
         aria-hidden="true"
         style={{
           position: 'absolute',
-          top: '-100px',
+          top: '-200px',
           left: '50%',
           transform: 'translateX(-50%)',
-          width: '1400px',
-          height: '900px',
-          background: 'radial-gradient(ellipse at 50% 50%, rgba(111, 155, 198, 0.08) 0%, rgba(111, 155, 198, 0.024) 40%, rgba(111, 155, 198, 0.02) 65%, transparent 85%)',
+          width: '1600px',
+          height: '1200px',
+          background: 'radial-gradient(ellipse at 50% 35%, rgba(111, 155, 198, 0.22) 0%, rgba(111, 155, 198, 0.066) 40%, rgba(111, 155, 198, 0.02) 65%, transparent 85%)',
           pointerEvents: 'none',
           zIndex: 0,
           borderRadius: '50%',
+          animation: 'bloom-breathe 5s ease-in-out infinite',
         }}
       />
       <div style={{ maxWidth:1000,margin:'0 auto',position:'relative',zIndex:1 }}>
@@ -1611,22 +1612,22 @@ function FinalCtaSection() {
   }
 
   return (
-    <section style={{ padding:'96px 48px',textAlign:'center',position:'relative',overflow:'visible',borderTop:'0.5px solid rgba(111,155,198,0.1)' }}>
+    <section style={{ padding:'96px 48px',textAlign:'center',position:'relative',overflow:'visible',borderTop:'0.5px solid rgba(111,155,198,0.1)',background:BG_BASE }}>
       {/* Final CTA bloom */}
       <div
         aria-hidden="true"
         style={{
           position: 'absolute',
-          top: '-120px',
+          top: '-200px',
           left: '50%',
           transform: 'translateX(-50%)',
           width: '1600px',
-          height: '1000px',
-          background: 'radial-gradient(ellipse at 50% 40%, rgba(111, 155, 198, 0.20) 0%, rgba(111, 155, 198, 0.06) 40%, rgba(111, 155, 198, 0.02) 65%, transparent 85%)',
+          height: '1200px',
+          background: 'radial-gradient(ellipse at 50% 35%, rgba(111, 155, 198, 0.22) 0%, rgba(111, 155, 198, 0.066) 40%, rgba(111, 155, 198, 0.02) 65%, transparent 85%)',
           pointerEvents: 'none',
           zIndex: 0,
           borderRadius: '50%',
-          animation: 'bloom-breathe 6s ease-in-out infinite',
+          animation: 'bloom-breathe 5s ease-in-out infinite',
         }}
       />
       <Ticks />

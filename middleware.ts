@@ -7,7 +7,8 @@ function isProtectedPath(pathname: string): boolean {
   if (pathname.startsWith("/app/")) return true;
   if (pathname === "/analyze") return true;
   if (pathname.startsWith("/analyze/")) return true;
-  if (pathname.startsWith("/report")) return true;
+  // NOTE: /report/[domain] is intentionally NOT protected — it is a public redirect to the
+  // canonical /reports/[token] so unauthenticated email recipients reach their report.
   return false;
 }
 
@@ -79,6 +80,5 @@ export const config = {
     "/analyze/:path*",
     "/scan",
     "/scan/:path*",
-    "/report/:path*",
   ],
 };

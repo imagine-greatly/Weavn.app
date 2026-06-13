@@ -866,7 +866,7 @@ function ComparisonSection() {
             {/* Badge row */}
             <p style={{ ...MONO,fontSize:9,textTransform:'uppercase',letterSpacing:'0.15em',color:STEEL,margin:'0 0 10px',border:'1px solid rgba(111,155,198,0.3)',padding:'4px 10px',display:'inline-block' }}>WHAT YOU ACTUALLY GET</p>
             {/* Name */}
-            <p style={{ ...MONO,fontSize:16,fontWeight:700,textTransform:'uppercase',letterSpacing:'0.15em',color:'rgba(111,155,198,1.0)',margin:'0 0 10px',textShadow:'0 0 20px rgba(111,155,198,0.5)' }}>WEBDOC</p>
+            <p style={{ ...MONO,fontSize:16,fontWeight:700,textTransform:'uppercase',letterSpacing:'0.15em',color:'rgba(111,155,198,1.0)',margin:'0 0 10px',textShadow:'0 0 20px rgba(111,155,198,0.5)' }}>WEAVN</p>
             {/* Descriptor */}
             <p style={{ ...SANS,fontSize:16,color:INK_PRI,margin:'0 0 16px',lineHeight:1.5 }}>A structured conversion audit engine</p>
             {/* Divider */}
@@ -980,7 +980,7 @@ function WhyDifferentSection() {
 const AGENCY_CAPS = [
   {
     title: 'White-label PDF export',
-    desc: 'Every report exports as a branded PDF with your agency name, logo, and color. Hand it to a client — webdoc never appears.',
+    desc: 'Every report exports as a branded PDF with your agency name, logo, and color. Hand it to a client — Weavn never appears.',
   },
   {
     title: 'Client management dashboard',

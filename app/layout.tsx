@@ -64,8 +64,8 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning style={{ backgroundColor: "#050810" }}>
       <head>
-        <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-        <link rel="apple-touch-icon" href="/webdocai_logo_definitive.svg" />
+        {/* Favicon / app icons are provided by the App Router file convention:
+            app/icon.svg (modern), app/favicon.ico (legacy), app/apple-icon.png (iOS). */}
         <meta name="theme-color" content="#050810" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />

@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="16 74 168 168" fill="none">
+  <!-- WebdocMark favicon: simplified for small-size legibility.
+       Three nested hexagons converging to a white core, sharing the bottom apex (100,240).
+       Drops the two finest outer rings of the full mark; keeps brand colors.
+       steel #6F9BC6 (interactive) / green #00C48C (json-string) / purple #8080c0 (json-key). -->
+  <polygon points="100,76 171.1,117 171.1,199 100,240 28.9,199 28.9,117"
+           fill="none" stroke="#6F9BC6" stroke-width="10" stroke-linejoin="round"/>
+  <polygon points="100,136 145.0,162 145.0,214 100,240 55.0,214 55.0,162"
+           fill="none" stroke="#00C48C" stroke-width="10" stroke-linejoin="round"/>
+  <polygon points="100,180 126.0,195 126.0,225 100,240 74.0,225 74.0,195"
+           fill="none" stroke="#8080c0" stroke-width="10" stroke-linejoin="round"/>
+  <polygon points="100,198 117.3,208 117.3,228 100,238 82.7,228 82.7,208" fill="#FFFFFF"/>
+</svg>

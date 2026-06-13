@@ -446,8 +446,8 @@ function GroundingProofSection() {
         <div style={{ background:'rgba(8,12,22,0.9)', border:'1px solid rgba(111,155,198,0.12)', boxShadow:'inset 0 1px 0 0 rgba(111,155,198,0.15)', marginBottom:0 }}>
           <div className="d-ground-cols" style={{ display:'flex' }}>
 
-            {/* Left — evidence output */}
-            <div style={{ flex:1, padding:28, background:'rgba(0,0,0,0.2)', borderRight:'0.5px solid rgba(111,155,198,0.1)' }}>
+            {/* Evidence output — the raw, cited evidence the model is forced to surface */}
+            <div style={{ flex:1, padding:28, background:'rgba(0,0,0,0.2)' }}>
               <p style={{ ...MONO,fontSize:9,textTransform:'uppercase',letterSpacing:'0.18em',color:INK_MUT,margin:'0 0 16px' }}>EVIDENCE ON YOUR PAGE</p>
               <div style={{ display:'flex',flexDirection:'column',gap:3 }}>
                 {[
@@ -468,29 +468,6 @@ function GroundingProofSection() {
                     </span>
                   </div>
                 ))}
-              </div>
-            </div>
-
-            {/* Right — finding produced */}
-            <div style={{ flex:1, padding:28 }}>
-              <p style={{ ...MONO,fontSize:9,textTransform:'uppercase',letterSpacing:'0.18em',color:INK_MUT,margin:'0 0 16px' }}>FINDING SURFACED</p>
-              <div style={{ background:'rgba(232,99,95,0.04)', border:'0.5px solid rgba(232,99,95,0.2)', borderLeft:'2px solid rgba(232,99,95,0.45)', padding:16 }}>
-                <div style={{ display:'flex',alignItems:'flex-start',justifyContent:'space-between',marginBottom:8,gap:12 }}>
-                  <div style={{ display:'flex',alignItems:'center',gap:10 }}>
-                    <span style={{ ...MONO,fontSize:10,color:CRIT,border:`0.5px solid rgba(232,99,95,0.35)`,padding:'2px 8px',textTransform:'uppercase',letterSpacing:'0.1em' }}>CRITICAL</span>
-                    <span style={{ ...DISP,fontWeight:600,fontSize:14,color:INK_PRI }}>Hero headline is feature-led, not outcome-led</span>
-                  </div>
-                  <span style={{ ...MONO,fontSize:11,color:LIFT_GREEN,whiteSpace:'nowrap',flexShrink:0,textShadow:'0 0 8px rgba(0,196,140,0.4)' }}>EST. LIFT +12–18%</span>
-                </div>
-                <div style={{ height:1,background:'rgba(255,255,255,0.06)',marginBottom:10 }} />
-                <p style={{ ...MONO,fontSize:9,textTransform:'uppercase',letterSpacing:'0.15em',color:INK_MUT,margin:'0 0 5px' }}>EVIDENCE</p>
-                <p style={{ ...SANS,fontSize:13,color:INK_SEC,margin:'0 0 12px',lineHeight:1.55 }}>
-                  Your H1 reads: &ldquo;The project management tool built for remote teams.&rdquo; This describes the product, not the outcome. No benefit statement above the fold.
-                </p>
-                <p style={{ ...MONO,fontSize:9,textTransform:'uppercase',letterSpacing:'0.15em',color:INK_MUT,margin:'0 0 5px' }}>FIX</p>
-                <p style={{ ...SANS,fontSize:13,color:INK_SEC,margin:0,lineHeight:1.55 }}>
-                  Rewrite the headline to lead with the outcome the visitor gets, not the feature you built.
-                </p>
               </div>
             </div>
 

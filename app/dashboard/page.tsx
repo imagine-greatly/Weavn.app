@@ -786,18 +786,23 @@ const PIPELINE_STEPS = [
   },
 ]
 
-// SVG connecting line — matches homepage branch-line style exactly (var(--interactive), strokeWidth 1.5, opacity 0.5, cubic bezier S-curves, no animation)
-// ViewBox 0 0 1000 2100 | slot=360px | left-card center x=230, right-card center x=770
-// Each subpath is a single cubic bezier in the 70px gap between cards only — no segments cross card interiors.
-// Segment anchors: card bottom-center → card top-center. CP1 pulls straight down from start; CP2 pulls straight up into end.
-// Layout: top=i*360, minHeight=290 → card bottoms y: 290,650,1010,1370,1730 | card tops y: 360,720,1080,1440,1800
-// CP offset = 35px (gap/2). CP1=(start_x, start_y+35), CP2=(end_x, end_y-35) → vertical tangents at both endpoints.
-const PIPELINE_SNAKE = [
-  'M 230 290 C 230 325 770 325 770 360',
-  'M 770 650 C 770 685 230 685 230 720',
-  'M 230 1010 C 230 1045 770 1045 770 1080',
-  'M 770 1370 C 770 1405 230 1405 230 1440',
-  'M 230 1730 C 230 1765 770 1765 770 1800',
+// SVG connecting line — matches homepage branch-line style (var(--interactive), strokeWidth 1.5, opacity 0.5, one cubic bezier per gap, no animation).
+// STRICT top/bottom edge routing — each segment runs ONLY in the whitespace between two cards:
+//   start = bottom-edge center of card N   (x = card center, y = card.offsetTop + card.offsetHeight) — ON card N's bottom border
+//   end   = top-edge center of card N+1    (x = card center, y = card.offsetTop)                     — ON card N+1's top border
+//   CP1 = (start_x, start_y + gap*0.4)   CP2 = (end_x, end_y - gap*0.4)
+//   → vertical tangent at both endpoints, so the curve leaves/enters each card perpendicular to its border and
+//     cannot clip a corner at any horizontal distance between cards.
+// Card heights are content-driven (minHeight 290, but the illustration cards render taller), so the live path is
+// measured from real rendered offsets at runtime (see HowItWorksSection). This constant is the SSR / no-JS fallback,
+// built with the same formula assuming the 290px min height: slot pitch 360 → tops 360,720,1080,1440,1800 · centers
+// x=230/770 · gap≈70 · cp=gap*0.4≈28.
+const PIPELINE_SNAKE_FALLBACK = [
+  'M 230 290 C 230 318 770 332 770 360',
+  'M 770 650 C 770 678 230 692 230 720',
+  'M 230 1010 C 230 1038 770 1052 770 1080',
+  'M 770 1370 C 770 1398 230 1412 230 1440',
+  'M 230 1730 C 230 1758 770 1772 770 1800',
 ].join(' ')
 
 const PIPELINE_FAIL = new Set([3, 8, 13, 18, 22, 26, 28])
@@ -886,6 +891,41 @@ function StepAnim({ idx }: { idx: number }) {
 }
 
 function HowItWorksSection() {
+  const wrapRef = useRef<HTMLDivElement>(null)
+  const cardRefs = useRef<(HTMLDivElement | null)[]>([])
+  // Live connecting line — measured from the real rendered card edges so each segment starts/ends exactly on a card
+  // border regardless of content-driven height. Seeded with the SSR / no-JS fallback to avoid a hydration gap.
+  const [snake, setSnake] = useState<string>(PIPELINE_SNAKE_FALLBACK)
+  const [lineBox, setLineBox] = useState<string>('0 0 1000 2100')
+
+  useEffect(() => {
+    const compute = () => {
+      const wrap = wrapRef.current
+      const cards = cardRefs.current.filter((c): c is HTMLDivElement => c != null)
+      if (!wrap || cards.length < 2) return
+      const segs: string[] = []
+      for (let i = 0; i < cards.length - 1; i++) {
+        const a = cards[i], b = cards[i + 1]
+        const startX = a.offsetLeft + a.offsetWidth / 2   // bottom-edge center of card N
+        const startY = a.offsetTop + a.offsetHeight        // ON card N's bottom border
+        const endX = b.offsetLeft + b.offsetWidth / 2      // top-edge center of card N+1
+        const endY = b.offsetTop                           // ON card N+1's top border
+        const gap = endY - startY
+        // vertical tangents at both edges: CP1 below start, CP2 above end
+        segs.push(`M ${startX} ${startY} C ${startX} ${startY + gap * 0.4} ${endX} ${endY - gap * 0.4} ${endX} ${endY}`)
+      }
+      setSnake(segs.join(' '))
+      // viewBox = real wrap px → 1:1 with the SVG element, no aspect distortion of the path
+      setLineBox(`0 0 ${wrap.offsetWidth} ${wrap.offsetHeight}`)
+    }
+    compute()
+    const ro = new ResizeObserver(compute)
+    if (wrapRef.current) ro.observe(wrapRef.current)
+    cardRefs.current.forEach(c => { if (c) ro.observe(c) })
+    window.addEventListener('resize', compute)
+    return () => { ro.disconnect(); window.removeEventListener('resize', compute) }
+  }, [])
+
   return (
     <section style={{ padding: '80px 48px', borderTop: '0.5px solid rgba(111,155,198,0.1)', position: 'relative', overflow: 'visible' }}>
       <style>{`
@@ -921,22 +961,23 @@ function HowItWorksSection() {
         </h2>
 
         {/* Step pipeline */}
-        <div className="d-pl-wrap" style={{ position: 'relative', height: 2100 }}>
+        <div ref={wrapRef} className="d-pl-wrap" style={{ position: 'relative', height: 2100 }}>
 
-          {/* SVG connector — top-to-bottom, matches homepage branch-line style: var(--interactive), strokeWidth 1.5, opacity 0.5, no animation */}
+          {/* SVG connector — strict top/bottom edge routing measured from real card edges (see HowItWorksSection).
+              overflow:visible + no clip-path / mask / overflow:hidden so the path can never be visually cropped into a card. */}
           <svg className="d-pl-svg" aria-hidden
-            style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 0 }}
-            viewBox="0 0 1000 2100"
+            style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', overflow: 'visible', pointerEvents: 'none', zIndex: 0 }}
+            viewBox={lineBox}
             preserveAspectRatio="none"
           >
-            <path d={PIPELINE_SNAKE} stroke="var(--interactive)" strokeWidth="1.5" strokeLinecap="round" fill="none" opacity="0.5" />
+            <path d={snake} stroke="var(--interactive)" strokeWidth="1.5" strokeLinecap="round" fill="none" opacity="0.5" />
           </svg>
 
           {/* Step cards */}
           {PIPELINE_STEPS.map((step, i) => {
             const isLeft = i % 2 === 0
             return (
-              <div key={step.num} className="d-pl-step" style={{
+              <div key={step.num} ref={el => { cardRefs.current[i] = el }} className="d-pl-step" style={{
                 position: 'absolute',
                 top: i * 360,
                 left: isLeft ? 0 : '54%',

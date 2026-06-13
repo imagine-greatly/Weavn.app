@@ -571,37 +571,23 @@ const PIPELINE_STEPS = [
   },
   {
     num: '02',
-    title: 'Headless Chrome renders your page',
-    desc: 'We load your actual live page in a real browser — the same DOM your visitors see, above-the-fold layout measured.',
-    tag: 'browserless · stealth mode · full dom render · 1280×800',
+    title: 'We render your live page and run every check',
+    desc: 'Your actual live page loads in a real browser — the same DOM your visitors see — and 307 checks fire across 27 categories, evaluating every conversion surface from headline to mobile layout.',
+    tag: 'citation required or the finding is dropped',
     bright: true,
   },
   {
     num: '03',
-    title: '307 checks fire across 27 categories',
-    desc: 'Every conversion surface is evaluated — headline, CTA, social proof, trust signals, mobile layout, load perception, and more.',
-    tag: 'parallel execution · ai-grounded · citation required or finding is dropped',
+    title: 'Findings are ranked by conversion impact',
+    desc: 'Each failing check is weighted by its estimated effect on conversion, then paired with a plain-English fix and drop-in rewritten copy. Priority 1 matters most.',
+    tag: 'estimated lift per finding · fix + copy included',
     bright: false,
   },
   {
     num: '04',
-    title: 'Findings are ranked by conversion impact',
-    desc: 'Each failing check is weighted by its estimated effect on conversion rate. Priority 1 matters most.',
-    tag: 'corpus-calibrated weights · estimated lift range per finding',
-    bright: false,
-  },
-  {
-    num: '05',
-    title: 'AI generates fixes and rewrites',
-    desc: 'Every critical and high-severity finding gets a plain-English fix and drop-in replacement copy — ready to paste directly.',
-    tag: 'grounded in visible content · not a generic suggestion',
-    bright: false,
-  },
-  {
-    num: '06',
-    title: 'Report assembles with corpus benchmarks',
+    title: 'Your report assembles with vertical benchmarks',
     desc: 'Your score is positioned against real sites in your exact vertical. You see where you stand and what to fix first.',
-    tag: 'percentile ranking · vertical-specific · 4,812 site corpus',
+    tag: 'percentile ranking · vertical-specific',
     bright: false,
   },
 ]
@@ -615,14 +601,12 @@ const PIPELINE_STEPS = [
 //     cannot clip a corner at any horizontal distance between cards.
 // Card heights are content-driven (minHeight 290, but the illustration cards render taller), so the live path is
 // measured from real rendered offsets at runtime (see HowItWorksSection). This constant is the SSR / no-JS fallback,
-// built with the same formula assuming the 290px min height: slot pitch 360 → tops 360,720,1080,1440,1800 · centers
+// built with the same formula assuming the 290px min height: slot pitch 360 → tops 360,720,1080 · centers
 // x=230/770 · gap≈70 · cp=gap*0.4≈28.
 const PIPELINE_SNAKE_FALLBACK = [
   'M 230 290 C 230 318 770 332 770 360',
   'M 770 650 C 770 678 230 692 230 720',
   'M 230 1010 C 230 1038 770 1052 770 1080',
-  'M 770 1370 C 770 1398 230 1412 230 1440',
-  'M 230 1730 C 230 1758 770 1772 770 1800',
 ].join(' ')
 
 const PIPELINE_FAIL = new Set([3, 8, 13, 18, 22, 26, 28])
@@ -636,25 +620,6 @@ function StepAnim({ idx }: { idx: number }) {
   )
   if (idx === 1) return (
     <div style={{ marginTop: 12, display: 'flex', justifyContent: 'center' }}>
-      <div style={{ position: 'relative', width: 260, height: 120, border: '1px solid rgba(111,155,198,0.2)', overflow: 'hidden' }}>
-        {/* Browser chrome strip */}
-        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 16, borderBottom: '0.5px solid rgba(111,155,198,0.12)', display: 'flex', alignItems: 'center', padding: '0 8px' }}>
-          <div style={{ flex: 1, height: 5, background: 'rgba(111,155,198,0.07)' }} />
-        </div>
-        {/* Page skeleton */}
-        <div style={{ position: 'absolute', top: 26, left: 12, width: '62%', height: 6, background: 'rgba(111,155,198,0.14)' }} />
-        <div style={{ position: 'absolute', top: 38, left: 12, width: '80%', height: 4, background: 'rgba(111,155,198,0.07)' }} />
-        <div style={{ position: 'absolute', top: 48, left: 12, width: '52%', height: 4, background: 'rgba(111,155,198,0.07)' }} />
-        <div style={{ position: 'absolute', top: 62, left: 12, right: 12, height: 1, background: 'rgba(111,155,198,0.08)' }} />
-        <div style={{ position: 'absolute', top: 71, left: 12, width: '70%', height: 4, background: 'rgba(111,155,198,0.05)' }} />
-        <div style={{ position: 'absolute', top: 81, left: 12, width: '55%', height: 4, background: 'rgba(111,155,198,0.05)' }} />
-        <div style={{ position: 'absolute', top: 95, left: 12, width: '42%', height: 4, background: 'rgba(111,155,198,0.04)' }} />
-        <div className="pl-scan" style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 1, background: 'rgba(111,155,198,0.45)' }} />
-      </div>
-    </div>
-  )
-  if (idx === 2) return (
-    <div style={{ marginTop: 12, display: 'flex', justifyContent: 'center' }}>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 14px)', gap: 6 }}>
         {Array.from({ length: 30 }).map((_, si) => (
           <div key={si} className="pl-check" style={{
@@ -667,7 +632,7 @@ function StepAnim({ idx }: { idx: number }) {
       </div>
     </div>
   )
-  if (idx === 3) return (
+  if (idx === 2) return (
     <div style={{ marginTop: 12 }}>
       {[
         { label: 'P1', w: '90%', c: 'rgba(232,99,95,0.7)' },
@@ -685,16 +650,6 @@ function StepAnim({ idx }: { idx: number }) {
           </div>
         </div>
       ))}
-    </div>
-  )
-  if (idx === 4) return (
-    <div style={{ marginTop: 12 }}>
-      <p className="pl-orig" style={{ ...SANS, fontSize: 12, fontStyle: 'italic', color: INK_MUT, margin: '0 0 6px', lineHeight: 1.4 }}>
-        &ldquo;The project management tool...&rdquo;
-      </p>
-      <p className="pl-rewrite" style={{ ...SANS, fontSize: 12, color: LIFT_GREEN, margin: 0, lineHeight: 1.4 }}>
-        &ldquo;Ship projects on time...&rdquo;
-      </p>
     </div>
   )
   return (
@@ -716,7 +671,7 @@ function HowItWorksSection() {
   // Live connecting line — measured from the real rendered card edges so each segment starts/ends exactly on a card
   // border regardless of content-driven height. Seeded with the SSR / no-JS fallback to avoid a hydration gap.
   const [snake, setSnake] = useState<string>(PIPELINE_SNAKE_FALLBACK)
-  const [lineBox, setLineBox] = useState<string>('0 0 1000 2100')
+  const [lineBox, setLineBox] = useState<string>('0 0 1000 1440')
 
   useEffect(() => {
     const compute = () => {
@@ -750,19 +705,13 @@ function HowItWorksSection() {
     <section style={{ padding: '80px 48px', borderTop: '0.5px solid rgba(111,155,198,0.1)', position: 'relative', overflow: 'visible' }}>
       <style>{`
         @keyframes pl-blink    { 0%,49%{opacity:1} 50%,100%{opacity:0} }
-        @keyframes pl-scan     { 0%{top:0px} 100%{top:110px} }
         @keyframes pl-check    { 0%{background:rgba(111,155,198,0.15)} 50%,80%{background:var(--target-bg)} 100%{background:rgba(111,155,198,0.15)} }
         @keyframes pl-bar      { 0%,100%{width:0} 55%,80%{width:var(--bar-w)} }
-        @keyframes pl-orig     { 0%{opacity:1} 38%,100%{opacity:0} }
-        @keyframes pl-rewrite  { 0%,33%{opacity:0} 72%,100%{opacity:1} }
         @keyframes pl-pulse    { 0%,100%{transform:scale(1)} 50%{transform:scale(1.4)} }
         @media (prefers-reduced-motion: no-preference) {
           .pl-cursor  { animation: pl-blink   1s   step-end    infinite }
-          .pl-scan    { animation: pl-scan    2.5s ease-in-out infinite }
           .pl-check   { animation: pl-check   2.2s ease-out    infinite }
           .pl-bar     { animation: pl-bar     2.5s ease-out    infinite }
-          .pl-orig    { animation: pl-orig    3s   ease-in-out infinite }
-          .pl-rewrite { animation: pl-rewrite 3s   ease-in-out infinite }
           .pl-pulse   { transform-box:fill-box; transform-origin:center; animation:pl-pulse 2s ease-in-out infinite }
         }
         @media (max-width:767px) {
@@ -781,7 +730,7 @@ function HowItWorksSection() {
         </h2>
 
         {/* Step pipeline */}
-        <div ref={wrapRef} className="d-pl-wrap" style={{ position: 'relative', height: 2100 }}>
+        <div ref={wrapRef} className="d-pl-wrap" style={{ position: 'relative', height: 1440 }}>
 
           {/* SVG connector — strict top/bottom edge routing measured from real card edges (see HowItWorksSection).
               overflow:visible + no clip-path / mask / overflow:hidden so the path can never be visually cropped into a card. */}

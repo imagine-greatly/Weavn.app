@@ -555,6 +555,9 @@ export async function POST(req: NextRequest) {
       const userEmail = userData?.user?.email;
       if (userEmail) {
         const criticalCount = typeof payload.criticalCount === 'number' ? payload.criticalCount : 0;
+        const reportUrl = shareToken
+          ? `https://weavn.app/reports/${shareToken}`
+          : 'https://weavn.app/dashboard';
         const resend = new Resend(process.env.RESEND_API_KEY);
         await resend.emails.send({
           from: 'devon@weavn.app',
@@ -631,7 +634,7 @@ export async function POST(req: NextRequest) {
     <p style="color:rgba(136,153,170,0.55);font-size:12px;line-height:1.8;margin:0 0 28px;">Weavn ran 264 diagnostic checks across 27 categories on <strong style="color:#F0F4FF;">${domain}</strong>. Full findings ranked by revenue impact, exact resolutions, and your growth blueprint are ready to view.</p>
 
     <!-- CTA -->
-    <a href="https://weavn.app/report/${domain}" style="display:inline-block;border:1px solid #00C8FF;color:#00C8FF;font-family:'Space Mono','Courier New',monospace;font-size:11px;letter-spacing:0.2em;text-transform:uppercase;padding:14px 32px;text-decoration:none;">VIEW YOUR REPORT →</a>
+    <a href="${reportUrl}" style="display:inline-block;border:1px solid #00C8FF;color:#00C8FF;font-family:'Space Mono','Courier New',monospace;font-size:11px;letter-spacing:0.2em;text-transform:uppercase;padding:14px 32px;text-decoration:none;">VIEW YOUR REPORT →</a>
 
   </div>
 

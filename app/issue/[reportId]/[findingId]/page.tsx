@@ -18,6 +18,7 @@ import { parseFindingBriefFromStoredValue } from "@/lib/expandFindingBriefParser
 type ReportRow = {
   id: string;
   domain: string;
+  share_token?: string | null;
   created_at: string;
   analysis: ReportPayload;
   extended_analysis?: unknown;
@@ -817,7 +818,7 @@ export default function IssuePage() {
         try {
           const result = await supabase
             .from("reports")
-            .select("id, domain, created_at, analysis, extended_analysis, finding_briefs")
+            .select("id, domain, share_token, created_at, analysis, extended_analysis, finding_briefs")
             .eq("id", reportId)
             .maybeSingle();
           const err = result.error as { message?: string; code?: string } | null;
@@ -831,7 +832,7 @@ export default function IssuePage() {
           if (extendedColumnMissing) {
             const fb = await supabase
               .from("reports")
-              .select("id, domain, created_at, analysis")
+              .select("id, domain, share_token, created_at, analysis")
               .eq("id", reportId)
               .maybeSingle();
             data = fb.data
@@ -849,7 +850,7 @@ export default function IssuePage() {
         } catch {
           const fb = await supabase
             .from("reports")
-            .select("id, domain, created_at, analysis")
+            .select("id, domain, share_token, created_at, analysis")
             .eq("id", reportId)
             .maybeSingle();
           data = fb.data
@@ -1580,7 +1581,7 @@ export default function IssuePage() {
           <div className="issue-top-back" style={{ flex: "1 1 0", minWidth: 200 }}>
             {report ? (
               <Link
-                href={`/report/${encodeURIComponent(report.domain)}`}
+                href={report.share_token ? `/reports/${report.share_token}` : "/dashboard"}
                 style={{
                   fontFamily: "var(--font-space-mono), monospace",
                   fontSize: 11,

@@ -36,10 +36,7 @@ function LogoRow() {
         aria-hidden
       />
       <span style={{ fontFamily: DISP, fontWeight: 700, fontSize: 18, color: C.primary, lineHeight: 1 }}>
-        Weav
-      </span>
-      <span style={{ fontFamily: DISP, fontWeight: 700, fontSize: 18, color: C.green, lineHeight: 1 }}>
-        n
+        Weavn
       </span>
     </div>
   );

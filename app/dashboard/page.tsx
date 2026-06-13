@@ -491,97 +491,6 @@ function GroundingProofSection() {
   )
 }
 
-// ── Section 5 — Vertical Showcase ────────────────────────────────────────────
-
-// STATIC ILLUSTRATION
-const VERTICAL_CARDS = [
-  {
-    type: 'B2B SAAS',
-    desc: 'Input your site as B2B SaaS. Checks target pricing page clarity, trial CTA placement, feature vs outcome framing, social proof positioning, and demo flow friction.',
-    findings: [
-      { sev: 'CRITICAL', sevColor: '#E8635F', sevBorder: 'rgba(232,99,95,0.4)', title: 'Trial CTA below fold on mobile', lift: '+8–12%', evidence: 'Primary action not visible on 375px viewport without scrolling' },
-      { sev: 'HIGH', sevColor: '#EFB23E', sevBorder: 'rgba(239,178,62,0.4)', title: 'Feature list leads with capabilities, not outcomes', lift: '+6–9%', evidence: 'Above-fold copy describes what the product does, not what the user gets' },
-    ],
-  },
-  {
-    type: 'E-COMMERCE',
-    desc: 'Input your site as e-commerce. Checks target product page proof, add-to-cart visibility, shipping cost transparency, cart abandonment signals, and purchase trust indicators.',
-    findings: [
-      { sev: 'CRITICAL', sevColor: '#E8635F', sevBorder: 'rgba(232,99,95,0.4)', title: 'No social proof on product page above add-to-cart', lift: '+10–15%', evidence: 'First testimonial appears at 1,800px — below the purchase decision point' },
-      { sev: 'HIGH', sevColor: '#EFB23E', sevBorder: 'rgba(239,178,62,0.4)', title: 'Shipping cost not visible until checkout', lift: '+7–11%', evidence: 'Price anchoring incomplete — total cost unknown until final step' },
-    ],
-  },
-  {
-    type: 'AGENCY / SERVICE',
-    desc: 'Input your site as agency or service. Checks target outcome specificity, case study placement, inquiry CTA clarity, service page trust signals, and contact form friction.',
-    findings: [
-      { sev: 'HIGH', sevColor: '#EFB23E', sevBorder: 'rgba(239,178,62,0.4)', title: 'No specific outcome stated in hero', lift: '+9–14%', evidence: "'We help businesses grow' is not a value proposition" },
-      { sev: 'HIGH', sevColor: '#EFB23E', sevBorder: 'rgba(239,178,62,0.4)', title: 'Contact form requires 7 fields', lift: '+6–10%', evidence: 'Industry data shows >4 fields reduces submission rate by 50%+' },
-    ],
-  },
-  {
-    type: 'CREATOR / NEWSLETTER',
-    desc: 'Input your site as creator or newsletter. Checks target opt-in value clarity, above-fold proof of content quality, subscribe CTA specificity, and social proof near the conversion point.',
-    findings: [
-      { sev: 'HIGH', sevColor: '#EFB23E', sevBorder: 'rgba(239,178,62,0.4)', title: 'No proof of content quality above fold', lift: '+8–12%', evidence: 'Visitor cannot evaluate what subscribing gets them before the opt-in ask' },
-      { sev: 'HIGH', sevColor: '#EFB23E', sevBorder: 'rgba(239,178,62,0.4)', title: 'Single opt-in CTA with no supporting reason to act', lift: '+5–8%', evidence: 'No social proof, sample content, or urgency signal near the CTA' },
-    ],
-  },
-]
-
-function VerticalShowcaseSection() {
-  return (
-    <section style={{ padding:'80px 48px',borderTop:'0.5px solid rgba(111,155,198,0.1)',position:'relative',overflow:'visible' }}>
-      <style>{`@media(max-width:767px){.d-vertical-grid{grid-template-columns:1fr!important}}`}</style>
-      <div style={{ maxWidth:1000,margin:'0 auto' }}>
-        <p style={{ ...MONO,fontSize:11,textTransform:'uppercase',letterSpacing:'0.2em',color:STEEL,margin:'0 0 16px' }}>
-          BUILT FOR YOUR SITE TYPE
-        </p>
-        <h2 style={{ ...DISP,fontWeight:700,fontSize:'clamp(28px,4vw,44px)',color:INK_PRI,letterSpacing:'-0.5px',margin:'0 0 16px',lineHeight:1.1 }}>
-          Different sites need different checks.
-        </h2>
-        <p style={{ ...SANS,fontSize:15,color:INK_SEC,lineHeight:1.65,maxWidth:580,margin:'0 0 40px' }}>
-          Tell us what kind of site you have. We apply the check subset that actually matters for your conversion model — e-commerce gets e-commerce diagnostics, SaaS gets SaaS diagnostics. Not a generic audit applied to everything.
-        </p>
-
-        <div className="d-vertical-grid" style={{ display:'grid',gridTemplateColumns:'repeat(2,1fr)',gap:16,marginBottom:24 }}>
-          {VERTICAL_CARDS.map(card => (
-            <div key={card.type} style={{
-              borderTop:'1px solid rgba(255,255,255,0.08)',
-              borderLeft:'1px solid rgba(255,255,255,0.05)',
-              borderRight:'1px solid rgba(255,255,255,0.03)',
-              borderBottom:'1px solid rgba(255,255,255,0.03)',
-              padding:20,
-              boxShadow:'inset 0 1px 0 0 rgba(111,155,198,0.08)',
-            }}>
-              <p style={{ ...MONO,fontSize:10,textTransform:'uppercase',letterSpacing:'0.15em',color:STEEL,margin:'0 0 8px' }}>{card.type}</p>
-              <p style={{ ...SANS,fontSize:13,color:INK_MUT,margin:'0 0 16px',lineHeight:1.55 }}>{card.desc}</p>
-              <div style={{ display:'flex',flexDirection:'column',gap:10 }}>
-                {card.findings.map((f, fi) => (
-                  <div key={fi} style={{ borderLeft:`2px solid ${f.sevColor === '#E8635F' ? 'rgba(232,99,95,0.35)' : 'rgba(239,178,62,0.3)'}`, paddingLeft:10 }}>
-                    <div style={{ display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:4,gap:8 }}>
-                      <div style={{ display:'flex',alignItems:'center',gap:6 }}>
-                        <span style={{ ...MONO,fontSize:8,color:f.sevColor,border:`0.5px solid ${f.sevBorder}`,padding:'1px 4px',textTransform:'uppercase',letterSpacing:'0.08em',flexShrink:0 }}>{f.sev}</span>
-                        <span style={{ ...DISP,fontSize:12,fontWeight:500,color:INK_PRI,lineHeight:1.3 }}>{f.title}</span>
-                      </div>
-                      <span style={{ ...MONO,fontSize:9,color:LIFT_GREEN,flexShrink:0 }}>{f.lift}</span>
-                    </div>
-                    <p style={{ ...SANS,fontSize:11,color:INK_MUT,margin:0,lineHeight:1.4,opacity:0.8 }}>{f.evidence}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <p style={{ ...MONO,fontSize:11,color:INK_MUT,textAlign:'center',margin:0 }}>
-          14 site type verticals · you choose your type · relevant checks applied automatically
-        </p>
-      </div>
-    </section>
-  )
-}
-
 // ── Section 6 — What We Check ─────────────────────────────────────────────────
 
 const SCOPE_ITEMS_LEFT = [
@@ -1076,8 +985,8 @@ const OBJECTIONS: ObjectionCard[] = [
   },
   {
     q: "Is this just for SaaS? I run an e-commerce store.",
-    a: "The engine classifies your site type automatically — SaaS, e-commerce, agency, creator, marketplace — and applies the relevant check subset for your category. A Shopify product page gets different diagnostics than a B2B SaaS pricing page. The corpus benchmarks are also segmented by vertical so your percentile is always against comparable sites, not a mixed average. E-commerce, SaaS, agencies, and creator sites are all actively represented in the corpus.",
-    tag: 'auto-classified · vertical-specific checks · e-comm and SaaS both supported',
+    a: "The engine classifies your site type automatically across 14 site-type verticals — SaaS, e-commerce, agency, creator, marketplace — and applies the relevant check subset for your category with no configuration required. A Shopify product page gets different diagnostics than a B2B SaaS pricing page. The corpus benchmarks are also segmented by vertical so your percentile is always against comparable sites, not a mixed average. E-commerce, SaaS, agencies, and creator sites are all actively represented in the corpus.",
+    tag: '14 verticals · auto-classified · e-comm and SaaS both supported',
   },
   {
     q: "What happens after I scan? Do I need to stay subscribed?",
@@ -1629,7 +1538,6 @@ export default function DashboardPage() {
       <HeroSection />
       <OutputSection />
       <GroundingProofSection />
-      <VerticalShowcaseSection />
       <WhatWeCheckSection />
       <HowItWorksSection />
       <ComparisonSection />

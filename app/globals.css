@@ -378,15 +378,6 @@ html, body {
   to { opacity: 1; transform: translateY(0); }
 }
 
-@keyframes countUp {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-@keyframes arcSweep {
-  from { stroke-dashoffset: 339; }
-}
-
 @keyframes intensityFlash {
   0% { box-shadow: var(--cyan-glow-intense); }
   100% { box-shadow: var(--cyan-glow-soft); }
@@ -458,30 +449,10 @@ html, body {
 }
 
 /* Analyze page — stronger drift (opacity 0.07) */
-@keyframes neuralDriftAnalyze {
-  0%    { transform: translate(0px, 0px)    scale(1);    opacity: 0.07; }
-  16.5% { transform: translate(30px, 0px)   scale(1.02); opacity: 0.085; }
-  33%   { transform: translate(30px, -20px) scale(1.05); opacity: 0.1; }
-  49.5% { transform: translate(-20px, -20px) scale(1.01); opacity: 0.085; }
-  66%   { transform: translate(-20px, 15px) scale(0.97); opacity: 0.07; }
-  83%   { transform: translate(0px, 15px)  scale(0.99); opacity: 0.07; }
-  100%  { transform: translate(0px, 0px)   scale(1);    opacity: 0.07; }
-}
-
 /* Section divider shimmer — band travels left to right */
 @keyframes shimmerDivider {
   0% { transform: translateX(-200px); }
   100% { transform: translateX(100vw); }
-}
-
-@keyframes scrollLeft {
-  from { transform: translateX(0); }
-  to { transform: translateX(-50%); }
-}
-
-@keyframes scrollRight {
-  from { transform: translateX(-50%); }
-  to { transform: translateX(0); }
 }
 
 @keyframes nodePulse {
@@ -507,26 +478,9 @@ html, body {
   100% { transform: translate3d(0, calc(100vh - 2px), 0); opacity: 0; }
 }
 
-@keyframes reportShine {
-  0% { transform: translateX(0); opacity: 0; }
-  15% { opacity: 1; }
-  70% { opacity: 1; }
-  100% { transform: translateX(360%); opacity: 0; }
-}
-
 
 /* Hero input focus pulse */
-@keyframes inputFocusPulse {
-  0%, 100% { box-shadow: 0 0 20px rgba(111, 155, 198, 0.2); }
-  50% { box-shadow: 0 0 40px rgba(111, 155, 198, 0.35); }
-}
-
 /* CTA button pulse */
-@keyframes ctaButtonPulse {
-  0%, 100% { box-shadow: 0 0 20px rgba(111, 155, 198, 0.3); }
-  50% { box-shadow: 0 0 40px rgba(111, 155, 198, 0.5); }
-}
-
 /* Floating particles drift */
 @keyframes drift {
   0% { transform: translateY(0); opacity: 0.4; }
@@ -534,131 +488,18 @@ html, body {
 }
 
 /* How-it-works: base vertical travel (one continuous signal; loop timing in page) */
-@keyframes timelineDot {
-  0% {
-    top: 0%;
-  }
-  100% {
-    top: 100%;
-  }
-}
-
 /* Step 1: terminal typing (character-by-character) */
-@keyframes typeUrl {
-  0% { width: 0; }
-  100% { width: 19ch; }
-}
 @keyframes blink {
   0%, 50% { opacity: 1; }
   51%, 100% { opacity: 0; }
 }
-@keyframes showFetching {
-  0%, 45% { opacity: 0; }
-  50%, 100% { opacity: 1; }
-}
-
 /* Step 3: wireframe scanline */
-@keyframes wireframeHighlight {
-  0%, 20%, 100% { background: var(--border-default); }
-  10% { background: rgba(0, 200, 255, 0.25); }
-}
-@keyframes scanlineDown {
-  0% { top: 0; }
-  100% { top: 100%; }
-}
-
 /* Step 2: cycling highlight (one row active per second) */
-@keyframes step2Highlight {
-  0%, 19% { color: var(--cyan); }
-  20%, 100% { color: var(--text-muted); }
-}
-@keyframes step2CheckOpacity {
-  0%, 19% { opacity: 1; }
-  20%, 100% { opacity: 0; }
-}
-
 /* Step 4: findings appear */
-@keyframes findingAppear {
-  0%, 15% { opacity: 0; transform: translateY(-4px); }
-  25%, 75% { opacity: 1; transform: translateY(0); }
-  85%, 100% { opacity: 0; transform: translateY(-4px); }
-}
-
 /* Analyze loading: scanning beam up/down */
-@keyframes scanBeam {
-  0% { top: 0; }
-  100% { top: 100%; }
-}
-
 /* Diagnostic loading: vertical beam inside wireframe stack (2.8s alternate) */
-@keyframes diagnosticScanBeamTravel {
-  0% { top: 0; }
-  100% { top: calc(100% - 2px); }
-}
-
-@keyframes markerPulseRed {
-  0%, 100% { box-shadow: 0 0 8px rgba(255, 45, 45, 0.8); }
-  50% { box-shadow: 0 0 16px rgba(255, 45, 45, 0.4); }
-}
-
-@keyframes markerPulseOrange {
-  0%, 100% { box-shadow: 0 0 8px rgba(255, 149, 0, 0.6); }
-  50% { box-shadow: 0 0 14px rgba(255, 149, 0, 0.35); }
-}
-
-@keyframes markerPulseGreen {
-  0%, 100% { box-shadow: 0 0 6px rgba(0, 255, 135, 0.5); }
-  50% { box-shadow: 0 0 12px rgba(0, 255, 135, 0.35); }
-}
-
-@keyframes markerPop {
-  0% { opacity: 0; transform: scale(0); }
-  100% { opacity: 1; transform: scale(1); }
-}
-
-@keyframes wireBlockCriticalPulse {
-  0%, 100% { background: rgba(0, 200, 255, 0.03); }
-  50% { background: rgba(255, 45, 45, 0.06); }
-}
-
-@keyframes verdictScoreReveal {
-  0% { opacity: 0; transform: scale(0.5); }
-  100% { opacity: 1; transform: scale(1); }
-}
-
-@keyframes diagnosticMarkersBulk {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.6); }
-}
-
-@keyframes criticalBloom {
-  0% { opacity: 0; }
-  30% { opacity: 1; }
-  100% { opacity: 0; }
-}
-
 /* Landing: data stream rows (between sections) */
-@keyframes landingStreamRowLeft {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
-}
-
-@keyframes landingStreamRowRight {
-  0% { transform: translateX(-50%); }
-  100% { transform: translateX(0); }
-}
-
 /* Landing: signal pulse traveling on horizontal line */
-@keyframes landingSignalSweep {
-  0% { left: -100px; }
-  100% { left: calc(100% + 100px); }
-}
-
-@keyframes landingPipeTravel {
-  0% { transform: translateY(-120%); }
-  100% { transform: translateY(520%); }
-}
-
 @keyframes terminalBlink {
   0%,
   100% {
@@ -669,18 +510,6 @@ html, body {
   }
 }
 
-@keyframes landingStepArrowPulse {
-  0%,
-  100% {
-    transform: scale(1);
-    color: var(--cyan);
-  }
-  50% {
-    transform: scale(1.15);
-    color: var(--cyan);
-  }
-}
-
 /* How it works step 3 ring, r=13 → C≈81.68 */
 @keyframes howWorksRingOsc {
   0% {
@@ -688,26 +517,6 @@ html, body {
   }
   100% {
     stroke-dashoffset: 20.42;
-  }
-}
-
-@keyframes criticalBadgePulse {
-  0%,
-  100% {
-    box-shadow: 0 0 4px rgba(255, 45, 45, 0.3);
-  }
-  50% {
-    box-shadow: 0 0 8px rgba(255, 45, 45, 0.8);
-  }
-}
-
-@keyframes landingHeroArrowNudge {
-  0%,
-  100% {
-    transform: translateX(0);
-  }
-  50% {
-    transform: translateX(6px);
   }
 }
 
@@ -753,43 +562,11 @@ html, body {
 }
 
 /* Landing: scattered issue dots vertical drift */
-@keyframes landingIssueDotDrift {
-  0%, 100% { transform: translateY(-4px); }
-  50% { transform: translateY(4px); }
-}
-
 /* Analyze: wireframe block assembly */
-@keyframes wireframeBlockIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
 /* Analyze: severity dot appear with pulse */
-@keyframes severityDotIn {
-  0% { opacity: 0; box-shadow: 0 0 0 0 rgba(255,45,45,0.4); }
-  50% { box-shadow: 0 0 12px 2px var(--red); }
-  100% { opacity: 1; box-shadow: 0 0 6px 1px rgba(0,0,0,0.3); }
-}
-
 /* Analyze: all dots pulse (scale) */
-@keyframes dotsPulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.5); }
-}
-
 /* Analyze: finding card appear */
-@keyframes findingCardIn {
-  from { opacity: 0; transform: translateX(20px); }
-  to { opacity: 1; transform: translateX(0); }
-}
-
 /* Analyze: background pulse overlay */
-@keyframes pulseOverlay {
-  0% { opacity: 0; }
-  25% { opacity: 1; }
-  100% { opacity: 0; }
-}
-
 /* Page skeleton pulse (dashboard, settings, finding detail) */
 @keyframes pageSkeletonPulse {
   0%,
@@ -1290,19 +1067,10 @@ svg path { fill: none !important; }
   0%, 100% { opacity: 0.7; transform: scale(1); }
   50%       { opacity: 1;   transform: scale(1.04); }
 }
-@keyframes fade-up-reveal {
-  from { opacity: 0; transform: translateY(24px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
 @keyframes card-rise {
   from { opacity: 0; transform: translateY(32px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-@keyframes pill-pop {
-  from { opacity: 0; transform: scale(0.7); }
-  to   { opacity: 1; transform: scale(1); }
-}
-
 /* bloom-breathe and ring-pulse: preserve translateX/translate positioning through the animation */
 @media (prefers-reduced-motion: no-preference) {
   @keyframes bloom-breathe {

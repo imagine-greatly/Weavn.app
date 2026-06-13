@@ -1336,40 +1336,6 @@ function PricingSection() {
   )
 }
 
-// ── What Happens Next strip ───────────────────────────────────────────────────
-
-function WhatHappensNextStrip() {
-  return (
-    <section style={{ padding:'64px 48px',borderTop:'0.5px solid rgba(111,155,198,0.1)',position:'relative',overflow:'visible' }}>
-      <style>{`@media(max-width:767px){.d-whn-connector{display:none!important}.d-whn-steps{flex-direction:column!important;gap:32px!important;align-items:flex-start!important}}`}</style>
-      <div style={{ maxWidth:1000,margin:'0 auto' }}>
-        <p style={{ ...MONO,fontSize:10,textTransform:'uppercase',letterSpacing:'0.2em',color:INK_MUT,textAlign:'center',margin:'0 0 40px' }}>
-          WHAT HAPPENS AFTER YOU SCAN
-        </p>
-        <div className="d-whn-steps" style={{ display:'flex',alignItems:'flex-start',gap:0 }}>
-          <div style={{ flex:1,textAlign:'center',padding:'0 24px' }}>
-            <p style={{ ...MONO,fontSize:18,fontWeight:700,color:'rgba(111,155,198,0.4)',margin:'0 0 10px',textShadow:'0 0 8px rgba(111,155,198,0.2)' }}>01</p>
-            <p style={{ ...SANS,fontSize:15,fontWeight:500,color:INK_PRI,margin:'0 0 8px',lineHeight:1.3 }}>Scan runs</p>
-            <p style={{ ...SANS,fontSize:13,color:INK_MUT,margin:0,lineHeight:1.6 }}>Your live page renders in headless Chrome. 307 checks fire. Takes about 90 seconds.</p>
-          </div>
-          <div className="d-whn-connector" style={{ width:1,background:'rgba(111,155,198,0.15)',alignSelf:'stretch',flexShrink:0 }} />
-          <div style={{ flex:1,textAlign:'center',padding:'0 24px' }}>
-            <p style={{ ...MONO,fontSize:18,fontWeight:700,color:'rgba(111,155,198,0.4)',margin:'0 0 10px',textShadow:'0 0 8px rgba(111,155,198,0.2)' }}>02</p>
-            <p style={{ ...SANS,fontSize:15,fontWeight:500,color:INK_PRI,margin:'0 0 8px',lineHeight:1.3 }}>Report delivered</p>
-            <p style={{ ...SANS,fontSize:13,color:INK_MUT,margin:0,lineHeight:1.6 }}>Every finding ranked by conversion impact. Evidence cited. Fix included. Copy rewritten.</p>
-          </div>
-          <div className="d-whn-connector" style={{ width:1,background:'rgba(111,155,198,0.15)',alignSelf:'stretch',flexShrink:0 }} />
-          <div style={{ flex:1,textAlign:'center',padding:'0 24px' }}>
-            <p style={{ ...MONO,fontSize:18,fontWeight:700,color:'rgba(111,155,198,0.4)',margin:'0 0 10px',textShadow:'0 0 8px rgba(111,155,198,0.2)' }}>03</p>
-            <p style={{ ...SANS,fontSize:15,fontWeight:500,color:INK_PRI,margin:'0 0 8px',lineHeight:1.3 }}>Work the list</p>
-            <p style={{ ...SANS,fontSize:13,color:INK_MUT,margin:0,lineHeight:1.6 }}>Start at priority 1. Most teams ship the top three fixes in an afternoon.</p>
-          </div>
-        </div>
-      </div>
-    </section>
-  )
-}
-
 // ── Section 13 — Final CTA ────────────────────────────────────────────────────
 // Hero scan flow requires a URL before proceeding — OPTION A: duplicate URL input + handler.
 
@@ -1511,7 +1477,6 @@ export default function DashboardPage() {
       </div>
       <MultiSiteSection />
       <PricingSection />
-      <WhatHappensNextStrip />
       <FinalCtaSection />
     </main>
   )

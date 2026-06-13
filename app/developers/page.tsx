@@ -170,7 +170,7 @@ const FAQ_CARDS = [
   },
   {
     q: 'What if a site blocks the scanner?',
-    a: 'webdoc uses Browserless Pro with stealth mode and a real Chrome user agent. Most sites scan cleanly. Cloudflare Enterprise with aggressive bot detection occasionally blocks — the API returns a structured error with block_reason: "automated_access_blocked".',
+    a: 'Weavn uses Browserless Pro with stealth mode and a real Chrome user agent. Most sites scan cleanly. Cloudflare Enterprise with aggressive bot detection occasionally blocks — the API returns a structured error with block_reason: "automated_access_blocked".',
     dataLine: 'error: automated_access_blocked',
     dataColor: '#E8635F',
   },
@@ -269,7 +269,7 @@ const API_CARDS_DEF = [
   {
     tier: 'BUILDER', tierColor: '#8080c0',
     price: '$99', economy: '/mo · 1,000 scans', economyColor: '#6F9BC6',
-    bestFor: 'Teams building audit pipelines or integrating webdoc into client workflows.',
+    bestFor: 'Teams building audit pipelines or integrating Weavn into client workflows.',
     cta: 'START BUILDER →', ctaHref: '/auth?surface=api&plan=builder',
     accentColor: 'rgba(255,255,255,0.12)', ctaBorderColor: 'rgba(157,140,255,0.45)', ctaColor: '#9D8CFF',
   },

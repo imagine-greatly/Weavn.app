@@ -27,10 +27,10 @@ function LogoRow() {
         aria-hidden
       />
       <span style={{ fontFamily: DISP, fontWeight: 700, fontSize: 18, color: C.primary, lineHeight: 1 }}>
-        webdoc
+        Weav
       </span>
       <span style={{ fontFamily: DISP, fontWeight: 700, fontSize: 18, color: C.green, lineHeight: 1 }}>
-        ai
+        n
       </span>
     </div>
   );

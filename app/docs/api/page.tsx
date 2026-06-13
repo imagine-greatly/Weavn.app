@@ -746,7 +746,7 @@ export default function ApiDocsPage() {
       <aside style={{ width: 220, flexShrink: 0, background: BG_R, borderRight: `1px solid ${BD}`, height: '100%', overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
         <div style={{ padding: '20px 24px', borderBottom: `1px solid ${BD}`, flexShrink: 0 }}>
           <div style={{ fontFamily: DISP, fontSize: 13, fontWeight: 700, color: T1, letterSpacing: '0.04em' }}>
-            webdoc.ai
+            Weavn
           </div>
           <div style={{ fontFamily: MONO, fontSize: 10, color: T3, marginTop: 4 }}>API v1</div>
         </div>
@@ -831,7 +831,7 @@ export default function ApiDocsPage() {
           <section id="errors" style={SB}>
             <Label>OVERVIEW</Label>
             <H2>Errors</H2>
-            <Body mb={24}>webdoc uses standard HTTP status codes. Error responses include a machine-readable <code style={{ fontFamily: MONO, fontSize: 12 }}>code</code> field for programmatic handling.</Body>
+            <Body mb={24}>Weavn uses standard HTTP status codes. Error responses include a machine-readable <code style={{ fontFamily: MONO, fontSize: 12 }}>code</code> field for programmatic handling.</Body>
             <ErrTable rows={[
               { code: '400', meaning: 'Bad request — missing or invalid URL' },
               { code: '401', meaning: 'Unauthorized — invalid or missing API key' },
@@ -939,7 +939,7 @@ export default function ApiDocsPage() {
             <Label>ENDPOINTS</Label>
             <H2>POST /api/v1/webhooks</H2>
             <Body mb={24}>
-              Register a webhook endpoint. webdoc will POST a signed payload to your URL whenever the specified events occur.
+              Register a webhook endpoint. Weavn will POST a signed payload to your URL whenever the specified events occur.
             </Body>
             <ParamTable rows={[
               { param: 'url',    type: 'string', required: 'required', description: 'The delivery endpoint that will receive webhook payloads.' },
@@ -966,7 +966,7 @@ export default function ApiDocsPage() {
             <Label>WEBHOOKS</Label>
             <H2>Webhooks</H2>
             <Body>
-              webdoc sends a POST request to your webhook URL when an async scan completes or fails.
+              Weavn sends a POST request to your webhook URL when an async scan completes or fails.
             </Body>
             <Body>Register webhooks in the developer portal or via the webhooks API.</Body>
           </section>
@@ -1003,7 +1003,7 @@ export default function ApiDocsPage() {
             <Label>RESPONSE SCHEMA</Label>
             <H2>Score</H2>
             <Body mb={24}>
-              Integer 0–100. Benchmarked against all sites webdoc has scanned in the same industry category.
+              Integer 0–100. Benchmarked against all sites Weavn has scanned in the same industry category.
             </Body>
             <FieldTable rows={[
               { name: 'score',                  type: 'integer', description: 'Overall conversion score, 0–100.' },

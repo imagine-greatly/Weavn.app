@@ -898,16 +898,6 @@ type ObjectionCard = { q: string; a: string; tag: string }
 
 const OBJECTIONS: ObjectionCard[] = [
   {
-    q: "How do I know it's not hallucinating?",
-    a: "Every finding must cite specific visible content — what's present, absent, or misplaced on your actual page. The model cannot pass a check without grounding it in evidence. Findings that fail validation are dropped before they reach you. You will never see a finding that isn't traceable to something real on your page.",
-    tag: 'grounding rule: cite visible content or fail',
-  },
-  {
-    q: 'Why not just paste my URL into ChatGPT?',
-    a: "A language model sees the text you paste, not your live page. Weavn renders the full DOM in headless Chrome, reads your above-the-fold layout, measures element positions, runs 307 structured checks against conversion best practices, and returns ranked output with estimated lift numbers. ChatGPT returns a chat response. This returns a report.",
-    tag: '307 checks · rendered DOM · ranked output · not a chat response',
-  },
-  {
     q: "I already know my site has problems. I don't have time to interpret a report.",
     a: "Every finding comes with a severity rank, a one-sentence plain-English description, a concrete fix, and drop-in replacement copy. There's nothing to interpret. Work down the list from priority 1. Most teams ship the top three fixes in an afternoon.",
     tag: 'ranked by impact · fix included · copy ready to paste',
@@ -921,16 +911,6 @@ const OBJECTIONS: ObjectionCard[] = [
     q: "How is the score calculated? What does 61 actually mean?",
     a: "Every check returns a pass, fail, or partial result. Fails are weighted by their estimated conversion impact — a broken value proposition costs more points than a missing favicon. The final score is a weighted composite across all 307 checks. A score of 61 means your page is passing the majority of checks but has meaningful conversion gaps, particularly in high-weight categories. Scores below 70 are flagged as critical — the data shows a strong correlation between sub-70 scores and above-average bounce rates in the corpus.",
     tag: 'weighted by conversion impact · not a vanity metric · corpus-calibrated',
-  },
-  {
-    q: "What if I disagree with a finding?",
-    a: "Every finding cites the specific visible evidence it's based on — what element was present, absent, or misplaced, and why that matters for conversion. If you read a finding and think the evidence is wrong, the fix is simple: look at your page and check. The grounding rule means the model cannot invent evidence. If the finding cites something that isn't there, that's a bug — use the feedback flag in the report and we'll investigate. In practice, the findings that users disagree with most are the ones that turn out to be most accurate.",
-    tag: 'every finding cites evidence · flaggable · grounded or dropped',
-  },
-  {
-    q: "How often should I scan?",
-    a: "Scan whenever you ship a meaningful change — new hero, new CTA, new pricing, new landing page. For most users on Starter that means once or twice a month. Free plan gives you three scans a month which covers most iteration cycles. Scanning the same unchanged page repeatedly won't change your findings — the engine reads what's there, not what was there last week. The corpus updates weekly so your percentile can shift even without a rescan as new sites are benchmarked.",
-    tag: 'scan on meaningful changes · corpus updates weekly · not a set-and-forget tool',
   },
   {
     q: "Is this just for SaaS? I run an e-commerce store.",

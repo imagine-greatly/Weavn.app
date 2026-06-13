@@ -835,15 +835,6 @@ const LIGHTHOUSE_ITEMS = [
   'No fixes — just scores and flags',
 ]
 
-const WEBDOC_ITEMS = [
-  'Renders your live DOM in headless Chrome',
-  '307 structured checks across 27 categories',
-  'Ranked by estimated conversion impact',
-  'Evidence cited per finding',
-  'Plain-English fix + AI-rewritten copy included',
-  'Benchmarked against real sites in your vertical',
-]
-
 const WEBDOC_ROWS = [
   { title: 'Renders your live DOM in headless Chrome', sub: 'not text you paste — your actual live page' },
   { title: '307 structured checks across 27 categories', sub: 'parallel execution · citation required per finding' },

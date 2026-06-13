@@ -653,7 +653,7 @@ export default function DevelopersPage() {
             One endpoint. Any URL. Instant intelligence.
           </h1>
           <p style={{ ...SANS, fontSize: 16, lineHeight: 1.65, color: '#9398A8', maxWidth: 600, margin: '0 auto 32px' }}>
-            POST a URL, get a weave back. Structured JSON, percentile benchmarks, ranked fixes.
+            POST a URL, get a report back. Structured JSON, percentile benchmarks, ranked fixes.
           </p>
 
           {/* Tabbed code block */}

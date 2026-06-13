@@ -83,8 +83,8 @@ function HeroSection() {
         return
       }
       const data = await res.json()
-      if (data.reportId) {
-        router.push(`/reports/${data.reportId}`)
+      if (data.shareToken) {
+        router.push(`/reports/${data.shareToken}`)
       } else if (data.error) {
         setScanError(data.error)
       }
@@ -1370,8 +1370,8 @@ function FinalCtaSection() {
         return
       }
       const data = await res.json()
-      if (data.reportId) {
-        router.push(`/reports/${data.reportId}`)
+      if (data.shareToken) {
+        router.push(`/reports/${data.shareToken}`)
       } else if (data.error) {
         setScanError(data.error)
       }

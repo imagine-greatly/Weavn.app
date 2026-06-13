@@ -530,6 +530,24 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  // Resolve the canonical share_token for this report. saveReport's update path rewrites
+  // share_token on each save, so read the final value by id. This token keys the public
+  // /reports/[token] route and the scan-completion email link, matching the v1 API contract
+  // (see app/api/v1/scan/route.ts).
+  let shareToken: string | null = null;
+  if (supabaseAdmin && reportId) {
+    try {
+      const { data: tokenRow } = await supabaseAdmin
+        .from('reports')
+        .select('share_token')
+        .eq('id', reportId)
+        .maybeSingle();
+      shareToken = (tokenRow as { share_token?: string | null } | null)?.share_token ?? null;
+    } catch (err) {
+      console.log(`[scan] share_token lookup failed (non-fatal) | ${err instanceof Error ? err.message : String(err)}`);
+    }
+  }
+
   // Email notification — non-blocking, must not delay the scan response
   if (userId && supabaseAdmin) {
     try {
@@ -648,6 +666,6 @@ export async function POST(req: NextRequest) {
   });
 
   return withCookies(
-    NextResponse.json({ domain, reportId, payload })
+    NextResponse.json({ domain, reportId, shareToken, payload })
   );
 }

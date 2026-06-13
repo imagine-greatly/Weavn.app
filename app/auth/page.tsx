@@ -59,7 +59,7 @@ function buildScanRedirect(): string {
       return `/dashboard?url=${encodeURIComponent(normalized)}`;
     }
   }
-  return "/app/dashboard";
+  return "/app";
 }
 
 // ── Sub-components ────────────────────────────────────────────────────────────
@@ -236,7 +236,7 @@ function AuthPageContent() {
         setTimeout(() => {
           const next = searchParams.get("next");
           const authSurface = typeof sessionStorage !== "undefined" ? (sessionStorage.getItem("auth_surface") || "dashboard") : "dashboard";
-          window.location.replace(next ?? (authSurface === "api" ? "/playground" : "/app/dashboard"));
+          window.location.replace(next ?? (authSurface === "api" ? "/playground" : "/app"));
         }, 800);
       } else {
         setSignupEmailSent(true);

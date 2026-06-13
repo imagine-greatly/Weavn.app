@@ -24,6 +24,10 @@ const nextConfig: NextConfig = {
       // Provisioning emails already sent in the wild link to /developer.
       { source: "/developer", destination: "/console", permanent: true },
       { source: "/developer/keys", destination: "/console/keys", permanent: true },
+      // Gated product app moved /app/dashboard -> /app. EXACT match only: the
+      // unmoved prototype pages /app/dashboard/founder and /app/dashboard/developer
+      // must keep resolving, so this must NOT be /app/dashboard/:path*.
+      { source: "/app/dashboard", destination: "/app", permanent: true },
     ];
   },
   webpack: (config, { dev }) => {

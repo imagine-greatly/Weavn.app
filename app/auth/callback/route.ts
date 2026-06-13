@@ -81,7 +81,7 @@ export async function GET(request: NextRequest) {
     const normalized = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
     destination = `/dashboard?url=${encodeURIComponent(normalized)}`;
   } else {
-    destination = "/app/dashboard";
+    destination = "/app";
   }
 
   const response = NextResponse.redirect(new URL(destination, requestUrl.origin));

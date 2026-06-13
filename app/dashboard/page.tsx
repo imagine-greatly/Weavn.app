@@ -672,26 +672,40 @@ function HowItWorksSection() {
   // border regardless of content-driven height. Seeded with the SSR / no-JS fallback to avoid a hydration gap.
   const [snake, setSnake] = useState<string>(PIPELINE_SNAKE_FALLBACK)
   const [lineBox, setLineBox] = useState<string>('0 0 1000 1440')
+  // Card tops + wrapper height are measured too: each card sits a constant GAP below the
+  // previous card's REAL bottom, so every connector segment spans the same positive gap and
+  // can never be forced back into a card interior (which happened when a content-driven card
+  // — e.g. step 02 at ~377px on a 768px viewport — overflowed the old fixed 360px slot pitch).
+  const [tops, setTops] = useState<number[]>([0, 360, 720, 1080])
+  const [wrapH, setWrapH] = useState<number>(1440)
 
   useEffect(() => {
+    const GAP = 64   // constant whitespace between every card's bottom and the next card's top
     const compute = () => {
       const wrap = wrapRef.current
       const cards = cardRefs.current.filter((c): c is HTMLDivElement => c != null)
       if (!wrap || cards.length < 2) return
+      // Measure real per-card height + horizontal center from the rendered DOM.
+      const h = cards.map(c => c.offsetHeight)
+      const cx = cards.map(c => c.offsetLeft + c.offsetWidth / 2)
+      // Lay cards out by cumulative measured height + a constant GAP, so the vertical gap
+      // between consecutive cards is always exactly GAP (positive) regardless of content height.
+      const t: number[] = [0]
+      for (let i = 1; i < cards.length; i++) t[i] = t[i - 1] + h[i - 1] + GAP
       const segs: string[] = []
       for (let i = 0; i < cards.length - 1; i++) {
-        const a = cards[i], b = cards[i + 1]
-        const startX = a.offsetLeft + a.offsetWidth / 2   // bottom-edge center of card N
-        const startY = a.offsetTop + a.offsetHeight        // ON card N's bottom border
-        const endX = b.offsetLeft + b.offsetWidth / 2      // top-edge center of card N+1
-        const endY = b.offsetTop                           // ON card N+1's top border
-        const gap = endY - startY
-        // vertical tangents at both edges: CP1 below start, CP2 above end
+        const startX = cx[i],     startY = t[i] + h[i]   // bottom-edge midpoint of card i — ON its border
+        const endX   = cx[i + 1], endY   = t[i + 1]      // top-edge midpoint of card i+1 — ON its border
+        const gap = endY - startY                         // === GAP, always positive
+        // identical formula for every segment: vertical tangent at both ends (CP offset = gap*0.4)
         segs.push(`M ${startX} ${startY} C ${startX} ${startY + gap * 0.4} ${endX} ${endY - gap * 0.4} ${endX} ${endY}`)
       }
+      const totalH = t[cards.length - 1] + h[cards.length - 1]
+      setTops(t)
+      setWrapH(totalH)
       setSnake(segs.join(' '))
       // viewBox = real wrap px → 1:1 with the SVG element, no aspect distortion of the path
-      setLineBox(`0 0 ${wrap.offsetWidth} ${wrap.offsetHeight}`)
+      setLineBox(`0 0 ${wrap.offsetWidth} ${totalH}`)
     }
     compute()
     const ro = new ResizeObserver(compute)
@@ -730,7 +744,7 @@ function HowItWorksSection() {
         </h2>
 
         {/* Step pipeline */}
-        <div ref={wrapRef} className="d-pl-wrap" style={{ position: 'relative', height: 1440 }}>
+        <div ref={wrapRef} className="d-pl-wrap" style={{ position: 'relative', height: wrapH }}>
 
           {/* SVG connector — strict top/bottom edge routing measured from real card edges (see HowItWorksSection).
               overflow:visible + no clip-path / mask / overflow:hidden so the path can never be visually cropped into a card. */}
@@ -748,7 +762,7 @@ function HowItWorksSection() {
             return (
               <div key={step.num} ref={el => { cardRefs.current[i] = el }} className="d-pl-step" style={{
                 position: 'absolute',
-                top: i * 360,
+                top: tops[i] ?? i * 360,
                 left: isLeft ? 0 : '54%',
                 width: '46%',
                 minHeight: 290,

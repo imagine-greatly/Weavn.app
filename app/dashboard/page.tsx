@@ -417,74 +417,8 @@ function OutputSection() {
             ))}
           </div>
         </div>
-      </div>
-    </section>
-  )
-}
-
-// ── Section 3 — AI-Rewritten Copy (standalone) ────────────────────────────────
-
-const REWRITE_EXAMPLES = [
-  {
-    type: 'HEADLINE',
-    original: 'The project management tool built for remote teams.',
-    rewritten: 'Ship projects on time, every time — no matter where your team works.',
-  },
-  {
-    type: 'PRIMARY CTA',
-    original: 'Get started',
-    rewritten: 'Start shipping on time — free',
-  },
-  {
-    type: 'VALUE PROPOSITION',
-    original: 'Powerful features for modern teams',
-    rewritten: "Everything your team needs to hit every deadline — nothing you don’t",
-  },
-] as const
-
-function AIRewriteSection() {
-  return (
-    <section style={{ padding:'80px 48px',borderTop:'0.5px solid rgba(111,155,198,0.1)',position:'relative',overflow:'visible' }}>
-      {/* Section 3 atmospheric bloom */}
-      <div aria-hidden="true" style={{ position:'absolute',top:0,left:'50%',width:'1000px',height:'800px',background:'radial-gradient(ellipse at 50% 35%, rgba(111, 155, 198, 0.05) 0%, rgba(111, 155, 198, 0.015) 40%, rgba(111, 155, 198, 0.004) 65%, transparent 85%)',pointerEvents:'none',zIndex:-1,animation:'bloom-breathe 5s ease-in-out infinite' }} />
-      <style>{`@media(max-width:639px){.d-rewrite-cols{flex-direction:column!important}}`}</style>
-      <div style={{ maxWidth:1000,margin:'0 auto' }}>
-        <p style={{ ...MONO,fontSize:11,textTransform:'uppercase',letterSpacing:'0.2em',color:STEEL,margin:'0 0 16px' }}>
-          AI-REWRITTEN COPY
-        </p>
-        <h2 style={{ ...DISP,fontWeight:700,fontSize:'clamp(28px,4vw,44px)',color:INK_PRI,letterSpacing:'-0.5px',margin:'0 0 16px',lineHeight:1.1 }}>
-          Not just what&apos;s broken. How to fix it.
-        </h2>
-        <p style={{ ...SANS,fontSize:15,color:INK_SEC,lineHeight:1.65,maxWidth:580,margin:'0 0 32px' }}>
-          Every critical finding includes a drop-in replacement — headline rewritten, CTA rewritten, copy rewritten. Ready to hand to your designer or paste directly.
-        </p>
-
-        {/* Three rewrite examples — static illustration */}
-        <div style={{ display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:16,flexWrap:'wrap',gap:8 }}>
-          <p style={{ ...MONO,fontSize:9,textTransform:'uppercase',letterSpacing:'0.18em',color:INK_MUT,margin:0 }}>THREE TYPES OF REWRITE INCLUDED</p>
-          <p style={{ ...MONO,fontSize:9,textTransform:'uppercase',letterSpacing:'0.15em',color:'rgba(111,155,198,0.3)',margin:0 }}>EXAMPLE SCAN RESULT — STATIC ILLUSTRATION</p>
-        </div>
-        <div style={{ display:'flex',flexDirection:'column',gap:12 }}>
-          {REWRITE_EXAMPLES.map(ex => (
-            <div key={ex.type}>
-              <p style={{ ...MONO,fontSize:9,textTransform:'uppercase',letterSpacing:'0.15em',color:INK_MUT,margin:'0 0 6px' }}>{ex.type}</p>
-              <div style={{ borderTop:'1px solid rgba(255,255,255,0.1)',borderLeft:'1px solid rgba(255,255,255,0.07)',borderRight:'1px solid rgba(255,255,255,0.04)',borderBottom:'1px solid rgba(255,255,255,0.03)',boxShadow:'inset 0 1px 0 0 rgba(111, 155, 198, 0.1)' }}>
-                <div className="d-rewrite-cols" style={{ display:'flex' }}>
-                  <div style={{ flex:1,padding:28,borderRight:'0.5px solid rgba(111,155,198,0.1)',background:'rgba(255,255,255,0.01)' }}>
-                    <p style={{ ...MONO,fontSize:10,textTransform:'uppercase',letterSpacing:'0.18em',color:'rgba(255,255,255,0.25)',margin:'0 0 14px' }}>ORIGINAL</p>
-                    <p style={{ ...SANS,fontSize:17,color:INK_SEC,margin:0,lineHeight:1.55,opacity:0.35 }}>&ldquo;{ex.original}&rdquo;</p>
-                  </div>
-                  <div style={{ flex:1,padding:28,position:'relative',borderLeft:'1px solid rgba(0, 196, 140, 0.25)',boxShadow:'inset 1px 0 0 0 rgba(0, 196, 140, 0.1)' }}>
-                    <p style={{ position:'relative',...MONO,fontSize:10,textTransform:'uppercase',letterSpacing:'0.18em',color:'rgba(0, 196, 140, 0.9)',margin:'0 0 14px',textShadow:'0 0 12px rgba(0, 196, 140, 0.4)' }}>REWRITTEN</p>
-                    <p style={{ position:'relative',...SANS,fontSize:17,color:INK_PRI,margin:0,lineHeight:1.55 }}>&ldquo;{ex.rewritten}&rdquo;</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-        <p style={{ ...MONO,fontSize:11,color:INK_MUT,margin:'16px 0 0' }}>
-          Every critical and high-severity finding includes a drop-in replacement. No copywriter required.
+        <p style={{ ...MONO,fontSize:11,color:INK_MUT,margin:'20px 0 0',lineHeight:1.6 }}>
+          Rewrites cover headline, CTA, and value-prop — every critical finding, ready to paste. No copywriter required.
         </p>
       </div>
     </section>
@@ -1717,7 +1651,6 @@ export default function DashboardPage() {
     <main style={{ minHeight:'100vh' }}>
       <HeroSection />
       <OutputSection />
-      <AIRewriteSection />
       <GroundingProofSection />
       <VerticalShowcaseSection />
       <WhatWeCheckSection />

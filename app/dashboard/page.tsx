@@ -729,9 +729,10 @@ function HowItWorksSection() {
           .pl-pulse   { transform-box:fill-box; transform-origin:center; animation:pl-pulse 2s ease-in-out infinite }
         }
         @media (max-width:767px) {
-          .d-pl-wrap  { height:auto!important }
-          .d-pl-step  { position:static!important; width:100%!important; margin-bottom:24px!important; left:auto!important; top:auto!important }
-          .d-pl-svg   { display:none!important }
+          .d-pl-wrap        { height:auto!important }
+          .d-pl-step        { position:static!important; width:100%!important; margin-bottom:24px!important; left:auto!important; top:auto!important }
+          .d-pl-svg         { display:none!important }
+          .d-pl-void-bloom  { display:none!important }
         }
       `}</style>
 
@@ -745,6 +746,24 @@ function HowItWorksSection() {
 
         {/* Step pipeline */}
         <div ref={wrapRef} className="d-pl-wrap" style={{ position: 'relative', height: wrapH }}>
+
+          {/* HOW_VOID_BLOOM_START — faint steel-blue glow filling the empty half of each alternating
+              row so the voids read as atmosphere, not dead space. Static, well below the bell-curve
+              intensity; self-contained — remove this block to delete. */}
+          {PIPELINE_STEPS.map((step, i) => (
+            <div key={`void-${step.num}`} aria-hidden="true" className="d-pl-void-bloom" style={{
+              position: 'absolute',
+              top: tops[i] ?? i * 360,
+              left: i % 2 === 0 ? 'auto' : 0,    // card on left → bloom on the empty right half, and vice versa
+              right: i % 2 === 0 ? 0 : 'auto',
+              width: '46%',
+              height: 280,
+              background: 'radial-gradient(ellipse at 50% 45%, rgba(111, 155, 198, 0.03) 0%, rgba(111, 155, 198, 0.008) 45%, transparent 72%)',
+              pointerEvents: 'none',
+              zIndex: 0,
+            }} />
+          ))}
+          {/* HOW_VOID_BLOOM_END */}
 
           {/* SVG connector — strict top/bottom edge routing measured from real card edges (see HowItWorksSection).
               overflow:visible + no clip-path / mask / overflow:hidden so the path can never be visually cropped into a card. */}
@@ -1026,6 +1045,8 @@ function MultiSiteSection() {
       position: 'relative',
       overflow: 'visible',
     }}>
+      {/* AT_SCALE_BLOOM — steel-blue section bloom behind the heading / white-label mock; self-contained, remove to delete */}
+      <div aria-hidden="true" className="d-bloom-atscale" style={{ position:'absolute',top:0,left:'50%',width:'1000px',height:'800px',background:'radial-gradient(ellipse at 50% 35%, rgba(111, 155, 198, 0.05) 0%, rgba(111, 155, 198, 0.015) 40%, rgba(111, 155, 198, 0.004) 65%, transparent 85%)',pointerEvents:'none',zIndex:-1,animation:'bloom-breathe 5s ease-in-out infinite' }} />
       <style>{`
         @media(max-width:767px){.d-agency-cap-grid{grid-template-columns:1fr!important}}
         @media(max-width:639px){.d-report-meta{flex-direction:column!important;gap:8px!important}.d-report-table-row{flex-wrap:wrap!important}}
@@ -1372,6 +1393,9 @@ function FinalCtaSection() {
 
   return (
     <section style={{ padding:'96px 48px',textAlign:'center',position:'relative',overflow:'visible',borderTop:'0.5px solid rgba(111,155,198,0.1)',background:BG_BASE }}>
+      {/* FINAL_CTA_BLOOM — contained steel-blue bloom behind the closing heading. zIndex 0 sits above
+          the opaque BG_BASE and below the zIndex:1 content; self-contained, remove to delete. */}
+      <div aria-hidden="true" className="d-bloom-finalcta" style={{ position:'absolute',top:0,left:'50%',transform:'translateX(-50%)',width:'820px',height:'360px',background:'radial-gradient(ellipse at 50% 40%, rgba(111, 155, 198, 0.05) 0%, rgba(111, 155, 198, 0.015) 42%, rgba(111, 155, 198, 0.004) 65%, transparent 85%)',pointerEvents:'none',zIndex:0,animation:'bloom-breathe 5s ease-in-out infinite' }} />
       <Ticks />
       <div style={{ position:'relative',zIndex:1 }}>
         <h2 style={{ ...DISP,fontWeight:700,fontSize:'clamp(28px,4vw,44px)',color:INK_PRI,letterSpacing:'-0.5px',margin:'0 0 32px',lineHeight:1.1,textShadow:'0 0 40px rgba(111, 155, 198, 0.15)' }}>

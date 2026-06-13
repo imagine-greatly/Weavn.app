@@ -18,6 +18,14 @@ const nextConfig: NextConfig = {
   generateBuildId: async () => {
     return Date.now().toString();
   },
+  async redirects() {
+    return [
+      // Legacy API portal route — renamed /developer → /console.
+      // Provisioning emails already sent in the wild link to /developer.
+      { source: "/developer", destination: "/console", permanent: true },
+      { source: "/developer/keys", destination: "/console/keys", permanent: true },
+    ];
+  },
   webpack: (config, { dev }) => {
     if (dev) {
       config.cache = false;

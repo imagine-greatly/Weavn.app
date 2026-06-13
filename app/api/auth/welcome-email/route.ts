@@ -42,7 +42,7 @@ function buildWelcomeText(name?: string | null): string {
   return [
     `Hi${name ? ` ${name}` : ''},`,
     '',
-    'Your API key has been provisioned. Visit your developer portal to copy it: https://weavn.app/developer',
+    'Your API key has been provisioned. Visit your developer portal to copy it: https://weavn.app/console',
     '',
     'Your first 25 scans are free. After that, scans are $0.25 each — no subscription required.',
     '',

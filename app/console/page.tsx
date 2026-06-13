@@ -408,7 +408,7 @@ function ApiKeysTab({ keyPrefix, onRevoke }: ApiKeysTabProps) {
       </div>
 
       <Link
-        href="/developer/keys"
+        href="/console/keys"
         className="bg-cyan-DEFAULT text-text-inverse font-body font-semibold text-sm px-5 py-2.5 no-underline inline-block hover:opacity-90 transition-opacity duration-150"
       >
         Create new key →

@@ -20,7 +20,7 @@ export default function AuthenticationPage() {
 
         <h2 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 22, fontWeight: 700, color: "var(--text-primary)", marginBottom: 16 }}>Where to find your key</h2>
         <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 15, color: "var(--text-secondary)", lineHeight: 1.8, marginBottom: 32 }}>
-          Your API key is generated at <a href="/developer/keys" style={{ color: "var(--cyan)" }}>/developer/keys</a> after account creation.
+          Your API key is generated at <a href="/console/keys" style={{ color: "var(--cyan)" }}>/console/keys</a> after account creation.
           The full key is displayed <strong style={{ color: "var(--text-primary)" }}>exactly once</strong> — copy it immediately.
           Only the key hash is stored; the plaintext cannot be recovered. Use the Regenerate function in the developer portal to rotate a lost key.
         </p>

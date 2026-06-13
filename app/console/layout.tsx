@@ -6,7 +6,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Weavn API — One endpoint. Structured output. Per scan.",
     description: "POST any URL → structured JSON in ~90s. 307 checks, ranked findings, corpus benchmarks. 25 free scans, no subscription to start.",
-    url: "https://weavn.app/developer",
+    url: "https://weavn.app/console",
     siteName: "Weavn",
     type: "website",
     images: [
@@ -30,7 +30,7 @@ export const metadata: Metadata = {
     follow: true,
   },
   alternates: {
-    canonical: "https://weavn.app/developer",
+    canonical: "https://weavn.app/console",
   },
 };
 

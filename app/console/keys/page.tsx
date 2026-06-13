@@ -79,7 +79,7 @@ export default function KeysPage() {
             You already have an active API key. For security, the full key cannot be recovered. Use the developer portal to manage or rotate your key.
           </p>
           <button
-            onClick={() => router.push("/developer")}
+            onClick={() => router.push("/console")}
             style={{ background: "#00C8FF", color: "#050810", border: "none", borderRadius: 4, padding: "12px 32px", fontFamily: SM, fontSize: 12, letterSpacing: "0.15em", cursor: "pointer" }}
           >
             GO TO DEVELOPER PORTAL →
@@ -150,7 +150,7 @@ export default function KeysPage() {
             {copied ? "COPIED ✓" : "COPY KEY"}
           </button>
           <button
-            onClick={() => router.push("/developer")}
+            onClick={() => router.push("/console")}
             style={{
               flex: 1,
               background: "transparent",

@@ -740,6 +740,36 @@ export default function DevelopersPage() {
       </section>
       <div className="section-separator" />
 
+      {/* ── 1b. WHAT YOU GET — plain-language comprehension bridge ───────────── */}
+      <section style={{ position: 'relative', overflow: 'hidden', padding: '56px 32px' }}>
+        <div style={{ position: 'relative', zIndex: 1, maxWidth: 1160, margin: '0 auto' }}>
+          <p style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.28em', color: '#9D8CFF', margin: '0 0 14px' }}>
+            WHAT YOU GET
+          </p>
+          <h2 style={{ ...DISP, fontSize: 'clamp(24px, 3vw, 34px)', fontWeight: 700, letterSpacing: '-0.5px', color: '#E6E9EE', margin: '0 0 24px', lineHeight: 1.15, maxWidth: 640 }}>
+            What comes back — and why it means something.
+          </h2>
+          <div style={{ ...PANEL, padding: 'clamp(20px, 3vw, 32px)' }}>
+            <Brackets />
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {[
+                { t: 'What it checks', lead: null, body: "307 checks across 27 conversion categories — hero, trust, CTA, social proof, and more — run against the exact page you submit." },
+                { t: 'What a finding is', lead: null, body: "Each issue comes back as a structured finding: what's wrong, the on-page evidence behind it, a ranked priority, and a rewritten fix you can paste in." },
+                { t: 'Why percentile, not a raw score', lead: 'Not an average. A percentile.', body: "Your score is positioned against a live corpus of real scans in the same vertical — so '63rd percentile' says something a generic audit number can't." },
+              ].map((c, i) => (
+                <div key={c.t} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  <span style={{ ...MONO, fontSize: 10, color: '#6E7587', letterSpacing: '0.12em' }}>{String(i + 1).padStart(2, '0')}</span>
+                  <p style={{ ...DISP, fontSize: 17, fontWeight: 600, color: '#E6E9EE', margin: 0 }}>{c.t}</p>
+                  {c.lead && <p style={{ ...MONO, fontSize: 12, color: '#9D8CFF', margin: 0 }}>{c.lead}</p>}
+                  <p style={{ ...SANS, fontSize: 14, lineHeight: 1.6, color: '#9398A8', margin: 0 }}>{c.body}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+      <div className="section-separator" />
+
       {/* ── 1a-ii. QUICKSTART — four-step path + engine visual ──────────────── */}
       <section style={{ position: 'relative', overflow: 'hidden', background: '#080D18', borderTop: '0.5px solid rgba(255,255,255,0.08)' }}>
         <div aria-hidden style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0, background: 'radial-gradient(ellipse 800px 500px at 50% 0%, rgba(157,140,255,0.04) 0%, transparent 60%)' }} />

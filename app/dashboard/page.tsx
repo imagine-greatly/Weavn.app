@@ -971,13 +971,106 @@ const OBJECTIONS: ObjectionCard[] = [
   },
 ]
 
+// ── Score-weight breakdown ────────────────────────────────────────────────────
+// Binds to the real scan response: the engine returns 7 dimensions, each with a
+// 0–100 score and a weight. Track length ∝ weight (the dimension's share of the
+// headline score); the fill ∝ score within that track, so filled length ∝
+// contribution = weight × score. state (fail/partial/pass) is a DISPLAY banding of
+// the score — NOT a per-check pass/fail tally (the response has no per-category
+// counts). Swap SCORE_DIMS for the live dimensions+weights array — layout unchanged.
+type ScoreDim = { label: string; score: number; weight: number; state?: 'fail' | 'partial' | 'pass' }
+
+const SCORE_DIMS: ScoreDim[] = [
+  { label: 'Conversion architecture', score: 62, weight: 0.20 },
+  { label: 'Message clarity',         score: 45, weight: 0.18 },
+  { label: 'Objection handling',      score: 52, weight: 0.15 },
+  { label: 'Offer clarity',           score: 74, weight: 0.15 },
+  { label: 'Trust signals',           score: 44, weight: 0.12 },
+  { label: 'Traffic readiness',       score: 80, weight: 0.10 },
+  { label: 'Technical foundation',    score: 85, weight: 0.10 },
+]
+
+const STATE_COLOR: Record<'fail' | 'partial' | 'pass', string> = { fail: CRIT, partial: HIGH_AMB, pass: STEEL }
+const bandState = (score: number): 'fail' | 'partial' | 'pass' => (score >= 70 ? 'pass' : score >= 50 ? 'partial' : 'fail')
+
+function ScoreWeightBreakdown({ dims = SCORE_DIMS }: { dims?: ScoreDim[] }) {
+  const maxWeight = Math.max(...dims.map(d => d.weight))
+  const composite = Math.round(dims.reduce((s, d) => s + d.weight * d.score, 0))
+  const cols = '180px 1fr 64px'
+  return (
+    <div style={{
+      background: SURFACE,
+      borderTop:'1px solid rgba(255,255,255,0.1)',
+      borderLeft:'1px solid rgba(255,255,255,0.06)',
+      borderRight:'1px solid rgba(255,255,255,0.03)',
+      borderBottom:'1px solid rgba(255,255,255,0.03)',
+      boxShadow:'inset 0 1px 0 0 rgba(111,155,198,0.12)',
+      padding:'24px 28px',
+    }}>
+      <style>{`@media(max-width:639px){.d-swb-row{grid-template-columns:118px 1fr 52px!important}}`}</style>
+
+      {/* Legend */}
+      <div style={{ display:'flex', gap:18, flexWrap:'wrap', alignItems:'center', marginBottom:18 }}>
+        {(([['Failing',CRIT],['Partial',HIGH_AMB],['Passing',STEEL]]) as [string,string][]).map(([lbl,c]) => (
+          <span key={lbl} style={{ display:'inline-flex', alignItems:'center', gap:7 }}>
+            <span style={{ width:9, height:9, background:c, flexShrink:0 }} />
+            <span style={{ ...MONO, fontSize:10, color:INK_MUT, letterSpacing:'0.08em' }}>{lbl}</span>
+          </span>
+        ))}
+        <span style={{ ...MONO, fontSize:10, color:'rgba(111,155,198,0.45)', marginLeft:'auto' }}>BAR = WEIGHT · FILL = SCORE</span>
+      </div>
+
+      {/* Header */}
+      <div className="d-swb-row" style={{ display:'grid', gridTemplateColumns:cols, gap:14, alignItems:'center', paddingBottom:8, borderBottom:'0.5px solid rgba(255,255,255,0.06)', marginBottom:10 }}>
+        <span style={{ ...MONO, fontSize:9, textTransform:'uppercase', letterSpacing:'0.14em', color:INK_MUT }}>DIMENSION</span>
+        <span style={{ ...MONO, fontSize:9, textTransform:'uppercase', letterSpacing:'0.14em', color:INK_MUT }}>WEIGHTED CONTRIBUTION</span>
+        <span style={{ ...MONO, fontSize:9, textTransform:'uppercase', letterSpacing:'0.14em', color:INK_MUT, textAlign:'right' }}>PTS</span>
+      </div>
+
+      {/* Dimension rows */}
+      <div style={{ display:'flex', flexDirection:'column', gap:9 }}>
+        {dims.map(d => {
+          const state = d.state ?? bandState(d.score)
+          const color = STATE_COLOR[state]
+          const trackPct = (d.weight / maxWeight) * 100
+          const contribution = d.weight * d.score
+          return (
+            <div key={d.label} className="d-swb-row" style={{ display:'grid', gridTemplateColumns:cols, gap:14, alignItems:'center' }}>
+              <span style={{ ...SANS, fontSize:13, color:INK_SEC, lineHeight:1.3 }}>{d.label}</span>
+              <div style={{ position:'relative', height:16, width:'100%' }}>
+                <div style={{ position:'absolute', left:0, top:0, height:'100%', width:`${trackPct}%`, background:'rgba(255,255,255,0.045)' }}>
+                  <div style={{ height:'100%', width:`${d.score}%`, background:color, boxShadow:`0 0 10px ${color}33` }} />
+                </div>
+              </div>
+              <span style={{ ...MONO, fontSize:12, color, textAlign:'right' }}>{contribution.toFixed(1)}</span>
+            </div>
+          )
+        })}
+      </div>
+
+      {/* Composite */}
+      <div className="d-swb-row" style={{ display:'grid', gridTemplateColumns:cols, gap:14, alignItems:'center', marginTop:14, paddingTop:14, borderTop:'1px solid rgba(111,155,198,0.18)' }}>
+        <span style={{ ...DISP, fontSize:14, fontWeight:600, color:INK_PRI }}>Composite score</span>
+        <div style={{ position:'relative', height:16, width:'100%' }}>
+          <div style={{ position:'absolute', left:0, top:0, height:'100%', width:'100%', background:'rgba(255,255,255,0.045)' }}>
+            <div style={{ height:'100%', width:`${composite}%`, background:STEEL, boxShadow:'0 0 14px rgba(111,155,198,0.4)' }} />
+          </div>
+        </div>
+        <span style={{ ...DISP, fontSize:18, fontWeight:700, color:STEEL, textAlign:'right' }}>{composite}</span>
+      </div>
+
+      <p style={{ ...MONO, fontSize:10, color:INK_MUT, margin:'16px 0 0', lineHeight:1.6, opacity:0.7 }}>
+        Example · acme-saas.com — pass / partial / fail is a display banding of each dimension&apos;s 0–100 score, not a per-check tally.
+      </p>
+    </div>
+  )
+}
+
 function WhyDifferentSection() {
   const [hoveredFaq, setHoveredFaq] = useState<number | null>(null)
   return (
     <section style={{ padding:'80px 48px',borderTop:'0.5px solid rgba(111,155,198,0.1)',position:'relative',overflow:'hidden',background:BG_BASE }}>
-      {/* PLACEHOLDER BLOOM — reserved slot for the score-breakdown visual (built in a later pass),
-          anchored behind the scoring explanation ("How is the score calculated / what does 61 mean"). */}
-      <Bloom size={640} opacity={0.12} style={{ top:'55%', left:'36%' }} />
+      {/* Scoring-section bloom now lives behind the score-weight breakdown below. */}
       <style>{`@media(max-width:767px){.d-diff-grid{grid-template-columns:1fr!important}}`}</style>
       <Ticks />
       <div style={{ maxWidth:1200,margin:'0 auto',position:'relative',zIndex:1 }}>
@@ -1014,6 +1107,24 @@ function WhyDifferentSection() {
               <p style={{ ...MONO,fontSize:11,color:STEEL,margin:0,textShadow:'0 0 6px rgba(111, 155, 198, 0.25)' }}>{card.tag}</p>
             </motion.div>
           ))}
+        </div>
+
+        {/* Score-weight breakdown — visual answer to the "how is the score calculated / what does 61 mean" card */}
+        <div style={{ position:'relative', marginTop:56 }}>
+          {/* Bloom behind the breakdown — fills the slot reserved in the bloom-system commit */}
+          <Bloom size={820} opacity={0.14} style={{ top:'56%' }} />
+          <div style={{ position:'relative', zIndex:1, maxWidth:840 }}>
+            <p style={{ ...MONO,fontSize:11,textTransform:'uppercase',letterSpacing:'0.2em',color:STEEL,margin:'0 0 14px' }}>
+              HOW THE SCORE IS BUILT
+            </p>
+            <h3 style={{ ...DISP,fontWeight:700,fontSize:'clamp(24px,3vw,34px)',color:INK_PRI,letterSpacing:'-0.5px',margin:'0 0 14px',lineHeight:1.15 }}>
+              What a 61 is actually made of.
+            </h3>
+            <p style={{ ...SANS,fontSize:14,color:INK_SEC,lineHeight:1.65,maxWidth:680,margin:'0 0 28px' }}>
+              Seven conversion dimensions, each scored 0–100 and weighted by how much it moves conversion. Your headline score is the weighted sum — a heavily-weighted dimension that fails costs far more than a light one. Here is where the example&apos;s 61 comes from.
+            </p>
+            <ScoreWeightBreakdown />
+          </div>
         </div>
       </div>
     </section>

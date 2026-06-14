@@ -21,8 +21,7 @@ const FULL_FINDING = `{
   "rewritten_copy": "string (max 25 words, ready to paste)",
   "confidence": "high" | "medium" | "low",
   "fix_effort": "hours" | "days" | "weeks",
-  "impact_tier": "high" | "medium" | "low",
-  "priority_rank": "P1" | "P2" | "P3"
+  "priority": number
 }`;
 
 export function buildApiPrompt(params: {
@@ -45,7 +44,7 @@ export function buildApiPrompt(params: {
   const schemaLines: string[] = [
     `{`,
     `  "score": number,`,
-    `  "verdict": "Excellent" | "Good" | "Needs Work" | "Critical",`,
+    `  "verdict": "Poor" | "Needs Work" | "Fair" | "Good" | "Excellent",`,
     `  "page_type": "homepage" | "pricing" | "product" | "about" | "landing",`,
     `  "dimensions": {`,
     `    "conversion_architecture": number,`,
@@ -56,6 +55,7 @@ export function buildApiPrompt(params: {
     `    "objection_handling": number,`,
     `    "offer_clarity": number`,
     `  },`,
+    `  "findings_summary": number,`,
   ];
   if (wantsSummary) schemaLines.push(`  "summary": "string (max 3 sentences)",`);
   if (wantsFindings) {
@@ -106,7 +106,7 @@ export function buildApiPrompt(params: {
     ``,
     `SCORING:`,
     `- score 0-100. FORBIDDEN: 10,15,20,25,30,35,40,45,50,55,60,62,65,70,75,80,85,90.`,
-    `- verdict: Excellent (80+), Good (65-79), Needs Work (45-64), Critical (below 45).`,
+    `- verdict: Excellent (80+), Good (65-79), Fair (50-64), Needs Work (35-49), Poor (below 35).`,
     `- All 7 dimension scores 0-100, distinct, non-forbidden.`,
     ``,
     `DIMENSION EVALUATION:`,
@@ -123,11 +123,10 @@ export function buildApiPrompt(params: {
 
   if (wantsFindings) {
     parts.push(``);
-    parts.push(`FINDINGS (return max ${findingLimit}, sorted P1 first, then P2, then P3):`);
+    parts.push(`FINDINGS (return max ${findingLimit}, sorted by priority ascending — priority 1 first):`);
     parts.push(`- id format: "finding_001", "finding_002", etc.`);
     parts.push(`- fix_effort: "hours" = under 4 hours dev work; "days" = 1–3 days; "weeks" = more than 3 days.`);
-    parts.push(`- impact_tier: "high" = 15%+ expected lift; "medium" = 5–15%; "low" = under 5%.`);
-    parts.push(`- priority_rank: P1 = high impact_tier + hours fix_effort; P2 = high + days OR medium + hours; P3 = everything else.`);
+    parts.push(`- priority: 1-based integer rank. Assign 1 to the highest-leverage fix (greatest expected lift for least effort), then 2, 3, … with no ties. Sort the findings array by this rank.`);
     if (findingDepth === "full") {
       parts.push(`- fix_steps: exactly 3 items, each actionable and specific to this page's actual content.`);
       parts.push(`- rewritten_copy: ready-to-paste replacement text only — no labels, no "Option A".`);

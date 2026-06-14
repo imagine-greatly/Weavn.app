@@ -62,8 +62,9 @@ function getDomain(urlStr: string): string {
 function scoreToVerdict(score: number): string {
   if (score >= 80) return "Excellent";
   if (score >= 65) return "Good";
-  if (score >= 45) return "Needs Work";
-  return "Critical";
+  if (score >= 50) return "Fair";
+  if (score >= 35) return "Needs Work";
+  return "Poor";
 }
 
 // ── scan executor (shared by sync path and async IIFE) ───────────────────────
@@ -108,7 +109,7 @@ interface ScanResult {
   pageCount: number;
   strengths?: unknown[];
   page_type?: string;
-  findings_summary?: { total: number; p1: number; p2: number; p3: number; critical: number; high: number };
+  findings_summary?: number;
   score_profile?: { weighted_score: number; profile_used: string; weights: Record<string, number> };
 }
 
@@ -341,14 +342,7 @@ async function executeScan(p: ScanParams): Promise<ScanResult> {
   };
 
   const findings_arr = parsed.findings ? (parsed.findings as unknown[]).slice(0, findingLimit) : [];
-  const findings_summary = {
-    total: findings_arr.length,
-    p1: findings_arr.filter((f) => (f as Record<string, unknown>).priority_rank === "P1").length,
-    p2: findings_arr.filter((f) => (f as Record<string, unknown>).priority_rank === "P2").length,
-    p3: findings_arr.filter((f) => (f as Record<string, unknown>).priority_rank === "P3").length,
-    critical: findings_arr.filter((f) => (f as Record<string, unknown>).severity === "critical").length,
-    high: findings_arr.filter((f) => (f as Record<string, unknown>).severity === "high").length,
-  };
+  const findings_summary = findings_arr.length;
 
   const dimensionBenchmarks = rawDimBenchmarks
     ? Object.entries(dimensions).reduce<Record<string, { score: number; average: number; percentile_label: string; p10: number; p90: number }>>((acc, [key, dimScore]) => {
@@ -416,13 +410,13 @@ export async function POST(req: NextRequest) {
         error: {
           code: "TRIAL_EXHAUSTED",
           message: `Your ${allowedResult.limit ?? 25}-scan free trial has been used. Upgrade your API key plan to continue.`,
-          status: 429,
+          status: 402,
         },
         reason: allowedResult.reason,
         limit: allowedResult.limit,
         used: allowedResult.used,
       },
-      { status: 429, headers: rlHeaders(apiKey) }
+      { status: 402, headers: rlHeaders(apiKey) }
     );
   }
 
@@ -623,12 +617,9 @@ export async function POST(req: NextRequest) {
           scan_id: scanId,
           url: normalizedUrl,
           score: null,
-          data: {
-            domain,
-            error: isBlocked ? "bot_blocked" : errMsg,
-            blocked: isBlocked,
-            code: isBlocked ? "BOT_BLOCKED" : "SCAN_FAILED",
-          },
+          data: isBlocked
+            ? { domain, blocked: true, code: "BOT_BLOCKED" }
+            : { domain, blocked: false, code: "SCAN_FAILED", error: errMsg },
         });
         if (callbackUrl) {
           void fetch(callbackUrl, {

@@ -36,9 +36,10 @@ const DIMENSION_KEY_MAP: Record<string, string> = {
 
 function scoreToVerdict(score: number): string {
   if (score >= 80) return "Excellent";
-  if (score >= 60) return "Good";
-  if (score >= 40) return "Needs Work";
-  return "Critical";
+  if (score >= 65) return "Good";
+  if (score >= 50) return "Fair";
+  if (score >= 35) return "Needs Work";
+  return "Poor";
 }
 
 function mapDimensions(scores: DimensionScoreRow[] | undefined): Record<string, number> {

@@ -30,8 +30,9 @@ function getServiceClient() {
 function scoreToVerdict(score: number): string {
   if (score >= 80) return "Excellent";
   if (score >= 65) return "Good";
-  if (score >= 45) return "Needs Work";
-  return "Critical";
+  if (score >= 50) return "Fair";
+  if (score >= 35) return "Needs Work";
+  return "Poor";
 }
 
 interface ChildScanResult {

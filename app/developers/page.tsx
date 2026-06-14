@@ -158,7 +158,7 @@ const FAQ_CARDS = [
   },
   {
     q: 'How does caching work?',
-    a: 'Identical URLs rescanned within 24 hours return the cached result at zero cost. Cache is invalidated when page content changes significantly — detected via fingerprint comparison. Force a fresh scan with force_refresh: true.',
+    a: 'Identical URLs rescanned within 24 hours return the cached result at zero cost. Cache is invalidated automatically when page content changes significantly — detected via fingerprint comparison.',
     dataLine: 'cache_hit: true · cost_usd: 0.00',
     dataColor: '#6F9BC6',
   },
@@ -170,8 +170,8 @@ const FAQ_CARDS = [
   },
   {
     q: 'What if a site blocks the scanner?',
-    a: 'Weavn uses Browserless Pro with stealth mode and a real Chrome user agent. Most sites scan cleanly. Cloudflare Enterprise with aggressive bot detection occasionally blocks — the API returns a structured error with block_reason: "automated_access_blocked".',
-    dataLine: 'error: automated_access_blocked',
+    a: 'Weavn uses Browserless Pro with stealth mode and a real Chrome user agent. Most sites scan cleanly. Cloudflare Enterprise with aggressive bot detection occasionally blocks — the API returns a structured error with error.code: "BOT_BLOCKED" and blocked: true.',
+    dataLine: 'error.code: BOT_BLOCKED · blocked: true',
     dataColor: '#E8635F',
   },
   {
@@ -372,9 +372,10 @@ const HIW_SCAN_CATS = [
 const HIW_JSON_LINES: { delay: number; indent: boolean; content: React.ReactNode }[] = [
   { delay: 0.1,  indent: false, content: <span style={{ color: '#6E7587' }}>{'{'}</span> },
   { delay: 0.3,  indent: true,  content: <><span style={{ color: '#8080c0' }}>&quot;score&quot;</span><span style={{ color: '#9398A8' }}>: </span><span style={{ color: '#E8635F' }}>61</span><span style={{ color: '#6E7587' }}>,</span></> },
-  { delay: 0.5,  indent: true,  content: <><span style={{ color: '#8080c0' }}>&quot;severity&quot;</span><span style={{ color: '#9398A8' }}>: </span><span style={{ color: '#E8635F' }}>&quot;critical&quot;</span><span style={{ color: '#6E7587' }}>,</span></> },
+  { delay: 0.5,  indent: true,  content: <><span style={{ color: '#8080c0' }}>&quot;verdict&quot;</span><span style={{ color: '#9398A8' }}>: </span><span style={{ color: '#6F9BC6' }}>&quot;Fair&quot;</span><span style={{ color: '#6E7587' }}>,</span></> },
   { delay: 0.7,  indent: true,  content: <><span style={{ color: '#8080c0' }}>&quot;percentile&quot;</span><span style={{ color: '#9398A8' }}>: </span><span style={{ color: '#6F9BC6' }}>63</span><span style={{ color: '#6E7587' }}>,</span></> },
-  { delay: 0.9,  indent: true,  content: <><span style={{ color: '#8080c0' }}>&quot;findings&quot;</span><span style={{ color: '#9398A8' }}>: </span><span style={{ color: '#6F9BC6' }}>23</span><span style={{ color: '#6E7587' }}>,</span></> },
+  { delay: 0.9,  indent: true,  content: <><span style={{ color: '#8080c0' }}>&quot;findings_summary&quot;</span><span style={{ color: '#9398A8' }}>: </span><span style={{ color: '#6F9BC6' }}>23</span><span style={{ color: '#6E7587' }}>,</span></> },
+  { delay: 1.0,  indent: true,  content: <><span style={{ color: '#8080c0' }}>&quot;findings&quot;</span><span style={{ color: '#9398A8' }}>: </span><span style={{ color: '#6E7587' }}>[ … ],</span></> },
   { delay: 1.1,  indent: true,  content: <><span style={{ color: '#8080c0' }}>&quot;industry&quot;</span><span style={{ color: '#9398A8' }}>: </span><span style={{ color: '#00C48C' }}>&quot;B2B SaaS&quot;</span><span style={{ color: '#6E7587' }}>,</span></> },
   { delay: 1.3,  indent: true,  content: <><span style={{ color: '#8080c0' }}>&quot;cost_usd&quot;</span><span style={{ color: '#9398A8' }}>: </span><span style={{ color: '#9398A8' }}>0.15</span></> },
   { delay: 1.5,  indent: false, content: <span style={{ color: '#6E7587' }}>{'}'}</span> },
@@ -863,24 +864,25 @@ export default function DevelopersPage() {
             </div>
             <div style={{ padding: '16px 20px', ...MONO, fontSize: 12, lineHeight: 1.7 }}>
               {[
-                { delay: '0.1s',  content: <><Muted c="{" /></> },
-                { delay: '0.25s', content: <>&nbsp;&nbsp;<K c="scan_id" /><Muted c=": " /><S c="sc_a8d3f2c1" /><Muted c="," /></> },
-                { delay: '0.4s',  content: <>&nbsp;&nbsp;<K c="url" /><Muted c=": " /><S c="https://your-site.com" /><Muted c="," /></> },
-                { delay: '0.55s', content: <>&nbsp;&nbsp;<K c="score" /><Muted c=": " /><span style={{ color: '#E8635F' }}>61</span><Muted c="," /></> },
-                { delay: '0.7s',  content: <>&nbsp;&nbsp;<K c="severity" /><Muted c=": " /><span style={{ color: '#E8635F' }}>&quot;critical&quot;</span><Muted c="," /></> },
-                { delay: '0.85s', content: <>&nbsp;&nbsp;<K c="percentile" /><Muted c=": " /><N c="63" /><Muted c="," /></> },
-                { delay: '1.0s',  content: <>&nbsp;&nbsp;<K c="benchmark_data" /><Muted c=": {" /></> },
-                { delay: '1.1s',  content: <>&nbsp;&nbsp;&nbsp;&nbsp;<K c="industry_avg" /><Muted c=": " /><N c="58" /><Muted c="," /></> },
-                { delay: '1.2s',  content: <>&nbsp;&nbsp;&nbsp;&nbsp;<K c="vertical" /><Muted c=": " /><S c="B2B SaaS" /><Muted c="," /></> },
-                { delay: '1.3s',  content: <>&nbsp;&nbsp;&nbsp;&nbsp;<K c="corpus_size" /><Muted c=": " /><N c="4812" /></> },
-                { delay: '1.4s',  content: <>&nbsp;&nbsp;<Muted c="}," /></> },
-                { delay: '1.5s',  content: <>&nbsp;&nbsp;<K c="findings" /><Muted c=": [" /></> },
-                { delay: '1.6s',  content: <>&nbsp;&nbsp;&nbsp;&nbsp;<Muted c="{ " /><K c="priority" /><Muted c=": " /><S c="P1" /><Muted c=", " /><K c="category" /><Muted c=": " /><S c="hero_section" /><Muted c=" }" /></> },
-                { delay: '1.7s',  content: <>&nbsp;&nbsp;&nbsp;&nbsp;<Muted c="{ " /><K c="estimated_lift" /><Muted c=": " /><span style={{ color: '#00C48C' }}>&quot;+12–18%&quot;</span><Muted c=", " /><K c="priority" /><Muted c=": " /><S c="P1" /><Muted c=" }" /></> },
-                { delay: '1.8s',  content: <>&nbsp;&nbsp;<Muted c="]," /></> },
-                { delay: '1.9s',  content: <>&nbsp;&nbsp;<K c="cost_usd" /><Muted c=": " /><N c="0.15" /><Muted c="," /></> },
-                { delay: '2.0s',  content: <>&nbsp;&nbsp;<K c="duration_ms" /><Muted c=": " /><N c="87432" /></> },
-                { delay: '2.1s',  content: <><Muted c="}" /></> },
+                { delay: '0.05s', content: <><Muted c="{" /></> },
+                { delay: '0.1s',  content: <>&nbsp;&nbsp;<K c="id" /><Muted c=": " /><S c="sc_a8d3f2c1" /><Muted c="," /></> },
+                { delay: '0.15s', content: <>&nbsp;&nbsp;<K c="url" /><Muted c=": " /><S c="https://your-site.com" /><Muted c="," /></> },
+                { delay: '0.2s',  content: <>&nbsp;&nbsp;<K c="score" /><Muted c=": " /><span style={{ color: '#E8635F' }}>61</span><Muted c="," /></> },
+                { delay: '0.25s', content: <>&nbsp;&nbsp;<K c="verdict" /><Muted c=": " /><S c="Fair" /><Muted c="," /></> },
+                { delay: '0.3s',  content: <>&nbsp;&nbsp;<K c="findings_summary" /><Muted c=": " /><N c="12" /><Muted c="," /></> },
+                { delay: '0.35s', content: <>&nbsp;&nbsp;<K c="findings" /><Muted c=": [ … ]," /></> },
+                { delay: '0.4s',  content: <>&nbsp;&nbsp;<K c="strengths" /><Muted c=": [ … ]," /></> },
+                { delay: '0.45s', content: <>&nbsp;&nbsp;<K c="summary" /><Muted c=": " /><S c="…" /><Muted c="," /></> },
+                { delay: '0.5s',  content: <>&nbsp;&nbsp;<K c="copy_rewrites" /><Muted c=": { … }," /></> },
+                { delay: '0.55s', content: <>&nbsp;&nbsp;<K c="growth_blueprint" /><Muted c=": [ … ]," /></> },
+                { delay: '0.6s',  content: <>&nbsp;&nbsp;<K c="benchmark" /><Muted c=": {" /></> },
+                { delay: '0.65s', content: <>&nbsp;&nbsp;&nbsp;&nbsp;<K c="industry_average" /><Muted c=": " /><N c="58" /><Muted c="," /></> },
+                { delay: '0.7s',  content: <>&nbsp;&nbsp;&nbsp;&nbsp;<K c="industry_percentile" /><Muted c=": " /><N c="63" /><Muted c="," /></> },
+                { delay: '0.75s', content: <>&nbsp;&nbsp;&nbsp;&nbsp;<K c="top_10_percent_score" /><Muted c=": " /><N c="82" /><Muted c="," /></> },
+                { delay: '0.8s',  content: <>&nbsp;&nbsp;&nbsp;&nbsp;<K c="sample_size" /><Muted c=": " /><N c="4812" /></> },
+                { delay: '0.85s', content: <>&nbsp;&nbsp;<Muted c="}," /></> },
+                { delay: '0.9s',  content: <>&nbsp;&nbsp;<K c="scan_meta" /><Muted c=": { " /><K c="cost_usd" /><Muted c=": " /><N c="0.15" /><Muted c=", " /><K c="duration_ms" /><Muted c=": " /><N c="87432" /><Muted c=" }" /></> },
+                { delay: '0.95s', content: <><Muted c="}" /></> },
               ].map((line, i) => (
                 <div key={i} className="dev-jline" style={{ animationDelay: line.delay }}>
                   {line.content}
@@ -888,6 +890,10 @@ export default function DevelopersPage() {
               ))}
             </div>
           </div>
+
+          <p style={{ ...MONO, fontSize: 10, color: '#6E7587', margin: '10px 0 0' }}>
+            scan_meta.cost_usd is the amount billed to your account for this scan — not Weavn&apos;s internal compute cost.
+          </p>
 
           {/* Schema facts */}
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px 32px', marginTop: 20 }}>
@@ -911,16 +917,18 @@ export default function DevelopersPage() {
             </div>
             <div style={{ padding: '16px 20px', ...MONO, fontSize: 12, lineHeight: 1.85 }}>
               <div><Muted c="{" /></div>
-              <div style={{ paddingLeft: 16 }}><K c="priority" /><Muted c=": " /><N c="1" /><Muted c="," /></div>
-              <div style={{ paddingLeft: 16 }}><K c="severity" /><Muted c=": " /><span style={{ color: '#E8635F' }}>&quot;critical&quot;</span><Muted c="," /></div>
-              <div style={{ paddingLeft: 16 }}><K c="category" /><Muted c=": " /><S c="value_proposition" /><Muted c="," /></div>
+              <div style={{ paddingLeft: 16 }}><K c="id" /><Muted c=": " /><S c="finding_001" /><Muted c="," /></div>
               <div style={{ paddingLeft: 16 }}><K c="title" /><Muted c=": " /><span style={{ color: '#E6E9EE' }}>&quot;Hero headline is feature-led, not outcome-led&quot;</span><Muted c="," /></div>
-              <div style={{ paddingLeft: 16 }}><K c="evidence" /><Muted c=": " /><span style={{ color: '#6E7587' }}>&quot;Found: &apos;Advanced analytics platform&apos;&quot;</span><Muted c="," /></div>
-              <div style={{ paddingLeft: 16 }}><K c="estimated_lift" /><Muted c=": " /><S c="+12-18%" /><Muted c="," /></div>
-              <div style={{ paddingLeft: 16 }}><K c="fix" /><Muted c=": " /><span style={{ color: '#6E7587' }}>&quot;Rewrite to lead with customer outcome&quot;</span><Muted c="," /></div>
+              <div style={{ paddingLeft: 16 }}><K c="severity" /><Muted c=": " /><span style={{ color: '#E8635F' }}>&quot;critical&quot;</span><Muted c="," /></div>
+              <div style={{ paddingLeft: 16 }}><K c="dimension" /><Muted c=": " /><S c="Conversion Architecture" /><Muted c="," /></div>
+              <div style={{ paddingLeft: 16 }}><K c="impact" /><Muted c=": " /><S c="high" /><Muted c="," /></div>
+              <div style={{ paddingLeft: 16 }}><K c="impact_estimate" /><Muted c=": " /><S c="+12-18% conversion lift" /><Muted c="," /></div>
+              <div style={{ paddingLeft: 16 }}><K c="explanation" /><Muted c=": " /><span style={{ color: '#6E7587' }}>&quot;Headline names the feature set, not the customer outcome&quot;</span><Muted c="," /></div>
+              <div style={{ paddingLeft: 16 }}><K c="fix_steps" /><Muted c=": [ … ]," /></div>
               <div style={{ paddingLeft: 16 }}><K c="rewritten_copy" /><Muted c=": " /><S c="See revenue impact in one dashboard." /><Muted c="," /></div>
-              <div style={{ paddingLeft: 16 }}><K c="fix_effort" /><Muted c=": " /><S c="low" /><Muted c="," /></div>
-              <div style={{ paddingLeft: 16 }}><K c="impact_tier" /><Muted c=": " /><span style={{ color: '#6F9BC6' }}>&quot;P1&quot;</span></div>
+              <div style={{ paddingLeft: 16 }}><K c="confidence" /><Muted c=": " /><S c="high" /><Muted c="," /></div>
+              <div style={{ paddingLeft: 16 }}><K c="fix_effort" /><Muted c=": " /><S c="hours" /><Muted c="," /></div>
+              <div style={{ paddingLeft: 16 }}><K c="priority" /><Muted c=": " /><N c="1" /></div>
               <div><Muted c="}" /></div>
             </div>
             <p style={{ ...MONO, fontSize: 10, color: '#6E7587', margin: 0, padding: '0 20px 14px' }}>
@@ -957,7 +965,7 @@ export default function DevelopersPage() {
               ))}
             </div>
             <p style={{ ...MONO, fontSize: 10, color: '#404860', margin: '10px 0 0' }}>
-              Category prefix visible in strengths[*].check_id — e.g. HERO_001, TRUST_013, CTA_016.
+              Each strengths[] entry is &#123; check_id, label, observation &#125; — the check_id category prefix maps to a group above (e.g. HERO_001, TRUST_013, CTA_016).
             </p>
           </div>
 
@@ -986,9 +994,10 @@ export default function DevelopersPage() {
                   { status: '400', code: 'INVALID_URL / INVALID_REQUEST', desc: 'url missing, malformed, or no valid domain', codeColor: '#8080c0' },
                   { status: '401', code: 'AUTH_INVALID',                 desc: 'Bearer token absent, malformed, or revoked', codeColor: '#8080c0' },
                   { status: '402', code: 'INSUFFICIENT_CREDITS',         desc: 'multi-page scan requested with no remaining credits', codeColor: '#8080c0' },
+                  { status: '402', code: 'TRIAL_EXHAUSTED',             desc: 'free 25-scan trial exhausted — upgrade plan to continue', codeColor: '#8080c0' },
                   { status: '422', code: 'BOT_BLOCKED',                  desc: 'site uses Cloudflare Enterprise or equivalent bot protection', codeColor: '#E8635F' },
                   { status: '422', code: 'EXTRACTION_FAILED',            desc: 'scanner could not extract content after two attempts', codeColor: '#E8635F' },
-                  { status: '429', code: 'TRIAL_EXHAUSTED',              desc: 'free 25-scan trial exhausted — upgrade plan to continue', codeColor: '#8080c0' },
+                  { status: '429', code: 'RATE_LIMITED',                desc: 'request rate limit exceeded — back off and retry', codeColor: '#8080c0' },
                   { status: '500', code: 'SCAN_FAILED / INTERNAL_ERROR', desc: 'analysis or infrastructure error — safe to retry', codeColor: '#E8635F' },
                 ].map((row, i, arr) => (
                   <div
@@ -1025,7 +1034,7 @@ export default function DevelopersPage() {
                 <div><Muted c="}" /></div>
               </div>
               <p style={{ ...MONO, fontSize: 10, color: '#6E7587', margin: 0, padding: '0 20px 12px' }}>
-                Retry 5xx. Do not retry 400/401/422 — the error is structural, not transient.
+                Retry 429 and 5xx with backoff. Do not retry 400/401/402/422 — the error is structural, not transient.
               </p>
             </div>
           </div>
@@ -1072,7 +1081,6 @@ export default function DevelopersPage() {
                   <div style={{ paddingLeft: 16 }}><K c="score" /><Muted c=": " /><span style={{ color: '#6E7587' }}>null</span><Muted c="," /></div>
                   <div style={{ paddingLeft: 16 }}><K c="data" /><Muted c=": {" /></div>
                   <div style={{ paddingLeft: 32 }}><K c="domain" /><Muted c=": " /><S c="your-site.com" /><Muted c="," /></div>
-                  <div style={{ paddingLeft: 32 }}><K c="error" /><Muted c=": " /><span style={{ color: '#E8635F' }}>&quot;bot_blocked&quot;</span><Muted c="," /></div>
                   <div style={{ paddingLeft: 32 }}><K c="blocked" /><Muted c=": " /><span style={{ color: '#E8635F' }}>true</span><Muted c="," /></div>
                   <div style={{ paddingLeft: 32 }}><K c="code" /><Muted c=": " /><span style={{ color: '#E8635F' }}>&quot;BOT_BLOCKED&quot;</span></div>
                   <div style={{ paddingLeft: 16 }}><Muted c="}" /></div>

@@ -23,6 +23,14 @@ const INK_MUT    = '#6E7587'   // --ink-muted
 const SURFACE    = '#0A0E18'   // --surface
 const BG_BASE    = '#050810'   // --bg / bg-base
 
+// ── Ambient tonal scale (TIER 3) ──────────────────────────────────────────────
+// Two muted, steel-tinted dark bands alternated down the page so it reads as
+// distinct bands instead of one flat slab. Banding ONLY — tone-raised stays
+// unmistakably dark and carries no glow, so it can never rival the emphasized
+// report card (TIER 2) or the bell-curve peak (TIER 1). Both are existing tokens.
+const TONE_BASE   = BG_BASE    // #050810 — near-black base band
+const TONE_RAISED = '#0D1020'  // --bg-card — faintly bluer, perceptibly lighter, still clearly dark
+
 // ── Shared chrome ─────────────────────────────────────────────────────────────
 
 function Ticks() {
@@ -292,13 +300,16 @@ function OutputSection() {
 
         {/* Mock report card — static illustration */}
         <div style={{
-          background: 'rgba(111, 155, 198, 0.02)',
+          background: 'rgba(111, 155, 198, 0.045)',
           borderTop:'1px solid rgba(255,255,255,0.12)',
           borderLeft:'1px solid rgba(255,255,255,0.08)',
           borderRight:'1px solid rgba(255,255,255,0.04)',
           borderBottom:'1px solid rgba(255,255,255,0.03)',
           padding:32,
-          boxShadow: 'inset 0 1px 0 0 rgba(111, 155, 198, 0.15), 0 0 0 1px rgba(111, 155, 198, 0.08)',
+          // TIER 2 emphasis — deliberate steel-blue halo so the eye lands on the product proof.
+          // Spills onto the base-tone section behind it; stronger than any other card
+          // (comparison/pricing), still below the bell-curve peak. Glow = "understand this."
+          boxShadow: '0 0 0 1px rgba(111, 155, 198, 0.22), 0 0 50px rgba(111, 155, 198, 0.18), 0 0 130px rgba(111, 155, 198, 0.08), inset 0 1px 0 0 rgba(111, 155, 198, 0.25)',
         }}>
           {/* Bridge line — contextualizes the mock for founders */}
           <p style={{ ...SANS,fontStyle:'italic',fontSize:13,color:INK_MUT,margin:'0 0 20px',lineHeight:1.55 }}>
@@ -429,7 +440,7 @@ function OutputSection() {
 
 function GroundingProofSection() {
   return (
-    <section style={{ padding:'80px 48px',borderTop:'0.5px solid rgba(111,155,198,0.1)',position:'relative',overflow:'visible' }}>
+    <section style={{ padding:'80px 48px',borderTop:'0.5px solid rgba(111,155,198,0.1)',position:'relative',overflow:'visible',background:TONE_RAISED }}>
       <style>{`@media(max-width:639px){.d-ground-cols{flex-direction:column!important}}`}</style>
       <div style={{ maxWidth:1000,margin:'0 auto' }}>
         <p style={{ ...MONO,fontSize:11,textTransform:'uppercase',letterSpacing:'0.2em',color:INK_MUT,margin:'0 0 16px' }}>
@@ -511,9 +522,8 @@ const SCOPE_ITEMS_RIGHT = [
 
 function WhatWeCheckSection() {
   return (
-    <section style={{ padding:'80px 48px',borderTop:'0.5px solid rgba(111,155,198,0.1)',position:'relative',overflow:'visible' }}>
-      {/* Section 6 atmospheric bloom */}
-      <div aria-hidden="true" style={{ position:'absolute',top:0,left:'50%',width:'1000px',height:'800px',background:'radial-gradient(ellipse at 50% 35%, rgba(111, 155, 198, 0.05) 0%, rgba(111, 155, 198, 0.015) 40%, rgba(111, 155, 198, 0.004) 65%, transparent 85%)',pointerEvents:'none',zIndex:-1,animation:'bloom-breathe 5s ease-in-out infinite' }} />
+    <section style={{ padding:'80px 48px',borderTop:'0.5px solid rgba(111,155,198,0.1)',position:'relative',overflow:'visible',background:TONE_BASE }}>
+      {/* Ambient TIER 3 — tonal band only; prior faint section bloom removed (scattered glow → tonal rhythm). */}
       <style>{`@media(max-width:767px){.d-scope-grid{grid-template-columns:1fr!important}}`}</style>
       <div style={{ maxWidth:1000,margin:'0 auto',position:'relative',zIndex:1 }}>
         <p style={{ ...MONO,fontSize:11,textTransform:'uppercase',letterSpacing:'0.2em',color:STEEL,margin:'0 0 16px' }}>
@@ -716,7 +726,7 @@ function HowItWorksSection() {
   }, [])
 
   return (
-    <section style={{ padding: '80px 48px', borderTop: '0.5px solid rgba(111,155,198,0.1)', position: 'relative', overflow: 'visible' }}>
+    <section style={{ padding: '80px 48px', borderTop: '0.5px solid rgba(111,155,198,0.1)', position: 'relative', overflow: 'visible', background: TONE_RAISED }}>
       <style>{`
         @keyframes pl-blink    { 0%,49%{opacity:1} 50%,100%{opacity:0} }
         @keyframes pl-check    { 0%{background:rgba(111,155,198,0.15)} 50%,80%{background:var(--target-bg)} 100%{background:rgba(111,155,198,0.15)} }
@@ -848,7 +858,7 @@ const STAT_CHIPS = ['307 CHECKS', '~90s MEDIAN', '4,812 SITES SCANNED']
 
 function ComparisonSection() {
   return (
-    <section style={{ padding:'80px 48px',borderTop:'0.5px solid rgba(111,155,198,0.1)',position:'relative',overflow:'visible' }}>
+    <section style={{ padding:'80px 48px',borderTop:'0.5px solid rgba(111,155,198,0.1)',position:'relative',overflow:'visible',background:TONE_BASE }}>
       <style>{`
         @media(max-width:1023px){.d-compare-grid{grid-template-columns:25fr 25fr 50fr!important}}
         @media(max-width:767px){.d-compare-grid{grid-template-columns:1fr!important}.d-compare-ghost-row{display:flex!important;gap:16px!important}.d-compare-ghost-row>div{flex:1!important}}
@@ -951,9 +961,9 @@ const OBJECTIONS: ObjectionCard[] = [
 function WhyDifferentSection() {
   const [hoveredFaq, setHoveredFaq] = useState<number | null>(null)
   return (
-    <section style={{ padding:'80px 48px',borderTop:'0.5px solid rgba(111,155,198,0.1)',position:'relative',overflow:'visible' }}>
-      {/* Section 9 atmospheric bloom */}
-      <div aria-hidden="true" style={{ position:'absolute',top:0,left:'50%',width:'1000px',height:'800px',background:'radial-gradient(ellipse at 50% 35%, rgba(111, 155, 198, 0.05) 0%, rgba(111, 155, 198, 0.015) 40%, rgba(111, 155, 198, 0.004) 65%, transparent 85%)',pointerEvents:'none',zIndex:-1,animation:'bloom-breathe 5s ease-in-out infinite' }} />
+    <section style={{ padding:'80px 48px',borderTop:'0.5px solid rgba(111,155,198,0.1)',position:'relative',overflow:'visible',background:TONE_BASE }}>
+      {/* Ambient TIER 3 — tonal band only; prior faint section bloom removed (scattered glow → tonal rhythm).
+          Base tone here is deliberate: keeps SURFACE cards legible and stays quiet right before the bell-curve peak. */}
       <style>{`@media(max-width:767px){.d-diff-grid{grid-template-columns:1fr!important}}`}</style>
       <Ticks />
       <div style={{ maxWidth:1200,margin:'0 auto',position:'relative',zIndex:1 }}>
@@ -1035,9 +1045,9 @@ function MultiSiteSection() {
       borderTop: '0.5px solid rgba(111,155,198,0.1)',
       position: 'relative',
       overflow: 'visible',
+      background: TONE_RAISED,
     }}>
-      {/* AT_SCALE_BLOOM — steel-blue section bloom behind the heading / white-label mock; self-contained, remove to delete */}
-      <div aria-hidden="true" className="d-bloom-atscale" style={{ position:'absolute',top:0,left:'50%',width:'1000px',height:'800px',background:'radial-gradient(ellipse at 50% 35%, rgba(111, 155, 198, 0.05) 0%, rgba(111, 155, 198, 0.015) 40%, rgba(111, 155, 198, 0.004) 65%, transparent 85%)',pointerEvents:'none',zIndex:-1,animation:'bloom-breathe 5s ease-in-out infinite' }} />
+      {/* Ambient TIER 3 — tonal band only; prior d-bloom-atscale section bloom removed (scattered glow → tonal rhythm). */}
       <style>{`
         @media(max-width:767px){.d-agency-cap-grid{grid-template-columns:1fr!important}}
         @media(max-width:639px){.d-report-meta{flex-direction:column!important;gap:8px!important}.d-report-table-row{flex-wrap:wrap!important}}
@@ -1258,7 +1268,7 @@ function PricingSection() {
       : 'inset 0 1px 0 0 rgba(255, 255, 255, 0.06)'
   }
   return (
-    <section id="pricing" style={{ padding:'80px 48px',borderTop:'0.5px solid rgba(111,155,198,0.1)',position:'relative',overflow:'visible' }}>
+    <section id="pricing" style={{ padding:'80px 48px',borderTop:'0.5px solid rgba(111,155,198,0.1)',position:'relative',overflow:'visible',background:TONE_BASE }}>
       <style>{`
         @media(max-width:1023px){.d-price-grid{grid-template-columns:repeat(2,1fr)!important}}
         @media(max-width:639px){.d-price-grid{grid-template-columns:1fr!important}}

@@ -65,9 +65,6 @@ export const SURFACE = {
   inset: 'bg-background-subtle border border-background-border',
 } as const;
 
-// Design token v2 — data/score constants
-export const IMPACT_KEYS = ['estimated_lift', 'percentile', 'impact_tier'] as const;
-
 // Metric keys — render in json-metric blue (#6F9BC6) in JSON code blocks.
 // Dimension names must stay in sync with DIMENSION_WEIGHTS in lib/benchmarks.ts.
 export const METRIC_KEYS: readonly string[] = [

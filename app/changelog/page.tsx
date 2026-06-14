@@ -19,6 +19,20 @@ interface Entry {
 
 const ENTRIES: Entry[] = [
   {
+    date: 'JUN 14, 2026',
+    tags: ['API', 'IMPROVED'],
+    title: 'v1 API response contract locked',
+    body: 'The v1 scan response shape is now frozen and identical across the engine and every doc surface, so integrations can build against one stable schema.',
+    bullets: [
+      'Per-finding priority is a plain 1-based integer rank (1 = highest leverage); "P1"-style labels are derived as "P" + priority, never stored',
+      'Removed the derived impact_tier and priority_rank finding fields',
+      'Top-level verdict replaces top-level severity — a 5-band quality scale: Poor, Needs Work, Fair, Good, Excellent',
+      'Per-finding severity stays a 4-value enum: critical, high, medium, low',
+      'findings_summary is now a single integer count, not a triage object',
+      'Error codes standardized: BOT_BLOCKED for bot-protected URLs, RATE_LIMITED on 429, and TRIAL_EXHAUSTED moved to 402',
+    ],
+  },
+  {
     date: 'JUN 7, 2026',
     tags: ['NEW', 'IMPROVED'],
     title: 'Scanning pipeline — complete state',

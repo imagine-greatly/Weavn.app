@@ -121,7 +121,7 @@ X-RateLimit-Reset: 1717200000
 # 429 response body
 {
   "error": {
-    "code": "rate_limited",
+    "code": "RATE_LIMITED",
     "retry_after": 2
   }
 }`,
@@ -458,36 +458,25 @@ print(data['score_profile'])  # "saas_consultative"`,
     "fix": "Rewrite to lead with the outcome.",
     "estimated_lift": "+8-12 pts",
     "confidence": 0.94,
-    "fix_effort": "hours",
-    "impact_tier": "high",
-    "priority_rank": "P1"
+    "fix_effort": "hours"
   }]
 }`,
     node: `const { findings } = await res.json()
 findings.forEach(f => {
   console.log(\`[\${f.severity}] \${f.title}\`)
-  console.log(\`Rank: \${f.priority_rank} | Effort: \${f.fix_effort}\`)
+  console.log(\`P\${f.priority} | Effort: \${f.fix_effort}\`)
 })`,
     python: `for f in data['findings']:
     print(f"[{f['severity']}] {f['title']}")
-    print(f"Rank: {f['priority_rank']} | Effort: {f['fix_effort']}")`,
+    print(f"P{f['priority']} | Effort: {f['fix_effort']}")`,
   },
   'findings-summary-schema': {
     curl: `{
-  "findings_summary": {
-    "p1_count": 3,
-    "p2_count": 7,
-    "p3_count": 13,
-    "total": 23,
-    "critical": 2,
-    "high": 5
-  }
+  "findings_summary": 23
 }`,
     node: `const { findings_summary } = await res.json()
-const { p1_count, p2_count, total } = findings_summary
-console.log(\`P1: \${p1_count}, Total: \${total}\`)`,
-    python: `fs = data['findings_summary']
-print(f"P1: {fs['p1_count']}, Total: {fs['total']}")`,
+console.log(\`Total findings: \${findings_summary}\`)`,
+    python: `print(f"Total findings: {data['findings_summary']}")`,
   },
   'benchmark-schema': {
     curl: `{
@@ -833,14 +822,16 @@ export default function ApiDocsPage() {
             <H2>Errors</H2>
             <Body mb={24}>Weavn uses standard HTTP status codes. Error responses include a machine-readable <code style={{ fontFamily: MONO, fontSize: 12 }}>code</code> field for programmatic handling.</Body>
             <ErrTable rows={[
-              { code: '400', meaning: 'Bad request — missing or invalid URL' },
-              { code: '401', meaning: 'Unauthorized — invalid or missing API key' },
-              { code: '402', meaning: 'Insufficient credits — top up required' },
+              { code: '400', meaning: 'INVALID_URL / INVALID_REQUEST — URL missing, malformed, or no valid domain.' },
+              { code: '401', meaning: 'AUTH_INVALID — Bearer token absent, malformed, or revoked.' },
+              { code: '402', meaning: 'INSUFFICIENT_CREDITS — multi-page scan requested with no remaining credits.' },
+              { code: '402', meaning: 'TRIAL_EXHAUSTED — free 25-scan trial exhausted; upgrade plan to continue.' },
               { code: '422', meaning: 'BOT_BLOCKED — URL is protected by bot detection (e.g. Cloudflare Enterprise) that prevents automated access. Try a different URL.' },
-              { code: '422', meaning: 'EXTRACTION_FAILED — Could not extract content from this URL. The page may require authentication or be otherwise inaccessible.' },
-              { code: '429', meaning: 'Rate limited — slow down requests' },
-              { code: '500', meaning: 'SCAN_FAILED — Internal scan error. Retry with exponential backoff.' },
+              { code: '422', meaning: 'EXTRACTION_FAILED — Could not extract content from this URL after two attempts. The page may require authentication or be otherwise inaccessible.' },
+              { code: '429', meaning: 'RATE_LIMITED — request rate limit exceeded; back off and retry.' },
+              { code: '500', meaning: 'SCAN_FAILED / INTERNAL_ERROR — analysis or infrastructure error; safe to retry with exponential backoff.' },
             ]} />
+            <Body mb={0}>Retry 429 and 5xx responses with exponential backoff. Do not retry 400, 401, 402, or 422 — they will fail identically until the request or account state changes.</Body>
           </section>
 
           <section id="rate-limits" style={SB}>
@@ -874,6 +865,7 @@ export default function ApiDocsPage() {
   "scan_id": "scan_01HXYZ7K2M9N3P4Q",
   "url": "https://acme-saas.com",
   "score": 61,
+  "verdict": "Fair",
   "industry": "B2B SaaS",
   "benchmark": {
     "industry_avg": 54,
@@ -1007,6 +999,7 @@ export default function ApiDocsPage() {
             </Body>
             <FieldTable rows={[
               { name: 'score',                  type: 'integer', description: 'Overall conversion score, 0–100.' },
+              { name: 'verdict',                type: 'string',  description: "Quality band derived from score. One of: 'Poor' | 'Needs Work' | 'Fair' | 'Good' | 'Excellent'." },
               { name: 'benchmark.industry_avg', type: 'integer', description: 'Mean score for the detected industry.' },
               { name: 'benchmark.top_quartile', type: 'integer', description: 'Score at the 75th percentile.' },
               { name: 'benchmark.percentile',   type: 'integer', description: 'Percentile rank vs. industry peers.' },
@@ -1040,7 +1033,7 @@ export default function ApiDocsPage() {
             <H2>Findings</H2>
             <FieldTable rows={[
               { name: 'id',             type: 'string',  description: 'Unique finding identifier.' },
-              { name: 'priority',       type: 'integer', description: 'Rank order — lower is higher priority.' },
+              { name: 'priority',       type: 'integer', description: 'Rank order, 1-based — lower is higher priority. Display as "P" + priority (e.g. 1 → "P1").' },
               { name: 'severity',       type: 'string',  description: "'critical' | 'high' | 'medium' | 'low'" },
               { name: 'category',       type: 'string',  description: 'Conversion dimension this finding belongs to.' },
               { name: 'title',          type: 'string',  description: 'Short headline for the finding.' },
@@ -1049,8 +1042,6 @@ export default function ApiDocsPage() {
               { name: 'estimated_lift', type: 'string',  description: 'Projected score improvement if fixed.' },
               { name: 'confidence',     type: 'number',  description: 'Model confidence, 0.0–1.0.' },
               { name: 'fix_effort',     type: 'string',  description: "Estimated implementation effort. 'hours' = copywriting or minor HTML change. 'days' = new section or content addition. 'weeks' = architectural or design change." },
-              { name: 'impact_tier',    type: 'string',  description: "Projected conversion impact if this finding is addressed. One of: 'high' | 'medium' | 'low'" },
-              { name: 'priority_rank',  type: 'string',  description: "Derived priority. 'P1' = high impact + hours effort (fix this week). 'P2' = high impact or hours effort. 'P3' = everything else." },
             ]} />
           </section>
 
@@ -1058,16 +1049,10 @@ export default function ApiDocsPage() {
             <Label>RESPONSE SCHEMA</Label>
             <H2>Findings summary</H2>
             <Body mb={24}>
-              Triage counts computed from the findings array. Use this for dashboard display without iterating all findings.
+              A single integer: the total number of findings in the findings array. Use it for dashboard display without iterating the array.
             </Body>
             <FieldTable rows={[
-              { name: 'findings_summary',          type: 'object', description: 'Triage counts computed from the findings array.' },
-              { name: 'findings_summary.p1_count', type: 'number', description: 'Fix this week: high impact, low effort findings.' },
-              { name: 'findings_summary.p2_count', type: 'number', description: 'Fix this month: high impact or low effort.' },
-              { name: 'findings_summary.p3_count', type: 'number', description: 'Fix when you can: lower priority improvements.' },
-              { name: 'findings_summary.total',    type: 'number', description: 'Total finding count.' },
-              { name: 'findings_summary.critical', type: 'number', description: 'Critical severity count.' },
-              { name: 'findings_summary.high',     type: 'number', description: 'High severity count.' },
+              { name: 'findings_summary', type: 'integer', description: 'Total count of findings returned in the findings array.' },
             ]} />
           </section>
 

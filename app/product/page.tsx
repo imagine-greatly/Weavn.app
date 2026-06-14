@@ -117,8 +117,8 @@ const PIPELINE_STEPS: PipelineStep[] = [
     label: 'OUTPUT ASSEMBLY',
     title: 'Structured response returned',
     description:
-      'Findings are sorted by priority_rank (P1 fix this week, P2 fix this month, P3 when you can), each with fix_effort and impact_tier. Strengths surface what\'s working. The full response is a complete conversion diagnostic in one structured JSON object.',
-    code: '{\n  "findings_summary": {\n    "p1_count": 3,\n    "p2_count": 8,\n    "p3_count": 12\n  },\n  "strengths": [...],\n  "findings": [...]\n}',
+      'Findings are sorted by priority — a 1-based rank, lowest number first — each with severity and fix_effort. Strengths surface what\'s working. The full response is a complete conversion diagnostic in one structured JSON object.',
+    code: '{\n  "findings_summary": 23,\n  "strengths": [...],\n  "findings": [...]\n}',
   },
 ]
 
@@ -656,15 +656,15 @@ export default function ProductPage() {
               <div style={{ fontFamily: '"Space Grotesk", sans-serif', fontWeight: 700, fontSize: 64, color: '#E8635F', lineHeight: 1 }}>61</div>
               <div style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#6E7587', marginTop: 8 }}>WEIGHTED OVERALL SCORE</div>
               <div style={{ fontFamily: '"IBM Plex Sans", sans-serif', fontSize: 14, color: '#9398A8', lineHeight: 1.6, marginTop: 12 }}>0–100. Calibrated to site type and buyer complexity. Benchmarked against 4,812 real sites in your vertical.</div>
-              <div style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, color: '#E8635F', marginTop: 12 }}>CRITICAL · score &lt; 70</div>
+              <div style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, color: '#E8635F', marginTop: 12 }}>FAIR · 5-band verdict</div>
             </div>
 
             {/* Panel 2 — Ranked Findings (steel blue) */}
             <div style={{ background: '#050810', padding: '32px 36px' }}>
               <div style={{ fontFamily: '"Space Grotesk", sans-serif', fontWeight: 700, fontSize: 64, color: '#6F9BC6', lineHeight: 1 }}>23</div>
               <div style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#6E7587', marginTop: 8 }}>RANKED FINDINGS</div>
-              <div style={{ fontFamily: '"IBM Plex Sans", sans-serif', fontSize: 14, color: '#9398A8', lineHeight: 1.6, marginTop: 12 }}>Sorted P1→P3. Each with severity, fix_effort, impact_tier, and specific evidence from the page.</div>
-              <div style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, color: '#6F9BC6', marginTop: 12 }}>P1→P3 · priority ranked</div>
+              <div style={{ fontFamily: '"IBM Plex Sans", sans-serif', fontSize: 14, color: '#9398A8', lineHeight: 1.6, marginTop: 12 }}>Sorted by priority rank. Each with severity, fix_effort, and specific evidence from the page.</div>
+              <div style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, color: '#6F9BC6', marginTop: 12 }}>1 → N · priority ranked</div>
             </div>
 
             {/* Panel 3 — Verified Strengths (green) */}
@@ -705,7 +705,7 @@ export default function ProductPage() {
                 <span style={{ color: '#8080c0' }}>&quot;score&quot;</span><span style={{ color: '#6E7587' }}>: </span><span style={{ color: '#E8635F' }}>61</span><span style={{ color: '#6E7587' }}>,</span>
               </div>
               <div style={{ paddingLeft: 16 }}>
-                <span style={{ color: '#8080c0' }}>&quot;severity&quot;</span><span style={{ color: '#6E7587' }}>: </span><span style={{ color: '#E8635F' }}>&quot;critical&quot;</span><span style={{ color: '#6E7587' }}>,</span>
+                <span style={{ color: '#8080c0' }}>&quot;verdict&quot;</span><span style={{ color: '#6E7587' }}>: </span><span style={{ color: '#6F9BC6' }}>&quot;Fair&quot;</span><span style={{ color: '#6E7587' }}>,</span>
               </div>
               <div style={{ paddingLeft: 16 }}>
                 <span style={{ color: '#8080c0' }}>&quot;percentile&quot;</span><span style={{ color: '#6E7587' }}>: </span><span style={{ color: '#6F9BC6' }}>63</span><span style={{ color: '#6E7587' }}>,</span>
@@ -717,7 +717,7 @@ export default function ProductPage() {
                 <span style={{ color: '#8080c0' }}>&quot;strengths&quot;</span><span style={{ color: '#6E7587' }}>: </span><span style={{ color: '#00C48C' }}>[...5 items]</span><span style={{ color: '#6E7587' }}>,</span>
               </div>
               <div style={{ paddingLeft: 16 }}>
-                <span style={{ color: '#8080c0' }}>&quot;benchmark_data&quot;</span><span style={{ color: '#6E7587' }}>: {'{'}...7 dimensions{'}'}</span><span style={{ color: '#6E7587' }}>,</span>
+                <span style={{ color: '#8080c0' }}>&quot;benchmark&quot;</span><span style={{ color: '#6E7587' }}>: {'{'}...7 dimensions{'}'}</span><span style={{ color: '#6E7587' }}>,</span>
               </div>
               <div style={{ paddingLeft: 16 }}>
                 <span style={{ color: '#8080c0' }}>&quot;cost_usd&quot;</span><span style={{ color: '#6E7587' }}>: 0.15</span>

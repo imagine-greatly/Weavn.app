@@ -5,7 +5,6 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ChevronDown, Menu } from "lucide-react";
 import { getSupabaseBrowserClient } from "@/lib/supabaseBrowser";
-import WebdocMark from "@/components/ui/WebdocMark";
 
 /**
  * Global navbar for webdoc.ai.
@@ -143,7 +142,8 @@ export default function Navbar() {
         aria-label="Weavn home"
         style={{ textDecoration: "none", color: "inherit", gap: "6px", cursor: "pointer" }}
       >
-        <WebdocMark size={60} animated={false} />
+        {/* Brand mark — single source of truth: /weavn-logo.svg (transparent master). */}
+        <img src="/weavn-logo.svg" alt="" width={60} height={56} style={{ display: "block", flexShrink: 0, objectFit: "contain" }} />
         {/* Wordmark — surface-neutral: single solid primary-text token, no per-letter color split.
             Never tinted steel/purple; the mark carries the brand color, the wordmark stays neutral. */}
         <span

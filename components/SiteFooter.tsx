@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import WebdocMark from "@/components/ui/WebdocMark";
 
 function FooterLink({ href, children }: { href: string; children: React.ReactNode }) {
   return (
@@ -39,7 +38,7 @@ export default function SiteFooter() {
       <div className="mx-auto grid max-w-[1100px] gap-12 md:grid-cols-2 lg:grid-cols-3">
         <div>
           <Link href="/" className="inline-flex items-center gap-2" aria-label="Weavn home" style={{ textDecoration: "none" }}>
-            <WebdocMark size={36} animated={false} />
+            <img src="/weavn-logo.svg" alt="" width={36} height={33} style={{ display: "block", flexShrink: 0, objectFit: "contain" }} />
             <span
               style={{
                 fontFamily: "var(--font-jetbrains-mono), var(--font-space-mono), monospace",

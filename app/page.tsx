@@ -1,6 +1,5 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import WebdocMark from '@/components/ui/WebdocMark'
 
 export const metadata: Metadata = {
   title: "Weavn — Website Intelligence, Delivered as an API",
@@ -171,7 +170,7 @@ function HeroForkSection() {
         {/* Scan-engine glyph */}
         <div className="flex flex-col items-center mt-12">
           <div className="engine-glyph" style={{ display: 'inline-block' }}>
-            <WebdocMark size={150} />
+            <img src="/weavn-logo.svg" alt="" width={150} height={139} style={{ display: 'block', flexShrink: 0, objectFit: 'contain' }} />
           </div>
           <p className="font-mono text-[10px] uppercase tracking-[0.25em] text-interactive/60 mt-3 mb-0">THE SCAN ENGINE</p>
         </div>

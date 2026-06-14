@@ -6,7 +6,6 @@ import { useSearchParams } from "next/navigation";
 import { Eye, EyeOff } from "lucide-react";
 import { getSupabaseBrowserClient } from "@/lib/supabaseBrowser";
 import type { ReportPayload } from "@/lib/reportSchema";
-import WebdocMark from "@/components/ui/WebdocMark";
 
 type AuthTab = "signin" | "create";
 
@@ -336,7 +335,7 @@ function AuthPageContent() {
             {/* TOP — brand identity */}
             <div className="auth-left-top" style={{ marginBottom: "auto" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-                <WebdocMark size={48} animated={false} />
+                <img src="/weavn-logo.svg" alt="" width={48} height={44} style={{ display: "block", flexShrink: 0, objectFit: "contain" }} />
                 <span style={{ fontFamily: DISP, fontSize: 24, fontWeight: 600, color: "#E6E9EE", letterSpacing: "-0.5px" }}>
                   Weavn
                 </span>
@@ -347,7 +346,7 @@ function AuthPageContent() {
             <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", justifyContent: "center", flex: 1 }}>
 
               <div style={{ display: "flex", justifyContent: "center" }}>
-                <WebdocMark size={72} animated={true} />
+                <img src="/weavn-logo.svg" alt="" width={72} height={67} style={{ display: "block", flexShrink: 0, objectFit: "contain" }} />
               </div>
 
               <p style={{ fontFamily: DISP, fontSize: 22, fontWeight: 600, color: "#E6E9EE", letterSpacing: "-0.3px", textAlign: "center", marginTop: 20, marginBottom: 0 }}>
@@ -441,7 +440,7 @@ function AuthPageContent() {
               className="auth-mobile-header"
               style={{ display: "none", alignItems: "center", gap: 10, marginBottom: 28 }}
             >
-              <WebdocMark size={36} animated={false} />
+              <img src="/weavn-logo.svg" alt="" width={36} height={33} style={{ display: "block", flexShrink: 0, objectFit: "contain" }} />
               <span style={{ fontFamily: DISP, fontSize: 20, fontWeight: 600, color: "#E6E9EE" }}>
                 Weavn
               </span>

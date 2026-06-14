@@ -24,9 +24,9 @@ const nextConfig: NextConfig = {
       // Provisioning emails already sent in the wild link to /developer.
       { source: "/developer", destination: "/console", permanent: true },
       { source: "/developer/keys", destination: "/console/keys", permanent: true },
-      // Gated product app moved /app/dashboard -> /app. EXACT match only: the
-      // unmoved prototype pages /app/dashboard/founder and /app/dashboard/developer
-      // must keep resolving, so this must NOT be /app/dashboard/:path*.
+      // Gated product app moved /app/dashboard -> /app. The orphan prototype pages
+      // (/app/dashboard/founder, /app/dashboard/developer) have been removed, so the
+      // exact /app/dashboard path is the only one left to redirect.
       { source: "/app/dashboard", destination: "/app", permanent: true },
     ];
   },

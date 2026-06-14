@@ -173,9 +173,13 @@ export function scoreToVerdict(score: number): string {
   return "Poor";
 }
 
-/** Verdict chip color on the steel surface: green = good, steel = neutral, amber/red = poor. */
+/**
+ * Verdict chip color on the steel surface: green = good, steel = neutral, amber/red = poor.
+ * Green starts at 70 to match ScoreRing's pass/fail threshold (scoreBand) — so the chip
+ * never reads green beside a red ring. The verdict *label* still uses the 5-band above.
+ */
 export function verdictColor(score: number): string {
-  if (score >= 65) return "#00C48C"; // success-positive
+  if (score >= 70) return "#00C48C"; // success-positive (matches the ring's green cutoff)
   if (score >= 50) return "#6F9BC6"; // steel (neutral)
   if (score >= 35) return "#EFB23E"; // amber (verdict)
   return "#E8635F"; // red (verdict)

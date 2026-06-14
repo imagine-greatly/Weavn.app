@@ -1503,11 +1503,8 @@ export default function DashboardPage() {
         </a>
       </div>
       <OutputSection />
-      <GroundingProofSection />
-      <WhatWeCheckSection />
-      <HowItWorksSection />
-      <ComparisonSection />
-      <WhyDifferentSection />
+
+      {/* Showcase — corpus percentile bell curve, promoted high as a proof moment (full-bleed) */}
       <LandingCorpusStats />
       {/* Benchmarks CTA — smooth-scroll hook from corpus section into pricing */}
       <div style={{ textAlign:'center',padding:'0 48px 56px',background:BG_BASE }}>
@@ -1526,6 +1523,12 @@ export default function DashboardPage() {
           Upgrade to see what separates the top quartile in your vertical from everyone else.
         </a>
       </div>
+
+      <GroundingProofSection />
+      <WhatWeCheckSection />
+      <HowItWorksSection />
+      <ComparisonSection />
+      <WhyDifferentSection />
       <MultiSiteSection />
       <PricingSection />
       <FinalCtaSection />

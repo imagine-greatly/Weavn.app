@@ -581,8 +581,8 @@ function HowItWorksSection() {
             </div>
             {[
               { p: 'url',           type: 'string',            req: true,  def: null,      note: 'URL to scan. Scheme added if absent.' },
-              { p: 'async',         type: 'boolean',           req: false, def: 'false',   note: 'Return immediately; result POSTed to callback_url.' },
-              { p: 'callback_url',  type: 'string',            req: false, def: null,      note: 'Delivery endpoint. Required when async: true.' },
+              { p: 'async',         type: 'boolean',           req: false, def: 'false',   note: 'Return immediately; result POSTed to webhook_url.' },
+              { p: 'webhook_url',   type: 'string',            req: false, def: null,      note: 'Delivery endpoint. Required when async: true.' },
               { p: 'pages',         type: 'number | string[]', req: false, def: '1',       note: 'Page count (1–5) or explicit path array.' },
               { p: 'fields',        type: 'string[]',          req: false, def: 'all',     note: 'summary · findings · copy_rewrites · growth_blueprint · benchmark' },
               { p: 'finding_limit', type: 'number',            req: false, def: '10',      note: 'Max findings returned. Range: 1–20.' },

@@ -447,7 +447,7 @@ export async function POST(req: NextRequest) {
     const rawDepth = typeof body?.finding_depth === "string" ? body.finding_depth : "full";
     findingDepth = rawDepth === "brief" ? "brief" : "full";
     asyncMode = body?.async === true;
-    callbackUrl = typeof body?.callback_url === "string" ? body.callback_url : null;
+    callbackUrl = typeof body?.webhook_url === "string" ? body.webhook_url : null;
     const rawPagesList = Array.isArray(body?.pages)
       ? (body.pages as unknown[]).filter((p): p is string => typeof p === "string")
       : null;

@@ -603,17 +603,11 @@ function HowItWorksSection() {
           <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.18em', color: '#6E7587', margin: '0 0 12px' }}>
             REQUEST PARAMETERS · POST /api/v1/scan
           </p>
-          <div style={{
-            borderTop: '1px solid rgba(255,255,255,0.12)',
-            borderLeft: '0.5px solid rgba(255,255,255,0.06)',
-            borderRight: '0.5px solid rgba(255,255,255,0.03)',
-            borderBottom: '0.5px solid rgba(255,255,255,0.03)',
-            background: '#0A0E18', overflow: 'hidden',
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px', borderBottom: '0.5px solid rgba(255,255,255,0.06)' }}>
-              <span style={{ width: 5, height: 5, background: 'rgba(255,255,255,0.2)', display: 'inline-block', flexShrink: 0 }} />
-              <span style={{ ...MONO, fontSize: 10, color: '#6E7587', textTransform: 'uppercase', letterSpacing: '0.12em' }}>7 params · 1 required · body · application/json</span>
-            </div>
+          <div style={PANEL_INNER}>
+            <PanelHeader
+              label="POST /api/v1/scan · 7 params"
+              right={<span style={{ ...MONO, fontSize: 10, color: '#6E7587', textTransform: 'uppercase', letterSpacing: '0.12em' }}>1 required · application/json</span>}
+            />
             {[
               { p: 'url',           type: 'string',            req: true,  def: null,      note: 'URL to scan. Scheme added if absent.' },
               { p: 'async',         type: 'boolean',           req: false, def: 'false',   note: 'Return immediately; result POSTed to webhook_url.' },
@@ -635,7 +629,7 @@ function HowItWorksSection() {
               >
                 <span style={{ color: '#8080c0' }}>{row.p}</span>
                 <span style={{ color: '#6F9BC6' }}>{row.type}</span>
-                <span style={{ color: row.req ? '#E8635F' : '#404860' }}>{row.req ? 'required' : 'optional'}</span>
+                <span style={{ color: row.req ? '#8080c0' : '#404860' }}>{row.req ? 'required' : 'optional'}</span>
                 <span style={{ color: row.def ? '#00C48C' : '#404860' }}>{row.def ?? '—'}</span>
                 <span style={{ color: '#6E7587' }}>{row.note}</span>
               </div>
@@ -906,27 +900,51 @@ export default function DevelopersPage() {
             <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.18em', color: '#6E7587', margin: '0 0 10px' }}>
               CHECK CATEGORIES · 27 GROUPS · 307 CHECKS
             </p>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+            {/* Grouped taxonomy — each cell is a real engine check_id prefix mapped to its category */}
+            <div
+              className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4"
+              style={{ borderTop: '0.5px solid rgba(255,255,255,0.08)', borderLeft: '0.5px solid rgba(255,255,255,0.08)' }}
+            >
               {[
-                'Hero Section', 'Trust & Credibility', 'CTA & Conversion', 'Messaging & Clarity',
-                'Social Proof', 'SEO & Metadata', 'Offer & Pricing', 'Offer Clarity',
-                'Objection Handling', 'Psychology & Persuasion', 'Specificity & Claim Quality',
-                'Competitive Differentiation', 'Navigation & UX', 'Mobile Experience',
-                'Page Speed & Technical', 'Narrative Flow', 'Page & Content Gaps',
-                'Conversion Path Expansion', 'Return Visitor & Retention', 'Email & Retention',
-                'Checkout & Purchase Friction', 'Product Page', 'E-commerce Specific',
-                'SaaS-Specific', 'Agency & Service', 'Accessibility & Inclusion',
-                'Universal & Cross-Vertical',
-              ].map(cat => (
-                <span
-                  key={cat}
+                { p: 'HERO_*',           c: 'Hero Section' },
+                { p: 'TRUST_*',          c: 'Trust & Credibility' },
+                { p: 'CTA_*',            c: 'CTA & Conversion' },
+                { p: 'MSG_*',            c: 'Messaging & Clarity' },
+                { p: 'SOCIAL_* · SPQ_*', c: 'Social Proof' },
+                { p: 'SEO_*',            c: 'SEO & Metadata' },
+                { p: 'OFFER_*',          c: 'Offer & Pricing' },
+                { p: 'OFC_*',            c: 'Offer Clarity' },
+                { p: 'OBJ_*',            c: 'Objection Handling' },
+                { p: 'PSY_*',            c: 'Psychology & Persuasion' },
+                { p: 'SPEC_*',           c: 'Specificity & Claim Quality' },
+                { p: 'DIFF_*',           c: 'Competitive Differentiation' },
+                { p: 'NAV_*',            c: 'Navigation & UX' },
+                { p: 'MOBILE_*',         c: 'Mobile Experience' },
+                { p: 'SPEED_*',          c: 'Page Speed & Technical' },
+                { p: 'NARR_*',           c: 'Narrative Flow' },
+                { p: 'PAGE_*',           c: 'Page & Content Gaps' },
+                { p: 'CONV_*',           c: 'Conversion Path Expansion' },
+                { p: 'RET_*',            c: 'Return Visitor & Retention' },
+                { p: 'EMAIL_*',          c: 'Email & Retention' },
+                { p: 'CHECK_*',          c: 'Checkout & Purchase Friction' },
+                { p: 'PROD_*',           c: 'Product Page' },
+                { p: 'ECOM_*',           c: 'E-commerce Specific' },
+                { p: 'SAAS_*',           c: 'SaaS-Specific' },
+                { p: 'SERV_*',           c: 'Agency & Service' },
+                { p: 'ACCESS_*',         c: 'Accessibility & Inclusion' },
+                { p: 'UNIV_*',           c: 'Universal & Cross-Vertical' },
+              ].map(g => (
+                <div
+                  key={g.p}
                   style={{
-                    ...MONO, fontSize: 10, color: '#6E7587',
-                    background: '#0A0E18',
-                    border: '0.5px solid rgba(255,255,255,0.07)',
-                    padding: '4px 8px',
+                    borderRight: '0.5px solid rgba(255,255,255,0.08)',
+                    borderBottom: '0.5px solid rgba(255,255,255,0.08)',
+                    padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 5,
                   }}
-                >{cat}</span>
+                >
+                  <span style={{ ...MONO, fontSize: 10.5, color: '#8080c0', letterSpacing: '0.04em' }}>{g.p}</span>
+                  <span style={{ ...MONO, fontSize: 10, color: '#9398A8' }}>{g.c}</span>
+                </div>
               ))}
             </div>
             <p style={{ ...MONO, fontSize: 10, color: '#404860', margin: '10px 0 0' }}>
@@ -944,16 +962,13 @@ export default function DevelopersPage() {
             {/* Plain-English lead-in — what to do when something goes wrong */}
             <div style={{ background: '#0A0E18', borderTop: '1px solid rgba(157,140,255,0.3)', borderLeft: '0.5px solid rgba(255,255,255,0.06)', padding: '16px 20px', marginBottom: 16 }}>
               <p style={{ ...SANS, fontSize: 14, lineHeight: 1.6, color: '#9398A8', margin: 0, maxWidth: 720 }}>
-                <span style={{ color: '#E6E9EE' }}>When something goes wrong, the response tells you exactly what failed and whether to retry.</span> Most issues are one of three things: a bad or unreachable URL, a missing or invalid API key, or a site that blocks automated scanning. The table below maps each status code to its meaning.
+                <span style={{ color: '#E6E9EE' }}>When something goes wrong, the response tells you exactly what failed and whether to retry.</span> Most issues are one of three things: a bad or unreachable URL, a missing or invalid API key, or a site that blocks automated scanning.
               </p>
             </div>
 
-            {/* Status code table */}
-            <div className="wd-panel" style={{ overflow: 'hidden', marginBottom: 16 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 16px', borderBottom: '0.5px solid rgba(255,255,255,0.06)' }}>
-                <span style={{ width: 5, height: 5, background: 'rgba(255,255,255,0.3)', flexShrink: 0, display: 'inline-block' }} />
-                <span style={{ ...MONO, fontSize: 11, color: '#6E7587' }}>status codes · error.code reference</span>
-              </div>
+            {/* Status code table — shared panel chrome */}
+            <div style={{ ...PANEL_INNER, marginBottom: 16 }}>
+              <PanelHeader label="status codes · error.code reference" />
               <div style={{ ...MONO, fontSize: 11 }}>
                 {[
                   { status: '400', code: 'INVALID_URL / INVALID_REQUEST', desc: 'url missing, malformed, or no valid domain', codeColor: '#8080c0' },

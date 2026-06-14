@@ -535,26 +535,26 @@ function GroundingProofSection() {
 
 // ── Section 6 — What We Check ─────────────────────────────────────────────────
 
-const SCOPE_ITEMS_LEFT = [
-  { cat: 'Value proposition', q: "Does your headline communicate a specific outcome, or just describe what you built?", ex: "ex: 'Hero headline is feature-led, not outcome-led · est. lift +12–18%'" },
-  { cat: 'Social proof', q: "Are testimonials visible before 800px? Are they specific or generic?", ex: "ex: 'No testimonials visible above 800px fold · est. lift +8–11%'" },
-  { cat: 'CTA clarity', q: "Is there one primary action above the fold, or are visitors choosing between competing options?", ex: "ex: 'Dual primary CTAs create decision paralysis · est. lift +6–9%'" },
-  { cat: 'Offer structure', q: "Is your pricing, trial, or free tier visible and framed around value rather than cost?", ex: "ex: 'Pricing not visible without scrolling · est. lift +5–8%'" },
-  { cat: 'Objection handling', q: "Does the page address the most common reasons someone wouldn't buy?", ex: "ex: 'No FAQ or risk-reversal above fold · est. lift +4–7%'" },
-]
-
-const SCOPE_ITEMS_RIGHT = [
-  { cat: 'Visual hierarchy', q: "Does the eye flow naturally from headline to proof to action, or does layout compete with itself?", ex: "ex: 'Eye tracking path broken by competing elements · est. lift +5–9%'" },
-  { cat: 'Trust signals', q: "Are security badges, guarantees, or credentials present where purchase anxiety peaks?", ex: "ex: 'No security badge near payment CTA · est. lift +3–6%'" },
-  { cat: 'Mobile experience', q: "Does the page convert on mobile, or does it just render without breaking?", ex: "ex: 'Primary CTA below fold on 375px viewport · est. lift +8–12%'" },
-  { cat: 'Load perception', q: "Does the page feel fast? Perceived load time affects conversion independent of actual speed.", ex: "ex: 'No loading state — page appears frozen for 2.1s · est. lift +4–7%'" },
-  { cat: 'Above-fold layout', q: "What does a visitor see before scrolling? Is it enough to make them want to scroll?", ex: "ex: 'Value prop, proof, and CTA not all visible before scroll · est. lift +10–15%'" },
+// The 27 conversion categories the engine checks — canonical taxonomy from
+// lib/diagnosticRubric.ts (the source of the "27 categories" claim). Illustrative
+// breadth map: uniform "covered" treatment, NO per-category pass/fail — the scan
+// response returns 7 dimension scores, never per-category check tallies.
+const COVERAGE_CATEGORIES = [
+  'Hero Section', 'Trust & Credibility', 'CTA & Conversion', 'Messaging & Clarity',
+  'Social Proof', 'SEO & Metadata', 'Navigation & UX', 'Psychology & Persuasion',
+  'Page & Content Gaps', 'Offer & Pricing', 'Email & Retention', 'Product Page',
+  'Mobile Experience', 'Checkout & Purchase Friction', 'Page Speed & Technical',
+  'Competitive Differentiation', 'Specificity & Claim Quality', 'Return Visitor & Retention',
+  'Accessibility & Inclusion', 'Universal & Cross-Vertical', 'SaaS-Specific',
+  'E-commerce Specific', 'Agency & Service', 'Conversion Path Expansion',
+  'Narrative Flow', 'Objection Handling', 'Offer Clarity',
 ]
 
 function WhatWeCheckSection() {
   return (
-    <section style={{ padding:'80px 48px',borderTop:'0.5px solid rgba(111,155,198,0.1)',position:'relative',overflow:'visible',background:BG_BASE }}>
-      <style>{`@media(max-width:767px){.d-scope-grid{grid-template-columns:1fr!important}}`}</style>
+    <section style={{ padding:'80px 48px',borderTop:'0.5px solid rgba(111,155,198,0.1)',position:'relative',overflow:'hidden',background:BG_BASE }}>
+      {/* Bloom behind the coverage map */}
+      <Bloom size={860} opacity={0.13} style={{ top:'62%' }} />
       <div style={{ maxWidth:1000,margin:'0 auto',position:'relative',zIndex:1 }}>
         <p style={{ ...MONO,fontSize:11,textTransform:'uppercase',letterSpacing:'0.2em',color:STEEL,margin:'0 0 16px' }}>
           SCOPE
@@ -566,26 +566,25 @@ function WhatWeCheckSection() {
           The engine checks every element a visitor encounters from the moment they land — not just your headline and CTA. If it affects whether someone converts, it&apos;s in the audit.
         </p>
 
-        {/* Diagnostic grid — two columns, no cards */}
-        <div className="d-scope-grid" style={{ display:'grid',gridTemplateColumns:'1fr 1fr',gap:'0 48px',marginBottom:32 }}>
-          <div>
-            {SCOPE_ITEMS_LEFT.map(item => (
-              <div key={item.cat} style={{ borderLeft:'2px solid rgba(111,155,198,0.2)',paddingLeft:16,marginBottom:32 }}>
-                <p style={{ ...DISP,fontSize:14,fontWeight:500,color:INK_PRI,margin:'0 0 4px' }}>{item.cat}</p>
-                <p style={{ ...SANS,fontSize:13,color:INK_MUT,margin:'0 0 6px',lineHeight:1.55 }}>{item.q}</p>
-                <p style={{ ...MONO,fontSize:10,fontStyle:'italic',color:'rgba(111,155,198,0.55)',margin:0,lineHeight:1.5 }}>{item.ex}</p>
-              </div>
-            ))}
-          </div>
-          <div>
-            {SCOPE_ITEMS_RIGHT.map(item => (
-              <div key={item.cat} style={{ borderLeft:'2px solid rgba(111,155,198,0.2)',paddingLeft:16,marginBottom:32 }}>
-                <p style={{ ...DISP,fontSize:14,fontWeight:500,color:INK_PRI,margin:'0 0 4px' }}>{item.cat}</p>
-                <p style={{ ...SANS,fontSize:13,color:INK_MUT,margin:'0 0 6px',lineHeight:1.55 }}>{item.q}</p>
-                <p style={{ ...MONO,fontSize:10,fontStyle:'italic',color:'rgba(111,155,198,0.55)',margin:0,lineHeight:1.5 }}>{item.ex}</p>
-              </div>
-            ))}
-          </div>
+        {/* Coverage map — illustrative breadth (what gets checked), NOT a live results grid.
+            Uniform steel "covered" treatment; deliberately no per-cell pass/fail state, since
+            the scan response carries no per-category results. */}
+        <p style={{ ...MONO,fontSize:10,textTransform:'uppercase',letterSpacing:'0.18em',color:'rgba(111,155,198,0.5)',margin:'0 0 16px' }}>
+          ALL 27 CATEGORIES — CHECKED ON EVERY SCAN
+        </p>
+        <div style={{ display:'grid',gridTemplateColumns:'repeat(auto-fill, minmax(220px, 1fr))',gap:10,marginBottom:32 }}>
+          {COVERAGE_CATEGORIES.map(cat => (
+            <div key={cat} style={{
+              display:'flex', alignItems:'center', gap:10,
+              background:'rgba(111,155,198,0.04)',
+              border:'1px solid rgba(111,155,198,0.14)',
+              boxShadow:'inset 0 1px 0 0 rgba(111,155,198,0.08)',
+              padding:'12px 14px',
+            }}>
+              <span aria-hidden style={{ width:6, height:6, background:STEEL, flexShrink:0, boxShadow:'0 0 6px rgba(111,155,198,0.5)' }} />
+              <span style={{ ...MONO, fontSize:11.5, color:INK_SEC, letterSpacing:'0.02em', lineHeight:1.3 }}>{cat}</span>
+            </div>
+          ))}
         </div>
 
         <p style={{ ...MONO,fontSize:11,color:'rgba(111, 155, 198, 0.6)',margin:'0 0 12px',textShadow:'0 0 8px rgba(111, 155, 198, 0.2)' }}>

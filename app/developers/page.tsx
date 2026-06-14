@@ -15,7 +15,7 @@ const RATE_POINTS = [
   { label: 'PLAYGROUND', price: '$0.25', color: '#6F9BC6' },
   { label: 'DEV',        price: '$0.19', color: '#6F9BC6' },
   { label: 'BUILDER',    price: '$0.17', color: '#6F9BC6' },
-  { label: 'SCALE',      price: '$0.15', color: '#6F9BC6' },
+  { label: 'VOLUME',     price: '$0.15', color: '#6F9BC6' },
   { label: 'ENTERPRISE', price: '$0.11', color: '#6F9BC6' },
 ]
 
@@ -273,10 +273,10 @@ const API_CARDS_DEF = [
     accentColor: 'rgba(255,255,255,0.12)', ctaBorderColor: 'rgba(157,140,255,0.45)', ctaColor: '#9D8CFF',
   },
   {
-    tier: 'SCALE', tierColor: '#8080c0',
+    tier: 'VOLUME', tierColor: '#8080c0',
     price: '$249', economy: '/mo · 3,000 scans · best value', economyColor: '#6F9BC6',
     bestFor: 'High-volume integrations and teams that need dedicated infrastructure and rate limits.',
-    cta: 'START SCALE →', ctaHref: '/auth?surface=api&plan=scale',
+    cta: 'START VOLUME →', ctaHref: '/auth?surface=api&plan=scale',
     accentColor: 'rgba(255,255,255,0.12)', ctaBorderColor: 'rgba(157,140,255,0.45)', ctaColor: '#9D8CFF',
   },
   {
@@ -1324,7 +1324,7 @@ export default function DevelopersPage() {
       </section>
       <div className="section-separator" />
 
-      {/* ── 4. INCLUDED ON ALL PLANS ────────────────────────────────────────── */}
+      {/* ── 4. PLATFORM CAPABILITIES ─────────────────────────────────────────── */}
       <section style={{ position: 'relative', overflow: 'hidden', background: '#080D18', borderTop: '0.5px solid rgba(255,255,255,0.08)', borderBottom: '0.5px solid rgba(255,255,255,0.05)' }}>
         <div aria-hidden style={{
           position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0,
@@ -1334,7 +1334,7 @@ export default function DevelopersPage() {
 
         <div style={{ position: 'relative', zIndex: 1, maxWidth: 1280, margin: '0 auto', padding: '64px 32px' }}>
           <p style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.2em', color: '#8080c0', textAlign: 'center', margin: '0 0 32px' }}>
-            INCLUDED ON ALL PLANS
+            PLATFORM CAPABILITIES
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

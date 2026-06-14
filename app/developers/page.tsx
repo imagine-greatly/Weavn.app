@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 
 // ── Data ──────────────────────────────────────────────────────────────────────
@@ -215,6 +214,48 @@ function Ticks() {
   )
 }
 
+// ── Shared chrome system (established by the hero, reused page-wide) ───────────
+// Dark surface + hairline purple-tinted border, zero radius. Purple = API surface.
+const PANEL: React.CSSProperties = {
+  background: '#080D18',
+  border: '1px solid rgba(157,140,255,0.18)',
+  borderRadius: 0,
+  position: 'relative',
+}
+const PANEL_INNER: React.CSSProperties = {
+  background: '#06090F',
+  border: '1px solid rgba(157,140,255,0.14)',
+  borderRadius: 0,
+  overflow: 'hidden',
+}
+
+// Four corner-bracket marks; expects a position:relative parent.
+function Brackets({ c = 'rgba(157,140,255,0.45)' }: { c?: string }) {
+  const b = `1px solid ${c}`
+  const s = 11
+  return (
+    <>
+      <div aria-hidden style={{ position:'absolute', top:6, left:6,     width:s, height:s, borderTop:b, borderLeft:b,    pointerEvents:'none', zIndex:2 }} />
+      <div aria-hidden style={{ position:'absolute', top:6, right:6,    width:s, height:s, borderTop:b, borderRight:b,   pointerEvents:'none', zIndex:2 }} />
+      <div aria-hidden style={{ position:'absolute', bottom:6, left:6,  width:s, height:s, borderBottom:b, borderLeft:b,  pointerEvents:'none', zIndex:2 }} />
+      <div aria-hidden style={{ position:'absolute', bottom:6, right:6, width:s, height:s, borderBottom:b, borderRight:b, pointerEvents:'none', zIndex:2 }} />
+    </>
+  )
+}
+
+// Terminal-style header bar: green square + mono label, optional right slot.
+function PanelHeader({ label, right }: { label: string; right?: React.ReactNode }) {
+  return (
+    <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:8, padding:'8px 14px', borderBottom:'0.5px solid rgba(255,255,255,0.08)' }}>
+      <span style={{ ...MONO, fontSize:11, color:'#9398A8', display:'inline-flex', alignItems:'center', gap:8, letterSpacing:'0.05em' }}>
+        <span aria-hidden style={{ width:7, height:7, background:'#00C48C', display:'inline-block', flexShrink:0 }} />
+        {label}
+      </span>
+      {right}
+    </div>
+  )
+}
+
 // JSON response lines (rendered with syntax colors for section 2)
 function K({ c }: { c: string }) { return <span style={{ color: '#8080c0' }}>&quot;{c}&quot;</span> }
 function S({ c }: { c: string }) { return <span style={{ color: '#00C48C' }}>&quot;{c}&quot;</span> }
@@ -327,7 +368,7 @@ function TabbedCode({ compact }: { compact?: boolean }) {
       <div style={{ padding: compact ? '12px 14px' : '14px 16px' }}>
         {lang === 'curl' && (
           <pre style={preStyle}>
-            <span style={{ color: '#00C8FF' }}>curl</span>{' -X POST \\\n'}
+            <span style={{ color: '#9D8CFF' }}>curl</span>{' -X POST \\\n'}
             {'  https://api.weavn.app/v1/scan \\\n'}
             {'  -H '}<span style={{ color: '#8080c0' }}>&quot;Authorization: Bearer </span><span style={{ color: '#9D8CFF' }}>weavn_live_••••</span><span style={{ color: '#8080c0' }}>&quot;</span>{' \\\n'}
             {'  -H '}<span style={{ color: '#8080c0' }}>&quot;Content-Type: application/json&quot;</span>{' \\\n'}
@@ -610,16 +651,6 @@ function HowItWorksSection() {
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function DevelopersPage() {
-  const router = useRouter()
-  const [heroUrl, setHeroUrl] = useState('')
-
-  function handleRunScan() {
-    const trimmed = heroUrl.trim()
-    if (!trimmed) return
-    const url = trimmed.startsWith('http') ? trimmed : `https://${trimmed}`
-    router.push(`/playground?url=${encodeURIComponent(url)}`)
-  }
-
   return (
     <main style={{ minHeight: '100vh' }}>
       <style>{`
@@ -628,8 +659,8 @@ export default function DevelopersPage() {
         @media (prefers-reduced-motion: reduce) { .dev-jline { animation:none; opacity:1; transform:none; } }
       `}</style>
 
-      {/* ── 1. HERO ─────────────────────────────────────────────────────────── */}
-      <section style={{ position: 'relative', overflow: 'hidden', padding: '96px 32px 64px', textAlign: 'center' }}>
+      {/* ── 1. HERO — split instrument: pitch (left) + live request/response (right) ── */}
+      <section style={{ position: 'relative', overflow: 'hidden', padding: '88px 32px 56px' }}>
         <div aria-hidden style={{
           position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0,
           background: [
@@ -637,122 +668,80 @@ export default function DevelopersPage() {
             'radial-gradient(ellipse 500px 300px at 50% 0%, rgba(157,140,255,0.04) 0%, transparent 55%)',
           ].join(', '),
         }} />
-        <Ticks />
 
-        <div style={{ position: 'relative', zIndex: 1, maxWidth: 896, margin: '0 auto' }}>
-          <p style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.2em', color: '#8080c0', margin: '0 0 20px' }}>
-            API
-          </p>
-          <h1 style={{ ...DISP, fontSize: 'clamp(36px, 5vw, 56px)', fontWeight: 700, letterSpacing: '-1.5px', color: '#E6E9EE', margin: '0 0 16px', lineHeight: 1.1 }}>
-            One endpoint. Any URL. Conversion intelligence.
-          </h1>
-          <p style={{ ...SANS, fontSize: 16, lineHeight: 1.65, color: '#9398A8', maxWidth: 600, margin: '0 auto 32px' }}>
-            POST a URL, get structured JSON back. Percentile benchmarks, ranked fixes.
-          </p>
+        <div style={{ position: 'relative', zIndex: 1, maxWidth: 1160, margin: '0 auto' }}>
+          {/* Hero panel — shared chrome: dark surface, hairline purple border, corner brackets */}
+          <div style={{ ...PANEL, padding: 'clamp(24px, 4vw, 44px)' }}>
+            <Brackets />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-12 items-center">
 
-          {/* Tabbed code block */}
-          <div style={{
-            maxWidth: 672, margin: '0 auto 24px', textAlign: 'left',
-            borderTop: '1px solid rgba(255,255,255,0.14)',
-            borderLeft: '1px solid rgba(255,255,255,0.07)',
-            borderRight: '1px solid rgba(255,255,255,0.04)',
-            borderBottom: '1px solid rgba(255,255,255,0.03)',
-            boxShadow: '0 0 0 1px rgba(255,255,255,0.06)',
-            background: '#080D18',
-            position: 'relative', overflow: 'hidden',
-          }}>
-            <TabbedCode />
+              {/* LEFT — pitch */}
+              <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+                <p style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.3em', color: '#9D8CFF', margin: '0 0 18px' }}>
+                  API
+                </p>
+                <h1 style={{ ...DISP, fontSize: 'clamp(32px, 4vw, 50px)', fontWeight: 700, letterSpacing: '-1.5px', color: '#E6E9EE', margin: '0 0 18px', lineHeight: 1.08 }}>
+                  One endpoint.<br />Any URL.<br />Conversion intelligence.
+                </h1>
+                <p style={{ ...SANS, fontSize: 16, lineHeight: 1.65, color: '#9398A8', maxWidth: 460, margin: '0 0 28px' }}>
+                  POST a URL, get structured JSON back — percentile benchmarks and ranked fixes.
+                </p>
+
+                {/* CTA row */}
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginBottom: 28 }}>
+                  <Link href="/auth?surface=api" style={{ ...MONO, fontSize: 12, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#9D8CFF', background: 'rgba(157,140,255,0.1)', border: '1px solid rgba(157,140,255,0.5)', padding: '11px 22px', textDecoration: 'none', display: 'inline-block' }}>
+                    GET API KEY →
+                  </Link>
+                  <Link href="/docs/api" style={{ ...MONO, fontSize: 12, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#9398A8', background: 'transparent', border: '1px solid rgba(255,255,255,0.14)', padding: '11px 22px', textDecoration: 'none', display: 'inline-block' }}>
+                    READ THE DOCS →
+                  </Link>
+                </div>
+
+                {/* Stat chips — neutral hairline borders */}
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                  {['307 checks', '~90s median', 'cache hits free'].map(label => (
+                    <span key={label} style={{ ...MONO, fontSize: 11, letterSpacing: '0.04em', color: '#9398A8', background: 'rgba(255,255,255,0.03)', border: '0.5px solid rgba(255,255,255,0.12)', padding: '5px 12px' }}>
+                      {label}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              {/* RIGHT — live instrument: REQUEST panel → connector → RESPONSE panel */}
+              <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+                {/* Panel 1 — REQUEST */}
+                <div style={PANEL_INNER}>
+                  <PanelHeader label="TERMINAL · CURL" />
+                  <TabbedCode compact />
+                </div>
+
+                {/* Connector */}
+                <p style={{ ...MONO, fontSize: 11, color: '#6E7587', textAlign: 'center', margin: '10px 0', letterSpacing: '0.05em' }}>
+                  ↓ 200 OK · 87s
+                </p>
+
+                {/* Panel 2 — RESPONSE (locked v1 contract values) */}
+                <div style={PANEL_INNER}>
+                  <PanelHeader label="RESPONSE.JSON" right={<span style={{ ...MONO, fontSize: 11, color: '#00C48C' }}>200 OK</span>} />
+                  <pre style={{ ...MONO, fontSize: 12.5, lineHeight: 1.9, margin: 0, padding: '14px 16px', whiteSpace: 'pre-wrap', wordBreak: 'break-word', color: '#9398A8' }}>
+<span style={{ color: '#6E7587' }}>{'{'}</span>{'\n  '}
+<span style={{ color: '#8080c0' }}>&quot;scan_id&quot;</span><span style={{ color: '#6E7587' }}>: </span><span style={{ color: '#00C48C' }}>&quot;sc_a8d3f2c1&quot;</span><span style={{ color: '#6E7587' }}>,</span>{'\n  '}
+<span style={{ color: '#8080c0' }}>&quot;score&quot;</span><span style={{ color: '#6E7587' }}>: </span><span style={{ color: '#9D8CFF' }}>61</span><span style={{ color: '#6E7587' }}>,</span>{'\n  '}
+<span style={{ color: '#8080c0' }}>&quot;verdict&quot;</span><span style={{ color: '#6E7587' }}>: </span><span style={{ color: '#EFB23E' }}>&quot;Fair&quot;</span><span style={{ color: '#6E7587' }}>,</span>{'\n  '}
+<span style={{ color: '#8080c0' }}>&quot;percentile&quot;</span><span style={{ color: '#6E7587' }}>: </span><span style={{ color: '#9D8CFF' }}>63</span><span style={{ color: '#6E7587' }}>,</span>{'\n  '}
+<span style={{ color: '#8080c0' }}>&quot;findings_summary&quot;</span><span style={{ color: '#6E7587' }}>: </span><span style={{ color: '#9D8CFF' }}>23</span>{'\n'}
+<span style={{ color: '#6E7587' }}>{'}'}</span>
+                  </pre>
+                </div>
+              </div>
+
+            </div>
           </div>
-          <p style={{ ...MONO, fontSize: 10, color: '#404860', textAlign: 'left', margin: '-18px 0 20px', maxWidth: 672, marginLeft: 'auto', marginRight: 'auto', padding: '0 2px' }}>
-            No official SDK — curl, Node, and Python above are complete. Any HTTP client that supports Bearer auth and JSON POST works identically.
-          </p>
 
-          {/* Stat pills */}
-          <div style={{ display: 'flex', justifyContent: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 32 }}>
-            {['307 checks', '~90s median', 'cache hits free'].map(label => (
-              <span key={label} style={{ background: 'rgba(255,255,255,0.04)', border: '0.5px solid rgba(255,255,255,0.1)', padding: '5px 12px', ...MONO, fontSize: 11, color: '#6F9BC6', letterSpacing: '0.05em' }}>
-                {label}
-              </span>
-            ))}
-          </div>
-
-          {/* Plain-language lede — relocated from the former START HERE section */}
-          <p style={{ ...SANS, fontSize: 15, lineHeight: 1.7, color: '#9398A8', maxWidth: 640, margin: '0 auto 16px' }}>
+          {/* Plain-language lede — kept directly beneath the hero */}
+          <p style={{ ...SANS, fontSize: 15, lineHeight: 1.7, color: '#9398A8', maxWidth: 760, margin: '28px auto 0', textAlign: 'center' }}>
             POST any web page and get conversion intelligence back as JSON &mdash; a 0&ndash;100 score, ranked findings with on-page evidence, fixes with rewritten copy, and percentile benchmarks for the vertical. Drop it into an e-commerce app, a CRM feature, a site builder, or an AI agent &mdash; the same shape on every call, so you build against it once.
           </p>
-
-          {/* Build-into-anything chips */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap', gap: 8, marginBottom: 28 }}>
-            <span style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.18em', color: '#6E7587', marginRight: 4 }}>BUILD INTO ANYTHING</span>
-            {['E-commerce app', 'CRM widget', 'AI agent'].map(chip => (
-              <span key={chip} style={{ ...MONO, fontSize: 11, color: '#9D8CFF', background: 'rgba(157,140,255,0.06)', border: '0.5px solid rgba(157,140,255,0.28)', padding: '5px 12px' }}>
-                {chip}
-              </span>
-            ))}
-          </div>
-
-          {/* Playground + response size */}
-          <p style={{ ...MONO, fontSize: 10, color: '#6E7587', textAlign: 'center', margin: '0 0 24px', letterSpacing: '0.03em' }}>
-            Try live at{' '}
-            <Link href="/playground" style={{ color: '#6F9BC6', textDecoration: 'none' }}>/playground</Link>
-            {' — no client setup needed.  ·  Response size scales with '}
-            <span style={{ color: '#8080c0' }}>finding_limit</span>
-            {' (1–20) and '}
-            <span style={{ color: '#8080c0' }}>finding_depth</span>
-            {'. Use '}
-            <span style={{ color: '#8080c0' }}>fields</span>
-            {' to omit unneeded top-level blocks.'}
-          </p>
-
-          {/* Primary CTA — URL input + run scan */}
-          <div style={{ maxWidth: 672, margin: '0 auto', display: 'flex', gap: 0 }}>
-            <input
-              type="url"
-              value={heroUrl}
-              onChange={e => setHeroUrl(e.target.value)}
-              onKeyDown={e => { if (e.key === 'Enter') handleRunScan() }}
-              placeholder="https://your-site.com"
-              style={{
-                ...MONO, fontSize: 13, flex: 1,
-                background: 'rgba(255,255,255,0.03)',
-                border: '1px solid rgba(255,255,255,0.12)',
-                borderRight: 'none',
-                color: '#E6E9EE',
-                padding: '12px 16px',
-                outline: 'none',
-                borderRadius: 0,
-              }}
-            />
-            <button
-              onClick={handleRunScan}
-              style={{
-                ...MONO, fontSize: 12,
-                background: 'rgba(157,140,255,0.1)',
-                border: '1px solid rgba(157,140,255,0.5)',
-                color: '#9D8CFF',
-                padding: '12px 20px',
-                cursor: 'pointer',
-                borderRadius: 0,
-                whiteSpace: 'nowrap',
-                letterSpacing: '0.08em',
-                textTransform: 'uppercase',
-                transition: 'all 0.15s',
-                flexShrink: 0,
-              }}
-            >
-              RUN A LIVE SCAN →
-            </button>
-          </div>
-
-          {/* Secondary CTAs */}
-          <div style={{ display: 'flex', justifyContent: 'center', gap: 10, flexWrap: 'wrap', marginTop: 12 }}>
-            <Link href="/auth?surface=api" style={{ ...MONO, fontSize: 11, color: '#6E7587', border: '0.5px solid rgba(255,255,255,0.1)', padding: '9px 20px', textDecoration: 'none', transition: 'all 0.15s', display: 'inline-block', letterSpacing: '0.08em' }}>
-              GET API KEY →
-            </Link>
-            <Link href="/docs/api" style={{ ...MONO, fontSize: 11, color: '#6E7587', border: '0.5px solid rgba(255,255,255,0.1)', padding: '9px 20px', textDecoration: 'none', transition: 'all 0.15s', display: 'inline-block', letterSpacing: '0.08em' }}>
-              READ THE DOCS →
-            </Link>
-          </div>
         </div>
       </section>
       <div className="section-separator" />

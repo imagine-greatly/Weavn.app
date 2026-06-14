@@ -10,6 +10,10 @@ interface ScoreRingProps {
   animate?: boolean
   /** @deprecated use animate */
   animated?: boolean
+  /** Force the band color instead of deriving from score — display override for illustrations. */
+  band?: 'sev-critical' | 'json-string'
+  /** Render the CRITICAL badge under the ring (default true). */
+  showBadge?: boolean
 }
 
 const SIZE_MAP = {
@@ -23,14 +27,14 @@ const BAND_HEX: Record<string, string> = {
   'json-string':  '#00C48C',
 }
 
-function ScoreRing({ score, size = 'md', label, animate = true, animated }: ScoreRingProps) {
+function ScoreRing({ score, size = 'md', label, animate = true, animated, band: bandProp, showBadge = true }: ScoreRingProps) {
   const shouldAnimate = animated !== undefined ? animated : animate
   const { px, stroke, font, badgeFont } = SIZE_MAP[size]
   const center        = px / 2
   const radius        = center - stroke / 2 - 2
   const circumference = 2 * Math.PI * radius
   const targetFill    = (Math.min(Math.max(score, 0), 100) / 100) * circumference
-  const band          = scoreBand(score)
+  const band          = bandProp ?? scoreBand(score)
   const isCrit        = band === 'sev-critical'
   const color         = BAND_HEX[band] ?? '#00C48C'
 
@@ -118,7 +122,7 @@ function ScoreRing({ score, size = 'md', label, animate = true, animated }: Scor
       </svg>
 
       {/* CRITICAL badge */}
-      {isCrit && (
+      {showBadge && isCrit && (
         <div style={{
           fontFamily: "'IBM Plex Mono', monospace",
           fontSize: badgeFont,

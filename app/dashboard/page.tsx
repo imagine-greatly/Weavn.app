@@ -81,6 +81,13 @@ function Bloom({
 
 // ── Section 1 — Hero ─────────────────────────────────────────────────────────
 
+// Hero right-column proof — illustrative B2B SaaS example (mirrors real report output).
+const HERO_FINDINGS = [
+  { p:'P1', sevColor:CRIT,     sevBorder:'rgba(232,99,95,0.4)',   barBorder:'rgba(232,99,95,0.45)',  title:'Hero headline is feature-led, not outcome-led', lift:'+12–18%' },
+  { p:'P2', sevColor:HIGH_AMB, sevBorder:'rgba(239,178,62,0.4)',  barBorder:'rgba(239,178,62,0.35)', title:'No above-fold social proof',                    lift:'+8–11%'  },
+  { p:'P3', sevColor:HIGH_AMB, sevBorder:'rgba(239,178,62,0.4)',  barBorder:'rgba(239,178,62,0.35)', title:'Dual primary CTAs create decision paralysis',   lift:'+6–9%'   },
+]
+
 function HeroSection() {
   const [scanUrl, setScanUrl] = useState('')
   const [isScanning, setIsScanning] = useState(false)
@@ -90,6 +97,8 @@ function HeroSection() {
   const [siteCount, setSiteCount] = useState(4812)
   const [lastScanSec, setLastScanSec] = useState(240)
   const router = useRouter()
+  const ringRef = useRef<HTMLDivElement>(null)
+  const ringInView = useInView(ringRef, { once: true, margin: '-80px' })
 
   useEffect(() => {
     let tick = 0
@@ -149,49 +158,27 @@ function HeroSection() {
         overflow: 'hidden',
       }}
     >
-      {/* Hero bloom — anchored behind the score-ring area (right side) */}
-      <Bloom size={720} opacity={0.17} style={{ left: 'auto', right: '-80px', top: '50%', transform: 'translateY(-50%)' }} />
       <Ticks />
-      {/* GHOST_RING_START — remove this entire block to delete */}
-      <div
-        aria-hidden="true"
-        style={{
-          position: 'absolute',
-          right: '-120px',
-          top: '50%',
-          transform: 'translateY(-50%)',
-          width: 480,
-          height: 480,
-          pointerEvents: 'none',
-          zIndex: 0,
-          opacity: 0.07,
-        }}
-      >
-        <svg width="480" height="480" viewBox="0 0 480 480" aria-hidden style={{ display: 'block' }}>
-          <circle cx="240" cy="240" r="215" fill="none" stroke="rgba(111,155,198,0.4)" strokeWidth="3" />
-          <circle cx="240" cy="240" r="215" fill="none" stroke="#6F9BC6" strokeWidth="3"
-            strokeDasharray="973 378" transform="rotate(-90 240 240)" strokeLinecap="round" />
-          <text x="240" y="240" dominantBaseline="central" textAnchor="middle"
-            fill="#6F9BC6" fontFamily="'Space Grotesk', sans-serif" fontWeight={600} fontSize={38}>72</text>
-        </svg>
-      </div>
-      {/* GHOST_RING_END */}
-      <div style={{ position:'relative',zIndex:1,maxWidth:800,margin:'0 auto',width:'100%',textAlign:'center' }}>
-        {/* Kicker */}
-        <p style={{ ...MONO,fontSize:11,textTransform:'uppercase',letterSpacing:'0.2em',color:STEEL,margin:'0 0 20px' }}>
-          FOR ANYONE WITH A SITE TO FIX
-        </p>
-        {/* H1 */}
-        <h1 style={{ ...DISP,fontSize:'clamp(36px,5vw,58px)',fontWeight:700,color:INK_PRI,letterSpacing:'-0.04em',margin:'0 0 24px',lineHeight:1.08 }}>
-          Find out exactly what&apos;s stopping visitors from converting.
-        </h1>
-        {/* Subhead */}
-        <p style={{ ...SANS,fontSize:17,color:INK_SEC,lineHeight:1.65,maxWidth:600,margin:'0 auto 44px' }}>
-          Paste your URL. Get a 0–100 score, every conversion problem ranked by impact, AI-rewritten copy, and benchmarks against real sites in your vertical — in about 90 seconds.
-        </p>
+      <style>{`@media(max-width:860px){.d-hero-grid{grid-template-columns:1fr!important;gap:44px!important}}`}</style>
+      <div className="d-hero-grid" style={{ position:'relative',zIndex:1,maxWidth:1140,margin:'0 auto',width:'100%',display:'grid',gridTemplateColumns:'1.05fr 0.95fr',gap:56,alignItems:'center' }}>
 
-        {/* URL input + CTA */}
-        <div style={{ maxWidth:580,margin:'0 auto',textAlign:'left' }}>
+        {/* LEFT — pitch + action */}
+        <div style={{ textAlign:'left' }}>
+          {/* Kicker */}
+          <p style={{ ...MONO,fontSize:11,textTransform:'uppercase',letterSpacing:'0.2em',color:STEEL,margin:'0 0 20px' }}>
+            FOR ANYONE WITH A SITE TO FIX
+          </p>
+          {/* H1 */}
+          <h1 style={{ ...DISP,fontSize:'clamp(34px,4.4vw,54px)',fontWeight:700,color:INK_PRI,letterSpacing:'-0.04em',margin:'0 0 22px',lineHeight:1.08 }}>
+            Find out exactly what&apos;s stopping visitors from converting.
+          </h1>
+          {/* Subhead */}
+          <p style={{ ...SANS,fontSize:17,color:INK_SEC,lineHeight:1.65,maxWidth:560,margin:'0 0 36px' }}>
+            Paste your URL. Get a 0–100 score, every conversion problem ranked by impact, AI-rewritten copy, and benchmarks against real sites in your vertical — in about 90 seconds.
+          </p>
+
+          {/* URL input + CTA */}
+          <div style={{ maxWidth:560 }}>
           <div style={{ display:'flex',flexWrap:'wrap' }}>
             <div
               onFocus={() => setInputFocused(true)}
@@ -241,14 +228,39 @@ function HeroSection() {
             </button>
           </div>
           {scanError && (
-            <p style={{ ...MONO,fontSize:11,color:CRIT,margin:'8px 0 0',textAlign:'center' }}>{scanError}</p>
+            <p style={{ ...MONO,fontSize:11,color:CRIT,margin:'8px 0 0' }}>{scanError}</p>
           )}
-          <p style={{ ...MONO,fontSize:11,color:INK_MUT,textAlign:'center',margin:'14px 0 0' }}>
-            No account required.
+          <p style={{ ...MONO,fontSize:11,color:INK_MUT,margin:'14px 0 0',opacity:0.55 }}>
+            no account required · {siteCount.toLocaleString()} sites scanned · last scan {lastScanSec < 60 ? `${lastScanSec} seconds` : `${Math.floor(lastScanSec / 60)} minutes`} ago
           </p>
-          <p style={{ ...MONO,fontSize:10,color:INK_MUT,textAlign:'center',margin:'8px 0 0',opacity:0.4 }}>
-            · {siteCount.toLocaleString()} sites scanned · last scan {lastScanSec < 60 ? `${lastScanSec} seconds` : `${Math.floor(lastScanSec / 60)} minutes`} ago
-          </p>
+          </div>
+        </div>
+
+        {/* RIGHT — the product, shown (illustrative B2B SaaS example) */}
+        <div style={{ position:'relative' }}>
+          {/* steel-blue bloom centered behind the score ring */}
+          <Bloom size={540} opacity={0.18} style={{ top:'34%' }} />
+          <div style={{ position:'relative',zIndex:1,display:'flex',flexDirection:'column',alignItems:'center' }}>
+            <div ref={ringRef} style={{ filter:'drop-shadow(0 0 10px rgba(232,99,95,0.4))' }}>
+              <ScoreRing score={72} size="lg" band="sev-critical" showBadge={false} animate={ringInView} />
+            </div>
+            <p style={{ ...MONO,fontSize:13,color:INK_MUT,margin:'10px 0 0' }}>/ 100</p>
+            <p style={{ ...MONO,fontSize:11,letterSpacing:'0.12em',textTransform:'uppercase',color:STEEL,margin:'12px 0 0' }}>63RD PERCENTILE · B2B SAAS</p>
+
+            {/* Top 3 findings — illustrative, mirrors real report output */}
+            <div style={{ width:'100%',maxWidth:400,margin:'26px 0 0',display:'flex',flexDirection:'column',gap:8 }}>
+              {HERO_FINDINGS.map(f => (
+                <div key={f.p} style={{ display:'flex',alignItems:'center',gap:10,background:SURFACE,borderTop:'1px solid rgba(255,255,255,0.08)',borderLeft:`2px solid ${f.barBorder}`,padding:'10px 12px' }}>
+                  <span style={{ ...MONO,fontSize:10,color:f.sevColor,border:`0.5px solid ${f.sevBorder}`,padding:'2px 6px',letterSpacing:'0.08em',flexShrink:0 }}>{f.p}</span>
+                  <span style={{ ...SANS,fontSize:13,fontWeight:500,color:INK_PRI,flex:1,lineHeight:1.3 }}>{f.title}</span>
+                  <span style={{ ...MONO,fontSize:11,color:LIFT_GREEN,whiteSpace:'nowrap',flexShrink:0 }}>{f.lift}</span>
+                </div>
+              ))}
+            </div>
+            <p style={{ ...MONO,fontSize:9,textTransform:'uppercase',letterSpacing:'0.14em',color:'rgba(111,155,198,0.4)',margin:'14px 0 0' }}>
+              EXAMPLE · acme-saas.com
+            </p>
+          </div>
         </div>
 
       </div>

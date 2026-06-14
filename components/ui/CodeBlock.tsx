@@ -16,7 +16,7 @@ const C = {
   muted:  '#6E7587',  // ink-muted   — bash commands, flags
   sec:    '#9398A8',  // ink-secondary
   pri:    '#E6E9EE',  // ink-primary
-  accent: '#00C8FF',  // accent-blue — wdoc_live_ tokens in bash only
+  accent: '#00C8FF',  // accent-blue — weavn_live_ tokens in bash only
 } as const
 
 const SEV_HEX: Record<string, string> = {
@@ -66,7 +66,7 @@ function tokenizeJSON(line: string): Tok[] {
 
 function tokenizeBash(line: string): Tok[] {
   const tokens: Tok[] = []
-  const re = /(wdoc_live_\S+)|("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')|(https?:\/\/\S+)|(\\$)|(-{1,2}[a-zA-Z]\S*)|(\s+)|(\S+)/g
+  const re = /(weavn_live_\S+)|("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')|(https?:\/\/\S+)|(\\$)|(-{1,2}[a-zA-Z]\S*)|(\s+)|(\S+)/g
   let m: RegExpExecArray | null
   while ((m = re.exec(line)) !== null) {
     const [full, wdoc, quoted, url, bs, flag, ws] = m

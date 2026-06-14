@@ -25,7 +25,7 @@ import type { ApiKeyRecord } from "@/lib/apiAuth";
 
 export const maxDuration = 300;
 
-const BASE_URL = "https://webdocai.com";
+const BASE_URL = "https://weavn.app";
 const ALL_FIELDS = ["summary", "findings", "copy_rewrites", "growth_blueprint", "benchmark"];
 const SCAN_LIMIT = 1000;
 

@@ -7,7 +7,7 @@ import Link from 'next/link'
 // ── Data ──────────────────────────────────────────────────────────────────────
 
 const CURL_CODE = `curl -X POST https://api.weavn.app/v1/scan \\
-  -H "Authorization: Bearer wdoc_live_••••" \\
+  -H "Authorization: Bearer weavn_live_••••" \\
   -H "Content-Type: application/json" \\
   -d '{"url": "https://your-site.com"}'`
 
@@ -145,8 +145,8 @@ const KEY_FACTS = [
 const FAQ_CARDS = [
   {
     q: 'How does authentication work?',
-    a: 'Every request requires a Bearer token in the Authorization header. Keys start with wdoc_live_ and are scoped to your account and plan. Get your key from the developer portal. Do not expose keys in client-side code — requests must originate server-side.',
-    dataLine: 'Authorization: Bearer wdoc_live_••••',
+    a: 'Every request requires a Bearer token in the Authorization header. Keys start with weavn_live_ and are scoped to your account and plan. Get your key from the developer portal. Do not expose keys in client-side code — requests must originate server-side.',
+    dataLine: 'Authorization: Bearer weavn_live_••••',
     dataColor: '#00C48C',
   },
   {
@@ -175,7 +175,7 @@ const FAQ_CARDS = [
   },
   {
     q: 'Is there an uptime SLA?',
-    a: 'Enterprise plans include a formal SLA. All other plans target 99.5% uptime. Status and incident history available at status.webdocai.com. Planned maintenance is announced 48 hours in advance via dashboard notification.',
+    a: 'Enterprise plans include a formal SLA. All other plans target 99.5% uptime. Status and incident history available at status.weavn.app. Planned maintenance is announced 48 hours in advance via dashboard notification.',
     dataLine: 'target_uptime: 99.5% · SLA: enterprise_only',
     dataColor: '#00C48C',
   },
@@ -329,7 +329,7 @@ function TabbedCode({ compact }: { compact?: boolean }) {
           <pre style={preStyle}>
             <span style={{ color: '#00C8FF' }}>curl</span>{' -X POST \\\n'}
             {'  https://api.weavn.app/v1/scan \\\n'}
-            {'  -H '}<span style={{ color: '#8080c0' }}>&quot;Authorization: Bearer </span><span style={{ color: '#9D8CFF' }}>wdoc_live_••••</span><span style={{ color: '#8080c0' }}>&quot;</span>{' \\\n'}
+            {'  -H '}<span style={{ color: '#8080c0' }}>&quot;Authorization: Bearer </span><span style={{ color: '#9D8CFF' }}>weavn_live_••••</span><span style={{ color: '#8080c0' }}>&quot;</span>{' \\\n'}
             {'  -H '}<span style={{ color: '#8080c0' }}>&quot;Content-Type: application/json&quot;</span>{' \\\n'}
             {'  -d '}<span style={{ color: '#8080c0' }}>&apos;&#123;&quot;url&quot;: &quot;</span><span style={{ color: '#00C48C' }}>https://your-site.com</span><span style={{ color: '#8080c0' }}>&quot;&#125;&apos;</span>
           </pre>
@@ -340,7 +340,7 @@ function TabbedCode({ compact }: { compact?: boolean }) {
             {'  '}<span style={{ color: '#00C48C' }}>&apos;https://api.weavn.app/v1/scan&apos;</span>{',\n  {\n'}
             {'    '}<span style={{ color: '#8080c0' }}>method</span>{': '}<span style={{ color: '#00C48C' }}>&apos;POST&apos;</span>{',\n'}
             {'    '}<span style={{ color: '#8080c0' }}>headers</span>{': {\n'}
-            {'      '}<span style={{ color: '#8080c0' }}>&apos;Authorization&apos;</span>{': '}<span style={{ color: '#00C48C' }}>&apos;Bearer </span><span style={{ color: '#9D8CFF' }}>wdoc_live_••••</span><span style={{ color: '#00C48C' }}>&apos;</span>{',\n'}
+            {'      '}<span style={{ color: '#8080c0' }}>&apos;Authorization&apos;</span>{': '}<span style={{ color: '#00C48C' }}>&apos;Bearer </span><span style={{ color: '#9D8CFF' }}>weavn_live_••••</span><span style={{ color: '#00C48C' }}>&apos;</span>{',\n'}
             {'      '}<span style={{ color: '#8080c0' }}>&apos;Content-Type&apos;</span>{': '}<span style={{ color: '#00C48C' }}>&apos;application/json&apos;</span>{',\n'}
             {'    },\n    '}<span style={{ color: '#8080c0' }}>body</span>{': JSON.stringify({ '}<span style={{ color: '#8080c0' }}>url</span>{': '}<span style={{ color: '#00C48C' }}>&apos;https://your-site.com&apos;</span>{' }),\n  },\n)\n'}
             <span style={{ color: '#8080c0' }}>const</span>{' data = '}<span style={{ color: '#8080c0' }}>await</span>{' res.json()'}
@@ -350,7 +350,7 @@ function TabbedCode({ compact }: { compact?: boolean }) {
           <pre style={preStyle}>
             <span style={{ color: '#8080c0' }}>import</span>{' requests\n\n'}
             {'resp = requests.post(\n  '}<span style={{ color: '#00C48C' }}>&apos;https://api.weavn.app/v1/scan&apos;</span>{',\n'}
-            {'  headers={'}<span style={{ color: '#8080c0' }}>&apos;Authorization&apos;</span>{': '}<span style={{ color: '#00C48C' }}>&apos;Bearer </span><span style={{ color: '#9D8CFF' }}>wdoc_live_••••</span><span style={{ color: '#00C48C' }}>&apos;</span>{'}, \n'}
+            {'  headers={'}<span style={{ color: '#8080c0' }}>&apos;Authorization&apos;</span>{': '}<span style={{ color: '#00C48C' }}>&apos;Bearer </span><span style={{ color: '#9D8CFF' }}>weavn_live_••••</span><span style={{ color: '#00C48C' }}>&apos;</span>{'}, \n'}
             {'  json={'}<span style={{ color: '#8080c0' }}>&apos;url&apos;</span>{': '}<span style={{ color: '#00C48C' }}>&apos;https://your-site.com&apos;</span>{'}, \n)\n'}
             {'data = resp.json()'}
           </pre>
@@ -1019,7 +1019,7 @@ export default function DevelopersPage() {
           <div style={{ marginTop: 32 }}>
             <p style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.18em', color: '#8080c0', margin: '0 0 16px' }}>WEBHOOK PAYLOAD</p>
             <p style={{ ...SANS, fontSize: 13, lineHeight: 1.6, color: '#9398A8', margin: '0 0 20px', maxWidth: 680 }}>
-              Every async and batch scan delivers a <span style={{ ...MONO, fontSize: 12, color: '#8080c0' }}>POST</span> to your registered endpoint when complete. Three delivery attempts: immediate, +5 min, +30 min. Verify with the <span style={{ ...MONO, fontSize: 12, color: '#8080c0' }}>X-WebDoc-Signature</span> header (HMAC-SHA256 of body, keyed with your webhook secret).
+              Every async and batch scan delivers a <span style={{ ...MONO, fontSize: 12, color: '#8080c0' }}>POST</span> to your registered endpoint when complete. Three delivery attempts: immediate, +5 min, +30 min. Verify with the <span style={{ ...MONO, fontSize: 12, color: '#8080c0' }}>X-Weavn-Signature</span> header (HMAC-SHA256 of body, keyed with your webhook secret).
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1068,9 +1068,9 @@ export default function DevelopersPage() {
             {/* Delivery headers reference */}
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 16 }}>
               {[
-                { h: 'X-WebDoc-Event', v: 'scan.completed | scan.failed' },
-                { h: 'X-WebDoc-Signature', v: 'HMAC-SHA256 hex of body' },
-                { h: 'X-WebDoc-Attempt', v: '1 | 2 | 3' },
+                { h: 'X-Weavn-Event', v: 'scan.completed | scan.failed' },
+                { h: 'X-Weavn-Signature', v: 'HMAC-SHA256 hex of body' },
+                { h: 'X-Weavn-Attempt', v: '1 | 2 | 3' },
               ].map(item => (
                 <div key={item.h} style={{ background: '#0A0E18', border: '0.5px solid rgba(255,255,255,0.08)', padding: '7px 12px', display: 'flex', gap: 8 }}>
                   <span style={{ ...MONO, fontSize: 11, color: '#8080c0' }}>{item.h}</span>

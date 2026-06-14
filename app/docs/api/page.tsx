@@ -59,13 +59,13 @@ const NAV_GROUPS: { label: string; items: { id: string; label: string }[] }[] = 
 const EX: Record<string, Record<Lang, string>> = {
   introduction: {
     curl: `curl -X POST https://api.weavn.app/v1/scan \\
-  -H "Authorization: Bearer wdoc_live_••••" \\
+  -H "Authorization: Bearer weavn_live_••••" \\
   -H "Content-Type: application/json" \\
   -d '{"url": "https://yoursite.com"}'`,
     node: `const res = await fetch('https://api.weavn.app/v1/scan', {
   method: 'POST',
   headers: {
-    'Authorization': 'Bearer wdoc_live_••••',
+    'Authorization': 'Bearer weavn_live_••••',
     'Content-Type': 'application/json',
   },
   body: JSON.stringify({ url: 'https://yoursite.com' }),
@@ -75,21 +75,21 @@ const data = await res.json()`,
 
 res = requests.post(
   'https://api.weavn.app/v1/scan',
-  headers={'Authorization': 'Bearer wdoc_live_••••'},
+  headers={'Authorization': 'Bearer weavn_live_••••'},
   json={'url': 'https://yoursite.com'}
 )
 data = res.json()`,
   },
   authentication: {
     curl: `# Include in every request
-curl -H "Authorization: Bearer wdoc_live_••••" \\
+curl -H "Authorization: Bearer weavn_live_••••" \\
   https://api.weavn.app/v1/scans`,
     node: `const headers = {
-  'Authorization': 'Bearer wdoc_live_••••',
+  'Authorization': 'Bearer weavn_live_••••',
   'Content-Type': 'application/json',
 }`,
     python: `headers = {
-  'Authorization': 'Bearer wdoc_live_••••',
+  'Authorization': 'Bearer weavn_live_••••',
   'Content-Type': 'application/json',
 }`,
   },
@@ -135,7 +135,7 @@ X-RateLimit-Reset: 1717200000
   },
   'post-scan': {
     curl: `curl -X POST https://api.weavn.app/v1/scan \\
-  -H "Authorization: Bearer wdoc_live_••••" \\
+  -H "Authorization: Bearer weavn_live_••••" \\
   -H "Content-Type: application/json" \\
   -d '{
     "url": "https://yoursite.com",
@@ -149,7 +149,7 @@ X-RateLimit-Reset: 1717200000
     node: `const res = await fetch('https://api.weavn.app/v1/scan', {
   method: 'POST',
   headers: {
-    'Authorization': 'Bearer wdoc_live_••••',
+    'Authorization': 'Bearer weavn_live_••••',
     'Content-Type': 'application/json',
   },
   body: JSON.stringify({
@@ -166,7 +166,7 @@ const { scan_id, score, findings } = await res.json()`,
 
 res = requests.post(
   'https://api.weavn.app/v1/scan',
-  headers={'Authorization': 'Bearer wdoc_live_••••'},
+  headers={'Authorization': 'Bearer weavn_live_••••'},
   json={
     'url': 'https://yoursite.com',
     'fields': ['score', 'findings', 'copy_rewrites'],
@@ -180,33 +180,33 @@ data = res.json()`,
   },
   'post-scan-batch': {
     curl: `curl -X POST https://api.weavn.app/v1/scan/batch \\
-  -H "Authorization: Bearer wdoc_live_••••" \\
+  -H "Authorization: Bearer weavn_live_••••" \\
   -H "Content-Type: application/json" \\
   -d '{
     "urls": [
       "https://site-a.com",
       "https://site-b.com"
     ],
-    "webhook_url": "https://yourapp.com/webhooks/webdoc"
+    "webhook_url": "https://yourapp.com/webhooks/weavn"
   }'`,
     node: `const res = await fetch('https://api.weavn.app/v1/scan/batch', {
   method: 'POST',
   headers: {
-    'Authorization': 'Bearer wdoc_live_••••',
+    'Authorization': 'Bearer weavn_live_••••',
     'Content-Type': 'application/json',
   },
   body: JSON.stringify({
     urls: ['https://site-a.com', 'https://site-b.com'],
-    webhook_url: 'https://yourapp.com/webhooks/webdoc',
+    webhook_url: 'https://yourapp.com/webhooks/weavn',
   }),
 })
 const { batch_id, scan_ids } = await res.json()`,
     python: `res = requests.post(
   'https://api.weavn.app/v1/scan/batch',
-  headers={'Authorization': 'Bearer wdoc_live_••••'},
+  headers={'Authorization': 'Bearer weavn_live_••••'},
   json={
     'urls': ['https://site-a.com', 'https://site-b.com'],
-    'webhook_url': 'https://yourapp.com/webhooks/webdoc',
+    'webhook_url': 'https://yourapp.com/webhooks/weavn',
   }
 )
 data = res.json()
@@ -215,64 +215,64 @@ print(data['batch_id'])`,
   'get-scans': {
     curl: `# List recent scans
 curl "https://api.weavn.app/v1/scans" \\
-  -H "Authorization: Bearer wdoc_live_••••"
+  -H "Authorization: Bearer weavn_live_••••"
 
 # Filter by domain, paginate
 curl "https://api.weavn.app/v1/scans?limit=5&url=yoursite.com" \\
-  -H "Authorization: Bearer wdoc_live_••••"`,
+  -H "Authorization: Bearer weavn_live_••••"`,
     node: `const res = await fetch(
   'https://api.weavn.app/v1/scans?limit=20',
-  { headers: { 'Authorization': 'Bearer wdoc_live_••••' } }
+  { headers: { 'Authorization': 'Bearer weavn_live_••••' } }
 )
 const { scans, next_cursor } = await res.json()`,
     python: `res = requests.get(
   'https://api.weavn.app/v1/scans',
-  headers={'Authorization': 'Bearer wdoc_live_••••'},
+  headers={'Authorization': 'Bearer weavn_live_••••'},
   params={'limit': 20}
 )
 data = res.json()`,
   },
   'get-scans-id': {
     curl: `curl "https://api.weavn.app/v1/scans/wdsc_abc123" \\
-  -H "Authorization: Bearer wdoc_live_••••"`,
+  -H "Authorization: Bearer weavn_live_••••"`,
     node: `const scanId = 'wdsc_abc123'
 const res = await fetch(
   \`https://api.weavn.app/v1/scans/\${scanId}\`,
-  { headers: { 'Authorization': 'Bearer wdoc_live_••••' } }
+  { headers: { 'Authorization': 'Bearer weavn_live_••••' } }
 )
 const scan = await res.json()`,
     python: `scan_id = 'wdsc_abc123'
 res = requests.get(
   f'https://api.weavn.app/v1/scans/{scan_id}',
-  headers={'Authorization': 'Bearer wdoc_live_••••'}
+  headers={'Authorization': 'Bearer weavn_live_••••'}
 )
 scan = res.json()`,
   },
   'post-webhooks': {
     curl: `curl -X POST https://api.weavn.app/v1/webhooks \\
-  -H "Authorization: Bearer wdoc_live_••••" \\
+  -H "Authorization: Bearer weavn_live_••••" \\
   -H "Content-Type: application/json" \\
   -d '{
-    "url": "https://yourapp.com/webhooks/webdoc",
+    "url": "https://yourapp.com/webhooks/weavn",
     "events": ["scan.completed", "scan.failed"]
   }'`,
     node: `const res = await fetch('https://api.weavn.app/v1/webhooks', {
   method: 'POST',
   headers: {
-    'Authorization': 'Bearer wdoc_live_••••',
+    'Authorization': 'Bearer weavn_live_••••',
     'Content-Type': 'application/json',
   },
   body: JSON.stringify({
-    url: 'https://yourapp.com/webhooks/webdoc',
+    url: 'https://yourapp.com/webhooks/weavn',
     events: ['scan.completed', 'scan.failed'],
   }),
 })
 const { webhook_id } = await res.json()`,
     python: `res = requests.post(
   'https://api.weavn.app/v1/webhooks',
-  headers={'Authorization': 'Bearer wdoc_live_••••'},
+  headers={'Authorization': 'Bearer weavn_live_••••'},
   json={
-    'url': 'https://yourapp.com/webhooks/webdoc',
+    'url': 'https://yourapp.com/webhooks/weavn',
     'events': ['scan.completed', 'scan.failed'],
   }
 )
@@ -281,32 +281,32 @@ print(data['webhook_id'])`,
   },
   'get-webhooks': {
     curl: `curl "https://api.weavn.app/v1/webhooks" \\
-  -H "Authorization: Bearer wdoc_live_••••"`,
+  -H "Authorization: Bearer weavn_live_••••"`,
     node: `const res = await fetch(
   'https://api.weavn.app/v1/webhooks',
-  { headers: { 'Authorization': 'Bearer wdoc_live_••••' } }
+  { headers: { 'Authorization': 'Bearer weavn_live_••••' } }
 )
 const { webhooks } = await res.json()`,
     python: `res = requests.get(
   'https://api.weavn.app/v1/webhooks',
-  headers={'Authorization': 'Bearer wdoc_live_••••'}
+  headers={'Authorization': 'Bearer weavn_live_••••'}
 )
 data = res.json()`,
   },
   'delete-webhooks-id': {
     curl: `curl -X DELETE \\
   "https://api.weavn.app/v1/webhooks/wh_abc123" \\
-  -H "Authorization: Bearer wdoc_live_••••"`,
+  -H "Authorization: Bearer weavn_live_••••"`,
     node: `await fetch(
   'https://api.weavn.app/v1/webhooks/wh_abc123',
   {
     method: 'DELETE',
-    headers: { 'Authorization': 'Bearer wdoc_live_••••' },
+    headers: { 'Authorization': 'Bearer weavn_live_••••' },
   }
 )`,
     python: `requests.delete(
   'https://api.weavn.app/v1/webhooks/wh_abc123',
-  headers={'Authorization': 'Bearer wdoc_live_••••'}
+  headers={'Authorization': 'Bearer weavn_live_••••'}
 )`,
   },
   'webhooks-overview': {
@@ -319,14 +319,14 @@ data = res.json()`,
   "findings_count": 23,
   "timestamp": "2026-06-07T00:00:00Z"
 }`,
-    node: `app.post('/webhooks/webdoc', (req, res) => {
+    node: `app.post('/webhooks/weavn', (req, res) => {
   const { event, scan_id, score } = req.body
   if (event === 'scan.completed') {
     console.log(scan_id, score)
   }
   res.status(200).send('ok')
 })`,
-    python: `@app.route('/webhooks/webdoc', methods=['POST'])
+    python: `@app.route('/webhooks/weavn', methods=['POST'])
 def handle_webhook():
     payload = request.get_json()
     if payload['event'] == 'scan.completed':
@@ -370,7 +370,7 @@ if handler:
   },
   'webhook-delivery': {
     curl: `# Signature header on every delivery
-X-Webdoc-Signature: <HMAC-SHA256 hex of raw body>
+X-Weavn-Signature: <HMAC-SHA256 hex of raw body>
 Content-Type: application/json`,
     node: `import crypto from 'crypto'
 
@@ -399,11 +399,11 @@ def verify(payload, sig, secret):
 # Each attempt has a 10-second timeout
 # After 3 failures — marked failed, no further retries`,
     node: `// Respond 200 immediately, process async
-app.post('/webhooks/webdoc', async (req, res) => {
+app.post('/webhooks/weavn', async (req, res) => {
   res.status(200).send('ok')
   await processAsync(req.body)
 })`,
-    python: `@app.route('/webhooks/webdoc', methods=['POST'])
+    python: `@app.route('/webhooks/weavn', methods=['POST'])
 def handle_webhook():
     payload = request.get_json()
     queue.enqueue(process_webhook, payload)
@@ -811,7 +811,7 @@ export default function ApiDocsPage() {
             <Body mb={16}>
               All API requests require a Bearer token in the Authorization header. Get your API key from the developer portal.
             </Body>
-            <Mono>Authorization: Bearer wdoc_live_••••</Mono>
+            <Mono>Authorization: Bearer weavn_live_••••</Mono>
             <p style={{ fontFamily: DISP, fontSize: 12, color: T3, marginTop: 12 }}>
               Keep your API key secret. Do not expose it in client-side code.
             </p>
@@ -975,7 +975,7 @@ export default function ApiDocsPage() {
             <H2>Delivery</H2>
             <Body>
               Every webhook POST includes an{' '}
-              <code style={{ fontFamily: MONO, fontSize: 12 }}>X-Webdoc-Signature</code>{' '}
+              <code style={{ fontFamily: MONO, fontSize: 12 }}>X-Weavn-Signature</code>{' '}
               header containing the HMAC-SHA256 hex of the raw request body. Verify it against your webhook secret using timing-safe comparison.
             </Body>
             <Body>

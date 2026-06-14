@@ -281,8 +281,8 @@ export default function TermsPage() {
             gap: 8,
           }}
         >
-          <span>WEBDOC AI · TERMS OF SERVICE</span>
-          <span>© {new Date().getFullYear()} WEBDOC AI</span>
+          <span>WEAVN · TERMS OF SERVICE</span>
+          <span>© {new Date().getFullYear()} WEAVN</span>
         </div>
       </main>
     </div>

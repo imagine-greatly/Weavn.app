@@ -216,7 +216,7 @@ function OverviewTab({ scansUsed, spend, avgScore, keyPrefix, scanRows }: Overvi
         <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mb-4">API KEY</div>
         <div className="flex items-center gap-3">
           <div className="font-mono text-sm text-text-secondary bg-background-subtle border border-background-border px-4 py-2.5 flex-1 min-w-0 truncate">
-            {keyPrefix ?? 'wdoc_live_'}••••••••••••••••••••••••••
+            {keyPrefix ?? 'weavn_live_'}••••••••••••••••••••••••••
           </div>
           <button
             onClick={handleCopy}
@@ -514,7 +514,7 @@ function DocsTab() {
         <>
           <span className="text-cyan-DEFAULT">curl</span>
           <span className="text-text-tertiary">{' -X POST https://api.weavn.app/v1/scan \\\n  -H "Authorization: Bearer '}</span>
-          <span className="text-score-high">wdoc_live_••••</span>
+          <span className="text-score-high">weavn_live_••••</span>
           <span className="text-text-tertiary">{'" \\\n  -d \'{"url": "'}</span>
           <span className="text-score-high">https://your-site.com</span>
           <span className="text-text-tertiary">{"\"}'"}  </span>
@@ -529,7 +529,7 @@ function DocsTab() {
         <>
           <span className="text-cyan-DEFAULT">curl</span>
           <span className="text-text-tertiary">{' -X POST https://api.weavn.app/v1/scan/batch \\\n  -H "Authorization: Bearer '}</span>
-          <span className="text-score-high">wdoc_live_••••</span>
+          <span className="text-score-high">weavn_live_••••</span>
           <span className="text-text-tertiary">{'" \\\n  -d \'{"urls": ["'}</span>
           <span className="text-score-high">https://site-a.com</span>
           <span className="text-text-tertiary">{'", "'}</span>
@@ -548,7 +548,7 @@ function DocsTab() {
           <span className="text-text-tertiary">{' https://api.weavn.app/v1/scans/'}</span>
           <span className="text-score-high">scan_01HXYZ7K2M9N3P4Q</span>
           <span className="text-text-tertiary">{' \\\n  -H "Authorization: Bearer '}</span>
-          <span className="text-score-high">wdoc_live_••••</span>
+          <span className="text-score-high">weavn_live_••••</span>
           <span className="text-text-tertiary">{'"'}</span>
         </>
       ),

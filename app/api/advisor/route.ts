@@ -2,7 +2,7 @@ import { cookies } from "next/headers";
 import { createServerClient } from "@supabase/ssr";
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
-import { formatWebDocScoreWithBand } from "@/lib/displayScoreColor";
+import { formatWeavnScoreWithBand } from "@/lib/displayScoreColor";
 import {
   buildDashboardAdvisorBaseSystemPrompt,
   buildDashboardAdvisorIssueSystemPrompt,
@@ -51,7 +51,7 @@ function buildContext(
     return [
       `═══ SITE: ${r.domain} ═══`,
       `Scan date: ${formatDate(r.created_at)}`,
-      `Weavn Score: ${formatWebDocScoreWithBand(hs)}`,
+      `Weavn Score: ${formatWeavnScoreWithBand(hs)}`,
       ``,
       `CATEGORY SCORES:`,
       `  Revenue impact: ${cs.psychology ?? 0}/100`,
@@ -163,7 +163,7 @@ export async function POST(req: NextRequest) {
           .map((r) => {
             const h = r.analysis?.healthScore;
             const line =
-              typeof h === "number" ? formatWebDocScoreWithBand(h) : `Weavn Score: ${String(h ?? "Unknown")}`;
+              typeof h === "number" ? formatWeavnScoreWithBand(h) : `Weavn Score: ${String(h ?? "Unknown")}`;
             return `- ${r.domain}: ${line}`;
           })
           .join("\n")}`
@@ -186,7 +186,7 @@ export async function POST(req: NextRequest) {
   const domainLabel = activeDomain || "this site";
   const hs0 = reports[0]?.analysis?.healthScore;
   const healthScoreForIssue =
-    typeof hs0 === "number" ? formatWebDocScoreWithBand(hs0) : "Unknown";
+    typeof hs0 === "number" ? formatWeavnScoreWithBand(hs0) : "Unknown";
   const systemPrompt = issueContext
     ? buildDashboardAdvisorIssueSystemPrompt(domainLabel, healthScoreForIssue, issueContext)
     : baseSystemPrompt;

@@ -60,9 +60,9 @@ async function deliverWithRetry(
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-WebDoc-Event": eventHeader,
-          "X-WebDoc-Signature": signature,
-          "X-WebDoc-Attempt": String(attempt + 1),
+          "X-Weavn-Event": eventHeader,
+          "X-Weavn-Signature": signature,
+          "X-Weavn-Attempt": String(attempt + 1),
         },
         body,
         signal: controller.signal,

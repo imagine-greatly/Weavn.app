@@ -1,12 +1,12 @@
-# WebDoc Clinical Futurism Design System
+# Weavn Clinical Futurism Design System
 
-> This file is the master aesthetic reference for webdoc.ai. Every component should align with these rules for color, motion, typography, and interaction.
+> This file is the master aesthetic reference for weavn.app. Every component should align with these rules for color, motion, typography, and interaction.
 
 ---
 
 ## Master Aesthetic Prompt (Reference)
 
-Before we build any pages, set up the complete visual identity and atmosphere for webdoc.ai. This governs every single component we build after this.
+Before we build any pages, set up the complete visual identity and atmosphere for weavn.app. This governs every single component we build after this.
 
 The core visual concept: **Intelligence flowing through a system.** Like a circuit board lighting up, or neural pathways firing. Mostly dark, with moments of electric intensity. The darkness is what makes the energy mean something.
 

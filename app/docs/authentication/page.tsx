@@ -15,7 +15,7 @@ export default function AuthenticationPage() {
 
         <h2 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 22, fontWeight: 700, color: "var(--text-primary)", marginBottom: 16 }}>Bearer token format</h2>
         <pre style={{ background: "rgba(0,0,0,0.5)", border: "1px solid rgba(255,255,255,0.08)", borderLeft: "3px solid var(--cyan)", borderRadius: 4, padding: "20px 24px", fontFamily: "'Space Mono', monospace", fontSize: 13, color: "var(--text-primary)", marginBottom: 32, overflowX: "auto", lineHeight: 1.7 }}>
-          {`Authorization: Bearer wdoc_live_<32-hex-chars>`}
+          {`Authorization: Bearer weavn_live_<32-hex-chars>`}
         </pre>
 
         <h2 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 22, fontWeight: 700, color: "var(--text-primary)", marginBottom: 16 }}>Where to find your key</h2>

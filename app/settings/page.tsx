@@ -379,7 +379,7 @@ export default function SettingsPage() {
       if (metaRes.error) throw new Error(metaRes.error.message ?? "Profile update failed.");
       if (emailRes.error) throw new Error(emailRes.error.message ?? "Email update failed.");
       setProfileStatus("Saved");
-      window.dispatchEvent(new CustomEvent("webdoc:profile-updated", { detail: { fullName: fullName.trim(), email: email.trim() } }));
+      window.dispatchEvent(new CustomEvent("weavn:profile-updated", { detail: { fullName: fullName.trim(), email: email.trim() } }));
       setTimeout(() => setProfileStatus(""), 2000);
     } catch (err) {
       setProfileError(err instanceof Error ? err.message : "An error occurred. Try again.");

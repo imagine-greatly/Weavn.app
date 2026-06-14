@@ -1,7 +1,7 @@
 'use client'
 import { useId, type CSSProperties } from 'react'
 
-interface WebdocMarkProps {
+interface WeavnMarkProps {
   size?: number
   animated?: boolean
   style?: CSSProperties
@@ -11,7 +11,7 @@ interface WebdocMarkProps {
   ringTints?: { outer: string; middle: string; inner: string }
 }
 
-export default function WebdocMark({ size = 46, animated = false, style, className, ringTints }: WebdocMarkProps) {
+export default function WeavnMark({ size = 46, animated = false, style, className, ringTints }: WeavnMarkProps) {
   const rawId = useId()
   const uid = rawId.replace(/:/g, '_')
   const w = size

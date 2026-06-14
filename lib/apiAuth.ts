@@ -55,7 +55,7 @@ export async function validateApiKey(req: NextRequest): Promise<ApiKeyRecord | n
 
 export function generateApiKey(): { key: string; hash: string; prefix: string } {
   const random = randomBytes(16).toString("hex"); // 32 hex chars
-  const key = `wdoc_live_${random}`;
+  const key = `weavn_live_${random}`;
   const prefix = key.slice(0, 12);
   const hash = sha256(key);
   return { key, hash, prefix };

@@ -7,7 +7,7 @@ import { ChevronDown, Menu } from "lucide-react";
 import { getSupabaseBrowserClient } from "@/lib/supabaseBrowser";
 
 /**
- * Global navbar for webdoc.ai.
+ * Global navbar for weavn.app.
  * Refer to DESIGN_SYSTEM.md for glow tiers, animations, typography.
  * Fixed, z-100, 64px height. Precision instrument panel — clinical, with pulsing dot as the only "alive" element at rest.
  */
@@ -40,7 +40,7 @@ export default function Navbar() {
       const nextName = String(data.user?.user_metadata?.full_name ?? "").trim();
       setDisplayName(nextName);
       if (!nextName && data.user?.email) {
-        const skipped = window.localStorage.getItem("webdoc_name_prompt_dismissed") === "1";
+        const skipped = window.localStorage.getItem("weavn_name_prompt_dismissed") === "1";
         setNameModalSkipped(skipped);
         if (!skipped) setShowNameModal(true);
       }
@@ -60,8 +60,8 @@ export default function Navbar() {
         setUserEmail(customEvent.detail.email);
       }
     };
-    window.addEventListener("webdoc:profile-updated", onProfileUpdated as EventListener);
-    return () => window.removeEventListener("webdoc:profile-updated", onProfileUpdated as EventListener);
+    window.addEventListener("weavn:profile-updated", onProfileUpdated as EventListener);
+    return () => window.removeEventListener("weavn:profile-updated", onProfileUpdated as EventListener);
   }, []);
 
   useEffect(() => {
@@ -530,7 +530,7 @@ export default function Navbar() {
           <button
             type="button"
             onClick={() => {
-              window.localStorage.setItem("webdoc_name_prompt_dismissed", "1");
+              window.localStorage.setItem("weavn_name_prompt_dismissed", "1");
               setNameModalSkipped(true);
               setShowNameModal(false);
             }}

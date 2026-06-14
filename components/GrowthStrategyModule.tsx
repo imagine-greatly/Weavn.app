@@ -51,7 +51,7 @@ export default function GrowthStrategyModule({
   domain: string;
 }) {
   const quickWins = useMemo(() => data.quickWins.slice(0, 5), [data.quickWins]);
-  const localStorageKey = `webdoc_growth_quickwins_${domain}`;
+  const localStorageKey = `weavn_growth_quickwins_${domain}`;
 
   const [checked, setChecked] = useState<boolean[]>(() => Array.from({ length: 5 }, () => false));
   const [openPlan, setOpenPlan] = useState(false);

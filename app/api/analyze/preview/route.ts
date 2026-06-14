@@ -18,7 +18,7 @@ const AXIOS_OPTIONS = {
   timeout: 12000,
   maxRedirects: 5,
   headers: {
-    "User-Agent": "Mozilla/5.0 (compatible; webdoc-scanner/1.0)",
+    "User-Agent": "Mozilla/5.0 (compatible; weavn-scanner/1.0)",
     Accept: "text/html",
   },
   validateStatus: () => true,

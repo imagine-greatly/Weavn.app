@@ -1,4 +1,4 @@
--- Auth foundation for webdoc.ai
+-- Auth foundation for weavn.app
 -- Adds: profiles, user-scoped reports, resolved_findings.
 
 -- Profiles: one row per auth user

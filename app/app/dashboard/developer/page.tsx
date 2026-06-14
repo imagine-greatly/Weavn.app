@@ -54,8 +54,8 @@ const PLAN = {
   overage: null as { scans: number; cost: string; rate: string } | null,
 }
 
-const API_KEY_MASKED  = 'wdoc_live_••••••••••••••••••••'
-const API_KEY_FULL    = 'wdoc_live_sk_example_abcdef1234567890'
+const API_KEY_MASKED  = 'weavn_live_••••••••••••••••••••'
+const API_KEY_FULL    = 'weavn_live_sk_example_abcdef1234567890'
 
 const REQUESTS: ScanRequest[] = [
   { timestamp: 'Jun 8, 12:34:21', url: 'https://acme-saas.com',           duration_ms: 87340, cost: '$0.15', status: 200 },
@@ -71,7 +71,7 @@ const REQUESTS: ScanRequest[] = [
 const WEBHOOKS: Webhook[] = [
   {
     id: 'wh_01',
-    url: 'https://myapp.com/webhooks/webdoc',
+    url: 'https://myapp.com/webhooks/weavn',
     events: ['scan.completed', 'scan.failed'],
     last_status: 200,
     last_at: 'Jun 8, 12:34:22',
@@ -86,12 +86,12 @@ const INVOICES: Invoice[] = [
 
 // ── Bash code snippets ────────────────────────────────────────────────────────
 const CODE_BASIC = `curl -X POST https://api.weavn.app/v1/scan \\
-  -H "Authorization: Bearer wdoc_live_••••" \\
+  -H "Authorization: Bearer weavn_live_••••" \\
   -H "Content-Type: application/json" \\
   -d '{"url": "https://your-site.com"}'`
 
 const CODE_ASYNC = `curl -X POST https://api.weavn.app/v1/scan \\
-  -H "Authorization: Bearer wdoc_live_••••" \\
+  -H "Authorization: Bearer weavn_live_••••" \\
   -H "Content-Type: application/json" \\
   -d '{
     "url": "https://your-site.com",
@@ -100,7 +100,7 @@ const CODE_ASYNC = `curl -X POST https://api.weavn.app/v1/scan \\
   }'`
 
 const CODE_BATCH = `curl -X POST https://api.weavn.app/v1/scan/batch \\
-  -H "Authorization: Bearer wdoc_live_••••" \\
+  -H "Authorization: Bearer weavn_live_••••" \\
   -H "Content-Type: application/json" \\
   -d '{
     "urls": [

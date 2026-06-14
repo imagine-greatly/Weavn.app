@@ -845,7 +845,7 @@ const LIGHTHOUSE_ITEMS = [
   'No fixes — just scores and flags',
 ]
 
-const WEBDOC_ROWS = [
+const WEAVN_ROWS = [
   { title: 'Renders your live DOM in headless Chrome', sub: 'not text you paste — your actual live page' },
   { title: '307 structured checks across 27 categories', sub: 'parallel execution · citation required per finding' },
   { title: 'Ranked by estimated conversion impact', sub: 'P1 matters most · work down the list' },
@@ -890,7 +890,7 @@ function ComparisonSection() {
             ))}
           </div>
 
-          {/* Column 3 — webdoc (dominant) */}
+          {/* Column 3 — weavn (dominant) */}
           <div style={{
             border:'1px solid rgba(111,155,198,0.5)',
             background:'rgba(111,155,198,0.04)',
@@ -906,8 +906,8 @@ function ComparisonSection() {
             {/* Divider */}
             <div style={{ height:1,background:'rgba(111,155,198,0.15)',marginBottom:20 }} />
             {/* Six capability rows */}
-            {WEBDOC_ROWS.map((row, ri) => (
-              <div key={ri} style={{ borderLeft:'2px solid rgba(111,155,198,0.3)',paddingLeft:12,marginBottom: ri < WEBDOC_ROWS.length - 1 ? 16 : 0 }}>
+            {WEAVN_ROWS.map((row, ri) => (
+              <div key={ri} style={{ borderLeft:'2px solid rgba(111,155,198,0.3)',paddingLeft:12,marginBottom: ri < WEAVN_ROWS.length - 1 ? 16 : 0 }}>
                 <p style={{ ...DISP,fontSize:15,fontWeight:500,color:INK_PRI,margin:'0 0 3px',lineHeight:1.3 }}>{row.title}</p>
                 <p style={{ ...MONO,fontSize:10,color:INK_MUT,margin:0,lineHeight:1.4 }}>{row.sub}</p>
               </div>

@@ -39,7 +39,7 @@ export async function fetchAndFingerprint(url: string): Promise<string | null> {
     try {
       const res = await fetch(url, {
         signal: controller.signal,
-        headers: { "User-Agent": "Mozilla/5.0 (compatible; WebdocBot/1.0)" },
+        headers: { "User-Agent": "Mozilla/5.0 (compatible; WeavnBot/1.0)" },
       });
       if (!res.ok) return null;
       html = await res.text();

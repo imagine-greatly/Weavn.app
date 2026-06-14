@@ -26,8 +26,8 @@ type ReportRow = {
 };
 
 type ChatMessage = { role: "user" | "assistant"; content: string };
-const STORAGE_KEY_PREFIX = "webdoc_report_";
-const STORAGE_META_KEY_PREFIX = "webdoc_report_meta_";
+const STORAGE_KEY_PREFIX = "weavn_report_";
+const STORAGE_META_KEY_PREFIX = "weavn_report_meta_";
 
 const FALLBACK_ADVISOR_CHIPS = [
   "What is the fastest resolution?",
@@ -783,8 +783,8 @@ export default function IssuePage() {
 
         if (found) {
           const briefKeyVariants = [...new Set([
-            `webdoc_brief_${reportId}_${findingId}`,
-            extKey ? `webdoc_brief_${reportId}_${extKey}` : "",
+            `weavn_brief_${reportId}_${findingId}`,
+            extKey ? `weavn_brief_${reportId}_${extKey}` : "",
           ].filter(Boolean))];
           for (const bk of briefKeyVariants) {
             try {
@@ -985,7 +985,7 @@ export default function IssuePage() {
       }
 
       try {
-        const cachedBriefRaw = localStorage.getItem(`webdoc_brief_${reportId}_${findingId}`);
+        const cachedBriefRaw = localStorage.getItem(`weavn_brief_${reportId}_${findingId}`);
         if (cachedBriefRaw) {
           const cachedBrief = JSON.parse(cachedBriefRaw) as FindingBriefExpansion;
           setBriefExpanded(cachedBrief);

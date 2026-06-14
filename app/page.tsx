@@ -164,7 +164,7 @@ function HeroForkSection() {
 
         {/* Subhead */}
         <p className="font-body text-lg text-text-secondary leading-relaxed text-center max-w-[600px] mx-auto mt-5 mb-0">
-          POST any URL. Get a weave back in 90 seconds — a 0–100 score, ranked fixes, AI-rewritten copy, and percentile benchmarks.
+          POST any URL. Get a report back in 90 seconds — a 0–100 score, ranked fixes, AI-rewritten copy, and percentile benchmarks.
         </p>
 
         {/* Scan-engine glyph */}
@@ -326,7 +326,7 @@ function FooterSection() {
           <Link href="/playground" className="font-body text-sm text-text-secondary hover:text-text-primary block mb-2 no-underline">API Playground →</Link>
           <Link href="/docs/api" className="font-body text-sm text-text-secondary hover:text-text-primary block mb-2 no-underline">API Reference →</Link>
           <Link href="/changelog" className="font-body text-sm text-text-secondary hover:text-text-primary block mb-2 no-underline">Changelog →</Link>
-          <a href="https://status.webdocai.com" className="font-body text-sm text-text-secondary hover:text-text-primary block mb-2 no-underline" target="_blank" rel="noopener noreferrer">Status →</a>
+          <a href="https://status.weavn.app" className="font-body text-sm text-text-secondary hover:text-text-primary block mb-2 no-underline" target="_blank" rel="noopener noreferrer">Status →</a>
         </div>
       </div>
       <div className="border-t border-background-border">

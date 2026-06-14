@@ -1,11 +1,11 @@
 ---
 name: project-overview
-description: webdoc.ai website conversion intelligence platform — public REST API on top of existing scanning engine, three dashboard types
+description: weavn.app website conversion intelligence platform — public REST API on top of existing scanning engine, three dashboard types
 metadata:
   type: project
 ---
 
-webdoc.ai is a SaaS website conversion intelligence platform. Core product: paste a URL, get 307 automated checks, ranked findings, rewritten copy, dimension scores — results in ~90 seconds.
+weavn.app is a SaaS website conversion intelligence platform. Core product: paste a URL, get 307 automated checks, ranked findings, rewritten copy, dimension scores — results in ~90 seconds.
 
 **Why:** Building a public REST API on top of the existing scanning engine to unlock agency and developer plans.
 

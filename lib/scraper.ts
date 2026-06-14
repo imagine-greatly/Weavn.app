@@ -811,7 +811,7 @@ export function cleanHtml(html: string): string {
 
 // -- SMART TRUNCATION ---------------------------------------------------
 const TRUNCATION_SEPARATOR = '\n<!-- ... content truncated ... -->\n'
-const SUBPAGE_TRUNCATION_SIGNAL = '\n<!-- [WEBDOC: content truncated at scraper limit — page continues beyond this point] -->\n'
+const SUBPAGE_TRUNCATION_SIGNAL = '\n<!-- [WEAVN: content truncated at scraper limit — page continues beyond this point] -->\n'
 
 export function applySmartTruncation(
   html: string,

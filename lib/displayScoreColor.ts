@@ -21,7 +21,7 @@ export function displayScoreRgb(score: number): string {
 }
 
 /** Severity band under the dashboard gauge (all caps). */
-export function webDocScoreBandUpper(score: number): string {
+export function weavnScoreBandUpper(score: number): string {
   const s = Math.max(0, Math.min(100, Number(score) || 0));
   if (s <= 44) return "CRITICAL RISK";
   if (s <= 64) return "NEEDS WORK";
@@ -29,7 +29,7 @@ export function webDocScoreBandUpper(score: number): string {
 }
 
 /** Advisor / narrative copy: score with band, e.g. "68/100 — Good Foundation band". */
-export function formatWebDocScoreWithBand(score: number): string {
+export function formatWeavnScoreWithBand(score: number): string {
   const s = Math.max(0, Math.min(100, Math.round(Number(score) || 0)));
   const band =
     s <= 44 ? "Critical Risk" : s <= 64 ? "Needs Work" : "Good Foundation";

@@ -72,10 +72,10 @@ export default function WebhooksDocsPage() {
               <td style={{ padding: "12px 20px", color: CYAN }}>Content-Type</td><td style={{ padding: "12px 20px", color: "var(--text-secondary)" }}>application/json</td>
             </tr>
             <tr style={{ borderBottom: `1px solid rgba(255,255,255,0.04)` }}>
-              <td style={{ padding: "12px 20px", color: CYAN }}>X-WebDoc-Event</td><td style={{ padding: "12px 20px", color: "var(--text-secondary)" }}>The event type (e.g., scan.completed)</td>
+              <td style={{ padding: "12px 20px", color: CYAN }}>X-Weavn-Event</td><td style={{ padding: "12px 20px", color: "var(--text-secondary)" }}>The event type (e.g., scan.completed)</td>
             </tr>
             <tr>
-              <td style={{ padding: "12px 20px", color: CYAN }}>X-WebDoc-Signature</td><td style={{ padding: "12px 20px", color: "var(--text-secondary)" }}>HMAC-SHA256 hex of the request body using your webhook secret</td>
+              <td style={{ padding: "12px 20px", color: CYAN }}>X-Weavn-Signature</td><td style={{ padding: "12px 20px", color: "var(--text-secondary)" }}>HMAC-SHA256 hex of the request body using your webhook secret</td>
             </tr>
           </tbody>
         </table>
@@ -94,7 +94,7 @@ function verifyWebhook(body: string, signature: string, secret: string): boolean
 
 // In your route handler:
 const body = await request.text()
-const sig = request.headers.get("x-webdoc-signature") ?? ""
+const sig = request.headers.get("x-weavn-signature") ?? ""
 if (!verifyWebhook(body, sig, process.env.WEBHOOK_SECRET!)) {
   return new Response("Unauthorized", { status: 401 })
 }

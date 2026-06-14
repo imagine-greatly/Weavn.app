@@ -16,13 +16,13 @@ const EXAMPLES = [
     lang: "Node.js",
     desc: "Scan a prospect's site, extract score + top 3 findings, and format for personalized outreach.",
     code: `// cold-email-enrichment.js
-const WEBDOC_API_KEY = process.env.WEBDOC_API_KEY
+const WEAVN_API_KEY = process.env.WEAVN_API_KEY
 
 async function enrichProspect(domain) {
   const res = await fetch('https://api.weavn.app/v1/scan', {
     method: 'POST',
     headers: {
-      'Authorization': \`Bearer \${WEBDOC_API_KEY}\`,
+      'Authorization': \`Bearer \${WEAVN_API_KEY}\`,
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({ url: \`https://\${domain}\` })
@@ -78,7 +78,7 @@ async function handleToolCall(toolName, toolInput) {
     const res = await fetch('https://api.weavn.app/v1/scan', {
       method: 'POST',
       headers: {
-        'Authorization': \`Bearer \${process.env.WEBDOC_API_KEY}\`,
+        'Authorization': \`Bearer \${process.env.WEAVN_API_KEY}\`,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({ url: toolInput.url })
@@ -113,7 +113,7 @@ if (response.stop_reason === 'tool_use') {
   "authentication": "headerAuth",
   "headerAuth": {
     "name": "Authorization",
-    "value": "Bearer {{ $env.WEBDOC_API_KEY }}"
+    "value": "Bearer {{ $env.WEAVN_API_KEY }}"
   },
   "body": {
     "url": "{{ $json.website_url }}"
@@ -130,11 +130,11 @@ if (response.stop_reason === 'tool_use') {
 // Example: update CRM record with score
 // Field mapping for CRM Update node:
 {
-  "webdoc_score":   "{{ $json.score }}",
-  "webdoc_verdict": "{{ $json.verdict }}",
-  "webdoc_issue_1": "{{ $json.findings[0].title }}",
-  "webdoc_issue_2": "{{ $json.findings[1].title }}",
-  "webdoc_scanned": "{{ $json.scanned_at }}"
+  "weavn_score":   "{{ $json.score }}",
+  "weavn_verdict": "{{ $json.verdict }}",
+  "weavn_issue_1": "{{ $json.findings[0].title }}",
+  "weavn_issue_2": "{{ $json.findings[1].title }}",
+  "weavn_scanned": "{{ $json.scanned_at }}"
 }`,
   },
   {
@@ -143,14 +143,14 @@ if (response.stop_reason === 'tool_use') {
     lang: "Node.js",
     desc: "Scan multiple URLs concurrently with Promise.allSettled to handle partial failures gracefully.",
     code: `// bulk-scan.js
-const WEBDOC_API_KEY = process.env.WEBDOC_API_KEY
+const WEAVN_API_KEY = process.env.WEAVN_API_KEY
 const CONCURRENCY = 3 // stay under rate limits
 
 async function scanUrl(url) {
   const res = await fetch('https://api.weavn.app/v1/scan', {
     method: 'POST',
     headers: {
-      'Authorization': \`Bearer \${WEBDOC_API_KEY}\`,
+      'Authorization': \`Bearer \${WEAVN_API_KEY}\`,
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({ url })

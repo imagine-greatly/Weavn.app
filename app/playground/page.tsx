@@ -124,7 +124,7 @@ export default function PlaygroundPage() {
   }
 
   function handleCopyKey() {
-    navigator.clipboard?.writeText('wdoc_live_example_key')
+    navigator.clipboard?.writeText('weavn_live_example_key')
     setKeyCopied(true)
     setTimeout(() => setKeyCopied(false), 2000)
   }
@@ -132,7 +132,7 @@ export default function PlaygroundPage() {
   const targetUrl  = url || 'https://your-site.com'
   const curlCode   = [
     `curl -X POST https://api.weavn.app/v1/scan \\`,
-    `  -H "Authorization: Bearer wdoc_live_••••••••" \\`,
+    `  -H "Authorization: Bearer weavn_live_••••••••" \\`,
     `  -H "Content-Type: application/json" \\`,
     `  -d '{`,
     `    "url": "${targetUrl}",`,
@@ -278,7 +278,7 @@ export default function PlaygroundPage() {
               </div>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
                 <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 13, color: '#00C48C' }}>
-                  wdoc_live_••••••••
+                  weavn_live_••••••••
                 </span>
                 <button
                   onClick={handleCopyKey}

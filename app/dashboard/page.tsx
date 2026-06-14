@@ -1054,7 +1054,7 @@ const REPORT_FINDINGS = [
 
 function MultiSiteSection() {
   return (
-    <section style={{
+    <section id="agencies" style={{
       padding: '80px 48px',
       borderTop: '0.5px solid rgba(111,155,198,0.1)',
       position: 'relative',
@@ -1068,14 +1068,14 @@ function MultiSiteSection() {
       {/* Bloom anchored behind the branded agency report card (top of section) */}
       <Bloom size={820} opacity={0.16} style={{ top:'34%' }} />
       <div style={{ maxWidth: 1000, margin: '0 auto', position: 'relative', zIndex: 1 }}>
-        <p style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.2em', color: INK_MUT, margin: '0 0 16px' }}>
-          AT SCALE
+        <p style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.2em', color: STEEL, margin: '0 0 16px' }}>
+          FOR AGENCIES
         </p>
         <h2 style={{ ...DISP, fontWeight: 700, fontSize: 'clamp(28px,4vw,44px)', color: INK_PRI, letterSpacing: '-0.5px', margin: '0 0 16px', lineHeight: 1.1 }}>
-          Run client audits. Deliver branded reports. Track every site.
+          Deliver branded audits under your own name.
         </h2>
-        <p style={{ ...SANS, fontSize: 15, color: INK_SEC, lineHeight: 1.65, maxWidth: 600, margin: '0 0 40px' }}>
-          The Agency plan turns Weavn into a client-facing audit tool. Scan any site, deliver a white-label report under your brand, and track score history per client — all from one dashboard.
+        <p style={{ ...SANS, fontSize: 15, color: INK_SEC, lineHeight: 1.65, maxWidth: 620, margin: '0 0 40px' }}>
+          Every report exports as a white-label PDF under your agency&apos;s name, logo, and color — Weavn never appears. Scan any client site, hand them the audit as your own, and track score history per client from one dashboard.
         </p>
 
         {/* White-label report mock — STATIC ILLUSTRATION */}
@@ -1156,10 +1156,21 @@ function MultiSiteSection() {
           This is what your client receives. Your name, your branding. Weavn never appears in the deliverable.
         </p>
 
-        {/* Capability grid */}
-        <div className="d-agency-cap-grid" style={{ display:'grid', gridTemplateColumns:'repeat(2,1fr)', gap:24, marginBottom:40 }}>
+        {/* Benefit pillars — what the agency plan includes */}
+        <p style={{ ...MONO, fontSize:10, textTransform:'uppercase', letterSpacing:'0.18em', color:'rgba(111,155,198,0.5)', margin:'0 0 16px' }}>
+          INCLUDED WITH THE AGENCY PLAN
+        </p>
+        <div className="d-agency-cap-grid" style={{ display:'grid', gridTemplateColumns:'repeat(2,1fr)', gap:16, marginBottom:40 }}>
           {AGENCY_CAPS.map(cap => (
-            <div key={cap.title} style={{ borderLeft:'2px solid rgba(111,155,198,0.25)', paddingLeft:16 }}>
+            <div key={cap.title} style={{
+              background: SURFACE,
+              borderTop:'1px solid rgba(255,255,255,0.1)',
+              borderLeft:'1px solid rgba(255,255,255,0.06)',
+              borderRight:'1px solid rgba(255,255,255,0.03)',
+              borderBottom:'1px solid rgba(255,255,255,0.03)',
+              boxShadow:'inset 0 1px 0 0 rgba(111,155,198,0.12)',
+              padding:'20px 22px',
+            }}>
               <p style={{ ...DISP, fontSize:15, fontWeight:600, color:INK_PRI, margin:'0 0 6px' }}>{cap.title}</p>
               <p style={{ ...SANS, fontSize:13, color:INK_MUT, margin:0, lineHeight:1.6 }}>{cap.desc}</p>
             </div>
@@ -1173,7 +1184,7 @@ function MultiSiteSection() {
             color:'rgba(111,155,198,0.75)', border:'0.5px solid rgba(111,155,198,0.3)',
             padding:'10px 16px', textDecoration:'none', display:'inline-block',
           }}>SEE AGENCY PLAN →</a>
-          <p style={{ ...MONO, fontSize:11, color:INK_MUT, margin:0 }}>Agency plan · $149/mo · white-label included · 100 API calls</p>
+          <p style={{ ...MONO, fontSize:11, color:INK_MUT, margin:0 }}>Agency · $149/mo · white-label included · 100 API calls</p>
         </div>
       </div>
     </section>
@@ -1485,6 +1496,12 @@ export default function DashboardPage() {
   return (
     <main style={{ minHeight:'100vh' }}>
       <HeroSection />
+      {/* Early white-label mention — understated, links to the agency section */}
+      <div style={{ textAlign:'center', padding:'4px 48px 28px', background:BG_BASE }}>
+        <a href="#agencies" style={{ ...MONO, fontSize:11, letterSpacing:'0.06em', color:'rgba(111,155,198,0.7)', textDecoration:'none' }}>
+          Agencies: deliver white-label reports under your own brand →
+        </a>
+      </div>
       <OutputSection />
       <GroundingProofSection />
       <WhatWeCheckSection />

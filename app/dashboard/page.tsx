@@ -23,13 +23,9 @@ const INK_MUT    = '#6E7587'   // --ink-muted
 const SURFACE    = '#0A0E18'   // --surface
 const BG_BASE    = '#050810'   // --bg / bg-base
 
-// ── Ambient tonal scale (TIER 3) ──────────────────────────────────────────────
-// Two muted, steel-tinted dark bands alternated down the page so it reads as
-// distinct bands instead of one flat slab. Banding ONLY — tone-raised stays
-// unmistakably dark and carries no glow, so it can never rival the emphasized
-// report card (TIER 2) or the bell-curve peak (TIER 1). Both are existing tokens.
-const TONE_BASE   = BG_BASE    // #050810 — near-black base band
-const TONE_RAISED = '#0D1020'  // --bg-card — faintly bluer, perceptibly lighter, still clearly dark
+// ── Continuous surface ────────────────────────────────────────────────────────
+// One near-black surface (BG_BASE) down the entire page. Section separation now
+// comes from spacing + content-anchored Bloom (below) — not alternating bg bands.
 
 // ── Shared chrome ─────────────────────────────────────────────────────────────
 
@@ -42,6 +38,44 @@ function Ticks() {
       <div aria-hidden style={{ position:'absolute',bottom:20,left:20,width:14,height:14,borderBottom:b,borderLeft:b,pointerEvents:'none',zIndex:1 }} />
       <div aria-hidden style={{ position:'absolute',bottom:20,right:20,width:14,height:14,borderBottom:b,borderRight:b,pointerEvents:'none',zIndex:1 }} />
     </>
+  )
+}
+
+// ── Bloom primitive ───────────────────────────────────────────────────────────
+// Reusable ambient steel-blue radial glow. Large, heavily feathered, low opacity —
+// reads as depth behind content, never a spotlight. Anchor one behind real content:
+// drop it as a child of a position:relative + overflow:hidden wrapper (it sits at
+// zIndex 0; give the content wrapper zIndex 1 so copy stays above the glow).
+// Defaults center on the offset parent; override via `style` (top/left/right/transform).
+function Bloom({
+  size = 700,
+  opacity = 0.16,
+  className,
+  style,
+}: {
+  size?: number
+  opacity?: number
+  className?: string
+  style?: React.CSSProperties
+}) {
+  const o = (m: number) => +(opacity * m).toFixed(4)
+  return (
+    <div
+      aria-hidden="true"
+      className={className}
+      style={{
+        position: 'absolute',
+        top: '50%',
+        left: '50%',
+        transform: 'translate(-50%, -50%)',
+        width: size,
+        height: size,
+        background: `radial-gradient(circle at center, rgba(111,155,198,${opacity}) 0%, rgba(111,155,198,${o(0.42)}) 30%, rgba(111,155,198,${o(0.14)}) 52%, rgba(111,155,198,${o(0.04)}) 70%, transparent 82%)`,
+        pointerEvents: 'none',
+        zIndex: 0,
+        ...style,
+      }}
+    />
   )
 }
 
@@ -112,26 +146,11 @@ function HeroSection() {
         alignItems: 'center',
         padding: '112px 48px 80px',
         position: 'relative',
-        overflow: 'visible',
+        overflow: 'hidden',
       }}
     >
-      {/* Hero bloom */}
-      <div
-        aria-hidden="true"
-        style={{
-          position: 'absolute',
-          top: '-200px',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          width: '1000px',
-          height: '800px',
-          background: 'radial-gradient(ellipse at 50% 35%, rgba(111, 155, 198, 0.05) 0%, rgba(111, 155, 198, 0.015) 40%, rgba(111, 155, 198, 0.004) 65%, transparent 85%)',
-          pointerEvents: 'none',
-          zIndex: 0,
-          borderRadius: '50%',
-          animation: 'bloom-breathe 5s ease-in-out infinite',
-        }}
-      />
+      {/* Hero bloom — anchored behind the score-ring area (right side) */}
+      <Bloom size={720} opacity={0.17} style={{ left: 'auto', right: '-80px', top: '50%', transform: 'translateY(-50%)' }} />
       <Ticks />
       {/* GHOST_RING_START — remove this entire block to delete */}
       <div
@@ -440,7 +459,7 @@ function OutputSection() {
 
 function GroundingProofSection() {
   return (
-    <section style={{ padding:'80px 48px',borderTop:'0.5px solid rgba(111,155,198,0.1)',position:'relative',overflow:'visible',background:TONE_RAISED }}>
+    <section style={{ padding:'80px 48px',borderTop:'0.5px solid rgba(111,155,198,0.1)',position:'relative',overflow:'visible',background:BG_BASE }}>
       <style>{`@media(max-width:639px){.d-ground-cols{flex-direction:column!important}}`}</style>
       <div style={{ maxWidth:1000,margin:'0 auto' }}>
         <p style={{ ...MONO,fontSize:11,textTransform:'uppercase',letterSpacing:'0.2em',color:INK_MUT,margin:'0 0 16px' }}>
@@ -522,8 +541,7 @@ const SCOPE_ITEMS_RIGHT = [
 
 function WhatWeCheckSection() {
   return (
-    <section style={{ padding:'80px 48px',borderTop:'0.5px solid rgba(111,155,198,0.1)',position:'relative',overflow:'visible',background:TONE_BASE }}>
-      {/* Ambient TIER 3 — tonal band only; prior faint section bloom removed (scattered glow → tonal rhythm). */}
+    <section style={{ padding:'80px 48px',borderTop:'0.5px solid rgba(111,155,198,0.1)',position:'relative',overflow:'visible',background:BG_BASE }}>
       <style>{`@media(max-width:767px){.d-scope-grid{grid-template-columns:1fr!important}}`}</style>
       <div style={{ maxWidth:1000,margin:'0 auto',position:'relative',zIndex:1 }}>
         <p style={{ ...MONO,fontSize:11,textTransform:'uppercase',letterSpacing:'0.2em',color:STEEL,margin:'0 0 16px' }}>
@@ -726,7 +744,7 @@ function HowItWorksSection() {
   }, [])
 
   return (
-    <section style={{ padding: '80px 48px', borderTop: '0.5px solid rgba(111,155,198,0.1)', position: 'relative', overflow: 'visible', background: TONE_RAISED }}>
+    <section style={{ padding: '80px 48px', borderTop: '0.5px solid rgba(111,155,198,0.1)', position: 'relative', overflow: 'visible', background: BG_BASE }}>
       <style>{`
         @keyframes pl-blink    { 0%,49%{opacity:1} 50%,100%{opacity:0} }
         @keyframes pl-check    { 0%{background:rgba(111,155,198,0.15)} 50%,80%{background:var(--target-bg)} 100%{background:rgba(111,155,198,0.15)} }
@@ -742,7 +760,6 @@ function HowItWorksSection() {
           .d-pl-wrap        { height:auto!important }
           .d-pl-step        { position:static!important; width:100%!important; margin-bottom:24px!important; left:auto!important; top:auto!important }
           .d-pl-svg         { display:none!important }
-          .d-pl-void-bloom  { display:none!important }
         }
       `}</style>
 
@@ -756,24 +773,6 @@ function HowItWorksSection() {
 
         {/* Step pipeline */}
         <div ref={wrapRef} className="d-pl-wrap" style={{ position: 'relative', height: wrapH }}>
-
-          {/* HOW_VOID_BLOOM_START — faint steel-blue glow filling the empty half of each alternating
-              row so the voids read as atmosphere, not dead space. Static, well below the bell-curve
-              intensity; self-contained — remove this block to delete. */}
-          {PIPELINE_STEPS.map((step, i) => (
-            <div key={`void-${step.num}`} aria-hidden="true" className="d-pl-void-bloom" style={{
-              position: 'absolute',
-              top: tops[i] ?? i * 360,
-              left: i % 2 === 0 ? 'auto' : 0,    // card on left → bloom on the empty right half, and vice versa
-              right: i % 2 === 0 ? 0 : 'auto',
-              width: '46%',
-              height: 280,
-              background: 'radial-gradient(ellipse at 50% 45%, rgba(111, 155, 198, 0.03) 0%, rgba(111, 155, 198, 0.008) 45%, transparent 72%)',
-              pointerEvents: 'none',
-              zIndex: 0,
-            }} />
-          ))}
-          {/* HOW_VOID_BLOOM_END */}
 
           {/* SVG connector — strict top/bottom edge routing measured from real card edges (see HowItWorksSection).
               overflow:visible + no clip-path / mask / overflow:hidden so the path can never be visually cropped into a card. */}
@@ -858,12 +857,14 @@ const STAT_CHIPS = ['307 CHECKS', '~90s MEDIAN', '4,812 SITES SCANNED']
 
 function ComparisonSection() {
   return (
-    <section style={{ padding:'80px 48px',borderTop:'0.5px solid rgba(111,155,198,0.1)',position:'relative',overflow:'visible',background:TONE_BASE }}>
+    <section style={{ padding:'80px 48px',borderTop:'0.5px solid rgba(111,155,198,0.1)',position:'relative',overflow:'hidden',background:BG_BASE }}>
       <style>{`
         @media(max-width:1023px){.d-compare-grid{grid-template-columns:25fr 25fr 50fr!important}}
         @media(max-width:767px){.d-compare-grid{grid-template-columns:1fr!important}.d-compare-ghost-row{display:flex!important;gap:16px!important}.d-compare-ghost-row>div{flex:1!important}}
       `}</style>
-      <div style={{ maxWidth:1200,margin:'0 auto' }}>
+      {/* Bloom anchored behind the "WHAT YOU ACTUALLY GET" (Weavn) panel on the right */}
+      <Bloom size={760} opacity={0.15} style={{ left:'76%', top:'56%' }} />
+      <div style={{ maxWidth:1200,margin:'0 auto',position:'relative',zIndex:1 }}>
         <p style={{ ...MONO,fontSize:11,textTransform:'uppercase',letterSpacing:'0.2em',color:STEEL,margin:'0 0 16px' }}>
           HOW IT COMPARES
         </p>
@@ -961,9 +962,10 @@ const OBJECTIONS: ObjectionCard[] = [
 function WhyDifferentSection() {
   const [hoveredFaq, setHoveredFaq] = useState<number | null>(null)
   return (
-    <section style={{ padding:'80px 48px',borderTop:'0.5px solid rgba(111,155,198,0.1)',position:'relative',overflow:'visible',background:TONE_BASE }}>
-      {/* Ambient TIER 3 — tonal band only; prior faint section bloom removed (scattered glow → tonal rhythm).
-          Base tone here is deliberate: keeps SURFACE cards legible and stays quiet right before the bell-curve peak. */}
+    <section style={{ padding:'80px 48px',borderTop:'0.5px solid rgba(111,155,198,0.1)',position:'relative',overflow:'hidden',background:BG_BASE }}>
+      {/* PLACEHOLDER BLOOM — reserved slot for the score-breakdown visual (built in a later pass),
+          anchored behind the scoring explanation ("How is the score calculated / what does 61 mean"). */}
+      <Bloom size={640} opacity={0.12} style={{ top:'55%', left:'36%' }} />
       <style>{`@media(max-width:767px){.d-diff-grid{grid-template-columns:1fr!important}}`}</style>
       <Ticks />
       <div style={{ maxWidth:1200,margin:'0 auto',position:'relative',zIndex:1 }}>
@@ -1044,15 +1046,16 @@ function MultiSiteSection() {
       padding: '80px 48px',
       borderTop: '0.5px solid rgba(111,155,198,0.1)',
       position: 'relative',
-      overflow: 'visible',
-      background: TONE_RAISED,
+      overflow: 'hidden',
+      background: BG_BASE,
     }}>
-      {/* Ambient TIER 3 — tonal band only; prior d-bloom-atscale section bloom removed (scattered glow → tonal rhythm). */}
       <style>{`
         @media(max-width:767px){.d-agency-cap-grid{grid-template-columns:1fr!important}}
         @media(max-width:639px){.d-report-meta{flex-direction:column!important;gap:8px!important}.d-report-table-row{flex-wrap:wrap!important}}
       `}</style>
-      <div style={{ maxWidth: 1000, margin: '0 auto' }}>
+      {/* Bloom anchored behind the branded agency report card (top of section) */}
+      <Bloom size={820} opacity={0.16} style={{ top:'34%' }} />
+      <div style={{ maxWidth: 1000, margin: '0 auto', position: 'relative', zIndex: 1 }}>
         <p style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.2em', color: INK_MUT, margin: '0 0 16px' }}>
           AT SCALE
         </p>
@@ -1066,15 +1069,15 @@ function MultiSiteSection() {
         {/* White-label report mock — STATIC ILLUSTRATION */}
         <div style={{
           background: 'rgba(6,9,18,0.95)',
-          border: '1px solid rgba(157,140,255,0.2)',
-          boxShadow: '0 0 60px rgba(157,140,255,0.06), inset 0 1px 0 0 rgba(157,140,255,0.15)',
+          border: '1px solid rgba(111,155,198,0.2)',
+          boxShadow: '0 0 60px rgba(111,155,198,0.06), inset 0 1px 0 0 rgba(111,155,198,0.15)',
           marginBottom: 12,
         }}>
           {/* Report header */}
-          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'28px 32px', borderBottom:'1px solid rgba(157,140,255,0.1)', flexWrap:'wrap', gap:16 }}>
+          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'28px 32px', borderBottom:'1px solid rgba(111,155,198,0.1)', flexWrap:'wrap', gap:16 }}>
             <div style={{ display:'flex', alignItems:'center', gap:16 }}>
-              <div style={{ width:52, height:52, background:'rgba(157,140,255,0.15)', border:'1px solid rgba(157,140,255,0.3)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
-                <span style={{ ...MONO, fontSize:18, fontWeight:700, color:'rgba(157,140,255,0.9)' }}>AC</span>
+              <div style={{ width:52, height:52, background:'rgba(111,155,198,0.15)', border:'1px solid rgba(111,155,198,0.3)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+                <span style={{ ...MONO, fontSize:18, fontWeight:700, color:'rgba(111,155,198,0.9)' }}>AC</span>
               </div>
               <div>
                 <p style={{ ...DISP, fontSize:22, fontWeight:700, color:INK_PRI, margin:'0 0 3px' }}>ACME AGENCY</p>
@@ -1095,14 +1098,14 @@ function MultiSiteSection() {
           </div>
 
           {/* Meta row */}
-          <div className="d-report-meta" style={{ display:'flex', padding:'12px 32px', background:'rgba(157,140,255,0.03)', borderBottom:'1px solid rgba(157,140,255,0.08)', gap:0 }}>
+          <div className="d-report-meta" style={{ display:'flex', padding:'12px 32px', background:'rgba(111,155,198,0.03)', borderBottom:'1px solid rgba(111,155,198,0.08)', gap:0 }}>
             {[
               { label:'CLIENT SITE', val:'acme-client.com' },
               { label:'SCAN DATE',   val:'June 11, 2026' },
               { label:'VERTICAL',    val:'B2B SaaS' },
               { label:'FINDINGS',    val:'23 total · 4 critical' },
             ].map((m, mi, arr) => (
-              <div key={mi} style={{ flex:1, paddingRight:16, paddingLeft: mi > 0 ? 16 : 0, borderLeft: mi > 0 ? '1px solid rgba(157,140,255,0.1)' : 'none' }}>
+              <div key={mi} style={{ flex:1, paddingRight:16, paddingLeft: mi > 0 ? 16 : 0, borderLeft: mi > 0 ? '1px solid rgba(111,155,198,0.1)' : 'none' }}>
                 <p style={{ ...MONO, fontSize:8, textTransform:'uppercase', letterSpacing:'0.15em', color:INK_MUT, margin:'0 0 2px' }}>{m.label}</p>
                 <p style={{ ...MONO, fontSize:11, color:INK_SEC, margin:0 }}>{m.val}</p>
               </div>
@@ -1112,7 +1115,7 @@ function MultiSiteSection() {
           {/* Findings table */}
           <div style={{ padding:'0 32px 28px' }}>
             {/* Table header */}
-            <div style={{ display:'grid', gridTemplateColumns:'40px 80px 1fr 80px 100px', gap:12, padding:'12px 0', borderBottom:'1px solid rgba(157,140,255,0.12)', marginBottom:4 }}>
+            <div style={{ display:'grid', gridTemplateColumns:'40px 80px 1fr 80px 100px', gap:12, padding:'12px 0', borderBottom:'1px solid rgba(111,155,198,0.12)', marginBottom:4 }}>
               {['PRIORITY','SEVERITY','FINDING','EST. LIFT','STATUS'].map(h => (
                 <p key={h} style={{ ...MONO, fontSize:8, textTransform:'uppercase', letterSpacing:'0.15em', color:INK_MUT, margin:0 }}>{h}</p>
               ))}
@@ -1130,7 +1133,7 @@ function MultiSiteSection() {
           </div>
 
           {/* Report footer */}
-          <div style={{ display:'flex', justifyContent:'space-between', padding:'16px 32px', borderTop:'1px solid rgba(157,140,255,0.08)', background:'rgba(157,140,255,0.02)', flexWrap:'wrap', gap:8 }}>
+          <div style={{ display:'flex', justifyContent:'space-between', padding:'16px 32px', borderTop:'1px solid rgba(111,155,198,0.08)', background:'rgba(111,155,198,0.02)', flexWrap:'wrap', gap:8 }}>
             <p style={{ ...MONO, fontSize:9, color:INK_MUT, margin:0 }}>ACME AGENCY · Conversion Intelligence</p>
             <p style={{ ...MONO, fontSize:9, color:INK_MUT, margin:0 }}>Powered by Weavn · 307 checks · verified findings</p>
             <p style={{ ...MONO, fontSize:9, color:INK_MUT, margin:0 }}>CONFIDENTIAL · acme-client.com</p>
@@ -1144,7 +1147,7 @@ function MultiSiteSection() {
         {/* Capability grid */}
         <div className="d-agency-cap-grid" style={{ display:'grid', gridTemplateColumns:'repeat(2,1fr)', gap:24, marginBottom:40 }}>
           {AGENCY_CAPS.map(cap => (
-            <div key={cap.title} style={{ borderLeft:'2px solid rgba(157,140,255,0.25)', paddingLeft:16 }}>
+            <div key={cap.title} style={{ borderLeft:'2px solid rgba(111,155,198,0.25)', paddingLeft:16 }}>
               <p style={{ ...DISP, fontSize:15, fontWeight:600, color:INK_PRI, margin:'0 0 6px' }}>{cap.title}</p>
               <p style={{ ...SANS, fontSize:13, color:INK_MUT, margin:0, lineHeight:1.6 }}>{cap.desc}</p>
             </div>
@@ -1155,7 +1158,7 @@ function MultiSiteSection() {
         <div style={{ display:'flex', alignItems:'center', gap:20, flexWrap:'wrap' }}>
           <a href="#pricing" style={{
             ...MONO, fontSize:12, textTransform:'uppercase', letterSpacing:'0.1em',
-            color:'rgba(157,140,255,0.75)', border:'0.5px solid rgba(157,140,255,0.3)',
+            color:'rgba(111,155,198,0.75)', border:'0.5px solid rgba(111,155,198,0.3)',
             padding:'10px 16px', textDecoration:'none', display:'inline-block',
           }}>SEE AGENCY PLAN →</a>
           <p style={{ ...MONO, fontSize:11, color:INK_MUT, margin:0 }}>Agency plan · $149/mo · white-label included · 100 API calls</p>
@@ -1254,8 +1257,8 @@ function PricingSection() {
     }
     if (card.name === 'Agency') {
       return hov
-        ? 'inset 0 1px 0 0 rgba(157, 140, 255, 0.22), 0 0 0 1px rgba(157, 140, 255, 0.12), 0 0 20px rgba(157, 140, 255, 0.05)'
-        : 'inset 0 1px 0 0 rgba(157, 140, 255, 0.1)'
+        ? 'inset 0 1px 0 0 rgba(111, 155, 198, 0.22), 0 0 0 1px rgba(111, 155, 198, 0.12), 0 0 20px rgba(111, 155, 198, 0.05)'
+        : 'inset 0 1px 0 0 rgba(111, 155, 198, 0.1)'
     }
     if (card.name === 'Enterprise') {
       return hov
@@ -1268,7 +1271,7 @@ function PricingSection() {
       : 'inset 0 1px 0 0 rgba(255, 255, 255, 0.06)'
   }
   return (
-    <section id="pricing" style={{ padding:'80px 48px',borderTop:'0.5px solid rgba(111,155,198,0.1)',position:'relative',overflow:'visible',background:TONE_BASE }}>
+    <section id="pricing" style={{ padding:'80px 48px',borderTop:'0.5px solid rgba(111,155,198,0.1)',position:'relative',overflow:'visible',background:BG_BASE }}>
       <style>{`
         @media(max-width:1023px){.d-price-grid{grid-template-columns:repeat(2,1fr)!important}}
         @media(max-width:639px){.d-price-grid{grid-template-columns:1fr!important}}

@@ -64,13 +64,10 @@ export default function LandingCorpusStats() {
         }
       `}</style>
 
-      {/* Atmosphere */}
+      {/* Atmosphere — steel-blue only */}
       <div aria-hidden style={{
         position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0,
-        background: [
-          'radial-gradient(ellipse 1200px 600px at 50% 30%, rgba(111,155,198,0.05) 0%, transparent 60%)',
-          'radial-gradient(ellipse 600px 400px at 20% 60%, rgba(157,140,255,0.03) 0%, transparent 55%)',
-        ].join(', '),
+        background: 'radial-gradient(ellipse 1200px 600px at 50% 30%, rgba(111,155,198,0.05) 0%, transparent 60%)',
       }} />
 
       {/* Corner ticks */}
@@ -150,7 +147,7 @@ export default function LandingCorpusStats() {
               { k: 'updated',     v: 'weekly', vc: '#00C48C' },
             ] as { k: string; v: string; vc: string }[]).map(row => (
               <div key={row.k} style={{ ...MONO, fontSize: 11, display: 'flex' }}>
-                <span style={{ color: '#8080c0' }}>{row.k}</span>
+                <span style={{ color: '#6F9BC6' }}>{row.k}</span>
                 <span style={{ color: '#6E7587' }}>: </span>
                 <span style={{ color: row.vc }}>{row.v}</span>
               </div>

@@ -141,20 +141,21 @@ export default function Navbar() {
         href="/"
         className="group flex min-w-0 flex-1 items-center"
         aria-label="Weavn home"
-        style={{ textDecoration: "none", color: "inherit", gap: "10px", cursor: "pointer" }}
+        style={{ textDecoration: "none", color: "inherit", gap: "6px", cursor: "pointer" }}
       >
-        <WebdocMark size={52} animated={false} />
+        <WebdocMark size={60} animated={false} />
+        {/* Wordmark — surface-neutral: single solid primary-text token, no per-letter color split.
+            Never tinted steel/purple; the mark carries the brand color, the wordmark stays neutral. */}
         <span
           style={{
             fontFamily: "var(--font-orbitron), sans-serif",
             fontSize: 18,
             fontWeight: 700,
             lineHeight: 1,
-            display: "flex",
+            color: "var(--text-primary)",
           }}
         >
-          <span style={{ color: "#FFFFFF" }}>Weavn</span>
-          <span style={{ color: "#6F9BC6" }}></span>
+          weavn
         </span>
       </Link>
 

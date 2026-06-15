@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { getSupabaseBrowserClient } from '@/lib/supabaseBrowser'
 import ScoreRing from '@/components/ui/ScoreRing'
 import Label from '@/components/ui/Label'
+import WeavnMark from '@/components/ui/WeavnMark'
 import SurfaceToggle, { SURFACE_NAV, useSurfaceCrossing } from '@/components/SurfaceToggle'
 import { FREE_API_TRIAL_SCANS } from '@/lib/constants'
 
@@ -1017,10 +1018,11 @@ export default function DeveloperPortal() {
       {/* ── Left Sidebar ─────────────────────────────────────────────────── */}
       <aside className="w-[220px] flex-shrink-0 bg-background-raised border-r border-background-border flex flex-col h-full">
 
-        {/* Wordmark — constant across both surfaces */}
-        <div className="px-6 py-5 border-b border-background-border">
-          <Link href="/" className="font-display font-extrabold text-sm text-text-primary no-underline">
-            Weavn
+        {/* Identity — WeavnMark + "Weavn" wordmark, constant across both surfaces */}
+        <div className="px-6 py-4 border-b border-background-border">
+          <Link href="/" className="flex items-center gap-2.5 no-underline">
+            <WeavnMark size={26} />
+            <span className="font-display font-extrabold text-sm text-text-primary">Weavn</span>
           </Link>
         </div>
 
@@ -1087,6 +1089,17 @@ export default function DeveloperPortal() {
           ) : (
             <div className="font-mono text-xs text-text-tertiary">{plan} · usage-based</div>
           )}
+        </div>
+
+        {/* Account (very bottom) — shared across both surfaces */}
+        <div className="px-6 py-4 border-t border-background-border">
+          <Link
+            href="/app/account"
+            className="flex items-center justify-between font-mono text-xs text-text-tertiary hover:text-text-primary transition-colors duration-150 no-underline"
+          >
+            <span>Account</span>
+            <span style={{ color: 'var(--surface-accent)' }}>→</span>
+          </Link>
         </div>
 
       </aside>

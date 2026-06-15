@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import ScoreRing from '@/components/ui/ScoreRing'
 
 // ── Steel-blue Dashboard surface tokens ────────────────────────────────────────
 const C = {
@@ -197,17 +198,17 @@ export default function BrandingConfig() {
                 </div>
               </div>
             </div>
-            <div style={{ padding: '18px 20px' }}>
-              <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
-                <span style={{ fontFamily: DISP, fontWeight: 700, fontSize: 34, color: brandColor }}>72</span>
-                <span style={{ fontFamily: MONO, fontSize: 12, color: C.inkMuted }}>/ 100</span>
+            <div style={{ padding: '18px 20px', display: 'flex', alignItems: 'center', gap: 18 }}>
+              {/* Production ScoreRing, tinted to the agency brand color — no hardcoded sample ring. */}
+              <ScoreRing score={72} color={brandColor} size="md" animate={false} showBadge={false} />
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontFamily: MONO, fontSize: 10, color: C.inkMuted, letterSpacing: '0.12em', textTransform: 'uppercase' }}>
+                  Conversion score
+                </div>
+                <p style={{ fontFamily: MONO, fontSize: 10, color: C.inkMuted, margin: '10px 0 0', letterSpacing: '0.06em', lineHeight: 1.6 }}>
+                  Sample — branding applies to shared reports once wired.
+                </p>
               </div>
-              <div style={{ height: 4, background: 'rgba(255,255,255,0.06)', marginTop: 12 }}>
-                <div style={{ width: '72%', height: '100%', background: brandColor }} />
-              </div>
-              <p style={{ fontFamily: MONO, fontSize: 10, color: C.inkMuted, margin: '12px 0 0', letterSpacing: '0.06em' }}>
-                Sample — branding applies to shared reports once wired.
-              </p>
             </div>
           </div>
         </div>

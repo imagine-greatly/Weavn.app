@@ -12,6 +12,9 @@ interface ScoreRingProps {
   animated?: boolean
   /** Force the band color instead of deriving from score — display override for illustrations. */
   band?: 'sev-critical' | 'json-string'
+  /** Arbitrary arc/number color override (e.g. an agency brand color in the white-label
+   *  preview). Wins over `band`/score-derived color and suppresses the CRITICAL badge. */
+  color?: string
   /** Render the CRITICAL badge under the ring (default true). */
   showBadge?: boolean
 }
@@ -27,7 +30,7 @@ const BAND_HEX: Record<string, string> = {
   'json-string':  '#00C48C',
 }
 
-function ScoreRing({ score, size = 'md', label, animate = true, animated, band: bandProp, showBadge = true }: ScoreRingProps) {
+function ScoreRing({ score, size = 'md', label, animate = true, animated, band: bandProp, color: colorProp, showBadge = true }: ScoreRingProps) {
   const shouldAnimate = animated !== undefined ? animated : animate
   const { px, stroke, font, badgeFont } = SIZE_MAP[size]
   const center        = px / 2
@@ -35,8 +38,9 @@ function ScoreRing({ score, size = 'md', label, animate = true, animated, band: 
   const circumference = 2 * Math.PI * radius
   const targetFill    = (Math.min(Math.max(score, 0), 100) / 100) * circumference
   const band          = bandProp ?? scoreBand(score)
-  const isCrit        = band === 'sev-critical'
-  const color         = BAND_HEX[band] ?? '#00C48C'
+  // A brand-color override (white-label preview) wins and never reads as CRITICAL.
+  const isCrit        = !colorProp && band === 'sev-critical'
+  const color         = colorProp ?? BAND_HEX[band] ?? '#00C48C'
 
   const arcRef = useRef<SVGCircleElement>(null)
   const [displayScore, setDisplayScore] = useState(score)

@@ -23,6 +23,14 @@ const config: Config = {
           glow: '#00C8FF15',
           muted: '#00C8FF60',
         },
+        // Developer surface (/console) signature — purple. Mirrors the cyan structure
+        // so the console's class-based chrome repalettes cleanly off the old cyan.
+        purple: {
+          DEFAULT: '#9D8CFF',
+          dim: '#9D8CFF20',
+          glow: '#9D8CFF15',
+          muted: '#8080c0',
+        },
         text: {
           primary: '#F0F4FF',
           secondary: '#8E8EA0',

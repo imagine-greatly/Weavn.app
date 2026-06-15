@@ -61,7 +61,7 @@ export default function KeysPage() {
   if (loading) {
     return (
       <div style={{ background: "#050810", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <p style={{ fontFamily: SM, fontSize: 13, color: "rgba(0,200,255,0.6)", letterSpacing: "0.15em" }}>
+        <p style={{ fontFamily: SM, fontSize: 13, color: "rgba(157,140,255,0.6)", letterSpacing: "0.15em" }}>
           GENERATING KEY...
         </p>
       </div>
@@ -72,7 +72,7 @@ export default function KeysPage() {
     return (
       <div style={{ background: "#050810", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: "0 24px" }}>
         <div style={{ maxWidth: 560, width: "100%", textAlign: "center" }}>
-          <p style={{ fontFamily: SM, fontSize: 11, color: "rgba(0,200,255,0.5)", letterSpacing: "0.2em", marginBottom: 16 }}>
+          <p style={{ fontFamily: SM, fontSize: 11, color: "rgba(157,140,255,0.5)", letterSpacing: "0.2em", marginBottom: 16 }}>
             API KEY ALREADY EXISTS
           </p>
           <p style={{ fontFamily: SG, fontSize: 16, color: "rgba(240,244,255,0.7)", marginBottom: 32 }}>
@@ -80,7 +80,7 @@ export default function KeysPage() {
           </p>
           <button
             onClick={() => router.push("/console")}
-            style={{ background: "#00C8FF", color: "#050810", border: "none", borderRadius: 4, padding: "12px 32px", fontFamily: SM, fontSize: 12, letterSpacing: "0.15em", cursor: "pointer" }}
+            style={{ background: "#9D8CFF", color: "#050810", border: "none", borderRadius: 4, padding: "12px 32px", fontFamily: SM, fontSize: 12, letterSpacing: "0.15em", cursor: "pointer" }}
           >
             GO TO DEVELOPER PORTAL →
           </button>
@@ -101,7 +101,7 @@ export default function KeysPage() {
     <div style={{ background: "#050810", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: "0 24px" }}>
       <div style={{ maxWidth: 640, width: "100%" }}>
         {/* Header */}
-        <p style={{ fontFamily: SM, fontSize: 11, color: "#00C8FF", letterSpacing: "0.2em", marginBottom: 8 }}>
+        <p style={{ fontFamily: SM, fontSize: 11, color: "#9D8CFF", letterSpacing: "0.2em", marginBottom: 8 }}>
           API KEY GENERATED
         </p>
         <h1 style={{ fontFamily: SG, fontSize: 32, fontWeight: 700, color: "#F0F4FF", marginBottom: 8 }}>
@@ -112,8 +112,8 @@ export default function KeysPage() {
         </p>
 
         {/* Key display */}
-        <div style={{ border: "1px solid rgba(0,200,255,0.3)", borderLeft: "3px solid #00C8FF", borderRadius: 4, padding: "24px", marginBottom: 24, background: "rgba(0,200,255,0.04)" }}>
-          <p style={{ fontFamily: SM, fontSize: 11, color: "rgba(0,200,255,0.5)", letterSpacing: "0.15em", marginBottom: 12 }}>
+        <div style={{ border: "1px solid rgba(157,140,255,0.3)", borderLeft: "3px solid #9D8CFF", borderRadius: 4, padding: "24px", marginBottom: 24, background: "rgba(157,140,255,0.04)" }}>
+          <p style={{ fontFamily: SM, fontSize: 11, color: "rgba(157,140,255,0.5)", letterSpacing: "0.15em", marginBottom: 12 }}>
             YOUR API KEY
           </p>
           <p style={{ fontFamily: SM, fontSize: 14, color: "#F0F4FF", wordBreak: "break-all", lineHeight: 1.6 }}>
@@ -135,7 +135,7 @@ export default function KeysPage() {
             onClick={handleCopy}
             style={{
               flex: 1,
-              background: copied ? "#22c55e" : "#00C8FF",
+              background: copied ? "#22c55e" : "#9D8CFF",
               color: "#050810",
               border: "none",
               borderRadius: 4,
@@ -154,8 +154,8 @@ export default function KeysPage() {
             style={{
               flex: 1,
               background: "transparent",
-              color: "#00C8FF",
-              border: "1px solid rgba(0,200,255,0.4)",
+              color: "#9D8CFF",
+              border: "1px solid rgba(157,140,255,0.4)",
               borderRadius: 4,
               padding: "14px 24px",
               fontFamily: SM,

@@ -169,7 +169,7 @@ function SeverityBadge({ severity }: { severity: Severity }) {
 
 function MethodBadge({ method }: { method: 'POST' | 'GET' }) {
   return (
-    <span className={`font-mono text-xs px-2 py-0.5 ${method === 'POST' ? 'bg-cyan-dim text-cyan-DEFAULT' : 'bg-background-subtle text-score-low'}`}>
+    <span className={`font-mono text-xs px-2 py-0.5 ${method === 'POST' ? 'bg-purple-dim text-purple-DEFAULT' : 'bg-background-subtle text-score-low'}`}>
       {method}
     </span>
   )
@@ -410,7 +410,7 @@ function ApiKeysTab({ keyPrefix, onRevoke }: ApiKeysTabProps) {
 
       <Link
         href="/console/keys"
-        className="bg-cyan-DEFAULT text-text-inverse font-body font-semibold text-sm px-5 py-2.5 no-underline inline-block hover:opacity-90 transition-opacity duration-150"
+        className="bg-purple-DEFAULT text-text-inverse font-body font-semibold text-sm px-5 py-2.5 no-underline inline-block hover:opacity-90 transition-opacity duration-150"
       >
         Create new key →
       </Link>
@@ -457,7 +457,7 @@ function WebhooksTab({ webhookLog }: { webhookLog: WebhookLog[] }) {
             <span className="font-body text-xs text-text-secondary">scan.failed</span>
           </label>
         </div>
-        <button className="bg-cyan-DEFAULT text-text-inverse font-body font-semibold text-sm px-5 py-2.5 mt-4 cursor-pointer border-0 hover:opacity-90 transition-opacity duration-150">
+        <button className="bg-purple-DEFAULT text-text-inverse font-body font-semibold text-sm px-5 py-2.5 mt-4 cursor-pointer border-0 hover:opacity-90 transition-opacity duration-150">
           Register endpoint
         </button>
       </div>
@@ -486,7 +486,7 @@ function WebhooksTab({ webhookLog }: { webhookLog: WebhookLog[] }) {
             <span className="font-mono text-xs text-text-tertiary flex-shrink-0">{log.time}</span>
             <span className="font-mono text-xs text-text-tertiary flex-shrink-0">{log.date}</span>
             {log.status === 500 && (
-              <span className="font-body text-xs text-cyan-DEFAULT cursor-pointer hover:underline flex-shrink-0">
+              <span className="font-body text-xs text-purple-DEFAULT cursor-pointer hover:underline flex-shrink-0">
                 Retry
               </span>
             )}
@@ -513,7 +513,7 @@ function DocsTab() {
       desc: 'Submit any URL for a full conversion audit. Returns synchronously in 60–120 seconds, or via webhook in async mode.',
       curl: (
         <>
-          <span className="text-cyan-DEFAULT">curl</span>
+          <span className="text-purple-DEFAULT">curl</span>
           <span className="text-text-tertiary">{' -X POST https://api.weavn.app/v1/scan \\\n  -H "Authorization: Bearer '}</span>
           <span className="text-score-high">weavn_live_••••</span>
           <span className="text-text-tertiary">{'" \\\n  -d \'{"url": "'}</span>
@@ -528,7 +528,7 @@ function DocsTab() {
       desc: 'Submit up to 10 URLs in a single request. Results delivered to your registered webhook endpoint.',
       curl: (
         <>
-          <span className="text-cyan-DEFAULT">curl</span>
+          <span className="text-purple-DEFAULT">curl</span>
           <span className="text-text-tertiary">{' -X POST https://api.weavn.app/v1/scan/batch \\\n  -H "Authorization: Bearer '}</span>
           <span className="text-score-high">weavn_live_••••</span>
           <span className="text-text-tertiary">{'" \\\n  -d \'{"urls": ["'}</span>
@@ -545,7 +545,7 @@ function DocsTab() {
       desc: 'Retrieve a completed scan by ID. Returns the full JSON schema including all findings and AI-rewritten copy.',
       curl: (
         <>
-          <span className="text-cyan-DEFAULT">curl</span>
+          <span className="text-purple-DEFAULT">curl</span>
           <span className="text-text-tertiary">{' https://api.weavn.app/v1/scans/'}</span>
           <span className="text-score-high">scan_01HXYZ7K2M9N3P4Q</span>
           <span className="text-text-tertiary">{' \\\n  -H "Authorization: Bearer '}</span>
@@ -580,7 +580,7 @@ function DocsTab() {
 
       <Link
         href="/docs"
-        className="font-body text-sm text-cyan-DEFAULT mt-6 inline-block no-underline hover:opacity-80 transition-opacity duration-150"
+        className="font-body text-sm text-purple-DEFAULT mt-6 inline-block no-underline hover:opacity-80 transition-opacity duration-150"
       >
         Full API reference →
       </Link>
@@ -696,7 +696,7 @@ export default function DeveloperPortal() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen bg-background-base">
-        <span className="font-mono text-sm" style={{ color: '#00C8FF' }}>Loading...</span>
+        <span className="font-mono text-sm" style={{ color: '#9D8CFF' }}>Loading...</span>
       </div>
     )
   }
@@ -727,7 +727,7 @@ export default function DeveloperPortal() {
               onClick={() => setActiveTab(item.id)}
               className={`w-full flex items-center gap-3 px-6 py-2.5 font-body text-sm cursor-pointer transition-colors duration-150 bg-transparent text-left border-0 border-l-2 ${
                 activeTab === item.id
-                  ? 'bg-background-interactive text-text-primary border-cyan-DEFAULT'
+                  ? 'bg-background-interactive text-text-primary border-purple-DEFAULT'
                   : 'text-text-secondary hover:text-text-primary hover:bg-background-interactive border-transparent'
               }`}
             >
@@ -743,7 +743,7 @@ export default function DeveloperPortal() {
           <div className="font-display font-extrabold text-2xl text-text-primary">{scansUsed}</div>
           <div className="font-mono text-xs text-text-tertiary">{usageLabel} · ${spend.toFixed(2)} spent</div>
           <div className="relative w-full h-px bg-background-border mt-3">
-            <div className="absolute top-0 left-0 h-full bg-cyan-DEFAULT" style={{ width: `${usagePct}%` }} />
+            <div className="absolute top-0 left-0 h-full bg-purple-DEFAULT" style={{ width: `${usagePct}%` }} />
           </div>
         </div>
 
@@ -759,7 +759,7 @@ export default function DeveloperPortal() {
           </span>
           <Link
             href="/playground"
-            className="bg-cyan-DEFAULT text-text-inverse font-body font-semibold text-xs px-4 py-2 no-underline hover:opacity-90 transition-opacity duration-150"
+            className="bg-purple-DEFAULT text-text-inverse font-body font-semibold text-xs px-4 py-2 no-underline hover:opacity-90 transition-opacity duration-150"
           >
             New scan →
           </Link>

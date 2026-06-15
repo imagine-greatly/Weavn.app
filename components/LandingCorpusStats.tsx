@@ -70,6 +70,12 @@ export default function LandingCorpusStats() {
         background: 'radial-gradient(ellipse 1200px 600px at 50% 30%, rgba(111,155,198,0.05) 0%, transparent 60%)',
       }} />
 
+      {/* Ambient steel section bloom — rises from low-center under the curve, fades fully to transparent before the section edges (below content) */}
+      <div aria-hidden style={{
+        position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0,
+        background: 'radial-gradient(ellipse 72% 95% at 50% 105%, rgba(111,155,198,0.11) 0%, rgba(111,155,198,0.046) 38%, transparent 82%)',
+      }} />
+
       {/* Corner ticks */}
       <div aria-hidden style={{ position:'absolute',top:20,left:20,width:14,height:14,borderTop:'0.5px solid rgba(111,155,198,0.18)',borderLeft:'0.5px solid rgba(111,155,198,0.18)',pointerEvents:'none',zIndex:1 }} />
       <div aria-hidden style={{ position:'absolute',top:20,right:20,width:14,height:14,borderTop:'0.5px solid rgba(111,155,198,0.18)',borderRight:'0.5px solid rgba(111,155,198,0.18)',pointerEvents:'none',zIndex:1 }} />
@@ -93,7 +99,7 @@ export default function LandingCorpusStats() {
             Not an average. A percentile.
           </h2>
           <p style={{ ...SANS, fontSize: 15, color: '#9398A8', lineHeight: 1.65, margin: 0 }}>
-            Every site is ranked against hundreds of thousands of real scans. You don't get a score — you get a position.
+            Every scan we run joins the corpus. You're ranked against thousands of real sites in your vertical — and the benchmark sharpens with every scan. You don't get a score. You get a position.
           </p>
         </motion.div>
 
@@ -156,11 +162,11 @@ export default function LandingCorpusStats() {
         </div>
       </div>
 
-      {/* Benchmark bloom — centered on 63rd pct marker position */}
+      {/* Benchmark bloom — centered on 21st pct marker position */}
       <div aria-hidden style={{
         position: 'absolute',
         bottom: 40,
-        left: '68%',
+        left: '51%',
         transform: 'translateX(-50%)',
         width: 500,
         height: 300,
@@ -294,17 +300,17 @@ export default function LandingCorpusStats() {
           transition={{ duration: 0.5, delay: 1.4, ease: 'easeOut' }}
         >
           <line
-            x1="980" y1="0" x2="980" y2="260"
+            x1="735" y1="0" x2="735" y2="260"
             stroke="rgba(140,180,220,0.7)"
             strokeWidth="1.2"
             strokeDasharray="4 3"
           />
-          <circle cx="980" cy="135" r="8" fill="rgba(140,180,220,0.15)" filter="url(#sbMarkerGlow)" />
-          <circle cx="980" cy="135" r="3" fill="rgba(140,180,220,0.9)" style={{ filter:'drop-shadow(0 0 4px rgba(111,155,198,0.6))', animation:'marker-pulse 3s ease-in-out infinite' }} />
-          <g transform="translate(980, -8)">
+          <circle cx="735" cy="135" r="8" fill="rgba(140,180,220,0.15)" filter="url(#sbMarkerGlow)" />
+          <circle cx="735" cy="135" r="3" fill="rgba(140,180,220,0.9)" style={{ filter:'drop-shadow(0 0 4px rgba(111,155,198,0.6))', animation:'marker-pulse 3s ease-in-out infinite' }} />
+          <g transform="translate(735, -8)">
             <rect x="-56" y="-50" width="112" height="44" fill="rgba(111,155,198,0.08)" stroke="rgba(111,155,198,0.3)" strokeWidth="0.5" filter="url(#sbMarkerGlow)" />
             <text x="0" y="-34" textAnchor="middle" fontFamily="IBM Plex Mono, monospace" fontSize="8"  fill="rgba(140,180,220,0.55)" letterSpacing="0.12em">YOUR SITE</text>
-            <text x="0" y="-16" textAnchor="middle" fontFamily="IBM Plex Mono, monospace" fontSize="15" fontWeight="700" fill="rgba(140,180,220,1.0)">63rd pct</text>
+            <text x="0" y="-16" textAnchor="middle" fontFamily="IBM Plex Mono, monospace" fontSize="15" fontWeight="700" fill="rgba(140,180,220,1.0)">21st pct</text>
             <line x1="0" y1="0" x2="0" y2="143" stroke="rgba(140,180,220,0.2)" strokeWidth="0.5" />
           </g>
         </motion.g>

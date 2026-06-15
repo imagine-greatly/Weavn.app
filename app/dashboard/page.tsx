@@ -242,10 +242,10 @@ function HeroSection() {
           <Bloom size={540} opacity={0.18} style={{ top:'34%' }} />
           <div style={{ position:'relative',zIndex:1,display:'flex',flexDirection:'column',alignItems:'center' }}>
             <div ref={ringRef} style={{ filter:'drop-shadow(0 0 10px rgba(232,99,95,0.4))' }}>
-              <ScoreRing score={72} size="lg" band="sev-critical" showBadge={false} animate={ringInView} />
+              <ScoreRing score={37} size="lg" band="sev-critical" showBadge={false} animate={ringInView} />
             </div>
             <p style={{ ...MONO,fontSize:13,color:INK_MUT,margin:'10px 0 0' }}>/ 100</p>
-            <p style={{ ...MONO,fontSize:11,letterSpacing:'0.12em',textTransform:'uppercase',color:STEEL,margin:'12px 0 0' }}>63RD PERCENTILE · B2B SAAS</p>
+            <p style={{ ...MONO,fontSize:11,letterSpacing:'0.12em',textTransform:'uppercase',color:STEEL,margin:'12px 0 0' }}>21ST PERCENTILE · B2B SAAS</p>
 
             {/* Top 3 findings — illustrative, mirrors real report output */}
             <div style={{ width:'100%',maxWidth:400,margin:'26px 0 0',display:'flex',flexDirection:'column',gap:8 }}>
@@ -359,13 +359,13 @@ function OutputSection() {
           <div style={{ display:'flex',alignItems:'center',gap:20,marginBottom:28,paddingBottom:24,borderBottom:'0.5px solid rgba(255,255,255,0.06)',flexWrap:'wrap' }}>
             <div ref={ringRef} style={{ position:'relative' }}>
               <div style={{ filter:'drop-shadow(0 0 5px rgba(232,99,95,0.35))', position:'relative', zIndex: 1 }}>
-                <ScoreRing score={61} size="lg" animate={ringInView} />
+                <ScoreRing score={37} size="lg" animate={ringInView} />
               </div>
             </div>
             <div>
-              <p style={{ ...MONO,fontSize:11,color:'rgba(111, 155, 198, 0.8)',margin:'0 0 6px' }}>63rd percentile · B2B SaaS</p>
+              <p style={{ ...MONO,fontSize:11,color:'rgba(111, 155, 198, 0.8)',margin:'0 0 6px' }}>21st percentile · B2B SaaS</p>
               <p style={{ ...SANS,fontSize:13,color:INK_SEC,margin:0,lineHeight:1.5,maxWidth:480 }}>
-                37 sites in your category score higher. Your top 3 fixes could move you to the 78th percentile.
+                79% of sites in your category score higher. Your top 3 fixes could move you to the 48th percentile.
               </p>
             </div>
           </div>
@@ -471,9 +471,11 @@ function OutputSection() {
 
 function GroundingProofSection() {
   return (
-    <section style={{ padding:'80px 48px',borderTop:'0.5px solid rgba(111,155,198,0.1)',position:'relative',overflow:'visible',background:BG_BASE }}>
+    <section style={{ padding:'80px 48px',borderTop:'0.5px solid rgba(111,155,198,0.1)',position:'relative',overflow:'hidden',background:BG_BASE }}>
       <style>{`@media(max-width:639px){.d-ground-cols{flex-direction:column!important}}`}</style>
-      <div style={{ maxWidth:1000,margin:'0 auto' }}>
+      {/* Ambient steel section bloom — centered, fades to transparent before all edges (below content) */}
+      <div aria-hidden style={{ position:'absolute', inset:0, zIndex:0, pointerEvents:'none', background:'radial-gradient(ellipse 80% 80% at 50% 50%, rgba(111,155,198,0.11) 0%, rgba(111,155,198,0.046) 38%, transparent 82%)' }} />
+      <div style={{ maxWidth:1000,margin:'0 auto',position:'relative',zIndex:1 }}>
         <p style={{ ...MONO,fontSize:11,textTransform:'uppercase',letterSpacing:'0.2em',color:INK_MUT,margin:'0 0 16px' }}>
           HOW IT STAYS HONEST
         </p>
@@ -481,7 +483,7 @@ function GroundingProofSection() {
           Every finding cites evidence. No evidence, no finding.
         </h2>
         <p style={{ ...SANS,fontSize:15,color:INK_SEC,lineHeight:1.65,maxWidth:580,margin:'0 0 40px' }}>
-          The model cannot surface a finding without grounding it in something specific and visible on your page. Findings that fail validation are dropped before they reach you. This is not a preference — it is enforced at the model level.
+          Every finding points to something specific and visible on your page — what was present, absent, or misplaced. Grounding is built into how the scan runs, not bolted on after.
         </p>
 
         {/* Demonstration panel — STATIC ILLUSTRATION */}
@@ -493,7 +495,7 @@ function GroundingProofSection() {
               <p style={{ ...MONO,fontSize:9,textTransform:'uppercase',letterSpacing:'0.18em',color:INK_MUT,margin:'0 0 16px' }}>EVIDENCE ON YOUR PAGE</p>
               <div style={{ display:'flex',flexDirection:'column',gap:3 }}>
                 {[
-                  { key:'h1_text',         val:'"The project management\\ntool built for remote\\nteams."', string:true },
+                  { key:'h1_text',         val:'"The project management tool built for remote teams."', string:true },
                   { key:'location',        val:'above_fold',      string:false },
                   { key:'char_count',      val:'47',              string:false },
                   { key:'classification',  val:'"feature_led"',   string:true  },
@@ -517,11 +519,11 @@ function GroundingProofSection() {
 
           {/* Grounding rule strip */}
           <div style={{ borderTop:'0.5px solid rgba(111,155,198,0.1)',padding:'14px 28px',display:'flex',justifyContent:'center',gap:16,flexWrap:'wrap' }}>
-            <span style={{ ...MONO,fontSize:10,color:STEEL }}>grounding_rule: cite_visible_content_or_fail</span>
+            <span style={{ ...MONO,fontSize:10,color:STEEL }}>grounding_rule: cite_visible_content</span>
             <span style={{ ...MONO,fontSize:10,color:INK_MUT }}>·</span>
-            <span style={{ ...MONO,fontSize:10,color:STEEL }}>findings_dropped_without_evidence: true</span>
+            <span style={{ ...MONO,fontSize:10,color:STEEL }}>evidence_required_per_finding: true</span>
             <span style={{ ...MONO,fontSize:10,color:INK_MUT }}>·</span>
-            <span style={{ ...MONO,fontSize:10,color:STEEL }}>validation: enforced_at_model_level</span>
+            <span style={{ ...MONO,fontSize:10,color:STEEL }}>validation: prompt_enforced</span>
           </div>
         </div>
 
@@ -696,9 +698,9 @@ function StepAnim({ idx }: { idx: number }) {
       <svg width="260" height="110" viewBox="0 0 260 110" aria-hidden>
         <line x1="0" y1="103" x2="260" y2="103" stroke="rgba(111,155,198,0.1)" strokeWidth="0.5" />
         <path d="M 0 103 C 46 103 84 88 108 66 C 126 50 136 28 149 18 C 162 9 169 17 178 33 C 197 66 227 99 260 103" fill="none" stroke="rgba(111,155,198,0.4)" strokeWidth="1.5" strokeLinecap="round" />
-        <line x1="149" y1="4" x2="149" y2="103" stroke="rgba(111,155,198,0.2)" strokeWidth="0.75" strokeDasharray="4 3" />
-        <text x="149" y="14" textAnchor="middle" fontFamily='"IBM Plex Mono",monospace' fontSize="9" fill="rgba(111,155,198,0.5)">63rd pct</text>
-        <circle className="pl-pulse" cx="149" cy="26" r="7" fill="rgba(111,155,198,0.7)" />
+        <line x1="108" y1="4" x2="108" y2="103" stroke="rgba(111,155,198,0.2)" strokeWidth="0.75" strokeDasharray="4 3" />
+        <text x="108" y="14" textAnchor="middle" fontFamily='"IBM Plex Mono",monospace' fontSize="9" fill="rgba(111,155,198,0.5)">21st pct</text>
+        <circle className="pl-pulse" cx="108" cy="66" r="7" fill="rgba(111,155,198,0.7)" />
       </svg>
     </div>
   )
@@ -774,7 +776,10 @@ function HowItWorksSection() {
         }
       `}</style>
 
-      <div style={{ maxWidth: 1000, margin: '0 auto' }}>
+      {/* Light steel bridge bloom — evens out mid-page luminance; stays under content + below the listed section blooms */}
+      <div aria-hidden style={{ position:'absolute', inset:0, zIndex:0, pointerEvents:'none', background:'radial-gradient(ellipse 85% 75% at 50% 50%, rgba(111,155,198,0.06) 0%, rgba(111,155,198,0.025) 38%, transparent 82%)' }} />
+
+      <div style={{ maxWidth: 1000, margin: '0 auto', position: 'relative', zIndex: 1 }}>
         <p style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.2em', color: STEEL, margin: '0 0 16px' }}>
           THE PROCESS
         </p>
@@ -954,8 +959,8 @@ const OBJECTIONS: ObjectionCard[] = [
     tag: 'renders in headless chrome · stack-agnostic · publicly accessible pages only',
   },
   {
-    q: "How is the score calculated? What does 61 actually mean?",
-    a: "Every check returns a pass, fail, or partial result. Fails are weighted by their estimated conversion impact — a broken value proposition costs more points than a missing favicon. The final score is a weighted composite across all 307 checks. A score of 61 means your page is passing the majority of checks but has meaningful conversion gaps, particularly in high-weight categories. Scores below 70 are flagged as critical — the data shows a strong correlation between sub-70 scores and above-average bounce rates in the corpus.",
+    q: "How is the score calculated? What does 37 actually mean?",
+    a: "Every check returns a pass, fail, or partial result. Fails are weighted by their estimated conversion impact — a broken value proposition costs more points than a missing favicon. The final score is a weighted composite across all 307 checks. A 37 means the page is failing a majority of its high-weight checks — the conversion fundamentals, not edge cases — which is why it's flagged critical. Scores below 70 are flagged as critical — the data shows a strong correlation between sub-70 scores and above-average bounce rates in the corpus.",
     tag: 'weighted by conversion impact · not a vanity metric · corpus-calibrated',
   },
   {
@@ -980,13 +985,13 @@ const OBJECTIONS: ObjectionCard[] = [
 type ScoreDim = { label: string; score: number; weight: number; state?: 'fail' | 'partial' | 'pass' }
 
 const SCORE_DIMS: ScoreDim[] = [
-  { label: 'Conversion architecture', score: 62, weight: 0.20 },
-  { label: 'Message clarity',         score: 45, weight: 0.18 },
-  { label: 'Objection handling',      score: 52, weight: 0.15 },
-  { label: 'Offer clarity',           score: 74, weight: 0.15 },
-  { label: 'Trust signals',           score: 44, weight: 0.12 },
-  { label: 'Traffic readiness',       score: 80, weight: 0.10 },
-  { label: 'Technical foundation',    score: 85, weight: 0.10 },
+  { label: 'Conversion architecture', score: 60, weight: 0.10 },
+  { label: 'Message clarity',         score: 20, weight: 0.19 },
+  { label: 'Objection handling',      score: 25, weight: 0.14 },
+  { label: 'Offer clarity',           score: 68, weight: 0.10 },
+  { label: 'Trust signals',           score: 24, weight: 0.10 },
+  { label: 'Traffic readiness',       score: 70, weight: 0.10 },
+  { label: 'Technical foundation',    score: 75, weight: 0.10 },
 ]
 
 const STATE_COLOR: Record<'fail' | 'partial' | 'pass', string> = { fail: CRIT, partial: HIGH_AMB, pass: STEEL }
@@ -1108,7 +1113,7 @@ function WhyDifferentSection() {
           ))}
         </div>
 
-        {/* Score-weight breakdown — visual answer to the "how is the score calculated / what does 61 mean" card */}
+        {/* Score-weight breakdown — visual answer to the "how is the score calculated / what does 37 mean" card */}
         <div style={{ position:'relative', marginTop:56 }}>
           {/* Bloom behind the breakdown — fills the slot reserved in the bloom-system commit */}
           <Bloom size={820} opacity={0.14} style={{ top:'56%' }} />
@@ -1117,10 +1122,10 @@ function WhyDifferentSection() {
               HOW THE SCORE IS BUILT
             </p>
             <h3 style={{ ...DISP,fontWeight:700,fontSize:'clamp(24px,3vw,34px)',color:INK_PRI,letterSpacing:'-0.5px',margin:'0 0 14px',lineHeight:1.15 }}>
-              What a 61 is actually made of.
+              What a 37 is actually made of.
             </h3>
             <p style={{ ...SANS,fontSize:14,color:INK_SEC,lineHeight:1.65,maxWidth:680,margin:'0 0 28px' }}>
-              Seven conversion dimensions, each scored 0–100 and weighted by how much it moves conversion. Your headline score is the weighted sum — a heavily-weighted dimension that fails costs far more than a light one. Here is where the example&apos;s 61 comes from.
+              Seven conversion dimensions, each scored 0–100 and weighted by how much it moves conversion. Your headline score is the weighted sum — a heavily-weighted dimension that fails costs far more than a light one. Here is where the example&apos;s 37 comes from.
             </p>
             <ScoreWeightBreakdown />
           </div>
@@ -1209,13 +1214,13 @@ function MultiSiteSection() {
             <div style={{ textAlign:'center', flexShrink:0 }}>
               <svg width="72" height="72" viewBox="0 0 72 72">
                 <circle cx="36" cy="36" r="28" stroke="rgba(111,155,198,0.12)" strokeWidth="3.5" fill="none" />
-                <circle cx="36" cy="36" r="28" stroke={CRIT} strokeWidth="3.5" strokeDasharray="175.93" strokeDashoffset="68.61" strokeLinecap="round" fill="none" transform="rotate(-90 36 36)" />
-                <text x="36" y="44" textAnchor="middle" fill={CRIT} style={{ fontFamily:'"Space Grotesk",sans-serif', fontSize:22, fontWeight:700 }}>61</text>
+                <circle cx="36" cy="36" r="28" stroke={CRIT} strokeWidth="3.5" strokeDasharray="175.93" strokeDashoffset="110.84" strokeLinecap="round" fill="none" transform="rotate(-90 36 36)" />
+                <text x="36" y="44" textAnchor="middle" fill={CRIT} style={{ fontFamily:'"Space Grotesk",sans-serif', fontSize:22, fontWeight:700 }}>37</text>
               </svg>
               <div style={{ marginTop:4 }}>
                 <span style={{ ...MONO, fontSize:8, color:CRIT, border:`0.5px solid ${CRIT}`, padding:'1px 5px', textTransform:'uppercase', letterSpacing:'0.08em' }}>CRITICAL</span>
               </div>
-              <p style={{ ...MONO, fontSize:9, color:INK_MUT, margin:'4px 0 0' }}>63rd percentile · B2B SaaS</p>
+              <p style={{ ...MONO, fontSize:9, color:INK_MUT, margin:'4px 0 0' }}>21st percentile · B2B SaaS</p>
             </div>
           </div>
 
@@ -1257,7 +1262,7 @@ function MultiSiteSection() {
           {/* Report footer */}
           <div style={{ display:'flex', justifyContent:'space-between', padding:'16px 32px', borderTop:'1px solid rgba(111,155,198,0.08)', background:'rgba(111,155,198,0.02)', flexWrap:'wrap', gap:8 }}>
             <p style={{ ...MONO, fontSize:9, color:INK_MUT, margin:0 }}>ACME AGENCY · Conversion Intelligence</p>
-            <p style={{ ...MONO, fontSize:9, color:INK_MUT, margin:0 }}>Powered by Weavn · 307 checks · verified findings</p>
+            <p style={{ ...MONO, fontSize:9, color:INK_MUT, margin:0 }}>307 checks · verified findings</p>
             <p style={{ ...MONO, fontSize:9, color:INK_MUT, margin:0 }}>CONFIDENTIAL · acme-client.com</p>
           </div>
         </div>

@@ -13,9 +13,10 @@ const DISP = '"Space Grotesk", sans-serif'
 interface ReportClientProps {
   domain: string
   payload: ReportPayload
+  scanDate?: string | null
 }
 
-export default function ReportClient({ domain, payload }: ReportClientProps) {
+export default function ReportClient({ domain, payload, scanDate }: ReportClientProps) {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null)
 
   useEffect(() => {
@@ -30,6 +31,7 @@ export default function ReportClient({ domain, payload }: ReportClientProps) {
       <ReportLayout
         domain={domain}
         payload={payload}
+        scanDate={scanDate}
         whiteLabel={true}
         fillContainer={false}
       />

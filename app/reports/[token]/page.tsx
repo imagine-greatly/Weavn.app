@@ -115,12 +115,13 @@ export default async function ReportPage({
   const analysis = (report.analysis ?? {}) as Record<string, unknown>
   const healthScore = (report.health_score as number) ?? 0
   const domain = (report.domain as string) ?? ''
+  const scanDate = (report.created_at as string | undefined) ?? null
 
   const payload = supabaseReportToPayload(healthScore, analysis)
 
   return (
-    <main className="bg-background-base" style={{ height: 'calc(100svh - 4rem)' }}>
-      <ReportClient domain={domain} payload={payload} />
+    <main className="bg-background-base" style={{ minHeight: 'calc(100svh - 4rem)' }}>
+      <ReportClient domain={domain} payload={payload} scanDate={scanDate} />
     </main>
   )
 }

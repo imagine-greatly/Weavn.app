@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { getSupabaseBrowserClient } from '@/lib/supabaseBrowser'
 import ScoreRing from '@/components/ui/ScoreRing'
 import Label from '@/components/ui/Label'
-import SurfaceSwitcher from '@/components/SurfaceSwitcher'
+import SurfaceToggle, { SURFACE_NAV, useSurfaceCrossing } from '@/components/SurfaceToggle'
 import { FREE_API_TRIAL_SCANS } from '@/lib/constants'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -858,6 +858,7 @@ const NAV_ITEMS: Array<{ id: TabId; label: string; icon: React.ReactNode }> = [
 export default function DeveloperPortal() {
   const router = useRouter()
   const [activeTab, setActiveTab] = useState<TabId>('overview')
+  const { rootRef, surface, navSurface, phase, crossing, flipTo } = useSurfaceCrossing('console')
 
   // Live data
   const [loading, setLoading]         = useState(true)
@@ -1011,40 +1012,63 @@ export default function DeveloperPortal() {
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-background-base">
+    <div ref={rootRef} data-surface="console" className="flex h-screen overflow-hidden bg-background-base">
 
       {/* ── Left Sidebar ─────────────────────────────────────────────────── */}
       <aside className="w-[220px] flex-shrink-0 bg-background-raised border-r border-background-border flex flex-col h-full">
 
-        {/* Logo */}
+        {/* Wordmark — constant across both surfaces */}
         <div className="px-6 py-5 border-b border-background-border">
           <Link href="/" className="font-display font-extrabold text-sm text-text-primary no-underline">
             Weavn
           </Link>
         </div>
 
-        {/* Surface-switcher — move between Developers (/console) and Dashboard (/app) */}
-        <div className="px-6 py-4 border-b border-background-border">
-          <SurfaceSwitcher active="console" />
-        </div>
-
-        {/* Nav */}
-        <nav className="flex-1 py-4">
-          {NAV_ITEMS.map(item => (
-            <button
-              key={item.id}
-              onClick={() => setActiveTab(item.id)}
-              className={`w-full flex items-center gap-3 px-6 py-2.5 font-body text-sm cursor-pointer transition-colors duration-150 bg-transparent text-left border-0 border-l-2 ${
-                activeTab === item.id
-                  ? 'bg-background-interactive text-text-primary border-purple-DEFAULT'
-                  : 'text-text-secondary hover:text-text-primary hover:bg-background-interactive border-transparent'
-              }`}
-            >
-              {item.icon}
-              {item.label}
-            </button>
-          ))}
+        {/* Surface-specific nav (middle) — reconfigures on crossing */}
+        <nav
+          key={navSurface}
+          className={`surface-nav flex-1 py-4${phase === 'leaving' ? ' is-leaving' : phase === 'entering' ? ' is-entering' : ''}`}
+        >
+          {navSurface === 'console'
+            ? NAV_ITEMS.map((item, i) => {
+                const active = activeTab === item.id
+                const style: React.CSSProperties = { '--nav-i': i } as React.CSSProperties
+                if (active) {
+                  style.background = 'color-mix(in srgb, var(--surface-accent) 8%, transparent)'
+                  style.borderLeftColor = 'var(--surface-accent)'
+                }
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => setActiveTab(item.id)}
+                    style={style}
+                    className={`surface-nav-item w-full flex items-center gap-3 px-6 py-2.5 font-body text-sm cursor-pointer transition-colors duration-150 bg-transparent text-left border-0 border-l-2 ${
+                      active
+                        ? 'text-text-primary'
+                        : 'text-text-secondary hover:text-text-primary hover:bg-background-interactive border-transparent'
+                    }`}
+                  >
+                    {item.icon}
+                    {item.label}
+                  </button>
+                )
+              })
+            : SURFACE_NAV.app.map((item, i) => (
+                <div
+                  key={item.label}
+                  aria-hidden
+                  style={{ '--nav-i': i } as React.CSSProperties}
+                  className="surface-nav-item w-full flex items-center gap-3 px-6 py-2.5 font-body text-sm text-left border-0 border-l-2 border-transparent text-text-secondary"
+                >
+                  {item.label}
+                </div>
+              ))}
         </nav>
+
+        {/* Surface toggle (bottom) */}
+        <div className="border-t border-background-border flex-shrink-0">
+          <SurfaceToggle current={surface} crossing={crossing} onFlip={flipTo} />
+        </div>
 
         {/* Usage block — month-to-date activity + display-only trial quota */}
         <div className="px-6 py-5 border-t border-background-border">
@@ -1057,7 +1081,7 @@ export default function DeveloperPortal() {
             <>
               <div className="font-mono text-xs text-text-tertiary">{scansUsed} / {FREE_API_TRIAL_SCANS} free trial · lifetime</div>
               <div className="relative w-full h-px bg-background-border mt-3">
-                <div className="absolute top-0 left-0 h-full bg-purple-DEFAULT" style={{ width: `${trialPct}%` }} />
+                <div className="absolute top-0 left-0 h-full" style={{ width: `${trialPct}%`, background: 'var(--surface-accent)' }} />
               </div>
             </>
           ) : (
@@ -1068,7 +1092,7 @@ export default function DeveloperPortal() {
       </aside>
 
       {/* ── Right Panel ──────────────────────────────────────────────────── */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="surface-scrim-target surface-content-in flex-1 flex flex-col overflow-hidden">
 
         {/* Top bar */}
         <div className="flex-shrink-0 bg-background-base border-b border-background-border px-8 py-4 flex justify-between items-center z-10">

@@ -1083,3 +1083,78 @@ svg path { fill: none !important; }
   }
   .engine-breathe { animation: engine-breathe 3s ease-in-out infinite; }
 }
+
+/* ───────────────────────────────────────────────────────────────────────────
+   APP-SHELL SURFACE SYSTEM — steel (Dashboard) ⇄ purple (Developers)
+   Surface is client state on the app-shell root [data-surface]. The toggle animates the
+   registered property --surface-accent THROUGH a desaturated neutral so the
+   repaint reads as the engine powering down, then up. Every app-shell accent
+   consumes var(--surface-accent) (solid) or color-mix(... var(--surface-accent))
+   (alpha fills), so nav, ring, buttons, slider and blooms all cross together.
+   Tokens are the locked marketing ones: steel #6F9BC6, purple #9D8CFF.
+   --------------------------------------------------------------------------- */
+@property --surface-accent {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #6F9BC6;
+}
+
+:root,
+[data-surface="app"]     { --surface-accent: #6F9BC6; --surface-rgb: 111, 155, 198; }
+[data-surface="console"] { --surface-accent: #9D8CFF; --surface-rgb: 157, 140, 255; }
+
+/* The weighted crossing — outgoing color → neutral hold (~42%) → incoming color.
+   The neutral beat is the deliberate "wait": the engine off before it powers up. */
+@keyframes surfaceCrossToConsole {
+  0%   { --surface-accent: #6F9BC6; }
+  42%  { --surface-accent: #565B63; }
+  100% { --surface-accent: #9D8CFF; }
+}
+@keyframes surfaceCrossToApp {
+  0%   { --surface-accent: #9D8CFF; }
+  42%  { --surface-accent: #565B63; }
+  100% { --surface-accent: #6F9BC6; }
+}
+.surface-cross-to-console { animation: surfaceCrossToConsole 640ms ease both; }
+.surface-cross-to-app     { animation: surfaceCrossToApp 640ms ease both; }
+
+/* Content scrim — main area dips while the system swaps out, then returns. */
+@keyframes surfaceScrim {
+  0%   { opacity: 1; }
+  34%  { opacity: 0.62; }
+  72%  { opacity: 0.62; }
+  100% { opacity: 1; }
+}
+.surface-crossing .surface-scrim-target { animation: surfaceScrim 700ms ease both; }
+
+/* Content entrance — masks the deferred content swap when the route push lands. */
+@keyframes surfaceContentIn { from { opacity: 0; } to { opacity: 1; } }
+.surface-content-in { animation: surfaceContentIn 260ms ease both; }
+
+/* Nav reconfigure — outgoing items out, 120ms hold, incoming stagger in (+45ms each). */
+@keyframes surfaceNavOut { to { opacity: 0; transform: translateY(-4px); } }
+@keyframes surfaceNavIn  { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+.surface-nav.is-leaving  .surface-nav-item { animation: surfaceNavOut 200ms ease both; }
+.surface-nav.is-entering .surface-nav-item { animation: surfaceNavIn 320ms ease both; animation-delay: calc(var(--nav-i, 0) * 45ms); }
+
+/* Toggle bloom — dims through the neutral beat, then a restrained pulse (noticed,
+   not announced) as the new color resolves, settling by 760ms. */
+@keyframes surfaceBloom {
+  0%   { opacity: 0.62; transform: translateX(-50%) scale(1); }
+  32%  { opacity: 0.34; transform: translateX(-50%) scale(0.96); }
+  55%  { opacity: 0.86; transform: translateX(-50%) scale(1.15); }
+  100% { opacity: 0.62; transform: translateX(-50%) scale(1); }
+}
+.surface-crossing .surface-toggle-bloom { animation: surfaceBloom 760ms ease both; }
+
+/* Reduced motion — a clean fast accent crossfade; no scrim, stagger, or neutral pass. */
+@media (prefers-reduced-motion: reduce) {
+  [data-surface] { transition: --surface-accent 220ms ease; }
+  .surface-cross-to-console,
+  .surface-cross-to-app { animation: none; }
+  .surface-crossing .surface-scrim-target,
+  .surface-crossing .surface-toggle-bloom,
+  .surface-nav.is-leaving .surface-nav-item,
+  .surface-nav.is-entering .surface-nav-item,
+  .surface-content-in { animation: none !important; }
+}

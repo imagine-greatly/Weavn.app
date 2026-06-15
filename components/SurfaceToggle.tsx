@@ -34,7 +34,9 @@ export const SURFACE_NAV: Record<Surface, { label: string; href?: string }[]> = 
   app: [
     { label: 'Overview', href: '/app' },
     { label: 'Reports', href: '/app/reports' },
+    { label: 'Clients', href: '/app/clients' },
     { label: 'Branding', href: '/app/branding' },
+    { label: 'Billing', href: '/app/billing' },
   ],
   console: [
     { label: 'Overview' },

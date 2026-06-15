@@ -99,7 +99,7 @@ export default function AccountPage() {
               <div style={{ fontFamily: DISP, fontWeight: 700, fontSize: 18, color: C.inkPrimary }}>{planLabel}</div>
             </div>
             <Link
-              href="/settings"
+              href="/app/billing"
               style={{
                 fontFamily: MONO, fontSize: 11, letterSpacing: '0.08em', textTransform: 'uppercase',
                 color: 'var(--surface-accent)', border: '0.5px solid color-mix(in srgb, var(--surface-accent) 50%, transparent)',

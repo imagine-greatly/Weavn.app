@@ -11,7 +11,7 @@ import { FREE_API_TRIAL_SCANS } from '@/lib/constants'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-type TabId = 'overview' | 'scans' | 'apikeys' | 'webhooks' | 'docs'
+type TabId = 'overview' | 'scans' | 'apikeys' | 'webhooks' | 'billing' | 'docs'
 type Severity = 'critical' | 'high' | 'medium' | 'low'
 
 interface ScanRow {
@@ -105,8 +105,18 @@ const TAB_TITLES: Record<TabId, string> = {
   scans:    'Scans',
   apikeys:  'API Keys',
   webhooks: 'Webhooks',
+  billing:  'Billing',
   docs:     'Documentation',
 }
+
+// Paid API tiers — shown for the upgrade affordance. Scan caps are the intended plan
+// limits; no prices are invented here. Checkout is NOT wired (see BillingTab seam).
+const PAID_TIERS: Array<{ id: string; name: string; scans: string }> = [
+  { id: 'dev',        name: 'Dev',        scans: '300 scans / mo'   },
+  { id: 'builder',    name: 'Builder',    scans: '1,000 scans / mo' },
+  { id: 'scale',      name: 'Volume',     scans: '3,000 scans / mo' },
+  { id: 'enterprise', name: 'Enterprise', scans: 'Custom volume'    },
+]
 
 // ── Icons (inline SVG, 16px, stroke-current) ──────────────────────────────────
 
@@ -157,6 +167,16 @@ function IconDoc() {
       <path d="M10 2v3h3" />
       <line x1="6" y1="9"  x2="10" y2="9"  />
       <line x1="6" y1="12" x2="10" y2="12" />
+    </svg>
+  )
+}
+
+function IconBilling() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+      <rect x="2" y="3.5" width="12" height="9" />
+      <line x1="2" y1="6.5" x2="14" y2="6.5" />
+      <line x1="4.5" y1="10" x2="7" y2="10" />
     </svg>
   )
 }
@@ -628,6 +648,112 @@ function WebhooksTab({ webhookLog }: { webhookLog: WebhookLog[] }) {
   )
 }
 
+// ── Billing Tab ───────────────────────────────────────────────────────────────
+
+interface BillingTabProps {
+  plan: string
+  isTrialPlan: boolean
+  monthScans: number
+  scansUsed: number
+}
+
+function BillingTab({ plan, isTrialPlan, monthScans, scansUsed }: BillingTabProps) {
+  const [portalBusy, setPortalBusy] = useState(false)
+  const [portalError, setPortalError] = useState<string | null>(null)
+  const [upgradeNotice, setUpgradeNotice] = useState(false)
+
+  // Opens the REAL Stripe billing portal via /api/settings/portal (the working settings
+  // path — NOT the non-existent /api/billing/portal). Users without a Stripe customer get
+  // an honest "No Stripe customer found" error rather than a fake portal.
+  async function openPortal() {
+    if (portalBusy) return
+    setPortalBusy(true); setPortalError(null)
+    try {
+      const supabase = getSupabaseBrowserClient()
+      const { data: session } = await supabase.auth.getSession()
+      const token = session.session?.access_token
+      if (!token) throw new Error('Authentication required.')
+      const res = await fetch('/api/settings/portal', { method: 'POST', headers: { Authorization: `Bearer ${token}` } })
+      const json = await res.json().catch(() => ({}))
+      if (!res.ok || !json.url) throw new Error(typeof json.error === 'string' ? json.error : 'Portal request failed.')
+      window.location.href = json.url as string
+    } catch (e) {
+      setPortalError(e instanceof Error ? e.message : 'Portal request failed.')
+      setPortalBusy(false)
+    }
+  }
+
+  return (
+    <div className="px-8 py-8">
+
+      {/* Current plan + manage billing */}
+      <div className="bg-background-raised border border-background-border p-6 mb-6">
+        <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mb-4">CURRENT API PLAN</div>
+        <div className="flex items-end justify-between gap-4 flex-wrap">
+          <div>
+            <div className="font-display font-extrabold text-3xl text-text-primary capitalize">{plan}</div>
+            <div className="font-mono text-xs text-text-tertiary mt-1">
+              {isTrialPlan
+                ? `${scansUsed} / ${FREE_API_TRIAL_SCANS} free trial scans used (lifetime)`
+                : 'Usage-based billing'}
+              {` · ${monthScans} this month`}
+            </div>
+          </div>
+          <button
+            onClick={openPortal}
+            disabled={portalBusy}
+            className="border border-purple-DEFAULT text-purple-DEFAULT font-body text-sm px-5 py-2.5 cursor-pointer bg-transparent hover:bg-purple-dim transition-colors duration-150 disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0"
+          >
+            {portalBusy ? 'Opening…' : 'Manage billing →'}
+          </button>
+        </div>
+        <div className="font-mono text-xs text-text-tertiary mt-3">
+          Opens the Stripe billing portal to manage payment methods and invoices.
+        </div>
+        {portalError ? <div className="font-mono text-xs text-severity-critical mt-2">{portalError}</div> : null}
+      </div>
+
+      {/* Paid tiers — upgrade affordance only; checkout is NOT wired */}
+      <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mb-3">API PLANS</div>
+      <div className="grid grid-cols-2 gap-px bg-background-border mb-3">
+        {PAID_TIERS.map(t => {
+          const isCurrent = plan === t.id
+          return (
+            <div key={t.id} className="bg-background-raised p-5">
+              <div className="flex items-center justify-between">
+                <span className="font-display font-bold text-lg text-text-primary">{t.name}</span>
+                {isCurrent && <span className="font-mono text-xs text-purple-DEFAULT">CURRENT</span>}
+              </div>
+              <div className="font-mono text-xs text-text-tertiary mt-1">{t.scans}</div>
+              <button
+                onClick={() => setUpgradeNotice(true)}
+                disabled={isCurrent}
+                className="mt-4 w-full border border-background-border text-text-secondary font-body text-xs px-4 py-2 cursor-pointer bg-transparent hover:text-text-primary hover:border-text-tertiary transition-colors duration-150 disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                {isCurrent ? 'Current plan' : 'Upgrade'}
+              </button>
+            </div>
+          )
+        })}
+      </div>
+
+      {/* TODO(wiring): paid-tier checkout is not wired — there are no Stripe products for
+          these tiers and api_keys.plan is not set from a purchase. We surface an honest
+          notice instead of faking a charge. */}
+      {upgradeNotice ? (
+        <div className="font-mono text-xs text-purple-muted mb-3">
+          Paid-tier checkout isn&apos;t wired up yet — upgrading API plans lands in the billing wiring phase. No charge was made.
+        </div>
+      ) : null}
+
+      <Link href="/developers" className="font-body text-sm text-purple-DEFAULT no-underline hover:opacity-80 transition-opacity duration-150">
+        View API pricing →
+      </Link>
+
+    </div>
+  )
+}
+
 // ── Docs Tab ──────────────────────────────────────────────────────────────────
 
 function DocsTab() {
@@ -725,6 +851,7 @@ const NAV_ITEMS: Array<{ id: TabId; label: string; icon: React.ReactNode }> = [
   { id: 'scans',    label: 'Scans',    icon: <IconList />    },
   { id: 'apikeys',  label: 'API Keys', icon: <IconKey />     },
   { id: 'webhooks', label: 'Webhooks', icon: <IconWebhook /> },
+  { id: 'billing',  label: 'Billing',  icon: <IconBilling /> },
   { id: 'docs',     label: 'Docs',     icon: <IconDoc />     },
 ]
 
@@ -985,6 +1112,9 @@ export default function DeveloperPortal() {
             />
           )}
           {activeTab === 'webhooks' && <WebhooksTab webhookLog={webhookLogMapped} />}
+          {activeTab === 'billing'  && (
+            <BillingTab plan={plan} isTrialPlan={isTrialPlan} monthScans={monthScans} scansUsed={scansUsed} />
+          )}
           {activeTab === 'docs'     && <DocsTab />}
         </div>
 

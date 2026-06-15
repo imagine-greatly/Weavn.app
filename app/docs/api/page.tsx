@@ -213,18 +213,18 @@ data = res.json()
 print(data['batch_id'])`,
   },
   'get-scans': {
-    curl: `# List recent scans
-curl "https://api.weavn.app/v1/scans" \\
+    curl: `# List recent scans (most recent first)
+curl "https://api.weavn.app/v1/scans?limit=20" \\
   -H "Authorization: Bearer weavn_live_••••"
 
-# Filter by domain, paginate
-curl "https://api.weavn.app/v1/scans?limit=5&url=yoursite.com" \\
+# Fetch the next page with next_cursor from the previous response
+curl "https://api.weavn.app/v1/scans?limit=20&cursor=eyJjcmVhdGVkX2F0IjoiMjAyNi0wNi0xNFQ..." \\
   -H "Authorization: Bearer weavn_live_••••"`,
     node: `const res = await fetch(
   'https://api.weavn.app/v1/scans?limit=20',
   { headers: { 'Authorization': 'Bearer weavn_live_••••' } }
 )
-const { scans, next_cursor } = await res.json()`,
+const { scans, next_cursor, has_more } = await res.json()`,
     python: `res = requests.get(
   'https://api.weavn.app/v1/scans',
   headers={'Authorization': 'Bearer weavn_live_••••'},
@@ -911,11 +911,10 @@ export default function ApiDocsPage() {
             <H2>GET /api/v1/scans</H2>
             <Body mb={24}>Retrieve a list of your scans, most recent first.</Body>
             <QueryTable rows={[
-              { param: 'limit',  type: 'number', description: 'Results per page. Default: 20. Max: 100.' },
-              { param: 'before', type: 'string', description: 'Cursor — return scans before this ID.' },
-              { param: 'after',  type: 'string', description: 'Cursor — return scans after this ID.' },
-              { param: 'url',    type: 'string', description: 'Filter by domain.' },
+              { param: 'limit',  type: 'number', description: 'Results per page. Default: 20. Max: 100 (out-of-range values are clamped).' },
+              { param: 'cursor', type: 'string', description: 'Opaque keyset cursor. Pass next_cursor from the previous response to fetch the next page.' },
             ]} />
+            <Body mb={0}>Each response adds <code style={{ fontFamily: MONO, fontSize: 12 }}>next_cursor</code> (a string, or null on the last page) and <code style={{ fontFamily: MONO, fontSize: 12 }}>has_more</code> (boolean) alongside <code style={{ fontFamily: MONO, fontSize: 12 }}>scans</code>. Paginate by passing <code style={{ fontFamily: MONO, fontSize: 12 }}>next_cursor</code> back as <code style={{ fontFamily: MONO, fontSize: 12 }}>cursor</code> until <code style={{ fontFamily: MONO, fontSize: 12 }}>has_more</code> is false.</Body>
           </section>
 
           <section id="get-scans-id" style={SB}>

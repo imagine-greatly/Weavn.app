@@ -411,14 +411,14 @@ const HIW_SCAN_CATS = [
 
 const HIW_JSON_LINES: { delay: number; indent: boolean; content: React.ReactNode }[] = [
   { delay: 0.1,  indent: false, content: <span style={{ color: '#6E7587' }}>{'{'}</span> },
-  { delay: 0.3,  indent: true,  content: <><span style={{ color: '#8080c0' }}>&quot;score&quot;</span><span style={{ color: '#9398A8' }}>: </span><span style={{ color: '#E8635F' }}>61</span><span style={{ color: '#6E7587' }}>,</span></> },
-  { delay: 0.5,  indent: true,  content: <><span style={{ color: '#8080c0' }}>&quot;verdict&quot;</span><span style={{ color: '#9398A8' }}>: </span><span style={{ color: '#6F9BC6' }}>&quot;Fair&quot;</span><span style={{ color: '#6E7587' }}>,</span></> },
-  { delay: 0.7,  indent: true,  content: <><span style={{ color: '#8080c0' }}>&quot;percentile&quot;</span><span style={{ color: '#9398A8' }}>: </span><span style={{ color: '#6F9BC6' }}>63</span><span style={{ color: '#6E7587' }}>,</span></> },
-  { delay: 0.9,  indent: true,  content: <><span style={{ color: '#8080c0' }}>&quot;findings_summary&quot;</span><span style={{ color: '#9398A8' }}>: </span><span style={{ color: '#6F9BC6' }}>23</span><span style={{ color: '#6E7587' }}>,</span></> },
+  { delay: 0.25, indent: true,  content: <><span style={{ color: '#8080c0' }}>&quot;scan_id&quot;</span><span style={{ color: '#9398A8' }}>: </span><span style={{ color: '#00C48C' }}>&quot;sc_a8d3f2c1&quot;</span><span style={{ color: '#6E7587' }}>,</span></> },
+  { delay: 0.4,  indent: true,  content: <><span style={{ color: '#8080c0' }}>&quot;score&quot;</span><span style={{ color: '#9398A8' }}>: </span><span style={{ color: '#E8635F' }}>61</span><span style={{ color: '#6E7587' }}>,</span></> },
+  { delay: 0.6,  indent: true,  content: <><span style={{ color: '#8080c0' }}>&quot;verdict&quot;</span><span style={{ color: '#9398A8' }}>: </span><span style={{ color: '#6F9BC6' }}>&quot;Fair&quot;</span><span style={{ color: '#6E7587' }}>,</span></> },
+  { delay: 0.8,  indent: true,  content: <><span style={{ color: '#8080c0' }}>&quot;findings_summary&quot;</span><span style={{ color: '#9398A8' }}>: </span><span style={{ color: '#6F9BC6' }}>23</span><span style={{ color: '#6E7587' }}>,</span></> },
   { delay: 1.0,  indent: true,  content: <><span style={{ color: '#8080c0' }}>&quot;findings&quot;</span><span style={{ color: '#9398A8' }}>: </span><span style={{ color: '#6E7587' }}>[ … ],</span></> },
-  { delay: 1.1,  indent: true,  content: <><span style={{ color: '#8080c0' }}>&quot;industry&quot;</span><span style={{ color: '#9398A8' }}>: </span><span style={{ color: '#00C48C' }}>&quot;B2B SaaS&quot;</span><span style={{ color: '#6E7587' }}>,</span></> },
-  { delay: 1.3,  indent: true,  content: <><span style={{ color: '#8080c0' }}>&quot;cost_usd&quot;</span><span style={{ color: '#9398A8' }}>: </span><span style={{ color: '#9398A8' }}>0.15</span></> },
-  { delay: 1.5,  indent: false, content: <span style={{ color: '#6E7587' }}>{'}'}</span> },
+  { delay: 1.2,  indent: true,  content: <><span style={{ color: '#8080c0' }}>&quot;industry&quot;</span><span style={{ color: '#9398A8' }}>: </span><span style={{ color: '#00C48C' }}>&quot;B2B SaaS&quot;</span><span style={{ color: '#6E7587' }}>,</span></> },
+  { delay: 1.4,  indent: true,  content: <><span style={{ color: '#8080c0' }}>&quot;scan_meta&quot;</span><span style={{ color: '#9398A8' }}>: </span><span style={{ color: '#6E7587' }}>{'{ '}</span><span style={{ color: '#8080c0' }}>&quot;cost_usd&quot;</span><span style={{ color: '#9398A8' }}>: </span><span style={{ color: '#9398A8' }}>0.15</span><span style={{ color: '#6E7587' }}>{' }'}</span></> },
+  { delay: 1.6,  indent: false, content: <span style={{ color: '#6E7587' }}>{'}'}</span> },
 ]
 
 function HowItWorksSection() {
@@ -722,7 +722,6 @@ export default function DevelopersPage() {
 <span style={{ color: '#8080c0' }}>&quot;scan_id&quot;</span><span style={{ color: '#6E7587' }}>: </span><span style={{ color: '#00C48C' }}>&quot;sc_a8d3f2c1&quot;</span><span style={{ color: '#6E7587' }}>,</span>{'\n  '}
 <span style={{ color: '#8080c0' }}>&quot;score&quot;</span><span style={{ color: '#6E7587' }}>: </span><span style={{ color: '#9D8CFF' }}>61</span><span style={{ color: '#6E7587' }}>,</span>{'\n  '}
 <span style={{ color: '#8080c0' }}>&quot;verdict&quot;</span><span style={{ color: '#6E7587' }}>: </span><span style={{ color: '#EFB23E' }}>&quot;Fair&quot;</span><span style={{ color: '#6E7587' }}>,</span>{'\n  '}
-<span style={{ color: '#8080c0' }}>&quot;percentile&quot;</span><span style={{ color: '#6E7587' }}>: </span><span style={{ color: '#9D8CFF' }}>63</span><span style={{ color: '#6E7587' }}>,</span>{'\n  '}
 <span style={{ color: '#8080c0' }}>&quot;findings_summary&quot;</span><span style={{ color: '#6E7587' }}>: </span><span style={{ color: '#9D8CFF' }}>23</span>{'\n'}
 <span style={{ color: '#6E7587' }}>{'}'}</span>
                   </pre>
@@ -859,11 +858,11 @@ export default function DevelopersPage() {
             <div style={{ padding: '16px 20px', ...MONO, fontSize: 12, lineHeight: 1.7 }}>
               {[
                 { delay: '0.05s', content: <><Muted c="{" /></> },
-                { delay: '0.1s',  content: <>&nbsp;&nbsp;<K c="id" /><Muted c=": " /><S c="sc_a8d3f2c1" /><Muted c="," /></> },
+                { delay: '0.1s',  content: <>&nbsp;&nbsp;<K c="scan_id" /><Muted c=": " /><S c="sc_a8d3f2c1" /><Muted c="," /></> },
                 { delay: '0.15s', content: <>&nbsp;&nbsp;<K c="url" /><Muted c=": " /><S c="https://your-site.com" /><Muted c="," /></> },
                 { delay: '0.2s',  content: <>&nbsp;&nbsp;<K c="score" /><Muted c=": " /><span style={{ color: '#E8635F' }}>61</span><Muted c="," /></> },
                 { delay: '0.25s', content: <>&nbsp;&nbsp;<K c="verdict" /><Muted c=": " /><S c="Fair" /><Muted c="," /></> },
-                { delay: '0.3s',  content: <>&nbsp;&nbsp;<K c="findings_summary" /><Muted c=": " /><N c="12" /><Muted c="," /></> },
+                { delay: '0.3s',  content: <>&nbsp;&nbsp;<K c="findings_summary" /><Muted c=": " /><N c="23" /><Muted c="," /></> },
                 { delay: '0.35s', content: <>&nbsp;&nbsp;<K c="findings" /><Muted c=": [ … ]," /></> },
                 { delay: '0.4s',  content: <>&nbsp;&nbsp;<K c="strengths" /><Muted c=": [ … ]," /></> },
                 { delay: '0.45s', content: <>&nbsp;&nbsp;<K c="summary" /><Muted c=": " /><S c="…" /><Muted c="," /></> },
@@ -1073,10 +1072,10 @@ export default function DevelopersPage() {
                   <div style={{ paddingLeft: 16 }}><K c="event" /><Muted c=": " /><S c="scan.completed" /><Muted c="," /></div>
                   <div style={{ paddingLeft: 16 }}><K c="scan_id" /><Muted c=": " /><S c="sc_a8d3f2c1" /><Muted c="," /></div>
                   <div style={{ paddingLeft: 16 }}><K c="url" /><Muted c=": " /><S c="https://your-site.com" /><Muted c="," /></div>
-                  <div style={{ paddingLeft: 16 }}><K c="score" /><Muted c=": " /><N c="74" /><Muted c="," /></div>
+                  <div style={{ paddingLeft: 16 }}><K c="score" /><Muted c=": " /><N c="61" /><Muted c="," /></div>
                   <div style={{ paddingLeft: 16 }}><K c="data" /><Muted c=": {" /></div>
                   <div style={{ paddingLeft: 32 }}><K c="domain" /><Muted c=": " /><S c="your-site.com" /><Muted c="," /></div>
-                  <div style={{ paddingLeft: 32 }}><K c="verdict" /><Muted c=": " /><S c="Good" /></div>
+                  <div style={{ paddingLeft: 32 }}><K c="verdict" /><Muted c=": " /><S c="Fair" /></div>
                   <div style={{ paddingLeft: 16 }}><Muted c="}" /></div>
                   <div><Muted c="}" /></div>
                 </div>
@@ -1176,7 +1175,7 @@ export default function DevelopersPage() {
                   step: '03',
                   label: 'WEBHOOK DELIVERY',
                   route: 'event: scan.completed',
-                  body: '{"event": "scan.completed", "scan_id": "...", "score": 74, "data": {...}}',
+                  body: '{"event": "scan.completed", "scan_id": "...", "score": 61, "data": {...}}',
                   detail: 'Single structured payload delivered to your endpoint. Three delivery attempts with exponential backoff.',
                   accent: 'rgba(0,196,140,0.35)',
                   accentRgba: '0,196,140',
@@ -1209,7 +1208,7 @@ export default function DevelopersPage() {
           <div style={{ marginTop: 32, display: 'flex', flexWrap: 'wrap', gap: 8 }}>
             {[
               { method: 'POST', path: '/api/v1/scan/batch', note: 'up to 10 URLs, parallel' },
-              { method: 'GET',  path: '/api/v1/scans',      note: 'list past scans (history)' },
+              { method: 'GET',  path: '/api/v1/scans',      note: 'list past scans (history) · paginated (limit + cursor)' },
               { method: 'GET',  path: '/api/v1/scans/:id',  note: 'retrieve one scan — poll async without a webhook' },
               { method: 'GET',  path: '/api/v1/webhooks',   note: 'list registered endpoints' },
               { method: 'POST', path: '/api/v1/webhooks',   note: 'register endpoint, secret returned once' },

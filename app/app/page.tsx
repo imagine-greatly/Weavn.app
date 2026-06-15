@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { getSupabaseBrowserClient } from '@/lib/supabaseBrowser'
-import WeavnMark from '@/components/ui/WeavnMark'
+import WeavingScan from '@/components/WeavingScan'
 import EmptyState from '@/components/dashboard/EmptyState'
 import SiteCockpit from '@/components/dashboard/SiteCockpit'
 import PortfolioCockpit from '@/components/dashboard/PortfolioCockpit'
@@ -17,7 +17,12 @@ const C = {
 
 const MONO = "'IBM Plex Mono', monospace"
 
-type Phase = 'idle' | 'weaving' | 'complete'
+function domainOf(raw: string): string {
+  const t = raw.trim()
+  try { return new URL(/^https?:\/\//i.test(t) ? t : `https://${t}`).hostname.replace(/^www\./, '') } catch { return t }
+}
+
+type Phase = 'idle' | 'weaving' | 'complete' | 'error'
 
 export default function DashboardHome() {
   const router = useRouter()
@@ -83,25 +88,25 @@ export default function DashboardHome() {
         setTimeout(() => router.push(`/reports/${data.shareToken}`), 700)
       } else {
         setError(data.error ?? 'Scan failed. Please try again.')
-        setPhase('idle')
-        setRescanningDomain(null)
+        if (rescanDomain) setRescanningDomain(null)
+        else setPhase('error')
       }
     } catch {
       setError('Scan failed. Please try again.')
-      setPhase('idle')
-      setRescanningDomain(null)
+      if (rescanDomain) setRescanningDomain(null)
+      else setPhase('error')
     }
   }
 
-  // ── Scanning state ("Weaving through your site…" / "Weave complete") ─────────
-  if (phase !== 'idle') {
+  // ── Scanning state — the weaving experience (in-progress / complete / error) ──
+  if (phase === 'weaving' || phase === 'complete' || phase === 'error') {
     return (
-      <div style={{ minHeight: 'calc(100vh - 4rem)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 22 }}>
-        <WeavnMark size={68} animated ringTints={{ outer: C.steel, middle: C.steel, inner: C.steel }} />
-        <p style={{ fontFamily: MONO, fontSize: 13, letterSpacing: '0.12em', color: C.steel, margin: 0 }}>
-          {phase === 'weaving' ? 'Weaving through your site…' : 'Weave complete'}
-        </p>
-      </div>
+      <WeavingScan
+        domain={domainOf(url)}
+        status={phase === 'complete' ? 'done' : phase === 'error' ? 'error' : 'weaving'}
+        error={error}
+        onReset={() => { setPhase('idle'); setError(null) }}
+      />
     )
   }
 

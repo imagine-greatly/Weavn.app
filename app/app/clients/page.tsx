@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { getSupabaseBrowserClient } from '@/lib/supabaseBrowser'
 import ScoreRing from '@/components/ui/ScoreRing'
+import EmptyState from '@/components/ui/EmptyState'
 import { rollUpSites, formatDate, type ReportRow, type SiteSummary } from '@/lib/dashboard'
 
 // ── Steel-blue Dashboard surface tokens ────────────────────────────────────────
@@ -172,16 +173,12 @@ export default function ClientsPage() {
       {error ? <p style={{ fontFamily: MONO, fontSize: 12, color: C.worse, margin: '0 0 16px' }}>{error}</p> : null}
 
       {sites.length === 0 ? (
-        // Simple inline placeholder — Pass C replaces this with the shared EmptyState.
-        <div style={{ border: `0.5px solid ${C.border}`, background: C.surface, padding: '40px 28px', textAlign: 'center' }}>
-          <p style={{ fontFamily: DISP, fontWeight: 700, fontSize: 18, color: C.inkPrimary, margin: '0 0 8px' }}>No client sites yet</p>
-          <p style={{ fontFamily: BODY, fontSize: 14, color: C.inkSecondary, margin: '0 0 18px' }}>
-            Run a scan from any page and the site shows up here, rolled up by domain.
-          </p>
-          <Link href="/app" style={{ fontFamily: MONO, fontSize: 11, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--surface-accent)', border: '0.5px solid color-mix(in srgb, var(--surface-accent) 50%, transparent)', padding: '10px 18px', textDecoration: 'none' }}>
-            Run a scan →
-          </Link>
-        </div>
+        <EmptyState
+          headline="No client sites yet"
+          sub="Run a scan from any page and the site shows up here, rolled up by domain."
+          actionLabel="Run a scan →"
+          actionHref="/app"
+        />
       ) : (
         <div style={{ border: `0.5px solid ${C.border}` }}>
           <div style={{ display: 'grid', gridTemplateColumns: GRID, gap: 12, padding: '12px 20px', background: 'rgba(255,255,255,0.02)', borderBottom: `0.5px solid ${C.border}` }}>

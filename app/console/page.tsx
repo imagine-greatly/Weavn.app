@@ -7,6 +7,7 @@ import { getSupabaseBrowserClient } from '@/lib/supabaseBrowser'
 import ScoreRing from '@/components/ui/ScoreRing'
 import Label from '@/components/ui/Label'
 import WeavnMark from '@/components/ui/WeavnMark'
+import EmptyState from '@/components/ui/EmptyState'
 import SurfaceToggle, { SURFACE_NAV, useSurfaceCrossing } from '@/components/SurfaceToggle'
 import { FREE_API_TRIAL_SCANS } from '@/lib/constants'
 
@@ -293,7 +294,13 @@ function OverviewTab({ monthScans, monthSpend, avgScore, keyPrefix, scanRows, cr
           </span>
         </div>
         {scanRows.length === 0 && (
-          <div className="px-6 py-8 font-mono text-sm text-text-tertiary">No scans yet.</div>
+          <EmptyState
+            dense
+            headline="No scans yet"
+            sub="Run your first scan and it shows up here, newest first."
+            actionLabel="New scan →"
+            actionHref="/playground"
+          />
         )}
         {scanRows.slice(0, 8).map((row, i) => (
           <div
@@ -381,7 +388,17 @@ function ScansTab({ scanRows }: { scanRows: ScanRow[] }) {
           ))}
         </div>
         {filtered.length === 0 && (
-          <div className="px-6 py-8 font-mono text-sm text-text-tertiary">No results.</div>
+          scanRows.length === 0 ? (
+            <EmptyState
+              dense
+              headline="No scans yet"
+              sub="Run your first scan to populate this table."
+              actionLabel="New scan →"
+              actionHref="/playground"
+            />
+          ) : (
+            <div className="px-6 py-8 font-mono text-sm text-text-tertiary">No matching scans.</div>
+          )
         )}
         {filtered.map((row, i) => (
           <div
@@ -624,7 +641,11 @@ function WebhooksTab({ webhookLog }: { webhookLog: WebhookLog[] }) {
           <span className="font-mono text-xs text-text-tertiary uppercase tracking-widest">DELIVERY LOG</span>
         </div>
         {webhookLog.length === 0 && (
-          <div className="px-6 py-8 font-mono text-sm text-text-tertiary">No deliveries yet.</div>
+          <EmptyState
+            dense
+            headline="No deliveries yet"
+            sub="Delivered scan events (scan.completed, scan.failed) will appear here."
+          />
         )}
         {webhookLog.map((log, i) => (
           <div key={i} className="flex items-center gap-4 px-6 py-4 border-b border-background-border last:border-0">

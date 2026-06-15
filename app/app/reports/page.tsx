@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { getSupabaseBrowserClient } from '@/lib/supabaseBrowser'
 import { scoreToVerdict, verdictColor, formatDate } from '@/lib/dashboard'
+import EmptyState from '@/components/ui/EmptyState'
 
 // ── Steel-blue Dashboard surface tokens ────────────────────────────────────────
 const C = {
@@ -138,11 +139,12 @@ export default function ReportsIndex() {
       </p>
 
       {rows.length === 0 ? (
-        <div style={{ border: `0.5px solid ${C.border}`, background: C.surface, padding: '28px 24px' }}>
-          <p style={{ fontFamily: BODY, fontSize: 15, color: C.inkSecondary, margin: 0 }}>
-            No reports yet. Run a scan from the Overview tab and it&apos;ll show up here.
-          </p>
-        </div>
+        <EmptyState
+          headline="No reports yet"
+          sub="Run a scan and every report you generate shows up here, newest first."
+          actionLabel="Run a scan →"
+          actionHref="/app"
+        />
       ) : (
         <div style={{ border: `0.5px solid ${C.border}` }}>
           {/* Header row */}

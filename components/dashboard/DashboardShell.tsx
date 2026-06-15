@@ -4,9 +4,15 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 import WeavnMark from '@/components/ui/WeavnMark'
+import WeavingScan from '@/components/WeavingScan'
 import { getSupabaseBrowserClient } from '@/lib/supabaseBrowser'
 import { FREE_DASHBOARD_SCANS_PER_MONTH } from '@/lib/constants'
 import SurfaceToggle, { SURFACE_NAV, useSurfaceCrossing } from '@/components/SurfaceToggle'
+
+function domainOf(raw: string): string {
+  const t = raw.trim()
+  try { return new URL(/^https?:\/\//i.test(t) ? t : `https://${t}`).hostname.replace(/^www\./, '') } catch { return t }
+}
 
 // ── Dashboard surface tokens (steel blue · muted cold futurism) ────────────────
 // Accent now flows from the shared --surface-accent CSS var (steel #6F9BC6 on this
@@ -258,21 +264,16 @@ function QuotaBlock() {
 function NewScanModal({ onClose }: { onClose: () => void }) {
   const router = useRouter()
   const [url, setUrl] = useState('')
-  const [phase, setPhase] = useState<'input' | 'weaving'>('input')
+  const [phase, setPhase] = useState<'input' | 'weaving' | 'error'>('input')
   const [error, setError] = useState<string | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
-  useEffect(() => { inputRef.current?.focus() }, [])
+  useEffect(() => { if (phase === 'input') inputRef.current?.focus() }, [phase])
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape' && phase === 'input') onClose() }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [onClose, phase])
-
-  const domain = (() => {
-    try { return new URL(/^https?:\/\//i.test(url) ? url : `https://${url}`).hostname.replace(/^www\./, '') }
-    catch { return url.trim() }
-  })()
 
   async function runScan() {
     const trimmed = url.trim()
@@ -292,19 +293,33 @@ function NewScanModal({ onClose }: { onClose: () => void }) {
         router.push(`/reports/${data.shareToken}`)
       } else {
         setError(data.error ?? 'Scan failed. Please try again.')
-        setPhase('input')
+        setPhase('error')
       }
     } catch {
       setError('Scan failed. Please try again.')
-      setPhase('input')
+      setPhase('error')
     }
+  }
+
+  // During the ~90s wait (and on failure) the weaving experience takes the full overlay.
+  if (phase === 'weaving' || phase === 'error') {
+    return (
+      <div style={{ position: 'fixed', inset: 0, background: 'rgba(5,8,16,0.92)', zIndex: 200, overflowY: 'auto' }}>
+        <WeavingScan
+          domain={domainOf(url)}
+          status={phase}
+          error={error}
+          onReset={() => { setPhase('input'); setError(null) }}
+        />
+      </div>
+    )
   }
 
   return (
     <div
       role="dialog"
       aria-modal="true"
-      onMouseDown={e => { if (e.target === e.currentTarget && phase === 'input') onClose() }}
+      onMouseDown={e => { if (e.target === e.currentTarget) onClose() }}
       style={{ position: 'fixed', inset: 0, background: 'rgba(5,8,16,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, zIndex: 200 }}
     >
       <div
@@ -318,56 +333,43 @@ function NewScanModal({ onClose }: { onClose: () => void }) {
         <span aria-hidden style={{ position: 'absolute', top: -1, left: -1, width: 10, height: 10, borderTop: '1px solid var(--surface-accent)', borderLeft: '1px solid var(--surface-accent)' }} />
         <span aria-hidden style={{ position: 'absolute', bottom: -1, right: -1, width: 10, height: 10, borderBottom: '1px solid var(--surface-accent)', borderRight: '1px solid var(--surface-accent)' }} />
 
-        {phase === 'weaving' ? (
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 18, padding: '20px 0' }}>
-            <WeavnMark size={60} animated ringTints={{ outer: '#6F9BC6', middle: '#6F9BC6', inner: '#6F9BC6' }} />
-            <p style={{ fontFamily: MONO, fontSize: 13, letterSpacing: '0.1em', color: 'var(--surface-accent)', margin: 0 }}>
-              Weaving through your site…
-            </p>
-            <p style={{ fontFamily: MONO, fontSize: 11, color: C.inkMuted, margin: 0 }}>{domain}</p>
-          </div>
-        ) : (
-          <>
-            <p style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--surface-accent)', margin: '0 0 10px' }}>
-              New scan
-            </p>
-            <h2 style={{ fontFamily: DISP, fontWeight: 700, fontSize: 22, color: C.inkPrimary, margin: '0 0 16px', letterSpacing: '-0.3px' }}>
-              Scan a site
-            </h2>
-            <div style={{ display: 'flex', gap: 0 }}>
-              <input
-                ref={inputRef}
-                type="url"
-                value={url}
-                onChange={e => { setUrl(e.target.value); setError(null) }}
-                onKeyDown={e => { if (e.key === 'Enter') void runScan() }}
-                placeholder="your-site.com"
-                autoComplete="off"
-                style={{
-                  flex: 1, minWidth: 0, fontFamily: MONO, fontSize: 14, color: C.inkPrimary,
-                  background: 'rgba(255,255,255,0.03)',
-                  border: '1px solid color-mix(in srgb, var(--surface-accent) 30%, transparent)', borderRight: 'none',
-                  padding: '12px 14px', outline: 'none', borderRadius: 0,
-                }}
-              />
-              <button
-                type="button"
-                onClick={() => void runScan()}
-                disabled={!url.trim()}
-                style={{
-                  fontFamily: MONO, fontSize: 12, letterSpacing: '0.08em', textTransform: 'uppercase',
-                  color: 'var(--surface-accent)', background: 'color-mix(in srgb, var(--surface-accent) 10%, transparent)',
-                  border: '1px solid color-mix(in srgb, var(--surface-accent) 50%, transparent)',
-                  padding: '12px 20px', borderRadius: 0, cursor: url.trim() ? 'pointer' : 'not-allowed',
-                  opacity: url.trim() ? 1 : 0.5, whiteSpace: 'nowrap',
-                }}
-              >
-                Scan →
-              </button>
-            </div>
-            {error ? <p style={{ fontFamily: MONO, fontSize: 12, color: C.worse, margin: '12px 0 0' }}>{error}</p> : null}
-          </>
-        )}
+        <p style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--surface-accent)', margin: '0 0 10px' }}>
+          New scan
+        </p>
+        <h2 style={{ fontFamily: DISP, fontWeight: 700, fontSize: 22, color: C.inkPrimary, margin: '0 0 16px', letterSpacing: '-0.3px' }}>
+          Scan a site
+        </h2>
+        <div style={{ display: 'flex', gap: 0 }}>
+          <input
+            ref={inputRef}
+            type="url"
+            value={url}
+            onChange={e => { setUrl(e.target.value); setError(null) }}
+            onKeyDown={e => { if (e.key === 'Enter') void runScan() }}
+            placeholder="your-site.com"
+            autoComplete="off"
+            style={{
+              flex: 1, minWidth: 0, fontFamily: MONO, fontSize: 14, color: C.inkPrimary,
+              background: 'rgba(255,255,255,0.03)',
+              border: '1px solid color-mix(in srgb, var(--surface-accent) 30%, transparent)', borderRight: 'none',
+              padding: '12px 14px', outline: 'none', borderRadius: 0,
+            }}
+          />
+          <button
+            type="button"
+            onClick={() => void runScan()}
+            disabled={!url.trim()}
+            style={{
+              fontFamily: MONO, fontSize: 12, letterSpacing: '0.08em', textTransform: 'uppercase',
+              color: 'var(--surface-accent)', background: 'color-mix(in srgb, var(--surface-accent) 10%, transparent)',
+              border: '1px solid color-mix(in srgb, var(--surface-accent) 50%, transparent)',
+              padding: '12px 20px', borderRadius: 0, cursor: url.trim() ? 'pointer' : 'not-allowed',
+              opacity: url.trim() ? 1 : 0.5, whiteSpace: 'nowrap',
+            }}
+          >
+            Scan →
+          </button>
+        </div>
       </div>
     </div>
   )

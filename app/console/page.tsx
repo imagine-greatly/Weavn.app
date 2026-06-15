@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { getSupabaseBrowserClient } from '@/lib/supabaseBrowser'
@@ -72,6 +72,13 @@ function relativeTime(iso: string): string {
   const h = Math.floor(m / 60)
   if (h < 24) return `${h}h ago`
   return `${Math.floor(h / 24)}d ago`
+}
+
+function formatAbsDate(iso: string | null): string {
+  if (!iso) return '—'
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return '—'
+  return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })
 }
 
 function scoreToSeverity(score: number): Severity {
@@ -183,14 +190,25 @@ interface OverviewTabProps {
   avgScore: number
   keyPrefix: string | null
   scanRows: ScanRow[]
+  createdLabel: string
+  lastUsedLabel: string
+  rotating: boolean
+  rotateError: string | null
+  onRotate: () => void
 }
 
-function OverviewTab({ scansUsed, spend, avgScore, keyPrefix, scanRows }: OverviewTabProps) {
+function OverviewTab({ scansUsed, spend, avgScore, keyPrefix, scanRows, createdLabel, lastUsedLabel, rotating, rotateError, onRotate }: OverviewTabProps) {
   const [copied, setCopied] = useState(false)
 
-  function handleCopy() {
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
+  // Copies the visible key prefix — the full secret is only shown once at creation
+  // (only its hash is stored), so the prefix is all that remains recoverable here.
+  async function handleCopy() {
+    if (!keyPrefix) return
+    try {
+      await navigator.clipboard.writeText(keyPrefix)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch { /* clipboard unavailable */ }
   }
 
   return (
@@ -217,21 +235,29 @@ function OverviewTab({ scansUsed, spend, avgScore, keyPrefix, scanRows }: Overvi
         <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mb-4">API KEY</div>
         <div className="flex items-center gap-3">
           <div className="font-mono text-sm text-text-secondary bg-background-subtle border border-background-border px-4 py-2.5 flex-1 min-w-0 truncate">
-            {keyPrefix ?? 'weavn_live_'}••••••••••••••••••••••••••
+            {keyPrefix ? `${keyPrefix}••••••••••••••••••••••••••` : '— no active key —'}
           </div>
           <button
             onClick={handleCopy}
-            className="border border-background-border text-text-tertiary font-body text-xs px-3 py-2.5 hover:text-text-primary hover:border-text-tertiary transition-colors duration-150 cursor-pointer bg-transparent flex-shrink-0"
+            disabled={!keyPrefix}
+            className="border border-background-border text-text-tertiary font-body text-xs px-3 py-2.5 hover:text-text-primary hover:border-text-tertiary transition-colors duration-150 cursor-pointer bg-transparent flex-shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {copied ? 'Copied!' : 'Copy'}
           </button>
-          <button className="text-text-tertiary font-body text-xs hover:text-text-primary transition-colors duration-150 bg-transparent border-0 cursor-pointer flex-shrink-0">
-            Regenerate →
+          <button
+            onClick={onRotate}
+            disabled={rotating || !keyPrefix}
+            className="text-text-tertiary font-body text-xs hover:text-text-primary transition-colors duration-150 bg-transparent border-0 cursor-pointer flex-shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            {rotating ? 'Rotating…' : 'Regenerate →'}
           </button>
         </div>
         <div className="font-mono text-xs text-text-tertiary mt-3">
-          Last used: 2 minutes ago · Created: Jun 1, 2026
+          Created: {createdLabel} · Last used: {lastUsedLabel}
         </div>
+        {rotateError ? (
+          <div className="font-mono text-xs text-severity-critical mt-2">{rotateError}</div>
+        ) : null}
       </div>
 
       {/* Activity feed */}
@@ -355,11 +381,17 @@ function ScansTab({ scanRows }: { scanRows: ScanRow[] }) {
 
 interface ApiKeysTabProps {
   keyPrefix: string | null
+  createdLabel: string
+  lastUsedLabel: string
+  rotating: boolean
+  rotateError: string | null
+  onRotate: () => void
   onRevoke: () => Promise<void>
 }
 
-function ApiKeysTab({ keyPrefix, onRevoke }: ApiKeysTabProps) {
+function ApiKeysTab({ keyPrefix, createdLabel, lastUsedLabel, rotating, rotateError, onRotate, onRevoke }: ApiKeysTabProps) {
   const [spendLimit, setSpendLimit] = useState('')
+  const [spendNotice, setSpendNotice] = useState(false)
   const [revoking, setRevoking] = useState(false)
 
   async function handleRevoke() {
@@ -388,8 +420,8 @@ function ApiKeysTab({ keyPrefix, onRevoke }: ApiKeysTabProps) {
         </div>
 
         <div className="flex gap-6 mt-4">
-          <span className="font-mono text-xs text-text-tertiary">Created Jun 1, 2026</span>
-          <span className="font-mono text-xs text-text-tertiary">Last used 2m ago</span>
+          <span className="font-mono text-xs text-text-tertiary">Created {createdLabel}</span>
+          <span className="font-mono text-xs text-text-tertiary">Last used {lastUsedLabel}</span>
           <span className="font-mono text-xs text-text-tertiary">All permissions</span>
         </div>
 
@@ -399,21 +431,38 @@ function ApiKeysTab({ keyPrefix, onRevoke }: ApiKeysTabProps) {
             type="text"
             placeholder="$50.00"
             value={spendLimit}
-            onChange={e => setSpendLimit(e.target.value)}
+            onChange={e => { setSpendLimit(e.target.value); setSpendNotice(false) }}
             className="bg-background-subtle border border-background-border font-mono text-sm text-text-primary px-3 py-2 w-32 outline-none"
           />
-          <button className="border border-background-border font-body text-xs text-text-secondary px-3 py-2 cursor-pointer bg-transparent hover:text-text-primary transition-colors duration-150">
+          {/* TODO(wiring): no persistence path for spend limits yet (no column/endpoint).
+              Held in form-state only — we surface an honest notice instead of faking a save. */}
+          <button
+            onClick={() => setSpendNotice(true)}
+            className="border border-background-border font-body text-xs text-text-secondary px-3 py-2 cursor-pointer bg-transparent hover:text-text-primary transition-colors duration-150"
+          >
             Save
           </button>
         </div>
+        {spendNotice ? (
+          <div className="font-mono text-xs text-purple-muted mt-3">
+            Spend limits aren&apos;t wired up yet — this lands in the billing wiring phase. Your input is kept here for now.
+          </div>
+        ) : null}
       </div>
 
-      <Link
-        href="/console/keys"
-        className="bg-purple-DEFAULT text-text-inverse font-body font-semibold text-sm px-5 py-2.5 no-underline inline-block hover:opacity-90 transition-opacity duration-150"
+      <button
+        onClick={onRotate}
+        disabled={rotating || !keyPrefix}
+        className="bg-purple-DEFAULT text-text-inverse font-body font-semibold text-sm px-5 py-2.5 inline-block hover:opacity-90 transition-opacity duration-150 border-0 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
       >
-        Create new key →
-      </Link>
+        {rotating ? 'Rotating…' : 'Rotate key →'}
+      </button>
+      <p className="font-mono text-xs text-text-tertiary mt-3">
+        Rotating deactivates the current key immediately and shows the new key once.
+      </p>
+      {rotateError ? (
+        <div className="font-mono text-xs text-severity-critical mt-2">{rotateError}</div>
+      ) : null}
 
     </div>
   )
@@ -606,56 +655,93 @@ export default function DeveloperPortal() {
   const [loading, setLoading]         = useState(true)
   const [scansUsed, setScansUsed]     = useState(0)
   const [keyPrefix, setKeyPrefix]     = useState<string | null>(null)
+  const [keyCreatedAt, setKeyCreatedAt] = useState<string | null>(null)
+  const [keyLastUsedAt, setKeyLastUsedAt] = useState<string | null>(null)
   const [plan, setPlan]               = useState('playground')
   const [rawUsage, setRawUsage]       = useState<UsageRow[]>([])
   const [rawWebhooks, setRawWebhooks] = useState<WebhookRow[]>([])
 
-  useEffect(() => {
-    async function load() {
-      const supabase = getSupabaseBrowserClient()
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) { router.push('/auth'); return }
+  // Key rotation (real, via DELETE /api/developer/generate-key — the new key is
+  // returned once and revealed here; only its hash is ever stored).
+  const [rotating, setRotating]       = useState(false)
+  const [rotateError, setRotateError] = useState<string | null>(null)
+  const [revealedKey, setRevealedKey] = useState<string | null>(null)
+  const [revealedCopied, setRevealedCopied] = useState(false)
 
-      const { data: keyRow } = await supabase
-        .from('api_keys')
-        .select('id, scans_used, plan, key_prefix')
-        .eq('user_id', user.id)
-        .eq('active', true)
-        .limit(1)
-        .maybeSingle()
+  const loadData = useCallback(async () => {
+    const supabase = getSupabaseBrowserClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) { router.push('/auth'); return }
 
-      if (keyRow) {
-        const kr = keyRow as { id: string; scans_used: number; plan: string; key_prefix: string }
-        setScansUsed(kr.scans_used ?? 0)
-        setPlan(kr.plan ?? 'playground')
-        setKeyPrefix(kr.key_prefix ?? null)
+    const { data: keyRow } = await supabase
+      .from('api_keys')
+      .select('id, scans_used, plan, key_prefix, created_at, last_used_at')
+      .eq('user_id', user.id)
+      .eq('active', true)
+      .limit(1)
+      .maybeSingle()
 
-        const { data: usage } = await supabase
-          .from('api_usage')
-          .select('id, url, score, status, created_at, response_time_ms, cost_usd')
-          .eq('api_key_id', kr.id)
-          .order('created_at', { ascending: false })
-          .limit(50)
-
-        setRawUsage((usage ?? []) as UsageRow[])
-
-        try {
-          const { data: wh, error: whErr } = await supabase
-            .from('webhook_deliveries')
-            .select('id, url, event, created_at, status')
-            .eq('api_key_id', kr.id)
-            .order('created_at', { ascending: false })
-            .limit(20)
-          if (!whErr) setRawWebhooks((wh ?? []) as WebhookRow[])
-        } catch {
-          // webhook_deliveries table may not exist yet
-        }
-      }
-
+    if (!keyRow) {
+      setKeyPrefix(null); setScansUsed(0); setPlan('playground')
+      setKeyCreatedAt(null); setKeyLastUsedAt(null)
+      setRawUsage([]); setRawWebhooks([])
       setLoading(false)
+      return
     }
-    load()
+
+    const kr = keyRow as { id: string; scans_used: number; plan: string; key_prefix: string; created_at: string | null; last_used_at: string | null }
+    setScansUsed(kr.scans_used ?? 0)
+    setPlan(kr.plan ?? 'playground')
+    setKeyPrefix(kr.key_prefix ?? null)
+    setKeyCreatedAt(kr.created_at ?? null)
+    setKeyLastUsedAt(kr.last_used_at ?? null)
+
+    const { data: usage } = await supabase
+      .from('api_usage')
+      .select('id, url, score, status, created_at, response_time_ms, cost_usd')
+      .eq('api_key_id', kr.id)
+      .order('created_at', { ascending: false })
+      .limit(50)
+    setRawUsage((usage ?? []) as UsageRow[])
+
+    try {
+      const { data: wh, error: whErr } = await supabase
+        .from('webhook_deliveries')
+        .select('id, url, event, created_at, status')
+        .eq('api_key_id', kr.id)
+        .order('created_at', { ascending: false })
+        .limit(20)
+      if (!whErr) setRawWebhooks((wh ?? []) as WebhookRow[])
+    } catch {
+      // webhook_deliveries table may not exist yet
+    }
+
+    setLoading(false)
   }, [router])
+
+  useEffect(() => { void loadData() }, [loadData])
+
+  async function handleRotate() {
+    if (rotating) return
+    const ok = typeof window !== 'undefined'
+      ? window.confirm('Rotate your API key? The current key stops working immediately and the new key is shown only once.')
+      : false
+    if (!ok) return
+    setRotating(true)
+    setRotateError(null)
+    try {
+      const res = await fetch('/api/developer/generate-key', { method: 'DELETE', credentials: 'include' })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok || !data?.key) throw new Error(typeof data?.error === 'string' ? data.error : 'Rotate failed. Please try again.')
+      setRevealedKey(String(data.key))
+      setRevealedCopied(false)
+      await loadData() // new key starts fresh — refresh prefix + usage
+    } catch (e) {
+      setRotateError(e instanceof Error ? e.message : 'Rotate failed. Please try again.')
+    } finally {
+      setRotating(false)
+    }
+  }
 
   // Derived values
   const spend = rawUsage.reduce((sum, r) => sum + (r.cost_usd ?? 0), 0)
@@ -667,6 +753,8 @@ export default function DeveloperPortal() {
   const planLimit = PLAN_LIMITS[plan] ?? 999999
   const usagePct  = planLimit < 999999 ? Math.min(100, (scansUsed / planLimit) * 100) : 5
   const usageLabel = planLimit >= 999999 ? 'of unlimited' : `of ${planLimit}`
+  const createdLabel = formatAbsDate(keyCreatedAt)
+  const lastUsedLabel = keyLastUsedAt ? relativeTime(keyLastUsedAt) : 'never'
 
   const scanRows: ScanRow[] = rawUsage.map(r => ({
     domain:   domainFromUrl(r.url ?? ''),
@@ -686,11 +774,7 @@ export default function DeveloperPortal() {
 
   async function handleRevoke() {
     await fetch('/api/developer/revoke-key', { method: 'POST', credentials: 'include' })
-    setKeyPrefix(null)
-    setScansUsed(0)
-    setPlan('playground')
-    setRawUsage([])
-    setRawWebhooks([])
+    await loadData()
   }
 
   if (loading) {
@@ -774,17 +858,74 @@ export default function DeveloperPortal() {
               avgScore={avgScore}
               keyPrefix={keyPrefix}
               scanRows={scanRows}
+              createdLabel={createdLabel}
+              lastUsedLabel={lastUsedLabel}
+              rotating={rotating}
+              rotateError={rotateError}
+              onRotate={handleRotate}
             />
           )}
           {activeTab === 'scans'    && <ScansTab scanRows={scanRows} />}
           {activeTab === 'apikeys'  && (
-            <ApiKeysTab keyPrefix={keyPrefix} onRevoke={handleRevoke} />
+            <ApiKeysTab
+              keyPrefix={keyPrefix}
+              createdLabel={createdLabel}
+              lastUsedLabel={lastUsedLabel}
+              rotating={rotating}
+              rotateError={rotateError}
+              onRotate={handleRotate}
+              onRevoke={handleRevoke}
+            />
           )}
           {activeTab === 'webhooks' && <WebhooksTab webhookLog={webhookLogMapped} />}
           {activeTab === 'docs'     && <DocsTab />}
         </div>
 
       </div>
+
+      {/* One-time reveal of a freshly rotated key — the full secret is shown once */}
+      {revealedKey && (
+        <div
+          style={{ position: 'fixed', inset: 0, background: 'rgba(5,8,16,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, zIndex: 200 }}
+        >
+          <div
+            className="bg-background-raised"
+            style={{ maxWidth: 560, width: '100%', border: '1px solid rgba(157,140,255,0.3)', borderLeft: '3px solid #9D8CFF', padding: 28 }}
+          >
+            <p className="font-mono" style={{ fontSize: 11, color: '#9D8CFF', letterSpacing: '0.2em', marginBottom: 8, textTransform: 'uppercase' }}>
+              New API key
+            </p>
+            <h2 className="font-display" style={{ fontSize: 22, fontWeight: 700, color: '#F0F4FF', marginBottom: 8 }}>
+              Copy your new key now.
+            </h2>
+            <p className="font-body" style={{ fontSize: 13, color: 'rgba(240,244,255,0.55)', marginBottom: 20, lineHeight: 1.6 }}>
+              This is the only time the full key is shown — only its hash is stored. The previous key has been deactivated.
+            </p>
+            <div className="font-mono" style={{ fontSize: 13, color: '#F0F4FF', background: 'rgba(157,140,255,0.06)', border: '1px solid rgba(157,140,255,0.25)', padding: '14px 16px', wordBreak: 'break-all', marginBottom: 16 }}>
+              {revealedKey}
+            </div>
+            <div style={{ display: 'flex', gap: 12 }}>
+              <button
+                onClick={() => {
+                  navigator.clipboard?.writeText(revealedKey).then(
+                    () => { setRevealedCopied(true); setTimeout(() => setRevealedCopied(false), 2000) },
+                    () => {}
+                  )
+                }}
+                className="bg-purple-DEFAULT text-text-inverse font-body font-semibold text-sm px-5 py-2.5 border-0 cursor-pointer"
+              >
+                {revealedCopied ? 'Copied ✓' : 'Copy key'}
+              </button>
+              <button
+                onClick={() => setRevealedKey(null)}
+                className="border border-background-border text-text-secondary font-body text-sm px-5 py-2.5 bg-transparent cursor-pointer hover:text-text-primary transition-colors duration-150"
+              >
+                Done
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

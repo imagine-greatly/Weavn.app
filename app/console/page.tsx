@@ -7,6 +7,7 @@ import { getSupabaseBrowserClient } from '@/lib/supabaseBrowser'
 import ScoreRing from '@/components/ui/ScoreRing'
 import Label from '@/components/ui/Label'
 import SurfaceSwitcher from '@/components/SurfaceSwitcher'
+import { FREE_API_TRIAL_SCANS } from '@/lib/constants'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -47,16 +48,9 @@ interface WebhookRow {
   status: string | number | null
 }
 
-// ── Plan limits ───────────────────────────────────────────────────────────────
-
-const PLAN_LIMITS: Record<string, number> = {
-  playground: 25,
-  dev: 300,
-  builder: 1000,
-  scale: 3000,
-  enterprise: 999999,
-  payg: 999999,
-}
+// Trial-gated plans (mirrors FREE_TRIAL_PLANS in lib/usageTracking): these keys are
+// capped at the lifetime free-trial ceiling; every other plan fails open (no gate yet).
+const TRIAL_PLANS = ['playground', 'payg', 'free']
 
 // ── Data helpers ──────────────────────────────────────────────────────────────
 
@@ -185,8 +179,8 @@ function MethodBadge({ method }: { method: 'POST' | 'GET' }) {
 // ── Overview Tab ──────────────────────────────────────────────────────────────
 
 interface OverviewTabProps {
-  scansUsed: number
-  spend: number
+  monthScans: number
+  monthSpend: number
   avgScore: number
   keyPrefix: string | null
   scanRows: ScanRow[]
@@ -197,7 +191,7 @@ interface OverviewTabProps {
   onRotate: () => void
 }
 
-function OverviewTab({ scansUsed, spend, avgScore, keyPrefix, scanRows, createdLabel, lastUsedLabel, rotating, rotateError, onRotate }: OverviewTabProps) {
+function OverviewTab({ monthScans, monthSpend, avgScore, keyPrefix, scanRows, createdLabel, lastUsedLabel, rotating, rotateError, onRotate }: OverviewTabProps) {
   const [copied, setCopied] = useState(false)
 
   // Copies the visible key prefix — the full secret is only shown once at creation
@@ -217,11 +211,11 @@ function OverviewTab({ scansUsed, spend, avgScore, keyPrefix, scanRows, createdL
       {/* Stat row */}
       <div className="grid grid-cols-3 gap-px bg-background-border mb-px">
         <div className="bg-background-raised p-6">
-          <div className="font-display font-extrabold text-4xl text-text-primary">{scansUsed}</div>
+          <div className="font-display font-extrabold text-4xl text-text-primary">{monthScans}</div>
           <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mt-1">SCANS THIS MONTH</div>
         </div>
         <div className="bg-background-raised p-6">
-          <div className="font-display font-extrabold text-4xl text-text-primary">${spend.toFixed(2)}</div>
+          <div className="font-display font-extrabold text-4xl text-text-primary">${monthSpend.toFixed(2)}</div>
           <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mt-1">SPENT THIS MONTH</div>
         </div>
         <div className="bg-background-raised p-6">
@@ -658,6 +652,8 @@ export default function DeveloperPortal() {
   const [keyCreatedAt, setKeyCreatedAt] = useState<string | null>(null)
   const [keyLastUsedAt, setKeyLastUsedAt] = useState<string | null>(null)
   const [plan, setPlan]               = useState('playground')
+  const [monthScans, setMonthScans]   = useState(0)
+  const [monthSpend, setMonthSpend]   = useState(0)
   const [rawUsage, setRawUsage]       = useState<UsageRow[]>([])
   const [rawWebhooks, setRawWebhooks] = useState<WebhookRow[]>([])
 
@@ -684,6 +680,7 @@ export default function DeveloperPortal() {
     if (!keyRow) {
       setKeyPrefix(null); setScansUsed(0); setPlan('playground')
       setKeyCreatedAt(null); setKeyLastUsedAt(null)
+      setMonthScans(0); setMonthSpend(0)
       setRawUsage([]); setRawWebhooks([])
       setLoading(false)
       return
@@ -703,6 +700,19 @@ export default function DeveloperPortal() {
       .order('created_at', { ascending: false })
       .limit(50)
     setRawUsage((usage ?? []) as UsageRow[])
+
+    // Month-to-date usage (current calendar month, UTC) — distinct from the lifetime
+    // api_keys.scans_used. count is exact; spend sums up to 1000 rows for the month.
+    const now = new Date()
+    const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)).toISOString()
+    const { data: monthRows, count: monthCount } = await supabase
+      .from('api_usage')
+      .select('cost_usd', { count: 'exact' })
+      .eq('api_key_id', kr.id)
+      .gte('created_at', monthStart)
+      .limit(1000)
+    setMonthScans(monthCount ?? (monthRows?.length ?? 0))
+    setMonthSpend((monthRows ?? []).reduce((s, r) => s + ((r as { cost_usd: number | null }).cost_usd ?? 0), 0))
 
     try {
       const { data: wh, error: whErr } = await supabase
@@ -743,16 +753,17 @@ export default function DeveloperPortal() {
     }
   }
 
-  // Derived values
-  const spend = rawUsage.reduce((sum, r) => sum + (r.cost_usd ?? 0), 0)
+  // Derived values. "This month" comes from the windowed monthScans/monthSpend, never
+  // lifetime scans_used. The sidebar quota is DISPLAY-ONLY: the only enforced cap is the
+  // lifetime free-trial ceiling on trial-plan keys (checkScanAllowed); paid tiers fail
+  // open. TODO(wiring): paid-tier quota enforcement + month-windowed plan limits.
   const avgScore = (() => {
     const scored = rawUsage.filter(r => r.score !== null)
     if (!scored.length) return 0
     return Math.round(scored.reduce((sum, r) => sum + (r.score ?? 0), 0) / scored.length)
   })()
-  const planLimit = PLAN_LIMITS[plan] ?? 999999
-  const usagePct  = planLimit < 999999 ? Math.min(100, (scansUsed / planLimit) * 100) : 5
-  const usageLabel = planLimit >= 999999 ? 'of unlimited' : `of ${planLimit}`
+  const isTrialPlan = TRIAL_PLANS.includes(plan)
+  const trialPct = isTrialPlan ? Math.min(100, Math.round((scansUsed / FREE_API_TRIAL_SCANS) * 100)) : 0
   const createdLabel = formatAbsDate(keyCreatedAt)
   const lastUsedLabel = keyLastUsedAt ? relativeTime(keyLastUsedAt) : 'never'
 
@@ -821,14 +832,23 @@ export default function DeveloperPortal() {
           ))}
         </nav>
 
-        {/* Usage block */}
+        {/* Usage block — month-to-date activity + display-only trial quota */}
         <div className="px-6 py-5 border-t border-background-border">
           <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mb-3">THIS MONTH</div>
-          <div className="font-display font-extrabold text-2xl text-text-primary">{scansUsed}</div>
-          <div className="font-mono text-xs text-text-tertiary">{usageLabel} · ${spend.toFixed(2)} spent</div>
-          <div className="relative w-full h-px bg-background-border mt-3">
-            <div className="absolute top-0 left-0 h-full bg-purple-DEFAULT" style={{ width: `${usagePct}%` }} />
-          </div>
+          <div className="font-display font-extrabold text-2xl text-text-primary">{monthScans}</div>
+          <div className="font-mono text-xs text-text-tertiary">{monthScans === 1 ? 'scan' : 'scans'} · ${monthSpend.toFixed(2)} spent</div>
+
+          <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mt-5 mb-2">Quota</div>
+          {isTrialPlan ? (
+            <>
+              <div className="font-mono text-xs text-text-tertiary">{scansUsed} / {FREE_API_TRIAL_SCANS} free trial · lifetime</div>
+              <div className="relative w-full h-px bg-background-border mt-3">
+                <div className="absolute top-0 left-0 h-full bg-purple-DEFAULT" style={{ width: `${trialPct}%` }} />
+              </div>
+            </>
+          ) : (
+            <div className="font-mono text-xs text-text-tertiary">{plan} · usage-based</div>
+          )}
         </div>
 
       </aside>
@@ -853,8 +873,8 @@ export default function DeveloperPortal() {
         <div className="flex-1 overflow-y-auto bg-background-base">
           {activeTab === 'overview' && (
             <OverviewTab
-              scansUsed={scansUsed}
-              spend={spend}
+              monthScans={monthScans}
+              monthSpend={monthSpend}
               avgScore={avgScore}
               keyPrefix={keyPrefix}
               scanRows={scanRows}

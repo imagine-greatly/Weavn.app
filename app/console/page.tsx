@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { getSupabaseBrowserClient } from '@/lib/supabaseBrowser'
 import ScoreRing from '@/components/ui/ScoreRing'
 import Label from '@/components/ui/Label'
+import SurfaceSwitcher from '@/components/SurfaceSwitcher'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -711,6 +712,11 @@ export default function DeveloperPortal() {
           <Link href="/" className="font-display font-extrabold text-sm text-text-primary no-underline">
             Weavn
           </Link>
+        </div>
+
+        {/* Surface-switcher — move between Developers (/console) and Dashboard (/app) */}
+        <div className="px-6 py-4 border-b border-background-border">
+          <SurfaceSwitcher active="console" />
         </div>
 
         {/* Nav */}

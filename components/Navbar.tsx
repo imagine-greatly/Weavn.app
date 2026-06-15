@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ChevronDown, Menu } from "lucide-react";
 import { getSupabaseBrowserClient } from "@/lib/supabaseBrowser";
+import SurfaceSwitcher from "@/components/SurfaceSwitcher";
 
 /**
  * Global navbar for weavn.app.
@@ -81,6 +82,12 @@ export default function Navbar() {
   }, [dropdownOpen]);
 
   const isLoggedIn = Boolean(userEmail);
+  // Inside a workspace shell the sidebar carries the surface-switcher, so the navbar
+  // omits it there to avoid a duplicate. On marketing pages the navbar shows it so a
+  // logged-in user can enter either workspace (no longer hard-forced to /app).
+  const inWorkspace =
+    pathname === "/app" || pathname.startsWith("/app/") ||
+    pathname === "/console" || pathname.startsWith("/console/");
 
   const navLinkTypography =
     "font-mono text-[10px] font-normal uppercase tracking-[2.5px] whitespace-nowrap";
@@ -231,27 +238,33 @@ export default function Navbar() {
           </Link>
         )}
         <div className="hidden items-center gap-4 md:flex">
-          <a
-            href={isLoggedIn ? "/app" : "/auth?surface=dashboard"}
-            className={`${ctaButtonClass} shrink-0`}
-            style={{ ...ctaOutlineStyle, textDecoration: "none" }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = "rgba(111,155,198,0.08)";
-              e.currentTarget.style.borderColor = "rgba(111,155,198,0.6)";
-              e.currentTarget.style.boxShadow = "var(--interactive-glow-active)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = "transparent";
-              e.currentTarget.style.borderColor = "rgba(111,155,198,0.35)";
-              e.currentTarget.style.boxShadow = "none";
-              e.currentTarget.style.transitionDuration = "300ms";
-            }}
-          >
-            DASHBOARD
-            <span className="ml-1 inline-block transition-transform duration-150 group-hover/cta:translate-x-[3px]">
-              →
-            </span>
-          </a>
+          {/* Logged-out: single workspace CTA. Logged-in on a marketing page: the
+              persistent surface-switcher so either workspace is one click away. */}
+          {!isLoggedIn ? (
+            <a
+              href="/auth?surface=dashboard"
+              className={`${ctaButtonClass} shrink-0`}
+              style={{ ...ctaOutlineStyle, textDecoration: "none" }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = "rgba(111,155,198,0.08)";
+                e.currentTarget.style.borderColor = "rgba(111,155,198,0.6)";
+                e.currentTarget.style.boxShadow = "var(--interactive-glow-active)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = "transparent";
+                e.currentTarget.style.borderColor = "rgba(111,155,198,0.35)";
+                e.currentTarget.style.boxShadow = "none";
+                e.currentTarget.style.transitionDuration = "300ms";
+              }}
+            >
+              DASHBOARD
+              <span className="ml-1 inline-block transition-transform duration-150 group-hover/cta:translate-x-[3px]">
+                →
+              </span>
+            </a>
+          ) : (
+            !inWorkspace && <SurfaceSwitcher compact />
+          )}
 
             {isLoggedIn && <div id="nav-user-dropdown" style={{ position: "relative" }}>
               <button
@@ -439,14 +452,19 @@ export default function Navbar() {
                 Sign in
               </Link>
             )}
-            <a
-              href={isLoggedIn ? "/app" : "/auth?surface=dashboard"}
-              className={`${navCtaTypography} flex min-h-[48px] items-center justify-center px-4 py-3`}
-              style={{ ...ctaOutlineStyle, textDecoration: "none", width: "100%" }}
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              DASHBOARD →
-            </a>
+            {!isLoggedIn ? (
+              <a
+                href="/auth?surface=dashboard"
+                className={`${navCtaTypography} flex min-h-[48px] items-center justify-center px-4 py-3`}
+                style={{ ...ctaOutlineStyle, textDecoration: "none", width: "100%" }}
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                DASHBOARD →
+              </a>
+            ) : (
+              /* Logged-in: both workspaces. The menu closes on the resulting route change. */
+              <SurfaceSwitcher />
+            )}
           </div>
         </nav>
       </div>

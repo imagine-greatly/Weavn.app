@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import WeavnMark from '@/components/ui/WeavnMark'
+import SurfaceSwitcher from '@/components/SurfaceSwitcher'
 
 // ── Dashboard surface tokens (steel blue · muted cold futurism) ────────────────
 // Source of truth: tailwind.config.ts / lib/design-tokens.ts. Steel #6F9BC6 is the
@@ -59,6 +60,11 @@ export default function DashboardShell({ children }: { children: React.ReactNode
           <span style={{ fontFamily: MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.2em', color: C.inkMuted }}>
             Dashboard
           </span>
+        </div>
+
+        {/* Surface-switcher — move between Dashboard (/app) and Developers (/console) */}
+        <div style={{ padding: '14px 18px', borderBottom: `0.5px solid ${C.border}`, flexShrink: 0 }}>
+          <SurfaceSwitcher active="app" />
         </div>
 
         {/* Nav */}

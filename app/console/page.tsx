@@ -48,6 +48,15 @@ interface WebhookRow {
   status: string | number | null
 }
 
+// Registered webhook endpoint (from /api/developer/webhooks). Distinct from the
+// delivery log (webhook_deliveries) — this is the subscription, not its history.
+interface WebhookEndpoint {
+  id: string
+  url: string
+  active: boolean
+  created_at: string
+}
+
 // Trial-gated plans (mirrors FREE_TRIAL_PLANS in lib/usageTracking): these keys are
 // capped at the lifetime free-trial ceiling; every other plan fails open (no gate yet).
 const TRIAL_PLANS = ['playground', 'payg', 'free']
@@ -465,9 +474,70 @@ function ApiKeysTab({ keyPrefix, createdLabel, lastUsedLabel, rotating, rotateEr
 // ── Webhooks Tab ──────────────────────────────────────────────────────────────
 
 function WebhooksTab({ webhookLog }: { webhookLog: WebhookLog[] }) {
-  const [webhookUrl, setWebhookUrl]       = useState('')
-  const [scanCompleted, setScanCompleted] = useState(true)
-  const [scanFailed, setScanFailed]       = useState(false)
+  const [webhookUrl, setWebhookUrl] = useState('')
+  const [endpoints, setEndpoints]   = useState<WebhookEndpoint[]>([])
+  const [listLoading, setListLoading] = useState(true)
+  const [registering, setRegistering] = useState(false)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [error, setError]           = useState<string | null>(null)
+
+  // List registered endpoints (real GET /api/developer/webhooks — session-auth).
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      try {
+        const res = await fetch('/api/developer/webhooks', { credentials: 'include' })
+        const data = await res.json().catch(() => ({}))
+        if (!cancelled && res.ok) setEndpoints((data.webhooks ?? []) as WebhookEndpoint[])
+      } catch { /* leave empty */ }
+      if (!cancelled) setListLoading(false)
+    })()
+    return () => { cancelled = true }
+  }, [])
+
+  async function handleRegister() {
+    const url = webhookUrl.trim()
+    if (!url || registering) return
+    setRegistering(true); setError(null)
+    try {
+      const res = await fetch('/api/developer/webhooks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ url }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(typeof data?.error === 'string' ? data.error : 'Failed to register endpoint')
+      setEndpoints(prev => [data as WebhookEndpoint, ...prev])
+      setWebhookUrl('')
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to register endpoint')
+    } finally {
+      setRegistering(false)
+    }
+  }
+
+  async function handleDelete(id: string) {
+    if (deletingId) return
+    setDeletingId(id); setError(null)
+    try {
+      const res = await fetch('/api/developer/webhooks', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ id }),
+      })
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        throw new Error(typeof data?.error === 'string' ? data.error : 'Failed to delete endpoint')
+      }
+      setEndpoints(prev => prev.filter(e => e.id !== id))
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to delete endpoint')
+    } finally {
+      setDeletingId(null)
+    }
+  }
 
   return (
     <div className="px-8 py-8">
@@ -475,37 +545,59 @@ function WebhooksTab({ webhookLog }: { webhookLog: WebhookLog[] }) {
       {/* Register form */}
       <div className="bg-background-raised border border-background-border p-6 mb-6">
         <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mb-4">REGISTER ENDPOINT</div>
-        <input
-          type="url"
-          placeholder="https://your-app.com/webhook"
-          value={webhookUrl}
-          onChange={e => setWebhookUrl(e.target.value)}
-          className="w-full bg-background-subtle border border-background-border font-mono text-sm text-text-primary px-4 py-3 placeholder:text-text-tertiary outline-none"
-        />
-        <div className="flex gap-3 mt-3">
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={scanCompleted}
-              onChange={e => setScanCompleted(e.target.checked)}
-            />
-            <span className="font-body text-xs text-text-secondary">scan.completed</span>
-          </label>
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={scanFailed}
-              onChange={e => setScanFailed(e.target.checked)}
-            />
-            <span className="font-body text-xs text-text-secondary">scan.failed</span>
-          </label>
+        <div className="flex gap-3">
+          <input
+            type="url"
+            placeholder="https://your-app.com/webhook"
+            value={webhookUrl}
+            onChange={e => { setWebhookUrl(e.target.value); setError(null) }}
+            onKeyDown={e => { if (e.key === 'Enter') void handleRegister() }}
+            className="flex-1 bg-background-subtle border border-background-border font-mono text-sm text-text-primary px-4 py-3 placeholder:text-text-tertiary outline-none"
+          />
+          <button
+            onClick={handleRegister}
+            disabled={registering || !webhookUrl.trim()}
+            className="bg-purple-DEFAULT text-text-inverse font-body font-semibold text-sm px-5 py-2.5 cursor-pointer border-0 hover:opacity-90 transition-opacity duration-150 disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0"
+          >
+            {registering ? 'Registering…' : 'Register'}
+          </button>
         </div>
-        <button className="bg-purple-DEFAULT text-text-inverse font-body font-semibold text-sm px-5 py-2.5 mt-4 cursor-pointer border-0 hover:opacity-90 transition-opacity duration-150">
-          Register endpoint
-        </button>
+        <div className="font-mono text-xs text-text-tertiary mt-3">
+          Registered endpoints receive all scan events (scan.completed, scan.failed).
+        </div>
+        {/* TODO(wiring): the webhooks endpoint never returns a signing secret, so we do
+            NOT fake a "secret shown once" here. Secret provisioning is a later backend add. */}
+        {error ? <div className="font-mono text-xs text-severity-critical mt-2">{error}</div> : null}
       </div>
 
-      {/* Delivery log */}
+      {/* Registered endpoints (real list + delete) */}
+      <div className="bg-background-raised border border-background-border mb-6">
+        <div className="px-6 py-4 border-b border-background-border">
+          <span className="font-mono text-xs text-text-tertiary uppercase tracking-widest">REGISTERED ENDPOINTS</span>
+        </div>
+        {listLoading ? (
+          <div className="px-6 py-8 font-mono text-sm text-text-tertiary">Loading…</div>
+        ) : endpoints.length === 0 ? (
+          <div className="px-6 py-8 font-mono text-sm text-text-tertiary">No endpoints registered.</div>
+        ) : endpoints.map(ep => (
+          <div key={ep.id} className="flex items-center gap-4 px-6 py-4 border-b border-background-border last:border-0">
+            <span className={`font-mono text-xs px-2 py-0.5 flex-shrink-0 ${ep.active ? 'bg-score-high/10 text-score-high' : 'bg-background-subtle text-text-tertiary'}`}>
+              {ep.active ? 'active' : 'inactive'}
+            </span>
+            <span className="font-mono text-xs text-text-secondary truncate flex-1">{ep.url}</span>
+            <span className="font-mono text-xs text-text-tertiary flex-shrink-0">{relativeTime(ep.created_at)}</span>
+            <button
+              onClick={() => handleDelete(ep.id)}
+              disabled={deletingId === ep.id}
+              className="font-body text-xs text-severity-critical hover:underline cursor-pointer bg-transparent border-0 flex-shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              {deletingId === ep.id ? 'Deleting…' : 'Delete'}
+            </button>
+          </div>
+        ))}
+      </div>
+
+      {/* Delivery log (history from webhook_deliveries) */}
       <div className="bg-background-raised border border-background-border">
         <div className="px-6 py-4 border-b border-background-border">
           <span className="font-mono text-xs text-text-tertiary uppercase tracking-widest">DELIVERY LOG</span>
@@ -528,11 +620,6 @@ function WebhooksTab({ webhookLog }: { webhookLog: WebhookLog[] }) {
             <span className="font-body text-xs text-text-tertiary truncate flex-1">{log.url}</span>
             <span className="font-mono text-xs text-text-tertiary flex-shrink-0">{log.time}</span>
             <span className="font-mono text-xs text-text-tertiary flex-shrink-0">{log.date}</span>
-            {log.status === 500 && (
-              <span className="font-body text-xs text-purple-DEFAULT cursor-pointer hover:underline flex-shrink-0">
-                Retry
-              </span>
-            )}
           </div>
         ))}
       </div>

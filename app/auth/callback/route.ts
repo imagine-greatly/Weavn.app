@@ -73,13 +73,20 @@ export async function GET(request: NextRequest) {
 
   await new Promise(resolve => setTimeout(resolve, 500));
 
-  // After successful session exchange, check for a pending scan URL stored in a cookie
+  // After successful session exchange, decide the landing destination:
+  //   1. a pending scan URL (cookie) → /dashboard to run it,
+  //   2. otherwise the signup surface (?surface=api forwarded from /auth) → /console,
+  //   3. else default → /app.
+  // This only sets the STARTING workspace; the surface-switcher reaches the other.
   const pendingUrlCookie = request.cookies.get("pendingUrl");
+  const surface = requestUrl.searchParams.get("surface");
   let destination: string;
   if (pendingUrlCookie?.value) {
     const raw = decodeURIComponent(pendingUrlCookie.value);
     const normalized = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
     destination = `/dashboard?url=${encodeURIComponent(normalized)}`;
+  } else if (surface === "api") {
+    destination = "/console";
   } else {
     destination = "/app";
   }

@@ -40,6 +40,20 @@ function mapAuthErrorToCtaMessage(raw: string): string {
   return "Authentication request failed.";
 }
 
+// Post-auth STARTING workspace from the captured signup surface/plan. This only sets
+// the initial workspace — it never restricts the other surface (both are always
+// reachable via the persistent surface-switcher). Default when surface is absent: /app.
+function resolvePostAuthDestination(): string {
+  if (typeof sessionStorage === "undefined") return "/app";
+  const surface = sessionStorage.getItem("auth_surface") || "";
+  const plan = (sessionStorage.getItem("auth_plan") || "").toLowerCase();
+  // Unambiguous API plans → Developers console. "enterprise" is intentionally omitted
+  // (it exists on both surfaces); the surface param disambiguates, else we default to /app.
+  const API_PLANS = ["dev", "builder", "scale"];
+  if (surface === "api" || API_PLANS.includes(plan)) return "/console";
+  return "/app";
+}
+
 function buildScanRedirect(): string {
   if (typeof document !== "undefined") {
     const match = document.cookie.match(/(?:^|;\s*)pendingUrl=([^;]*)/);
@@ -58,7 +72,8 @@ function buildScanRedirect(): string {
       return `/dashboard?url=${encodeURIComponent(normalized)}`;
     }
   }
-  return "/app";
+  // No pending scan → route to the workspace implied by the signup surface.
+  return resolvePostAuthDestination();
 }
 
 // ── Sub-components ────────────────────────────────────────────────────────────
@@ -234,8 +249,9 @@ function AuthPageContent() {
       if (data?.session) {
         setTimeout(() => {
           const next = searchParams.get("next");
-          const authSurface = typeof sessionStorage !== "undefined" ? (sessionStorage.getItem("auth_surface") || "dashboard") : "dashboard";
-          window.location.replace(next ?? (authSurface === "api" ? "/playground" : "/app"));
+          // surface=api → /console, dashboard/none → /app (buildScanRedirect also
+          // honors a pending scan URL). Replaces the old /playground landing.
+          window.location.replace(next ?? buildScanRedirect());
         }, 800);
       } else {
         setSignupEmailSent(true);
@@ -503,7 +519,9 @@ function AuthPageContent() {
                   const supabase = getSupabaseBrowserClient();
                   const { error } = await supabase.auth.signInWithOAuth({
                     provider: "google",
-                    options: { redirectTo: window.location.origin + "/auth/callback" },
+                    // Carry the signup surface through OAuth so the callback can land
+                    // API users on /console and dashboard users on /app.
+                    options: { redirectTo: window.location.origin + "/auth/callback?surface=" + encodeURIComponent(surface) },
                   });
                   if (error) { setGoogleError(error.message || "Google authentication failed."); setIsGoogleLoading(false); }
                 } catch {

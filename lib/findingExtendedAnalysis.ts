@@ -5,6 +5,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import type { Leak, ReportPayload } from "@/lib/reportSchema";
+import { realScanCostUsd } from "@/lib/scanCost";
 import { getDashboardMoneyLeaks } from "@/lib/dashboardMoneyLeaks";
 import {
   expandFindingBriefWithAnthropic,
@@ -242,7 +243,8 @@ export async function generateAndPersistFirstFindingBrief(
 
 
 /**
- * Makes ONE Anthropic call for all 5 findings and returns a keyed map of expansions.
+ * Makes ONE Anthropic call for all 5 findings and returns a keyed map of expansions
+ * plus the real USD cost of that call (0 if the call was skipped/failed before billing).
  * Returns an empty map on failure; the caller handles logging and fallback.
  */
 async function generateAllFindingBriefsMaster(
@@ -250,13 +252,13 @@ async function generateAllFindingBriefsMaster(
   domain: string,
   payload: ReportPayload,
   pageSummary?: string
-): Promise<Record<string, FindingBriefExpansion>> {
+): Promise<{ map: Record<string, FindingBriefExpansion>; costUsd: number }> {
   const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) return {};
+  if (!apiKey) return { map: {}, costUsd: 0 };
 
   const allLeaks = resolveLeaksForReportPayload(payload);
   const leaks = allLeaks.slice(0, 5);
-  if (leaks.length === 0) return {};
+  if (leaks.length === 0) return { map: {}, costUsd: 0 };
 
   const overallScore = payload.healthScore ?? payload.growthScore ?? 0;
   const siteType = payload.site_type;
@@ -315,6 +317,7 @@ ${EXPAND_FINDING_BRIEF_JSON_CONTRACT}`;
 
   const anthropic = new Anthropic({ apiKey, timeout: 120_000 });
   let rawText = "";
+  let briefsCostUsd = 0;
   try {
     const msg = await anthropic.messages.create({
       model: "claude-sonnet-4-6",
@@ -324,8 +327,9 @@ ${EXPAND_FINDING_BRIEF_JSON_CONTRACT}`;
     });
     const textBlock = msg.content.find((b) => b.type === "text");
     rawText = textBlock && textBlock.type === "text" ? textBlock.text : "";
+    briefsCostUsd = realScanCostUsd(msg.usage);
     console.log(
-      `[extended-analysis] master brief done | stop_reason=${msg.stop_reason} output_tokens=${msg.usage?.output_tokens} report=${reportId}`
+      `[extended-analysis] master brief done | stop_reason=${msg.stop_reason} output_tokens=${msg.usage?.output_tokens} cost_usd=$${briefsCostUsd.toFixed(4)} report=${reportId}`
     );
   } catch (err) {
     console.error(
@@ -347,7 +351,7 @@ ${EXPAND_FINDING_BRIEF_JSON_CONTRACT}`;
     const parsed = JSON.parse(arrStr);
     if (!Array.isArray(parsed)) {
       console.error("[extended-analysis] master brief response is not a JSON array");
-      return {};
+      return { map: {}, costUsd: briefsCostUsd };
     }
     for (let i = 0; i < leaks.length; i++) {
       const item = parsed[i];
@@ -368,10 +372,10 @@ ${EXPAND_FINDING_BRIEF_JSON_CONTRACT}`;
       err instanceof Error ? err.message : String(err),
       rawText.slice(0, 500)
     );
-    return {};
+    return { map: {}, costUsd: briefsCostUsd };
   }
 
-  return map;
+  return { map, costUsd: briefsCostUsd };
 }
 
 /**
@@ -386,7 +390,8 @@ export async function generateAndPersistAllFindingBriefs(
   reportId: string,
   domain: string,
   payload: ReportPayload,
-  pageSummary?: string
+  pageSummary?: string,
+  baseScanCostUsd = 0
 ): Promise<void> {
   if (!process.env.ANTHROPIC_API_KEY) {
     console.warn("[extended-analysis] ANTHROPIC_API_KEY missing; skipping batch expansion.");
@@ -405,12 +410,19 @@ export async function generateAndPersistAllFindingBriefs(
   console.log(`[extended-analysis] generating briefs for ${leaks.length} findings via master call | report=${reportId}`);
 
   let map: Record<string, FindingBriefExpansion>;
+  let briefsCostUsd = 0;
   try {
-    map = await generateAllFindingBriefsMaster(reportId, domain, payload, pageSummary);
+    const result = await generateAllFindingBriefsMaster(reportId, domain, payload, pageSummary);
+    map = result.map;
+    briefsCostUsd = result.costUsd;
   } catch (err) {
     console.warn("[extended-analysis] master brief generation failed:", err instanceof Error ? err.message : err);
     return;
   }
+
+  // Persist the real dashboard scan cost = primary analysis call + this briefs call.
+  // Isolated from the briefs write so a missing scan_cost_usd column can't break briefs.
+  await persistDashboardScanCost(supabase, reportId, baseScanCostUsd + briefsCostUsd);
 
   if (Object.keys(map).length === 0) {
     console.warn("[extended-analysis] no successful expansions for report", reportId);
@@ -418,5 +430,27 @@ export async function generateAndPersistAllFindingBriefs(
   }
 
   await persistBriefsBatch(supabase, reportId, map);
+}
+
+// Writes the real total model cost for a dashboard scan to reports.scan_cost_usd.
+// Best-effort: dashboard scans have no api_usage row (that table is api-key scoped),
+// so cost lives with the report. Swallows errors so it never affects the scan path.
+async function persistDashboardScanCost(
+  supabase: SupabaseClient,
+  reportId: string,
+  costUsd: number
+): Promise<void> {
+  try {
+    await supabase
+      .from("reports")
+      .update({ scan_cost_usd: costUsd })
+      .eq("id", reportId);
+    console.log(`[extended-analysis] persisted scan_cost_usd=$${costUsd.toFixed(4)} | report=${reportId}`);
+  } catch (err) {
+    console.warn(
+      "[extended-analysis] failed to persist scan_cost_usd:",
+      err instanceof Error ? err.message : err
+    );
+  }
 }
 

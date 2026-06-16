@@ -20,7 +20,7 @@ import { dispatchWebhook } from "@/lib/webhooks";
 import { fetchAndFingerprint, fingerprintsMatch } from "@/lib/fingerprint";
 import { buildApiPrompt } from "@/lib/apiPrompt";
 import { updateBenchmark } from "@/lib/benchmarks";
-import { calculateScanCost } from "@/lib/scanCost";
+import { calculateScanCost, realScanCostUsd } from "@/lib/scanCost";
 import type { ApiKeyRecord } from "@/lib/apiAuth";
 
 export const maxDuration = 300;
@@ -158,6 +158,7 @@ async function runOneScan(opts: BatchScanOptions): Promise<Record<string, unknow
 
   const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY, timeout: 90_000 });
   let rawJson: string;
+  let realCostUsd: number | undefined;
   try {
     const message = await client.messages.create({
       model: "claude-sonnet-4-6",
@@ -166,6 +167,7 @@ async function runOneScan(opts: BatchScanOptions): Promise<Record<string, unknow
       system: [{ type: "text", text: systemPrompt, cache_control: { type: "ephemeral" } }],
       messages: [{ role: "user", content: userContent }],
     });
+    realCostUsd = realScanCostUsd(message.usage);
     const block = message.content.find(c => c.type === "text");
     if (!block || block.type !== "text") throw new Error("No text content.");
     rawJson = block.text.replace(/^```(?:json)?\s*\n?/m, "").replace(/\n?```\s*$/m, "").trim();
@@ -209,7 +211,8 @@ async function runOneScan(opts: BatchScanOptions): Promise<Record<string, unknow
   } as any).eq("id", reportId).then(() => {}, () => {});
 
   const durationMs = Date.now() - scanStart;
-  const costUsd = calculateScanCost({ pageCount, cached: false });
+  // Real model cost from token usage; fall back to the synthetic constant only if usage was unavailable.
+  const costUsd = realCostUsd ?? calculateScanCost({ pageCount, cached: false });
   void logScanUsage(apiKey.id, { url: normalizedUrl, score, responseTimeMs: durationMs, status: "success", pageCount, costUsd, cached: false });
   updateBenchmark(site_type, score);
 

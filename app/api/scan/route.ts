@@ -664,7 +664,11 @@ export async function POST(req: NextRequest) {
   // Fire-and-forget: pre-generate AI advisor briefs for all findings in the background.
   // The response goes out immediately; briefs are written to reports.extended_analysis as they complete.
   const pageSummaryForBriefs = buildPageSummary(extraction);
-  void generateAndPersistAllFindingBriefs(reportId, domain, payload, pageSummaryForBriefs).catch((err) => {
+  // payload.scanCostUsd = real model cost of the primary analysis call (lib/analyze.ts).
+  // The briefs task adds its own call cost and persists the total to reports.scan_cost_usd.
+  const primaryScanCostUsd = typeof payload.scanCostUsd === "number" ? payload.scanCostUsd : 0;
+  process.stderr.write(`[ROUTE] SCAN COST | domain=${domain} primary_usd=$${primaryScanCostUsd.toFixed(4)} (briefs cost added async, infra excluded)\n`);
+  void generateAndPersistAllFindingBriefs(reportId, domain, payload, pageSummaryForBriefs, primaryScanCostUsd).catch((err) => {
     console.log("[scan] background brief generation failed:", err instanceof Error ? (err.stack ?? err.message) : err);
   });
 

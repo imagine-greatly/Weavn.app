@@ -23,7 +23,7 @@ import { fetchAndFingerprint, fingerprintsMatch } from "@/lib/fingerprint";
 import { buildApiPrompt } from "@/lib/apiPrompt";
 import { getBenchmark, updateBenchmark, getDimensionBenchmarks, getPercentileLabel, getWeightProfile } from "@/lib/benchmarks";
 import { apiError } from "@/lib/apiErrors";
-import { calculateScanCost } from "@/lib/scanCost";
+import { calculateScanCost, realScanCostUsd } from "@/lib/scanCost";
 import type { ApiKeyRecord } from "@/lib/apiAuth";
 
 export const maxDuration = 300;
@@ -204,6 +204,7 @@ async function executeScan(p: ScanParams): Promise<ScanResult> {
 
   let rawJson: string;
   let tokensUsed: number | undefined;
+  let realCostUsd: number | undefined;
   try {
     const message = await Promise.race([
       client.messages.create({
@@ -216,6 +217,7 @@ async function executeScan(p: ScanParams): Promise<ScanResult> {
       analyzeDeadline,
     ]);
     tokensUsed = (message.usage?.input_tokens ?? 0) + (message.usage?.output_tokens ?? 0);
+    realCostUsd = realScanCostUsd(message.usage);
     const block = message.content.find(c => c.type === "text");
     if (!block || block.type !== "text") throw new Error("No text content from model.");
     rawJson = block.text.replace(/^```(?:json)?\s*\n?/m, "").replace(/\n?```\s*$/m, "").trim();
@@ -306,7 +308,8 @@ async function executeScan(p: ScanParams): Promise<ScanResult> {
 
   // Post-scan hooks
   const durationMs = Date.now() - scanStart;
-  const costUsd = calculateScanCost({ pageCount, cached: false });
+  // Real model cost from token usage; fall back to the synthetic constant only if usage was unavailable.
+  const costUsd = realCostUsd ?? calculateScanCost({ pageCount, cached: false });
   void logScanUsage(apiKeyId, { url: normalizedUrl, score, responseTimeMs: durationMs, status: "success", pageCount, costUsd, cached: false });
   updateBenchmark(site_type, score);
 

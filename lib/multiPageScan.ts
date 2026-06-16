@@ -6,6 +6,7 @@ import { detectSiteType } from "@/lib/siteType";
 import { extractPageData } from "@/lib/analyzePipeline";
 import { buildApiPrompt } from "@/lib/apiPrompt";
 import { logScanUsage, deductCredits, InsufficientCreditsError } from "@/lib/usageTracking";
+import { realScanCostUsd } from "@/lib/scanCost";
 import { dispatchMultiPageWebhook } from "@/lib/webhooks";
 
 export const MULTI_PAGE_CONCURRENCY = 2;
@@ -129,6 +130,7 @@ async function scanPageForMulti(
 
   let rawJson: string;
   let tokensUsed: number | undefined;
+  let realCostUsd = 0;
   try {
     const message = await anthropic.messages.create({
       model: "claude-sonnet-4-6",
@@ -138,6 +140,7 @@ async function scanPageForMulti(
       messages: [{ role: "user", content: userContent }],
     });
     tokensUsed = (message.usage?.input_tokens ?? 0) + (message.usage?.output_tokens ?? 0);
+    realCostUsd = realScanCostUsd(message.usage);
     const block = message.content.find(c => c.type === "text");
     if (!block || block.type !== "text") throw new Error("No text content from model.");
     rawJson = block.text.replace(/^```(?:json)?\s*\n?/m, "").replace(/\n?```\s*$/m, "").trim();
@@ -197,7 +200,7 @@ async function scanPageForMulti(
     responseTimeMs: durationMs,
     status: "success",
     pageCount: 1,
-    costUsd: 0.15,
+    costUsd: realCostUsd,
     cached: false,
   });
 

@@ -10,7 +10,7 @@ function getServiceClient() {
 }
 
 // Fire-and-forget: report api_scan units to Stripe metered billing.
-// costCents: number of cents for this scan (e.g. 0.15 → 15). Defaults to 1 unit.
+// costCents: real model cost for this scan in cents (e.g. $0.083 → 8). Defaults to 1 unit.
 export function reportUsageToStripe(apiKeyId: string, costCents = 1): void {
   void (async () => {
     try {

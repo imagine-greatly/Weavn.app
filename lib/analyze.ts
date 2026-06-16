@@ -7,6 +7,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import type { CombinedExtraction } from "./scraper";
 import { extractPageData } from "@/lib/analyzePipeline";
+import { realScanCostUsd } from "@/lib/scanCost";
 import type {
   ReportPayload,
   SiteType,
@@ -1221,7 +1222,7 @@ export async function runAnalysis(
   plan?: string,
   model?: string,
   timeoutMs?: number
-): Promise<ReportPayload> {
+): Promise<ReportPayload & { scanCostUsd: number }> {
   const resolvedModel = model ?? "claude-sonnet-4-6";
   const clientTimeoutMs =
     extraction.complexity === 'simple' ? 130_000 :
@@ -1296,7 +1297,7 @@ export async function runAnalysis(
   const maxTokens = isMultiPage ? 8000 : 6000
 
   let attempt = 0;
-  const run = async (): Promise<ReportPayload> => {
+  const run = async (): Promise<ReportPayload & { scanCostUsd: number }> => {
     attempt++;
     process.stderr.write(`[ANALYZE] claude START | attempt=${attempt} model=${resolvedModel} contentLen=${userContent.length} maxTokens=${maxTokens}\n`);
     const message = await client.messages.create({
@@ -1312,11 +1313,7 @@ export async function runAnalysis(
     process.stderr.write(`[ANALYZE] claude DONE | attempt=${attempt} stop_reason=${message.stop_reason} input_tokens=${message.usage?.input_tokens} output_tokens=${message.usage?.output_tokens}\n`);
     process.stderr.write(`[ANALYZE] CACHE | hit=${cacheHit} cache_read=${cacheRead} cache_write=${cacheWrite}\n`);
     const inputNoCacheTokens = (message.usage?.input_tokens ?? 0) - cacheRead - cacheWrite;
-    const estimatedUsd =
-      (inputNoCacheTokens / 1_000_000 * 3) +
-      (cacheWrite / 1_000_000 * 3.75) +
-      (cacheRead / 1_000_000 * 0.30) +
-      ((message.usage?.output_tokens ?? 0) / 1_000_000 * 15);
+    const estimatedUsd = realScanCostUsd(message.usage);
     process.stderr.write(`[ANALYZE] SCAN COST | model=sonnet input_no_cache=${inputNoCacheTokens} cache_write=${cacheWrite} cache_read=${cacheRead} output=${message.usage?.output_tokens ?? 0} estimated_usd=$${estimatedUsd.toFixed(4)}\n`);
 
     if (message.stop_reason === "max_tokens") {
@@ -1335,7 +1332,7 @@ export async function runAnalysis(
     process.stderr.write(`[ANALYZE] JSON.parse START | raw_len=${raw.length}\n`);
     const parsed: unknown = JSON.parse(raw);
     process.stderr.write(`[ANALYZE] JSON.parse DONE\n`);
-    return ensurePayload(parsed, siteType, safeExtraction.pagesAnalyzed);
+    return { ...ensurePayload(parsed, siteType, safeExtraction.pagesAnalyzed), scanCostUsd: estimatedUsd };
   };
 
   const runStart = Date.now()

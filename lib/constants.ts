@@ -46,3 +46,40 @@ export const FREE_API_TRIAL_SCANS = 25;
 
 /** Dashboard: max fresh scans per calendar month (UTC) for a user whose profiles.plan = 'free'. Resets on the 1st of each month. */
 export const FREE_DASHBOARD_SCANS_PER_MONTH = 3;
+
+// ── Dashboard plan monthly caps — HARD CAP (no overage) ───────────────────────
+// Keyed by profiles.plan. A plan absent from this map is treated as unlimited
+// (Enterprise = custom/unlimited by contract). Resets on the 1st of each UTC month.
+// These MUST match the locked pricing on the dashboard pricing page.
+export const DASHBOARD_PLAN_MONTHLY_CAPS: Record<string, number> = {
+  free: FREE_DASHBOARD_SCANS_PER_MONTH, // 3
+  starter: 50,
+  pro: 200,
+  agency: 500,
+  // enterprise: unlimited by contract — intentionally absent
+};
+
+// ── API plan included scans — SOFT CAP (overage billed, never hard-blocked) ────
+// Keyed by api_keys.plan. Above the included count, scans are still served and
+// billed at the per-scan overage rate below (metered to Stripe). A plan absent
+// from this map (e.g. enterprise) is treated as unlimited/custom contract.
+export const API_PLAN_INCLUDED_SCANS: Record<string, number> = {
+  dev: 250,
+  builder: 1000,
+  scale: 3000,
+  // enterprise: custom — intentionally absent
+};
+
+/** API per-scan overage rate (USD) charged for scans beyond the included quota. */
+export const API_PLAN_OVERAGE_USD: Record<string, number> = {
+  dev: 0.3,
+  builder: 0.25,
+  scale: 0.2,
+};
+
+// ── Per-account rate limits — bound abuse independent of the monthly cap ──────
+// Fixed-window (per minute) request ceilings, enforced via the bump_scan_rate
+// RPC (migration 026). These are a coarse abuse bound, not the billing cap.
+export const DASHBOARD_RATE_LIMIT_PER_MIN = 10;
+export const API_RATE_LIMIT_PER_MIN = 60;
+export const SCAN_RATE_WINDOW_SECONDS = 60;

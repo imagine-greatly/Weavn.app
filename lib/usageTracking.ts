@@ -1,6 +1,10 @@
 import { createClient } from "@supabase/supabase-js";
 import Stripe from "stripe";
-import { FREE_API_TRIAL_SCANS } from "@/lib/constants";
+import {
+  FREE_API_TRIAL_SCANS,
+  DASHBOARD_PLAN_MONTHLY_CAPS,
+  API_PLAN_INCLUDED_SCANS,
+} from "@/lib/constants";
 
 function getServiceClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -98,12 +102,52 @@ export async function logScanUsage(
 }
 
 // Plans that are subject to the free trial ceiling. Any other plan value is
-// treated as paid/subscription and passes through without a trial gate.
+// treated as paid/subscription.
 const FREE_TRIAL_PLANS = new Set(["playground", "payg", "free"]);
 
-export async function checkScanAllowed(
+function utcMonthStartISO(now = new Date()): string {
+  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)).toISOString();
+}
+function utcNextMonthStartISO(now = new Date()): string {
+  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1)).toISOString();
+}
+
+// Count billable scans (successful, non-cached) for an API key in the current UTC month.
+async function countApiMonthlyScans(
+  supabase: ReturnType<typeof getServiceClient>,
   apiKeyId: string
-): Promise<{ allowed: boolean; reason?: string; limit?: number; used?: number; remaining?: number }> {
+): Promise<number> {
+  const { count } = await supabase
+    .from("api_usage")
+    .select("id", { count: "exact", head: true })
+    .eq("api_key_id", apiKeyId)
+    .eq("status", "success")
+    .eq("cached", false)
+    .gte("created_at", utcMonthStartISO());
+  return count ?? 0;
+}
+
+export interface ScanAllowance {
+  allowed: boolean;
+  reason?: string;
+  limit?: number; // included quota (paid) or trial ceiling
+  used?: number; // scans this period (or lifetime for trial)
+  remaining?: number; // included scans left this period (>= 0)
+  overage?: boolean; // allowed but beyond included quota — billed as overage (API only)
+  plan?: string;
+}
+
+/**
+ * API-path allowance (keyed by api_key_id).
+ * - Trial plans: blocked at the lifetime FREE_API_TRIAL_SCANS ceiling.
+ * - Paid API tiers (dev/builder/scale): included monthly quota; ABOVE it scans are
+ *   still allowed and flagged `overage: true` so the caller bills the per-scan
+ *   overage rate. Never hard-blocked.
+ * - Enterprise / unknown paid plan: unlimited (custom contract).
+ * Fails OPEN on infra error: the API path meters and bills every scan, so a
+ * lookup blip can't cause unbounded loss here (unlike the dashboard hard cap).
+ */
+export async function checkScanAllowed(apiKeyId: string): Promise<ScanAllowance> {
   const supabase = getServiceClient();
 
   const { data, error } = await supabase
@@ -113,32 +157,103 @@ export async function checkScanAllowed(
     .single();
 
   if (error || !data) {
-    // DB lookup failure — allow through rather than blocking on infra errors
-    console.warn("[checkScanAllowed] key lookup failed:", error?.message ?? "no data");
+    console.warn("[checkScanAllowed] key lookup failed (allowing — API is metered):", error?.message ?? "no data");
     return { allowed: true };
   }
 
   const row = data as { plan: string; scans_used: number };
+  const plan = row.plan;
 
-  // Paid / subscription plans are not trial-gated (plan-level limits are a later task)
-  if (!FREE_TRIAL_PLANS.has(row.plan)) {
-    return { allowed: true };
-  }
-
-  // Free trial plan: enforce lifetime ceiling
-  if (row.scans_used >= FREE_API_TRIAL_SCANS) {
+  // Trial plans: lifetime ceiling.
+  if (FREE_TRIAL_PLANS.has(plan)) {
+    if (row.scans_used >= FREE_API_TRIAL_SCANS) {
+      return { allowed: false, reason: "trial_exhausted", limit: FREE_API_TRIAL_SCANS, used: row.scans_used, plan };
+    }
     return {
-      allowed: false,
-      reason: "trial_exhausted",
+      allowed: true,
       limit: FREE_API_TRIAL_SCANS,
       used: row.scans_used,
+      remaining: FREE_API_TRIAL_SCANS - row.scans_used,
+      plan,
     };
+  }
+
+  // Paid API tiers: included quota + overage.
+  const included = API_PLAN_INCLUDED_SCANS[plan];
+  if (included == null) {
+    // Enterprise / custom — unlimited by contract.
+    return { allowed: true, plan };
+  }
+
+  let used = 0;
+  try {
+    used = await countApiMonthlyScans(supabase, apiKeyId);
+  } catch (e) {
+    console.warn("[checkScanAllowed] monthly count failed (allowing — API is metered):", e instanceof Error ? e.message : e);
+    return { allowed: true, limit: included, plan };
   }
 
   return {
     allowed: true,
-    remaining: FREE_API_TRIAL_SCANS - row.scans_used,
+    limit: included,
+    used,
+    remaining: Math.max(0, included - used),
+    overage: used >= included,
+    plan,
   };
+}
+
+export interface DashboardAllowance {
+  allowed: boolean;
+  plan: string;
+  limit: number | null; // null = unlimited (enterprise/custom)
+  used: number;
+  reason?: string;
+  resetsAt?: string;
+}
+
+/**
+ * Dashboard-path allowance (keyed by user_id). HARD CAP per plan — no overage.
+ * Counts completed (non-pending/failed/error) reports this UTC month against the
+ * plan's cap. Plans absent from DASHBOARD_PLAN_MONTHLY_CAPS (enterprise) are
+ * unlimited.
+ *
+ * THROWS on any DB error so the caller can fail CLOSED — a lookup blip must never
+ * silently grant unlimited scans to a hard-capped paid tier (unbounded loss).
+ */
+export async function checkDashboardScanAllowed(userId: string): Promise<DashboardAllowance> {
+  const supabase = getServiceClient();
+
+  const { data: profile, error: planErr } = await supabase
+    .from("profiles")
+    .select("plan")
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (planErr) throw new Error(`profile plan lookup failed: ${planErr.message}`);
+
+  const plan = (profile as { plan?: string } | null)?.plan ?? "free";
+  const cap = DASHBOARD_PLAN_MONTHLY_CAPS[plan];
+
+  // Unlimited by contract.
+  if (cap == null) {
+    return { allowed: true, plan, limit: null, used: 0 };
+  }
+
+  const { count, error: countErr } = await supabase
+    .from("reports")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", userId)
+    .gte("created_at", utcMonthStartISO())
+    .neq("status", "pending")
+    .neq("status", "failed")
+    .neq("status", "error");
+  if (countErr) throw new Error(`monthly scan count failed: ${countErr.message}`);
+
+  const used = count ?? 0;
+  if (used >= cap) {
+    return { allowed: false, plan, limit: cap, used, reason: "monthly_cap_reached", resetsAt: utcNextMonthStartISO() };
+  }
+  return { allowed: true, plan, limit: cap, used };
 }
 
 export class InsufficientCreditsError extends Error {

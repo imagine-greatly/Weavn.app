@@ -21,6 +21,8 @@ import { fetchAndFingerprint, fingerprintsMatch } from "@/lib/fingerprint";
 import { buildApiPrompt } from "@/lib/apiPrompt";
 import { updateBenchmark } from "@/lib/benchmarks";
 import { calculateScanCost, realScanCostUsd } from "@/lib/scanCost";
+import { checkRateLimit } from "@/lib/rateLimit";
+import { API_RATE_LIMIT_PER_MIN } from "@/lib/constants";
 import type { ApiKeyRecord } from "@/lib/apiAuth";
 
 export const maxDuration = 300;
@@ -235,8 +237,14 @@ export async function POST(req: NextRequest) {
   const apiKey = await validateApiKey(req);
   if (!apiKey) return apiError("AUTH_INVALID", "Invalid API key", 401, rlHeaders(null));
 
+  // Per-account rate limit (requests/min) — one batch request counts as one. Fails open.
+  const rl = await checkRateLimit(`api:${apiKey.id}`, API_RATE_LIMIT_PER_MIN);
+  if (!rl.allowed) {
+    return apiError("RATE_LIMITED", `Rate limit exceeded (${API_RATE_LIMIT_PER_MIN} requests/min). Retry in ${rl.retryAfterSeconds}s.`, 429, { ...rlHeaders(apiKey), "Retry-After": String(rl.retryAfterSeconds) });
+  }
+
   const allowed = await checkScanAllowed(apiKey.id);
-  if (!allowed.allowed) return apiError("RATE_LIMIT_EXCEEDED", "Scan limit reached", 403, rlHeaders(apiKey));
+  if (!allowed.allowed) return apiError("TRIAL_EXHAUSTED", "Scan limit reached. Upgrade your plan to continue.", 402, rlHeaders(apiKey));
 
   let urls: string[], fields: string[], findingLimit: number, findingDepth: "brief" | "full", asyncMode: boolean;
   try {

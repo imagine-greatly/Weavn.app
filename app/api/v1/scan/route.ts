@@ -24,6 +24,8 @@ import { buildApiPrompt } from "@/lib/apiPrompt";
 import { getBenchmark, updateBenchmark, getDimensionBenchmarks, getPercentileLabel, getWeightProfile } from "@/lib/benchmarks";
 import { apiError } from "@/lib/apiErrors";
 import { calculateScanCost, realScanCostUsd } from "@/lib/scanCost";
+import { checkRateLimit } from "@/lib/rateLimit";
+import { API_RATE_LIMIT_PER_MIN } from "@/lib/constants";
 import type { ApiKeyRecord } from "@/lib/apiAuth";
 
 export const maxDuration = 300;
@@ -405,7 +407,21 @@ export async function POST(req: NextRequest) {
     return apiError("AUTH_INVALID", "Invalid API key", 401, rlHeaders(null));
   }
 
-  // 2. Check scan allowed — must fire before any scrape/analysis cost
+  // 1.5. Per-account rate limit (requests/min) — bounds burst abuse independent of
+  // the monthly quota. Fails open on infra error.
+  const rl = await checkRateLimit(`api:${apiKey.id}`, API_RATE_LIMIT_PER_MIN);
+  if (!rl.allowed) {
+    return apiError(
+      "RATE_LIMITED",
+      `Rate limit exceeded (${API_RATE_LIMIT_PER_MIN} requests/min). Retry in ${rl.retryAfterSeconds}s.`,
+      429,
+      { ...rlHeaders(apiKey), "Retry-After": String(rl.retryAfterSeconds) }
+    );
+  }
+
+  // 2. Check scan allowed — must fire before any scrape/analysis cost.
+  // Paid API tiers are never hard-blocked here; over-quota scans return
+  // allowed=true with overage:true and are billed at the per-scan overage rate.
   const allowedResult = await checkScanAllowed(apiKey.id);
   if (!allowedResult.allowed) {
     return NextResponse.json(

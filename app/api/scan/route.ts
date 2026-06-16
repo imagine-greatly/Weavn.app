@@ -13,8 +13,10 @@ import { detectSiteType } from "@/lib/siteType";
 import { runAnalysis, buildPageSummary } from "@/lib/analyze";
 import { saveReport } from "@/lib/supabase";
 import { generateAndPersistAllFindingBriefs } from "@/lib/findingExtendedAnalysis";
+import { checkDashboardScanAllowed } from "@/lib/usageTracking";
+import { checkRateLimit } from "@/lib/rateLimit";
 import { Resend } from "resend";
-import { FREE_DASHBOARD_SCANS_PER_MONTH } from "@/lib/constants";
+import { DASHBOARD_RATE_LIMIT_PER_MIN } from "@/lib/constants";
 
 
 function mergeCookies(from: NextResponse, to: NextResponse) {
@@ -106,60 +108,60 @@ export async function POST(req: NextRequest) {
     };
   }
 
-  // ── Free dashboard monthly quota — checked before any scan cost ──────────────
-  // Only applies to non-internal, logged-in free-plan users.
+  // ── Per-plan monthly scan cap (HARD CAP, fail closed) + per-account rate limit ─
+  // Applies to every non-internal, logged-in user — Free AND paid tiers. Paid
+  // "unlimited" plans are NOT exempt: each plan has a monthly cap (Starter 50,
+  // Pro 200, Agency 500; Enterprise unlimited by contract). The cap is the spend
+  // ceiling, so a DB error here fails CLOSED rather than granting unlimited scans.
+  // resolvedUserPlan is reused later for model selection (avoids a second lookup).
+  let resolvedUserPlan: string | null = null;
   if (!internalBypass && userId) {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-    if (supabaseUrl && serviceKey) {
-      try {
-        const quotaClient = createClient(supabaseUrl, serviceKey);
+    // (a) Coarse per-account rate limit — bounds scripted bursts. Fails open.
+    const rl = await checkRateLimit(`dash:${userId}`, DASHBOARD_RATE_LIMIT_PER_MIN);
+    if (!rl.allowed) {
+      return withCookies(
+        NextResponse.json(
+          {
+            error: "Too many scans in a short time. Please slow down and try again shortly.",
+            reason: "rate_limited",
+            retry_after_seconds: rl.retryAfterSeconds,
+          },
+          { status: 429, headers: { "Retry-After": String(rl.retryAfterSeconds) } }
+        )
+      );
+    }
 
-        // Fetch the user's plan. profiles PK is user_id, not id.
-        const { data: profileData } = await quotaClient
-          .from("profiles")
-          .select("plan")
-          .eq("user_id", userId)
-          .maybeSingle();
-        const userPlanNow = (profileData as { plan?: string } | null)?.plan ?? "free";
+    // (b) Monthly hard cap.
+    let gate;
+    try {
+      gate = await checkDashboardScanAllowed(userId);
+    } catch (quotaErr) {
+      // FAIL CLOSED: we could not verify the cap, so we must not let the scan
+      // proceed (a hard-capped paid tier would otherwise become unlimited).
+      console.error("[scan] quota check failed — failing closed:", quotaErr instanceof Error ? quotaErr.message : quotaErr);
+      return withCookies(
+        NextResponse.json(
+          { error: "Could not verify your scan quota right now. Please try again in a moment.", reason: "quota_check_unavailable" },
+          { status: 503 }
+        )
+      );
+    }
 
-        if (userPlanNow === "free") {
-          const now = new Date();
-          const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)).toISOString();
-
-          // Count completed (non-error) scans this calendar month for this user.
-          // Dashboard route never serves cache hits — every completed report is a billed scan.
-          // Excludes pending/failed/error rows so in-flight or failed attempts don't consume quota.
-          const { count } = await quotaClient
-            .from("reports")
-            .select("id", { count: "exact", head: true })
-            .eq("user_id", userId)
-            .gte("created_at", monthStart)
-            .neq("status", "pending")
-            .neq("status", "failed")
-            .neq("status", "error");
-
-          const monthlyUsed = count ?? 0;
-          if (monthlyUsed >= FREE_DASHBOARD_SCANS_PER_MONTH) {
-            const resetsAt = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1)).toISOString();
-            return withCookies(
-              NextResponse.json(
-                {
-                  error: "Monthly scan limit reached",
-                  reason: "free_monthly_exhausted",
-                  limit: FREE_DASHBOARD_SCANS_PER_MONTH,
-                  used: monthlyUsed,
-                  resets_at: resetsAt,
-                },
-                { status: 429 }
-              )
-            );
-          }
-        }
-      } catch (quotaErr) {
-        // Quota check failure must not block the scan — log and continue
-        console.warn("[scan] monthly quota check failed (non-fatal):", quotaErr instanceof Error ? quotaErr.message : quotaErr);
-      }
+    resolvedUserPlan = gate.plan;
+    if (!gate.allowed) {
+      return withCookies(
+        NextResponse.json(
+          {
+            error: "Monthly scan limit reached. Upgrade your plan to run more scans.",
+            reason: gate.reason ?? "monthly_cap_reached",
+            plan: gate.plan,
+            limit: gate.limit,
+            used: gate.used,
+            resets_at: gate.resetsAt,
+          },
+          { status: 429 }
+        )
+      );
     }
   }
 
@@ -355,9 +357,12 @@ export async function POST(req: NextRequest) {
   process.stderr.write(`[ROUTE] detectSiteType DONE | site_type=${site_type} elapsed=${Date.now() - scanStart}ms\n`)
   console.log(`[scan] SITE_TYPE | domain=${domain} site_type=${site_type} elapsed=${Date.now() - scanStart}ms`)
 
-  // Fetch user plan for model selection (agency uses higher-capacity model)
-  let userPlan = "free";
-  if (!internalBypass) {
+  // User plan for model selection (agency uses higher-capacity model). Reuse the
+  // plan already resolved by the monthly-cap gate above to avoid a second lookup.
+  // (The earlier read here used profiles.id, which doesn't exist — profiles PK is
+  // user_id — so it always fell back to "free".)
+  let userPlan = resolvedUserPlan ?? "free";
+  if (!internalBypass && resolvedUserPlan === null) {
     const planStart = Date.now()
     try {
       const supabaseService = createClient(
@@ -365,7 +370,7 @@ export async function POST(req: NextRequest) {
         process.env.SUPABASE_SERVICE_ROLE_KEY!
       );
       const planResult = await Promise.race([
-        supabaseService.from("profiles").select("plan").eq("id", userId).maybeSingle(),
+        supabaseService.from("profiles").select("plan").eq("user_id", userId).maybeSingle(),
         new Promise<never>((_, reject) =>
           setTimeout(() => reject(new Error('[TIMEOUT] plan lookup')), 5_000)
         ),

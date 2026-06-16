@@ -4,38 +4,39 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { ReportPayload } from "@/lib/reportSchema";
 import { estimatePercentile, ordinal, scoreToVerdict } from "@/lib/dashboard";
 import { stripMarkdownForDisplay } from "@/lib/stripMarkdownForDisplay";
+import {
+  type BrandingConfig,
+  type SectionId,
+  type ThemeTokens,
+  getTemplate,
+  resolveTheme,
+} from "@/lib/branding";
 
 /**
- * Scan report — a single cohesive vertical document (muted cold futurism).
- * Replaces the old two-panel rail + tabbed build. Read by scrolling, sections
- * stacked top → bottom. Accent flows from --surface-accent (steel by default).
+ * Scan report — ONE single-column document, shared by the in-app report and the
+ * agency white-label render (do not fork). Agencies pass a `branding` prop that
+ * themes the WRAPPER only: cover, chrome accent, light/dark tokens, footer, and
+ * which optional sections appear. The INSTRUMENT (score ring, conversion-health
+ * strip, findings, voice, section order) is fixed by the component + the selected
+ * template and is physically un-editable here.
  *
- * DATA FIDELITY: renders ONLY fields the engine actually returns. It normalizes
- * BOTH stored shapes — the dashboard pipeline (legacy: leaks /
- * conversionTransformation / growthBlueprint / dimensionScores) and the v1 API
- * (dimensions{7} / api_findings / copy_rewrites / growth_blueprint) — into one
- * view-model, and omits any section whose source field is absent. No fabrication.
+ * Strict token separation: the brand accent (t.accent) drives CHROME only; the
+ * diagnostic VERDICT colors (t.verdict red/amber/green) are semantic + fixed and
+ * never read from the accent. DATA FIDELITY: renders only fields the engine
+ * returns (normalizing legacy + v1 shapes), omitting absent sections.
  */
 
 // ── Score-band thresholds (centralized + tunable) ───────────────────────────────
 const BAND = { AMBER_AT: 50, GREEN_AT: 70 } as const;
-const RED = "#E8635F";
-const AMBER = "#EFB23E";
-const GREEN = "#00C48C";
-const INK_PRIMARY = "#E6E9EE";
-const INK_SECONDARY = "#9398A8";
-const INK_MUTED = "#6E7587";
-const BORDER = "rgba(255,255,255,0.06)";
-const ACCENT = "var(--surface-accent)";
 
 const MONO = "'IBM Plex Mono', monospace";
 const BODY = "'IBM Plex Sans', sans-serif";
 const DISP = "'Space Grotesk', sans-serif";
 
-function bandColor(score: number): string {
-  if (score >= BAND.GREEN_AT) return GREEN;
-  if (score >= BAND.AMBER_AT) return AMBER;
-  return RED;
+function bandColor(score: number, t: ThemeTokens): string {
+  if (score >= BAND.GREEN_AT) return t.verdict.green;
+  if (score >= BAND.AMBER_AT) return t.verdict.amber;
+  return t.verdict.red;
 }
 
 // ── Canonical 7 dimensions — stable order across every report ────────────────────
@@ -80,12 +81,15 @@ interface ViewFinding {
   priority: number;
 }
 
-const SEVERITY_META: Record<ViewFinding["severity"], { color: string; label: string }> = {
-  critical: { color: RED, label: "Critical" },
-  high: { color: AMBER, label: "High" },
-  medium: { color: ACCENT, label: "Medium" },
-  low: { color: INK_MUTED, label: "Low" },
-};
+// Severity is VERDICT/neutral-colored — never the brand accent.
+function severityMeta(sev: ViewFinding["severity"], t: ThemeTokens): { color: string; label: string } {
+  switch (sev) {
+    case "critical": return { color: t.verdict.red, label: "Critical" };
+    case "high": return { color: t.verdict.amber, label: "High" };
+    case "medium": return { color: t.inkSecondary, label: "Medium" };
+    default: return { color: t.inkMuted, label: "Low" };
+  }
+}
 
 function clean(s: unknown): string {
   return stripMarkdownForDisplay(String(s ?? "").trim());
@@ -114,7 +118,6 @@ function normSeverity(sev: unknown, rubric: unknown): ViewFinding["severity"] {
   return "medium";
 }
 
-// A lift estimate is "positive" (green) when it reads as gain, not a loss.
 function isPositiveLift(s: string): boolean {
   if (!s) return false;
   if (/loss|lose|drop|decline|down|leak/i.test(s)) return false;
@@ -138,10 +141,8 @@ function extractDimensions(p: RawPayload): { label: string; score: number }[] {
   for (const d of DIMENSIONS) {
     let score = NaN;
     if (dims && typeof dims[d.key] === "number") {
-      // v1 — the 7-key dimensions object, keyed by canonical snake_case name.
       score = dims[d.key];
     } else if (rows && d.ciLabel) {
-      // legacy — match a dimensionScores row by the dimension's first token.
       const token = d.ciLabel.split(" ")[0].toLowerCase();
       const match = rows.find((r) =>
         String((r as { label?: string }).label ?? "").toLowerCase().includes(token)
@@ -164,9 +165,8 @@ function extractFindings(p: RawPayload): ViewFinding[] {
   );
   const mapped = src.map((raw, i): ViewFinding => {
     const f = raw as Record<string, unknown>;
-    const title = clean(f.revenueTitle || f.title || "");
     return {
-      title,
+      title: clean(f.revenueTitle || f.title || ""),
       severity: normSeverity(f.severity, f.rubricSeverity),
       dimension: titleCase(clean(f.dimension || f.category || "")),
       impactEstimate: clean(f.impact_estimate || f.impactStatement || ""),
@@ -213,13 +213,12 @@ function extractBlueprint(p: RawPayload): { week1: string[]; weeks24: string[]; 
 }
 
 // ── Hero ring — large, muted, verdict-banded; NO glow / bloom halo ───────────────
-function HeroRing({ score }: { score: number }) {
+function HeroRing({ score, color, track }: { score: number; color: string; track: string }) {
   const px = 166;
   const stroke = 3.5;
   const center = px / 2;
   const radius = center - stroke / 2 - 2;
   const circumference = 2 * Math.PI * radius;
-  const color = bandColor(score);
   const target = (Math.max(0, Math.min(100, score)) / 100) * circumference;
 
   const [display, setDisplay] = useState(score);
@@ -238,11 +237,11 @@ function HeroRing({ score }: { score: number }) {
     const duration = 1000;
     let raf = 0;
     const tick = (now: number) => {
-      const t = Math.min((now - start) / duration, 1);
-      const e = 1 - Math.pow(1 - t, 3);
+      const tt = Math.min((now - start) / duration, 1);
+      const e = 1 - Math.pow(1 - tt, 3);
       setDisplay(Math.round(score * e));
       if (arcRef.current) arcRef.current.style.strokeDasharray = `${target * e} ${circumference}`;
-      if (t < 1) raf = requestAnimationFrame(tick);
+      if (tt < 1) raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
@@ -250,41 +249,24 @@ function HeroRing({ score }: { score: number }) {
 
   return (
     <svg width={px} height={px} viewBox={`0 0 ${px} ${px}`} style={{ display: "block" }}>
-      {/* faint track */}
-      <circle cx={center} cy={center} r={radius} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth={stroke} />
-      {/* verdict-banded arc — no filter, no glow */}
+      <circle cx={center} cy={center} r={radius} fill="none" stroke={track} strokeWidth={stroke} />
       <circle
         ref={arcRef}
-        cx={center}
-        cy={center}
-        r={radius}
-        fill="none"
-        stroke={color}
-        strokeWidth={stroke}
-        strokeLinecap="round"
+        cx={center} cy={center} r={radius}
+        fill="none" stroke={color} strokeWidth={stroke} strokeLinecap="round"
         strokeDasharray={`${target} ${circumference}`}
         transform={`rotate(-90 ${center} ${center})`}
       />
-      <text
-        x={center}
-        y={center}
-        dominantBaseline="central"
-        textAnchor="middle"
-        fill={color}
-        fontFamily="'Space Grotesk', sans-serif"
-        fontWeight={600}
-        fontSize={52}
-      >
+      <text x={center} y={center} dominantBaseline="central" textAnchor="middle" fill={color} fontFamily="'Space Grotesk', sans-serif" fontWeight={600} fontSize={52}>
         {display}
       </text>
     </svg>
   );
 }
 
-// ── Section header ──────────────────────────────────────────────────────────────
-function SectionLabel({ children }: { children: React.ReactNode }) {
+function SectionLabel({ children, t }: { children: React.ReactNode; t: ThemeTokens }) {
   return (
-    <div style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.22em", textTransform: "uppercase", color: INK_MUTED, marginBottom: 18 }}>
+    <div style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.22em", textTransform: "uppercase", color: t.inkMuted, marginBottom: 18 }}>
       {children}
     </div>
   );
@@ -293,11 +275,11 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 export type ReportLayoutProps = {
   domain: string;
   payload?: ReportPayload;
-  /** ISO timestamp of the scan (real value); omitted from the masthead if absent. */
   scanDate?: string | null;
-  /** Retained for caller compatibility — the single-column document handles its own scroll. */
+  /** Agency white-label config. When present the wrapper (cover/accent/theme/footer/toggles) themes; the body stays locked. */
+  branding?: BrandingConfig | null;
   fillContainer?: boolean;
-  // The following are accepted but no longer drive the layout (kept so callers don't break).
+  // Accepted for caller compatibility — no longer drive the layout.
   score?: number;
   sharedView?: boolean;
   isPro?: boolean;
@@ -309,7 +291,7 @@ export type ReportLayoutProps = {
   whiteLabel?: boolean;
 };
 
-const JUMP = [
+const JUMP: { id: SectionId; label: string }[] = [
   { id: "score", label: "Score" },
   { id: "health", label: "Health" },
   { id: "brief", label: "Brief" },
@@ -318,8 +300,10 @@ const JUMP = [
   { id: "blueprint", label: "Blueprint" },
 ];
 
-export default function ReportLayout({ domain, payload, scanDate, fillContainer = false }: ReportLayoutProps) {
+export default function ReportLayout({ domain, payload, scanDate, branding, fillContainer = false }: ReportLayoutProps) {
   const p = (payload ?? {}) as RawPayload;
+  const t = useMemo(() => resolveTheme(branding), [branding]);
+  const template = getTemplate(branding?.templateId);
 
   const view = useMemo(() => {
     const score = extractScore(p);
@@ -338,7 +322,9 @@ export default function ReportLayout({ domain, payload, scanDate, fillContainer 
   }, [p]);
 
   const sectionRefs = useRef<Record<string, HTMLElement | null>>({});
-  const present: Record<string, boolean> = {
+
+  // Data presence (omit absent) × agency inclusion (optional sections only).
+  const dataPresent: Record<SectionId, boolean> = {
     score: true,
     health: view.dimensions.length > 0,
     brief: Boolean(view.brief),
@@ -346,6 +332,13 @@ export default function ReportLayout({ domain, payload, scanDate, fillContainer 
     rewrites: view.rewrites.length > 0,
     blueprint: Boolean(view.blueprint),
   };
+  const included = (id: SectionId): boolean => {
+    if (!branding) return true;
+    if (id === "rewrites") return branding.includedSections.rewrites;
+    if (id === "blueprint") return branding.includedSections.blueprint;
+    return true;
+  };
+  const liveSections = template.sections.filter((s) => dataPresent[s.id] && included(s.id));
 
   const scrollTo = (id: string) => sectionRefs.current[id]?.scrollIntoView({ behavior: "smooth", block: "start" });
 
@@ -358,251 +351,246 @@ export default function ReportLayout({ domain, payload, scanDate, fillContainer 
     (view.critical ? ` · ${view.critical} critical` : "") +
     (view.high ? ` · ${view.high} high` : "");
 
+  const ringColor = bandColor(view.score, t);
+
+  // ── Section renderers — keyed by id so the template list drives composition ────
+  const sections: Record<SectionId, () => React.ReactNode> = {
+    score: () => (
+      <section
+        key="score" id="score" ref={(el) => { sectionRefs.current.score = el; }}
+        className="report-doc-anchor"
+        style={{ position: "relative", textAlign: "center", padding: "20px 0 44px", overflow: "hidden" }}
+      >
+        <div aria-hidden style={{ position: "absolute", left: "50%", top: "44%", transform: "translate(-50%, -50%)", width: 620, height: 360, background: `radial-gradient(ellipse at center, ${t.accentSoft} 0%, transparent 72%)`, pointerEvents: "none", zIndex: 0 }} />
+        <div style={{ position: "relative", zIndex: 1 }}>
+          <p style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.24em", textTransform: "uppercase", color: t.accent, margin: "0 0 14px" }}>
+            Conversion Intelligence
+          </p>
+          <h1 style={{ fontFamily: DISP, fontWeight: 700, fontSize: 24, color: t.inkPrimary, margin: "0 0 4px", letterSpacing: "-0.4px", wordBreak: "break-word" }}>{domain}</h1>
+          {dateLabel ? (
+            <p style={{ fontFamily: MONO, fontSize: 11, color: t.inkMuted, margin: "0 0 30px", letterSpacing: "0.06em" }}>Scanned {dateLabel}</p>
+          ) : <div style={{ height: 30 }} />}
+          <div style={{ display: "flex", justifyContent: "center" }}>
+            <HeroRing score={view.score} color={ringColor} track={t.track} />
+          </div>
+          <div style={{ marginTop: 22 }}>
+            <span style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase", color: ringColor, border: `0.5px solid ${ringColor}66`, padding: "5px 12px" }}>
+              {view.verdict}
+            </span>
+          </div>
+          <p style={{ fontFamily: DISP, fontWeight: 700, fontSize: 26, color: t.inkPrimary, margin: "20px 0 0", letterSpacing: "-0.4px" }}>
+            {view.percentile} percentile{view.siteLabel ? <span style={{ color: t.inkSecondary }}> · {view.siteLabel}</span> : null}
+          </p>
+          {view.findings.length > 0 ? (
+            <p style={{ fontFamily: MONO, fontSize: 12, color: t.inkMuted, margin: "12px 0 0", letterSpacing: "0.04em" }}>{findingsCountLine}</p>
+          ) : null}
+        </div>
+      </section>
+    ),
+    health: () => (
+      <section key="health" id="health" ref={(el) => { sectionRefs.current.health = el; }} className="report-doc-anchor" style={{ marginBottom: 52 }}>
+        <SectionLabel t={t}>Conversion Health</SectionLabel>
+        <div className="report-health-strip">
+          {view.dimensions.map((d) => {
+            const c = bandColor(d.score, t);
+            return (
+              <div key={d.label} style={{ background: t.surface, padding: "16px 14px", display: "flex", flexDirection: "column", gap: 10, minHeight: 104 }}>
+                <div style={{ fontFamily: MONO, fontSize: 10, lineHeight: 1.35, color: t.inkSecondary, letterSpacing: "0.03em", minHeight: 26 }}>{d.label}</div>
+                <div style={{ position: "relative", width: "100%", height: 2, background: t.track, marginTop: "auto" }}>
+                  <div style={{ position: "absolute", left: 0, top: 0, height: "100%", width: `${Math.max(0, Math.min(100, d.score))}%`, background: c }} />
+                </div>
+                <div style={{ fontFamily: DISP, fontWeight: 700, fontSize: 20, color: c }}>{d.score}</div>
+              </div>
+            );
+          })}
+        </div>
+        <p style={{ fontFamily: MONO, fontSize: 9.5, letterSpacing: "0.14em", textTransform: "uppercase", color: t.inkMuted, margin: "12px 0 0" }}>
+          27 categories · 307 checks
+        </p>
+      </section>
+    ),
+    brief: () => (
+      <section key="brief" id="brief" ref={(el) => { sectionRefs.current.brief = el; }} className="report-doc-anchor" style={{ marginBottom: 52 }}>
+        <SectionLabel t={t}>Diagnostic Brief</SectionLabel>
+        <div style={{ borderLeft: `2px solid ${t.accent}`, paddingLeft: 20 }}>
+          <p style={{ fontFamily: BODY, fontSize: 16, lineHeight: 1.7, color: t.inkPrimary, margin: 0 }}>{view.brief}</p>
+        </div>
+      </section>
+    ),
+    findings: () => (
+      <section key="findings" id="findings" ref={(el) => { sectionRefs.current.findings = el; }} className="report-doc-anchor" style={{ marginBottom: 52 }}>
+        <SectionLabel t={t}>Ranked Findings</SectionLabel>
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          {view.findings.map((f, i) => {
+            const meta = severityMeta(f.severity, t);
+            const liftPositive = isPositiveLift(f.impactEstimate);
+            return (
+              <div key={`${f.title}-${i}`} style={{ position: "relative", borderLeft: `2px solid ${meta.color}`, background: `color-mix(in srgb, ${meta.color} 5%, transparent)`, padding: "18px 20px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: 10 }}>
+                  <span style={{ fontFamily: MONO, fontSize: 11, color: t.inkMuted }}>{String(i + 1).padStart(2, "0")}</span>
+                  <span style={{ fontFamily: MONO, fontSize: 9.5, letterSpacing: "0.1em", textTransform: "uppercase", color: meta.color, border: `0.5px solid ${meta.color}66`, padding: "3px 8px" }}>{meta.label}</span>
+                  {f.dimension ? (
+                    <span style={{ fontFamily: MONO, fontSize: 9.5, letterSpacing: "0.08em", textTransform: "uppercase", color: t.inkMuted, border: `0.5px solid ${t.border}`, padding: "3px 8px" }}>{f.dimension}</span>
+                  ) : null}
+                  {f.impactEstimate ? (
+                    <span style={{ fontFamily: MONO, fontSize: 11, color: liftPositive ? t.verdict.green : t.inkMuted, marginLeft: "auto" }}>{f.impactEstimate}</span>
+                  ) : null}
+                </div>
+                <h3 style={{ fontFamily: DISP, fontWeight: 600, fontSize: 16, color: t.inkPrimary, margin: "0 0 8px", letterSpacing: "-0.2px" }}>{f.title}</h3>
+                {f.evidence ? <p style={{ fontFamily: BODY, fontSize: 14, lineHeight: 1.65, color: t.inkSecondary, margin: 0 }}>{f.evidence}</p> : null}
+                {f.impactLine ? <p style={{ fontFamily: MONO, fontSize: 12, lineHeight: 1.6, color: t.inkMuted, margin: "8px 0 0" }}>{f.impactLine}</p> : null}
+              </div>
+            );
+          })}
+        </div>
+      </section>
+    ),
+    rewrites: () => (
+      <section key="rewrites" id="rewrites" ref={(el) => { sectionRefs.current.rewrites = el; }} className="report-doc-anchor" style={{ marginBottom: 52 }}>
+        <SectionLabel t={t}>Rewrites</SectionLabel>
+        <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+          {view.rewrites.map((r) => (
+            <div key={r.label}>
+              <div style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", textTransform: "uppercase", color: t.inkMuted, marginBottom: 8 }}>{r.label}</div>
+              <div className="report-rewrite-grid" style={{ border: `0.5px solid ${t.border}` }}>
+                <div style={{ background: t.surface, padding: "14px 16px" }}>
+                  <div style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase", color: t.inkMuted, marginBottom: 6 }}>Current</div>
+                  <p style={{ fontFamily: BODY, fontSize: 14, lineHeight: 1.6, color: t.inkSecondary, margin: 0 }}>{r.current || "—"}</p>
+                </div>
+                <div style={{ background: t.surface, padding: "14px 16px" }}>
+                  <div style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase", color: t.accent, marginBottom: 6 }}>Rewritten</div>
+                  <p style={{ fontFamily: BODY, fontSize: 14, lineHeight: 1.6, color: t.inkPrimary, margin: 0 }}>{r.rewritten}</p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+    ),
+    blueprint: () => {
+      const bp = view.blueprint!;
+      return (
+        <section key="blueprint" id="blueprint" ref={(el) => { sectionRefs.current.blueprint = el; }} className="report-doc-anchor">
+          <SectionLabel t={t}>Growth Blueprint</SectionLabel>
+          <div className="report-blueprint-grid">
+            {([
+              { title: "Week 1", items: bp.week1 },
+              { title: "Weeks 2–4", items: bp.weeks24 },
+              { title: "Month 2+", items: bp.month2 },
+            ] as const).filter((c) => c.items.length > 0).map((col) => (
+              <div key={col.title} style={{ border: `0.5px solid ${t.border}`, background: t.surface, padding: "18px 18px 20px" }}>
+                <div style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", textTransform: "uppercase", color: t.accent, marginBottom: 14 }}>{col.title}</div>
+                <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: 12 }}>
+                  {col.items.map((it, i) => (
+                    <li key={i} style={{ fontFamily: BODY, fontSize: 13.5, lineHeight: 1.55, color: t.inkSecondary, display: "flex", gap: 9 }}>
+                      <span style={{ color: t.accent, flexShrink: 0 }}>·</span>{it}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </section>
+      );
+    },
+  };
+
+  const preparedFor = domain;
+
   return (
     <div
       style={{
         width: "100%",
-        background: "#050810",
-        ...(fillContainer ? { height: "100%", overflowY: "auto" } : {}),
+        background: t.bg,
+        color: t.inkPrimary,
+        // On the /reports render (!fillContainer) the route has no navbar but the
+        // root layout still pads 64px — pull up and repaint it in the theme bg so a
+        // light white-label report has no dark band above the cover.
+        ...(fillContainer ? { height: "100%", overflowY: "auto" } : { minHeight: "100vh", marginTop: "-64px", paddingTop: "64px" }),
       }}
     >
       <style>{`
         .report-doc-anchor { scroll-margin-top: 64px; }
-        /* auto-fit collapses empty tracks, so present dimensions always fill the row:
-           7 across on desktop, wrapping to 4+3 / 2-up on narrow widths. */
         .report-health-strip {
           display: grid;
           grid-template-columns: repeat(auto-fit, minmax(104px, 1fr));
           gap: 1px;
-          background: ${BORDER};
-          border: 0.5px solid ${BORDER};
+          background: ${t.border};
+          border: 0.5px solid ${t.border};
         }
-        .report-rewrite-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: ${BORDER}; }
+        .report-rewrite-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: ${t.border}; }
         @media (max-width: 640px) { .report-rewrite-grid { grid-template-columns: 1fr; } }
         .report-blueprint-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
         @media (max-width: 760px) { .report-blueprint-grid { grid-template-columns: 1fr; } }
+        @media print {
+          .report-jumpnav { display: none !important; }
+          * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+        }
       `}</style>
 
-      {/* Thin sticky in-page jump nav (anchors, not a rail) */}
+      {/* Thin sticky in-page jump nav (anchors, not a rail) + print/PDF action */}
       <nav
+        className="report-jumpnav"
         style={{
           position: "sticky", top: 0, zIndex: 20,
           display: "flex", gap: 4, alignItems: "center", flexWrap: "wrap",
-          padding: "10px 24px", background: "rgba(5,8,16,0.9)", backdropFilter: "blur(10px)",
-          borderBottom: `0.5px solid ${BORDER}`,
+          padding: "10px 24px", background: t.mode === "light" ? "rgba(255,255,255,0.9)" : "rgba(5,8,16,0.9)",
+          backdropFilter: "blur(10px)", borderBottom: `0.5px solid ${t.border}`,
         }}
       >
-        <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.16em", textTransform: "uppercase", color: INK_MUTED, marginRight: 10, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 200 }}>
+        <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.16em", textTransform: "uppercase", color: t.inkMuted, marginRight: 10, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 200 }}>
           {domain}
         </span>
-        {JUMP.filter((j) => present[j.id]).map((j) => (
-          <button
-            key={j.id}
-            type="button"
-            onClick={() => scrollTo(j.id)}
-            style={{ fontFamily: MONO, fontSize: 10.5, letterSpacing: "0.06em", textTransform: "uppercase", color: INK_SECONDARY, background: "transparent", border: "none", padding: "5px 9px", cursor: "pointer" }}
-          >
+        {JUMP.filter((j) => liveSections.some((s) => s.id === j.id)).map((j) => (
+          <button key={j.id} type="button" onClick={() => scrollTo(j.id)} style={{ fontFamily: MONO, fontSize: 10.5, letterSpacing: "0.06em", textTransform: "uppercase", color: t.inkSecondary, background: "transparent", border: "none", padding: "5px 9px", cursor: "pointer" }}>
             {j.label}
           </button>
         ))}
+        <button type="button" onClick={() => window.print()} style={{ marginLeft: "auto", fontFamily: MONO, fontSize: 10.5, letterSpacing: "0.06em", textTransform: "uppercase", color: t.accent, background: "transparent", border: `0.5px solid ${t.accent}55`, padding: "5px 11px", cursor: "pointer", whiteSpace: "nowrap" }}>
+          PDF ↓
+        </button>
       </nav>
 
-      <div style={{ maxWidth: 860, margin: "0 auto", padding: "44px 24px 140px" }}>
+      <div style={{ maxWidth: 860, margin: "0 auto", padding: "44px 24px 64px" }}>
 
-        {/* ── 1. SCORE HERO ─────────────────────────────────────────────────── */}
-        <section
-          id="score"
-          ref={(el) => { sectionRefs.current.score = el; }}
-          className="report-doc-anchor"
-          style={{ position: "relative", textAlign: "center", padding: "20px 0 44px", overflow: "hidden" }}
-        >
-          {/* faint surface bloom behind the hero (not the ring) */}
-          <div
-            aria-hidden
-            style={{
-              position: "absolute", left: "50%", top: "44%", transform: "translate(-50%, -50%)",
-              width: 620, height: 360,
-              background: "radial-gradient(ellipse at center, color-mix(in srgb, var(--surface-accent) 11%, transparent) 0%, transparent 72%)",
-              pointerEvents: "none", zIndex: 0,
-            }}
-          />
-          <div style={{ position: "relative", zIndex: 1 }}>
-            <p style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.24em", textTransform: "uppercase", color: ACCENT, margin: "0 0 14px" }}>
-              Conversion Intelligence
-            </p>
-            <h1 style={{ fontFamily: DISP, fontWeight: 700, fontSize: 24, color: INK_PRIMARY, margin: "0 0 4px", letterSpacing: "-0.4px", wordBreak: "break-word" }}>
-              {domain}
-            </h1>
-            {dateLabel ? (
-              <p style={{ fontFamily: MONO, fontSize: 11, color: INK_MUTED, margin: "0 0 30px", letterSpacing: "0.06em" }}>
-                Scanned {dateLabel}
+        {/* ── COVER — agency-owned, white-label only (heavy accent) ──────────── */}
+        {branding ? (
+          <section style={{ position: "relative", marginBottom: 48, padding: "30px 28px 26px", border: `0.5px solid ${t.border}`, background: t.surface, overflow: "hidden" }}>
+            <div aria-hidden style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, background: t.accent }} />
+            <div aria-hidden style={{ position: "absolute", right: -40, top: -40, width: 240, height: 200, background: `radial-gradient(ellipse at center, ${t.accentSoft} 0%, transparent 70%)`, pointerEvents: "none" }} />
+            <div style={{ position: "relative", zIndex: 1 }}>
+              {branding.logoUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={branding.logoUrl} alt={branding.agencyName || "Agency"} style={{ height: 48, width: "auto", maxWidth: 260, objectFit: "contain", display: "block", marginBottom: 18 }} crossOrigin="anonymous" />
+              ) : branding.agencyName ? (
+                <div style={{ fontFamily: DISP, fontWeight: 800, fontSize: 22, color: t.accent, marginBottom: 14 }}>{branding.agencyName}</div>
+              ) : null}
+              <p style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.2em", textTransform: "uppercase", color: t.accent, margin: "0 0 8px" }}>
+                Conversion audit · prepared for {preparedFor}
               </p>
-            ) : <div style={{ height: 30 }} />}
-
-            <div style={{ display: "flex", justifyContent: "center" }}>
-              <HeroRing score={view.score} />
-            </div>
-
-            {/* verdict tag */}
-            <div style={{ marginTop: 22 }}>
-              <span style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase", color: bandColor(view.score), border: `0.5px solid ${bandColor(view.score)}66`, padding: "5px 12px" }}>
-                {view.verdict}
-              </span>
-            </div>
-
-            {/* percentile — prominent, second only to the ring (position, not score) */}
-            <p style={{ fontFamily: DISP, fontWeight: 700, fontSize: 26, color: INK_PRIMARY, margin: "20px 0 0", letterSpacing: "-0.4px" }}>
-              {view.percentile} percentile{view.siteLabel ? <span style={{ color: INK_SECONDARY }}> · {view.siteLabel}</span> : null}
-            </p>
-
-            {/* findings count */}
-            {view.findings.length > 0 ? (
-              <p style={{ fontFamily: MONO, fontSize: 12, color: INK_MUTED, margin: "12px 0 0", letterSpacing: "0.04em" }}>
-                {findingsCountLine}
-              </p>
-            ) : null}
-          </div>
-        </section>
-
-        {/* ── 2. CONVERSION HEALTH strip ────────────────────────────────────── */}
-        {present.health ? (
-          <section id="health" ref={(el) => { sectionRefs.current.health = el; }} className="report-doc-anchor" style={{ marginBottom: 52 }}>
-            <SectionLabel>Conversion Health</SectionLabel>
-            <div className="report-health-strip">
-              {view.dimensions.map((d) => {
-                const c = bandColor(d.score);
-                return (
-                  <div key={d.label} style={{ background: "#0A0E18", padding: "16px 14px", display: "flex", flexDirection: "column", gap: 10, minHeight: 104 }}>
-                    <div style={{ fontFamily: MONO, fontSize: 10, lineHeight: 1.35, color: INK_SECONDARY, letterSpacing: "0.03em", minHeight: 26 }}>
-                      {d.label}
-                    </div>
-                    <div style={{ position: "relative", width: "100%", height: 2, background: "rgba(255,255,255,0.07)", marginTop: "auto" }}>
-                      <div style={{ position: "absolute", left: 0, top: 0, height: "100%", width: `${Math.max(0, Math.min(100, d.score))}%`, background: c }} />
-                    </div>
-                    <div style={{ fontFamily: DISP, fontWeight: 700, fontSize: 20, color: c }}>{d.score}</div>
-                  </div>
-                );
-              })}
-            </div>
-            <p style={{ fontFamily: MONO, fontSize: 9.5, letterSpacing: "0.14em", textTransform: "uppercase", color: INK_MUTED, margin: "12px 0 0" }}>
-              Conversion engine · 27 categories · 307 checks
-            </p>
-          </section>
-        ) : null}
-
-        {/* ── 3. DIAGNOSTIC BRIEF ───────────────────────────────────────────── */}
-        {present.brief ? (
-          <section id="brief" ref={(el) => { sectionRefs.current.brief = el; }} className="report-doc-anchor" style={{ marginBottom: 52 }}>
-            <SectionLabel>Diagnostic Brief</SectionLabel>
-            <div style={{ borderLeft: `2px solid ${ACCENT}`, paddingLeft: 20 }}>
-              <p style={{ fontFamily: BODY, fontSize: 16, lineHeight: 1.7, color: INK_PRIMARY, margin: 0 }}>
-                {view.brief}
-              </p>
+              {branding.agencyName && branding.logoUrl ? (
+                <p style={{ fontFamily: BODY, fontSize: 13, color: t.inkSecondary, margin: "0 0 2px" }}>{branding.agencyName}</p>
+              ) : null}
+              {branding.coverNote ? (
+                <p style={{ fontFamily: BODY, fontSize: 15, lineHeight: 1.7, color: t.inkPrimary, margin: "12px 0 0", maxWidth: 620 }}>{branding.coverNote}</p>
+              ) : null}
             </div>
           </section>
         ) : null}
 
-        {/* ── 4. RANKED FINDINGS ────────────────────────────────────────────── */}
-        {present.findings ? (
-          <section id="findings" ref={(el) => { sectionRefs.current.findings = el; }} className="report-doc-anchor" style={{ marginBottom: 52 }}>
-            <SectionLabel>Ranked Findings</SectionLabel>
-            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              {view.findings.map((f, i) => {
-                const meta = SEVERITY_META[f.severity];
-                const liftPositive = isPositiveLift(f.impactEstimate);
-                return (
-                  <div
-                    key={`${f.title}-${i}`}
-                    style={{
-                      position: "relative",
-                      borderLeft: `2px solid ${meta.color}`,
-                      background: `color-mix(in srgb, ${meta.color} 5%, transparent)`,
-                      padding: "18px 20px",
-                    }}
-                  >
-                    <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: 10 }}>
-                      <span style={{ fontFamily: MONO, fontSize: 11, color: INK_MUTED }}>{String(i + 1).padStart(2, "0")}</span>
-                      <span style={{ fontFamily: MONO, fontSize: 9.5, letterSpacing: "0.1em", textTransform: "uppercase", color: meta.color, border: `0.5px solid ${meta.color}66`, padding: "3px 8px" }}>
-                        {meta.label}
-                      </span>
-                      {f.dimension ? (
-                        <span style={{ fontFamily: MONO, fontSize: 9.5, letterSpacing: "0.08em", textTransform: "uppercase", color: INK_MUTED, border: `0.5px solid ${BORDER}`, padding: "3px 8px" }}>
-                          {f.dimension}
-                        </span>
-                      ) : null}
-                      {f.impactEstimate ? (
-                        <span style={{ fontFamily: MONO, fontSize: 11, color: liftPositive ? GREEN : INK_MUTED, marginLeft: "auto" }}>
-                          {f.impactEstimate}
-                        </span>
-                      ) : null}
-                    </div>
-                    <h3 style={{ fontFamily: DISP, fontWeight: 600, fontSize: 16, color: INK_PRIMARY, margin: "0 0 8px", letterSpacing: "-0.2px" }}>
-                      {f.title}
-                    </h3>
-                    {f.evidence ? (
-                      <p style={{ fontFamily: BODY, fontSize: 14, lineHeight: 1.65, color: INK_SECONDARY, margin: 0 }}>
-                        {f.evidence}
-                      </p>
-                    ) : null}
-                    {f.impactLine ? (
-                      <p style={{ fontFamily: MONO, fontSize: 12, lineHeight: 1.6, color: INK_MUTED, margin: "8px 0 0" }}>
-                        {f.impactLine}
-                      </p>
-                    ) : null}
-                  </div>
-                );
-              })}
-            </div>
-          </section>
-        ) : null}
+        {/* ── BODY — locked instrument, template-ordered sections ───────────── */}
+        {liveSections.map((s) => sections[s.id]())}
 
-        {/* ── 5. REWRITES ───────────────────────────────────────────────────── */}
-        {present.rewrites ? (
-          <section id="rewrites" ref={(el) => { sectionRefs.current.rewrites = el; }} className="report-doc-anchor" style={{ marginBottom: 52 }}>
-            <SectionLabel>Rewrites</SectionLabel>
-            <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
-              {view.rewrites.map((r) => (
-                <div key={r.label}>
-                  <div style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", textTransform: "uppercase", color: INK_MUTED, marginBottom: 8 }}>{r.label}</div>
-                  <div className="report-rewrite-grid" style={{ border: `0.5px solid ${BORDER}` }}>
-                    <div style={{ background: "#0A0E18", padding: "14px 16px" }}>
-                      <div style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase", color: INK_MUTED, marginBottom: 6 }}>Current</div>
-                      <p style={{ fontFamily: BODY, fontSize: 14, lineHeight: 1.6, color: INK_SECONDARY, margin: 0 }}>{r.current || "—"}</p>
-                    </div>
-                    <div style={{ background: "#0A0E18", padding: "14px 16px" }}>
-                      <div style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase", color: ACCENT, marginBottom: 6 }}>Rewritten</div>
-                      <p style={{ fontFamily: BODY, fontSize: 14, lineHeight: 1.6, color: INK_PRIMARY, margin: 0 }}>{r.rewritten}</p>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
-        ) : null}
-
-        {/* ── 6. GROWTH BLUEPRINT ───────────────────────────────────────────── */}
-        {present.blueprint && view.blueprint ? (
-          <section id="blueprint" ref={(el) => { sectionRefs.current.blueprint = el; }} className="report-doc-anchor">
-            <SectionLabel>Growth Blueprint</SectionLabel>
-            <div className="report-blueprint-grid">
-              {([
-                { title: "Week 1", items: view.blueprint.week1 },
-                { title: "Weeks 2–4", items: view.blueprint.weeks24 },
-                { title: "Month 2+", items: view.blueprint.month2 },
-              ] as const).filter((c) => c.items.length > 0).map((col) => (
-                <div key={col.title} style={{ border: `0.5px solid ${BORDER}`, background: "#0A0E18", padding: "18px 18px 20px" }}>
-                  <div style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", textTransform: "uppercase", color: ACCENT, marginBottom: 14 }}>{col.title}</div>
-                  <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: 12 }}>
-                    {col.items.map((it, i) => (
-                      <li key={i} style={{ fontFamily: BODY, fontSize: 13.5, lineHeight: 1.55, color: INK_SECONDARY, display: "flex", gap: 9 }}>
-                        <span style={{ color: ACCENT, flexShrink: 0 }}>·</span>{it}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
-            </div>
-          </section>
+        {/* ── FOOTER — agency-owned, white-label only ───────────────────────── */}
+        {branding ? (
+          <footer style={{ marginTop: 56, paddingTop: 18, borderTop: `0.5px solid ${t.border}`, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
+            <span style={{ fontFamily: MONO, fontSize: 10.5, letterSpacing: "0.06em", color: t.inkSecondary }}>
+              {[branding.footerText || branding.agencyName, "Confidential"].filter(Boolean).join(" · ")}
+            </span>
+            <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase", color: t.inkMuted }}>
+              307 checks · verified findings
+            </span>
+          </footer>
         ) : null}
       </div>
     </div>

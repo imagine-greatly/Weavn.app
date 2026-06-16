@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import ReportLayout from '@/components/ReportLayout'
 import type { ReportPayload } from '@/lib/reportSchema'
+import type { BrandingConfig } from '@/lib/branding'
 import { getSupabaseBrowserClient } from '@/lib/supabaseBrowser'
 
 const MONO = '"IBM Plex Mono", monospace'
@@ -14,9 +15,10 @@ interface ReportClientProps {
   domain: string
   payload: ReportPayload
   scanDate?: string | null
+  branding?: BrandingConfig | null
 }
 
-export default function ReportClient({ domain, payload, scanDate }: ReportClientProps) {
+export default function ReportClient({ domain, payload, scanDate, branding }: ReportClientProps) {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null)
 
   useEffect(() => {
@@ -32,12 +34,13 @@ export default function ReportClient({ domain, payload, scanDate }: ReportClient
         domain={domain}
         payload={payload}
         scanDate={scanDate}
-        whiteLabel={true}
+        branding={branding}
         fillContainer={false}
       />
 
-      {/* Sticky CTA — only for unauthenticated users */}
-      {isAuthenticated === false && (
+      {/* Sticky CTA — only for unauthenticated users, and NEVER on a white-label
+          render (no Weavn surface may appear in an agency's client-facing report). */}
+      {isAuthenticated === false && !branding && (
         <div
           style={{
             position: 'fixed',

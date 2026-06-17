@@ -1,0 +1,41 @@
+name: Supabase Keep-Alive
+
+# Free-tier Supabase projects pause after ~7 days of inactivity. This pings the
+# database twice a week with a tiny REST query so it never goes idle.
+#
+# Required GitHub repo secrets (Settings → Secrets and variables → Actions):
+#   NEXT_PUBLIC_SUPABASE_URL    e.g. https://vaqghgdgxdblnidzhzpr.supabase.co
+#   SUPABASE_SERVICE_ROLE_KEY   the project's service_role key (bypasses RLS)
+# Nothing is hardcoded — both values are read from secrets at runtime.
+
+on:
+  schedule:
+    # Mondays and Thursdays at 07:11 UTC (twice weekly, ~3–4 day gap).
+    - cron: "11 7 * * 1,4"
+  workflow_dispatch: {}
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Supabase REST (lightweight keep-alive query)
+        env:
+          SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          set -euo pipefail
+          if [ -z "${SUPABASE_URL:-}" ] || [ -z "${SERVICE_ROLE_KEY:-}" ]; then
+            echo "::error::Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY secret."
+            exit 1
+          fi
+          # select a single id from a table that always exists; service_role bypasses RLS.
+          code=$(curl -sS -o /dev/null -w "%{http_code}" \
+            "${SUPABASE_URL%/}/rest/v1/profiles?select=id&limit=1" \
+            -H "apikey: ${SERVICE_ROLE_KEY}" \
+            -H "Authorization: Bearer ${SERVICE_ROLE_KEY}")
+          echo "Supabase responded with HTTP ${code}"
+          # 200 = rows returned, 206 = partial content (range) — both prove the DB is awake.
+          case "$code" in
+            200|206) echo "Keep-alive OK." ;;
+            *) echo "::error::Keep-alive query failed (HTTP ${code})."; exit 1 ;;
+          esac

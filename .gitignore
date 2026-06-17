@@ -23,3 +23,9 @@ node_modules
 
 .vercel
 .env*.local
+
+# Supabase CLI local link state (not for commit)
+supabase/.temp/
+
+# Local database backups — never commit dumps
+backups/

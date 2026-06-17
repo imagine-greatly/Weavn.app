@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { getSupabaseBrowserClient } from '@/lib/supabaseBrowser'
 import { FREE_DASHBOARD_SCANS_PER_MONTH } from '@/lib/constants'
+import { isCheckoutableDashboardTier, type BillingInterval } from '@/lib/pricing'
 
 // ── Steel-blue Dashboard surface tokens ────────────────────────────────────────
 const C = {
@@ -21,8 +22,8 @@ const BODY = "'IBM Plex Sans', sans-serif"
 const DISP = "'Space Grotesk', sans-serif"
 
 // Canonical DASHBOARD tiers (mirrors the /dashboard marketing pricing). These are the
-// dashboard plan set ONLY — API/console tiers never render here. Per-tier checkout is
-// not wired (no confirmed price IDs), so CTAs route to the real Stripe billing portal.
+// dashboard plan set ONLY — API/console tiers never render here. Upgrades run self-serve
+// Stripe Checkout per tier; downgrades route to the Stripe billing portal.
 interface Tier {
   id: string
   name: string
@@ -76,7 +77,9 @@ export default function DashboardBillingPage() {
   const [subscription, setSubscription] = useState<Subscription | null>(null)
   const [portalBusy, setPortalBusy] = useState(false)
   const [portalError, setPortalError] = useState<string | null>(null)
-  const [changeNotice, setChangeNotice] = useState<string | null>(null)
+  const [interval, setBillingInterval] = useState<BillingInterval>('month')
+  const [checkoutBusy, setCheckoutBusy] = useState<string | null>(null)
+  const [checkoutError, setCheckoutError] = useState<string | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -128,6 +131,28 @@ export default function DashboardBillingPage() {
     } catch (e) {
       setPortalError(e instanceof Error ? e.message : 'Portal request failed.')
       setPortalBusy(false)
+    }
+  }
+
+  async function startCheckout(planId: string) {
+    if (checkoutBusy) return
+    setCheckoutBusy(planId); setCheckoutError(null)
+    try {
+      const supabase = getSupabaseBrowserClient()
+      const { data: { session } } = await supabase.auth.getSession()
+      const token = session?.access_token
+      if (!token) { window.location.href = '/auth?mode=signup'; return }
+      const res = await fetch('/api/stripe/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ plan: planId, interval }),
+      })
+      const json = await res.json().catch(() => ({}))
+      if (!res.ok || !json.url) throw new Error(typeof json.error === 'string' ? json.error : 'Checkout failed.')
+      window.location.href = json.url as string
+    } catch (e) {
+      setCheckoutError(e instanceof Error ? e.message : 'Checkout failed.')
+      setCheckoutBusy(null)
     }
   }
 
@@ -222,8 +247,28 @@ export default function DashboardBillingPage() {
           </div>
 
           {/* Plan options — DASHBOARD tiers only */}
-          <div style={{ fontFamily: MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.16em', color: C.inkMuted, marginBottom: 14 }}>
-            Dashboard plans
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 14 }}>
+            <div style={{ fontFamily: MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.16em', color: C.inkMuted }}>
+              Dashboard plans
+            </div>
+            <div role="group" aria-label="Billing interval" style={{ display: 'inline-flex', border: `0.5px solid ${C.border}` }}>
+              {(['month', 'year'] as BillingInterval[]).map((iv) => (
+                <button
+                  key={iv}
+                  type="button"
+                  onClick={() => setBillingInterval(iv)}
+                  aria-pressed={interval === iv}
+                  style={{
+                    fontFamily: MONO, fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase',
+                    padding: '7px 14px', border: 'none', cursor: 'pointer',
+                    background: interval === iv ? 'color-mix(in srgb, var(--surface-accent) 18%, transparent)' : 'transparent',
+                    color: interval === iv ? 'var(--surface-accent)' : C.inkMuted,
+                  }}
+                >
+                  {iv === 'month' ? 'Monthly' : 'Annual'}
+                </button>
+              ))}
+            </div>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 1, background: C.border }}>
             {DASHBOARD_TIERS.map(t => {
@@ -256,12 +301,17 @@ export default function DashboardBillingPage() {
                   </ul>
                   <button
                     type="button"
-                    onClick={() => setChangeNotice(
-                      isCurrent
-                        ? null
-                        : `Plan changes aren't wired to checkout yet — manage your subscription in the billing portal. No charge was made.`,
-                    )}
-                    disabled={isCurrent}
+                    onClick={() => {
+                      if (isCurrent) return
+                      // Upgrades into a self-serve tier run Stripe Checkout; downgrades
+                      // and non-checkoutable tiers (e.g. enterprise) go to the portal.
+                      if (direction === 'Upgrade' && isCheckoutableDashboardTier(t.id)) {
+                        void startCheckout(t.id)
+                      } else {
+                        void openPortal()
+                      }
+                    }}
+                    disabled={isCurrent || checkoutBusy === t.id || portalBusy}
                     style={{
                       fontFamily: MONO, fontSize: 11, letterSpacing: '0.06em',
                       color: isCurrent ? C.inkMuted : 'var(--surface-accent)',
@@ -271,14 +321,14 @@ export default function DashboardBillingPage() {
                       opacity: isCurrent ? 0.6 : 1, width: '100%',
                     }}
                   >
-                    {isCurrent ? 'Current plan' : `${direction} →`}
+                    {isCurrent ? 'Current plan' : checkoutBusy === t.id ? 'Redirecting…' : `${direction} →`}
                   </button>
                 </div>
               )
             })}
           </div>
-          {changeNotice ? (
-            <p style={{ fontFamily: MONO, fontSize: 12, color: '#EFB23E', margin: '14px 0 0', lineHeight: 1.6 }}>{changeNotice}</p>
+          {checkoutError ? (
+            <p style={{ fontFamily: MONO, fontSize: 12, color: C.worse, margin: '14px 0 0', lineHeight: 1.6 }}>{checkoutError}</p>
           ) : null}
         </>
       )}

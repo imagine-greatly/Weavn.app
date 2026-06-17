@@ -57,62 +57,78 @@ export async function POST(req: NextRequest) {
     switch (event.type) {
       case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session;
-        const userId = session.metadata?.supabase_user_id;
+        const userId = session.metadata?.user_id;
+        const plan = session.metadata?.plan;
+        const surface = session.metadata?.surface ?? 'dashboard';
+        const customerId =
+          typeof session.customer === 'string' ? session.customer : session.customer?.id ?? null;
 
-        if (!userId) break;
+        if (!userId || !plan) break;
 
-        // The tier was chosen from the catalog at checkout and stamped on the
-        // session metadata; fall back to 'free' if somehow absent.
-        const plan = session.metadata?.plan ?? 'free';
-
-        await supabase
-          .from('profiles')
-          .update({
-            plan,
-            stripe_customer_id: session.customer as string,
-          })
-          .eq('id', userId);
-
-        console.log(`[webhook] User ${userId} upgraded to ${plan}`);
-        break;
-      }
-
-      case 'customer.subscription.deleted': {
-        const subscription = event.data.object as Stripe.Subscription;
-        const userId = subscription.metadata?.supabase_user_id;
-
-        if (!userId) break;
-
-        await supabase
-          .from('profiles')
-          .update({ plan: 'free' })
-          .eq('id', userId);
-
-        console.log(`[webhook] User ${userId} downgraded to free`);
+        if (surface === 'api') {
+          // API track: the plan lives on api_keys, keyed by user_id.
+          const update: Record<string, unknown> = { plan };
+          if (customerId) update.stripe_customer_id = customerId;
+          await supabase.from('api_keys').update(update).eq('user_id', userId);
+          console.log(`[webhook] User ${userId} API plan → ${plan}`);
+        } else {
+          // Dashboard track (default): the plan lives on profiles, keyed by id.
+          const update: Record<string, unknown> = { plan };
+          if (customerId) update.stripe_customer_id = customerId;
+          await supabase.from('profiles').update(update).eq('id', userId);
+          console.log(`[webhook] User ${userId} upgraded to ${plan}`);
+        }
         break;
       }
 
       case 'customer.subscription.updated': {
         const subscription = event.data.object as Stripe.Subscription;
-        const userId = subscription.metadata?.supabase_user_id;
+        const customerId =
+          typeof subscription.customer === 'string'
+            ? subscription.customer
+            : subscription.customer?.id ?? null;
+        if (!customerId) break;
 
-        if (!userId) break;
+        // canceled / unpaid → revert to free; otherwise map the active price to a tier.
+        const revert = subscription.status === 'canceled' || subscription.status === 'unpaid';
+        const mapped = planFromPriceId(subscription.items.data[0]?.price.id);
+        const newPlan = revert ? 'free' : mapped;
+        // Unknown price on an active subscription → leave the plan untouched.
+        if (!newPlan) break;
 
-        const isActive = subscription.status === 'active';
-        const activePriceId = subscription.items.data[0]?.price.id;
-        // Real catalog mapping (kills always-'pro'). Unknown price → leave as-is
-        // by falling back to 'free' only when the subscription is inactive.
-        const mapped = planFromPriceId(activePriceId);
-        const activePlan = isActive ? (mapped ?? 'free') : 'free';
+        // Surface is determined by which table currently holds this Stripe customer.
+        const { data: apiRow } = await supabase
+          .from('api_keys')
+          .select('id')
+          .eq('stripe_customer_id', customerId)
+          .limit(1)
+          .maybeSingle();
 
-        await supabase
-          .from('profiles')
-          .update({ plan: activePlan })
-          .eq('id', userId);
+        if (apiRow) {
+          await supabase.from('api_keys').update({ plan: newPlan }).eq('stripe_customer_id', customerId);
+        } else {
+          await supabase.from('profiles').update({ plan: newPlan }).eq('stripe_customer_id', customerId);
+        }
 
         console.log(
-          `[webhook] User ${userId} subscription updated: ${subscription.status} → ${activePlan}`
+          `[webhook] subscription ${subscription.status} → ${newPlan} for customer ${customerId} (${apiRow ? 'api' : 'dashboard'})`
         );
+        break;
+      }
+
+      case 'customer.subscription.deleted': {
+        const subscription = event.data.object as Stripe.Subscription;
+        const customerId =
+          typeof subscription.customer === 'string'
+            ? subscription.customer
+            : subscription.customer?.id ?? null;
+        if (!customerId) break;
+
+        // Revert to free on both tracks for this customer.
+        await supabase.from('profiles').update({ plan: 'free' }).eq('stripe_customer_id', customerId);
+        await supabase.from('api_keys').update({ plan: 'free' }).eq('stripe_customer_id', customerId);
+
+        console.log(`[webhook] subscription deleted → free for customer ${customerId}`);
         break;
       }
 

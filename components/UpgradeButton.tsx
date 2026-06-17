@@ -37,6 +37,10 @@ type UpgradeButtonProps = {
   style?: CSSProperties;
   className?: string;
   variant?: "outline" | "primary";
+  /** Dashboard tier to check out into. Defaults to "pro" (legacy behaviour). */
+  plan?: string;
+  /** Billing interval. Defaults to "month" (legacy behaviour). */
+  interval?: "month" | "year";
 };
 
 export default function UpgradeButton({
@@ -44,6 +48,8 @@ export default function UpgradeButton({
   style,
   className,
   variant = "outline",
+  plan = "pro",
+  interval = "month",
 }: UpgradeButtonProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -69,6 +75,7 @@ export default function UpgradeButton({
           "Content-Type": "application/json",
           Authorization: `Bearer ${session.access_token}`,
         },
+        body: JSON.stringify({ plan, interval }),
       });
 
       const contentType = res.headers.get("content-type");

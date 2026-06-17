@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
+import {
+  DASHBOARD_PLANS,
+  dashboardPriceId,
+  isCheckoutableDashboardTier,
+  type BillingInterval,
+} from '@/lib/pricing';
 
 export async function POST(req: NextRequest) {
   try {
@@ -42,17 +48,38 @@ export async function POST(req: NextRequest) {
 
     let requestBody: Record<string, unknown> = {};
     try { requestBody = await req.json(); } catch { /* no body */ }
-    const requestedPlan = 'pro';
+
+    // Tier selected from the catalog (no hardcoded single price). Default to
+    // 'pro' so the legacy "Upgrade to Pro" button keeps working without a body.
+    const requestedPlan = (requestBody.plan as string | undefined) ?? 'pro';
+    const interval: BillingInterval = requestBody.interval === 'year' ? 'year' : 'month';
+
+    if (!isCheckoutableDashboardTier(requestedPlan)) {
+      // free has no checkout; enterprise routes to contact/booking, not Stripe.
+      return NextResponse.json(
+        { error: `Plan "${requestedPlan}" is not available for self-serve checkout`, code: 'CHECKOUT_PLAN_INVALID' },
+        { status: 400 }
+      );
+    }
+
+    const priceId = dashboardPriceId(requestedPlan, interval);
+    if (!priceId) {
+      console.error(`[checkout] No Stripe price configured for ${requestedPlan}/${interval}`);
+      return NextResponse.json(
+        { error: 'Plan not configured', code: 'CHECKOUT_PRICE_NOT_CONFIGURED' },
+        { status: 500 }
+      );
+    }
 
     const { data: profile } = await supabase
       .from('profiles')
       .select('stripe_customer_id, plan')
-      .eq('id', user.id)
+      .eq('user_id', user.id)
       .single();
 
     if (profile?.plan === requestedPlan) {
       return NextResponse.json(
-        { error: `Already subscribed to ${requestedPlan}`, code: 'CHECKOUT_ALREADY_SUBSCRIBED' },
+        { error: `Already subscribed to ${DASHBOARD_PLANS[requestedPlan].name}`, code: 'CHECKOUT_ALREADY_SUBSCRIBED' },
         { status: 400 }
       );
     }
@@ -69,10 +96,8 @@ export async function POST(req: NextRequest) {
       await supabase
         .from('profiles')
         .update({ stripe_customer_id: customerId })
-        .eq('id', user.id);
+        .eq('user_id', user.id);
     }
-
-    const priceId = process.env.STRIPE_PRO_PRICE_ID!;
 
     const session = await stripe.checkout.sessions.create({
       customer: customerId,

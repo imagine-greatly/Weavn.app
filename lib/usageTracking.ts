@@ -13,9 +13,18 @@ function getServiceClient() {
   return createClient(url, key);
 }
 
-// Fire-and-forget: report api_scan units to Stripe metered billing.
-// costCents: real model cost for this scan in cents (e.g. $0.083 → 8). Defaults to 1 unit.
-export function reportUsageToStripe(apiKeyId: string, costCents = 1): void {
+// Fire-and-forget: report SCAN-COUNT units to Stripe metered billing.
+//
+// BILLING (customer-facing), kept strictly separate from COGS: the meter counts
+// SCANS, not dollars. One billable scan = `scanCount` units (default 1). The
+// Stripe metered price (see scripts/setup-stripe.ts) applies the included
+// allowance ($0 up to the tier's quota) and the per-scan overage rate via
+// graduated tiers — so the dollar logic lives in the price, never here.
+//
+// This deliberately does NOT pass model cost. Real model COGS
+// (realScanCostUsd → api_usage.cost_usd / reports.scan_cost_usd) is internal
+// margin accounting and never touches the meter.
+export function reportUsageToStripe(apiKeyId: string, scanCount = 1): void {
   void (async () => {
     try {
       const stripeKey = process.env.STRIPE_SECRET_KEY;
@@ -45,7 +54,7 @@ export function reportUsageToStripe(apiKeyId: string, costCents = 1): void {
       const stripe = new Stripe(stripeKey, { apiVersion: "2026-02-25.clover" });
       await stripe.billing.meterEvents.create({
         event_name: "api_scan",
-        payload: { stripe_customer_id: customerId, value: String(Math.max(1, costCents)) },
+        payload: { stripe_customer_id: customerId, value: String(Math.max(1, Math.round(scanCount))) },
       });
     } catch (err) {
       console.error("[usageTracking] reportUsageToStripe failed:", err);
@@ -92,9 +101,11 @@ export async function logScanUsage(
             .eq("id", apiKeyId);
         });
     });
-    // Report to Stripe metered billing (fire and forget) — value in cents
+    // Report to Stripe metered billing (fire and forget) — ONE scan unit per
+    // billable scan. Included allowance + overage rate are applied by the Stripe
+    // price tiers. cost_usd above is internal COGS and is intentionally NOT sent.
     if (data.status === "success" && !data.cached) {
-      reportUsageToStripe(apiKeyId, Math.max(1, Math.round((data.costUsd ?? 0.15) * 100)));
+      reportUsageToStripe(apiKeyId, 1);
     }
   } catch (err) {
     console.error("[usageTracking] logScanUsage failed:", err);

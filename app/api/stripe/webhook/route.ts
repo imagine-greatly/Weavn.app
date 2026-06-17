@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
+import { planFromPriceId } from '@/lib/pricing';
 
 export const config = { api: { bodyParser: false } };
 
@@ -52,10 +53,6 @@ export async function POST(req: NextRequest) {
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
 
-  function planFromPriceId(_priceId: string | null | undefined): 'pro' {
-    return 'pro';
-  }
-
   try {
     switch (event.type) {
       case 'checkout.session.completed': {
@@ -64,7 +61,9 @@ export async function POST(req: NextRequest) {
 
         if (!userId) break;
 
-        const plan = 'pro';
+        // The tier was chosen from the catalog at checkout and stamped on the
+        // session metadata; fall back to 'free' if somehow absent.
+        const plan = session.metadata?.plan ?? 'free';
 
         await supabase
           .from('profiles')
@@ -72,7 +71,7 @@ export async function POST(req: NextRequest) {
             plan,
             stripe_customer_id: session.customer as string,
           })
-          .eq('id', userId);
+          .eq('user_id', userId);
 
         console.log(`[webhook] User ${userId} upgraded to ${plan}`);
         break;
@@ -87,7 +86,7 @@ export async function POST(req: NextRequest) {
         await supabase
           .from('profiles')
           .update({ plan: 'free' })
-          .eq('id', userId);
+          .eq('user_id', userId);
 
         console.log(`[webhook] User ${userId} downgraded to free`);
         break;
@@ -101,12 +100,15 @@ export async function POST(req: NextRequest) {
 
         const isActive = subscription.status === 'active';
         const activePriceId = subscription.items.data[0]?.price.id;
-        const activePlan = isActive ? planFromPriceId(activePriceId) : 'free';
+        // Real catalog mapping (kills always-'pro'). Unknown price → leave as-is
+        // by falling back to 'free' only when the subscription is inactive.
+        const mapped = planFromPriceId(activePriceId);
+        const activePlan = isActive ? (mapped ?? 'free') : 'free';
 
         await supabase
           .from('profiles')
           .update({ plan: activePlan })
-          .eq('id', userId);
+          .eq('user_id', userId);
 
         console.log(
           `[webhook] User ${userId} subscription updated: ${subscription.status} → ${activePlan}`
@@ -120,15 +122,15 @@ export async function POST(req: NextRequest) {
 
         const { data: profile } = await supabase
           .from('profiles')
-          .select('id')
+          .select('user_id')
           .eq('stripe_customer_id', customerId)
           .single();
 
-        if (profile?.id) {
+        if (profile?.user_id) {
           await supabase
             .from('profiles')
             .update({ plan: 'free' })
-            .eq('id', profile.id);
+            .eq('user_id', profile.user_id);
 
           console.log(
             `[webhook] Payment failed for customer ${customerId}, downgraded to free`

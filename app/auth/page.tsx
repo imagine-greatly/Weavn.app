@@ -11,7 +11,12 @@ type AuthTab = "signin" | "create";
 
 const MONO = '"IBM Plex Mono", monospace';
 const DISP = '"Space Grotesk", sans-serif';
+const BODY = '"IBM Plex Sans", sans-serif';
 
+// Locked design tokens (mirror tailwind.config.ts / lib/design-tokens.ts). Nothing
+// on this page uses a color outside this set: base=background, blue=steel/dashboard
+// surface, purple=API/developer surface, green=success-only, red=severity-only,
+// ink/inkDim=neutral text shades, labelMuted=muted label text.
 const C = {
   green:      "#00C48C",
   blue:       "#6F9BC6",
@@ -19,6 +24,8 @@ const C = {
   labelMuted: "#6E7587",
   base:       "#050810",
   red:        "#E8635F",
+  ink:        "#E6E9EE",
+  inkDim:     "#9398A8",
 } as const;
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -302,183 +309,179 @@ function AuthPageContent() {
         .auth-input::placeholder { color: #6E7587; font-family: "IBM Plex Mono", monospace; font-size: 12px; opacity: 1; }
         @keyframes authPulseDot { 0%,100%{opacity:1} 50%{opacity:0.3} }
         @media (max-width: 767px) {
-          .auth-root     { flex-direction: column !important; }
-          .auth-left     { flex: none !important; padding: 28px 20px !important; }
-          .auth-left-top, .auth-left-divider, .auth-left-rows, .auth-left-surface, .auth-left-foot { display: none !important; }
-          .auth-right    { padding: 32px 20px !important; }
+          .auth-grid       { grid-template-columns: 1fr !important; }
+          .auth-form       { order: -1 !important; }
+          .auth-engine     { border-right: none !important; border-top: 0.5px solid rgba(157,140,255,0.15) !important; padding: 40px 22px !important; }
+          .auth-form-panel { padding: 40px 22px !important; }
         }
       `}</style>
 
-      <div className="auth-root" style={{ display: "flex", minHeight: "100vh", flexDirection: "row" }}>
+      <div
+        className="auth-grid"
+        style={{ display: "grid", gridTemplateColumns: "1.55fr 1fr", minHeight: "100vh", background: C.base }}
+      >
 
         {/* ══════════════════════════════════════════════════════════════════
-            LEFT PANEL — "here's what you're about to unlock"
+            LEFT PANEL — THE ENGINE (purple-leaning, ~61%). Illustrative only —
+            these doors depict the architecture; they are NOT navigation.
         ══════════════════════════════════════════════════════════════════ */}
         <div
-          className="auth-left"
+          className="auth-engine"
           style={{
-            flex: "0 0 42%",
-            background: C.base,
             position: "relative",
             overflow: "hidden",
+            background: C.base,
+            borderRight: "0.5px solid rgba(157,140,255,0.15)",
             display: "flex",
             flexDirection: "column",
-            justifyContent: "space-between",
-            padding: "56px 48px",
+            justifyContent: "center",
+            padding: "56px 56px",
           }}
         >
-          {/* Atmosphere */}
+          {/* Content-anchored purple bloom behind the lower-middle (two-stop fade to bg) */}
           <div aria-hidden style={{
-            position: "absolute", inset: 0, pointerEvents: "none",
-            background: [
-              "radial-gradient(ellipse 700px 900px at 20% 40%, rgba(111,155,198,0.07) 0%, transparent 60%)",
-              "radial-gradient(ellipse 400px 500px at 80% 85%, rgba(157,140,255,0.05) 0%, transparent 55%)",
-            ].join(", "),
+            position: "absolute", inset: 0, pointerEvents: "none", zIndex: 0,
+            background: "radial-gradient(ellipse 640px 540px at 50% 70%, rgba(157,140,255,0.11) 0%, rgba(5,8,16,0) 60%)",
           }} />
-          {/* Corner ticks */}
+
+          {/* Purple corner brackets (1px) — all four corners */}
           {[
-            { top: 24,    left: 24,    borderTop: "0.5px solid rgba(111,155,198,0.25)", borderLeft:   "0.5px solid rgba(111,155,198,0.25)" },
-            { top: 24,    right: 24,   borderTop: "0.5px solid rgba(111,155,198,0.25)", borderRight:  "0.5px solid rgba(111,155,198,0.25)" },
-            { bottom: 24, left: 24,    borderBottom: "0.5px solid rgba(111,155,198,0.25)", borderLeft: "0.5px solid rgba(111,155,198,0.25)" },
-            { bottom: 24, right: 24,   borderBottom: "0.5px solid rgba(111,155,198,0.25)", borderRight:"0.5px solid rgba(111,155,198,0.25)" },
+            { top: 22,    left: 22,  borderTop: "1px solid rgba(157,140,255,0.3)",    borderLeft:  "1px solid rgba(157,140,255,0.3)" },
+            { top: 22,    right: 22, borderTop: "1px solid rgba(157,140,255,0.3)",    borderRight: "1px solid rgba(157,140,255,0.3)" },
+            { bottom: 22, left: 22,  borderBottom: "1px solid rgba(157,140,255,0.3)", borderLeft:  "1px solid rgba(157,140,255,0.3)" },
+            { bottom: 22, right: 22, borderBottom: "1px solid rgba(157,140,255,0.3)", borderRight: "1px solid rgba(157,140,255,0.3)" },
           ].map((s, i) => (
             <div key={i} aria-hidden style={{ position: "absolute", width: 16, height: 16, pointerEvents: "none", ...s }} />
           ))}
 
-          {/* Content */}
-          <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", height: "100%", gap: 0 }}>
+          {/* Engine content (centered column) */}
+          <div style={{ position: "relative", zIndex: 1, width: "100%", maxWidth: 560, margin: "0 auto" }}>
 
-            {/* TOP — brand identity */}
-            <div className="auth-left-top" style={{ marginBottom: "auto" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-                <img src="/weavn-logo.svg" alt="" width={48} height={44} style={{ display: "block", flexShrink: 0, objectFit: "contain" }} />
-                <span style={{ fontFamily: DISP, fontSize: 24, fontWeight: 600, color: "#E6E9EE", letterSpacing: "-0.5px" }}>
-                  Weavn
-                </span>
+            {/* Kicker */}
+            <p style={{ fontFamily: MONO, fontSize: 10, textTransform: "uppercase", letterSpacing: "0.28em", color: C.labelMuted, margin: "0 0 18px" }}>
+              THE ENGINE
+            </p>
+
+            {/* Terminal request panel */}
+            <div style={{ border: "0.5px solid rgba(157,140,255,0.25)", background: "rgba(157,140,255,0.04)" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 16px", borderBottom: "0.5px solid rgba(157,140,255,0.18)" }}>
+                <span style={{ fontFamily: MONO, fontSize: 12, color: C.purple, letterSpacing: "0.04em" }}>POST /v1/scan</span>
+                <span style={{ fontFamily: MONO, fontSize: 11, color: C.labelMuted }}>~90s</span>
+              </div>
+              <div style={{ padding: "16px 18px", fontFamily: MONO, fontSize: 12.5, lineHeight: 1.7 }}>
+                <div style={{ color: C.labelMuted }}>{"{"}</div>
+                <div style={{ paddingLeft: 16 }}>
+                  <span style={{ color: C.purple }}>{'"url"'}</span>
+                  <span style={{ color: C.labelMuted }}>{": "}</span>
+                  <span style={{ color: C.blue }}>{'"acme-saas.com"'}</span>
+                  <span style={{ color: C.labelMuted }}>{","}</span>
+                </div>
+                <div style={{ paddingLeft: 16 }}>
+                  <span style={{ color: C.purple }}>{'"score"'}</span>
+                  <span style={{ color: C.labelMuted }}>{": "}</span>
+                  <span style={{ color: C.red }}>{"37"}</span>
+                  <span style={{ color: C.labelMuted }}>{","}</span>
+                </div>
+                <div style={{ paddingLeft: 16 }}>
+                  <span style={{ color: C.purple }}>{'"percentile"'}</span>
+                  <span style={{ color: C.labelMuted }}>{": "}</span>
+                  <span style={{ color: C.red }}>{"21"}</span>
+                  <span style={{ color: C.labelMuted }}>{","}</span>
+                </div>
+                <div style={{ paddingLeft: 16 }}>
+                  <span style={{ color: C.purple }}>{'"checks"'}</span>
+                  <span style={{ color: C.labelMuted }}>{": "}</span>
+                  <span style={{ color: C.ink }}>{"307"}</span>
+                </div>
+                <div style={{ color: C.labelMuted }}>{"}"}</div>
               </div>
             </div>
 
-            {/* MIDDLE — engine identity */}
-            <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", justifyContent: "center", flex: 1 }}>
+            {/* Connector threads — each flows into its door's top border (no end nodes).
+                PURPLE → Developer API door (left); STEEL → Dashboard door (right). */}
+            <div aria-hidden style={{ position: "relative", height: 46 }}>
+              <svg width="100%" height="46" viewBox="0 0 1000 100" preserveAspectRatio="none" style={{ display: "block" }}>
+                <path d="M 500 0 C 500 58 283 38 283 100" stroke={C.purple} strokeWidth="0.85" fill="none" opacity="0.5" vectorEffect="non-scaling-stroke" />
+                <path d="M 500 0 C 500 58 783 38 783 100" stroke={C.blue}   strokeWidth="0.85" fill="none" opacity="0.5" vectorEffect="non-scaling-stroke" />
+              </svg>
+            </div>
 
-              <div style={{ display: "flex", justifyContent: "center" }}>
-                <img src="/weavn-logo.svg" alt="" width={72} height={67} style={{ display: "block", flexShrink: 0, objectFit: "contain" }} />
+            {/* Surface doors — unequal (API primary + wider). ILLUSTRATIVE, not links. */}
+            <div style={{ display: "grid", gridTemplateColumns: "1.3fr 1fr", gap: 14, alignItems: "start" }}>
+
+              {/* DEVELOPER API door — purple, primary, wider; brighter purple top border */}
+              <div style={{ background: "rgba(157,140,255,0.03)", border: "0.5px solid rgba(157,140,255,0.18)", borderTop: "1.5px solid rgba(157,140,255,0.55)", padding: "16px 18px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+                  <span style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.14em", color: C.purple }}>DEVELOPER API</span>
+                  <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.18em", color: C.labelMuted }}>PRIMARY</span>
+                </div>
+                <p style={{ fontFamily: BODY, fontSize: 12.5, lineHeight: 1.55, color: C.inkDim, margin: "0 0 14px" }}>
+                  Build directly on the engine. POST a URL, get structured JSON back.
+                </p>
+                {["Structured JSON response", "Webhooks + batch scans", "307 checks · 27 categories", "Your key, your stack"].map(f => (
+                  <div key={f} style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 9 }}>
+                    <span aria-hidden style={{ width: 10, height: 1, background: C.purple, flexShrink: 0, opacity: 0.7 }} />
+                    <span style={{ fontFamily: MONO, fontSize: 11.5, color: C.ink, letterSpacing: "0.02em" }}>{f}</span>
+                  </div>
+                ))}
+                <div style={{ marginTop: 14, border: "0.5px solid rgba(157,140,255,0.25)", background: "rgba(157,140,255,0.05)", padding: "8px 12px", fontFamily: MONO, fontSize: 11, color: C.purple, letterSpacing: "0.04em" }}>
+                  weavn_live_7•••••••••••••
+                </div>
               </div>
 
-              <p style={{ fontFamily: DISP, fontSize: 22, fontWeight: 600, color: "#E6E9EE", letterSpacing: "-0.3px", textAlign: "center", marginTop: 20, marginBottom: 0 }}>
-                Weavn
-              </p>
-              <p style={{ fontFamily: MONO, fontSize: 10, textTransform: "uppercase", letterSpacing: "0.2em", color: "rgba(111,155,198,0.5)", textAlign: "center", marginTop: 6, marginBottom: 0 }}>
-                CONVERSION INTELLIGENCE ENGINE
-              </p>
-
-              <div className="auth-left-divider" aria-hidden style={{ height: "0.5px", background: "linear-gradient(to right, transparent, rgba(111,155,198,0.2), transparent)", margin: "32px 0" }} />
-
-              <div className="auth-left-rows" style={{ display: "flex", flexDirection: "column", gap: 0, border: "0.5px solid rgba(111,155,198,0.12)" }}>
-                {([
-                  { label: "DIAGNOSTIC CHECKS", value: "307",   color: C.blue },
-                  { label: "MEDIAN RESPONSE",   value: "~90s",  color: C.blue },
-                  { label: "SITES BENCHMARKED", value: "4,812", color: C.green },
-                ] as const).map((row, i, arr) => (
-                  <div
-                    key={row.label}
-                    style={{
-                      display: "flex", justifyContent: "space-between", alignItems: "center",
-                      padding: "14px 20px",
-                      borderBottom: i < arr.length - 1 ? "0.5px solid rgba(111,155,198,0.08)" : "none",
-                    }}
-                  >
-                    <span style={{ fontFamily: MONO, fontSize: 10, textTransform: "uppercase", letterSpacing: "0.15em", color: C.labelMuted }}>{row.label}</span>
-                    <span style={{ fontFamily: MONO, fontSize: 16, fontWeight: 600, color: row.color }}>{row.value}</span>
+              {/* DASHBOARD door — steel, secondary, narrower, quieter; brighter steel top border */}
+              <div style={{ background: "rgba(111,155,198,0.025)", border: "0.5px solid rgba(111,155,198,0.15)", borderTop: "1.5px solid rgba(111,155,198,0.45)", padding: "16px 18px" }}>
+                <span style={{ display: "block", fontFamily: MONO, fontSize: 11, letterSpacing: "0.14em", color: C.blue, marginBottom: 10 }}>DASHBOARD</span>
+                <p style={{ fontFamily: BODY, fontSize: 12, lineHeight: 1.55, color: C.labelMuted, margin: "0 0 14px" }}>
+                  The same scan, rendered visually. No code required.
+                </p>
+                {["Scored reports", "White-label exports"].map(f => (
+                  <div key={f} style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 9 }}>
+                    <span aria-hidden style={{ width: 10, height: 1, background: C.blue, flexShrink: 0, opacity: 0.55 }} />
+                    <span style={{ fontFamily: MONO, fontSize: 11, color: C.inkDim, letterSpacing: "0.02em" }}>{f}</span>
                   </div>
                 ))}
               </div>
 
-              <p className="auth-left-surface" style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.08em", textAlign: "center", marginTop: 28, marginBottom: 0 }}>
-                {surface === "api" ? (
-                  <>
-                    <span style={{ color: C.purple }}>API surface</span>
-                    <span style={{ color: C.labelMuted }}> · your key is waiting</span>
-                  </>
-                ) : (
-                  <>
-                    <span style={{ color: C.blue }}>Dashboard surface</span>
-                    <span style={{ color: C.labelMuted }}> · your score is waiting</span>
-                  </>
-                )}
-              </p>
-
-              <p className="auth-left-foot" style={{ fontFamily: MONO, fontSize: 10, color: "rgba(111,155,198,0.3)", textAlign: "center", marginTop: 32, marginBottom: 0 }}>
-                Same engine. Same 307 checks. Every plan.
-              </p>
-
             </div>
-
           </div>
         </div>
 
         {/* ══════════════════════════════════════════════════════════════════
-            RIGHT PANEL — form
+            RIGHT PANEL — FORM (~39%). All auth logic/handlers preserved verbatim.
         ══════════════════════════════════════════════════════════════════ */}
         <div
-          className="auth-right"
+          className="auth-form auth-form-panel"
           style={{
-            flex: 1,
-            background: "#080D18",
             position: "relative",
             overflow: "hidden",
+            background: C.base,
             display: "flex",
-            alignItems: "center",
+            flexDirection: "column",
             justifyContent: "center",
-            padding: 48,
+            padding: "56px 56px",
           }}
         >
-          {/* Atmosphere */}
-          <div aria-hidden style={{
-            position: "absolute", inset: 0, pointerEvents: "none",
-            background: "radial-gradient(ellipse 500px 500px at 60% 30%, rgba(111,155,198,0.04) 0%, transparent 60%)",
-          }} />
-          {/* Corner ticks */}
+          {/* Steel corner brackets — top-right + bottom-right only */}
           {[
-            { top: 20,    left: 20,    borderTop: "0.5px solid rgba(111,155,198,0.15)", borderLeft:   "0.5px solid rgba(111,155,198,0.15)" },
-            { top: 20,    right: 20,   borderTop: "0.5px solid rgba(111,155,198,0.15)", borderRight:  "0.5px solid rgba(111,155,198,0.15)" },
-            { bottom: 20, left: 20,    borderBottom: "0.5px solid rgba(111,155,198,0.15)", borderLeft: "0.5px solid rgba(111,155,198,0.15)" },
-            { bottom: 20, right: 20,   borderBottom: "0.5px solid rgba(111,155,198,0.15)", borderRight:"0.5px solid rgba(111,155,198,0.15)" },
+            { top: 20,    right: 20, borderTop: "0.5px solid rgba(111,155,198,0.25)",    borderRight: "0.5px solid rgba(111,155,198,0.25)" },
+            { bottom: 20, right: 20, borderBottom: "0.5px solid rgba(111,155,198,0.25)", borderRight: "0.5px solid rgba(111,155,198,0.25)" },
           ].map((s, i) => (
             <div key={i} aria-hidden style={{ position: "absolute", width: 14, height: 14, pointerEvents: "none", ...s }} />
           ))}
 
-          {/* Form card */}
-          <div style={{ width: "100%", maxWidth: 420, position: "relative", zIndex: 1 }}>
+          <div style={{ width: "100%", maxWidth: 400, margin: "0 auto", position: "relative", zIndex: 1 }}>
 
-            {/* Mobile-only wordmark header */}
-            <div
-              className="auth-mobile-header"
-              style={{ display: "none", alignItems: "center", gap: 10, marginBottom: 28 }}
-            >
-              <img src="/weavn-logo.svg" alt="" width={36} height={33} style={{ display: "block", flexShrink: 0, objectFit: "contain" }} />
-              <span style={{ fontFamily: DISP, fontSize: 20, fontWeight: 600, color: "#E6E9EE" }}>
-                Weavn
-              </span>
-            </div>
-
-            {/* Tab toggle */}
-            <div style={{ display: "flex", background: C.base, border: "0.5px solid rgba(111,155,198,0.2)", padding: 3, width: "fit-content", marginBottom: 32 }}>
+            {/* SIGN IN / CREATE ACCOUNT segmented toggle (existing mode state) */}
+            <div style={{ display: "flex", background: C.base, border: "0.5px solid rgba(111,155,198,0.2)", padding: 3, width: "fit-content", marginBottom: 26 }}>
               {(["signin", "create"] as const).map(t => (
                 <button
                   key={t}
                   type="button"
                   onClick={() => switchTab(t)}
                   style={{
-                    fontFamily: MONO,
-                    fontSize: 11,
-                    textTransform: "uppercase",
-                    letterSpacing: "0.12em",
-                    padding: "8px 20px",
-                    border: "none",
-                    cursor: "pointer",
-                    borderRadius: 0,
-                    transition: "all 0.15s",
+                    fontFamily: MONO, fontSize: 11, textTransform: "uppercase", letterSpacing: "0.12em",
+                    padding: "8px 20px", border: "none", cursor: "pointer", borderRadius: 0, transition: "all 0.15s",
                     background: tab === t ? "rgba(111,155,198,0.12)" : "transparent",
                     color:      tab === t ? C.blue : C.labelMuted,
                   }}
@@ -489,13 +492,13 @@ function AuthPageContent() {
             </div>
 
             {/* Heading */}
-            <h1 style={{ fontFamily: DISP, fontSize: 28, fontWeight: 700, color: "#E6E9EE", margin: "0 0 28px", lineHeight: 1.1 }}>
+            <h1 style={{ fontFamily: DISP, fontSize: 22, fontWeight: 500, color: C.ink, margin: "0 0 22px", lineHeight: 1.15 }}>
               {isCreate ? "Create your account." : "Welcome back."}
             </h1>
 
-            {/* Pending domain context */}
+            {/* Pending domain context (preserved) */}
             {pendingDomain ? (
-              <div style={{ marginBottom: 20, display: "flex", alignItems: "center", gap: 8 }}>
+              <div style={{ marginBottom: 18, display: "flex", alignItems: "center", gap: 8 }}>
                 <span aria-hidden style={{ width: 5, height: 5, background: C.green, flexShrink: 0, display: "inline-block", animation: "authPulseDot 1.5s ease-in-out infinite" }} />
                 <span style={{ fontFamily: MONO, color: C.green, fontSize: 10, letterSpacing: "0.12em" }}>
                   DIAGNOSTIC QUEUED — {pendingDomain}
@@ -503,7 +506,7 @@ function AuthPageContent() {
               </div>
             ) : null}
 
-            {/* Google OAuth button */}
+            {/* Continue with Google (existing OAuth handler, verbatim) */}
             <button
               type="button"
               disabled={isSubmitting || isGoogleLoading}
@@ -531,24 +534,23 @@ function AuthPageContent() {
               }}
               style={{
                 display: "flex", alignItems: "center", justifyContent: "center", gap: 12,
-                width: "100%", padding: "14px", borderRadius: 0,
-                background: "rgba(255,255,255,0.05)",
-                border: "0.5px solid rgba(255,255,255,0.15)",
-                color: "#E6E9EE", fontFamily: MONO, fontSize: 12, letterSpacing: "0.05em",
+                width: "100%", padding: "13px", borderRadius: 0,
+                background: "transparent",
+                border: "0.5px solid rgba(111,155,198,0.3)",
+                color: C.ink, fontFamily: MONO, fontSize: 12, letterSpacing: "0.05em",
                 cursor: isSubmitting || isGoogleLoading ? "not-allowed" : "pointer",
                 opacity: isGoogleLoading ? 0.72 : 1,
                 transition: "all 0.15s",
-                marginBottom: 20,
               }}
               onMouseEnter={(e) => {
                 if (!isSubmitting && !isGoogleLoading) {
-                  e.currentTarget.style.background = "rgba(255,255,255,0.09)";
-                  e.currentTarget.style.border     = "0.5px solid rgba(255,255,255,0.25)";
+                  e.currentTarget.style.background = "rgba(111,155,198,0.06)";
+                  e.currentTarget.style.border     = "0.5px solid rgba(111,155,198,0.5)";
                 }
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.background = "rgba(255,255,255,0.05)";
-                e.currentTarget.style.border     = "0.5px solid rgba(255,255,255,0.15)";
+                e.currentTarget.style.background = "transparent";
+                e.currentTarget.style.border     = "0.5px solid rgba(111,155,198,0.3)";
               }}
             >
               <GoogleIcon />
@@ -557,15 +559,15 @@ function AuthPageContent() {
             {googleError ? <ErrorText>{googleError}</ErrorText> : null}
 
             {/* OR divider */}
-            <div style={{ display: "flex", alignItems: "center", gap: 16, margin: "20px 0" }}>
-              <div style={{ flex: 1, height: "0.5px", background: "rgba(255,255,255,0.07)" }} />
+            <div style={{ display: "flex", alignItems: "center", gap: 16, margin: "18px 0" }}>
+              <div style={{ flex: 1, height: "0.5px", background: "rgba(111,155,198,0.12)" }} />
               <span style={{ fontFamily: MONO, fontSize: 10, color: C.labelMuted }}>OR</span>
-              <div style={{ flex: 1, height: "0.5px", background: "rgba(255,255,255,0.07)" }} />
+              <div style={{ flex: 1, height: "0.5px", background: "rgba(111,155,198,0.12)" }} />
             </div>
 
-            {/* Name — signup only */}
+            {/* NAME — create only (preserved; required by handleCreateAccount) */}
             {isCreate ? (
-              <div style={{ marginBottom: 16 }}>
+              <div style={{ marginBottom: 18 }}>
                 <label htmlFor="auth-name" style={labelStyle}>NAME</label>
                 <input
                   id="auth-name" type="text" autoComplete="name"
@@ -577,7 +579,7 @@ function AuthPageContent() {
               </div>
             ) : null}
 
-            {/* Email */}
+            {/* EMAIL */}
             <div>
               <label htmlFor="auth-email" style={labelStyle}>EMAIL</label>
               <input
@@ -589,8 +591,8 @@ function AuthPageContent() {
               {emailError ? <ErrorText>{emailError}</ErrorText> : null}
             </div>
 
-            {/* Password */}
-            <div style={{ marginTop: 16 }}>
+            {/* PASSWORD (show/hide preserved) */}
+            <div style={{ marginTop: 18 }}>
               <label htmlFor="auth-pw" style={labelStyle}>PASSWORD</label>
               <div style={{ position: "relative" }}>
                 <input
@@ -618,9 +620,9 @@ function AuthPageContent() {
               {passwordError ? <ErrorText>{passwordError}</ErrorText> : null}
             </div>
 
-            {/* Forgot password */}
+            {/* Forgot password — signin only (preserved) */}
             {tab === "signin" ? (
-              <div style={{ textAlign: "right", marginTop: 8 }}>
+              <div style={{ textAlign: "right", marginTop: 10 }}>
                 <Link
                   href="/auth/forgot-password"
                   style={{ fontFamily: MONO, fontSize: 10, color: C.labelMuted, textDecoration: "none" }}
@@ -632,7 +634,7 @@ function AuthPageContent() {
               </div>
             ) : null}
 
-            {/* Submit button */}
+            {/* Submit (existing handlers) */}
             <button
               type="button"
               disabled={isSubmitting}
@@ -640,7 +642,7 @@ function AuthPageContent() {
               style={{
                 width: "100%", padding: "13px", borderRadius: 0,
                 background: "rgba(111,155,198,0.08)",
-                border: "1px solid rgba(111,155,198,0.5)",
+                border: "0.5px solid rgba(111,155,198,0.5)",
                 color: C.blue, fontFamily: MONO, fontSize: 13, fontWeight: 400,
                 letterSpacing: "0.15em", textTransform: "uppercase",
                 cursor: isSubmitting ? "not-allowed" : "pointer",
@@ -669,11 +671,11 @@ function AuthPageContent() {
               </p>
             ) : null}
 
-            {/* Toggle link */}
+            {/* Footer toggle link (reuses existing switchTab) */}
             <p style={{ fontFamily: MONO, fontSize: 11, color: C.labelMuted, textAlign: "center", marginTop: 20, marginBottom: 0 }}>
               {tab === "signin" ? (
                 <>
-                  {"Don't have an account? "}
+                  {"New here? "}
                   <span
                     role="button" tabIndex={0} style={{ color: C.blue, cursor: "pointer" }}
                     onClick={() => switchTab("create")}
@@ -692,7 +694,7 @@ function AuthPageContent() {
               )}
             </p>
 
-            {/* Terms — signup only */}
+            {/* Terms — create only (preserved) */}
             {isCreate ? (
               <p style={{ marginTop: 12, marginBottom: 0, fontFamily: MONO, fontSize: 10, color: C.labelMuted, textAlign: "center", lineHeight: 1.6 }}>
                 By creating an account you agree to our{" "}

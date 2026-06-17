@@ -46,7 +46,7 @@ export function reportUsageToStripe(apiKeyId: string, scanCount = 1): void {
       const { data: profile } = await supabase
         .from("profiles")
         .select("stripe_customer_id")
-        .eq("user_id", userId)
+        .eq("id", userId)
         .single();
       const customerId = (profile as { stripe_customer_id?: string | null } | null)?.stripe_customer_id;
       if (!customerId) return;
@@ -238,7 +238,7 @@ export async function checkDashboardScanAllowed(userId: string): Promise<Dashboa
   const { data: profile, error: planErr } = await supabase
     .from("profiles")
     .select("plan")
-    .eq("user_id", userId)
+    .eq("id", userId)
     .maybeSingle();
   if (planErr) throw new Error(`profile plan lookup failed: ${planErr.message}`);
 

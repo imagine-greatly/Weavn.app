@@ -359,8 +359,7 @@ export async function POST(req: NextRequest) {
 
   // User plan for model selection (agency uses higher-capacity model). Reuse the
   // plan already resolved by the monthly-cap gate above to avoid a second lookup.
-  // (The earlier read here used profiles.id, which doesn't exist — profiles PK is
-  // user_id — so it always fell back to "free".)
+  // profiles is keyed by `id` (= auth user id), so the lookup below uses .eq("id").
   let userPlan = resolvedUserPlan ?? "free";
   if (!internalBypass && resolvedUserPlan === null) {
     const planStart = Date.now()
@@ -370,7 +369,7 @@ export async function POST(req: NextRequest) {
         process.env.SUPABASE_SERVICE_ROLE_KEY!
       );
       const planResult = await Promise.race([
-        supabaseService.from("profiles").select("plan").eq("user_id", userId).maybeSingle(),
+        supabaseService.from("profiles").select("plan").eq("id", userId).maybeSingle(),
         new Promise<never>((_, reject) =>
           setTimeout(() => reject(new Error('[TIMEOUT] plan lookup')), 5_000)
         ),

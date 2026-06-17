@@ -337,7 +337,7 @@ export async function getProfilePlanAndScanCount(
   const { data } = await supabase
     .from("profiles")
     .select("plan, scan_count")
-    .eq("user_id", userId)
+    .eq("id", userId)
     .maybeSingle();
   return (data as { plan?: string; scan_count?: number } | null) ?? null;
 }
@@ -350,7 +350,7 @@ export async function incrementProfileScanCount(
   await supabase
     .from("profiles")
     .update({ scan_count: scanCount + 1 })
-    .eq("user_id", userId);
+    .eq("id", userId);
 }
 
 export async function createProfileWithScanCount(
@@ -360,7 +360,7 @@ export async function createProfileWithScanCount(
   scanCount = 1
 ): Promise<void> {
   await supabase.from("profiles").insert({
-    user_id: userId,
+    id: userId,
     plan,
     scan_count: scanCount,
   });

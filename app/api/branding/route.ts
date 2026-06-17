@@ -4,13 +4,11 @@ import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 import { DEFAULT_BRANDING, sanitizeBranding } from "@/lib/branding";
 
-// profiles is keyed by user_id in 002 but policies/reads use `id` (009). Resolve
-// the row by either so branding read/write works across both schema shapes.
-async function loadProfile(svc: SupabaseClient, uid: string): Promise<{ row: Record<string, unknown> | null; keyCol: "id" | "user_id" }> {
-  let res = await svc.from("profiles").select("plan, branding").eq("id", uid).maybeSingle();
-  if (res.data) return { row: res.data as Record<string, unknown>, keyCol: "id" };
-  res = await svc.from("profiles").select("plan, branding").eq("user_id", uid).maybeSingle();
-  return { row: (res.data as Record<string, unknown> | null) ?? null, keyCol: "user_id" };
+// profiles is keyed by `id` (= auth user id). Resolve the row for branding
+// read/write by that column.
+async function loadProfile(svc: SupabaseClient, uid: string): Promise<{ row: Record<string, unknown> | null; keyCol: "id" }> {
+  const res = await svc.from("profiles").select("plan, branding").eq("id", uid).maybeSingle();
+  return { row: (res.data as Record<string, unknown> | null) ?? null, keyCol: "id" };
 }
 
 function clients() {

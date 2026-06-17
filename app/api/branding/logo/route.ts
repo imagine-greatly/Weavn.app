@@ -10,8 +10,7 @@ const ALLOWED: Record<string, string> = {
 };
 
 async function planFor(svc: SupabaseClient, uid: string): Promise<string> {
-  let res = await svc.from("profiles").select("plan").eq("id", uid).maybeSingle();
-  if (!res.data) res = await svc.from("profiles").select("plan").eq("user_id", uid).maybeSingle();
+  const res = await svc.from("profiles").select("plan").eq("id", uid).maybeSingle();
   return String((res.data as { plan?: string } | null)?.plan ?? "free");
 }
 

@@ -305,10 +305,7 @@ export default function SettingsPage() {
 
   /** Prefer normalized plan from profiles row; fall back to API when no row. */
   async function applyPlanFromProfile(uid: string, apiFallback: PlanType, logRow: boolean) {
-    let prof = await supabase.from("profiles").select("*").eq("id", uid).maybeSingle();
-    if (!prof.data) {
-      prof = await supabase.from("profiles").select("*").eq("user_id", uid).maybeSingle();
-    }
+    const prof = await supabase.from("profiles").select("*").eq("id", uid).maybeSingle();
     const profileRow = (prof.data as Record<string, unknown> | null) ?? null;
     if (logRow) console.log("[settings] profiles full row:", profileRow, prof.error ?? null);
     setPlan(profileRow ? normalizePlanFromProfile(profileRow) : apiFallback);

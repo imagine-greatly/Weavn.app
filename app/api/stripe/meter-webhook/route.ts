@@ -61,10 +61,10 @@ export async function POST(req: NextRequest) {
         // Deactivate all API keys for this Stripe customer
         const { data: profiles } = await supabase
           .from("profiles")
-          .select("user_id")
+          .select("id")
           .eq("stripe_customer_id", customerId);
 
-        const userIds = (profiles ?? []).map((p: { user_id: string }) => p.user_id);
+        const userIds = (profiles ?? []).map((p: { id: string }) => p.id);
 
         if (userIds.length > 0) {
           const { error } = await supabase

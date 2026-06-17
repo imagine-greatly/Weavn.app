@@ -238,7 +238,7 @@ function AuthPageContent() {
       const userId = data?.user?.id;
       if (!userId) { setGlobalError("Authentication request failed."); setIsSubmitting(false); return; }
       const { error: profileError } = await supabase
-        .from("profiles").upsert({ user_id: userId, plan: "free" }, { onConflict: "user_id" });
+        .from("profiles").upsert({ id: userId, plan: "free" }, { onConflict: "id" });
       if (profileError) console.warn("Failed to create profile:", profileError); // eslint-disable-line no-console
       if (localStorage.getItem("pending_report")) await savePendingReportIfAny(userId);
       try {

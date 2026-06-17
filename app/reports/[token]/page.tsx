@@ -23,8 +23,7 @@ function getServiceClient() {
 // are Agency tier (gated here, so a downgrade silently reverts to the in-app look).
 async function loadOwnerBranding(supabase: SupabaseClient, ownerId: string | null | undefined): Promise<BrandingConfig | null> {
   if (!ownerId) return null
-  let res = await supabase.from('profiles').select('plan, branding').eq('id', ownerId).maybeSingle()
-  if (!res.data) res = await supabase.from('profiles').select('plan, branding').eq('user_id', ownerId).maybeSingle()
+  const res = await supabase.from('profiles').select('plan, branding').eq('id', ownerId).maybeSingle()
   const row = res.data as { plan?: string; branding?: unknown } | null
   if (!row || row.plan !== 'agency' || !row.branding) return null
   return sanitizeBranding(row.branding)

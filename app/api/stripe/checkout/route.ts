@@ -74,7 +74,7 @@ export async function POST(req: NextRequest) {
     const { data: profile } = await supabase
       .from('profiles')
       .select('stripe_customer_id, plan')
-      .eq('user_id', user.id)
+      .eq('id', user.id)
       .single();
 
     if (profile?.plan === requestedPlan) {
@@ -96,7 +96,7 @@ export async function POST(req: NextRequest) {
       await supabase
         .from('profiles')
         .update({ stripe_customer_id: customerId })
-        .eq('user_id', user.id);
+        .eq('id', user.id);
     }
 
     const session = await stripe.checkout.sessions.create({

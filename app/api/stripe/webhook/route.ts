@@ -71,7 +71,7 @@ export async function POST(req: NextRequest) {
             plan,
             stripe_customer_id: session.customer as string,
           })
-          .eq('user_id', userId);
+          .eq('id', userId);
 
         console.log(`[webhook] User ${userId} upgraded to ${plan}`);
         break;
@@ -86,7 +86,7 @@ export async function POST(req: NextRequest) {
         await supabase
           .from('profiles')
           .update({ plan: 'free' })
-          .eq('user_id', userId);
+          .eq('id', userId);
 
         console.log(`[webhook] User ${userId} downgraded to free`);
         break;
@@ -108,7 +108,7 @@ export async function POST(req: NextRequest) {
         await supabase
           .from('profiles')
           .update({ plan: activePlan })
-          .eq('user_id', userId);
+          .eq('id', userId);
 
         console.log(
           `[webhook] User ${userId} subscription updated: ${subscription.status} → ${activePlan}`
@@ -122,15 +122,15 @@ export async function POST(req: NextRequest) {
 
         const { data: profile } = await supabase
           .from('profiles')
-          .select('user_id')
+          .select('id')
           .eq('stripe_customer_id', customerId)
           .single();
 
-        if (profile?.user_id) {
+        if (profile?.id) {
           await supabase
             .from('profiles')
             .update({ plan: 'free' })
-            .eq('user_id', profile.user_id);
+            .eq('id', profile.id);
 
           console.log(
             `[webhook] Payment failed for customer ${customerId}, downgraded to free`

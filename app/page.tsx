@@ -84,20 +84,23 @@ function NavBar() {
 
 // ── Hero — the scan-engine fork ──────────────────────────────────────────────
 
-// Door cards sit in a 2-col grid inside the 880px container (gap 24px), so the
-// card top-centers land at x≈214 and x≈666 in the 880-wide viewBox.
-const FORK_LEFT_PATH = 'M 440 0 C 440 40 214 80 214 110'
-const FORK_RIGHT_PATH = 'M 440 0 C 440 40 666 80 666 110'
+// Door cards sit in an UNEQUAL grid inside the 880px container (1.6fr / 1fr,
+// gap 24px) so the API door reads as primary. Card top-centers land at x≈263
+// (API door — wider, left) and x≈715 (dashboard door — narrower, right).
+const FORK_LEFT_PATH = 'M 440 0 C 440 40 263 80 263 110'
+const FORK_RIGHT_PATH = 'M 440 0 C 440 40 715 80 715 110'
 
+// Dashboard (non-technical) door — secondary, kept short and quiet.
 const FOUNDER_LINES = [
   'Plain-English fixes, ranked by conversion impact',
-  'Visual report with your score and benchmarks',
   'Free to start — no account, no code',
 ]
 
+// API/developer door — primary, carries more detail than the dashboard door.
 const DEVELOPER_LINES = [
   'POST any URL → structured JSON in ~90s',
   'Batch endpoint, async mode, webhooks',
+  'Typed SDKs and copy-paste examples',
   '25 free scans, no subscription',
 ]
 
@@ -177,54 +180,50 @@ function HeroForkSection() {
 
         {/* Fork connectors — wide inverted Y (md+) */}
         <svg className="hidden md:block w-full mt-2" viewBox="0 0 880 110" height="110" aria-hidden>
-          <path className="branch-path" d={FORK_LEFT_PATH} stroke="var(--interactive)" strokeWidth="1.5" fill="none" opacity="0.5" />
-          <path className="branch-path" d={FORK_RIGHT_PATH} stroke="var(--data-impact)" strokeWidth="1.5" fill="none" opacity="0.5" style={{ animationDelay: '0.55s' }} />
+          {/* Left branch → API door (purple, primary); right branch → dashboard door (steel) */}
+          <path className="branch-path" d={FORK_LEFT_PATH} stroke="var(--data-impact)" strokeWidth="1.5" fill="none" opacity="0.5" />
+          <path className="branch-path" d={FORK_RIGHT_PATH} stroke="var(--interactive)" strokeWidth="1.5" fill="none" opacity="0.5" style={{ animationDelay: '0.55s' }} />
           <g className="fork-pulse">
-            <rect x="-1.5" y="-1.5" width="3" height="3" fill="var(--interactive)" opacity="0.45">
+            <rect x="-1.5" y="-1.5" width="3" height="3" fill="var(--data-impact)" opacity="0.45">
               <animateMotion dur="2.2s" repeatCount="indefinite" path={FORK_LEFT_PATH} />
             </rect>
-            <rect x="-1.5" y="-1.5" width="3" height="3" fill="var(--data-impact)" opacity="0.45">
+            <rect x="-1.5" y="-1.5" width="3" height="3" fill="var(--interactive)" opacity="0.45">
               <animateMotion dur="2.2s" repeatCount="indefinite" path={FORK_RIGHT_PATH} />
             </rect>
           </g>
         </svg>
 
-        {/* Below md — single short vertical connector to the first door */}
+        {/* Below md — single short vertical connector to the first (primary API) door */}
         <div className="flex md:hidden justify-center mt-2 mb-0">
           <svg width="8" height="56" viewBox="0 0 8 56" aria-hidden>
-            <line x1="4" y1="0" x2="4" y2="48" stroke="var(--interactive)" strokeWidth="1.5" opacity="0.5" />
+            <line x1="4" y1="0" x2="4" y2="48" stroke="var(--data-impact)" strokeWidth="1.5" opacity="0.5" />
             <g className="fork-pulse">
-              <rect x="-1.5" y="-1.5" width="3" height="3" fill="var(--interactive)" opacity="0.45">
+              <rect x="-1.5" y="-1.5" width="3" height="3" fill="var(--data-impact)" opacity="0.45">
                 <animateMotion dur="2.2s" repeatCount="indefinite" path="M 4 0 L 4 48" />
               </rect>
             </g>
           </svg>
         </div>
 
-        {/* Door cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Surface split — deliberately unequal: API door primary (purple, wider,
+            first), dashboard door secondary (steel, narrower, quieter). */}
+        <div className="grid grid-cols-1 md:grid-cols-[1.6fr_1fr] gap-6 items-start">
 
-          {/* Founders door — steel blue */}
-          <div className="door-card-l door-card-founder bg-surface border border-background-border border-t-interactive/40 flex flex-col p-7">
-            <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-interactive m-0 mb-3">FOR FOUNDERS &amp; TEAMS</p>
-            <h2 className="font-display font-bold text-2xl leading-tight text-text-primary m-0 mb-4">See exactly what to fix</h2>
-            <div className="flex-1">
-              {FOUNDER_LINES.map(line => (
-                <p key={line} className="font-body text-sm text-text-secondary leading-relaxed m-0 mb-2">· {line}</p>
-              ))}
-            </div>
-            <Link
-              href="/dashboard"
-              className="door-cta-founder font-mono text-xs text-interactive border border-interactive/50 px-6 py-3 block text-center no-underline mt-6 transition-shadow duration-300"
-            >
-              See what&apos;s killing your conversions →
-            </Link>
-          </div>
-
-          {/* Developers door — pale purple */}
-          <div className="door-card-r door-card-developer bg-surface border border-background-border border-t-data-impact/40 flex flex-col p-7">
+          {/* Developers door — PRIMARY, pale purple, wider, the obvious path */}
+          <div className="door-card-l door-card-developer bg-surface border border-background-border border-t-data-impact/40 flex flex-col p-8">
             <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-data-impact m-0 mb-3">FOR DEVELOPERS</p>
-            <h2 className="font-display font-bold text-2xl leading-tight text-text-primary m-0 mb-4">Build with the data</h2>
+            <h2 className="font-display font-bold text-[28px] leading-[1.1] text-text-primary m-0 mb-3">Build with the data</h2>
+            <p className="font-body text-sm text-text-secondary leading-relaxed m-0 mb-5">
+              The same engine behind the reports, exposed as one endpoint — wire conversion intelligence straight into your stack.
+            </p>
+
+            {/* Endpoint snippet — detail the dashboard door doesn't carry */}
+            <div className="font-mono text-[11px] leading-relaxed border border-data-impact/20 bg-data-impact/5 p-3 mb-5">
+              <span className="text-data-impact">POST</span> <span className="text-text-secondary">/v1/scan</span><br />
+              <span className="text-text-tertiary">{`{ "url": "https://yoursite.com" }`}</span><br />
+              <span className="text-text-tertiary">→ 0–100 score · ranked findings · JSON</span>
+            </div>
+
             <div className="flex-1">
               {DEVELOPER_LINES.map(line => (
                 <p key={line} className="font-body text-sm text-text-secondary leading-relaxed m-0 mb-2">· {line}</p>
@@ -232,9 +231,26 @@ function HeroForkSection() {
             </div>
             <Link
               href="/developers"
-              className="door-cta-developer font-mono text-xs text-data-impact border border-data-impact/50 px-6 py-3 block text-center no-underline mt-6 transition-shadow duration-300"
+              className="door-cta-developer font-mono text-xs font-semibold text-background-base bg-data-impact px-6 py-3.5 block text-center no-underline mt-6 transition-shadow duration-300"
             >
               Explore the API →
+            </Link>
+          </div>
+
+          {/* Founders door — SECONDARY, steel blue, narrower, quieter (still a full path) */}
+          <div className="door-card-r door-card-founder bg-surface border border-background-border border-t-interactive/40 flex flex-col p-6">
+            <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-interactive m-0 mb-3">FOR FOUNDERS &amp; TEAMS</p>
+            <h2 className="font-display font-bold text-xl leading-tight text-text-primary m-0 mb-4">See exactly what to fix</h2>
+            <div className="flex-1">
+              {FOUNDER_LINES.map(line => (
+                <p key={line} className="font-body text-sm text-text-secondary leading-relaxed m-0 mb-2">· {line}</p>
+              ))}
+            </div>
+            <Link
+              href="/dashboard"
+              className="door-cta-founder font-mono text-xs text-interactive border border-interactive/30 px-5 py-2.5 block text-center no-underline mt-6 transition-colors duration-200 hover:border-interactive/60"
+            >
+              Scan my site →
             </Link>
           </div>
 

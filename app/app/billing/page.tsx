@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { getSupabaseBrowserClient } from '@/lib/supabaseBrowser'
 import { FREE_DASHBOARD_SCANS_PER_MONTH } from '@/lib/constants'
-import { isCheckoutableDashboardTier, type BillingInterval } from '@/lib/pricing'
+import { DASHBOARD_PLANS, annualUsd, isCheckoutableDashboardTier, type BillingInterval, type DashboardTier } from '@/lib/pricing'
 
 // ── Steel-blue Dashboard surface tokens ────────────────────────────────────────
 const C = {
@@ -24,29 +24,30 @@ const DISP = "'Space Grotesk', sans-serif"
 // Canonical DASHBOARD tiers (mirrors the /dashboard marketing pricing). These are the
 // dashboard plan set ONLY — API/console tiers never render here. Upgrades run self-serve
 // Stripe Checkout per tier; downgrades route to the Stripe billing portal.
+// Prices are NOT stored here — they are read from DASHBOARD_PLANS (lib/pricing.ts,
+// the single source of truth) via priceFor() so the catalog can never drift from
+// what the billing page shows. Only display-only copy (scans/features) lives here.
 interface Tier {
-  id: string
+  id: DashboardTier
   name: string
-  price: string
-  priceSub: string
   scans: string
   features: string[]
 }
 const DASHBOARD_TIERS: Tier[] = [
   {
-    id: 'free', name: 'Free', price: '$0', priceSub: 'no credit card', scans: '3 scans / month',
+    id: 'free', name: 'Free', scans: '3 scans / month',
     features: ['3 scans per month', 'Score + top 3 findings', 'Benchmarked against corpus'],
   },
   {
-    id: 'starter', name: 'Starter', price: '$49', priceSub: 'per month', scans: 'Unlimited scans',
+    id: 'starter', name: 'Starter', scans: 'Unlimited scans',
     features: ['Unlimited scans', 'Full report — all findings ranked', 'AI-rewritten copy', 'Cancel anytime'],
   },
   {
-    id: 'agency', name: 'Agency', price: '$149', priceSub: 'per month', scans: 'Unlimited scans',
+    id: 'agency', name: 'Agency', scans: 'Unlimited scans',
     features: ['Everything in Starter', 'White-label PDF reports', '100 API calls bundled', 'Client management dashboard'],
   },
   {
-    id: 'enterprise', name: 'Enterprise', price: '$499', priceSub: 'annual billing', scans: 'Dedicated capacity',
+    id: 'enterprise', name: 'Enterprise', scans: 'Dedicated capacity',
     features: ['Everything in Agency', 'Dedicated scan capacity', 'SLA + priority support', 'Custom vertical benchmarks'],
   },
 ]
@@ -68,6 +69,19 @@ function fmtDate(tsSeconds: number | null): string {
 function fmtAmount(amount: number | null, currency: string): string {
   if (amount == null) return '—'
   return new Intl.NumberFormat(undefined, { style: 'currency', currency: (currency || 'USD').toUpperCase() }).format(amount / 100)
+}
+const fmtUsd = (n: number): string => `$${n.toLocaleString('en-US')}`
+
+// Price label for a dashboard tier at the selected interval, read straight from
+// the pricing catalog (DASHBOARD_PLANS). Annual = monthly × ANNUAL_MULTIPLIER via
+// annualUsd(). null monthly price = custom/contact (enterprise).
+function priceFor(tierId: DashboardTier, billing: BillingInterval): { price: string; sub: string } {
+  const monthly = DASHBOARD_PLANS[tierId].priceMonthlyUsd
+  if (monthly == null) return { price: 'Custom', sub: "let's talk" }
+  if (monthly === 0) return { price: '$0', sub: 'no credit card' }
+  return billing === 'year'
+    ? { price: fmtUsd(annualUsd(monthly) ?? monthly), sub: 'per year' }
+    : { price: fmtUsd(monthly), sub: 'per month' }
 }
 
 export default function DashboardBillingPage() {
@@ -159,6 +173,7 @@ export default function DashboardBillingPage() {
   const normalized = normalizePlan(plan)
   const currentTier = DASHBOARD_TIERS.find(t => t.id === normalized) ?? DASHBOARD_TIERS[0]
   const isFree = normalized === 'free'
+  const currentMonthly = DASHBOARD_PLANS[normalized as DashboardTier].priceMonthlyUsd
   const scanLine = isFree
     ? `${monthScans} of ${FREE_DASHBOARD_SCANS_PER_MONTH} scans this period`
     : `${monthScans} scans this period · unlimited`
@@ -202,7 +217,8 @@ export default function DashboardBillingPage() {
                   <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
                     <span style={{ fontFamily: DISP, fontWeight: 700, fontSize: 30, color: C.inkPrimary }}>{currentTier.name}</span>
                     <span style={{ fontFamily: MONO, fontSize: 13, color: C.inkSecondary }}>
-                      {currentTier.price}{!isFree && <span style={{ color: C.inkMuted }}>/mo</span>}
+                      {currentMonthly == null ? 'Custom' : fmtUsd(currentMonthly)}
+                      {currentMonthly != null && currentMonthly > 0 && <span style={{ color: C.inkMuted }}>/mo</span>}
                     </span>
                   </div>
                   <div style={{ fontFamily: MONO, fontSize: 12, color: C.inkMuted, marginTop: 8 }}>
@@ -276,6 +292,7 @@ export default function DashboardBillingPage() {
               const idxCurrent = DASHBOARD_TIERS.findIndex(x => x.id === normalized)
               const idxThis = DASHBOARD_TIERS.findIndex(x => x.id === t.id)
               const direction = idxThis > idxCurrent ? 'Upgrade' : 'Downgrade'
+              const pp = priceFor(t.id, interval)
               return (
                 <div key={t.id} style={{ position: 'relative', background: C.surface, padding: '22px 20px', display: 'flex', flexDirection: 'column' }}>
                   {isCurrent && (
@@ -289,8 +306,8 @@ export default function DashboardBillingPage() {
                     {isCurrent && <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '0.1em', color: 'var(--surface-accent)' }}>CURRENT</span>}
                   </div>
                   <div style={{ display: 'flex', alignItems: 'baseline', gap: 5, marginBottom: 14 }}>
-                    <span style={{ fontFamily: DISP, fontWeight: 700, fontSize: 22, color: C.inkPrimary }}>{t.price}</span>
-                    <span style={{ fontFamily: MONO, fontSize: 10, color: C.inkMuted }}>{t.priceSub}</span>
+                    <span style={{ fontFamily: DISP, fontWeight: 700, fontSize: 22, color: C.inkPrimary }}>{pp.price}</span>
+                    <span style={{ fontFamily: MONO, fontSize: 10, color: C.inkMuted }}>{pp.sub}</span>
                   </div>
                   <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 18px', flex: 1 }}>
                     {t.features.map(f => (

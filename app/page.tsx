@@ -240,7 +240,10 @@ function HeroForkSection() {
           {/* Founders door — SECONDARY, steel blue, narrower, quieter (still a full path) */}
           <div className="door-card-r door-card-founder bg-surface border border-background-border border-t-interactive/40 flex flex-col p-6">
             <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-interactive m-0 mb-3">FOR FOUNDERS &amp; TEAMS</p>
-            <h2 className="font-display font-bold text-xl leading-tight text-text-primary m-0 mb-4">See exactly what to fix</h2>
+            <h2 className="font-display font-bold text-xl leading-tight text-text-primary m-0 mb-3">See exactly what to fix</h2>
+            <p className="font-body text-sm text-text-secondary leading-relaxed m-0 mb-4">
+              The same engine, rendered visually — no code required.
+            </p>
             <div className="flex-1">
               {FOUNDER_LINES.map(line => (
                 <p key={line} className="font-body text-sm text-text-secondary leading-relaxed m-0 mb-2">· {line}</p>

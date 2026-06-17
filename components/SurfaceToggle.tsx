@@ -217,6 +217,14 @@ export default function SurfaceToggle({ current, crossing, onFlip }: SurfaceTogg
           )
         })}
       </div>
+
+      {/* Quiet framing caption — why both surfaces exist. Dashboard-surface only,
+          subordinate to the toggle (muted mono one-liner, not a heading). */}
+      {current === 'app' && (
+        <p style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '0.04em', color: MUTED, margin: '9px 0 0', lineHeight: 1.5, position: 'relative', zIndex: 1 }}>
+          Same engine. Rendered for humans.
+        </p>
+      )}
     </div>
   )
 }

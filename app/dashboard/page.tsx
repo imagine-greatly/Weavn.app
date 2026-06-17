@@ -173,8 +173,12 @@ function HeroSection() {
             Find out exactly what&apos;s stopping visitors from converting.
           </h1>
           {/* Subhead */}
-          <p style={{ ...SANS,fontSize:17,color:INK_SEC,lineHeight:1.65,maxWidth:560,margin:'0 0 36px' }}>
+          <p style={{ ...SANS,fontSize:17,color:INK_SEC,lineHeight:1.65,maxWidth:560,margin:'0 0 16px' }}>
             Paste your URL. Get a 0–100 score, every conversion problem ranked by impact, AI-rewritten copy, and benchmarks against real sites in your vertical — in about 90 seconds.
+          </p>
+          {/* Framing — this visual surface runs on the same engine as the API */}
+          <p style={{ ...MONO,fontSize:12.5,color:STEEL,letterSpacing:'0.04em',lineHeight:1.6,maxWidth:560,margin:'0 0 36px' }}>
+            Every report runs on the same engine behind the API — you just never touch the code.
           </p>
 
           {/* URL input + CTA */}

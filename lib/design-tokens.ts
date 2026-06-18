@@ -82,5 +82,5 @@ export const SEVERITY_COLOR: Record<string, string> = {
   low: 'ink-muted',
 };
 
-export const scoreBand = (n: number): string =>
-  n >= 70 ? 'json-string' : 'sev-critical';
+// scoreBand moved to lib/verdict (canonical 3-band: red <50 · amber 50–69 · green 70+).
+// Import { scoreBand } from '@/lib/verdict'.

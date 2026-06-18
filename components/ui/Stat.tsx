@@ -1,4 +1,4 @@
-import { scoreBand } from '@/lib/design-tokens'
+import { scoreColor } from '@/lib/verdict'
 
 export interface StatProps {
   value: string | number
@@ -6,16 +6,10 @@ export interface StatProps {
   verdict?: 'score' | 'good-count' | 'problem-count' | 'neutral'
 }
 
-const BAND_HEX: Record<string, string> = {
-  'sev-critical': '#E8635F',
-  'sev-high':     '#EFB23E',
-  'json-string':  '#00C48C',
-}
-
 function Stat({ value, label, verdict = 'neutral' }: StatProps) {
   let color: string
   if (verdict === 'score') {
-    color = BAND_HEX[scoreBand(Number(value))] ?? '#E6E9EE'
+    color = scoreColor(Number(value))
   } else if (verdict === 'good-count') {
     color = '#00C48C'  // json-string
   } else if (verdict === 'problem-count') {

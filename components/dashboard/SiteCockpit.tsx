@@ -7,9 +7,9 @@ import {
   estimatePercentile,
   ordinal,
   scoreToVerdict,
-  verdictColor,
   type SiteSummary,
 } from '@/lib/dashboard'
+import { scoreColor } from '@/lib/verdict'
 
 // ── Steel-blue Dashboard surface tokens ────────────────────────────────────────
 // Steel #6F9BC6 is the signature. Green = success-only, amber/red = verdict-only,
@@ -119,7 +119,7 @@ export default function SiteCockpit({ site, onScanAgain, rescanning = false, onB
   const { domain, score, shareToken, delta, previousScore, findings, history } = site
 
   const verdict = scoreToVerdict(score)
-  const vColor = verdictColor(score)
+  const vColor = scoreColor(score)
   const pct = estimatePercentile(score)
 
   const deltaText =

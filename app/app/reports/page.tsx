@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { getSupabaseBrowserClient } from '@/lib/supabaseBrowser'
-import { scoreToVerdict, verdictColor, formatDate } from '@/lib/dashboard'
+import { formatDate } from '@/lib/dashboard'
+import { scoreToVerdict, scoreColor } from '@/lib/verdict'
 import EmptyState from '@/components/ui/EmptyState'
 
 // ── Steel-blue Dashboard surface tokens ────────────────────────────────────────
@@ -176,8 +177,8 @@ export default function ReportsIndex() {
                   {r.domain}
                 </span>
                 <span style={{ fontFamily: MONO, fontSize: 12, color: C.inkSecondary }}>{formatDate(r.scannedAt)}</span>
-                <span style={{ fontFamily: MONO, fontSize: 14, color: verdictColor(r.score), textAlign: 'right' }}>{r.score}</span>
-                <span style={{ fontFamily: MONO, fontSize: 11, color: verdictColor(r.score), textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                <span style={{ fontFamily: MONO, fontSize: 14, color: scoreColor(r.score), textAlign: 'right' }}>{r.score}</span>
+                <span style={{ fontFamily: MONO, fontSize: 11, color: scoreColor(r.score), textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                   {scoreToVerdict(r.score)}
                 </span>
                 <span style={{ fontFamily: MONO, fontSize: 12, color: deltaColor, textAlign: 'right' }}>{deltaText}</span>

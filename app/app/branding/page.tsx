@@ -9,6 +9,8 @@ import {
   TEMPLATES,
   resolveTheme,
 } from '@/lib/branding'
+import VerdictRing from '@/components/ui/VerdictRing'
+import { scoreBand } from '@/lib/verdict'
 
 // ── Steel-blue Dashboard surface tokens (the config UI lives on /app) ───────────
 const C = {
@@ -317,7 +319,7 @@ function BrandPreview({ branding }: { branding: BrandingConfig }) {
     { label: 'Trust Signals', score: 42 },   // red
     { label: 'Offer Clarity', score: 78 },    // green
   ]
-  const verdictFor = (s: number) => (s >= 70 ? t.verdict.green : s >= 50 ? t.verdict.amber : t.verdict.red)
+  const verdictFor = (s: number) => { const b = scoreBand(s); return b === 'green' ? t.verdict.green : b === 'amber' ? t.verdict.amber : t.verdict.red }
   return (
     <div style={{ border: `0.5px solid ${t.border}`, background: t.bg, overflow: 'hidden' }}>
       {/* cover */}
@@ -335,11 +337,7 @@ function BrandPreview({ branding }: { branding: BrandingConfig }) {
       {/* score + dims (verdict-colored, fixed) */}
       <div style={{ padding: 18, textAlign: 'center' }}>
         <div style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '0.2em', textTransform: 'uppercase', color: t.accent, marginBottom: 8 }}>Conversion Intelligence</div>
-        <svg width={84} height={84} viewBox="0 0 84 84" style={{ display: 'block', margin: '0 auto' }}>
-          <circle cx={42} cy={42} r={38} fill="none" stroke={t.track} strokeWidth={3.5} />
-          <circle cx={42} cy={42} r={38} fill="none" stroke={t.verdict.amber} strokeWidth={3.5} strokeLinecap="round" strokeDasharray={`${0.61 * 2 * Math.PI * 38} ${2 * Math.PI * 38}`} transform="rotate(-90 42 42)" />
-          <text x={42} y={42} dominantBaseline="central" textAnchor="middle" fill={t.verdict.amber} fontFamily="'Space Grotesk', sans-serif" fontWeight={600} fontSize={26}>61</text>
-        </svg>
+        <VerdictRing score={61} size={84} stroke={3.5} fontSize={26} color={t.verdict.amber} track={t.track} animate={false} style={{ margin: '0 auto' }} />
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1, background: t.border, border: `0.5px solid ${t.border}`, marginTop: 16 }}>
           {sample.map(d => (
             <div key={d.label} style={{ background: t.surface, padding: '10px 10px', textAlign: 'left' }}>

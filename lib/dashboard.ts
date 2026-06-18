@@ -164,50 +164,11 @@ export function rollUpSites(rows: ReportRow[]): SiteSummary[] {
   return sites;
 }
 
-// ── Verdict band (5-band) — mirrors the v1 API contract (app/api/v1/scan) ───────
-export function scoreToVerdict(score: number): string {
-  if (score >= 80) return "Excellent";
-  if (score >= 65) return "Good";
-  if (score >= 50) return "Fair";
-  if (score >= 35) return "Needs Work";
-  return "Poor";
-}
-
-/**
- * Verdict chip color on the steel surface: green = good, steel = neutral, amber/red = poor.
- * Green starts at 70 to match ScoreRing's pass/fail threshold (scoreBand) — so the chip
- * never reads green beside a red ring. The verdict *label* still uses the 5-band above.
- */
-export function verdictColor(score: number): string {
-  if (score >= 70) return "#00C48C"; // success-positive (matches the ring's green cutoff)
-  if (score >= 50) return "#6F9BC6"; // steel (neutral)
-  if (score >= 35) return "#EFB23E"; // amber (verdict)
-  return "#E8635F"; // red (verdict)
-}
-
-/**
- * Percentile estimate vs. a static industry baseline (p10/p50/p90 ≈ 32/55/80).
- * Deterministic function of the real score — labeled as an estimate in the UI.
- * Mirrors the piecewise shape of lib/benchmarks.ts calculatePercentile without
- * touching it or requiring the service-role benchmark tables on the client.
- * TODO(wiring): swap for the per-site industry_benchmarks percentile when exposed.
- */
-export function estimatePercentile(score: number): number {
-  const s = Math.max(0, Math.min(100, Math.round(score)));
-  const p10 = 32;
-  const p50 = 55;
-  const p90 = 80;
-  if (s <= p10) return Math.max(1, Math.round((s / p10) * 10));
-  if (s <= p50) return Math.round(10 + ((s - p10) / (p50 - p10)) * 40);
-  if (s <= p90) return Math.round(50 + ((s - p50) / (p90 - p50)) * 40);
-  return Math.min(99, Math.round(90 + ((s - p90) / (100 - p90)) * 10));
-}
-
-export function ordinal(n: number): string {
-  const suffixes = ["th", "st", "nd", "rd"];
-  const v = n % 100;
-  return `${n}${suffixes[(v - 20) % 10] ?? suffixes[v] ?? suffixes[0]}`;
-}
+// ── Verdict + percentile helpers — single source of truth in lib/verdict ─────────
+// Re-exported for back-compat with existing '@/lib/dashboard' imports. The canonical
+// 3-band color now lives in lib/verdict as scoreColor (the old 4-band verdictColor is
+// gone — import { scoreColor } from '@/lib/verdict' instead).
+export { scoreToVerdict, estimatePercentile, ordinal } from "./verdict";
 
 // ── Formatting + URLs ──────────────────────────────────────────────────────────
 export function formatDate(iso: string): string {

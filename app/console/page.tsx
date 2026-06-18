@@ -10,18 +10,17 @@ import WeavnMark from '@/components/ui/WeavnMark'
 import EmptyState from '@/components/ui/EmptyState'
 import SurfaceToggle, { SURFACE_NAV, useSurfaceCrossing } from '@/components/SurfaceToggle'
 import { FREE_API_TRIAL_SCANS } from '@/lib/constants'
+import { scoreColor, scoreToVerdict } from '@/lib/verdict'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 type TabId = 'overview' | 'scans' | 'apikeys' | 'webhooks' | 'billing' | 'docs'
-type Severity = 'critical' | 'high' | 'medium' | 'low'
 
 interface ScanRow {
   domain: string
   score: number
   findings: number
   time: string
-  severity: Severity
 }
 
 interface WebhookLog {
@@ -86,12 +85,7 @@ function formatAbsDate(iso: string | null): string {
   return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })
 }
 
-function scoreToSeverity(score: number): Severity {
-  if (score < 40) return 'critical'
-  if (score < 60) return 'high'
-  if (score < 75) return 'medium'
-  return 'low'
-}
+// scoreToSeverity removed — scan rows now use the canonical verdict band (lib/verdict).
 
 function webhookStatusCode(raw: string | number | null): number {
   if (typeof raw === 'number') return raw
@@ -185,16 +179,16 @@ function IconBilling() {
 
 // ── Shared micro-components ───────────────────────────────────────────────────
 
-function SeverityBadge({ severity }: { severity: Severity }) {
-  const cls: Record<Severity, string> = {
-    critical: 'bg-severity-critical/10 text-severity-critical',
-    high:     'bg-severity-high/10 text-severity-high',
-    medium:   'bg-severity-medium/10 text-severity-medium',
-    low:      'bg-severity-low/10 text-severity-low',
-  }
+// Scan-row verdict badge — canonical 3-band color (lib/verdict) + the descriptive
+// verdict label. Replaces the old 4-level severity palette.
+function SeverityBadge({ score }: { score: number }) {
+  const color = scoreColor(score)
   return (
-    <span className={`font-mono text-xs px-2 py-0.5 flex-shrink-0 ${cls[severity]}`}>
-      {severity}
+    <span
+      className="font-mono text-xs px-2 py-0.5 flex-shrink-0"
+      style={{ color, border: `0.5px solid ${color}66`, textTransform: 'uppercase', letterSpacing: '0.06em' }}
+    >
+      {scoreToVerdict(score)}
     </span>
   )
 }
@@ -313,7 +307,7 @@ function OverviewTab({ monthScans, monthSpend, avgScore, keyPrefix, scanRows, cr
               <div className="font-mono text-xs text-text-tertiary">{row.findings} findings · $0.15</div>
             </div>
             <div className="font-mono text-xs text-text-tertiary ml-auto flex-shrink-0">{row.time}</div>
-            <SeverityBadge severity={row.severity} />
+            <SeverityBadge score={row.score} />
           </div>
         ))}
       </div>
@@ -1009,7 +1003,6 @@ export default function DeveloperPortal() {
     score:    r.score ?? 0,
     findings: 0,
     time:     relativeTime(r.created_at),
-    severity: scoreToSeverity(r.score ?? 0),
   }))
 
   const webhookLogMapped: WebhookLog[] = rawWebhooks.map(r => ({

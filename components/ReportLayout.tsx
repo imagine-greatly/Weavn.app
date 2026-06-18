@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { ReportPayload } from "@/lib/reportSchema";
-import { estimatePercentile, ordinal, scoreToVerdict } from "@/lib/dashboard";
+import { estimatePercentile, ordinal, scoreToVerdict, scoreBand } from "@/lib/verdict";
+import VerdictRing from "@/components/ui/VerdictRing";
 import { stripMarkdownForDisplay } from "@/lib/stripMarkdownForDisplay";
 import {
   type BrandingConfig,
@@ -26,17 +27,16 @@ import {
  * returns (normalizing legacy + v1 shapes), omitting absent sections.
  */
 
-// ── Score-band thresholds (centralized + tunable) ───────────────────────────────
-const BAND = { AMBER_AT: 50, GREEN_AT: 70 } as const;
+// Score-band thresholds live in lib/verdict (scoreBand: red <50 · amber 50–69 · green 70+).
 
 const MONO = "'IBM Plex Mono', monospace";
 const BODY = "'IBM Plex Sans', sans-serif";
 const DISP = "'Space Grotesk', sans-serif";
 
+// Maps the canonical band to this report's THEME verdict color (dark vs light/PDF).
 function bandColor(score: number, t: ThemeTokens): string {
-  if (score >= BAND.GREEN_AT) return t.verdict.green;
-  if (score >= BAND.AMBER_AT) return t.verdict.amber;
-  return t.verdict.red;
+  const b = scoreBand(score);
+  return b === "green" ? t.verdict.green : b === "amber" ? t.verdict.amber : t.verdict.red;
 }
 
 // ── Canonical 7 dimensions — stable order across every report ────────────────────
@@ -212,57 +212,8 @@ function extractBlueprint(p: RawPayload): { week1: string[]; weeks24: string[]; 
   return null;
 }
 
-// ── Hero ring — large, muted, verdict-banded; NO glow / bloom halo ───────────────
-function HeroRing({ score, color, track }: { score: number; color: string; track: string }) {
-  const px = 166;
-  const stroke = 3.5;
-  const center = px / 2;
-  const radius = center - stroke / 2 - 2;
-  const circumference = 2 * Math.PI * radius;
-  const target = (Math.max(0, Math.min(100, score)) / 100) * circumference;
-
-  const [display, setDisplay] = useState(score);
-  const arcRef = useRef<SVGCircleElement>(null);
-
-  useEffect(() => {
-    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (reduced) {
-      setDisplay(score);
-      if (arcRef.current) arcRef.current.style.strokeDasharray = `${target} ${circumference}`;
-      return;
-    }
-    setDisplay(0);
-    if (arcRef.current) arcRef.current.style.strokeDasharray = `0 ${circumference}`;
-    const start = performance.now();
-    const duration = 1000;
-    let raf = 0;
-    const tick = (now: number) => {
-      const tt = Math.min((now - start) / duration, 1);
-      const e = 1 - Math.pow(1 - tt, 3);
-      setDisplay(Math.round(score * e));
-      if (arcRef.current) arcRef.current.style.strokeDasharray = `${target * e} ${circumference}`;
-      if (tt < 1) raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [score, target, circumference]);
-
-  return (
-    <svg width={px} height={px} viewBox={`0 0 ${px} ${px}`} style={{ display: "block" }}>
-      <circle cx={center} cy={center} r={radius} fill="none" stroke={track} strokeWidth={stroke} />
-      <circle
-        ref={arcRef}
-        cx={center} cy={center} r={radius}
-        fill="none" stroke={color} strokeWidth={stroke} strokeLinecap="round"
-        strokeDasharray={`${target} ${circumference}`}
-        transform={`rotate(-90 ${center} ${center})`}
-      />
-      <text x={center} y={center} dominantBaseline="central" textAnchor="middle" fill={color} fontFamily="'Space Grotesk', sans-serif" fontWeight={600} fontSize={52}>
-        {display}
-      </text>
-    </svg>
-  );
-}
+// The report hero ring is the canonical VerdictRing at 166px (see the score section),
+// fed this report's theme-aware verdict color so the light/PDF variant is preserved.
 
 function SectionLabel({ children, t }: { children: React.ReactNode; t: ThemeTokens }) {
   return (
@@ -371,7 +322,7 @@ export default function ReportLayout({ domain, payload, scanDate, branding, fill
             <p style={{ fontFamily: MONO, fontSize: 11, color: t.inkMuted, margin: "0 0 30px", letterSpacing: "0.06em" }}>Scanned {dateLabel}</p>
           ) : <div style={{ height: 30 }} />}
           <div style={{ display: "flex", justifyContent: "center" }}>
-            <HeroRing score={view.score} color={ringColor} track={t.track} />
+            <VerdictRing score={view.score} size={166} stroke={3.5} fontSize={52} color={ringColor} track={t.track} />
           </div>
           <div style={{ marginTop: 22 }}>
             <span style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase", color: ringColor, border: `0.5px solid ${ringColor}66`, padding: "5px 12px" }}>

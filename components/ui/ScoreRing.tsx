@@ -1,7 +1,14 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
-import { scoreBand } from '@/lib/design-tokens'
+import VerdictRing from '@/components/ui/VerdictRing'
+import { scoreBand, type VerdictBand } from '@/lib/verdict'
+
+/**
+ * ScoreRing — thin compatibility wrapper around the canonical VerdictRing. Keeps the
+ * existing dashboard API (sm/md/lg sizes, CRITICAL badge, label, band/color overrides)
+ * while delegating the actual ring to VerdictRing, which consumes lib/verdict for the
+ * canonical 3-band color. No glow (locked design).
+ */
 
 interface ScoreRingProps {
   score: number
@@ -10,7 +17,7 @@ interface ScoreRingProps {
   animate?: boolean
   /** @deprecated use animate */
   animated?: boolean
-  /** Force the band color instead of deriving from score — display override for illustrations. */
+  /** Legacy band override (token names) — mapped to the canonical verdict band. */
   band?: 'sev-critical' | 'json-string'
   /** Arbitrary arc/number color override (e.g. an agency brand color in the white-label
    *  preview). Wins over `band`/score-derived color and suppresses the CRITICAL badge. */
@@ -19,117 +26,25 @@ interface ScoreRingProps {
   showBadge?: boolean
 }
 
-const SIZE_MAP = {
-  sm: { px: 40,  stroke: 3, font: 10, badgeFont: 6  },
-  md: { px: 64,  stroke: 4, font: 13, badgeFont: 8  },
-  lg: { px: 96,  stroke: 5, font: 18, badgeFont: 10 },
-}
-
-const BAND_HEX: Record<string, string> = {
-  'sev-critical': '#E8635F',
-  'json-string':  '#00C48C',
-}
+const BADGE_FONT: Record<'sm' | 'md' | 'lg', number> = { sm: 6, md: 8, lg: 10 }
 
 function ScoreRing({ score, size = 'md', label, animate = true, animated, band: bandProp, color: colorProp, showBadge = true }: ScoreRingProps) {
   const shouldAnimate = animated !== undefined ? animated : animate
-  const { px, stroke, font, badgeFont } = SIZE_MAP[size]
-  const center        = px / 2
-  const radius        = center - stroke / 2 - 2
-  const circumference = 2 * Math.PI * radius
-  const targetFill    = (Math.min(Math.max(score, 0), 100) / 100) * circumference
-  const band          = bandProp ?? scoreBand(score)
+  // Map the legacy token-name band override onto the canonical verdict band.
+  const forcedBand: VerdictBand | undefined =
+    bandProp === 'sev-critical' ? 'red' : bandProp === 'json-string' ? 'green' : undefined
+  const band = forcedBand ?? scoreBand(score)
   // A brand-color override (white-label preview) wins and never reads as CRITICAL.
-  const isCrit        = !colorProp && band === 'sev-critical'
-  const color         = colorProp ?? BAND_HEX[band] ?? '#00C48C'
-
-  const arcRef = useRef<SVGCircleElement>(null)
-  const [displayScore, setDisplayScore] = useState(score)
-
-  useEffect(() => {
-    if (!arcRef.current) return
-    const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    const doAnimate = shouldAnimate && !prefersReduced
-
-    if (!doAnimate) {
-      setDisplayScore(score)
-      arcRef.current.style.strokeDasharray = `${targetFill} ${circumference}`
-      return
-    }
-
-    setDisplayScore(0)
-    arcRef.current.style.strokeDasharray = `0 ${circumference}`
-
-    const start = performance.now()
-    const duration = 1100
-    let rafId: number
-
-    const tick = (now: number) => {
-      const t = Math.min((now - start) / duration, 1)
-      const ease = 1 - Math.pow(1 - t, 3)
-      setDisplayScore(Math.round(score * ease))
-      if (arcRef.current) {
-        arcRef.current.style.strokeDasharray = `${targetFill * ease} ${circumference}`
-      }
-      if (t < 1) rafId = requestAnimationFrame(tick)
-    }
-    rafId = requestAnimationFrame(tick)
-    return () => cancelAnimationFrame(rafId)
-  }, [shouldAnimate, score, targetFill, circumference])
-
-  const filterId = `arcGlow-${size}`
+  const isCrit = !colorProp && band === 'red'
 
   return (
     <div style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'center', gap: 4, overflow: 'visible' }}>
-      <svg width={px} height={px} viewBox={`0 0 ${px} ${px}`} overflow="visible" style={{ display: 'block' }}>
-        <defs>
-          <filter id={filterId} x="-80%" y="-80%" width="260%" height="260%">
-            <feGaussianBlur stdDeviation="1.2" result="blur1" />
-            <feGaussianBlur in="SourceGraphic" stdDeviation="2.5" result="blur2" />
-            <feMerge>
-              <feMergeNode in="blur2" />
-              <feMergeNode in="blur1" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-        </defs>
+      <VerdictRing score={score} size={size} band={forcedBand} color={colorProp} animate={shouldAnimate} />
 
-        {/* Background track */}
-        <circle
-          cx={center} cy={center} r={radius}
-          fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth={stroke}
-        />
-
-        {/* Colored progress arc with glow */}
-        <circle
-          ref={arcRef}
-          cx={center} cy={center} r={radius}
-          fill="none"
-          stroke={color}
-          strokeWidth={stroke}
-          strokeDasharray={`${targetFill} ${circumference}`}
-          transform={`rotate(-90 ${center} ${center})`}
-          filter={`url(#${filterId})`}
-        />
-
-        {/* Score number centered */}
-        <text
-          x={center} y={center}
-          dominantBaseline="central"
-          textAnchor="middle"
-          fill={color}
-          fontFamily="'Space Grotesk', sans-serif"
-          fontWeight={600}
-          fontSize={font}
-        >
-          {displayScore}
-        </text>
-      </svg>
-
-      {/* CRITICAL badge */}
       {showBadge && isCrit && (
         <div style={{
           fontFamily: "'IBM Plex Mono', monospace",
-          fontSize: badgeFont,
+          fontSize: BADGE_FONT[size],
           color: '#E8635F',
           border: '0.5px solid rgba(232,99,95,0.35)',
           padding: '2px 6px',

@@ -774,7 +774,7 @@ export default function ProductPage() {
                 {([
                   { k: 'interface',        v: 'dashboard' },
                   { k: 'account_required', v: 'false (first scan)' },
-                  { k: 'white_label',      v: 'pro+' },
+                  { k: 'white_label',      v: 'agency+' },
                   { k: 'scans_from',       v: '$0 free' },
                 ] as { k: string; v: string }[]).map(s => (
                   <div key={s.k} style={{ display: 'flex', alignItems: 'baseline', fontFamily: '"IBM Plex Mono", monospace', fontSize: 12, marginBottom: 6 }}>

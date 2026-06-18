@@ -147,7 +147,7 @@ function ScansRemaining() {
   const u = used ?? 0
   const remaining = limit == null ? null : Math.max(0, limit - u)
   const exhausted = remaining != null && remaining === 0
-  const text = used == null ? 'checking your monthly quota…' : limit == null ? `${u} scans this month · unlimited` : `${remaining} of ${limit} scans left this month`
+  const text = used == null ? 'checking your monthly quota…' : limit == null ? `${u} scans this month · no monthly cap` : `${remaining} of ${limit} scans left this month`
 
   return (
     <p style={{ fontFamily: MONO, fontSize: 11.5, color: exhausted ? C.crit : C.inkSecondary, margin: 0, letterSpacing: '0.02em' }}>

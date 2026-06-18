@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from 'react'
 import WeavnMark from '@/components/ui/WeavnMark'
 import WeavingScan from '@/components/WeavingScan'
 import { getSupabaseBrowserClient } from '@/lib/supabaseBrowser'
-import { FREE_DASHBOARD_SCANS_PER_MONTH } from '@/lib/constants'
+import { DASHBOARD_PLAN_MONTHLY_CAPS } from '@/lib/constants'
 import SurfaceToggle, { SURFACE_NAV, useSurfaceCrossing } from '@/components/SurfaceToggle'
 
 function domainOf(raw: string): string {
@@ -226,8 +226,8 @@ function QuotaBlock() {
     return () => { cancelled = true }
   }, [])
 
-  const isFree = plan === 'free'
-  const limit = isFree ? FREE_DASHBOARD_SCANS_PER_MONTH : null
+  // Hard monthly cap for this plan from the catalog (null = enterprise/custom — no cap).
+  const limit = DASHBOARD_PLAN_MONTHLY_CAPS[plan] ?? null
   const pct = limit ? Math.min(100, Math.round(((used ?? 0) / limit) * 100)) : 100
 
   return (
@@ -252,7 +252,7 @@ function QuotaBlock() {
         }} />
       </div>
       <div style={{ fontFamily: MONO, fontSize: 9.5, color: C.inkMuted, marginTop: 7, letterSpacing: '0.04em' }}>
-        {limit ? 'this month · resets on the 1st' : 'unlimited this month'}
+        {limit ? 'this month · resets on the 1st' : 'custom plan · no monthly cap'}
       </div>
     </div>
   )

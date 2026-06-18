@@ -40,7 +40,7 @@ function buildWelcomeText(name?: string | null): string {
     '',
     'Your API key has been provisioned. Visit your developer portal to copy it: https://weavn.app/console',
     '',
-    'Your first 25 scans are free. After that, scans are $0.25 each — no subscription required.',
+    'Your first 25 scans are free. After that, scans are $0.30 each — no subscription required.',
     '',
     'Docs: https://weavn.app/docs/api',
     '',

@@ -1303,7 +1303,7 @@ function MultiSiteSection() {
             color:'rgba(111,155,198,0.75)', border:'0.5px solid rgba(111,155,198,0.3)',
             padding:'10px 16px', textDecoration:'none', display:'inline-block',
           }}>SEE AGENCY PLAN →</a>
-          <p style={{ ...MONO, fontSize:11, color:INK_MUT, margin:0 }}>Agency · $149/mo · white-label included · 100 API calls</p>
+          <p style={{ ...MONO, fontSize:11, color:INK_MUT, margin:0 }}>Agency · $249/mo · white-label included · 500 scans/mo</p>
         </div>
       </div>
     </section>
@@ -1325,6 +1325,8 @@ type PricingCard = {
   ctaFilled: boolean
 }
 
+// Prices + scan counts mirror lib/pricing.ts DASHBOARD_PLANS (the single source of
+// truth) — keep in sync. The dashboard track is hard-capped per tier (no "Unlimited").
 const PRICING_CARDS: PricingCard[] = [
   {
     name: 'Free',
@@ -1343,11 +1345,11 @@ const PRICING_CARDS: PricingCard[] = [
   {
     name: 'Starter',
     kicker: 'WHERE MOST TEAMS START',
-    price: '$49/mo',
+    price: '$39/mo',
     priceSub: 'month-to-month',
     highlight: true,
     features: [
-      'Unlimited scans',
+      '50 scans per month',
       'Full report — all findings ranked',
       'AI-rewritten copy included',
       'Cancel anytime',
@@ -1357,14 +1359,29 @@ const PRICING_CARDS: PricingCard[] = [
     ctaFilled: true,
   },
   {
-    name: 'Agency',
-    price: '$149/mo',
+    name: 'Pro',
+    price: '$99/mo',
     priceSub: 'month-to-month',
     highlight: false,
     features: [
+      '200 scans per month',
       'Everything in Starter',
+      'Higher volume for an in-house team',
+      'Cancel anytime',
+    ],
+    cta: 'Get started →',
+    ctaHref: '/auth?surface=dashboard&plan=pro',
+    ctaFilled: false,
+  },
+  {
+    name: 'Agency',
+    price: '$249/mo',
+    priceSub: 'month-to-month',
+    highlight: false,
+    features: [
+      'Everything in Pro',
+      '500 scans per month',
       'White-label PDF reports',
-      '100 API calls bundled',
       'Client management dashboard',
     ],
     cta: 'Get started →',
@@ -1373,8 +1390,8 @@ const PRICING_CARDS: PricingCard[] = [
   },
   {
     name: 'Enterprise',
-    price: '$499/mo',
-    priceSub: 'annual billing',
+    price: 'Custom',
+    priceSub: 'book a call',
     highlight: false,
     features: [
       'Everything in Agency',
@@ -1428,7 +1445,7 @@ function PricingSection() {
         <p style={{ ...SANS,fontSize:15,color:INK_SEC,margin:'0 0 48px' }}>
           Every plan runs the same 307-check engine. No feature-gated diagnostics.
         </p>
-        <div className="d-price-grid" style={{ display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:16 }}>
+        <div className="d-price-grid" style={{ display:'grid',gridTemplateColumns:'repeat(5,1fr)',gap:16 }}>
           {PRICING_CARDS.map((card, i) => (
             <motion.div
               key={card.name}

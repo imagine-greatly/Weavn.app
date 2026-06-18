@@ -10,6 +10,7 @@ import WeavnMark from '@/components/ui/WeavnMark'
 import EmptyState from '@/components/ui/EmptyState'
 import SurfaceToggle, { SURFACE_NAV, useSurfaceCrossing } from '@/components/SurfaceToggle'
 import { FREE_API_TRIAL_SCANS } from '@/lib/constants'
+import { API_PLANS, type ApiTier } from '@/lib/pricing'
 import { scoreColor, scoreToVerdict, estimatePercentile, ordinal } from '@/lib/verdict'
 import VerdictRing from '@/components/ui/VerdictRing'
 import Bloom from '@/components/ui/Bloom'
@@ -108,14 +109,16 @@ const TAB_TITLES: Record<TabId, string> = {
   docs:     'Documentation',
 }
 
-// Paid API tiers — shown for the upgrade affordance. Scan caps are the intended plan
-// limits; no prices are invented here. Checkout is NOT wired (see BillingTab seam).
-const PAID_TIERS: Array<{ id: string; name: string; scans: string }> = [
-  { id: 'dev',        name: 'Dev',        scans: '300 scans / mo'   },
-  { id: 'builder',    name: 'Builder',    scans: '1,000 scans / mo' },
-  { id: 'scale',      name: 'Volume',     scans: '3,000 scans / mo' },
-  { id: 'enterprise', name: 'Enterprise', scans: 'Custom volume'    },
-]
+// Paid API tiers — every figure read from API_PLANS (lib/pricing.ts, the single source
+// of truth). Checkout is NOT wired (see BillingTab seam). No invented numbers.
+const PAID_TIER_IDS: ApiTier[] = ['dev', 'builder', 'scale', 'enterprise']
+const PAID_TIERS = PAID_TIER_IDS.map((id) => {
+  const p = API_PLANS[id]
+  const base = p.baseMonthlyUsd == null ? 'Custom' : `$${p.baseMonthlyUsd}/mo`
+  const incl = p.includedScans == null ? 'custom volume' : `${p.includedScans.toLocaleString()} scans incl`
+  const over = id === 'enterprise' ? `from $${p.overageUsd.toFixed(2)}/scan` : `$${p.overageUsd.toFixed(2)}/scan over`
+  return { id, name: p.name, line: `${base} · ${incl} · ${over}` }
+})
 
 // ── Icons (inline SVG, 16px, stroke-current) ──────────────────────────────────
 
@@ -855,7 +858,7 @@ function BillingTab({ plan, isTrialPlan, monthScans, scansUsed }: BillingTabProp
                 <span className="font-display font-bold text-lg text-text-primary">{t.name}</span>
                 {isCurrent && <span className="font-mono text-xs text-purple-DEFAULT">CURRENT</span>}
               </div>
-              <div className="font-mono text-xs text-text-tertiary mt-1">{t.scans}</div>
+              <div className="font-mono text-xs text-text-tertiary mt-1">{t.line}</div>
               <button
                 onClick={() => setUpgradeNotice(true)}
                 disabled={isCurrent}

@@ -2518,7 +2518,7 @@ function FindingsPaywallLockBar({ lockedCount }: { lockedCount: number }) {
         </div>
       </div>
       <div className="flex shrink-0 justify-center">
-        <UpgradeButton label="UPGRADE TO FULL REPORT — $50/MO →" />
+        <UpgradeButton label="UPGRADE TO FULL REPORT — $39/MO →" />
       </div>
     </div>
   );

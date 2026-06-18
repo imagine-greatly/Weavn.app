@@ -292,7 +292,7 @@ export default function LandingFinalCTA({ url, onUrlChange, autoFocus }: Props) 
           </p>
 
           <p className="mt-7 text-center font-mono text-[11px]" style={{ color: "var(--text-muted)" }}>
-            Free tier: one full diagnostic scan · Pro: $50/month · Cancel anytime
+            Free tier: 3 scans a month · Starter: $39/month · Cancel anytime
           </p>
           <p className="mt-4 text-center font-mono text-[11px]" style={{ color: "var(--text-muted)" }}>
             ▪ UNDER 2 MINUTES

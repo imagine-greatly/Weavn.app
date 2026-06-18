@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react'
 import { getSupabaseBrowserClient } from '@/lib/supabaseBrowser'
-import { FREE_DASHBOARD_SCANS_PER_MONTH } from '@/lib/constants'
 import { DASHBOARD_PLANS, annualUsd, isCheckoutableDashboardTier, type BillingInterval, type DashboardTier } from '@/lib/pricing'
 
 // ── Steel-blue Dashboard surface tokens ────────────────────────────────────────
@@ -33,33 +32,37 @@ interface Tier {
   scans: string
   features: string[]
 }
-const DASHBOARD_TIERS: Tier[] = [
-  {
-    id: 'free', name: 'Free', scans: '3 scans / month',
-    features: ['3 scans per month', 'Score + top 3 findings', 'Benchmarked against corpus'],
-  },
-  {
-    id: 'starter', name: 'Starter', scans: 'Unlimited scans',
-    features: ['Unlimited scans', 'Full report — all findings ranked', 'AI-rewritten copy', 'Cancel anytime'],
-  },
-  {
-    id: 'agency', name: 'Agency', scans: 'Unlimited scans',
-    features: ['Everything in Starter', 'White-label PDF reports', '100 API calls bundled', 'Client management dashboard'],
-  },
-  {
-    id: 'enterprise', name: 'Enterprise', scans: 'Dedicated capacity',
-    features: ['Everything in Agency', 'Dedicated scan capacity', 'SLA + priority support', 'Custom vertical benchmarks'],
-  },
-]
+// Qualitative feature copy ONLY — every name, price, and scan count is read from
+// DASHBOARD_PLANS (lib/pricing.ts, the single source of truth). The dashboard track is
+// hard-capped per tier, so there is no "Unlimited".
+const TIER_FEATURES: Record<DashboardTier, string[]> = {
+  free:       ['Score + top 3 findings', 'Benchmarked against corpus'],
+  starter:    ['Full report — all findings ranked', 'AI-rewritten copy', 'Cancel anytime'],
+  pro:        ['Everything in Starter', 'Higher volume for an in-house team'],
+  agency:     ['Everything in Pro', 'White-label PDF reports', 'Client management dashboard'],
+  enterprise: ['Everything in Agency', 'Dedicated scan capacity', 'SLA + priority support', 'Custom vertical benchmarks'],
+}
+const DASHBOARD_TIER_ORDER: DashboardTier[] = ['free', 'starter', 'pro', 'agency', 'enterprise']
+function scanLineFor(tier: DashboardTier): string {
+  const n = DASHBOARD_PLANS[tier].scansPerMonth
+  return n == null ? 'Custom volume' : `${n} scans / month`
+}
+const DASHBOARD_TIERS: Tier[] = DASHBOARD_TIER_ORDER.map((id) => ({
+  id,
+  name: DASHBOARD_PLANS[id].name,
+  scans: scanLineFor(id),
+  features: [scanLineFor(id), ...TIER_FEATURES[id]],
+}))
 
 interface Subscription { current_period_end: number | null; amount: number | null; currency: string }
 
-// profiles.plan today is free/pro/agency; 'pro' is the entry paid tier ≈ Starter.
-function normalizePlan(plan: string): string {
+// Map the stored profiles.plan to a catalog tier. All five are real tiers now
+// (Starter $39/50, Pro $99/200), so 'pro' is no longer remapped to Starter.
+function normalizePlan(plan: string): DashboardTier {
   const p = plan.toLowerCase()
-  if (p === 'pro') return 'starter'
-  if (['free', 'starter', 'agency', 'enterprise'].includes(p)) return p
-  return 'free'
+  return (['free', 'starter', 'pro', 'agency', 'enterprise'] as DashboardTier[]).includes(p as DashboardTier)
+    ? (p as DashboardTier)
+    : 'free'
 }
 
 function fmtDate(tsSeconds: number | null): string {
@@ -173,11 +176,13 @@ export default function DashboardBillingPage() {
   const normalized = normalizePlan(plan)
   const currentTier = DASHBOARD_TIERS.find(t => t.id === normalized) ?? DASHBOARD_TIERS[0]
   const isFree = normalized === 'free'
-  const currentMonthly = DASHBOARD_PLANS[normalized as DashboardTier].priceMonthlyUsd
-  const scanLine = isFree
-    ? `${monthScans} of ${FREE_DASHBOARD_SCANS_PER_MONTH} scans this period`
-    : `${monthScans} scans this period · unlimited`
-  const scanPct = isFree ? Math.min(100, Math.round((monthScans / FREE_DASHBOARD_SCANS_PER_MONTH) * 100)) : 100
+  const currentMonthly = DASHBOARD_PLANS[normalized].priceMonthlyUsd
+  // Hard scan cap for the current tier (null = enterprise/custom — no fixed cap).
+  const cap = DASHBOARD_PLANS[normalized].scansPerMonth
+  const scanLine = cap == null
+    ? `${monthScans} scans this period`
+    : `${monthScans} of ${cap} scans this period`
+  const scanPct = cap == null ? 100 : Math.min(100, Math.round((monthScans / cap) * 100))
 
   return (
     <div className="dashboard-root-shell" style={{ padding: '32px 32px 56px', maxWidth: 1040, margin: '0 auto' }}>
@@ -252,7 +257,7 @@ export default function DashboardBillingPage() {
               <div style={{ position: 'relative', width: '100%', height: 3, background: 'rgba(255,255,255,0.06)', marginTop: 18 }}>
                 <div style={{
                   position: 'absolute', top: 0, left: 0, height: '100%', width: `${scanPct}%`,
-                  background: isFree && monthScans >= FREE_DASHBOARD_SCANS_PER_MONTH ? C.worse : 'var(--surface-accent)',
+                  background: cap != null && monthScans >= cap ? C.worse : 'var(--surface-accent)',
                 }} />
               </div>
               <div style={{ fontFamily: MONO, fontSize: 11, color: C.inkMuted, marginTop: 9 }}>

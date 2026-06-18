@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { getSupabaseBrowserClient } from '@/lib/supabaseBrowser'
@@ -10,7 +10,10 @@ import WeavnMark from '@/components/ui/WeavnMark'
 import EmptyState from '@/components/ui/EmptyState'
 import SurfaceToggle, { SURFACE_NAV, useSurfaceCrossing } from '@/components/SurfaceToggle'
 import { FREE_API_TRIAL_SCANS } from '@/lib/constants'
-import { scoreColor, scoreToVerdict } from '@/lib/verdict'
+import { scoreColor, scoreToVerdict, estimatePercentile, ordinal } from '@/lib/verdict'
+import VerdictRing from '@/components/ui/VerdictRing'
+import Bloom from '@/components/ui/Bloom'
+import CornerBrackets from '@/components/ui/CornerBrackets'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -206,7 +209,7 @@ function MethodBadge({ method }: { method: 'POST' | 'GET' }) {
 interface OverviewTabProps {
   monthScans: number
   monthSpend: number
-  avgScore: number
+  avgScore: number | null
   keyPrefix: string | null
   scanRows: ScanRow[]
   createdLabel: string
@@ -214,104 +217,216 @@ interface OverviewTabProps {
   rotating: boolean
   rotateError: string | null
   onRotate: () => void
+  scansUsed: number
+  isTrialPlan: boolean
+  plan: string
+  lastScanMs: number | null
 }
 
-function OverviewTab({ monthScans, monthSpend, avgScore, keyPrefix, scanRows, createdLabel, lastUsedLabel, rotating, rotateError, onRotate }: OverviewTabProps) {
-  const [copied, setCopied] = useState(false)
+function OverviewTab({ monthScans, monthSpend, avgScore, keyPrefix, scanRows, createdLabel, lastUsedLabel, rotating, rotateError, onRotate, scansUsed, isTrialPlan, plan, lastScanMs }: OverviewTabProps) {
+  const [keyCopied, setKeyCopied] = useState(false)
+  const [curlCopied, setCurlCopied] = useState(false)
+  const quickstartRef = useRef<HTMLDivElement>(null)
+  const hasScans = scanRows.length > 0
+  const trialPct = isTrialPlan ? Math.min(100, Math.round((scansUsed / FREE_API_TRIAL_SCANS) * 100)) : 100
 
-  // Copies the visible key prefix — the full secret is only shown once at creation
-  // (only its hash is stored), so the prefix is all that remains recoverable here.
-  async function handleCopy() {
-    if (!keyPrefix) return
-    try {
-      await navigator.clipboard.writeText(keyPrefix)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
-    } catch { /* clipboard unavailable */ }
+  // The full secret is unrecoverable post-creation (only the prefix is stored), so the
+  // snippet carries the real key PREFIX; the full key is shown once at creation/rotation.
+  const keyForCurl = keyPrefix ?? 'YOUR_API_KEY'
+  const keyMasked = keyPrefix ? `${keyPrefix}••••••••••••` : 'YOUR_API_KEY'
+  const curlText =
+    `curl -X POST https://api.weavn.app/v1/scan \\\n` +
+    `  -H "Authorization: Bearer ${keyForCurl}" \\\n` +
+    `  -H "Content-Type: application/json" \\\n` +
+    `  -d '{"url": "https://yoursite.com"}'`
+
+  async function copyCurl() {
+    try { await navigator.clipboard.writeText(curlText); setCurlCopied(true); setTimeout(() => setCurlCopied(false), 2000) } catch { /* clipboard unavailable */ }
   }
+  async function copyKey() {
+    if (!keyPrefix) return
+    try { await navigator.clipboard.writeText(keyPrefix); setKeyCopied(true); setTimeout(() => setKeyCopied(false), 2000) } catch { /* clipboard unavailable */ }
+  }
+  const focusQuickstart = () => quickstartRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
 
-  return (
-    <div className="px-8 py-8">
+  const engineLine = !hasScans
+    ? 'warm · idle · 307 checks · 27 categories · ~90s median'
+    : lastScanMs != null
+      ? `warm · last scan ${Math.round(lastScanMs / 1000)}s · 307 checks · 27 categories`
+      : 'warm · 307 checks · 27 categories'
 
-      {/* Stat row */}
-      <div className="grid grid-cols-3 gap-px bg-background-border mb-px">
-        <div className="bg-background-raised p-6">
-          <div className="font-display font-extrabold text-4xl text-text-primary">{monthScans}</div>
-          <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mt-1">SCANS THIS MONTH</div>
+  // Steel (--interactive token) sparkline — secondary baseline visual, not a verdict.
+  const Sparkline = () => (
+    <svg width="100%" height={18} viewBox="0 0 100 18" preserveAspectRatio="none" style={{ display: 'block', marginTop: 10 }} aria-hidden>
+      <polyline points="0,13 18,10 36,12 54,6 72,9 90,5 100,8" fill="none" stroke="#6F9BC6" strokeWidth={1} strokeOpacity={0.28} />
+    </svg>
+  )
+
+  const quickstart = (compact: boolean) => (
+    <div ref={quickstartRef} className="relative overflow-hidden bg-background-raised mb-px" style={{ border: '0.5px solid color-mix(in srgb, var(--surface-accent) 22%, rgba(255,255,255,0.08))', padding: compact ? '18px 20px' : '24px' }}>
+      <CornerBrackets corners={['tl', 'tr']} size={12} />
+      {!compact && <Bloom size={520} intensity={0.12} style={{ top: '18%' }} />}
+      <div className="relative" style={{ zIndex: 1 }}>
+        <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+          <span className="font-mono text-xs uppercase tracking-widest" style={{ color: 'var(--surface-accent)' }}>
+            {compact ? 'QUICKSTART · reference' : 'QUICKSTART — fire your first scan'}
+          </span>
+          <button onClick={copyCurl} className="font-mono text-xs px-2 py-1 cursor-pointer bg-transparent uppercase tracking-wider" style={{ color: 'var(--surface-accent)', border: '0.5px solid color-mix(in srgb, var(--surface-accent) 45%, transparent)' }}>
+            {curlCopied ? 'Copied ✓' : 'Copy'}
+          </button>
         </div>
-        <div className="bg-background-raised p-6">
-          <div className="font-display font-extrabold text-4xl text-text-primary">${monthSpend.toFixed(2)}</div>
-          <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mt-1">SPENT THIS MONTH</div>
+        <div className="bg-background-subtle border border-background-border p-4">
+          <pre className="font-mono text-xs leading-relaxed m-0 whitespace-pre-wrap">
+            <span className="text-purple-DEFAULT">curl</span>
+            <span className="text-text-tertiary">{' -X POST '}</span>
+            <span style={{ color: '#6F9BC6' }}>https://api.weavn.app/v1/scan</span>
+            <span className="text-text-tertiary">{' \\\n  -H "Authorization: Bearer '}</span>
+            <span style={{ color: '#6F9BC6' }}>{keyMasked}</span>
+            <span className="text-text-tertiary">{'" \\\n  -H "Content-Type: application/json" \\\n  -d \'{"url": "'}</span>
+            <span className="text-text-secondary">https://yoursite.com</span>
+            <span className="text-text-tertiary">{'"}\''}</span>
+          </pre>
         </div>
-        <div className="bg-background-raised p-6">
-          <div className="font-display font-extrabold text-4xl text-score-mid">{avgScore}</div>
-          <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mt-1">AVERAGE SCORE</div>
-        </div>
+        {/* RUNNABLE SCAN MOUNTS HERE — phase 2 */}
+        {!compact ? (
+          <p className="font-mono text-xs text-text-tertiary mt-3">
+            Full key is shown once at creation — the snippet carries your key prefix.
+          </p>
+        ) : null}
       </div>
+    </div>
+  )
 
-      {/* API Key block */}
-      <div className="bg-background-raised border border-background-border p-6 mt-px mb-px">
-        <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mb-4">API KEY</div>
+  const metricStrip = (
+    <div className="grid grid-cols-3 gap-px bg-background-border mb-px">
+      <div className="bg-background-raised p-6">
+        <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mb-2">Scans this month</div>
+        <div className="font-display font-extrabold" style={{ fontSize: 27, color: '#E6E9EE' }}>{monthScans}</div>
+        <Sparkline />
+      </div>
+      <div className="bg-background-raised p-6">
+        <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mb-2">Spent this month</div>
+        <div className="font-display font-extrabold" style={{ fontSize: 27, color: '#E6E9EE' }}>${monthSpend.toFixed(2)}</div>
+        <Sparkline />
+      </div>
+      <div className="bg-background-raised p-6">
+        <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mb-2">Avg score</div>
+        {avgScore == null ? (
+          <>
+            <div className="font-display font-extrabold" style={{ fontSize: 27, color: '#6E7587' }}>—</div>
+            <div className="font-mono text-xs text-text-tertiary mt-2">no scans yet</div>
+          </>
+        ) : (
+          <>
+            <div className="font-display font-extrabold" style={{ fontSize: 27, color: scoreColor(avgScore) }}>{avgScore}</div>
+            <Sparkline />
+          </>
+        )}
+      </div>
+    </div>
+  )
+
+  const credentials = (
+    <div className="grid grid-cols-2 gap-px bg-background-border mb-px">
+      {/* API KEY */}
+      <div className="bg-background-raised p-6">
+        <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mb-3">API key</div>
         <div className="flex items-center gap-3">
           <div className="font-mono text-sm text-text-secondary bg-background-subtle border border-background-border px-4 py-2.5 flex-1 min-w-0 truncate">
             {keyPrefix ? `${keyPrefix}••••••••••••••••••••••••••` : '— no active key —'}
           </div>
-          <button
-            onClick={handleCopy}
-            disabled={!keyPrefix}
-            className="border border-background-border text-text-tertiary font-body text-xs px-3 py-2.5 hover:text-text-primary hover:border-text-tertiary transition-colors duration-150 cursor-pointer bg-transparent flex-shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
-          >
-            {copied ? 'Copied!' : 'Copy'}
+          <button onClick={copyKey} disabled={!keyPrefix} className="border border-background-border text-text-tertiary font-body text-xs px-3 py-2.5 hover:text-text-primary hover:border-text-tertiary transition-colors duration-150 cursor-pointer bg-transparent flex-shrink-0 disabled:opacity-40 disabled:cursor-not-allowed">
+            {keyCopied ? 'Copied!' : 'Copy'}
           </button>
-          <button
-            onClick={onRotate}
-            disabled={rotating || !keyPrefix}
-            className="text-text-tertiary font-body text-xs hover:text-text-primary transition-colors duration-150 bg-transparent border-0 cursor-pointer flex-shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
-          >
+          <button onClick={onRotate} disabled={rotating || !keyPrefix} className="text-text-tertiary font-body text-xs hover:text-text-primary transition-colors duration-150 bg-transparent border-0 cursor-pointer flex-shrink-0 disabled:opacity-40 disabled:cursor-not-allowed">
             {rotating ? 'Rotating…' : 'Regenerate →'}
           </button>
         </div>
-        <div className="font-mono text-xs text-text-tertiary mt-3">
-          Created: {createdLabel} · Last used: {lastUsedLabel}
-        </div>
-        {rotateError ? (
-          <div className="font-mono text-xs text-severity-critical mt-2">{rotateError}</div>
-        ) : null}
+        <div className="font-mono text-xs text-text-tertiary mt-3">Created {createdLabel} · Last used {lastUsedLabel}</div>
+        {rotateError ? <div className="font-mono text-xs text-severity-critical mt-2">{rotateError}</div> : null}
       </div>
-
-      {/* Activity feed */}
-      <div className="bg-background-raised border border-background-border mt-px">
-        <div className="px-6 py-4 border-b border-background-border flex justify-between items-center">
-          <span className="font-mono text-xs text-text-tertiary uppercase tracking-widest">RECENT SCANS</span>
-          <span className="font-body text-xs text-text-tertiary cursor-pointer hover:text-text-secondary transition-colors duration-150">
-            View all →
-          </span>
-        </div>
-        {scanRows.length === 0 && (
-          <EmptyState
-            dense
-            headline="No scans yet"
-            sub="Run your first scan and it shows up here, newest first."
-            actionLabel="New scan →"
-            actionHref="/playground"
-          />
-        )}
-        {scanRows.slice(0, 8).map((row, i) => (
-          <div
-            key={i}
-            className="flex items-center gap-4 px-6 py-4 border-b border-background-border last:border-0 hover:bg-background-interactive transition-colors duration-150 cursor-pointer"
-          >
-            <ScoreRing score={row.score} size="sm" animated={false} />
-            <div className="flex-1 min-w-0">
-              <div className="font-body text-sm text-text-primary">{row.domain}</div>
-              <div className="font-mono text-xs text-text-tertiary">{row.findings} findings · $0.15</div>
+      {/* QUOTA */}
+      <div className="bg-background-raised p-6">
+        <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mb-3">Quota</div>
+        {isTrialPlan ? (
+          <>
+            <div className="font-mono text-sm text-text-primary">{scansUsed} / {FREE_API_TRIAL_SCANS} <span className="text-text-tertiary">scans · free trial</span></div>
+            <div className="relative w-full h-px bg-background-border mt-3">
+              <div className="absolute top-0 left-0 h-full" style={{ width: `${trialPct}%`, background: 'var(--surface-accent)' }} />
             </div>
-            <div className="font-mono text-xs text-text-tertiary ml-auto flex-shrink-0">{row.time}</div>
-            <SeverityBadge score={row.score} />
+            <div className="font-mono text-xs text-text-tertiary mt-2">lifetime trial ceiling</div>
+          </>
+        ) : (
+          <div className="font-mono text-sm text-text-secondary capitalize">{plan} · usage-based</div>
+        )}
+      </div>
+    </div>
+  )
+
+  const recent = (
+    <div className="bg-background-raised border border-background-border mt-px">
+      <div className="px-6 py-4 border-b border-background-border flex justify-between items-center">
+        <span className="font-mono text-xs text-text-tertiary uppercase tracking-widest">Recent scans</span>
+      </div>
+      {hasScans ? (
+        scanRows.slice(0, 8).map((row, i) => (
+          <div key={i} className="flex items-center gap-4 px-6 py-4 border-b border-background-border last:border-0 hover:bg-background-interactive transition-colors duration-150 cursor-pointer">
+            <VerdictRing score={row.score} size="sm" animate={false} />
+            <span className="font-body text-sm text-text-primary flex-1 min-w-0 truncate">{row.domain}</span>
+            <span className="font-mono text-xs text-text-tertiary flex-shrink-0">{ordinal(estimatePercentile(row.score))} pct</span>
+            <span className="font-mono text-xs text-text-tertiary flex-shrink-0">307 checks</span>
+            <span className="font-mono text-xs text-text-tertiary flex-shrink-0 ml-auto">{row.time}</span>
           </div>
-        ))}
+        ))
+      ) : (
+        <>
+          <div className="flex items-center gap-4 px-6 py-4" style={{ opacity: 0.55, borderTop: '1px dashed rgba(255,255,255,0.12)' }}>
+            <VerdictRing score={37} size="sm" animate={false} />
+            <span className="font-body text-sm text-text-primary flex-1 min-w-0 truncate">acme-saas.com</span>
+            <span className="font-mono text-xs text-text-tertiary flex-shrink-0">19th pct</span>
+            <span className="font-mono text-xs text-text-tertiary flex-shrink-0">307 checks</span>
+          </div>
+          <div className="px-6 py-3 font-mono text-xs text-text-tertiary" style={{ opacity: 0.7 }}>↑ sample — your scans will appear here, newest first</div>
+        </>
+      )}
+    </div>
+  )
+
+  return (
+    <div className="px-8 py-8">
+      {/* 1 — Header */}
+      <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
+        <div className="flex items-center gap-3">
+          <h1 className="font-display font-extrabold text-text-primary" style={{ fontSize: 21, letterSpacing: '-0.3px' }}>Overview</h1>
+          <span className="font-mono uppercase" style={{ fontSize: 9.5, letterSpacing: '0.18em', color: 'var(--surface-accent)', border: '0.5px solid color-mix(in srgb, var(--surface-accent) 50%, transparent)', padding: '3px 8px' }}>Developer</span>
+        </div>
+        <button onClick={focusQuickstart} className="font-mono uppercase cursor-pointer" style={{ fontSize: 11, letterSpacing: '0.08em', color: 'var(--surface-accent)', background: 'color-mix(in srgb, var(--surface-accent) 9%, transparent)', border: '0.5px solid color-mix(in srgb, var(--surface-accent) 50%, transparent)', padding: '8px 16px' }}>New scan →</button>
       </div>
 
+      {/* 2 — Engine readout strip */}
+      <div className="relative overflow-hidden flex items-center gap-3 mb-6 flex-wrap" style={{ border: '0.5px solid color-mix(in srgb, var(--surface-accent) 18%, rgba(255,255,255,0.06))', background: 'color-mix(in srgb, var(--surface-accent) 4%, transparent)', padding: '10px 16px' }}>
+        <style>{`@keyframes enginePulse{0%,100%{opacity:1}50%{opacity:0.3}} .engine-dot{animation:enginePulse 2s ease-in-out infinite}`}</style>
+        <span aria-hidden className="engine-dot" style={{ width: 7, height: 7, flexShrink: 0, background: hasScans ? 'var(--surface-accent)' : '#6F9BC6', boxShadow: hasScans ? '0 0 6px var(--surface-accent)' : '0 0 6px #6F9BC6' }} />
+        <span className="font-mono uppercase" style={{ fontSize: 10, letterSpacing: '0.2em', color: 'var(--surface-accent)' }}>Engine</span>
+        <span className="font-mono" style={{ fontSize: 11.5, color: '#9398A8' }}>{engineLine}</span>
+      </div>
+
+      {/* 3+ — quickstart-first when empty; cockpit-first (demoted quickstart) when returning */}
+      {!hasScans ? (
+        <>
+          {quickstart(false)}
+          {metricStrip}
+          {credentials}
+          {recent}
+        </>
+      ) : (
+        <>
+          {metricStrip}
+          {credentials}
+          {recent}
+          <div className="mt-6">{quickstart(true)}</div>
+        </>
+      )}
     </div>
   )
 }
@@ -988,9 +1103,9 @@ export default function DeveloperPortal() {
   // lifetime scans_used. The sidebar quota is DISPLAY-ONLY: the only enforced cap is the
   // lifetime free-trial ceiling on trial-plan keys (checkScanAllowed); paid tiers fail
   // open. TODO(wiring): paid-tier quota enforcement + month-windowed plan limits.
-  const avgScore = (() => {
+  const avgScore: number | null = (() => {
     const scored = rawUsage.filter(r => r.score !== null)
-    if (!scored.length) return 0
+    if (!scored.length) return null
     return Math.round(scored.reduce((sum, r) => sum + (r.score ?? 0), 0) / scored.length)
   })()
   const isTrialPlan = TRIAL_PLANS.includes(plan)
@@ -1004,6 +1119,8 @@ export default function DeveloperPortal() {
     findings: 0,
     time:     relativeTime(r.created_at),
   }))
+  // Most-recent scan duration (API response time) for the engine readout, if present.
+  const lastScanMs: number | null = rawUsage[0]?.response_time_ms ?? null
 
   const webhookLogMapped: WebhookLog[] = rawWebhooks.map(r => ({
     status: webhookStatusCode(r.status),
@@ -1148,6 +1265,10 @@ export default function DeveloperPortal() {
               rotating={rotating}
               rotateError={rotateError}
               onRotate={handleRotate}
+              scansUsed={scansUsed}
+              isTrialPlan={isTrialPlan}
+              plan={plan}
+              lastScanMs={lastScanMs}
             />
           )}
           {activeTab === 'scans'    && <ScansTab scanRows={scanRows} />}

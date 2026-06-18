@@ -1,0 +1,97 @@
+name: Supabase Backup
+
+# Automated logical backups of the Supabase Postgres database.
+#
+# Runs every 12 hours (and on demand) on a GitHub-hosted runner, dumps the
+# whole database with pg_dump, commits the dump into backups/ in THIS repo,
+# and keeps only the most recent ~30 dumps.
+#
+# Safe to commit dumps here ONLY because this repo is PRIVATE. If it is ever
+# made public, disable this workflow and push dumps to a private repo or
+# external storage instead — never expose a database dump publicly.
+#
+# Required GitHub repo secret (Settings -> Secrets and variables -> Actions):
+#   SUPABASE_DB_URL   postgresql://postgres.<ref>:<password>@<host>:5432/postgres
+#                     Use the Session pooler (port 5432) or the direct
+#                     connection — NOT the transaction pooler (port 6543),
+#                     which does not support the session features pg_dump needs.
+# Nothing is hardcoded — the connection string is read from the secret at runtime.
+
+on:
+  schedule:
+    # Every 12 hours, at 03:17 and 15:17 UTC (offset minutes to dodge the
+    # top-of-hour scheduling congestion on GitHub's shared runners).
+    - cron: "17 3,15 * * *"
+  workflow_dispatch: {}
+
+# Allow the job to push the committed dump back to the repo.
+permissions:
+  contents: write
+
+# Never let two backup runs race on the same branch.
+concurrency:
+  group: supabase-backup
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install PostgreSQL 17 client (pg_dump)
+        run: |
+          set -euo pipefail
+          # Use the official PostgreSQL apt repo so we get pg_dump 17, which can
+          # dump Postgres 15/16/17 servers (pg_dump must be >= the server version).
+          sudo install -d /usr/share/postgresql-common/pgdg
+          curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc \
+            | sudo gpg --dearmor -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.gpg
+          echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.gpg] https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" \
+            | sudo tee /etc/apt/sources.list.d/pgdg.list > /dev/null
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client-17
+          pg_dump --version
+
+      - name: Run pg_dump
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          set -euo pipefail
+          if [ -z "${SUPABASE_DB_URL:-}" ]; then
+            echo "::error::Missing SUPABASE_DB_URL secret."
+            exit 1
+          fi
+          mkdir -p backups
+          STAMP=$(date -u +%Y%m%d_%H%M%S)
+          OUT="backups/weavn_full_${STAMP}.dump"
+          # Custom format (-Fc) is compressed and restorable with pg_restore.
+          pg_dump "$SUPABASE_DB_URL" --format=custom --no-owner --no-privileges --file="$OUT"
+          ls -lh "$OUT"
+          # Fail loudly if the dump came out empty.
+          test -s "$OUT" || { echo "::error::Dump file is empty."; exit 1; }
+
+      - name: Rotate — keep only the last 30 dumps
+        run: |
+          set -euo pipefail
+          cd backups
+          # Newest first; delete everything past the 30 most recent.
+          ls -1t weavn_full_*.dump | tail -n +31 | xargs -r rm -f
+          echo "Dumps retained:"; ls -1t weavn_full_*.dump | wc -l
+
+      - name: Commit & push dump
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          # backups/ is gitignored for local safety, so force-add the dumps here.
+          # A pathspec add (git >= 2.0) also stages the deletions from rotation.
+          git add -f backups/weavn_full_*.dump
+          git add -A backups
+          if git diff --cached --quiet; then
+            echo "No backup changes to commit."
+          else
+            git commit -m "chore(backup): supabase dump $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            git push
+          fi

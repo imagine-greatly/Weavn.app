@@ -64,7 +64,7 @@ export default function AccountPage() {
 
   return (
     <div className="dashboard-root-shell" style={{ padding: '32px 32px 56px', maxWidth: 720, margin: '0 auto' }}>
-      <p style={{ fontFamily: MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.2em', color: 'var(--surface-accent)', margin: '0 0 8px' }}>
+      <p style={{ fontFamily: MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.2em', color: C.inkMuted, margin: '0 0 8px' }}>
         Account
       </p>
       <h1 style={{ fontFamily: DISP, fontWeight: 700, fontSize: 28, color: C.inkPrimary, margin: '0 0 6px', letterSpacing: '-0.5px' }}>
@@ -77,11 +77,7 @@ export default function AccountPage() {
       {loading ? (
         <p style={{ fontFamily: MONO, fontSize: 12, color: C.inkMuted, margin: 0 }}>Loading…</p>
       ) : (
-        <div style={{ position: 'relative', border: `0.5px solid ${C.border}`, background: C.surface }}>
-          {/* L-corner brackets in the surface accent */}
-          <span aria-hidden style={{ position: 'absolute', top: -1, left: -1, width: 9, height: 9, borderTop: '1px solid var(--surface-accent)', borderLeft: '1px solid var(--surface-accent)' }} />
-          <span aria-hidden style={{ position: 'absolute', bottom: -1, right: -1, width: 9, height: 9, borderBottom: '1px solid var(--surface-accent)', borderRight: '1px solid var(--surface-accent)' }} />
-
+        <div style={{ border: `0.5px solid ${C.border}`, background: C.surface }}>
           {/* Email */}
           <div style={{ padding: '18px 22px', borderBottom: `0.5px solid ${C.border}` }}>
             <div style={{ fontFamily: MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.14em', color: C.inkMuted, marginBottom: 7 }}>

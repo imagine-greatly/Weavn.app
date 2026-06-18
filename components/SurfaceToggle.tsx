@@ -31,9 +31,11 @@ const SEGMENTS: { id: Surface; label: string }[] = [
 /** Surface-specific nav, shared so a shell can render the incoming surface's items
  *  (display-only) during the crossing before the route push lands. */
 export const SURFACE_NAV: Record<Surface, { label: string; href?: string }[]> = {
+  // Display-only crossing preview (the superset). The LIVE /app nav is composed by
+  // tier in DashboardShell — founders: Overview · Billing; agency: + Clients · Branding.
+  // "Reports" is folded into the Overview (the scan history) and never appears.
   app: [
     { label: 'Overview', href: '/app' },
-    { label: 'Reports', href: '/app/reports' },
     { label: 'Clients', href: '/app/clients' },
     { label: 'Branding', href: '/app/branding' },
     { label: 'Billing', href: '/app/billing' },

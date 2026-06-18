@@ -186,7 +186,7 @@ export default function DashboardBillingPage() {
 
   return (
     <div className="dashboard-root-shell" style={{ padding: '32px 32px 56px', maxWidth: 1040, margin: '0 auto' }}>
-      <p style={{ fontFamily: MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.2em', color: 'var(--surface-accent)', margin: '0 0 8px' }}>
+      <p style={{ fontFamily: MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.2em', color: C.inkMuted, margin: '0 0 8px' }}>
         Billing
       </p>
       <h1 style={{ fontFamily: DISP, fontWeight: 700, fontSize: 28, color: C.inkPrimary, margin: '0 0 6px', letterSpacing: '-0.5px' }}>
@@ -200,19 +200,9 @@ export default function DashboardBillingPage() {
         <p style={{ fontFamily: MONO, fontSize: 12, color: C.inkMuted, margin: 0 }}>Loading…</p>
       ) : (
         <>
-          {/* Current plan card — steel, corner brackets, ambient steel bloom */}
-          <div style={{ position: 'relative', marginBottom: 36 }}>
-            <div
-              aria-hidden
-              style={{
-                position: 'absolute', left: 0, top: -10, width: 360, height: 180,
-                background: 'radial-gradient(ellipse 60% 70% at 18% 30%, color-mix(in srgb, var(--surface-accent) 16%, transparent) 0%, transparent 70%)',
-                pointerEvents: 'none', zIndex: 0,
-              }}
-            />
-            <div style={{ position: 'relative', border: `0.5px solid ${C.border}`, background: C.surface, padding: '24px 26px', zIndex: 1 }}>
-              <span aria-hidden style={{ position: 'absolute', top: -1, left: -1, width: 10, height: 10, borderTop: '1px solid var(--surface-accent)', borderLeft: '1px solid var(--surface-accent)' }} />
-              <span aria-hidden style={{ position: 'absolute', bottom: -1, right: -1, width: 10, height: 10, borderBottom: '1px solid var(--surface-accent)', borderRight: '1px solid var(--surface-accent)' }} />
+          {/* Current plan card — flat hairline frame (monochrome). */}
+          <div style={{ marginBottom: 36 }}>
+            <div style={{ position: 'relative', border: `0.5px solid ${C.border}`, background: C.surface, padding: '24px 26px' }}>
 
               <div style={{ fontFamily: MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.16em', color: C.inkMuted, marginBottom: 14 }}>
                 Current plan
@@ -300,12 +290,6 @@ export default function DashboardBillingPage() {
               const pp = priceFor(t.id, interval)
               return (
                 <div key={t.id} style={{ position: 'relative', background: C.surface, padding: '22px 20px', display: 'flex', flexDirection: 'column' }}>
-                  {isCurrent && (
-                    <>
-                      <span aria-hidden style={{ position: 'absolute', top: -1, left: -1, width: 9, height: 9, borderTop: '1px solid var(--surface-accent)', borderLeft: '1px solid var(--surface-accent)' }} />
-                      <span aria-hidden style={{ position: 'absolute', bottom: -1, right: -1, width: 9, height: 9, borderBottom: '1px solid var(--surface-accent)', borderRight: '1px solid var(--surface-accent)' }} />
-                    </>
-                  )}
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
                     <span style={{ fontFamily: DISP, fontWeight: 700, fontSize: 17, color: C.inkPrimary }}>{t.name}</span>
                     {isCurrent && <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '0.1em', color: 'var(--surface-accent)' }}>CURRENT</span>}

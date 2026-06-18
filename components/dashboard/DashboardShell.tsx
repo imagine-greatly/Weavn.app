@@ -52,6 +52,30 @@ export default function DashboardShell({ children }: { children: React.ReactNode
   const { rootRef, surface, navSurface, phase, crossing, flipTo } = useSurfaceCrossing('app')
   const [scanOpen, setScanOpen] = useState(false)
 
+  // Tier drives the nav — no locked items, no padlocks. Default to the minimal founder
+  // nav while the plan loads so locked items never flash. Agency/Enterprise add Clients
+  // + Branding. "Reports" is folded into the Overview and never appears.
+  const [plan, setPlan] = useState<string | null>(null)
+  useEffect(() => {
+    let cancelled = false
+    fetch('/api/profile').then(r => r.json()).then(d => {
+      if (!cancelled && typeof d?.plan === 'string') setPlan(d.plan)
+    }).catch(() => {})
+    return () => { cancelled = true }
+  }, [])
+  const isAgency = plan === 'agency' || plan === 'enterprise'
+  const APP_NAV: { label: string; href?: string }[] = isAgency
+    ? [
+        { label: 'Overview', href: '/app' },
+        { label: 'Clients', href: '/app/clients' },
+        { label: 'Branding', href: '/app/branding' },
+        { label: 'Billing', href: '/app/billing' },
+      ]
+    : [
+        { label: 'Overview', href: '/app' },
+        { label: 'Billing', href: '/app/billing' },
+      ]
+
   const navClass = `surface-nav${phase === 'leaving' ? ' is-leaving' : phase === 'entering' ? ' is-entering' : ''}`
 
   return (
@@ -84,7 +108,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
 
         {/* Surface-specific nav (middle) — reconfigures on crossing */}
         <nav key={navSurface} className={navClass} style={{ flex: 1, padding: '12px 0', overflowY: 'auto' }}>
-          {SURFACE_NAV[navSurface].map((item, i) => {
+          {(navSurface === 'app' ? APP_NAV : SURFACE_NAV[navSurface]).map((item, i) => {
             const cssVars = { '--nav-i': i } as React.CSSProperties
             if (navSurface === 'app' && item.href) {
               const active = isActive(pathname, item.href)

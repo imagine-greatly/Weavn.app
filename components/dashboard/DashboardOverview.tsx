@@ -2,20 +2,17 @@
 
 import { useEffect, useState } from 'react'
 import VerdictCard, { type VerdictCardFinding } from '@/components/dashboard/VerdictCard'
+import VerdictRing from '@/components/ui/VerdictRing'
 import { getSupabaseBrowserClient } from '@/lib/supabaseBrowser'
 import { DASHBOARD_PLAN_MONTHLY_CAPS } from '@/lib/constants'
-import { scoreColor } from '@/lib/verdict'
-import { resolveViewMode, type SiteSummary } from '@/lib/dashboard'
+import { scoreColor, estimatePercentile, ordinal } from '@/lib/verdict'
+import { formatDate, type SiteSummary } from '@/lib/dashboard'
 
 /**
- * Founder Dashboard Overview — near-monochrome, color-as-signal (presentation only).
- * Data comes from app/app/page.tsx (sites + scan handler); quota read live here.
- *
- * Frame: black + hairline white-alpha borders + a gray text ramp. Color is rationed:
- * it appears ONLY on the verdict ring (the hero), the band-colored verdict label, the
- * band-colored avg-score, and genuinely-urgent (high/critical) finding markers. Steel
- * (var(--surface-accent)) is reserved for affordances (New scan button, report link).
- * NO bloom, NO corner brackets, no glow, no decorative color washes.
+ * Founder Dashboard Overview — near-monochrome, color-as-signal. This IS the scan
+ * history now (Reports is folded away): every scan, newest first, each opening the
+ * in-depth report. Color is rationed to the verdict ring/score and real urgency;
+ * steel (var(--surface-accent)) is affordance-only. NO bloom, brackets, or glow.
  */
 
 const MONO = "'IBM Plex Mono', monospace"
@@ -29,37 +26,25 @@ const C = {
   inkDim: '#5A6070',
   surface: '#0A0E18',
   border: 'rgba(255,255,255,0.06)',
-  borderStrong: 'rgba(255,255,255,0.12)',
-  crit: '#E8635F',  // --sev-critical — reserved for real urgency
-  amber: '#EFB23E', // --sev-high
+  crit: '#E8635F', // --sev-critical — reserved for real urgency
 } as const
 
 const STEEL = 'var(--surface-accent)' // interaction affordance only
 const steelBorder = 'color-mix(in srgb, var(--surface-accent) 45%, transparent)'
 
-// Finding severity → signal. Only high/critical carry color; everything else is muted.
-function findingSignal(sev: string): { color: string; muted: boolean } {
-  const s = sev.toLowerCase()
-  if (s === 'critical') return { color: C.crit, muted: false }
-  if (s === 'high') return { color: C.amber, muted: false }
-  return { color: C.inkDim, muted: true } // warning / medium / low / passing → muted gray
-}
-
-function toCardFindings(site: SiteSummary): VerdictCardFinding[] {
-  return site.findings.slice(0, 3).map((f) => {
-    const sig = findingSignal(f.severity)
-    return { title: f.title, color: sig.color, muted: sig.muted, tag: f.estLift ?? f.severity }
-  })
-}
-
-function deltaSummary(site: SiteSummary): string {
-  if (site.previousScore == null) return 'First scan'
-  if (site.delta === 0) return 'No change since last scan'
-  return site.delta! > 0 ? `Up ${site.delta} since last scan` : `Down ${Math.abs(site.delta!)} since last scan`
+/** One scan (report) for the history list — every scan, not rolled up by domain. */
+export interface ScanHistoryRow {
+  domain: string
+  score: number
+  date: string
+  shareToken: string | null
 }
 
 export interface DashboardOverviewProps {
+  /** Rolled-up per-domain summaries (drive the metric strip). */
   sites: SiteSummary[]
+  /** Every scan, newest first (the history list). */
+  scans: ScanHistoryRow[]
   url: string
   onUrlChange: (value: string) => void
   onScan: () => void
@@ -67,8 +52,20 @@ export interface DashboardOverviewProps {
   error?: string | null
 }
 
-export default function DashboardOverview({ sites, url, onUrlChange, onScan, scanning = false, error }: DashboardOverviewProps) {
-  const hasScans = sites.length > 0
+export default function DashboardOverview({ sites, scans, url, onUrlChange, onScan, scanning = false, error }: DashboardOverviewProps) {
+  const hasScans = scans.length > 0
+
+  // Plan drives the single, contextual Agency nudge (no padlocks). Default to no nudge
+  // while loading so nothing flashes; show only for confirmed founder (non-agency) plans.
+  const [plan, setPlan] = useState<string | null>(null)
+  useEffect(() => {
+    let cancelled = false
+    fetch('/api/profile').then(r => r.json()).then(d => {
+      if (!cancelled && typeof d?.plan === 'string') setPlan(d.plan)
+    }).catch(() => {})
+    return () => { cancelled = true }
+  }, [])
+  const isFounder = plan != null && plan !== 'agency' && plan !== 'enterprise'
 
   return (
     <div style={{ padding: '32px 32px 64px', maxWidth: 1040, margin: '0 auto' }}>
@@ -106,15 +103,26 @@ export default function DashboardOverview({ sites, url, onUrlChange, onScan, sca
         </p>
       </div>
 
-      {/* 3 — Conditional body */}
-      {!hasScans ? <SampleSection /> : <RealCockpit sites={sites} />}
+      {/* 3 — Body: empty sample, or the full scan history */}
+      {!hasScans ? <SampleSection /> : <RealCockpit sites={sites} scans={scans} />}
+
+      {/* 4 — Contextual Agency nudge — founders only, one instance, no padlock */}
+      {isFounder && (
+        <div style={{ marginTop: 32, paddingTop: 18, borderTop: `0.5px solid ${C.border}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
+          <span style={{ fontFamily: BODY, fontSize: 13, color: C.inkMuted, lineHeight: 1.5 }}>
+            Managing multiple client sites? Agency adds white-label reports and a client dashboard.
+          </span>
+          <a href="/app/billing" style={{ fontFamily: MONO, fontSize: 11, letterSpacing: '0.08em', textTransform: 'uppercase', color: STEEL, border: `0.5px solid ${steelBorder}`, padding: '8px 14px', textDecoration: 'none', whiteSpace: 'nowrap' }}>
+            View plans →
+          </a>
+        </div>
+      )}
     </div>
   )
 }
 
-// Real monthly quota — mirrors the shell QuotaBlock query shape (month-count of reports
-// + plan from /api/profile + DASHBOARD_PLAN_MONTHLY_CAPS). Gray register; red only when
-// the quota is exhausted (a genuine "wrong/blocked" signal).
+// Real monthly quota — mirrors the shell QuotaBlock query shape. Gray register; red
+// only when the quota is exhausted (a genuine "blocked" signal).
 function ScansRemaining() {
   const [used, setUsed] = useState<number | null>(null)
   const [plan, setPlan] = useState<string>('free')
@@ -157,7 +165,7 @@ function ScansRemaining() {
   )
 }
 
-// ── 3a. No scans → "what you'll get" ghosted sample (monochrome) ──────────────────
+// ── No scans → "what you'll get" ghosted sample (monochrome) ──────────────────────
 const SAMPLE_FINDINGS: VerdictCardFinding[] = [
   { title: 'No social proof above the fold', color: C.crit, tag: 'HIGH' },
   { title: 'Primary CTA unclear on mobile', color: C.crit, tag: 'HIGH' },
@@ -186,50 +194,57 @@ function SampleSection() {
   )
 }
 
-// ── 3b. Has scans → verdict card(s) + metric strip below ──────────────────────────
-function RealCockpit({ sites }: { sites: SiteSummary[] }) {
+// ── Has scans → metric strip + full scan history (every scan, newest first) ───────
+function RealCockpit({ sites, scans }: { sites: SiteSummary[]; scans: ScanHistoryRow[] }) {
   const sitesScanned = sites.length
-  const reportsGenerated = sites.reduce((n, s) => n + s.history.length, 0)
+  const reportsGenerated = scans.length
   const valid = sites.map((s) => s.score).filter((n) => Number.isFinite(n))
   const avgScore = valid.length ? Math.round(valid.reduce((a, b) => a + b, 0) / valid.length) : null
 
-  const viewMode = resolveViewMode(sites.length)
-  const ordered = [...sites].sort((a, b) => new Date(b.lastScannedAt).getTime() - new Date(a.lastScannedAt).getTime())
-
   return (
     <section>
-      {viewMode === 'site' ? (
-        <div style={{ maxWidth: 560 }}>
-          <SiteVerdictCard site={ordered[0]} />
-        </div>
-      ) : (
-        <>
-          <SectionLabel>Your sites</SectionLabel>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 16 }}>
-            {ordered.map((s) => <SiteVerdictCard key={s.domain} site={s} />)}
-          </div>
-        </>
-      )}
-
       {/* Metric strip — flat, hairline-divided; numbers bright gray except band-colored score */}
-      <div style={{ marginTop: 28, display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1, background: C.border, border: `0.5px solid ${C.border}` }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1, background: C.border, border: `0.5px solid ${C.border}`, marginBottom: 36 }}>
         <MetricTile label="Sites tracked" value={String(sitesScanned)} />
         <MetricTile label="Avg score" value={avgScore == null ? '—' : String(avgScore)} valueColor={avgScore == null ? C.inkMuted : scoreColor(avgScore)} />
         <MetricTile label="Reports" value={String(reportsGenerated)} />
+      </div>
+
+      {/* Scan history — every scan, newest first; each opens the in-depth report */}
+      <SectionLabel>Scan history</SectionLabel>
+      <div style={{ borderTop: `0.5px solid ${C.border}`, borderLeft: `0.5px solid ${C.border}`, borderRight: `0.5px solid ${C.border}` }}>
+        {scans.map((s, i) => (
+          <ScanRow key={`${s.domain}-${s.date}-${i}`} scan={s} last={i === scans.length - 1} />
+        ))}
       </div>
     </section>
   )
 }
 
-function SiteVerdictCard({ site }: { site: SiteSummary }) {
+function ScanRow({ scan, last }: { scan: ScanHistoryRow; last: boolean }) {
+  const inner = (
+    <>
+      <VerdictRing score={scan.score} size="sm" animate={false} />
+      <span style={{ fontFamily: BODY, fontSize: 14, color: C.inkPrimary, flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{scan.domain}</span>
+      <span style={{ fontFamily: MONO, fontSize: 11, color: C.inkMuted, minWidth: 74, textAlign: 'right', flexShrink: 0 }}>{ordinal(estimatePercentile(scan.score))} pct</span>
+      <span style={{ fontFamily: MONO, fontSize: 11, color: C.inkMuted, minWidth: 96, textAlign: 'right', flexShrink: 0 }}>{formatDate(scan.date)}</span>
+      <span aria-hidden style={{ fontFamily: MONO, fontSize: 14, color: STEEL, flexShrink: 0 }}>→</span>
+    </>
+  )
+  const rowStyle: React.CSSProperties = {
+    display: 'flex', alignItems: 'center', gap: 16, width: '100%', textAlign: 'left',
+    padding: '14px 20px', borderBottom: last ? 'none' : `0.5px solid ${C.border}`, background: C.surface, textDecoration: 'none',
+  }
+  if (!scan.shareToken) return <div style={{ ...rowStyle, opacity: 0.7 }}>{inner}</div>
   return (
-    <VerdictCard
-      domain={site.domain}
-      score={site.score}
-      summary={deltaSummary(site)}
-      findings={toCardFindings(site)}
-      href={site.shareToken ? `/reports/${site.shareToken}` : undefined}
-    />
+    <a
+      href={`/reports/${scan.shareToken}`}
+      style={rowStyle}
+      onMouseEnter={e => { (e.currentTarget as HTMLAnchorElement).style.background = 'rgba(255,255,255,0.02)' }}
+      onMouseLeave={e => { (e.currentTarget as HTMLAnchorElement).style.background = C.surface }}
+    >
+      {inner}
+    </a>
   )
 }
 

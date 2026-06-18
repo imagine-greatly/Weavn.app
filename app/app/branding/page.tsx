@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import {
   type BrandingConfig,
   type ThemeMode,
@@ -46,6 +47,7 @@ const MAX_BYTES = 2 * 1024 * 1024
  * and which optional sections appear. Persisted via /api/branding (Agency-gated).
  */
 export default function BrandingConfigPage() {
+  const router = useRouter()
   const [loading, setLoading] = useState(true)
   const [plan, setPlan] = useState<string>('free')
   const [b, setB] = useState<BrandingConfig>(DEFAULT_BRANDING)
@@ -63,16 +65,19 @@ export default function BrandingConfigPage() {
         const res = await fetch('/api/branding')
         const data = await res.json().catch(() => ({}))
         if (cancelled) return
-        if (typeof data.plan === 'string') setPlan(data.plan)
+        const p = typeof data.plan === 'string' ? data.plan : 'free'
+        setPlan(p)
+        // Route gating: Branding (white-label) is an Agency/Enterprise capability.
+        if (p !== 'agency' && p !== 'enterprise') { router.replace('/app'); return }
         if (data.branding) setB({ ...DEFAULT_BRANDING, ...data.branding })
       } finally {
         if (!cancelled) setLoading(false)
       }
     })()
     return () => { cancelled = true }
-  }, [])
+  }, [router])
 
-  const isAgency = plan === 'agency'
+  const isAgency = plan === 'agency' || plan === 'enterprise'
   function set<K extends keyof BrandingConfig>(key: K, value: BrandingConfig[K]) {
     setB(prev => ({ ...prev, [key]: value }))
     setSaveMsg(null)
@@ -117,7 +122,7 @@ export default function BrandingConfigPage() {
 
   const Header = (
     <>
-      <p style={{ fontFamily: MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.2em', color: 'var(--surface-accent)', margin: '0 0 8px' }}>
+      <p style={{ fontFamily: MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.2em', color: C.inkMuted, margin: '0 0 8px' }}>
         Branding
       </p>
       <h1 style={{ fontFamily: DISP, fontWeight: 700, fontSize: 28, color: C.inkPrimary, margin: '0 0 6px', letterSpacing: '-0.5px' }}>
@@ -129,38 +134,11 @@ export default function BrandingConfigPage() {
     </>
   )
 
-  if (loading) {
+  // Loading, or a non-agency user mid-redirect — never render a broken/locked page.
+  if (loading || !isAgency) {
     return (
       <div style={{ minHeight: 'calc(100vh - 4rem)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <p style={{ fontFamily: MONO, fontSize: 12, color: C.inkMuted }}>Loading…</p>
-      </div>
-    )
-  }
-
-  // ── Locked preview (lower tiers) — CTA to Dashboard Billing, not marketing ──────
-  if (!isAgency) {
-    return (
-      <div className="dashboard-root-shell" style={{ padding: '32px 32px 56px', maxWidth: 1040, margin: '0 auto' }}>
-        {Header}
-        <div style={{ position: 'relative', border: `0.5px solid ${C.border}` }}>
-          <div style={{ filter: 'blur(2px)', opacity: 0.5, pointerEvents: 'none', userSelect: 'none', padding: 24 }} aria-hidden>
-            <BrandPreview branding={DEFAULT_BRANDING} />
-          </div>
-          <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(5,8,16,0.55)' }}>
-            <div style={{ position: 'relative', maxWidth: 420, textAlign: 'center', border: `0.5px solid ${C.amber}55`, background: 'rgba(10,14,24,0.95)', padding: '26px 28px' }}>
-              <span aria-hidden style={{ position: 'absolute', top: -1, left: -1, width: 10, height: 10, borderTop: `1px solid ${C.amber}`, borderLeft: `1px solid ${C.amber}` }} />
-              <span aria-hidden style={{ position: 'absolute', bottom: -1, right: -1, width: 10, height: 10, borderBottom: `1px solid ${C.amber}`, borderRight: `1px solid ${C.amber}` }} />
-              <p style={{ fontFamily: MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.16em', color: C.amber, margin: '0 0 8px' }}>🔒 Agency plan</p>
-              <p style={{ fontFamily: DISP, fontWeight: 700, fontSize: 18, color: C.inkPrimary, margin: '0 0 8px' }}>White-label reports</p>
-              <p style={{ fontFamily: BODY, fontSize: 13.5, color: C.inkSecondary, margin: '0 0 18px', lineHeight: 1.6 }}>
-                Hand clients a report under your own logo, accent, and cover. This is an Agency-tier capability.
-              </p>
-              <Link href="/app/billing" style={{ display: 'inline-block', fontFamily: MONO, fontSize: 11, letterSpacing: '0.06em', textTransform: 'uppercase', color: C.amber, border: `1px solid ${C.amber}88`, padding: '10px 18px', textDecoration: 'none' }}>
-                View plans →
-              </Link>
-            </div>
-          </div>
-        </div>
       </div>
     )
   }

@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { getSupabaseBrowserClient } from '@/lib/supabaseBrowser'
 import WeavingScan from '@/components/WeavingScan'
-import DashboardOverview from '@/components/dashboard/DashboardOverview'
+import DashboardOverview, { type ScanHistoryRow } from '@/components/dashboard/DashboardOverview'
 import { rollUpSites, type ReportRow, type SiteSummary } from '@/lib/dashboard'
 
 const MONO = "'IBM Plex Mono', monospace"
@@ -20,6 +20,7 @@ export default function DashboardHome() {
   const router = useRouter()
   const [loading, setLoading] = useState(true)
   const [sites, setSites] = useState<SiteSummary[]>([])
+  const [scans, setScans] = useState<ScanHistoryRow[]>([])
   const [url, setUrl] = useState('')
   const [phase, setPhase] = useState<Phase>('idle')
   const [error, setError] = useState<string | null>(null)
@@ -46,7 +47,10 @@ export default function DashboardHome() {
         .neq('status', 'error')
         .order('created_at', { ascending: false })
       if (cancelled) return
-      setSites(rollUpSites((data ?? []) as ReportRow[]))
+      const rows = (data ?? []) as ReportRow[]
+      setSites(rollUpSites(rows))
+      // Every scan (not rolled up) — newest first — for the Overview history list.
+      setScans(rows.map(r => ({ domain: r.domain, score: r.health_score ?? 0, date: r.created_at, shareToken: r.share_token })))
       setLoading(false)
     })()
     return () => { cancelled = true }
@@ -109,6 +113,7 @@ export default function DashboardHome() {
   return (
     <DashboardOverview
       sites={sites}
+      scans={scans}
       url={url}
       onUrlChange={setUrl}
       onScan={() => runScan(url)}

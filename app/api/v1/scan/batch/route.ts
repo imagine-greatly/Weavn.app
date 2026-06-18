@@ -13,8 +13,8 @@ import { scrapeSite } from "@/lib/scraper";
 import { detectSiteType } from "@/lib/siteType";
 import { extractPageData } from "@/lib/analyzePipeline";
 import { saveReport } from "@/lib/supabase";
-import { validateApiKey } from "@/lib/apiAuth";
-import { logScanUsage, checkScanAllowed } from "@/lib/usageTracking";
+import { validateApiKey, extractKeyPrefix } from "@/lib/apiAuth";
+import { logScanUsage, logRejectedRequest, checkScanAllowed } from "@/lib/usageTracking";
 import { apiError } from "@/lib/apiErrors";
 import { dispatchWebhook } from "@/lib/webhooks";
 import { fetchAndFingerprint, fingerprintsMatch } from "@/lib/fingerprint";
@@ -215,7 +215,7 @@ async function runOneScan(opts: BatchScanOptions): Promise<Record<string, unknow
   const durationMs = Date.now() - scanStart;
   // Real model cost from token usage; fall back to the synthetic constant only if usage was unavailable.
   const costUsd = realCostUsd ?? calculateScanCost({ pageCount, cached: false });
-  void logScanUsage(apiKey.id, { url: normalizedUrl, score, responseTimeMs: durationMs, status: "success", pageCount, costUsd, cached: false });
+  void logScanUsage(apiKey.id, { url: normalizedUrl, score, responseTimeMs: durationMs, status: "success", statusCode: 200, endpoint: "scan_batch", pageCount, costUsd, cached: false });
   updateBenchmark(site_type, score);
 
   const result: Record<string, unknown> = {
@@ -235,29 +235,37 @@ export async function POST(req: NextRequest) {
   const batchStart = Date.now();
 
   const apiKey = await validateApiKey(req);
-  if (!apiKey) return apiError("AUTH_INVALID", "Invalid API key", 401, rlHeaders(null));
+  if (!apiKey) {
+    void logRejectedRequest(null, { url: "", statusCode: 401, endpoint: "scan_batch", errorCode: "invalid_key", responseTimeMs: Date.now() - batchStart, keyPrefixAttempted: extractKeyPrefix(req) });
+    return apiError("AUTH_INVALID", "Invalid API key", 401, rlHeaders(null));
+  }
 
   // Per-account rate limit (requests/min) — one batch request counts as one. Fails open.
   const rl = await checkRateLimit(`api:${apiKey.id}`, API_RATE_LIMIT_PER_MIN);
   if (!rl.allowed) {
+    void logRejectedRequest(apiKey.id, { url: "", statusCode: 429, endpoint: "scan_batch", errorCode: "rate_limited", responseTimeMs: Date.now() - batchStart });
     return apiError("RATE_LIMITED", `Rate limit exceeded (${API_RATE_LIMIT_PER_MIN} requests/min). Retry in ${rl.retryAfterSeconds}s.`, 429, { ...rlHeaders(apiKey), "Retry-After": String(rl.retryAfterSeconds) });
   }
 
   const allowed = await checkScanAllowed(apiKey.id);
-  if (!allowed.allowed) return apiError("TRIAL_EXHAUSTED", "Scan limit reached. Upgrade your plan to continue.", 402, rlHeaders(apiKey));
+  if (!allowed.allowed) {
+    void logRejectedRequest(apiKey.id, { url: "", statusCode: 402, endpoint: "scan_batch", errorCode: "quota_exhausted", responseTimeMs: Date.now() - batchStart });
+    return apiError("TRIAL_EXHAUSTED", "Scan limit reached. Upgrade your plan to continue.", 402, rlHeaders(apiKey));
+  }
 
   let urls: string[], fields: string[], findingLimit: number, findingDepth: "brief" | "full", asyncMode: boolean;
   try {
     const body = await req.json();
     urls = Array.isArray(body?.urls) ? body.urls.filter((u: unknown) => typeof u === "string" && u.trim()) : [];
-    if (urls.length === 0) return apiError("INVALID_REQUEST", "urls is required and must not be empty", 400, rlHeaders(apiKey));
-    if (urls.length > 10) return apiError("INVALID_REQUEST", "Maximum 10 URLs per batch request", 400, rlHeaders(apiKey));
+    if (urls.length === 0) { void logRejectedRequest(apiKey.id, { url: "", statusCode: 400, endpoint: "scan_batch", errorCode: "validation", responseTimeMs: Date.now() - batchStart }); return apiError("INVALID_REQUEST", "urls is required and must not be empty", 400, rlHeaders(apiKey)); }
+    if (urls.length > 10) { void logRejectedRequest(apiKey.id, { url: "", statusCode: 400, endpoint: "scan_batch", errorCode: "validation", responseTimeMs: Date.now() - batchStart }); return apiError("INVALID_REQUEST", "Maximum 10 URLs per batch request", 400, rlHeaders(apiKey)); }
     fields = Array.isArray(body?.fields) ? body.fields.filter((f: string) => ALL_FIELDS.includes(f)) : [];
     findingLimit = Math.min(20, Math.max(1, typeof body?.finding_limit === "number" ? body.finding_limit : 10));
     const rawDepth = typeof body?.finding_depth === "string" ? body.finding_depth : "full";
     findingDepth = rawDepth === "brief" ? "brief" : "full";
     asyncMode = body?.async === true;
   } catch {
+    void logRejectedRequest(apiKey.id, { url: "", statusCode: 400, endpoint: "scan_batch", errorCode: "validation", responseTimeMs: Date.now() - batchStart });
     return apiError("INVALID_REQUEST", "Invalid request body", 400, rlHeaders(apiKey));
   }
 
@@ -294,6 +302,7 @@ export async function POST(req: NextRequest) {
           })
           .catch(err => {
             console.error("[API v1 batch] async scan failed:", url, err instanceof Error ? err.message : err);
+            void logScanUsage(apiKey.id, { url, score: null, responseTimeMs: Date.now() - batchStart, status: "error", statusCode: 500, endpoint: "scan_batch", errorCode: "scan_failed" });
             dispatchWebhook(apiKey.id, { event: "scan.failed", scan_id: scanIds[i], url, score: null, data: { error: err instanceof Error ? err.message : "Scan failed" } });
           })
       ));
@@ -311,6 +320,7 @@ export async function POST(req: NextRequest) {
     if (r.status === "fulfilled") {
       return { url: urls[i], status: "success" as const, data: r.value };
     }
+    void logScanUsage(apiKey.id, { url: urls[i], score: null, responseTimeMs: Date.now() - batchStart, status: "error", statusCode: 500, endpoint: "scan_batch", errorCode: "scan_failed" });
     return { url: urls[i], status: "failed" as const, error: r.reason instanceof Error ? r.reason.message : "Scan failed" };
   });
 

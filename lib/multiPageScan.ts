@@ -199,6 +199,8 @@ async function scanPageForMulti(
     score,
     responseTimeMs: durationMs,
     status: "success",
+    statusCode: 200,
+    endpoint: "scan",
     pageCount: 1,
     costUsd: realCostUsd,
     cached: false,

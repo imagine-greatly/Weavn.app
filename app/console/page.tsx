@@ -1058,6 +1058,7 @@ export default function DeveloperPortal() {
       .from('api_usage')
       .select('cost_usd', { count: 'exact' })
       .eq('api_key_id', kr.id)
+      .eq('status', 'success')   // billable scans only — exclude error/reject instrumentation rows
       .gte('created_at', monthStart)
       .limit(1000)
     setMonthScans(monthCount ?? (monthRows?.length ?? 0))

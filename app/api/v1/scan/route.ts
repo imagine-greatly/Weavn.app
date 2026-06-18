@@ -15,8 +15,8 @@ import { scrapeSite } from "@/lib/scraper";
 import { detectSiteType } from "@/lib/siteType";
 import { extractPageData } from "@/lib/analyzePipeline";
 import { saveReport } from "@/lib/supabase";
-import { validateApiKey } from "@/lib/apiAuth";
-import { logScanUsage, checkScanAllowed, deductCredits, InsufficientCreditsError } from "@/lib/usageTracking";
+import { validateApiKey, extractKeyPrefix } from "@/lib/apiAuth";
+import { logScanUsage, logRejectedRequest, checkScanAllowed, deductCredits, InsufficientCreditsError } from "@/lib/usageTracking";
 import { dispatchWebhook } from "@/lib/webhooks";
 import { runMultiPageScan } from "@/lib/multiPageScan";
 import { fetchAndFingerprint, fingerprintsMatch } from "@/lib/fingerprint";
@@ -150,7 +150,7 @@ async function executeScan(p: ScanParams): Promise<ScanResult> {
   }
   if (scrapeError || !extraction?.rawHtml) {
     await markFailed();
-    void logScanUsage(apiKeyId, { url: normalizedUrl, score: null, responseTimeMs: Date.now() - scanStart, status: "error" });
+    void logScanUsage(apiKeyId, { url: normalizedUrl, score: null, responseTimeMs: Date.now() - scanStart, status: "error", statusCode: 500, endpoint: "scan", errorCode: "scrape_failed" });
     throw new Error("Could not extract content from this URL");
   }
 
@@ -227,7 +227,7 @@ async function executeScan(p: ScanParams): Promise<ScanResult> {
     const msg = err instanceof Error ? err.message : "Analysis failed.";
     console.error(`[API v1] ANALYZE ERROR | domain=${domain} | ${msg}`);
     await markFailed();
-    void logScanUsage(apiKeyId, { url: normalizedUrl, score: null, responseTimeMs: Date.now() - scanStart, status: "error" });
+    void logScanUsage(apiKeyId, { url: normalizedUrl, score: null, responseTimeMs: Date.now() - scanStart, status: "error", statusCode: 500, endpoint: "scan", errorCode: "analyze_error" });
     throw new Error(`Scan failed: ${msg}`);
   }
 
@@ -248,7 +248,7 @@ async function executeScan(p: ScanParams): Promise<ScanResult> {
     parsed = JSON.parse(rawJson) as ApiResponse;
   } catch {
     await markFailed();
-    void logScanUsage(apiKeyId, { url: normalizedUrl, score: null, responseTimeMs: Date.now() - scanStart, status: "error" });
+    void logScanUsage(apiKeyId, { url: normalizedUrl, score: null, responseTimeMs: Date.now() - scanStart, status: "error", statusCode: 500, endpoint: "scan", errorCode: "json_parse" });
     throw new Error("Scan failed: invalid JSON response from model.");
   }
 
@@ -295,7 +295,7 @@ async function executeScan(p: ScanParams): Promise<ScanResult> {
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Failed to save report.";
     await markFailed();
-    void logScanUsage(apiKeyId, { url: normalizedUrl, score: null, responseTimeMs: Date.now() - scanStart, status: "error" });
+    void logScanUsage(apiKeyId, { url: normalizedUrl, score: null, responseTimeMs: Date.now() - scanStart, status: "error", statusCode: 500, endpoint: "scan", errorCode: "save_failed" });
     throw new Error(`Scan failed: ${msg}`);
   }
 
@@ -312,7 +312,7 @@ async function executeScan(p: ScanParams): Promise<ScanResult> {
   const durationMs = Date.now() - scanStart;
   // Real model cost from token usage; fall back to the synthetic constant only if usage was unavailable.
   const costUsd = realCostUsd ?? calculateScanCost({ pageCount, cached: false });
-  void logScanUsage(apiKeyId, { url: normalizedUrl, score, responseTimeMs: durationMs, status: "success", pageCount, costUsd, cached: false });
+  void logScanUsage(apiKeyId, { url: normalizedUrl, score, responseTimeMs: durationMs, status: "success", statusCode: 200, endpoint: "scan", pageCount, costUsd, cached: false });
   updateBenchmark(site_type, score);
 
   // Benchmark
@@ -404,6 +404,7 @@ export async function POST(req: NextRequest) {
   // 1. Auth
   const apiKey = await validateApiKey(req);
   if (!apiKey) {
+    void logRejectedRequest(null, { url: "", statusCode: 401, endpoint: "scan", errorCode: "invalid_key", responseTimeMs: Date.now() - scanStart, keyPrefixAttempted: extractKeyPrefix(req) });
     return apiError("AUTH_INVALID", "Invalid API key", 401, rlHeaders(null));
   }
 
@@ -411,6 +412,7 @@ export async function POST(req: NextRequest) {
   // the monthly quota. Fails open on infra error.
   const rl = await checkRateLimit(`api:${apiKey.id}`, API_RATE_LIMIT_PER_MIN);
   if (!rl.allowed) {
+    void logRejectedRequest(apiKey.id, { url: "", statusCode: 429, endpoint: "scan", errorCode: "rate_limited", responseTimeMs: Date.now() - scanStart });
     return apiError(
       "RATE_LIMITED",
       `Rate limit exceeded (${API_RATE_LIMIT_PER_MIN} requests/min). Retry in ${rl.retryAfterSeconds}s.`,
@@ -424,6 +426,7 @@ export async function POST(req: NextRequest) {
   // allowed=true with overage:true and are billed at the per-scan overage rate.
   const allowedResult = await checkScanAllowed(apiKey.id);
   if (!allowedResult.allowed) {
+    void logRejectedRequest(apiKey.id, { url: "", statusCode: 402, endpoint: "scan", errorCode: "quota_exhausted", responseTimeMs: Date.now() - scanStart });
     return NextResponse.json(
       {
         error: {
@@ -439,6 +442,13 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  // Log a 400 validation reject, then return the SAME apiError as before — the response
+  // body, status, and headers are byte-identical. Shared by every url-validation path below.
+  const invalidUrl = () => {
+    void logRejectedRequest(apiKey.id, { url: "", statusCode: 400, endpoint: "scan", errorCode: "validation", responseTimeMs: Date.now() - scanStart });
+    return apiError("INVALID_URL", "url is required", 400, rlHeaders(apiKey));
+  };
+
   // 3. Parse body
   let normalizedUrl: string;
   let pages: number;
@@ -452,7 +462,7 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const rawUrl = typeof body?.url === "string" ? body.url : "";
-    if (!rawUrl) return apiError("INVALID_URL", "url is required", 400, rlHeaders(apiKey));
+    if (!rawUrl) return invalidUrl();
     normalizedUrl = normalizeUrl(rawUrl);
     pages = Math.max(1, Math.min(5, typeof body?.pages === "number" ? body.pages : 1));
     fields = Array.isArray(body?.fields) ? (body.fields as string[]).filter((f: string) => ALL_FIELDS.includes(f)) : [];
@@ -466,17 +476,17 @@ export async function POST(req: NextRequest) {
       : null;
     multiPagePaths = rawPagesList && rawPagesList.length > 0 ? rawPagesList : null;
   } catch {
-    return apiError("INVALID_URL", "url is required", 400, rlHeaders(apiKey));
+    return invalidUrl();
   }
 
-  if (!normalizedUrl) return apiError("INVALID_URL", "url is required", 400, rlHeaders(apiKey));
+  if (!normalizedUrl) return invalidUrl();
   try { new URL(normalizedUrl); } catch {
-    return apiError("INVALID_URL", "url is required", 400, rlHeaders(apiKey));
+    return invalidUrl();
   }
 
   const domain = getDomain(normalizedUrl);
   if (!domain || !domain.includes(".")) {
-    return apiError("INVALID_URL", "url is required", 400, rlHeaders(apiKey));
+    return invalidUrl();
   }
 
   const cacheUrl = normalizedUrl.toLowerCase().replace(/\/+$/, "");

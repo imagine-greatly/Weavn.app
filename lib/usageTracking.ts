@@ -69,6 +69,9 @@ export async function logScanUsage(
     score: number | null;
     responseTimeMs: number;
     status: "success" | "error";
+    statusCode: number;
+    endpoint?: "scan" | "scan_batch";
+    errorCode?: string | null;
     pageCount?: number;
     costUsd?: number;
     cached?: boolean;
@@ -82,6 +85,9 @@ export async function logScanUsage(
       score: data.score,
       response_time_ms: data.responseTimeMs,
       status: data.status,
+      status_code: data.statusCode,
+      endpoint: data.endpoint ?? "scan",
+      error_code: data.errorCode ?? null,
       page_count: data.pageCount ?? 1,
       cost_usd: data.costUsd ?? 0,
       cached: data.cached ?? false,
@@ -109,6 +115,45 @@ export async function logScanUsage(
     }
   } catch (err) {
     console.error("[usageTracking] logScanUsage failed:", err);
+  }
+}
+
+/**
+ * Log a REJECTED request (401/402/429/400) to api_usage for instrumentation. A reject
+ * consumed NO scan, so this deliberately does NOT call increment_scans_used and does
+ * NOT report to Stripe — it only writes the log row. status text is 'error' (back-compat)
+ * with status_code/error_code carrying the real class. `apiKeyId` may be null (401, key
+ * unknown); such rows are correctly invisible to per-user RLS SELECT. Never throws.
+ */
+export async function logRejectedRequest(
+  apiKeyId: string | null,
+  data: {
+    url: string;
+    statusCode: number;
+    endpoint: "scan" | "scan_batch";
+    errorCode: string;
+    responseTimeMs?: number;
+    keyPrefixAttempted?: string | null;
+  }
+): Promise<void> {
+  try {
+    const supabase = getServiceClient();
+    await supabase.from("api_usage").insert({
+      api_key_id: apiKeyId,
+      url: data.url,
+      score: null,
+      response_time_ms: data.responseTimeMs ?? 0,
+      status: "error",
+      status_code: data.statusCode,
+      endpoint: data.endpoint,
+      error_code: data.errorCode,
+      page_count: 1,
+      cost_usd: 0,
+      cached: false,
+      key_prefix_attempted: data.keyPrefixAttempted ?? null,
+    });
+  } catch (err) {
+    console.error("[usageTracking] logRejectedRequest failed:", err);
   }
 }
 

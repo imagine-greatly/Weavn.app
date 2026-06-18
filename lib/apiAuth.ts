@@ -53,6 +53,18 @@ export async function validateApiKey(req: NextRequest): Promise<ApiKeyRecord | n
   return data as ApiKeyRecord;
 }
 
+/**
+ * Prefix of the PRESENTED bearer token, for logging a FAILED auth attempt (401).
+ * Returns the public prefix ONLY (first 12 chars, e.g. "weavn_live_7") — NEVER the
+ * full key/secret, even a failed one. Returns null when no token was presented.
+ */
+export function extractKeyPrefix(req: NextRequest): string | null {
+  const authHeader = req.headers.get("authorization") ?? "";
+  const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7).trim() : "";
+  if (!token) return null;
+  return token.slice(0, 12); // public prefix segment only — not the secret
+}
+
 export function generateApiKey(): { key: string; hash: string; prefix: string } {
   const random = randomBytes(16).toString("hex"); // 32 hex chars
   const key = `weavn_live_${random}`;

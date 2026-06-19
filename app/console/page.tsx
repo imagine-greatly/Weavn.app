@@ -18,7 +18,7 @@ import CornerBrackets from '@/components/ui/CornerBrackets'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-type TabId = 'overview' | 'scans' | 'apikeys' | 'webhooks' | 'billing' | 'docs'
+type TabId = 'overview' | 'usage' | 'apikeys' | 'webhooks' | 'billing' | 'docs'
 
 interface ScanRow {
   domain: string
@@ -102,7 +102,7 @@ function webhookStatusCode(raw: string | number | null): number {
 
 const TAB_TITLES: Record<TabId, string> = {
   overview: 'Overview',
-  scans:    'Scans',
+  usage:    'Usage',
   apikeys:  'API Keys',
   webhooks: 'Webhooks',
   billing:  'Billing',
@@ -210,11 +210,7 @@ function MethodBadge({ method }: { method: 'POST' | 'GET' }) {
 // ── Overview Tab ──────────────────────────────────────────────────────────────
 
 interface OverviewTabProps {
-  monthScans: number
-  monthSpend: number
-  avgScore: number | null
   keyPrefix: string | null
-  scanRows: ScanRow[]
   createdLabel: string
   lastUsedLabel: string
   rotating: boolean
@@ -223,309 +219,367 @@ interface OverviewTabProps {
   scansUsed: number
   isTrialPlan: boolean
   plan: string
-  lastScanMs: number | null
+  monthScans: number
+  monthSpend: number
+  onViewUsage: () => void
+  onViewDocs: () => void
 }
 
-function OverviewTab({ monthScans, monthSpend, avgScore, keyPrefix, scanRows, createdLabel, lastUsedLabel, rotating, rotateError, onRotate, scansUsed, isTrialPlan, plan, lastScanMs }: OverviewTabProps) {
+function OverviewTab({ keyPrefix, createdLabel, lastUsedLabel, rotating, rotateError, onRotate, scansUsed, isTrialPlan, plan, monthScans, monthSpend, onViewUsage, onViewDocs }: OverviewTabProps) {
   const [keyCopied, setKeyCopied] = useState(false)
   const [curlCopied, setCurlCopied] = useState(false)
-  const quickstartRef = useRef<HTMLDivElement>(null)
-  const hasScans = scanRows.length > 0
-  const trialPct = isTrialPlan ? Math.min(100, Math.round((scansUsed / FREE_API_TRIAL_SCANS) * 100)) : 100
 
-  // The full secret is unrecoverable post-creation (only the prefix is stored), so the
-  // snippet carries the real key PREFIX; the full key is shown once at creation/rotation.
+  // Only the key PREFIX is recoverable (the full secret is shown once at creation/
+  // rotation); the snippet + copy carry the prefix.
   const keyForCurl = keyPrefix ?? 'YOUR_API_KEY'
-  const keyMasked = keyPrefix ? `${keyPrefix}••••••••••••` : 'YOUR_API_KEY'
+  const keyMasked = keyPrefix ? `${keyPrefix}••••••••••••••••` : 'YOUR_API_KEY'
   const curlText =
     `curl -X POST https://api.weavn.app/v1/scan \\\n` +
     `  -H "Authorization: Bearer ${keyForCurl}" \\\n` +
     `  -H "Content-Type: application/json" \\\n` +
     `  -d '{"url": "https://yoursite.com"}'`
 
-  async function copyCurl() {
-    try { await navigator.clipboard.writeText(curlText); setCurlCopied(true); setTimeout(() => setCurlCopied(false), 2000) } catch { /* clipboard unavailable */ }
-  }
   async function copyKey() {
     if (!keyPrefix) return
     try { await navigator.clipboard.writeText(keyPrefix); setKeyCopied(true); setTimeout(() => setKeyCopied(false), 2000) } catch { /* clipboard unavailable */ }
   }
-  const focusQuickstart = () => quickstartRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  async function copyCurl() {
+    try { await navigator.clipboard.writeText(curlText); setCurlCopied(true); setTimeout(() => setCurlCopied(false), 2000) } catch { /* clipboard unavailable */ }
+  }
 
-  const engineLine = !hasScans
-    ? 'warm · idle · 307 checks · 27 categories · ~90s median'
-    : lastScanMs != null
-      ? `warm · last scan ${Math.round(lastScanMs / 1000)}s · 307 checks · 27 categories`
-      : 'warm · 307 checks · 27 categories'
+  // Access readout — trial remaining (Playground) vs included-this-period (paid tiers).
+  // Read straight from API_PLANS + the live api_keys.plan. No invented numbers.
+  const apiPlan = API_PLANS[plan as ApiTier]
+  const overageUsd = apiPlan?.overageUsd ?? API_PLANS.dev.overageUsd
+  const included = apiPlan?.includedScans ?? null
+  const meter = isTrialPlan
+    ? { label: 'Trial remaining', value: `${Math.max(0, FREE_API_TRIAL_SCANS - scansUsed)} / ${FREE_API_TRIAL_SCANS}`, pct: Math.min(100, Math.round((scansUsed / FREE_API_TRIAL_SCANS) * 100)) as number | null, sub: 'lifetime free trial' }
+    : included != null
+      ? { label: 'Included this period', value: `${monthScans} / ${included}`, pct: Math.min(100, Math.round((monthScans / included) * 100)) as number | null, sub: 'resets on the 1st' }
+      : { label: 'Usage', value: `${monthScans}`, pct: null as number | null, sub: 'this month · custom volume' }
+  const planName = apiPlan?.name ?? (plan.charAt(0).toUpperCase() + plan.slice(1))
 
-  // Steel (--interactive token) sparkline — secondary baseline visual, not a verdict.
-  const Sparkline = () => (
-    <svg width="100%" height={18} viewBox="0 0 100 18" preserveAspectRatio="none" style={{ display: 'block', marginTop: 10 }} aria-hidden>
-      <polyline points="0,13 18,10 36,12 54,6 72,9 90,5 100,8" fill="none" stroke="#6F9BC6" strokeWidth={1} strokeOpacity={0.28} />
-    </svg>
-  )
-
-  const quickstart = (compact: boolean) => (
-    <div ref={quickstartRef} className="relative overflow-hidden bg-background-raised mb-px" style={{ border: '0.5px solid color-mix(in srgb, var(--surface-accent) 22%, rgba(255,255,255,0.08))', padding: compact ? '18px 20px' : '24px' }}>
-      <CornerBrackets corners={['tl', 'tr']} size={12} />
-      {!compact && <Bloom size={520} intensity={0.12} style={{ top: '18%' }} />}
-      <div className="relative" style={{ zIndex: 1 }}>
-        <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
-          <span className="font-mono text-xs uppercase tracking-widest" style={{ color: 'var(--surface-accent)' }}>
-            {compact ? 'QUICKSTART · reference' : 'QUICKSTART — fire your first scan'}
-          </span>
-          <button onClick={copyCurl} className="font-mono text-xs px-2 py-1 cursor-pointer bg-transparent uppercase tracking-wider" style={{ color: 'var(--surface-accent)', border: '0.5px solid color-mix(in srgb, var(--surface-accent) 45%, transparent)' }}>
-            {curlCopied ? 'Copied ✓' : 'Copy'}
-          </button>
-        </div>
-        <div className="bg-background-subtle border border-background-border p-4">
-          <pre className="font-mono text-xs leading-relaxed m-0 whitespace-pre-wrap">
-            <span className="text-purple-DEFAULT">curl</span>
-            <span className="text-text-tertiary">{' -X POST '}</span>
-            <span style={{ color: '#6F9BC6' }}>https://api.weavn.app/v1/scan</span>
-            <span className="text-text-tertiary">{' \\\n  -H "Authorization: Bearer '}</span>
-            <span style={{ color: '#6F9BC6' }}>{keyMasked}</span>
-            <span className="text-text-tertiary">{'" \\\n  -H "Content-Type: application/json" \\\n  -d \'{"url": "'}</span>
-            <span className="text-text-secondary">https://yoursite.com</span>
-            <span className="text-text-tertiary">{'"}\''}</span>
-          </pre>
-        </div>
-        {/* RUNNABLE SCAN MOUNTS HERE — phase 2 */}
-        {!compact ? (
-          <p className="font-mono text-xs text-text-tertiary mt-3">
-            Full key is shown once at creation — the snippet carries your key prefix.
-          </p>
-        ) : null}
-      </div>
-    </div>
-  )
-
-  const metricStrip = (
-    <div className="grid grid-cols-3 gap-px bg-background-border mb-px">
-      <div className="bg-background-raised p-6">
-        <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mb-2">Scans this month</div>
-        <div className="font-display font-extrabold" style={{ fontSize: 27, color: '#E6E9EE' }}>{monthScans}</div>
-        <Sparkline />
-      </div>
-      <div className="bg-background-raised p-6">
-        <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mb-2">Spent this month</div>
-        <div className="font-display font-extrabold" style={{ fontSize: 27, color: '#E6E9EE' }}>${monthSpend.toFixed(2)}</div>
-        <Sparkline />
-      </div>
-      <div className="bg-background-raised p-6">
-        <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mb-2">Avg score</div>
-        {avgScore == null ? (
-          <>
-            <div className="font-display font-extrabold" style={{ fontSize: 27, color: '#6E7587' }}>—</div>
-            <div className="font-mono text-xs text-text-tertiary mt-2">no scans yet</div>
-          </>
-        ) : (
-          <>
-            <div className="font-display font-extrabold" style={{ fontSize: 27, color: scoreColor(avgScore) }}>{avgScore}</div>
-            <Sparkline />
-          </>
-        )}
-      </div>
-    </div>
-  )
-
-  const credentials = (
-    <div className="grid grid-cols-2 gap-px bg-background-border mb-px">
-      {/* API KEY */}
-      <div className="bg-background-raised p-6">
-        <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mb-3">API key</div>
-        <div className="flex items-center gap-3">
-          <div className="font-mono text-sm text-text-secondary bg-background-subtle border border-background-border px-4 py-2.5 flex-1 min-w-0 truncate">
-            {keyPrefix ? `${keyPrefix}••••••••••••••••••••••••••` : '— no active key —'}
-          </div>
-          <button onClick={copyKey} disabled={!keyPrefix} className="border border-background-border text-text-tertiary font-body text-xs px-3 py-2.5 hover:text-text-primary hover:border-text-tertiary transition-colors duration-150 cursor-pointer bg-transparent flex-shrink-0 disabled:opacity-40 disabled:cursor-not-allowed">
-            {keyCopied ? 'Copied!' : 'Copy'}
-          </button>
-          <button onClick={onRotate} disabled={rotating || !keyPrefix} className="text-text-tertiary font-body text-xs hover:text-text-primary transition-colors duration-150 bg-transparent border-0 cursor-pointer flex-shrink-0 disabled:opacity-40 disabled:cursor-not-allowed">
-            {rotating ? 'Rotating…' : 'Regenerate →'}
-          </button>
-        </div>
-        <div className="font-mono text-xs text-text-tertiary mt-3">Created {createdLabel} · Last used {lastUsedLabel}</div>
-        {rotateError ? <div className="font-mono text-xs text-severity-critical mt-2">{rotateError}</div> : null}
-      </div>
-      {/* QUOTA */}
-      <div className="bg-background-raised p-6">
-        <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mb-3">Quota</div>
-        {isTrialPlan ? (
-          <>
-            <div className="font-mono text-sm text-text-primary">{scansUsed} / {FREE_API_TRIAL_SCANS} <span className="text-text-tertiary">scans · free trial</span></div>
-            <div className="relative w-full h-px bg-background-border mt-3">
-              <div className="absolute top-0 left-0 h-full" style={{ width: `${trialPct}%`, background: 'var(--surface-accent)' }} />
-            </div>
-            <div className="font-mono text-xs text-text-tertiary mt-2">lifetime trial ceiling</div>
-          </>
-        ) : (
-          <div className="font-mono text-sm text-text-secondary capitalize">{plan} · usage-based</div>
-        )}
-      </div>
-    </div>
-  )
-
-  const recent = (
-    <div className="bg-background-raised border border-background-border mt-px">
-      <div className="px-6 py-4 border-b border-background-border flex justify-between items-center">
-        <span className="font-mono text-xs text-text-tertiary uppercase tracking-widest">Recent scans</span>
-      </div>
-      {hasScans ? (
-        scanRows.slice(0, 8).map((row, i) => (
-          <div key={i} className="flex items-center gap-4 px-6 py-4 border-b border-background-border last:border-0 hover:bg-background-interactive transition-colors duration-150 cursor-pointer">
-            <VerdictRing score={row.score} size="sm" animate={false} />
-            <span className="font-body text-sm text-text-primary flex-1 min-w-0 truncate">{row.domain}</span>
-            <span className="font-mono text-xs text-text-tertiary flex-shrink-0">{ordinal(estimatePercentile(row.score))} pct</span>
-            <span className="font-mono text-xs text-text-tertiary flex-shrink-0">307 checks</span>
-            <span className="font-mono text-xs text-text-tertiary flex-shrink-0 ml-auto">{row.time}</span>
-          </div>
-        ))
-      ) : (
-        <>
-          <div className="flex items-center gap-4 px-6 py-4" style={{ opacity: 0.55, borderTop: '1px dashed rgba(255,255,255,0.12)' }}>
-            <VerdictRing score={37} size="sm" animate={false} />
-            <span className="font-body text-sm text-text-primary flex-1 min-w-0 truncate">acme-saas.com</span>
-            <span className="font-mono text-xs text-text-tertiary flex-shrink-0">19th pct</span>
-            <span className="font-mono text-xs text-text-tertiary flex-shrink-0">307 checks</span>
-          </div>
-          <div className="px-6 py-3 font-mono text-xs text-text-tertiary" style={{ opacity: 0.7 }}>↑ sample — your scans will appear here, newest first</div>
-        </>
-      )}
-    </div>
-  )
+  // Purple is rationed to affordances; gray everything else. No bloom/brackets/glow.
+  const purpleBtn: React.CSSProperties = { color: 'var(--surface-accent)', border: '0.5px solid color-mix(in srgb, var(--surface-accent) 45%, transparent)' }
+  const dim = '#5A6070'
 
   return (
-    <div className="px-8 py-8">
+    <div className="px-8 py-8" style={{ maxWidth: 1040 }}>
       {/* 1 — Header */}
-      <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
+      <div className="flex items-center justify-between mb-7 flex-wrap gap-3">
         <div className="flex items-center gap-3">
-          <h1 className="font-display font-extrabold text-text-primary" style={{ fontSize: 21, letterSpacing: '-0.3px' }}>Overview</h1>
-          <span className="font-mono uppercase" style={{ fontSize: 9.5, letterSpacing: '0.18em', color: 'var(--surface-accent)', border: '0.5px solid color-mix(in srgb, var(--surface-accent) 50%, transparent)', padding: '3px 8px' }}>Developer</span>
+          <h1 className="font-display font-bold text-ink-primary" style={{ fontSize: 21, letterSpacing: '-0.3px' }}>Overview</h1>
+          <span className="font-mono uppercase text-ink-muted border border-background-border" style={{ fontSize: 9.5, letterSpacing: '0.18em', padding: '3px 8px' }}>Developer</span>
         </div>
-        <button onClick={focusQuickstart} className="font-mono uppercase cursor-pointer" style={{ fontSize: 11, letterSpacing: '0.08em', color: 'var(--surface-accent)', background: 'color-mix(in srgb, var(--surface-accent) 9%, transparent)', border: '0.5px solid color-mix(in srgb, var(--surface-accent) 50%, transparent)', padding: '8px 16px' }}>New scan →</button>
+        <button onClick={onViewDocs} className="font-mono uppercase cursor-pointer bg-transparent text-ink-muted hover:text-ink-secondary transition-colors" style={{ fontSize: 11, letterSpacing: '0.08em' }}>Docs →</button>
       </div>
 
-      {/* 2 — Engine readout strip */}
-      <div className="relative overflow-hidden flex items-center gap-3 mb-6 flex-wrap" style={{ border: '0.5px solid color-mix(in srgb, var(--surface-accent) 18%, rgba(255,255,255,0.06))', background: 'color-mix(in srgb, var(--surface-accent) 4%, transparent)', padding: '10px 16px' }}>
-        <style>{`@keyframes enginePulse{0%,100%{opacity:1}50%{opacity:0.3}} .engine-dot{animation:enginePulse 2s ease-in-out infinite}`}</style>
-        <span aria-hidden className="engine-dot" style={{ width: 7, height: 7, flexShrink: 0, background: hasScans ? 'var(--surface-accent)' : '#6F9BC6', boxShadow: hasScans ? '0 0 6px var(--surface-accent)' : '0 0 6px #6F9BC6' }} />
-        <span className="font-mono uppercase" style={{ fontSize: 10, letterSpacing: '0.2em', color: 'var(--surface-accent)' }}>Engine</span>
-        <span className="font-mono" style={{ fontSize: 11.5, color: '#9398A8' }}>{engineLine}</span>
+      {/* 2 — YOUR API KEY (the hero) */}
+      <div className="bg-background-raised border border-background-border p-6 mb-px">
+        <div className="font-mono uppercase text-ink-muted mb-3" style={{ fontSize: 10, letterSpacing: '0.2em' }}>Your API key</div>
+        <div className="flex items-center gap-3 flex-wrap">
+          <code className="font-mono text-ink-primary bg-background-subtle border border-background-border flex-1 min-w-0 truncate" style={{ fontSize: 15, padding: '12px 16px' }}>{keyPrefix ? keyMasked : '— no active key —'}</code>
+          <button onClick={copyKey} disabled={!keyPrefix} className="font-mono uppercase cursor-pointer bg-transparent disabled:opacity-40 disabled:cursor-not-allowed" style={{ ...purpleBtn, fontSize: 11, letterSpacing: '0.08em', padding: '12px 14px' }}>{keyCopied ? 'Copied' : 'Copy'}</button>
+          <button onClick={onRotate} disabled={rotating || !keyPrefix} className="font-mono uppercase cursor-pointer bg-transparent border border-background-border text-ink-secondary hover:text-ink-primary disabled:opacity-40 disabled:cursor-not-allowed" style={{ fontSize: 11, letterSpacing: '0.08em', padding: '12px 14px' }}>{rotating ? 'Rotating…' : 'Regenerate'}</button>
+        </div>
+        <div className="font-mono mt-3" style={{ fontSize: 11, color: dim }}>Created {createdLabel} · Last used {lastUsedLabel} · all permissions</div>
+        {rotateError ? <div className="font-mono text-severity-critical mt-2" style={{ fontSize: 11 }}>{rotateError}</div> : null}
       </div>
 
-      {/* 3+ — quickstart-first when empty; cockpit-first (demoted quickstart) when returning */}
-      {!hasScans ? (
-        <>
-          {quickstart(false)}
-          {metricStrip}
-          {credentials}
-          {recent}
-        </>
-      ) : (
-        <>
-          {metricStrip}
-          {credentials}
-          {recent}
-          <div className="mt-6">{quickstart(true)}</div>
-        </>
-      )}
+      {/* 3 — FIRE YOUR FIRST SCAN */}
+      <div className="bg-background-raised border border-background-border p-6 mb-px">
+        <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+          <div className="flex items-baseline gap-3 flex-wrap">
+            <span className="font-mono uppercase" style={{ fontSize: 10, letterSpacing: '0.2em', color: 'var(--surface-accent)' }}>Fire your first scan</span>
+            <span className="font-mono text-ink-muted" style={{ fontSize: 10.5 }}>~90s · returns structured JSON</span>
+          </div>
+          <button onClick={copyCurl} className="font-mono uppercase cursor-pointer bg-transparent" style={{ ...purpleBtn, fontSize: 11, letterSpacing: '0.08em', padding: '4px 8px' }}>{curlCopied ? 'Copied ✓' : 'Copy'}</button>
+        </div>
+        <pre className="bg-background-subtle border border-background-border p-4 font-mono leading-relaxed m-0 whitespace-pre-wrap" style={{ fontSize: 12 }}>
+          <span className="text-purple-DEFAULT">curl</span>
+          <span className="text-ink-muted">{' -X POST '}</span>
+          <span style={{ color: '#6F9BC6' }}>https://api.weavn.app/v1/scan</span>
+          <span className="text-ink-muted">{' \\\n  -H "Authorization: Bearer '}</span>
+          <span style={{ color: '#6F9BC6' }}>{keyMasked}</span>
+          <span className="text-ink-muted">{'" \\\n  -H "Content-Type: application/json" \\\n  -d \'{"url": "'}</span>
+          <span className="text-ink-secondary">https://yoursite.com</span>
+          <span className="text-ink-muted">{'"}\''}</span>
+        </pre>
+        <div className="font-mono mt-3" style={{ fontSize: 11, color: dim }}>Paste your full key — it&apos;s shown once at creation. Lost it? Regenerate above.</div>
+      </div>
+
+      {/* 4 — ACCESS READOUT */}
+      <div className="grid grid-cols-3 gap-px bg-background-border mb-px">
+        <div className="bg-background-raised p-6">
+          <div className="font-mono uppercase text-ink-muted mb-2" style={{ fontSize: 10, letterSpacing: '0.18em' }}>{meter.label}</div>
+          <div className="font-display font-bold" style={{ fontSize: 22, color: '#E6E9EE' }}>{meter.value}</div>
+          {meter.pct != null ? (
+            <div className="relative w-full mt-3" style={{ height: 2, background: 'rgba(255,255,255,0.07)' }}>
+              <div className="absolute top-0 left-0 h-full" style={{ width: `${meter.pct}%`, background: '#6E7587' }} />
+            </div>
+          ) : null}
+          <div className="font-mono mt-2" style={{ fontSize: 10.5, color: dim }}>{meter.sub}</div>
+        </div>
+        <div className="bg-background-raised p-6">
+          <div className="font-mono uppercase text-ink-muted mb-2" style={{ fontSize: 10, letterSpacing: '0.18em' }}>Plan</div>
+          <div className="font-display font-bold" style={{ fontSize: 22, color: '#E6E9EE' }}>{planName}</div>
+          <div className="font-mono mt-2" style={{ fontSize: 10.5, color: dim }}>then ${overageUsd.toFixed(2)}/scan</div>
+        </div>
+        <div className="bg-background-raised p-6">
+          <div className="font-mono uppercase text-ink-muted mb-2" style={{ fontSize: 10, letterSpacing: '0.18em' }}>Scans this month</div>
+          <div className="font-display font-bold" style={{ fontSize: 22, color: '#E6E9EE' }}>{monthScans}</div>
+          <div className="font-mono mt-2" style={{ fontSize: 10.5, color: dim }}>${monthSpend.toFixed(2)} COGS</div>
+        </div>
+      </div>
+
+      {/* 5 — Usage link */}
+      <div className="flex items-center justify-between gap-4 mt-6 pt-4 border-t border-background-border flex-wrap">
+        <span className="font-body text-ink-muted" style={{ fontSize: 13 }}>View request logs, throughput, and latency</span>
+        <button onClick={onViewUsage} className="font-mono uppercase cursor-pointer bg-transparent" style={{ ...purpleBtn, fontSize: 11, letterSpacing: '0.08em', padding: '8px 14px' }}>Usage →</button>
+      </div>
     </div>
   )
 }
 
-// ── Scans Tab ─────────────────────────────────────────────────────────────────
+// ── Usage Tab (instrumentation) ─────────────────────────────────────────────────
+// Real data only, scoped to the user's api_key_id (RLS: "Users view own usage").
+// Consumes the migration-028 columns: status_code, endpoint, error_code, page_count,
+// cached. No fabricated fields; the inspector shows logged metadata only.
 
-function ScansTab({ scanRows }: { scanRows: ScanRow[] }) {
-  const [search, setSearch]           = useState('')
-  const [scoreFilter, setScoreFilter] = useState('all')
-  const [sort, setSort]               = useState('newest')
+type UsageRange = '24h' | '7d' | '30d'
+const RANGE_MS: Record<UsageRange, number> = { '24h': 86_400_000, '7d': 604_800_000, '30d': 2_592_000_000 }
 
-  const filtered = scanRows
-    .filter(s => !search || s.domain.toLowerCase().includes(search.toLowerCase()))
-    .filter(s => {
-      if (scoreFilter === '70+')   return s.score >= 70
-      if (scoreFilter === '40-69') return s.score >= 40 && s.score < 70
-      if (scoreFilter === '0-39')  return s.score < 40
-      return true
-    })
-    .slice()
-    .sort((a, b) => {
-      if (sort === 'lowest')  return a.score - b.score
-      if (sort === 'highest') return b.score - a.score
-      return 0
-    })
+interface UsageLogRow {
+  id: string
+  created_at: string
+  endpoint: string | null
+  status: string
+  status_code: number | null
+  error_code: string | null
+  response_time_ms: number | null
+  cost_usd: number | null
+  page_count: number | null
+  cached: boolean | null
+  url: string
+  score: number | null
+}
 
-  const inputCls =
-    'bg-background-subtle border border-background-border font-mono text-sm text-text-primary px-4 py-2.5 outline-none'
+function percentile(sortedAsc: number[], p: number): number {
+  if (sortedAsc.length === 0) return 0
+  const idx = Math.min(sortedAsc.length - 1, Math.floor((p / 100) * sortedAsc.length))
+  return sortedAsc[idx]
+}
+
+// Bucket rows over the range into N slots (oldest→newest) for a sparkline.
+function bucketSeries(rows: UsageLogRow[], range: UsageRange, agg: 'count' | 'avgDur'): number[] {
+  const N = 24
+  const now = Date.now()
+  const span = RANGE_MS[range]
+  const start = now - span
+  const counts = new Array(N).fill(0)
+  const sums = new Array(N).fill(0)
+  for (const r of rows) {
+    const t = new Date(r.created_at).getTime()
+    if (t < start || t > now) continue
+    let i = Math.floor(((t - start) / span) * N)
+    if (i < 0) i = 0
+    if (i >= N) i = N - 1
+    counts[i] += 1
+    sums[i] += r.response_time_ms ?? 0
+  }
+  return agg === 'count' ? counts : counts.map((c, i) => (c > 0 ? Math.round(sums[i] / c) : 0))
+}
+
+// status_code → color: 200 quiet gray, 4xx amber, 5xx red.
+function codeColor(code: number | null): string {
+  if (code == null) return '#6E7587'
+  if (code >= 500) return '#E8635F'
+  if (code >= 400) return '#EFB23E'
+  return '#9398A8'
+}
+// score → display color: passing (>=70) muted gray (green is rationed to the success
+// bar), 50–69 amber, <50 red.
+function scoreDisplayColor(score: number | null): string {
+  if (score == null) return '#5A6070'
+  return score >= 70 ? '#9398A8' : scoreColor(score)
+}
+
+function GraySpark({ series }: { series: number[] }) {
+  const max = Math.max(1, ...series)
+  const n = series.length
+  const pts = series.map((v, i) => `${n > 1 ? (i / (n - 1)) * 100 : 0},${(18 - (v / max) * 16).toFixed(1)}`).join(' ')
+  return (
+    <svg width="100%" height={20} viewBox="0 0 100 20" preserveAspectRatio="none" style={{ display: 'block', marginTop: 10 }} aria-hidden>
+      <polyline points={pts} fill="none" stroke="#6E7587" strokeWidth={1} strokeOpacity={0.5} />
+    </svg>
+  )
+}
+
+function DetailRow({ k, v, vColor }: { k: string; v: string; vColor?: string }) {
+  return (
+    <div>
+      <div className="font-mono uppercase text-ink-muted mb-1" style={{ fontSize: 9, letterSpacing: '0.14em' }}>{k}</div>
+      <div className="font-mono truncate" style={{ fontSize: 13, color: vColor ?? '#E6E9EE' }}>{v}</div>
+    </div>
+  )
+}
+
+function UsageTab({ keyId }: { keyId: string | null }) {
+  const [range, setRange] = useState<UsageRange>('7d')
+  const [rows, setRows] = useState<UsageLogRow[]>([])
+  const [loading, setLoading] = useState(true)
+  const [filter, setFilter] = useState<'all' | 'success' | 'errors'>('all')
+  const [selected, setSelected] = useState<UsageLogRow | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      setLoading(true)
+      if (!keyId) { if (!cancelled) { setRows([]); setLoading(false) } return }
+      try {
+        const supabase = getSupabaseBrowserClient()
+        const since = new Date(Date.now() - RANGE_MS[range]).toISOString()
+        // Scoped to the user's api_key_id; RLS "Users view own usage" enforces ownership.
+        const { data } = await supabase
+          .from('api_usage')
+          .select('id, created_at, endpoint, status, status_code, error_code, response_time_ms, cost_usd, page_count, cached, url, score')
+          .eq('api_key_id', keyId)
+          .gte('created_at', since)
+          .order('created_at', { ascending: false })
+          .limit(2000)
+        if (cancelled) return
+        setRows((data ?? []) as UsageLogRow[])
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    })()
+    return () => { cancelled = true }
+  }, [keyId, range])
+
+  const total = rows.length
+  const successCount = rows.filter(r => r.status === 'success').length
+  const errorCount = total - successCount
+  const successPct = total ? Math.round((successCount / total) * 100) : 0
+  const durs = rows.map(r => r.response_time_ms ?? 0).filter(n => n > 0).sort((a, b) => a - b)
+  const p50 = percentile(durs, 50)
+  const p95 = percentile(durs, 95)
+  const spend = rows.reduce((s, r) => s + (r.cost_usd ?? 0), 0)
+  const cachedPct = total ? Math.round((rows.filter(r => r.cached).length / total) * 100) : 0
+  const avgPages = total ? rows.reduce((s, r) => s + (r.page_count ?? 1), 0) / total : 0
+  const throughput = bucketSeries(rows, range, 'count')
+  const durSeries = bucketSeries(rows, range, 'avgDur')
+
+  const logRows = rows
+    .filter(r => filter === 'all' ? true : filter === 'success' ? r.status === 'success' : r.status !== 'success')
+    .slice(0, 50)
+
+  const fmtDur = (ms: number) => (ms >= 1000 ? `${(ms / 1000).toFixed(1)}s` : `${ms}ms`)
+  const fmtTime = (iso: string) => { try { return new Date(iso).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) } catch { return iso } }
+  const cols = '120px 92px 56px 64px 70px 1fr 56px'
+  const activeChip: React.CSSProperties = { background: 'color-mix(in srgb, var(--surface-accent) 14%, transparent)', color: 'var(--surface-accent)' }
+  const idleChip: React.CSSProperties = { background: 'transparent', color: '#6E7587' }
 
   return (
-    <div className="px-8 py-8">
-
-      {/* Filter bar */}
-      <div className="flex gap-3 mb-6">
-        <input
-          type="text"
-          placeholder="Search domains..."
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          className={`flex-1 ${inputCls} placeholder:text-text-tertiary`}
-        />
-        <select
-          value={scoreFilter}
-          onChange={e => setScoreFilter(e.target.value)}
-          className={`${inputCls} cursor-pointer`}
-        >
-          <option value="all">All scores</option>
-          <option value="70+">70+ (good)</option>
-          <option value="40-69">40–69 (mid)</option>
-          <option value="0-39">0–39 (low)</option>
-        </select>
-        <select
-          value={sort}
-          onChange={e => setSort(e.target.value)}
-          className={`${inputCls} cursor-pointer`}
-        >
-          <option value="newest">Newest first</option>
-          <option value="lowest">Lowest score</option>
-          <option value="highest">Highest score</option>
-        </select>
-      </div>
-
-      {/* Table */}
-      <div className="bg-background-raised border border-background-border">
-        <div className="grid grid-cols-[2fr_80px_80px_72px_96px] px-6 py-3 border-b border-background-border">
-          {['DOMAIN', 'SCORE', 'FINDINGS', 'COST', 'DATE'].map(h => (
-            <div key={h} className="font-mono text-xs text-text-tertiary uppercase tracking-widest">{h}</div>
+    <div className="px-8 py-8" style={{ maxWidth: 1100 }}>
+      {/* 1 — Header + range toggle */}
+      <div className="flex items-center justify-between mb-7 flex-wrap gap-3">
+        <div className="flex items-center gap-3">
+          <h1 className="font-display font-bold text-ink-primary" style={{ fontSize: 21, letterSpacing: '-0.3px' }}>Usage</h1>
+          <span className="font-mono uppercase text-ink-muted border border-background-border" style={{ fontSize: 9.5, letterSpacing: '0.18em', padding: '3px 8px' }}>Developer</span>
+        </div>
+        <div className="inline-flex border border-background-border">
+          {(['24h', '7d', '30d'] as UsageRange[]).map(r => (
+            <button key={r} onClick={() => setRange(r)} className="font-mono uppercase cursor-pointer" style={{ fontSize: 10, letterSpacing: '0.08em', padding: '7px 14px', ...(range === r ? activeChip : idleChip) }}>{r}</button>
           ))}
         </div>
-        {filtered.length === 0 && (
-          scanRows.length === 0 ? (
-            <EmptyState
-              dense
-              headline="No scans yet"
-              sub="Run your first scan to populate this table."
-              actionLabel="New scan →"
-              actionHref="/playground"
-            />
-          ) : (
-            <div className="px-6 py-8 font-mono text-sm text-text-tertiary">No matching scans.</div>
-          )
-        )}
-        {filtered.map((row, i) => (
-          <div
-            key={i}
-            className="grid grid-cols-[2fr_80px_80px_72px_96px] items-center px-6 py-4 border-b border-background-border last:border-0 hover:bg-background-interactive cursor-pointer transition-colors duration-150"
-          >
-            <div className="font-body text-sm text-text-primary">{row.domain}</div>
-            <div><ScoreRing score={row.score} size="sm" animated={false} /></div>
-            <div className="font-mono text-sm text-text-secondary">{row.findings}</div>
-            <div className="font-mono text-sm text-text-tertiary">$0.15</div>
-            <div className="font-mono text-xs text-text-tertiary">{row.time}</div>
+      </div>
+
+      {/* 2 — Metric strip */}
+      <div className="grid grid-cols-4 gap-px bg-background-border mb-px">
+        <div className="bg-background-raised p-6">
+          <div className="font-mono uppercase text-ink-muted" style={{ fontSize: 10, letterSpacing: '0.18em' }}>Scans</div>
+          <div className="font-display font-bold" style={{ fontSize: 26, color: '#E6E9EE' }}>{total}</div>
+          <GraySpark series={throughput} />
+        </div>
+        <div className="bg-background-raised p-6">
+          <div className="font-mono uppercase text-ink-muted" style={{ fontSize: 10, letterSpacing: '0.18em' }}>Duration</div>
+          <div className="font-display font-bold" style={{ fontSize: 26, color: '#E6E9EE' }}>{fmtDur(p50)} <span className="font-mono" style={{ fontSize: 12, color: '#6E7587' }}>p50</span></div>
+          <div className="font-mono mt-1" style={{ fontSize: 11, color: '#6E7587' }}>p95 {fmtDur(p95)}</div>
+          <GraySpark series={durSeries} />
+        </div>
+        <div className="bg-background-raised p-6">
+          <div className="font-mono uppercase text-ink-muted" style={{ fontSize: 10, letterSpacing: '0.18em' }}>Success</div>
+          <div className="font-display font-bold" style={{ fontSize: 26, color: '#E6E9EE' }}>{successPct}%</div>
+          <div className="flex w-full mt-3" style={{ height: 2 }}>
+            <div style={{ width: `${successPct}%`, background: '#00C48C' }} />
+            <div style={{ width: `${100 - successPct}%`, background: errorCount > 0 ? '#E8635F' : 'rgba(255,255,255,0.07)' }} />
           </div>
+          <div className="font-mono mt-2" style={{ fontSize: 10.5, color: '#5A6070' }}>{successCount} ok · {errorCount} err</div>
+        </div>
+        <div className="bg-background-raised p-6">
+          <div className="font-mono uppercase text-ink-muted" style={{ fontSize: 10, letterSpacing: '0.18em' }}>Spend · COGS</div>
+          <div className="font-display font-bold" style={{ fontSize: 26, color: '#E6E9EE' }}>${spend.toFixed(2)}</div>
+          <div className="font-mono mt-2" style={{ fontSize: 10.5, color: '#5A6070' }}>cached {cachedPct}% · {avgPages.toFixed(1)} pg avg</div>
+        </div>
+      </div>
+
+      {/* 3 — Request log */}
+      <div className="flex items-center gap-2 mt-8 mb-3 flex-wrap">
+        <span className="font-mono uppercase text-ink-muted" style={{ fontSize: 10, letterSpacing: '0.2em' }}>Request log</span>
+        <span className="font-mono" style={{ fontSize: 10, color: '#5A6070' }}>· last 50</span>
+        <div className="inline-flex border border-background-border ml-2">
+          {(['all', 'success', 'errors'] as const).map(f => (
+            <button key={f} onClick={() => setFilter(f)} className="font-mono uppercase cursor-pointer" style={{ fontSize: 9.5, letterSpacing: '0.08em', padding: '5px 10px', ...(filter === f ? activeChip : idleChip) }}>{f}</button>
+          ))}
+        </div>
+      </div>
+
+      <div className="bg-background-raised border border-background-border">
+        <div className="grid items-center px-6 py-3 border-b border-background-border" style={{ gridTemplateColumns: cols }}>
+          {['TIME', 'ENDPOINT', 'CODE', 'DUR', 'COGS', 'TARGET', 'SCORE'].map(h => (
+            <div key={h} className="font-mono uppercase text-ink-muted" style={{ fontSize: 9.5, letterSpacing: '0.12em' }}>{h}</div>
+          ))}
+        </div>
+        {loading ? (
+          <div className="px-6 py-8 font-mono text-ink-muted" style={{ fontSize: 12 }}>Loading…</div>
+        ) : logRows.length === 0 ? (
+          <div className="px-6 py-8 font-mono text-ink-muted" style={{ fontSize: 12 }}>{total === 0 ? 'No requests in this range yet.' : 'No matching requests.'}</div>
+        ) : logRows.map(r => (
+          <button
+            key={r.id}
+            onClick={() => setSelected(r)}
+            className="grid items-center px-6 py-3 border-b border-background-border last:border-0 w-full text-left cursor-pointer hover:bg-background-interactive transition-colors"
+            style={{ gridTemplateColumns: cols, background: selected?.id === r.id ? 'rgba(255,255,255,0.03)' : 'transparent' }}
+          >
+            <span className="font-mono text-ink-muted truncate" style={{ fontSize: 11 }}>{fmtTime(r.created_at)}</span>
+            <span className="font-mono text-ink-secondary truncate" style={{ fontSize: 11 }}>{r.endpoint ?? 'scan'}</span>
+            <span className="font-mono" style={{ fontSize: 11, color: codeColor(r.status_code) }}>{r.status_code ?? '—'}</span>
+            <span className="font-mono text-ink-muted" style={{ fontSize: 11 }}>{r.response_time_ms != null ? fmtDur(r.response_time_ms) : '—'}</span>
+            <span className="font-mono text-ink-muted" style={{ fontSize: 11 }}>${(r.cost_usd ?? 0).toFixed(2)}</span>
+            <span className="font-mono truncate" style={{ fontSize: 11, color: r.url ? '#9398A8' : '#EFB23E' }}>{r.url || r.error_code || '—'}</span>
+            <span className="font-mono" style={{ fontSize: 11, color: scoreDisplayColor(r.score) }}>{r.score ?? '—'}</span>
+          </button>
         ))}
       </div>
 
+      {/* 4 — Request detail (inspector) — logged metadata only */}
+      {selected ? (
+        <div className="bg-background-raised border border-background-border mt-px p-6">
+          <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+            <span className="font-mono uppercase text-ink-muted" style={{ fontSize: 10, letterSpacing: '0.2em' }}>Request detail</span>
+            <button onClick={() => setSelected(null)} className="font-mono uppercase cursor-pointer bg-transparent text-ink-muted hover:text-ink-secondary" style={{ fontSize: 10, letterSpacing: '0.08em' }}>Close ✕</button>
+          </div>
+          <div className="grid grid-cols-2 gap-x-8 gap-y-3" style={{ maxWidth: 640 }}>
+            <DetailRow k="endpoint" v={selected.endpoint ?? 'scan'} />
+            <DetailRow k="status" v={`${selected.status_code ?? '—'} · ${selected.status}`} vColor={codeColor(selected.status_code)} />
+            <DetailRow k="duration" v={selected.response_time_ms != null ? fmtDur(selected.response_time_ms) : '—'} />
+            <DetailRow k="cogs" v={`$${(selected.cost_usd ?? 0).toFixed(2)} · ${selected.page_count ?? 1} pg${selected.cached ? ' · cached' : ''}`} />
+            <DetailRow k="target" v={selected.url || '—'} />
+            <DetailRow k={selected.error_code ? 'error' : 'score'} v={selected.error_code ? selected.error_code : (selected.score != null ? `${selected.score} · ${ordinal(estimatePercentile(selected.score))} pct` : '—')} vColor={selected.error_code ? codeColor(selected.status_code) : scoreDisplayColor(selected.score)} />
+          </div>
+          <div className="font-mono mt-5" style={{ fontSize: 10.5, color: '#5A6070' }}>Detail reflects logged request metadata. Full request/response payloads aren&apos;t stored.</div>
+        </div>
+      ) : null}
     </div>
   )
 }
@@ -982,7 +1036,7 @@ function DocsTab() {
 
 const NAV_ITEMS: Array<{ id: TabId; label: string; icon: React.ReactNode }> = [
   { id: 'overview', label: 'Overview', icon: <IconGrid />    },
-  { id: 'scans',    label: 'Scans',    icon: <IconList />    },
+  { id: 'usage',    label: 'Usage',    icon: <IconList />    },
   { id: 'apikeys',  label: 'API Keys', icon: <IconKey />     },
   { id: 'webhooks', label: 'Webhooks', icon: <IconWebhook /> },
   { id: 'billing',  label: 'Billing',  icon: <IconBilling /> },
@@ -1005,6 +1059,7 @@ export default function DeveloperPortal() {
   const [monthSpend, setMonthSpend]   = useState(0)
   const [rawUsage, setRawUsage]       = useState<UsageRow[]>([])
   const [rawWebhooks, setRawWebhooks] = useState<WebhookRow[]>([])
+  const [keyId, setKeyId]             = useState<string | null>(null)
 
   // Key rotation (real, via DELETE /api/developer/generate-key — the new key is
   // returned once and revealed here; only its hash is ever stored).
@@ -1031,11 +1086,13 @@ export default function DeveloperPortal() {
       setKeyCreatedAt(null); setKeyLastUsedAt(null)
       setMonthScans(0); setMonthSpend(0)
       setRawUsage([]); setRawWebhooks([])
+      setKeyId(null)
       setLoading(false)
       return
     }
 
     const kr = keyRow as { id: string; scans_used: number; plan: string; key_prefix: string; created_at: string | null; last_used_at: string | null }
+    setKeyId(kr.id)
     setScansUsed(kr.scans_used ?? 0)
     setPlan(kr.plan ?? 'playground')
     setKeyPrefix(kr.key_prefix ?? null)
@@ -1259,11 +1316,7 @@ export default function DeveloperPortal() {
         <div className="flex-1 overflow-y-auto bg-background-base">
           {activeTab === 'overview' && (
             <OverviewTab
-              monthScans={monthScans}
-              monthSpend={monthSpend}
-              avgScore={avgScore}
               keyPrefix={keyPrefix}
-              scanRows={scanRows}
               createdLabel={createdLabel}
               lastUsedLabel={lastUsedLabel}
               rotating={rotating}
@@ -1272,10 +1325,13 @@ export default function DeveloperPortal() {
               scansUsed={scansUsed}
               isTrialPlan={isTrialPlan}
               plan={plan}
-              lastScanMs={lastScanMs}
+              monthScans={monthScans}
+              monthSpend={monthSpend}
+              onViewUsage={() => setActiveTab('usage')}
+              onViewDocs={() => setActiveTab('docs')}
             />
           )}
-          {activeTab === 'scans'    && <ScansTab scanRows={scanRows} />}
+          {activeTab === 'usage'    && <UsageTab keyId={keyId} />}
           {activeTab === 'apikeys'  && (
             <ApiKeysTab
               keyPrefix={keyPrefix}

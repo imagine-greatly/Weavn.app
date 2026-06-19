@@ -134,6 +134,69 @@ export function calculateDimensionScores(
   });
 }
 
+/**
+ * Generic dimension definition — lets a caller score an arbitrary set of
+ * dimensions (e.g. the 7 public API dimensions) from the same rubric results,
+ * using the identical weighted PASS/FAIL math as calculateDimensionScores.
+ */
+export interface DimensionDef {
+  id: string;
+  label: string;
+  description: string;
+  categories: string[];
+}
+
+/**
+ * Weighted dimension scores for an arbitrary dimension set. SKIP rows are
+ * excluded from the denominator (never penalize unobserved checks); a dimension
+ * with no evaluated PASS/FAIL checks scores 0. Same weighting + status bands as
+ * calculateDimensionScores — this is the parameterized form of it.
+ */
+export function scoreDimensions(
+  allResults: Array<{ id: string; status: string }>,
+  defs: DimensionDef[]
+): DimensionScoreRow[] {
+  const resultMap = new Map<string, ReturnType<typeof normalizeRubricStatus>>();
+  for (const r of allResults) {
+    const id = String(r.id ?? "").trim();
+    if (!id) continue;
+    const norm = normalizeRubricStatus(r.status);
+    resultMap.set(id, norm);
+    resultMap.set(id.toUpperCase(), norm);
+  }
+
+  return defs.map((dim) => {
+    const dimChecks = DIAGNOSTIC_CHECKS.filter((c) => dim.categories.includes(c.category));
+
+    let totalWeight = 0;
+    let passedWeight = 0;
+    let failCount = 0;
+
+    for (const check of dimChecks) {
+      const st = resultMap.get(check.id) ?? resultMap.get(check.id.toUpperCase());
+      if (st !== "PASS" && st !== "FAIL") continue;
+      const weight = WEIGHTS[check.severity] ?? 1;
+      totalWeight += weight;
+      if (st === "PASS") passedWeight += weight;
+      else if (st === "FAIL") failCount++;
+    }
+
+    const score = totalWeight > 0 ? Math.round((passedWeight / totalWeight) * 100) : 0;
+    const status: DimensionStatus =
+      score >= 70 ? "strong" : score >= 50 ? "fair" : score >= 30 ? "weak" : "critical";
+
+    return {
+      id: dim.id,
+      label: dim.label,
+      description: dim.description,
+      score,
+      failCount,
+      totalCount: dimChecks.length,
+      status,
+    };
+  });
+}
+
 const SEV_ORDER: Record<string, number> = {
   Critical: 4,
   High: 3,

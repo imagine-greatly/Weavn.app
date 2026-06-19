@@ -1,0 +1,607 @@
+/**
+ * Rubric scan engine — the glue that makes the 307-check rubric actually RUN
+ * in the live /api/v1/scan path.
+ *
+ * Responsibilities (all pure functions — the model call itself lives in the route):
+ *  - scope the 307 checks per scan (siteType vocab map)
+ *  - serialize the scoped check list into a cacheable prompt block
+ *  - tolerantly parse the model's PASS/FAIL/SKIP rows, salvaging truncated output
+ *  - compute the 0–100 score (via processFindings) and the 7 API dimensions
+ *    (via revenueDimensions.scoreDimensions) FROM the check results
+ *  - derive findings / strengths / leaks / category scores from the same results
+ *
+ * Score + dimensions are computed from the rubric, never self-reported by the model.
+ */
+
+import DIAGNOSTIC_CHECKS, { type DiagnosticCheck } from "@/lib/diagnosticRubric";
+import {
+  scoreDimensions,
+  type DimensionDef,
+  type DimensionScoreRow,
+} from "@/lib/revenueDimensions";
+import {
+  enrichRubricFailures,
+  curateFindings,
+  enrichedFindingToLeak,
+  sortByRevenuePriority,
+  type RubricResultRow,
+  type EnrichedRubricFinding,
+} from "@/lib/processFindings";
+import type { SiteType, Leak, CategoryScores, GrowthBlueprint } from "@/lib/reportSchema";
+import { RUBRIC_EVALUATION_SYSTEM_PROMPT } from "@/lib/prompts";
+
+// ── The 7 API dimensions ─────────────────────────────────────────────────────
+
+export type ApiDimensionKey =
+  | "conversion_architecture"
+  | "trust_signals"
+  | "message_clarity"
+  | "traffic_readiness"
+  | "technical_foundation"
+  | "objection_handling"
+  | "offer_clarity";
+
+export const API_DIMENSION_KEYS: readonly ApiDimensionKey[] = [
+  "conversion_architecture",
+  "trust_signals",
+  "message_clarity",
+  "traffic_readiness",
+  "technical_foundation",
+  "objection_handling",
+  "offer_clarity",
+];
+
+const API_DIMENSION_META: Record<ApiDimensionKey, { label: string; description: string }> = {
+  conversion_architecture: { label: "Conversion Architecture", description: "The structural machinery that moves a visitor to action" },
+  trust_signals: { label: "Trust Signals", description: "Credibility and proof that the offer is real and works" },
+  message_clarity: { label: "Message Clarity", description: "How clearly the page communicates what it is and why it matters" },
+  traffic_readiness: { label: "Traffic Readiness", description: "Getting found and capturing the traffic that arrives" },
+  technical_foundation: { label: "Technical Foundation", description: "The technical and UX substrate the experience runs on" },
+  objection_handling: { label: "Objection Handling", description: "Neutralizing the doubts that stop a buyer from converting" },
+  offer_clarity: { label: "Offer Clarity", description: "Whether the offer, pricing, and what-you-get are unambiguous" },
+};
+
+/**
+ * APPROVED 27 → 7 map (Stage 2). Every category maps to exactly one dimension;
+ * all 307 checks are covered. The phantom "Emotional Sequence & Page Flow"
+ * category from the old REVENUE_DIMENSIONS is intentionally absent.
+ * Page & Content Gaps → message_clarity (per reviewer amendment).
+ */
+export const CATEGORY_TO_DIMENSION: Record<string, ApiDimensionKey> = {
+  // conversion_architecture (51)
+  "Hero Section": "conversion_architecture",
+  "CTA & Conversion": "conversion_architecture",
+  "Checkout & Purchase Friction": "conversion_architecture",
+  "Conversion Path Expansion": "conversion_architecture",
+  // trust_signals (39)
+  "Trust & Credibility": "trust_signals",
+  "Social Proof": "trust_signals",
+  "Specificity & Claim Quality": "trust_signals",
+  // message_clarity (47)
+  "Messaging & Clarity": "message_clarity",
+  "Narrative Flow": "message_clarity",
+  "Page & Content Gaps": "message_clarity",
+  // traffic_readiness (27)
+  "SEO & Metadata": "traffic_readiness",
+  "Email & Retention": "traffic_readiness",
+  "Return Visitor & Retention": "traffic_readiness",
+  // technical_foundation (57)
+  "Navigation & UX": "technical_foundation",
+  "Mobile Experience": "technical_foundation",
+  "Page Speed & Technical": "technical_foundation",
+  "Accessibility & Inclusion": "technical_foundation",
+  "Universal & Cross-Vertical": "technical_foundation",
+  // objection_handling (34)
+  "Psychology & Persuasion": "objection_handling",
+  "Competitive Differentiation": "objection_handling",
+  "Objection Handling": "objection_handling",
+  // offer_clarity (52)
+  "Offer & Pricing": "offer_clarity",
+  "Product Page": "offer_clarity",
+  "Offer Clarity": "offer_clarity",
+  "SaaS-Specific": "offer_clarity",
+  "E-commerce Specific": "offer_clarity",
+  "Agency & Service": "offer_clarity",
+};
+
+/** Dimension definitions for the generic scorer, derived from the map (single source of truth). */
+export const API_DIMENSION_DEFS: DimensionDef[] = API_DIMENSION_KEYS.map((key) => ({
+  id: key,
+  label: API_DIMENSION_META[key].label,
+  description: API_DIMENSION_META[key].description,
+  categories: Object.entries(CATEGORY_TO_DIMENSION)
+    .filter(([, dim]) => dim === key)
+    .map(([cat]) => cat),
+}));
+
+// Dev-time guard: every category present in the rubric must be mapped exactly once.
+const _unmapped = Array.from(new Set(DIAGNOSTIC_CHECKS.map((c) => c.category))).filter(
+  (cat) => !(cat in CATEGORY_TO_DIMENSION)
+);
+if (_unmapped.length > 0) {
+  console.error(`[rubricScan] CATEGORY_TO_DIMENSION is missing categories: ${_unmapped.join(", ")}`);
+}
+
+// ── siteType scoping (vocab map: detectSiteType output → rubric siteTypes) ────
+
+/**
+ * Maps a detected SiteType to the set of rubric `siteType` values whose checks
+ * apply. Universal always applies. Detected types with no matching rubric verticals
+ * (content, unknown) get universal-only. Nothing is silently dropped: every rubric
+ * check is universal/saas/ecommerce/service, and each is covered by the right detected type.
+ */
+export function rubricSiteTypesFor(siteType: SiteType): ReadonlySet<string> {
+  switch (siteType) {
+    case "saas":
+      return new Set(["universal", "saas"]);
+    case "ecommerce":
+      return new Set(["universal", "ecommerce"]);
+    case "service":
+      return new Set(["universal", "service"]);
+    case "local":
+      return new Set(["universal", "local"]);
+    case "content":
+    case "unknown":
+    default:
+      return new Set(["universal"]);
+  }
+}
+
+/** The scoped subset of checks for this scan — stable per siteType (cache-friendly). */
+export function scopeChecksForScan(siteType: SiteType): DiagnosticCheck[] {
+  const allowed = rubricSiteTypesFor(siteType);
+  return DIAGNOSTIC_CHECKS.filter((c) => allowed.has(c.siteType)).sort((a, b) => {
+    if (a.categoryNumber !== b.categoryNumber) return a.categoryNumber - b.categoryNumber;
+    return a.id.localeCompare(b.id);
+  });
+}
+
+/**
+ * Serializes the scoped check list into a single deterministic text block.
+ * Stable bytes for a given siteType → cacheable behind a cache_control breakpoint.
+ * One line per check: id | category | severity MODE | pageType | failCondition [| PASS: passLabel]
+ */
+export function serializeChecksForPrompt(checks: DiagnosticCheck[]): string {
+  const lines = checks.map((c) => {
+    const pass = c.passLabel ? ` | PASS-SIGNAL: ${c.passLabel}` : "";
+    return `${c.id} | ${c.category} | ${c.severity} ${c.mode} | pageType:${c.pageType ?? "any"} | ${c.failCondition}${pass}`;
+  });
+  return `DIAGNOSTIC CHECK CATALOG (${checks.length} checks — evaluate every one):\n${lines.join("\n")}`;
+}
+
+// ── System prompt (voice core + output contract) ─────────────────────────────
+
+/**
+ * Output contract appended to the revived voice prompt. Defines the single-object
+ * JSON shape the parser expects, the SKIP-WHEN-UNOBSERVABLE rule (only FAIL on real
+ * on-page evidence; never penalize what static HTML cannot reveal), full-coverage
+ * ("one row per check id"), and graceful-truncation guidance (terse PASS/SKIP so the
+ * model never runs out of room before covering every id).
+ */
+const RUBRIC_OUTPUT_CONTRACT = `---
+
+OBSERVABILITY RULE — SKIP WHAT YOU CANNOT SEE (CRITICAL):
+You are evaluating STATIC HTML only — no browser, no rendering, no network trace, no runtime. You CANNOT measure page load speed, Core Web Vitals, real performance, animation, lazy-load timing, A/B variants, or any behavior that only exists when the page actually runs. For ANY check whose signal is not directly observable in the static HTML you were given — especially Page Speed & Technical, Core Web Vitals, and rendering/performance checks — return status SKIP, never FAIL. Only return FAIL when there is concrete, quotable evidence in the HTML itself. Never penalize a site for something you did not actually observe. When the signal is ambiguous or unobservable, SKIP.
+
+COVERAGE RULE:
+Return exactly one row for EVERY check id supplied in the DIAGNOSTIC CHECK CATALOG — no more, no fewer. Do not invent ids. Do not omit ids. Evaluate them in the order given.
+
+GRACEFUL OUTPUT — NEVER RUN OUT OF ROOM:
+Keep PASS and SKIP rows terse: PASS is just {id, status}; SKIP is {id, status, skipReason} with one short sentence. Spend your output budget on FAIL rows that carry real evidence. If you are running low on space, keep emitting compact rows so every id is still covered rather than writing long prose for a few. Any id you do not return a row for will be treated as SKIP — so prioritize coverage over verbosity.
+
+OUTPUT FORMAT — return ONE JSON object only. No markdown, no preamble, start with {:
+{
+  "page_type": "homepage" | "pricing" | "product" | "about" | "landing",
+  "summary": "<the Intelligence Brief opening described above — 3 sentences, score+band, structural verdict, stakes>",
+  "copy_rewrites": { "headline": "<max 12 words>", "subheadline": "<max 20 words>", "cta": "<max 5 words>" },
+  "growth_blueprint": [ { "priority": <int>, "action": "<max 15 words>", "effort": "low"|"medium"|"high", "impact": "low"|"medium"|"high", "timeframe": "Week 1"|"Weeks 2-4"|"Month 2" } ],
+  "results": [
+    // one row per catalog check id, in catalog order:
+    //   FAIL → { "id", "status": "FAIL", "title", "exitTrigger", "evidence", "conversionCost", "implementation", "effort" }
+    //   PASS → { "id", "status": "PASS" }
+    //   SKIP → { "id", "status": "SKIP", "skipReason": "<one short sentence>" }
+  ]
+}`;
+
+/** The full rubric evaluation system prompt: revived voice core + the object/coverage/skip contract. */
+export function buildRubricSystemPrompt(): string {
+  return `${RUBRIC_EVALUATION_SYSTEM_PROMPT}\n\n${RUBRIC_OUTPUT_CONTRACT}`;
+}
+
+/** Anthropic system text block. */
+export interface RubricSystemBlock {
+  type: "text";
+  text: string;
+  cache_control?: { type: "ephemeral" };
+}
+
+/**
+ * The system blocks for the rubric call: instructions first, then the scoped check
+ * catalog with a cache_control breakpoint. The catalog is stable per siteType, so the
+ * whole prefix [instructions + catalog] is cached and reused — and it sits BEFORE the
+ * per-scan HTML, which is carried in the user message.
+ */
+export function buildRubricSystemBlocks(scopedChecks: DiagnosticCheck[]): RubricSystemBlock[] {
+  return [
+    { type: "text", text: buildRubricSystemPrompt() },
+    { type: "text", text: serializeChecksForPrompt(scopedChecks), cache_control: { type: "ephemeral" } },
+  ];
+}
+
+// ── Tolerant response parsing + salvage ──────────────────────────────────────
+
+export interface ApiCopyRewrites {
+  headline?: string;
+  subheadline?: string;
+  cta?: string;
+}
+
+export interface ApiBlueprintItem {
+  priority: number;
+  action: string;
+  effort: string;
+  impact: string;
+  timeframe: string;
+}
+
+export interface ParsedRubric {
+  /** One row per scoped check id — missing ids backfilled as SKIP. */
+  rows: RubricResultRow[];
+  summary: string;
+  copyRewrites: ApiCopyRewrites;
+  growthBlueprint: ApiBlueprintItem[];
+  pageType: string;
+  /** True when strict JSON.parse failed and rows were salvaged from partial output. */
+  truncated: boolean;
+  /** Number of scoped checks the model actually returned a row for (pre-backfill). */
+  returnedRows: number;
+}
+
+function normStatus(raw: unknown): "PASS" | "FAIL" | "SKIP" {
+  const u = String(raw ?? "").trim().toUpperCase();
+  if (u === "PASS") return "PASS";
+  if (u === "FAIL") return "FAIL";
+  return "SKIP";
+}
+
+function normalizeRow(r: Record<string, unknown>): RubricResultRow {
+  return {
+    id: String(r.id ?? "").trim(),
+    status: normStatus(r.status),
+    evidence: typeof r.evidence === "string" ? r.evidence : undefined,
+    title: typeof r.title === "string" ? r.title : undefined,
+    exitTrigger: typeof r.exitTrigger === "string" ? r.exitTrigger : undefined,
+    conversionCost: typeof r.conversionCost === "string" ? r.conversionCost : undefined,
+    implementation: typeof r.implementation === "string" ? r.implementation : undefined,
+    effort: typeof r.effort === "string" ? r.effort : undefined,
+    skipReason: typeof r.skipReason === "string" ? r.skipReason : undefined,
+  };
+}
+
+/** Recovers flat row objects (each containing "id" + "status") from possibly-truncated text. */
+function salvageRows(text: string): Record<string, unknown>[] {
+  const out: Record<string, unknown>[] = [];
+  // Flat objects only (rubric rows have no nested objects); a brace inside a quoted
+  // string is rare and that row simply degrades to SKIP. Tolerates a truncated tail.
+  const re = /\{[^{}]*?"id"\s*:\s*"[^"]+?"[^{}]*?\}/g;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(text)) !== null) {
+    try {
+      const parsed = JSON.parse(m[0]) as Record<string, unknown>;
+      if (typeof parsed.id === "string") out.push(parsed);
+    } catch {
+      /* drop the broken fragment */
+    }
+  }
+  return out;
+}
+
+function salvageString(text: string, key: string): string {
+  const re = new RegExp(`"${key}"\\s*:\\s*"((?:[^"\\\\]|\\\\.)*)"`);
+  const m = text.match(re);
+  if (!m) return "";
+  try {
+    return JSON.parse(`"${m[1]}"`) as string;
+  } catch {
+    return m[1] ?? "";
+  }
+}
+
+function salvageCopyRewrites(text: string): ApiCopyRewrites {
+  const block = text.match(/"copy_rewrites"\s*:\s*\{([\s\S]*?)\}/);
+  const scope = block ? block[1] : text;
+  const pick = (k: string): string | undefined => {
+    const m = scope.match(new RegExp(`"${k}"\\s*:\\s*"((?:[^"\\\\]|\\\\.)*)"`));
+    if (!m) return undefined;
+    try {
+      return JSON.parse(`"${m[1]}"`) as string;
+    } catch {
+      return m[1];
+    }
+  };
+  return { headline: pick("headline"), subheadline: pick("subheadline"), cta: pick("cta") };
+}
+
+function coerceBlueprint(raw: unknown): ApiBlueprintItem[] {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .map((item) => {
+      const o = (item ?? {}) as Record<string, unknown>;
+      return {
+        priority: typeof o.priority === "number" ? o.priority : 0,
+        action: String(o.action ?? ""),
+        effort: String(o.effort ?? "medium"),
+        impact: String(o.impact ?? "medium"),
+        timeframe: String(o.timeframe ?? "Week 1"),
+      };
+    })
+    .filter((b) => b.action.trim().length > 0);
+}
+
+/**
+ * Parses the model response into rubric rows + extra fields, GUARANTEEING one row per
+ * scoped check id (missing → SKIP) and salvaging partial/truncated/malformed output.
+ * Never throws — a scan that did work always degrades to a result, never to nothing.
+ */
+export function parseRubricResponse(rawText: string, scopedChecks: DiagnosticCheck[]): ParsedRubric {
+  const cleaned = (rawText ?? "")
+    .replace(/^```(?:json)?\s*\n?/m, "")
+    .replace(/\n?```\s*$/m, "")
+    .trim();
+
+  let obj: Record<string, unknown> | null = null;
+  let truncated = false;
+  try {
+    const parsed = JSON.parse(cleaned);
+    obj = parsed && typeof parsed === "object" ? (parsed as Record<string, unknown>) : null;
+  } catch {
+    truncated = true;
+  }
+
+  let rawRows: Record<string, unknown>[] = [];
+  let summary = "";
+  let copyRewrites: ApiCopyRewrites = {};
+  let growthBlueprint: ApiBlueprintItem[] = [];
+  let pageType = "homepage";
+
+  if (obj) {
+    const resultsField = Array.isArray(obj.results) ? obj.results : Array.isArray(obj) ? obj : [];
+    rawRows = (resultsField as unknown[]).filter(
+      (r): r is Record<string, unknown> => !!r && typeof r === "object"
+    );
+    summary = typeof obj.summary === "string" ? obj.summary : "";
+    copyRewrites =
+      obj.copy_rewrites && typeof obj.copy_rewrites === "object"
+        ? (obj.copy_rewrites as ApiCopyRewrites)
+        : {};
+    growthBlueprint = coerceBlueprint(obj.growth_blueprint);
+    pageType = typeof obj.page_type === "string" ? obj.page_type : "homepage";
+  } else {
+    // Salvage path — strict parse failed (almost always truncation mid-results).
+    rawRows = salvageRows(cleaned);
+    summary = salvageString(cleaned, "summary");
+    copyRewrites = salvageCopyRewrites(cleaned);
+    growthBlueprint = []; // tail field; not recoverable from a truncated body
+    pageType = salvageString(cleaned, "page_type") || "homepage";
+  }
+
+  // Index returned rows by id (case-insensitive), then backfill every scoped id.
+  const byId = new Map<string, RubricResultRow>();
+  for (const raw of rawRows) {
+    const row = normalizeRow(raw);
+    if (!row.id) continue;
+    byId.set(row.id, row);
+    byId.set(row.id.toUpperCase(), row);
+  }
+
+  const rows: RubricResultRow[] = scopedChecks.map((c) => {
+    const found = byId.get(c.id) ?? byId.get(c.id.toUpperCase());
+    if (found) return found;
+    return { id: c.id, status: "SKIP", skipReason: "No result returned — salvaged as skip." };
+  });
+
+  const returnedRows = new Set(rawRows.map((r) => String(r.id ?? "").trim()).filter(Boolean)).size;
+
+  return { rows, summary, copyRewrites, growthBlueprint, pageType, truncated, returnedRows };
+}
+
+// ── Scoring + dimensions FROM the rubric results ─────────────────────────────
+
+/** Per-dimension rows (7) computed from the rubric results via the shared weighted scorer. */
+export function computeApiDimensionRows(rows: Array<{ id: string; status: string }>): DimensionScoreRow[] {
+  return scoreDimensions(rows, API_DIMENSION_DEFS);
+}
+
+/** The 7-dim response object (every key present; 0 when no evaluated checks in that dimension). */
+export function computeApiDimensions(
+  rows: Array<{ id: string; status: string }>
+): Record<ApiDimensionKey, number> {
+  const out = {} as Record<ApiDimensionKey, number>;
+  for (const k of API_DIMENSION_KEYS) out[k] = 0;
+  for (const row of computeApiDimensionRows(rows)) {
+    out[row.id as ApiDimensionKey] = row.score;
+  }
+  return out;
+}
+
+/** Best-effort legacy categoryScores derived from the new dimension scores. */
+export function categoryScoresFromDimensions(dims: Record<ApiDimensionKey, number>): CategoryScores {
+  return {
+    conversion: dims.conversion_architecture,
+    trust: dims.trust_signals,
+    messaging: dims.message_clarity,
+    seo: dims.traffic_readiness,
+    ux: dims.technical_foundation,
+    psychology: dims.objection_handling,
+  };
+}
+
+// ── Findings / strengths / leaks derived from the rubric results ─────────────
+
+export interface ApiFinding {
+  id: string;
+  title: string;
+  severity: "critical" | "high" | "medium" | "low";
+  dimension: string;
+  category: string;
+  impact: "high" | "medium" | "low";
+  impact_estimate: string;
+  explanation: string;
+  fix_steps: string[];
+  rewritten_copy?: string;
+  confidence: "high" | "medium" | "low";
+  fix_effort: "hours" | "days" | "weeks";
+  priority: number;
+  rubric_check_title: string;
+}
+
+function severityLower(sev: string): "critical" | "high" | "medium" | "low" {
+  const s = sev.toLowerCase();
+  return s === "critical" || s === "high" || s === "medium" || s === "low" ? s : "medium";
+}
+
+function impactFromSeverity(sev: string): "high" | "medium" | "low" {
+  const s = sev.toLowerCase();
+  if (s === "critical" || s === "high") return "high";
+  if (s === "medium") return "medium";
+  return "low";
+}
+
+function fixEffortFromRevenue(effort?: string): "hours" | "days" | "weeks" {
+  if (effort === "Today") return "hours";
+  if (effort === "This Month") return "weeks";
+  return "days";
+}
+
+function dimensionLabelForCategory(category: string): string {
+  const key = CATEGORY_TO_DIMENSION[category];
+  return key ? API_DIMENSION_META[key].label : category;
+}
+
+function toApiFinding(f: EnrichedRubricFinding, priority: number): ApiFinding {
+  const fixText = f.fix?.trim() || f.howToFixIt?.trim() || "";
+  return {
+    id: f.id,
+    title: (f.revenueTitle?.trim() || f.title).trim(),
+    severity: severityLower(f.severity),
+    dimension: dimensionLabelForCategory(f.category),
+    category: f.category,
+    impact: impactFromSeverity(f.severity),
+    impact_estimate: f.impactStatement?.trim() || "",
+    explanation: f.evidence?.trim() || f.failCondition,
+    fix_steps: fixText ? [fixText] : [],
+    ...(fixText ? { rewritten_copy: undefined } : {}),
+    confidence: impactFromSeverity(f.severity),
+    fix_effort: fixEffortFromRevenue(f.revenueEffort ?? undefined),
+    priority,
+    rubric_check_title: f.title,
+  };
+}
+
+/** Ranked API findings (revenue-priority order), capped at findingLimit. */
+export function buildApiFindings(
+  rows: RubricResultRow[],
+  scopedChecks: DiagnosticCheck[],
+  findingLimit: number
+): ApiFinding[] {
+  const byId = new Map(scopedChecks.map((c) => [c.id, c]));
+  const enriched = enrichRubricFailures(rows, byId);
+  const sorted = sortByRevenuePriority(enriched);
+  return sorted.slice(0, findingLimit).map((f, i) => toApiFinding(f, i + 1));
+}
+
+export interface ApiStrength {
+  check_id: string;
+  label: string;
+  observation: string;
+}
+
+/** Strengths = checks that PASSed and carry a passLabel (cap 5). */
+export function buildStrengths(rows: RubricResultRow[], scopedChecks: DiagnosticCheck[]): ApiStrength[] {
+  const byId = new Map(scopedChecks.map((c) => [c.id, c]));
+  const out: ApiStrength[] = [];
+  for (const r of rows) {
+    if (normStatus(r.status) !== "PASS") continue;
+    const check = byId.get(r.id);
+    if (!check?.passLabel) continue;
+    out.push({
+      check_id: r.id,
+      label: check.passLabel,
+      observation: r.evidence?.trim() || check.title,
+    });
+    if (out.length >= 5) break;
+  }
+  return out;
+}
+
+export interface BuiltLeaks {
+  leaks: Leak[];
+  moneyLeaks: Leak[];
+  quickWins: Leak[];
+  growthRoadmap: Leak[];
+  hiddenCount: number;
+  totalFailed: number;
+}
+
+/** Curated leak tiers for the stored ReportPayload (drives the rendered report). */
+export function buildLeaks(rows: RubricResultRow[], scopedChecks: DiagnosticCheck[]): BuiltLeaks {
+  const byId = new Map(scopedChecks.map((c) => [c.id, c]));
+  const enriched = enrichRubricFailures(rows, byId);
+  const curated = curateFindings(enriched);
+  return {
+    leaks: enriched.map(enrichedFindingToLeak),
+    moneyLeaks: curated.moneyLeaks.map((f) => enrichedFindingToLeak(f as EnrichedRubricFinding)),
+    quickWins: curated.quickWins.map((f) => enrichedFindingToLeak(f as EnrichedRubricFinding)),
+    growthRoadmap: curated.growthRoadmap.map((f) => enrichedFindingToLeak(f as EnrichedRubricFinding)),
+    hiddenCount: curated.hiddenCount,
+    totalFailed: enriched.length,
+  };
+}
+
+/** Converts the model's flat blueprint array into the stored GrowthBlueprint struct. */
+export function buildGrowthBlueprintStruct(items: ApiBlueprintItem[]): GrowthBlueprint {
+  const weekOne: string[] = [];
+  const weekTwoToFour: string[] = [];
+  let monthTwo = "";
+  for (const it of items) {
+    if (it.timeframe === "Week 1") weekOne.push(it.action);
+    else if (it.timeframe === "Weeks 2-4") weekTwoToFour.push(it.action);
+    else if (it.timeframe === "Month 2" && !monthTwo) monthTwo = it.action;
+  }
+  return {
+    weekOne: weekOne.slice(0, 3),
+    weekTwoToFour: weekTwoToFour.slice(0, 3),
+    monthTwo,
+    projectedLift: "",
+  };
+}
+
+export interface RubricCounts {
+  totalChecks: number;
+  fails: number;
+  passes: number;
+  skips: number;
+  criticalCount: number;
+  highCount: number;
+}
+
+/** Counts derived from the evaluated rows + scoped checks (never a hardcoded literal). */
+export function rubricCounts(rows: RubricResultRow[], scopedChecks: DiagnosticCheck[]): RubricCounts {
+  const sevById = new Map(scopedChecks.map((c) => [c.id, c.severity]));
+  let fails = 0,
+    passes = 0,
+    skips = 0,
+    criticalCount = 0,
+    highCount = 0;
+  for (const r of rows) {
+    const st = normStatus(r.status);
+    if (st === "FAIL") {
+      fails++;
+      const sev = sevById.get(r.id);
+      if (sev === "Critical") criticalCount++;
+      else if (sev === "High") highCount++;
+    } else if (st === "PASS") passes++;
+    else skips++;
+  }
+  return { totalChecks: scopedChecks.length, fails, passes, skips, criticalCount, highCount };
+}

@@ -27,6 +27,25 @@ import { calculateScanCost, realScanCostUsd } from "@/lib/scanCost";
 import { checkRateLimit } from "@/lib/rateLimit";
 import { API_RATE_LIMIT_PER_MIN } from "@/lib/constants";
 import type { ApiKeyRecord } from "@/lib/apiAuth";
+import {
+  scopeChecksForScan,
+  buildRubricSystemBlocks,
+  parseRubricResponse,
+  computeApiDimensions,
+  computeApiDimensionRows,
+  buildApiFindings,
+  buildStrengths,
+  buildLeaks,
+  buildGrowthBlueprintStruct,
+  categoryScoresFromDimensions,
+  rubricCounts,
+} from "@/lib/rubricScan";
+import { computeGrowthScoreFromRubric } from "@/lib/processFindings";
+
+// Gated experimental rubric scoring. DEFAULTS OFF — when WEAVN_RUBRIC_SCORING is
+// unset or not exactly "true", /api/v1/scan runs the original self-reported scoring
+// path byte-for-byte. Flipping it true is a deliberate, calibrate-then-enable step.
+const RUBRIC_SCORING_ENABLED = process.env.WEAVN_RUBRIC_SCORING === "true";
 
 export const maxDuration = 300;
 
@@ -177,15 +196,8 @@ async function executeScan(p: ScanParams): Promise<ScanResult> {
     : (complexity === "complex" ? 150_000 : complexity === "medium" ? 95_000 : 72_000);
   const analyzeTimeoutMs = Math.min(ceiling, Math.max(floor, baseTimeout - elapsed));
 
-  // Build prompt
+  // ── Shared setup (same for both scoring paths) ──────────────────────────────
   const pageCount = 1 + (extraction.additionalPages?.length ?? 0);
-  const { systemPrompt } = buildApiPrompt({
-    fields: effectiveFields,
-    findingLimit,
-    findingDepth,
-    siteType: site_type,
-    pageCount,
-  });
 
   // Build user content (raw HTML, same approach as lib/analyze.ts)
   const hardCap = complexity === "simple" ? 40_000 : complexity === "medium" ? 55_000 : 70_000;
@@ -204,87 +216,213 @@ async function executeScan(p: ScanParams): Promise<ScanResult> {
     setTimeout(() => reject(new Error("[TIMEOUT] Analysis timed out")), analyzeTimeoutMs)
   );
 
-  let rawJson: string;
+  // Normalized analysis outputs — populated by whichever scoring path runs below.
   let tokensUsed: number | undefined;
   let realCostUsd: number | undefined;
-  try {
-    const message = await Promise.race([
-      client.messages.create({
+  let score: number;
+  let page_type: string;
+  let strengths: unknown[];
+  let summary: string | undefined;
+  let findingsReturn: unknown[] | undefined;
+  let findingsArr: unknown[];
+  let copyRewritesVal: Record<string, string | undefined> | undefined;
+  let growthBlueprintVal: unknown[] | undefined;
+  let dimensions: Record<string, number>;
+  let reportPayload: Record<string, unknown>;
+
+  if (RUBRIC_SCORING_ENABLED) {
+    // ── RUBRIC SCORING PATH (gated by WEAVN_RUBRIC_SCORING; experimental) ──────
+    // Score + dimensions + findings are COMPUTED from the 307-check rubric results,
+    // never self-reported by the model. The scoped catalog is injected as a cached
+    // system block BEFORE the HTML (carried in the user message).
+    const scopedChecks = scopeChecksForScan(site_type);
+    const systemBlocks = buildRubricSystemBlocks(scopedChecks);
+
+    let rawText: string;
+    try {
+      // Stream to ride out long (16K-token) outputs without socket idle timeouts.
+      const streamRun = client.messages.stream({
         model: "claude-sonnet-4-6",
-        max_tokens: isMultiPage ? 8000 : 5000,
+        max_tokens: 16000,
         temperature: 0,
-        system: [{ type: "text", text: systemPrompt, cache_control: { type: "ephemeral" } }],
+        system: systemBlocks,
         messages: [{ role: "user", content: userContent }],
-      }),
-      analyzeDeadline,
-    ]);
-    tokensUsed = (message.usage?.input_tokens ?? 0) + (message.usage?.output_tokens ?? 0);
-    realCostUsd = realScanCostUsd(message.usage);
-    const block = message.content.find(c => c.type === "text");
-    if (!block || block.type !== "text") throw new Error("No text content from model.");
-    rawJson = block.text.replace(/^```(?:json)?\s*\n?/m, "").replace(/\n?```\s*$/m, "").trim();
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : "Analysis failed.";
-    console.error(`[API v1] ANALYZE ERROR | domain=${domain} | ${msg}`);
-    await markFailed();
-    void logScanUsage(apiKeyId, { url: normalizedUrl, score: null, responseTimeMs: Date.now() - scanStart, status: "error", statusCode: 500, endpoint: "scan", errorCode: "analyze_error" });
-    throw new Error(`Scan failed: ${msg}`);
+      });
+      const message = await Promise.race([streamRun.finalMessage(), analyzeDeadline]);
+      tokensUsed = (message.usage?.input_tokens ?? 0) + (message.usage?.output_tokens ?? 0);
+      realCostUsd = realScanCostUsd(message.usage);
+      const block = message.content.find(c => c.type === "text");
+      if (!block || block.type !== "text") throw new Error("No text content from model.");
+      rawText = block.text;
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Analysis failed.";
+      console.error(`[API v1] RUBRIC ANALYZE ERROR | domain=${domain} | ${msg}`);
+      await markFailed();
+      void logScanUsage(apiKeyId, { url: normalizedUrl, score: null, responseTimeMs: Date.now() - scanStart, status: "error", statusCode: 500, endpoint: "scan", errorCode: "analyze_error" });
+      throw new Error(`Scan failed: ${msg}`);
+    }
+
+    // Tolerant parse — guarantees one row per scoped check (missing → SKIP), never throws.
+    const parsedRubric = parseRubricResponse(rawText, scopedChecks);
+    const { growthScore } = computeGrowthScoreFromRubric(parsedRubric.rows, scopedChecks, null);
+    const counts = rubricCounts(parsedRubric.rows, scopedChecks);
+    console.log(`[API v1] RUBRIC | domain=${domain} score=${growthScore} fails=${counts.fails} passes=${counts.passes} skips=${counts.skips} returned=${parsedRubric.returnedRows}/${scopedChecks.length} truncated=${parsedRubric.truncated}`);
+
+    const apiDims = computeApiDimensions(parsedRubric.rows);
+    const apiFindings = buildApiFindings(parsedRubric.rows, scopedChecks, findingLimit);
+    const builtLeaks = buildLeaks(parsedRubric.rows, scopedChecks);
+    const dimRows = computeApiDimensionRows(parsedRubric.rows);
+    const blueprintStruct = buildGrowthBlueprintStruct(parsedRubric.growthBlueprint);
+
+    score = Math.min(100, Math.max(0, Math.round(growthScore)));
+    page_type = parsedRubric.pageType || "homepage";
+    strengths = buildStrengths(parsedRubric.rows, scopedChecks);
+    summary = parsedRubric.summary || undefined;
+    findingsReturn = apiFindings;
+    findingsArr = apiFindings;
+    copyRewritesVal = {
+      headline: parsedRubric.copyRewrites.headline,
+      subheadline: parsedRubric.copyRewrites.subheadline,
+      cta: parsedRubric.copyRewrites.cta,
+    };
+    growthBlueprintVal = parsedRubric.growthBlueprint;
+    dimensions = apiDims;
+
+    reportPayload = {
+      site_type,
+      healthScore: score,
+      conversionScore: score,
+      growthScore: score,
+      pagesAnalyzed: extraction.pagesAnalyzed,
+      diagnosticBrief: summary ?? "",
+      intelligenceBrief: summary ?? "",
+      dimensionScores: dimRows,
+      leaks: builtLeaks.leaks,
+      api_findings: apiFindings,
+      categoryScores: categoryScoresFromDimensions(apiDims),
+      topLeak: builtLeaks.moneyLeaks[0],
+      heroRewrite: {
+        currentHeadline: "", currentSubheadline: "", currentCta: "",
+        suggestedHeadline: copyRewritesVal.headline ?? "",
+        suggestedSubheadline: copyRewritesVal.subheadline ?? "",
+        suggestedCta: copyRewritesVal.cta ?? "",
+        psychologistsNote: "",
+      },
+      growthBlueprint: blueprintStruct,
+      growthStrategy: { biggestOpportunity: "", trafficOpportunity: "", conversionOpportunity: "", trustOpportunity: "", quickWins: [], thirtyDayPlan: "" },
+      moneyLeaks: builtLeaks.moneyLeaks,
+      quickWins: builtLeaks.quickWins,
+      growthRoadmap: builtLeaks.growthRoadmap,
+      totalChecked: scopedChecks.length,
+      totalFailed: counts.fails,
+      criticalCount: counts.criticalCount,
+      highCount: counts.highCount,
+      hiddenCount: builtLeaks.hiddenCount,
+    };
+  } else {
+    // ── SELF-REPORTED SCORING PATH (default — behaves byte-for-byte as before) ──
+    const { systemPrompt } = buildApiPrompt({
+      fields: effectiveFields,
+      findingLimit,
+      findingDepth,
+      siteType: site_type,
+      pageCount,
+    });
+
+    let rawJson: string;
+    try {
+      const message = await Promise.race([
+        client.messages.create({
+          model: "claude-sonnet-4-6",
+          max_tokens: isMultiPage ? 8000 : 5000,
+          temperature: 0,
+          system: [{ type: "text", text: systemPrompt, cache_control: { type: "ephemeral" } }],
+          messages: [{ role: "user", content: userContent }],
+        }),
+        analyzeDeadline,
+      ]);
+      tokensUsed = (message.usage?.input_tokens ?? 0) + (message.usage?.output_tokens ?? 0);
+      realCostUsd = realScanCostUsd(message.usage);
+      const block = message.content.find(c => c.type === "text");
+      if (!block || block.type !== "text") throw new Error("No text content from model.");
+      rawJson = block.text.replace(/^```(?:json)?\s*\n?/m, "").replace(/\n?```\s*$/m, "").trim();
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Analysis failed.";
+      console.error(`[API v1] ANALYZE ERROR | domain=${domain} | ${msg}`);
+      await markFailed();
+      void logScanUsage(apiKeyId, { url: normalizedUrl, score: null, responseTimeMs: Date.now() - scanStart, status: "error", statusCode: 500, endpoint: "scan", errorCode: "analyze_error" });
+      throw new Error(`Scan failed: ${msg}`);
+    }
+
+    // Parse response
+    type ApiResponse = {
+      score: number;
+      verdict: string;
+      dimensions: Record<string, number>;
+      summary?: string;
+      findings?: unknown[];
+      copy_rewrites?: Record<string, string | undefined>;
+      growth_blueprint?: unknown[];
+      strengths?: unknown[];
+      page_type?: string;
+    };
+    let parsed: ApiResponse;
+    try {
+      parsed = JSON.parse(rawJson) as ApiResponse;
+    } catch {
+      await markFailed();
+      void logScanUsage(apiKeyId, { url: normalizedUrl, score: null, responseTimeMs: Date.now() - scanStart, status: "error", statusCode: 500, endpoint: "scan", errorCode: "json_parse" });
+      throw new Error("Scan failed: invalid JSON response from model.");
+    }
+
+    score = Math.min(100, Math.max(0, Math.round(parsed.score ?? 50)));
+    page_type = typeof parsed.page_type === "string" ? parsed.page_type : "homepage";
+    strengths = Array.isArray(parsed.strengths) ? parsed.strengths : [];
+    summary = parsed.summary;
+    findingsReturn = parsed.findings ? (parsed.findings as unknown[]).slice(0, findingLimit) : undefined;
+    findingsArr = parsed.findings ? (parsed.findings as unknown[]).slice(0, findingLimit) : [];
+    copyRewritesVal = parsed.copy_rewrites;
+    growthBlueprintVal = parsed.growth_blueprint;
+
+    const dims: Record<string, number> = { conversion_architecture: 0, trust_signals: 0, message_clarity: 0, traffic_readiness: 0, technical_foundation: 0, objection_handling: 0, offer_clarity: 0 };
+    if (parsed.dimensions) {
+      for (const [k, v] of Object.entries(parsed.dimensions)) {
+        if (k in dims) dims[k] = typeof v === "number" ? v : 0;
+      }
+    }
+    dimensions = dims;
+
+    // Save report — store a minimal ReportPayload-compatible object
+    reportPayload = {
+      site_type,
+      healthScore: score,
+      conversionScore: score,
+      growthScore: score,
+      pagesAnalyzed: extraction.pagesAnalyzed,
+      diagnosticBrief: parsed.summary ?? "",
+      intelligenceBrief: parsed.summary ?? "",
+      dimensionScores: parsed.dimensions
+        ? Object.entries(parsed.dimensions).map(([label, s], i) => ({
+            id: `dim-${i}`,
+            label: Object.keys({ conversion_architecture: "Conversion Architecture", trust_signals: "Trust Signals", message_clarity: "Message Clarity", traffic_readiness: "Traffic Readiness", technical_foundation: "Technical Foundation" }).find(k => k === label) ?? label,
+            description: "",
+            score: typeof s === "number" ? s : 0,
+            failCount: 0,
+            totalCount: 1,
+            status: (typeof s === "number" && s >= 80 ? "strong" : s >= 60 ? "fair" : s >= 40 ? "weak" : "critical") as "strong" | "fair" | "weak" | "critical",
+          }))
+        : [],
+      leaks: [],
+      api_findings: parsed.findings ? (parsed.findings as unknown[]).slice(0, findingLimit) : [],
+      categoryScores: { psychology: 50, messaging: 50, conversion: score, seo: 50, ux: 50, trust: 50 },
+      topLeak: undefined,
+      heroRewrite: { currentHeadline: "", currentSubheadline: "", currentCta: "", suggestedHeadline: parsed.copy_rewrites?.headline ?? "", suggestedSubheadline: parsed.copy_rewrites?.subheadline ?? "", suggestedCta: parsed.copy_rewrites?.cta ?? "", psychologistsNote: "" },
+      growthBlueprint: { weekOne: [], weekTwoToFour: [], monthTwo: "", projectedLift: "" },
+      growthStrategy: { biggestOpportunity: "", trafficOpportunity: "", conversionOpportunity: "", trustOpportunity: "", quickWins: [], thirtyDayPlan: "" },
+    };
   }
 
-  // Parse response
-  type ApiResponse = {
-    score: number;
-    verdict: string;
-    dimensions: Record<string, number>;
-    summary?: string;
-    findings?: unknown[];
-    copy_rewrites?: Record<string, string | undefined>;
-    growth_blueprint?: unknown[];
-    strengths?: unknown[];
-    page_type?: string;
-  };
-  let parsed: ApiResponse;
-  try {
-    parsed = JSON.parse(rawJson) as ApiResponse;
-  } catch {
-    await markFailed();
-    void logScanUsage(apiKeyId, { url: normalizedUrl, score: null, responseTimeMs: Date.now() - scanStart, status: "error", statusCode: 500, endpoint: "scan", errorCode: "json_parse" });
-    throw new Error("Scan failed: invalid JSON response from model.");
-  }
-
-  const score = Math.min(100, Math.max(0, Math.round(parsed.score ?? 50)));
   const verdict = scoreToVerdict(score);
-  const page_type = typeof parsed.page_type === "string" ? parsed.page_type : "homepage";
-  const strengths = Array.isArray(parsed.strengths) ? parsed.strengths : [];
-
-  // Save report — store a minimal ReportPayload-compatible object
-  const reportPayload = {
-    site_type,
-    healthScore: score,
-    conversionScore: score,
-    growthScore: score,
-    pagesAnalyzed: extraction.pagesAnalyzed,
-    diagnosticBrief: parsed.summary ?? "",
-    intelligenceBrief: parsed.summary ?? "",
-    dimensionScores: parsed.dimensions
-      ? Object.entries(parsed.dimensions).map(([label, s], i) => ({
-          id: `dim-${i}`,
-          label: Object.keys({ conversion_architecture: "Conversion Architecture", trust_signals: "Trust Signals", message_clarity: "Message Clarity", traffic_readiness: "Traffic Readiness", technical_foundation: "Technical Foundation" }).find(k => k === label) ?? label,
-          description: "",
-          score: typeof s === "number" ? s : 0,
-          failCount: 0,
-          totalCount: 1,
-          status: (typeof s === "number" && s >= 80 ? "strong" : s >= 60 ? "fair" : s >= 40 ? "weak" : "critical") as "strong" | "fair" | "weak" | "critical",
-        }))
-      : [],
-    leaks: [],
-    api_findings: parsed.findings ? (parsed.findings as unknown[]).slice(0, findingLimit) : [],
-    categoryScores: { psychology: 50, messaging: 50, conversion: score, seo: 50, ux: 50, trust: 50 },
-    topLeak: undefined,
-    heroRewrite: { currentHeadline: "", currentSubheadline: "", currentCta: "", suggestedHeadline: parsed.copy_rewrites?.headline ?? "", suggestedSubheadline: parsed.copy_rewrites?.subheadline ?? "", suggestedCta: parsed.copy_rewrites?.cta ?? "", psychologistsNote: "" },
-    growthBlueprint: { weekOne: [], weekTwoToFour: [], monthTwo: "", projectedLift: "" },
-    growthStrategy: { biggestOpportunity: "", trafficOpportunity: "", conversionOpportunity: "", trustOpportunity: "", quickWins: [], thirtyDayPlan: "" },
-  };
 
   let reportId = "";
   try {
@@ -319,23 +457,6 @@ async function executeScan(p: ScanParams): Promise<ScanResult> {
   const benchmark = await getBenchmark(site_type, score).catch(() => null);
   const rawDimBenchmarks = await getDimensionBenchmarks(site_type).catch(() => null);
 
-  // Build dimension map
-  const dimMap: Record<string, string> = {
-    conversion_architecture: "Conversion Architecture",
-    trust_signals: "Trust Signals",
-    message_clarity: "Message Clarity",
-    traffic_readiness: "Traffic Readiness",
-    technical_foundation: "Technical Foundation",
-    objection_handling: "Objection Handling",
-    offer_clarity: "Offer Clarity",
-  };
-  const dimensions: Record<string, number> = { conversion_architecture: 0, trust_signals: 0, message_clarity: 0, traffic_readiness: 0, technical_foundation: 0, objection_handling: 0, offer_clarity: 0 };
-  if (parsed.dimensions) {
-    for (const [k, v] of Object.entries(parsed.dimensions)) {
-      if (k in dimensions) dimensions[k] = typeof v === "number" ? v : 0;
-    }
-  }
-
   const weights = getWeightProfile(site_type, complexity);
   const weighted_score = Math.min(100, Math.max(0, Math.round(
     Object.entries(dimensions).reduce((sum, [key, val]) => sum + (weights[key] ?? 0) * val, 0)
@@ -346,8 +467,7 @@ async function executeScan(p: ScanParams): Promise<ScanResult> {
     weights,
   };
 
-  const findings_arr = parsed.findings ? (parsed.findings as unknown[]).slice(0, findingLimit) : [];
-  const findings_summary = findings_arr.length;
+  const findings_summary = findingsArr.length;
 
   const dimensionBenchmarks = rawDimBenchmarks
     ? Object.entries(dimensions).reduce<Record<string, { score: number; average: number; percentile_label: string; p10: number; p90: number }>>((acc, [key, dimScore]) => {
@@ -372,10 +492,10 @@ async function executeScan(p: ScanParams): Promise<ScanResult> {
     scannedAt: new Date().toISOString(),
     pagesScanned: extraction.pagesAnalyzed.length,
     dimensions,
-    summary: parsed.summary,
-    findings: parsed.findings ? (parsed.findings as unknown[]).slice(0, findingLimit) : undefined,
-    copyRewrites: parsed.copy_rewrites,
-    growthBlueprint: parsed.growth_blueprint,
+    summary,
+    findings: findingsReturn,
+    copyRewrites: copyRewritesVal,
+    growthBlueprint: growthBlueprintVal,
     benchmark,
     dimensionBenchmarks,
     wordCount,

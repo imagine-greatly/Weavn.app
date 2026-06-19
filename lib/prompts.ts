@@ -106,12 +106,7 @@ If any answer is no — rewrite it.
 
 DYNAMIC CONTENT RULE — Before flagging any finding about missing, incomplete, or absent content, ask: could this be dynamic content that is not visible in a static HTML snapshot? Never flag as missing or broken: carousel or slider content (only one slide visible), tab panel content (only active tab captured), accordion content (collapsed panels not in DOM), modal or popup content (not open in snapshot), lazy-loaded images or text (may not have loaded), animated counters or numbers (may show initial value), video content (not capturable from HTML), or infinite scroll content (only first batch captured). Only flag content issues when the absence is clearly structural and not a rendering artifact of JavaScript-driven dynamic components. If surrounding HTML suggests a dynamic component — look for classes like swiper, slick, carousel, tabs, accordion, collapse, lazy — treat the component as fully functional and populated.
 
-The check catalog encodes severity and category for scoring; your narrative must describe the same failure the check targets.
-
-For every PASS return: {id, status: 'PASS'}
-For every SKIP return: {id, status: 'SKIP', skipReason: one sentence}
-
-Return ONLY the JSON array. No markdown. No explanation. No preamble.`;
+The check catalog encodes severity and category for scoring; your narrative must describe the same failure the check targets.`;
 
 /** @deprecated Use RUBRIC_EVALUATION_SYSTEM_PROMPT — kept for reference only. */
 export const RUBRIC_JSON_SHAPE_EXAMPLE = RUBRIC_EVALUATION_SYSTEM_PROMPT;

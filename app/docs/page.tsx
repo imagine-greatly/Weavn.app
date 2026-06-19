@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useMemo } from "react";
 import LandingFinalCTA from "@/components/landing/LandingFinalCTA";
+import { BAND_HEX } from "@/lib/verdict";
 
 /**
  * Docs page — technical reference for the Weavn AI diagnostic platform.
@@ -55,11 +56,13 @@ const NAV: { section: string; items: { label: string; id: string }[] }[] = [
 
 const ALL_NAV_ITEMS: NavItem[] = NAV.flatMap((g) => g.items.map((i) => ({ ...i, section: g.section })));
 
+// Canonical 3-band legend — sourced from lib/verdict (the single source of truth for
+// score → band → color). Thresholds: red < 50, amber 50–69, green ≥ 70. Colors come
+// from BAND_HEX, never a hardcoded 4th definition.
 const SCORE_RANGES = [
-  { range: "0-39", label: "CRITICAL", color: "var(--red)", text: "Multiple high-impact findings. Conversion architecture is actively suppressing revenue; resolve in priority order." },
-  { range: "40-59", label: "AT RISK", color: "var(--orange)", text: "Measurable revenue suppression detected. Address the top three findings first, then rescan." },
-  { range: "60-79", label: "SUBOPTIMAL", color: "var(--cyan)", text: "Conversion architecture underperforms in one or more revenue dimensions. Remaining findings are lower suppression." },
-  { range: "80-100", label: "OPTIMIZED", color: "var(--green)", text: "Minor suppression only. Resolve residual findings after higher-priority work elsewhere." },
+  { range: "0–49", label: "CRITICAL", color: BAND_HEX.red, text: "Multiple high-impact findings. Conversion architecture is actively suppressing revenue; resolve in priority order." },
+  { range: "50–69", label: "AT RISK", color: BAND_HEX.amber, text: "Measurable revenue suppression detected. Address the top findings first, then rescan." },
+  { range: "70–100", label: "OPTIMIZED", color: BAND_HEX.green, text: "Minor suppression only. Resolve residual findings after higher-priority work elsewhere." },
 ];
 
 const PRINCIPLES = [
@@ -175,23 +178,23 @@ export default function DocsPage() {
   return (
     <div
       className="min-h-screen"
-      style={{ background: "var(--bg-base)", paddingTop: 64 }}
+      style={{ background: "#050810", paddingTop: 64 }}
     >
       <div className="flex">
         {/* Sidebar — sticky 240px */}
         <aside
           className="sticky top-16 h-[calc(100vh-4rem)] w-[240px] shrink-0 overflow-y-auto border-r py-8 pl-6 pr-4"
-          style={{ borderColor: "var(--border-default)" }}
+          style={{ borderColor: "rgba(255,255,255,0.08)" }}
         >
           <input
             type="search"
             placeholder="Search documentation"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="mb-6 w-full rounded border bg-transparent px-3 py-2 font-mono text-[13px] outline-none placeholder:font-mono"
+            className="mb-6 w-full border bg-transparent px-3 py-2 font-mono text-[13px] outline-none placeholder:font-mono"
             style={{
-              borderColor: "var(--border-default)",
-              color: "var(--text-primary)",
+              borderColor: "rgba(255,255,255,0.08)",
+              color: "#E6E9EE",
             }}
           />
           <nav className="space-y-6">
@@ -199,7 +202,7 @@ export default function DocsPage() {
               <div key={group.section}>
                 <p
                   className="font-mono text-[10px] uppercase"
-                  style={{ color: "var(--text-muted)", letterSpacing: "2px", marginBottom: 8 }}
+                  style={{ color: "#6E7587", letterSpacing: "2px", marginBottom: 8 }}
                 >
                   {group.section}
                 </p>
@@ -210,8 +213,8 @@ export default function DocsPage() {
                         href={`#${item.id}`}
                         className="block border-l-2 py-2 pl-3 font-mono text-[13px] transition-colors"
                         style={{
-                          borderLeftColor: activeId === item.id ? "var(--cyan)" : "transparent",
-                          color: activeId === item.id ? "var(--cyan)" : "var(--text-secondary)",
+                          borderLeftColor: activeId === item.id ? "#9D8CFF" : "transparent",
+                          color: activeId === item.id ? "#9D8CFF" : "#9398A8",
                         }}
                       >
                         {item.label}
@@ -231,33 +234,33 @@ export default function DocsPage() {
           style={{ maxWidth: "min(880px, calc(100vw - 280px))" }}
         >
           <DocSection id="getting-your-first-scan" title="Running your first diagnostic" visible={visibleIds.has("getting-your-first-scan")}>
-            <p className="mb-6 font-sans text-[15px] leading-[1.8]" style={{ color: "var(--text-secondary)" }}>
+            <p className="mb-6 font-body text-[15px] leading-[1.8]" style={{ color: "#9398A8" }}>
               Enter your URL on the landing page. Select depth if prompted. Run diagnostic. No account is required for the first run.
             </p>
-            <h3 className="mb-3 max-w-[min(36rem,100%)] font-sans font-extrabold" style={{ color: "var(--text-primary)", fontWeight: 800, fontSize: "clamp(18px, 1.5vw, 22px)", lineHeight: 0.98, letterSpacing: "-0.5px" }}>
+            <h3 className="mb-3 max-w-[min(36rem,100%)] font-display font-extrabold" style={{ color: "#E6E9EE", fontWeight: 800, fontSize: "clamp(18px, 1.5vw, 22px)", lineHeight: 0.98, letterSpacing: "-0.5px" }}>
               URL hygiene
             </h3>
-            <ul className="mb-6 list-disc space-y-2 pl-5 font-sans text-[15px] leading-[1.8]" style={{ color: "var(--text-secondary)" }}>
+            <ul className="mb-6 list-disc space-y-2 pl-5 font-body text-[15px] leading-[1.8]" style={{ color: "#9398A8" }}>
               <li>Include the scheme: https://</li>
               <li>Start with the landing page; highest traffic and highest suppression surface area</li>
               <li>On fetch errors, toggle www. or apex to match the live canonical host</li>
             </ul>
-            <h3 className="mb-3 max-w-[min(36rem,100%)] font-sans font-extrabold" style={{ color: "var(--text-primary)", fontWeight: 800, fontSize: "clamp(18px, 1.5vw, 22px)", lineHeight: 0.98, letterSpacing: "-0.5px" }}>
+            <h3 className="mb-3 max-w-[min(36rem,100%)] font-display font-extrabold" style={{ color: "#E6E9EE", fontWeight: 800, fontSize: "clamp(18px, 1.5vw, 22px)", lineHeight: 0.98, letterSpacing: "-0.5px" }}>
               Pages in scope
             </h3>
-            <div className="overflow-x-auto rounded-lg border" style={{ borderColor: "var(--border-default)", background: "var(--bg-card)" }}>
+            <div className="overflow-x-auto border" style={{ borderColor: "rgba(255,255,255,0.08)", background: "#0A0E18" }}>
               <table className="w-full border-collapse font-mono text-[13px]">
                 <thead>
-                  <tr style={{ borderBottom: "1px solid var(--border-default)" }}>
-                    <th className="p-3 text-left font-medium" style={{ color: "var(--text-primary)" }}>Page</th>
-                    <th className="p-3 text-left font-medium" style={{ color: "var(--text-primary)" }}>Diagnostic focus</th>
+                  <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
+                    <th className="p-3 text-left font-medium" style={{ color: "#E6E9EE" }}>Page</th>
+                    <th className="p-3 text-left font-medium" style={{ color: "#E6E9EE" }}>Diagnostic focus</th>
                   </tr>
                 </thead>
-                <tbody style={{ color: "var(--text-secondary)" }}>
-                  <tr style={{ borderBottom: "1px solid var(--border-default)" }}><td className="p-3">Landing Page</td><td className="p-3">Hero, messaging, primary CTA, trust signal architecture</td></tr>
-                  <tr style={{ borderBottom: "1px solid var(--border-default)" }}><td className="p-3">Pricing</td><td className="p-3">Offer clarity, commitment step count</td></tr>
-                  <tr style={{ borderBottom: "1px solid var(--border-default)" }}><td className="p-3">About</td><td className="p-3">Authority and credibility density</td></tr>
-                  <tr style={{ borderBottom: "1px solid var(--border-default)" }}><td className="p-3">Product/Service</td><td className="p-3">Outcome proof, purchase path continuity</td></tr>
+                <tbody style={{ color: "#9398A8" }}>
+                  <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.08)" }}><td className="p-3">Landing Page</td><td className="p-3">Hero, messaging, primary CTA, trust signal architecture</td></tr>
+                  <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.08)" }}><td className="p-3">Pricing</td><td className="p-3">Offer clarity, commitment step count</td></tr>
+                  <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.08)" }}><td className="p-3">About</td><td className="p-3">Authority and credibility density</td></tr>
+                  <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.08)" }}><td className="p-3">Product/Service</td><td className="p-3">Outcome proof, purchase path continuity</td></tr>
                   <tr><td className="p-3">Blog/FAQ</td><td className="p-3">Search relevance signals, content depth</td></tr>
                 </tbody>
               </table>
@@ -265,16 +268,16 @@ export default function DocsPage() {
           </DocSection>
 
           <DocSection id="understanding-your-score" title="Weavn Score bands" visible={visibleIds.has("understanding-your-score")}>
-            <p className="mb-6 font-sans text-[15px] leading-[1.8]" style={{ color: "var(--text-secondary)" }}>
+            <p className="mb-6 font-body text-[15px] leading-[1.8]" style={{ color: "#9398A8" }}>
               Weavn Score (0–100) aggregates conversion architecture health across revenue dimensions. Each band maps to expected suppression level.
             </p>
             <div className="space-y-3">
               {SCORE_RANGES.map((r) => (
                 <div
                   key={r.range}
-                  className="rounded-lg border-l-4 p-4"
+                  className="border-l-4 p-4"
                   style={{
-                    background: "var(--bg-card)",
+                    background: "#0A0E18",
                     borderColor: r.color,
                     borderLeftWidth: 4,
                   }}
@@ -282,7 +285,7 @@ export default function DocsPage() {
                   <p className="font-mono text-[12px] font-medium uppercase" style={{ color: r.color }}>
                     {r.range}: {r.label}
                   </p>
-                  <p className="mt-2 font-sans text-[15px] leading-[1.8]" style={{ color: "var(--text-secondary)" }}>
+                  <p className="mt-2 font-body text-[15px] leading-[1.8]" style={{ color: "#9398A8" }}>
                     {r.text}
                   </p>
                 </div>
@@ -291,77 +294,77 @@ export default function DocsPage() {
           </DocSection>
 
           <DocSection id="reading-your-report" title="Interpreting diagnostic findings" visible={visibleIds.has("reading-your-report")}>
-            <p className="mb-6 font-sans text-[15px] leading-[1.8]" style={{ color: "var(--text-secondary)" }}>
+            <p className="mb-6 font-body text-[15px] leading-[1.8]" style={{ color: "#9398A8" }}>
               The diagnostic report orders content by revenue impact. Each block below maps to a UI region.
             </p>
-            <h3 className="mb-2 max-w-[min(36rem,100%)] font-sans font-extrabold" style={{ color: "var(--text-primary)", fontWeight: 800, fontSize: "clamp(18px, 1.5vw, 22px)", lineHeight: 0.98, letterSpacing: "-0.5px" }}>
+            <h3 className="mb-2 max-w-[min(36rem,100%)] font-display font-extrabold" style={{ color: "#E6E9EE", fontWeight: 800, fontSize: "clamp(18px, 1.5vw, 22px)", lineHeight: 0.98, letterSpacing: "-0.5px" }}>
               Weavn Score ring
             </h3>
-            <p className="mb-6 font-sans text-[15px] leading-[1.8]" style={{ color: "var(--text-secondary)" }}>
+            <p className="mb-6 font-body text-[15px] leading-[1.8]" style={{ color: "#9398A8" }}>
               The top ring is the composite Weavn Score across all revenue dimensions. Track this number across rescans to measure architectural movement.
             </p>
-            <h3 className="mb-2 max-w-[min(36rem,100%)] font-sans font-extrabold" style={{ color: "var(--text-primary)", fontWeight: 800, fontSize: "clamp(18px, 1.5vw, 22px)", lineHeight: 0.98, letterSpacing: "-0.5px" }}>
+            <h3 className="mb-2 max-w-[min(36rem,100%)] font-display font-extrabold" style={{ color: "#E6E9EE", fontWeight: 800, fontSize: "clamp(18px, 1.5vw, 22px)", lineHeight: 0.98, letterSpacing: "-0.5px" }}>
               Revenue dimension scores
             </h3>
-            <p className="mb-6 font-sans text-[15px] leading-[1.8]" style={{ color: "var(--text-secondary)" }}>
+            <p className="mb-6 font-body text-[15px] leading-[1.8]" style={{ color: "#9398A8" }}>
               Conversion Architecture, Trust Signals, Message Clarity, Traffic Readiness, and Technical Foundation each expose a bar and sub-score. The lowest bars indicate which dimension currently drives suppression.
             </p>
-            <h3 className="mb-2 max-w-[min(36rem,100%)] font-sans font-extrabold" style={{ color: "var(--text-primary)", fontWeight: 800, fontSize: "clamp(18px, 1.5vw, 22px)", lineHeight: 0.98, letterSpacing: "-0.5px" }}>
+            <h3 className="mb-2 max-w-[min(36rem,100%)] font-display font-extrabold" style={{ color: "#E6E9EE", fontWeight: 800, fontSize: "clamp(18px, 1.5vw, 22px)", lineHeight: 0.98, letterSpacing: "-0.5px" }}>
               Finding cards
             </h3>
-            <p className="mb-6 font-sans text-[15px] leading-[1.8]" style={{ color: "var(--text-secondary)" }}>
+            <p className="mb-6 font-body text-[15px] leading-[1.8]" style={{ color: "#9398A8" }}>
               Each card lists severity, cited principle, quoted evidence from your DOM, and a written resolution. Critical findings stay sorted by revenue impact at the top of the list.
             </p>
-            <h3 className="mb-2 max-w-[min(36rem,100%)] font-sans font-extrabold" style={{ color: "var(--text-primary)", fontWeight: 800, fontSize: "clamp(18px, 1.5vw, 22px)", lineHeight: 0.98, letterSpacing: "-0.5px" }}>
+            <h3 className="mb-2 max-w-[min(36rem,100%)] font-display font-extrabold" style={{ color: "#E6E9EE", fontWeight: 800, fontSize: "clamp(18px, 1.5vw, 22px)", lineHeight: 0.98, letterSpacing: "-0.5px" }}>
               Hero diagnostic rewrite
             </h3>
-            <p className="mb-6 font-sans text-[15px] leading-[1.8]" style={{ color: "var(--text-secondary)" }}>
+            <p className="mb-6 font-body text-[15px] leading-[1.8]" style={{ color: "#9398A8" }}>
               Pro includes an AI-generated hero rewrite constrained by the same finding set. Edit to match brand voice; the text is implementation-ready draft copy.
             </p>
-            <h3 className="mb-2 max-w-[min(36rem,100%)] font-sans font-extrabold" style={{ color: "var(--text-primary)", fontWeight: 800, fontSize: "clamp(18px, 1.5vw, 22px)", lineHeight: 0.98, letterSpacing: "-0.5px" }}>
+            <h3 className="mb-2 max-w-[min(36rem,100%)] font-display font-extrabold" style={{ color: "#E6E9EE", fontWeight: 800, fontSize: "clamp(18px, 1.5vw, 22px)", lineHeight: 0.98, letterSpacing: "-0.5px" }}>
               Resolution summary
             </h3>
-            <p className="font-sans text-[15px] leading-[1.8]" style={{ color: "var(--text-secondary)" }}>
+            <p className="font-body text-[15px] leading-[1.8]" style={{ color: "#9398A8" }}>
               A short ordered list of the highest-impact resolutions to ship first.
             </p>
           </DocSection>
 
           <DocSection id="critical-vs-warning-vs-passing" title="Severity bands" visible={visibleIds.has("critical-vs-warning-vs-passing")}>
-            <p className="mb-6 font-sans text-[15px] leading-[1.8]" style={{ color: "var(--text-secondary)" }}>
+            <p className="mb-6 font-body text-[15px] leading-[1.8]" style={{ color: "#9398A8" }}>
               Severity tags sequence work by suppression strength.
             </p>
-            <p className="mb-4 font-sans text-[15px] leading-[1.8]" style={{ color: "var(--text-secondary)" }}>
-              <strong style={{ color: "var(--red)" }}>Critical</strong> — Actively suppressing conversions. Immediate resolution required. Typical triggers include failed eight-second hero read and invisible or ambiguous primary CTAs.
+            <p className="mb-4 font-body text-[15px] leading-[1.8]" style={{ color: "#9398A8" }}>
+              <strong style={{ color: "#E8635F" }}>Critical</strong> — Actively suppressing conversions. Immediate resolution required. Typical triggers include failed eight-second hero read and invisible or ambiguous primary CTAs.
             </p>
-            <p className="mb-4 font-sans text-[15px] leading-[1.8]" style={{ color: "var(--text-secondary)" }}>
-              <strong style={{ color: "var(--orange)" }}>High</strong> — Measurable revenue suppression detected. Resolve after critical items clear (e.g., weak social proof placement, thin meta description).
+            <p className="mb-4 font-body text-[15px] leading-[1.8]" style={{ color: "#9398A8" }}>
+              <strong style={{ color: "#EFB23E" }}>High</strong> — Measurable revenue suppression detected. Resolve after critical items clear (e.g., weak social proof placement, thin meta description).
             </p>
-            <p className="font-sans text-[15px] leading-[1.8]" style={{ color: "var(--text-secondary)" }}>
-              <strong style={{ color: "var(--green)" }}>Low / clear</strong> — Minor suppression or a check that produced no finding. Defer work until higher-priority cards are closed; use clear states as internal benchmarks.
+            <p className="font-body text-[15px] leading-[1.8]" style={{ color: "#9398A8" }}>
+              <strong style={{ color: "#00C48C" }}>Low / clear</strong> — Minor suppression or a check that produced no finding. Defer work until higher-priority cards are closed; use clear states as internal benchmarks.
             </p>
           </DocSection>
 
           <DocSection id="psychology-principles-explained" title="Principles cited in findings" visible={visibleIds.has("psychology-principles-explained")}>
-            <p className="mb-8 font-sans text-[15px] leading-[1.8]" style={{ color: "var(--text-secondary)" }}>
+            <p className="mb-8 font-body text-[15px] leading-[1.8]" style={{ color: "#9398A8" }}>
               Weavn attaches a named principle to each finding. Below are the eight most frequent citations and how they surface in a diagnostic scan.
             </p>
             <div className="space-y-10">
               {PRINCIPLES.map((p) => (
                 <div key={p.name}>
-                  <p className="font-mono text-[14px] font-medium" style={{ color: "var(--cyan)" }}>
+                  <p className="font-mono text-[14px] font-medium" style={{ color: "#E6E9EE" }}>
                     {p.name}
                   </p>
-                  <p className="mt-1 font-sans text-[15px] leading-[1.8]" style={{ color: "var(--text-secondary)" }}>
+                  <p className="mt-1 font-body text-[15px] leading-[1.8]" style={{ color: "#9398A8" }}>
                     {p.definition}
                   </p>
-                  <p className="mt-3 font-sans text-[15px] leading-[1.8]" style={{ color: "var(--text-secondary)" }}>
+                  <p className="mt-3 font-body text-[15px] leading-[1.8]" style={{ color: "#9398A8" }}>
                     {p.applies}
                   </p>
                   <div
-                    className="mt-3 rounded-lg border p-3 font-mono text-[13px]"
-                    style={{ background: "var(--bg-card)", borderColor: "var(--border-default)", color: "var(--text-secondary)" }}
+                    className="mt-3 border p-3 font-mono text-[13px]"
+                    style={{ background: "#0A0E18", borderColor: "rgba(255,255,255,0.08)", color: "#9398A8" }}
                   >
-                    <span style={{ color: "var(--text-muted)" }}>Example: </span>
+                    <span style={{ color: "#6E7587" }}>Example: </span>
                     {p.example}
                   </div>
                 </div>
@@ -370,79 +373,79 @@ export default function DocsPage() {
           </DocSection>
 
           <DocSection id="how-to-prioritize-fixes" title="Prioritizing resolutions" visible={visibleIds.has("how-to-prioritize-fixes")}>
-            <p className="mb-6 font-sans text-[15px] leading-[1.8]" style={{ color: "var(--text-secondary)" }}>
+            <p className="mb-6 font-body text-[15px] leading-[1.8]" style={{ color: "#9398A8" }}>
               Ship Critical resolutions first, then High. Inside Critical, follow the report order; it is already sorted by revenue impact.
             </p>
-            <p className="font-sans text-[15px] leading-[1.8]" style={{ color: "var(--text-secondary)" }}>
+            <p className="font-body text-[15px] leading-[1.8]" style={{ color: "#9398A8" }}>
               Close one finding per deploy when possible: implement the top resolution, run a diagnostic scan, read the delta, then proceed. Isolated changes keep score movement attributable.
             </p>
           </DocSection>
 
           <DocSection id="how-hero-rewrites-work" title="How hero rewrites work" visible={visibleIds.has("how-hero-rewrites-work")}>
-            <p className="mb-6 font-sans text-[15px] leading-[1.8]" style={{ color: "var(--text-secondary)" }}>
+            <p className="mb-6 font-body text-[15px] leading-[1.8]" style={{ color: "#9398A8" }}>
               Pro outputs an AI-generated hero block tied to the active finding list (outcome-led headline, risk reversal, CTA clarity). The model does not invent findings; it responds only to flagged cards.
             </p>
-            <p className="font-sans text-[15px] leading-[1.8]" style={{ color: "var(--text-secondary)" }}>
+            <p className="font-body text-[15px] leading-[1.8]" style={{ color: "#9398A8" }}>
               Treat the block as draft copy. Align tone with brand guidelines. Cross-reference the principle string on each finding to see why the rewrite shifted specific phrases.
             </p>
           </DocSection>
 
           <DocSection id="implementing-suggestions" title="Implementing resolutions" visible={visibleIds.has("implementing-suggestions")}>
-            <p className="mb-6 font-sans text-[15px] leading-[1.8]" style={{ color: "var(--text-secondary)" }}>
+            <p className="mb-6 font-body text-[15px] leading-[1.8]" style={{ color: "#9398A8" }}>
               Each card ships a concrete resolution. Paste into CMS or code, or hand the text to an editor as a scoped brief.
             </p>
-            <p className="font-sans text-[15px] leading-[1.8]" style={{ color: "var(--text-secondary)" }}>
+            <p className="font-body text-[15px] leading-[1.8]" style={{ color: "#9398A8" }}>
               After deployment, run another diagnostic scan to refresh Weavn Score and verify the finding clears. Pro retains history for trend comparison.
             </p>
           </DocSection>
 
           <DocSection id="when-to-regenerate" title="When to regenerate" visible={visibleIds.has("when-to-regenerate")}>
-            <p className="font-sans text-[15px] leading-[1.8]" style={{ color: "var(--text-secondary)" }}>
+            <p className="font-body text-[15px] leading-[1.8]" style={{ color: "#9398A8" }}>
               Regenerate the hero rewrite when positioning, audience, or offer copy changes materially, or when you need an alternate phrasing. Each run re-binds to the latest finding set so output stays consistent with current suppression data.
             </p>
           </DocSection>
 
           <DocSection id="best-urls-to-scan" title="Recommended URLs" visible={visibleIds.has("best-urls-to-scan")}>
-            <p className="mb-6 font-sans text-[15px] leading-[1.8]" style={{ color: "var(--text-secondary)" }}>
+            <p className="mb-6 font-body text-[15px] leading-[1.8]" style={{ color: "#9398A8" }}>
               Queue landing page first, then pricing, about, and primary product or service URLs. Each diagnostic scan ingests the landing page and up to two additional subpages (Pro).
             </p>
-            <p className="font-sans text-[15px] leading-[1.8]" style={{ color: "var(--text-secondary)" }}>
+            <p className="font-body text-[15px] leading-[1.8]" style={{ color: "#9398A8" }}>
               Match the hostname pattern used in paid and organic entry (www versus apex) so the HTML matches visitor-facing infrastructure.
             </p>
           </DocSection>
 
           <DocSection id="site-types-explained" title="Site models" visible={visibleIds.has("site-types-explained")}>
-            <p className="mb-6 font-sans text-[15px] leading-[1.8]" style={{ color: "var(--text-secondary)" }}>
+            <p className="mb-6 font-body text-[15px] leading-[1.8]" style={{ color: "#9398A8" }}>
               Weavn classifies ecommerce, SaaS, service, local, and content sites, then applies model-specific weights so checks stay comparable within the archetype.
             </p>
-            <p className="font-sans text-[15px] leading-[1.8]" style={{ color: "var(--text-secondary)" }}>
+            <p className="font-body text-[15px] leading-[1.8]" style={{ color: "#9398A8" }}>
               No manual model selection is required; inference uses page signals. A misclassified model still returns valid findings; emphasis strings may shift slightly.
             </p>
           </DocSection>
 
           <DocSection id="improving-your-score" title="Moving the Weavn Score" visible={visibleIds.has("improving-your-score")}>
-            <p className="mb-6 font-sans text-[15px] leading-[1.8]" style={{ color: "var(--text-secondary)" }}>
+            <p className="mb-6 font-body text-[15px] leading-[1.8]" style={{ color: "#9398A8" }}>
               Close Critical cards, then High. Rescan after each batch. Ten- to twenty-point moves are common once the top three to five findings ship.
             </p>
-            <p className="font-sans text-[15px] leading-[1.8]" style={{ color: "var(--text-secondary)" }}>
+            <p className="font-body text-[15px] leading-[1.8]" style={{ color: "#9398A8" }}>
               Outcome-led heroes, visible primary CTAs, and dense trust markers in the first viewport move the composite score fastest. Use cited principles as edit constraints, not decoration.
             </p>
           </DocSection>
 
           <DocSection id="scan-history" title="Scan history" visible={visibleIds.has("scan-history")}>
-            <p className="font-sans text-[15px] leading-[1.8]" style={{ color: "var(--text-secondary)" }}>
+            <p className="font-body text-[15px] leading-[1.8]" style={{ color: "#9398A8" }}>
               Pro lists every past diagnostic scan and reopens prior reports. Compare Weavn Score before and after resolution batches.
             </p>
           </DocSection>
 
           <DocSection id="sharing-reports" title="Sharing reports" visible={visibleIds.has("sharing-reports")}>
-            <p className="font-sans text-[15px] leading-[1.8]" style={{ color: "var(--text-secondary)" }}>
+            <p className="font-body text-[15px] leading-[1.8]" style={{ color: "#9398A8" }}>
               Pro enables read-only public links to the full diagnostic report. Revoke links from account settings when access should terminate.
             </p>
           </DocSection>
 
           <DocSection id="billing" title="Billing" visible={visibleIds.has("billing")}>
-            <p className="font-sans text-[15px] leading-[1.8]" style={{ color: "var(--text-secondary)" }}>
+            <p className="font-body text-[15px] leading-[1.8]" style={{ color: "#9398A8" }}>
               Pro is $99 per month, billed monthly. Cancel in account settings; access persists through the paid period. Refunds apply only under the five-finding guarantee documented on the pricing page.
             </p>
           </DocSection>
@@ -469,9 +472,9 @@ function DocSection({
   return (
     <section id={id} className="mb-16 scroll-mt-24">
       <h2
-        className="mb-4 max-w-[min(40rem,100%)] font-sans font-extrabold"
+        className="mb-4 max-w-[min(40rem,100%)] font-display font-extrabold"
         style={{
-          color: "var(--text-primary)",
+          color: "#E6E9EE",
           fontSize: "clamp(32px, 3.2vw, 44px)",
           lineHeight: 0.98,
           letterSpacing: "-1.2px",

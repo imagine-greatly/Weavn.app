@@ -1,13 +1,18 @@
 "use client";
 import { useState } from "react";
 import DocsLayout from "@/app/docs/_components/DocsLayout";
+import { CodeBlock } from "@/components/ui/CodeBlock";
 
-const SM = "'Space Mono', monospace";
-const SG = "'Space Grotesk', sans-serif";
-const CYAN = "#00C8FF";
+// Canonical monochrome tokens (cyan/Space Mono purged, zero radius). Purple (#9D8CFF)
+// rationed to the active tab; code uses the shared CodeBlock's restrained tinting.
+const MONO = "'IBM Plex Mono', monospace";
+const DISP = "'Space Grotesk', sans-serif";
+const BODY = "'IBM Plex Sans', sans-serif";
 const BORDER = "rgba(255,255,255,0.08)";
-const MUTED = "rgba(240,244,255,0.4)";
-const TEXT = "#F0F4FF";
+const ACCENT = "#9D8CFF";   // purple — active tab only
+const T1 = "#E6E9EE";
+const T2 = "#9398A8";
+const T3 = "#6E7587";
 
 const EXAMPLES = [
   {
@@ -203,8 +208,8 @@ export default function ExamplesPage() {
 
   return (
     <DocsLayout activeId="javascript">
-      <p style={{ fontFamily: SM, fontSize: 11, color: CYAN, letterSpacing: "0.2em", marginBottom: 12 }}>CODE EXAMPLES</p>
-      <h1 style={{ fontFamily: SG, fontSize: "clamp(28px, 4vw, 44px)", fontWeight: 800, color: TEXT, letterSpacing: "-1.2px", marginBottom: 40 }}>
+      <p style={{ fontFamily: MONO, fontSize: 11, color: T3, letterSpacing: "0.2em", marginBottom: 12 }}>CODE EXAMPLES</p>
+      <h1 style={{ fontFamily: DISP, fontSize: "clamp(28px, 4vw, 44px)", fontWeight: 800, color: T1, letterSpacing: "-1.2px", marginBottom: 40 }}>
         Complete examples
       </h1>
 
@@ -217,11 +222,11 @@ export default function ExamplesPage() {
             style={{
               background: "none",
               border: "none",
-              borderBottom: active === ex.id ? `2px solid ${CYAN}` : "2px solid transparent",
+              borderBottom: active === ex.id ? `2px solid ${ACCENT}` : "2px solid transparent",
               padding: "10px 20px",
-              fontFamily: SM,
+              fontFamily: MONO,
               fontSize: 12,
-              color: active === ex.id ? CYAN : MUTED,
+              color: active === ex.id ? ACCENT : T3,
               cursor: "pointer",
               marginBottom: -1,
               whiteSpace: "nowrap",
@@ -233,26 +238,12 @@ export default function ExamplesPage() {
       </div>
 
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
-        <span style={{ fontFamily: SM, fontSize: 11, color: MUTED, background: "rgba(255,255,255,0.05)", border: `1px solid ${BORDER}`, borderRadius: 3, padding: "3px 10px" }}>
+        <span style={{ fontFamily: MONO, fontSize: 11, color: T3, background: "rgba(255,255,255,0.05)", border: `1px solid ${BORDER}`, padding: "3px 10px" }}>
           {example.lang}
         </span>
       </div>
-      <p style={{ fontFamily: SG, fontSize: 15, color: MUTED, lineHeight: 1.7, marginBottom: 24 }}>{example.desc}</p>
-      <pre style={{
-        background: "rgba(0,0,0,0.6)",
-        border: `1px solid ${BORDER}`,
-        borderLeft: `3px solid ${CYAN}`,
-        borderRadius: 4,
-        padding: "24px 28px",
-        fontFamily: SM,
-        fontSize: 12,
-        color: TEXT,
-        overflowX: "auto",
-        lineHeight: 1.75,
-        margin: 0,
-      }}>
-        {example.code}
-      </pre>
+      <p style={{ fontFamily: BODY, fontSize: 15, color: T2, lineHeight: 1.7, marginBottom: 24 }}>{example.desc}</p>
+      <CodeBlock language="json" code={example.code} />
     </DocsLayout>
   );
 }

@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import Label from '@/components/ui/Label'
 import { CodeBlock } from '@/components/ui/CodeBlock'
 
 const BG       = 'transparent'
@@ -16,6 +15,7 @@ const T2       = '#9398A8'
 const T3       = '#6E7587'
 const MONO     = "'IBM Plex Mono', monospace"
 const DISP     = "'Space Grotesk', sans-serif"
+const ACCENT   = '#9D8CFF'  // purple — rationed to active nav / tab affordances
 
 type Lang = 'curl' | 'node' | 'python'
 
@@ -676,12 +676,23 @@ function EvBlock({ name, desc }: { name: string; desc: string }) {
   )
 }
 
+function Eyebrow({ children }: { children: React.ReactNode }) {
+  return (
+    <span style={{
+      display: 'inline-block', fontFamily: MONO, fontSize: 11, color: T3,
+      textTransform: 'uppercase', letterSpacing: '0.18em',
+      borderLeft: '2px solid rgba(255,255,255,0.14)', paddingLeft: 10, marginBottom: 4,
+    }}>
+      {children}
+    </span>
+  )
+}
 function H2({ children }: { children: React.ReactNode }) {
   return (
     <h2 style={{
       fontFamily: DISP, fontWeight: 700, fontSize: 28, color: T1,
       margin: '16px 0', letterSpacing: '-0.4px',
-      borderLeft: '2px solid rgba(111,155,198,0.25)',
+      borderLeft: '2px solid rgba(255,255,255,0.12)',
       paddingLeft: 12, marginLeft: -14,
     }}>
       {children}
@@ -707,7 +718,7 @@ function Mono({ children }: { children: React.ReactNode }) {
   )
 }
 
-const SB: React.CSSProperties = { marginBottom: 64, paddingBottom: 64, borderBottom: '1px solid rgba(111,155,198,0.12)' }
+const SB: React.CSSProperties = { marginBottom: 64, paddingBottom: 64, borderBottom: '1px solid rgba(255,255,255,0.06)' }
 const SL: React.CSSProperties = { paddingBottom: 64 }
 
 // ── page ───────────────────────────────────────────────────────────────────
@@ -771,8 +782,8 @@ export default function ApiDocsPage() {
                       width: '100%', textAlign: 'left',
                       fontFamily: MONO, fontSize: 13, padding: '8px 24px',
                       cursor: 'pointer', border: 'none', outline: 'none',
-                      background: on ? 'rgba(0,196,140,0.04)' : 'transparent',
-                      borderLeft: `2px solid ${on ? GREEN : 'transparent'}`,
+                      background: on ? 'rgba(157,140,255,0.06)' : 'transparent',
+                      borderLeft: `2px solid ${on ? ACCENT : 'transparent'}`,
                       color: on ? T1 : T2,
                       transition: 'color 0.15s',
                     }}
@@ -796,7 +807,7 @@ export default function ApiDocsPage() {
         <div style={{ maxWidth: 640 }}>
 
           <section id="introduction" style={SB}>
-            <Label>OVERVIEW</Label>
+            <Eyebrow>OVERVIEW</Eyebrow>
             <H2>API Reference · v1</H2>
             <Body>
               The Weavn API returns a structured conversion audit for any URL. POST a URL, get back a JSON object with a score, ranked findings, AI-rewritten copy, and industry benchmarks.
@@ -806,7 +817,7 @@ export default function ApiDocsPage() {
           </section>
 
           <section id="authentication" style={SB}>
-            <Label>OVERVIEW</Label>
+            <Eyebrow>OVERVIEW</Eyebrow>
             <H2>Authentication</H2>
             <Body mb={16}>
               All API requests require a Bearer token in the Authorization header. Get your API key from the developer portal.
@@ -818,7 +829,7 @@ export default function ApiDocsPage() {
           </section>
 
           <section id="errors" style={SB}>
-            <Label>OVERVIEW</Label>
+            <Eyebrow>OVERVIEW</Eyebrow>
             <H2>Errors</H2>
             <Body mb={24}>Weavn uses standard HTTP status codes. Error responses include a machine-readable <code style={{ fontFamily: MONO, fontSize: 12 }}>code</code> field for programmatic handling.</Body>
             <ErrTable rows={[
@@ -835,7 +846,7 @@ export default function ApiDocsPage() {
           </section>
 
           <section id="rate-limits" style={SB}>
-            <Label>OVERVIEW</Label>
+            <Eyebrow>OVERVIEW</Eyebrow>
             <H2>Rate limits</H2>
             <Body>
               10 concurrent requests per API key. No per-minute limit. Batch endpoint accepts up to 10 URLs per request.
@@ -843,7 +854,7 @@ export default function ApiDocsPage() {
           </section>
 
           <section id="post-scan" style={SB}>
-            <Label>ENDPOINTS</Label>
+            <Eyebrow>ENDPOINTS</Eyebrow>
             <H2>POST /api/v1/scan</H2>
             <Body mb={24}>
               Submit a URL for a full conversion audit. Returns synchronously by default, or via webhook in async mode.
@@ -892,7 +903,7 @@ export default function ApiDocsPage() {
           </section>
 
           <section id="post-scan-batch" style={SB}>
-            <Label>ENDPOINTS</Label>
+            <Eyebrow>ENDPOINTS</Eyebrow>
             <H2>POST /api/v1/scan/batch</H2>
             <Body mb={24}>
               Submit up to 10 URLs in a single request. Always async — results delivered via webhook.
@@ -907,7 +918,7 @@ export default function ApiDocsPage() {
           </section>
 
           <section id="get-scans" style={SB}>
-            <Label>ENDPOINTS</Label>
+            <Eyebrow>ENDPOINTS</Eyebrow>
             <H2>GET /api/v1/scans</H2>
             <Body mb={24}>Retrieve a list of your scans, most recent first.</Body>
             <QueryTable rows={[
@@ -918,7 +929,7 @@ export default function ApiDocsPage() {
           </section>
 
           <section id="get-scans-id" style={SB}>
-            <Label>ENDPOINTS</Label>
+            <Eyebrow>ENDPOINTS</Eyebrow>
             <H2>{'GET /api/v1/scans/{id}'}</H2>
             <Body mb={24}>Retrieve a single scan by ID.</Body>
             <QueryTable rows={[
@@ -927,7 +938,7 @@ export default function ApiDocsPage() {
           </section>
 
           <section id="post-webhooks" style={SB}>
-            <Label>ENDPOINTS</Label>
+            <Eyebrow>ENDPOINTS</Eyebrow>
             <H2>POST /api/v1/webhooks</H2>
             <Body mb={24}>
               Register a webhook endpoint. Weavn will POST a signed payload to your URL whenever the specified events occur.
@@ -939,13 +950,13 @@ export default function ApiDocsPage() {
           </section>
 
           <section id="get-webhooks" style={SB}>
-            <Label>ENDPOINTS</Label>
+            <Eyebrow>ENDPOINTS</Eyebrow>
             <H2>GET /api/v1/webhooks</H2>
             <Body mb={24}>List all registered webhook endpoints for your API key.</Body>
           </section>
 
           <section id="delete-webhooks-id" style={SB}>
-            <Label>ENDPOINTS</Label>
+            <Eyebrow>ENDPOINTS</Eyebrow>
             <H2>{'DELETE /api/v1/webhooks/{id}'}</H2>
             <Body mb={24}>Remove a registered webhook. No further deliveries will be attempted to this endpoint.</Body>
             <QueryTable rows={[
@@ -954,7 +965,7 @@ export default function ApiDocsPage() {
           </section>
 
           <section id="webhooks-overview" style={SB}>
-            <Label>WEBHOOKS</Label>
+            <Eyebrow>WEBHOOKS</Eyebrow>
             <H2>Webhooks</H2>
             <Body>
               Weavn sends a POST request to your webhook URL when an async scan completes or fails.
@@ -963,14 +974,14 @@ export default function ApiDocsPage() {
           </section>
 
           <section id="webhook-events" style={SB}>
-            <Label>WEBHOOKS</Label>
+            <Eyebrow>WEBHOOKS</Eyebrow>
             <H2>Events</H2>
             <EvBlock name="scan.completed" desc="Fires when a scan finishes successfully. Payload includes scan_id, url, score, findings_count, and timestamp." />
             <EvBlock name="scan.failed" desc="Fires when a scan fails after retries. Payload includes scan_id, url, error message, and timestamp." />
           </section>
 
           <section id="webhook-delivery" style={SB}>
-            <Label>WEBHOOKS</Label>
+            <Eyebrow>WEBHOOKS</Eyebrow>
             <H2>Delivery</H2>
             <Body>
               Every webhook POST includes an{' '}
@@ -983,7 +994,7 @@ export default function ApiDocsPage() {
           </section>
 
           <section id="webhook-retries" style={SB}>
-            <Label>WEBHOOKS</Label>
+            <Eyebrow>WEBHOOKS</Eyebrow>
             <H2>Retries</H2>
             <Body>
               Webhooks are retried up to 3 times on failure. Attempt 1: immediate. Attempt 2: 5 minutes after failure. Attempt 3: 30 minutes after failure. Each attempt has a 10-second timeout. After 3 failures the webhook is marked failed and no further retries occur. Acknowledge immediately with 200 and process asynchronously to avoid timeouts.
@@ -991,7 +1002,7 @@ export default function ApiDocsPage() {
           </section>
 
           <section id="score-schema" style={SB}>
-            <Label>RESPONSE SCHEMA</Label>
+            <Eyebrow>RESPONSE SCHEMA</Eyebrow>
             <H2>Score</H2>
             <Body mb={24}>
               Integer 0–100. Benchmarked against all sites Weavn has scanned in the same industry category.
@@ -1006,7 +1017,7 @@ export default function ApiDocsPage() {
           </section>
 
           <section id="page-type-schema" style={SB}>
-            <Label>RESPONSE SCHEMA</Label>
+            <Eyebrow>RESPONSE SCHEMA</Eyebrow>
             <H2>Page type</H2>
             <Body mb={24}>
               The page type classified by the scanner before check execution. Determines which page-type-specific checks apply.
@@ -1017,7 +1028,7 @@ export default function ApiDocsPage() {
           </section>
 
           <section id="score-profile-schema" style={SB}>
-            <Label>RESPONSE SCHEMA</Label>
+            <Eyebrow>RESPONSE SCHEMA</Eyebrow>
             <H2>Score profile</H2>
             <Body mb={24}>
               The weight profile used to compute the overall score. Reflects how dimension scores were weighted for this site's classification.
@@ -1028,7 +1039,7 @@ export default function ApiDocsPage() {
           </section>
 
           <section id="findings-schema" style={SB}>
-            <Label>RESPONSE SCHEMA</Label>
+            <Eyebrow>RESPONSE SCHEMA</Eyebrow>
             <H2>Findings</H2>
             <FieldTable rows={[
               { name: 'id',             type: 'string',  description: 'Unique finding identifier.' },
@@ -1045,7 +1056,7 @@ export default function ApiDocsPage() {
           </section>
 
           <section id="findings-summary-schema" style={SB}>
-            <Label>RESPONSE SCHEMA</Label>
+            <Eyebrow>RESPONSE SCHEMA</Eyebrow>
             <H2>Findings summary</H2>
             <Body mb={24}>
               A single integer: the total number of findings in the findings array. Use it for dashboard display without iterating the array.
@@ -1056,7 +1067,7 @@ export default function ApiDocsPage() {
           </section>
 
           <section id="benchmark-schema" style={SB}>
-            <Label>RESPONSE SCHEMA</Label>
+            <Eyebrow>RESPONSE SCHEMA</Eyebrow>
             <H2>Benchmark</H2>
             <FieldTable rows={[
               { name: 'industry',       type: 'string',  description: 'Auto-detected or overridden industry slug.' },
@@ -1068,7 +1079,7 @@ export default function ApiDocsPage() {
           </section>
 
           <section id="strengths-schema" style={SB}>
-            <Label>RESPONSE SCHEMA</Label>
+            <Eyebrow>RESPONSE SCHEMA</Eyebrow>
             <H2>Strengths</H2>
             <Body mb={24}>
               Top passing checks where this site performs genuinely above average. Only returned when checks pass with specific visible evidence. Array may be empty — never padded.
@@ -1081,7 +1092,7 @@ export default function ApiDocsPage() {
           </section>
 
           <section id="copy-schema" style={SB}>
-            <Label>RESPONSE SCHEMA</Label>
+            <Eyebrow>RESPONSE SCHEMA</Eyebrow>
             <H2>Rewritten copy</H2>
             <Body mb={24}>AI-rewritten alternatives for the most conversion-critical copy elements on the page.</Body>
             <FieldTable rows={[
@@ -1094,7 +1105,7 @@ export default function ApiDocsPage() {
           </section>
 
           <section id="dimensions-schema" style={SB}>
-            <Label>RESPONSE SCHEMA</Label>
+            <Eyebrow>RESPONSE SCHEMA</Eyebrow>
             <H2>Dimensions</H2>
             <Body mb={24}>Scores across each of the 8 revenue dimensions. Each contributes a weighted portion of the overall score.</Body>
             <FieldTable rows={[
@@ -1110,7 +1121,7 @@ export default function ApiDocsPage() {
           </section>
 
           <section id="dimension-benchmarks-schema" style={SB}>
-            <Label>RESPONSE SCHEMA</Label>
+            <Eyebrow>RESPONSE SCHEMA</Eyebrow>
             <H2>Dimension benchmarks</H2>
             <Body mb={24}>
               Per-dimension scores benchmarked against corpus data for this site's vertical. Only present when the benchmark field is requested or the fields array is empty.
@@ -1126,7 +1137,7 @@ export default function ApiDocsPage() {
           </section>
 
           <section id="metadata-schema" style={SL}>
-            <Label>RESPONSE SCHEMA</Label>
+            <Eyebrow>RESPONSE SCHEMA</Eyebrow>
             <H2>Metadata</H2>
             <FieldTable rows={[
               { name: 'scan_id',      type: 'string',  description: 'Unique scan identifier (wdsc_...).' },
@@ -1144,19 +1155,8 @@ export default function ApiDocsPage() {
       </main>
 
       {/* ── RIGHT CODE PANEL ── */}
-      <aside style={{ width: 380, flexShrink: 0, background: BG_R, borderLeft: '0.5px solid rgba(128,128,192,0.15)', height: '100%', overflowY: 'auto', boxShadow: 'inset 1px 0 0 rgba(128,128,192,0.1)', position: 'relative' }}>
-        {/* Faint purple bloom */}
-        <div
-          aria-hidden
-          style={{
-            position: 'absolute',
-            inset: 0,
-            pointerEvents: 'none',
-            zIndex: 0,
-            background: 'radial-gradient(ellipse 400px 800px at 50% 40%, rgba(128,128,192,0.06) 0%, transparent 60%)',
-          }}
-        />
-        <div style={{ position: 'sticky', top: 0, padding: '40px 24px', zIndex: 1 }}>
+      <aside style={{ width: 380, flexShrink: 0, background: BG_R, borderLeft: `1px solid ${BD}`, height: '100%', overflowY: 'auto', position: 'relative' }}>
+        <div style={{ position: 'sticky', top: 0, padding: '40px 24px' }}>
           <div style={{ display: 'flex', borderBottom: `1px solid ${BD}`, marginBottom: 20 }}>
             {LANGS.map(l => (
               <button
@@ -1166,7 +1166,7 @@ export default function ApiDocsPage() {
                   fontFamily: MONO, fontSize: 12,
                   padding: '8px 14px', cursor: 'pointer',
                   border: 'none', outline: 'none', background: 'transparent',
-                  borderBottom: lang === l.id ? `2px solid ${GREEN}` : '2px solid transparent',
+                  borderBottom: lang === l.id ? `2px solid ${ACCENT}` : '2px solid transparent',
                   color: lang === l.id ? T1 : T3,
                   transition: 'color 0.15s', marginBottom: -1,
                 }}

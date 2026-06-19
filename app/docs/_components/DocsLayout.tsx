@@ -2,10 +2,13 @@
 
 import Link from "next/link";
 
-const SM = "'Space Mono', 'Courier New', monospace";
-const CYAN = "#00C8FF";
-const BORDER = "rgba(255,255,255,0.08)";
-const MUTED = "rgba(240,244,255,0.4)";
+// Canonical monochrome tokens (cyan/Space Mono purged). Purple is rationed to the
+// active-nav affordance only; everything else rides the gray ink ramp.
+const MONO = "'IBM Plex Mono', monospace";
+const ACCENT = "#9D8CFF";              // purple — active nav only
+const BORDER = "rgba(255,255,255,0.08)"; // hairline
+const MUTED = "#6E7587";               // ink-muted
+const SECONDARY = "#9398A8";           // ink-secondary
 
 const NAV = [
   { section: "GETTING STARTED", items: [
@@ -43,7 +46,7 @@ export default function DocsLayout({ children, activeId }: { children: React.Rea
           <nav>
             {NAV.map(group => (
               <div key={group.section} style={{ marginBottom: 28 }}>
-                <p style={{ fontFamily: SM, fontSize: 10, color: MUTED, letterSpacing: "0.2em", marginBottom: 10 }}>
+                <p style={{ fontFamily: MONO, fontSize: 10, color: MUTED, letterSpacing: "0.2em", marginBottom: 10 }}>
                   {group.section}
                 </p>
                 <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
@@ -56,10 +59,10 @@ export default function DocsLayout({ children, activeId }: { children: React.Rea
                           style={{
                             display: "block",
                             padding: "8px 12px",
-                            borderLeft: `2px solid ${isActive ? CYAN : "transparent"}`,
-                            fontFamily: SM,
+                            borderLeft: `2px solid ${isActive ? ACCENT : "transparent"}`,
+                            fontFamily: MONO,
                             fontSize: 13,
-                            color: isActive ? CYAN : MUTED,
+                            color: isActive ? ACCENT : SECONDARY,
                             textDecoration: "none",
                             transition: "color 0.15s",
                           }}

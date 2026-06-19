@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { getSupabaseBrowserClient } from '@/lib/supabaseBrowser'
 import ScoreRing from '@/components/ui/ScoreRing'
-import Label from '@/components/ui/Label'
 import WeavnMark from '@/components/ui/WeavnMark'
 import EmptyState from '@/components/ui/EmptyState'
 import SurfaceToggle, { SURFACE_NAV, useSurfaceCrossing } from '@/components/SurfaceToggle'
@@ -110,7 +109,8 @@ const TAB_TITLES: Record<TabId, string> = {
 }
 
 // Paid API tiers — every figure read from API_PLANS (lib/pricing.ts, the single source
-// of truth). Checkout is NOT wired (see BillingTab seam). No invented numbers.
+// of truth). Catalog-driven from API_PLANS; checkout wired via BillingTab startCheckout
+// (POST /api/stripe/checkout, surface:'api'). No invented numbers.
 const PAID_TIER_IDS: ApiTier[] = ['dev', 'builder', 'scale', 'enterprise']
 const PAID_TIERS = PAID_TIER_IDS.map((id) => {
   const p = API_PLANS[id]
@@ -201,7 +201,7 @@ function SeverityBadge({ score }: { score: number }) {
 
 function MethodBadge({ method }: { method: 'POST' | 'GET' }) {
   return (
-    <span className={`font-mono text-xs px-2 py-0.5 ${method === 'POST' ? 'bg-purple-dim text-purple-DEFAULT' : 'bg-background-subtle text-score-low'}`}>
+    <span className={`font-mono text-xs px-2 py-0.5 ${method === 'POST' ? 'bg-purple-dim text-purple-DEFAULT' : 'bg-background-subtle text-ink-secondary'}`}>
       {method}
     </span>
   )
@@ -1029,11 +1029,11 @@ function DocsTab() {
       curl: (
         <>
           <span className="text-purple-DEFAULT">curl</span>
-          <span className="text-text-tertiary">{' -X POST https://api.weavn.app/v1/scan \\\n  -H "Authorization: Bearer '}</span>
-          <span className="text-score-high">weavn_live_••••</span>
-          <span className="text-text-tertiary">{'" \\\n  -d \'{"url": "'}</span>
-          <span className="text-score-high">https://your-site.com</span>
-          <span className="text-text-tertiary">{"\"}'"}  </span>
+          <span className="text-ink-muted">{' -X POST https://api.weavn.app/v1/scan \\\n  -H "Authorization: Bearer '}</span>
+          <span style={{ color: '#6F9BC6' }}>weavn_live_••••</span>
+          <span className="text-ink-muted">{'" \\\n  -d \'{"url": "'}</span>
+          <span style={{ color: '#6F9BC6' }}>https://your-site.com</span>
+          <span className="text-ink-muted">{"\"}'"}  </span>
         </>
       ),
     },
@@ -1044,13 +1044,13 @@ function DocsTab() {
       curl: (
         <>
           <span className="text-purple-DEFAULT">curl</span>
-          <span className="text-text-tertiary">{' -X POST https://api.weavn.app/v1/scan/batch \\\n  -H "Authorization: Bearer '}</span>
-          <span className="text-score-high">weavn_live_••••</span>
-          <span className="text-text-tertiary">{'" \\\n  -d \'{"urls": ["'}</span>
-          <span className="text-score-high">https://site-a.com</span>
-          <span className="text-text-tertiary">{'", "'}</span>
-          <span className="text-score-high">https://site-b.com</span>
-          <span className="text-text-tertiary">{"\"]}'"}</span>
+          <span className="text-ink-muted">{' -X POST https://api.weavn.app/v1/scan/batch \\\n  -H "Authorization: Bearer '}</span>
+          <span style={{ color: '#6F9BC6' }}>weavn_live_••••</span>
+          <span className="text-ink-muted">{'" \\\n  -d \'{"urls": ["'}</span>
+          <span style={{ color: '#6F9BC6' }}>https://site-a.com</span>
+          <span className="text-ink-muted">{'", "'}</span>
+          <span style={{ color: '#6F9BC6' }}>https://site-b.com</span>
+          <span className="text-ink-muted">{"\"]}'"}</span>
         </>
       ),
     },
@@ -1061,11 +1061,11 @@ function DocsTab() {
       curl: (
         <>
           <span className="text-purple-DEFAULT">curl</span>
-          <span className="text-text-tertiary">{' https://api.weavn.app/v1/scans/'}</span>
-          <span className="text-score-high">scan_01HXYZ7K2M9N3P4Q</span>
-          <span className="text-text-tertiary">{' \\\n  -H "Authorization: Bearer '}</span>
-          <span className="text-score-high">weavn_live_••••</span>
-          <span className="text-text-tertiary">{'"'}</span>
+          <span className="text-ink-muted">{' https://api.weavn.app/v1/scans/'}</span>
+          <span style={{ color: '#6F9BC6' }}>scan_01HXYZ7K2M9N3P4Q</span>
+          <span className="text-ink-muted">{' \\\n  -H "Authorization: Bearer '}</span>
+          <span style={{ color: '#6F9BC6' }}>weavn_live_••••</span>
+          <span className="text-ink-muted">{'"'}</span>
         </>
       ),
     },
@@ -1073,8 +1073,8 @@ function DocsTab() {
 
   return (
     <div className="px-8 py-8">
-      <Label>API QUICK REFERENCE</Label>
-      <h2 className="font-display font-extrabold text-3xl text-text-primary mt-3 mb-8">
+      <div className="font-mono uppercase text-ink-muted" style={{ fontSize: 10, letterSpacing: '0.2em' }}>API quick reference</div>
+      <h2 className="font-display font-extrabold text-3xl text-ink-primary mt-3 mb-8">
         Everything you need.
       </h2>
 
@@ -1082,11 +1082,11 @@ function DocsTab() {
         <div key={ep.path} className="bg-background-raised border border-background-border p-6 mb-px">
           <div className="flex items-center gap-3 mb-4">
             <MethodBadge method={ep.method} />
-            <span className="font-mono text-base text-text-primary">{ep.path}</span>
+            <span className="font-mono text-base text-ink-primary">{ep.path}</span>
           </div>
-          <p className="font-body text-sm text-text-secondary mb-4">{ep.desc}</p>
+          <p className="font-body text-sm text-ink-secondary mb-4">{ep.desc}</p>
           <div className="bg-background-subtle border border-background-border p-4">
-            <pre className="font-mono text-xs text-text-tertiary leading-relaxed m-0 whitespace-pre-wrap">
+            <pre className="font-mono text-xs text-ink-muted leading-relaxed m-0 whitespace-pre-wrap">
               {ep.curl}
             </pre>
           </div>

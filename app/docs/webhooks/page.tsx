@@ -1,53 +1,56 @@
 "use client";
 import DocsLayout from "@/app/docs/_components/DocsLayout";
+import { CodeBlock } from "@/components/ui/CodeBlock";
 
-const SM = "'Space Mono', monospace";
-const SG = "'Space Grotesk', sans-serif";
-const CYAN = "#00C8FF";
+// Canonical monochrome tokens (cyan/Space Mono purged, zero radius). Method colors are
+// the one rationed signal (POST green, GET blue, DELETE red — from lib/verdict bands).
+const MONO = "'IBM Plex Mono', monospace";
+const DISP = "'Space Grotesk', sans-serif";
+const BODY = "'IBM Plex Sans', sans-serif";
 const BORDER = "rgba(255,255,255,0.08)";
-const MUTED = "rgba(240,244,255,0.4)";
-const TEXT = "#F0F4FF";
+const CODE = "#6F9BC6";     // restrained blue — event/header names
+const POST = "#00C48C";
+const GET = "#6F9BC6";
+const DELETE = "#E8635F";
+const T1 = "#E6E9EE";
+const T2 = "#9398A8";
+const T3 = "#6E7587";
 
-function CodeBlock({ code }: { code: string }) {
-  return (
-    <pre style={{ background: "rgba(0,0,0,0.5)", border: `1px solid ${BORDER}`, borderLeft: `3px solid ${CYAN}`, borderRadius: 4, padding: "18px 22px", fontFamily: SM, fontSize: 13, color: TEXT, overflowX: "auto", margin: "0 0 32px", lineHeight: 1.7 }}>
-      {code}
-    </pre>
-  );
-}
+const METHOD_COLOR: Record<string, string> = { POST, GET, DELETE };
 
 export default function WebhooksDocsPage() {
   return (
     <DocsLayout activeId="webhooks">
-      <p style={{ fontFamily: SM, fontSize: 11, color: CYAN, letterSpacing: "0.2em", marginBottom: 12 }}>API REFERENCE</p>
-      <h1 style={{ fontFamily: SG, fontSize: "clamp(28px, 4vw, 44px)", fontWeight: 800, color: TEXT, letterSpacing: "-1.2px", marginBottom: 24 }}>Webhooks</h1>
-      <p style={{ fontFamily: SG, fontSize: 16, color: MUTED, lineHeight: 1.8, marginBottom: 48 }}>
+      <p style={{ fontFamily: MONO, fontSize: 11, color: T3, letterSpacing: "0.2em", marginBottom: 12 }}>API REFERENCE</p>
+      <h1 style={{ fontFamily: DISP, fontSize: "clamp(28px, 4vw, 44px)", fontWeight: 800, color: T1, letterSpacing: "-1.2px", marginBottom: 24 }}>Webhooks</h1>
+      <p style={{ fontFamily: BODY, fontSize: 16, color: T2, lineHeight: 1.8, marginBottom: 48 }}>
         Receive a POST request to your server when a scan completes. Each delivery is signed with HMAC-SHA256 so you can verify it came from weavn.app.
       </p>
 
       {/* Events */}
-      <h2 style={{ fontFamily: SG, fontSize: 20, fontWeight: 700, color: TEXT, marginBottom: 16 }}>Events</h2>
-      <div style={{ border: `1px solid ${BORDER}`, borderRadius: 4, overflow: "hidden", marginBottom: 40 }}>
-        <table style={{ width: "100%", borderCollapse: "collapse", fontFamily: SM, fontSize: 13 }}>
+      <h2 style={{ fontFamily: DISP, fontSize: 20, fontWeight: 700, color: T1, marginBottom: 16 }}>Events</h2>
+      <div style={{ border: `1px solid ${BORDER}`, overflow: "hidden", marginBottom: 40 }}>
+        <table style={{ width: "100%", borderCollapse: "collapse", fontFamily: MONO, fontSize: 13 }}>
           <thead>
             <tr style={{ borderBottom: `1px solid ${BORDER}`, background: "rgba(255,255,255,0.02)" }}>
-              {["Event", "When it fires"].map(h => <th key={h} style={{ textAlign: "left", padding: "12px 20px", color: MUTED, fontWeight: 400 }}>{h}</th>)}
+              {["Event", "When it fires"].map(h => <th key={h} style={{ textAlign: "left", padding: "12px 20px", color: T3, fontWeight: 400 }}>{h}</th>)}
             </tr>
           </thead>
           <tbody>
-            <tr style={{ borderBottom: `1px solid rgba(255,255,255,0.04)` }}>
-              <td style={{ padding: "12px 20px", color: CYAN }}>scan.completed</td><td style={{ padding: "12px 20px", color: "var(--text-secondary)" }}>Scan finished and report saved successfully</td>
+            <tr style={{ borderBottom: `1px solid ${BORDER}` }}>
+              <td style={{ padding: "12px 20px", color: CODE }}>scan.completed</td><td style={{ padding: "12px 20px", color: T2 }}>Scan finished and report saved successfully</td>
             </tr>
             <tr>
-              <td style={{ padding: "12px 20px", color: CYAN }}>scan.failed</td><td style={{ padding: "12px 20px", color: "var(--text-secondary)" }}>Scan encountered an unrecoverable error</td>
+              <td style={{ padding: "12px 20px", color: CODE }}>scan.failed</td><td style={{ padding: "12px 20px", color: T2 }}>Scan encountered an unrecoverable error</td>
             </tr>
           </tbody>
         </table>
       </div>
 
       {/* Payload */}
-      <h2 style={{ fontFamily: SG, fontSize: 20, fontWeight: 700, color: TEXT, marginBottom: 16 }}>Payload</h2>
-      <CodeBlock code={`{
+      <h2 style={{ fontFamily: DISP, fontSize: 20, fontWeight: 700, color: T1, marginBottom: 16 }}>Payload</h2>
+      <div style={{ marginBottom: 32 }}>
+        <CodeBlock language="json" code={`{
   "event": "scan.completed",
   "scan_id": "c4f1a2b3-...",
   "url": "https://example.com",
@@ -57,33 +60,35 @@ export default function WebhooksDocsPage() {
     "verdict": "Needs Work"
   }
 }`} />
+      </div>
 
       {/* Headers */}
-      <h2 style={{ fontFamily: SG, fontSize: 20, fontWeight: 700, color: TEXT, marginBottom: 16 }}>Request headers</h2>
-      <div style={{ border: `1px solid ${BORDER}`, borderRadius: 4, overflow: "hidden", marginBottom: 40 }}>
-        <table style={{ width: "100%", borderCollapse: "collapse", fontFamily: SM, fontSize: 13 }}>
+      <h2 style={{ fontFamily: DISP, fontSize: 20, fontWeight: 700, color: T1, marginBottom: 16 }}>Request headers</h2>
+      <div style={{ border: `1px solid ${BORDER}`, overflow: "hidden", marginBottom: 40 }}>
+        <table style={{ width: "100%", borderCollapse: "collapse", fontFamily: MONO, fontSize: 13 }}>
           <thead>
             <tr style={{ borderBottom: `1px solid ${BORDER}`, background: "rgba(255,255,255,0.02)" }}>
-              {["Header", "Value"].map(h => <th key={h} style={{ textAlign: "left", padding: "12px 20px", color: MUTED, fontWeight: 400 }}>{h}</th>)}
+              {["Header", "Value"].map(h => <th key={h} style={{ textAlign: "left", padding: "12px 20px", color: T3, fontWeight: 400 }}>{h}</th>)}
             </tr>
           </thead>
           <tbody>
-            <tr style={{ borderBottom: `1px solid rgba(255,255,255,0.04)` }}>
-              <td style={{ padding: "12px 20px", color: CYAN }}>Content-Type</td><td style={{ padding: "12px 20px", color: "var(--text-secondary)" }}>application/json</td>
+            <tr style={{ borderBottom: `1px solid ${BORDER}` }}>
+              <td style={{ padding: "12px 20px", color: CODE }}>Content-Type</td><td style={{ padding: "12px 20px", color: T2 }}>application/json</td>
             </tr>
-            <tr style={{ borderBottom: `1px solid rgba(255,255,255,0.04)` }}>
-              <td style={{ padding: "12px 20px", color: CYAN }}>X-Weavn-Event</td><td style={{ padding: "12px 20px", color: "var(--text-secondary)" }}>The event type (e.g., scan.completed)</td>
+            <tr style={{ borderBottom: `1px solid ${BORDER}` }}>
+              <td style={{ padding: "12px 20px", color: CODE }}>X-Weavn-Event</td><td style={{ padding: "12px 20px", color: T2 }}>The event type (e.g., scan.completed)</td>
             </tr>
             <tr>
-              <td style={{ padding: "12px 20px", color: CYAN }}>X-Weavn-Signature</td><td style={{ padding: "12px 20px", color: "var(--text-secondary)" }}>HMAC-SHA256 hex of the request body using your webhook secret</td>
+              <td style={{ padding: "12px 20px", color: CODE }}>X-Weavn-Signature</td><td style={{ padding: "12px 20px", color: T2 }}>HMAC-SHA256 hex of the request body using your webhook secret</td>
             </tr>
           </tbody>
         </table>
       </div>
 
       {/* Signature verification */}
-      <h2 style={{ fontFamily: SG, fontSize: 20, fontWeight: 700, color: TEXT, marginBottom: 16 }}>Verifying signatures</h2>
-      <CodeBlock code={`import { createHmac } from "crypto"
+      <h2 style={{ fontFamily: DISP, fontSize: 20, fontWeight: 700, color: T1, marginBottom: 16 }}>Verifying signatures</h2>
+      <div style={{ marginBottom: 32 }}>
+        <CodeBlock language="json" code={`import { createHmac } from "crypto"
 
 function verifyWebhook(body: string, signature: string, secret: string): boolean {
   const expected = createHmac("sha256", secret)
@@ -99,24 +104,25 @@ if (!verifyWebhook(body, sig, process.env.WEBHOOK_SECRET!)) {
   return new Response("Unauthorized", { status: 401 })
 }
 const payload = JSON.parse(body)`} />
+      </div>
 
       {/* Endpoint management */}
-      <h2 style={{ fontFamily: SG, fontSize: 20, fontWeight: 700, color: TEXT, marginBottom: 16 }}>Managing webhook endpoints</h2>
+      <h2 style={{ fontFamily: DISP, fontSize: 20, fontWeight: 700, color: T1, marginBottom: 16 }}>Managing webhook endpoints</h2>
       <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 40 }}>
         {[
           { method: "POST", desc: "Register a new webhook endpoint. Returns the secret once." },
           { method: "GET", desc: "List all registered webhooks. Secret is never returned in list." },
           { method: "DELETE", desc: "Remove a webhook by ID." },
         ].map(ep => (
-          <div key={ep.method} style={{ border: `1px solid ${BORDER}`, borderLeft: `3px solid ${CYAN}`, borderRadius: 4, padding: "14px 20px", display: "flex", gap: 20, alignItems: "center" }}>
-            <span style={{ fontFamily: SM, fontSize: 12, color: ep.method === "DELETE" ? "#ef4444" : ep.method === "GET" ? "#22c55e" : CYAN, minWidth: 56 }}>{ep.method}</span>
-            <span style={{ fontFamily: SM, fontSize: 13, color: MUTED, minWidth: 140 }}>/api/v1/webhooks</span>
-            <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 14, color: "var(--text-secondary)" }}>{ep.desc}</span>
+          <div key={ep.method} style={{ border: `1px solid ${BORDER}`, padding: "14px 20px", display: "flex", gap: 20, alignItems: "center" }}>
+            <span style={{ fontFamily: MONO, fontSize: 12, color: METHOD_COLOR[ep.method], minWidth: 56 }}>{ep.method}</span>
+            <span style={{ fontFamily: MONO, fontSize: 13, color: T2, minWidth: 140 }}>/api/v1/webhooks</span>
+            <span style={{ fontFamily: BODY, fontSize: 14, color: T2 }}>{ep.desc}</span>
           </div>
         ))}
       </div>
-      <p style={{ fontFamily: SG, fontSize: 14, color: MUTED }}>
-        The webhook secret is returned <strong style={{ color: TEXT }}>once</strong> when you register the endpoint.
+      <p style={{ fontFamily: BODY, fontSize: 14, color: T2 }}>
+        The webhook secret is returned <strong style={{ color: T1 }}>once</strong> when you register the endpoint.
         Store it securely — it cannot be retrieved later. Delete and re-register to rotate a lost secret.
       </p>
     </DocsLayout>

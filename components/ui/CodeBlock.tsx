@@ -16,7 +16,7 @@ const C = {
   muted:  '#6E7587',  // ink-muted   — bash commands, flags
   sec:    '#9398A8',  // ink-secondary
   pri:    '#E6E9EE',  // ink-primary
-  accent: '#00C8FF',  // accent-blue — weavn_live_ tokens in bash only
+  accent: '#6F9BC6',  // muted blue — weavn_live_ tokens in bash only (cyan purged)
 } as const
 
 const SEV_HEX: Record<string, string> = {

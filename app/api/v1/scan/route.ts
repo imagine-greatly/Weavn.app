@@ -103,6 +103,62 @@ function readableTextLength(html: string): number {
     .trim().length;
 }
 
+/**
+ * Tolerant parse of a model JSON object that may be truncated at max_tokens.
+ * Strict parse first; then minimal repair — isolate from the first '{', drop any
+ * trailing prose after the last complete object, and (for genuine truncation) close
+ * an open string, drop a trailing comma / dangling "key":, and append the missing
+ * closers (innermost-first) computed from a string-aware brace/bracket scan.
+ * Returns null only when truly unrecoverable. Never throws.
+ */
+function tolerantParseJsonObject(raw: string): Record<string, unknown> | null {
+  const asObj = (v: unknown): Record<string, unknown> | null =>
+    v && typeof v === "object" && !Array.isArray(v) ? (v as Record<string, unknown>) : null;
+  const tryParse = (s: string): Record<string, unknown> | null => {
+    try { return asObj(JSON.parse(s)); } catch { return null; }
+  };
+
+  const direct = tryParse(raw);
+  if (direct) return direct;
+
+  const start = raw.indexOf("{");
+  if (start === -1) return null;
+  const body = raw.slice(start);
+
+  // Trailing prose after a complete object.
+  const lastBrace = body.lastIndexOf("}");
+  if (lastBrace !== -1) {
+    const trimmed = tryParse(body.slice(0, lastBrace + 1));
+    if (trimmed) return trimmed;
+  }
+
+  // Truncation repair: scan tracking string state + open structures.
+  const stack: string[] = [];
+  let inStr = false, esc = false;
+  for (let i = 0; i < body.length; i++) {
+    const c = body[i];
+    if (inStr) {
+      if (esc) esc = false;
+      else if (c === "\\") esc = true;
+      else if (c === '"') inStr = false;
+      continue;
+    }
+    if (c === '"') inStr = true;
+    else if (c === "{") stack.push("}");
+    else if (c === "[") stack.push("]");
+    else if (c === "}" || c === "]") stack.pop();
+  }
+
+  let candidate = body;
+  if (inStr) candidate += '"';                                  // close a value cut mid-string
+  candidate = candidate.replace(/[\s,]+$/, "");                 // trailing whitespace / comma
+  candidate = candidate.replace(/,?\s*"(?:[^"\\]|\\.)*"\s*:\s*$/, ""); // dangling "key": with no value
+  candidate = candidate.replace(/[\s,]+$/, "");
+  let closing = "";
+  while (stack.length) closing += stack.pop();                  // innermost-first
+  return tryParse(candidate + closing);
+}
+
 // ── scan executor (shared by sync path and async IIFE) ───────────────────────
 
 interface ScanParams {
@@ -393,10 +449,18 @@ async function executeScan(p: ScanParams): Promise<ScanResult> {
       strengths?: unknown[];
       page_type?: string;
     };
-    let parsed: ApiResponse;
+    let parsed: ApiResponse | null = null;
     try {
       parsed = JSON.parse(rawJson) as ApiResponse;
     } catch {
+      // Truncated/partial JSON (usually max_tokens) — salvage instead of hard-failing
+      // a scan that did the work. Only give up if it's truly unrecoverable.
+      parsed = tolerantParseJsonObject(rawJson) as ApiResponse | null;
+      if (parsed) {
+        console.warn(`[API v1] JSON salvage recovered a truncated response | domain=${domain}`);
+      }
+    }
+    if (!parsed) {
       await markFailed();
       void logScanUsage(apiKeyId, { url: normalizedUrl, score: null, responseTimeMs: Date.now() - scanStart, status: "error", statusCode: 500, endpoint: "scan", errorCode: "json_parse" });
       throw new Error("Scan failed: invalid JSON response from model.");

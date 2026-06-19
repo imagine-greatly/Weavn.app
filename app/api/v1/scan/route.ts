@@ -919,6 +919,69 @@ export async function POST(req: NextRequest) {
   return NextResponse.json(response, { headers: { ...rlHeaders(apiKey), "X-Cache": "MISS", "X-Cache-Reason": cachedRow ? "content-changed" : "no-cache" } });
 }
 
+// ── Cache reconstruction (rebuild API fields from the stored analysis blob) ────
+
+const API_DIM_KEY_BY_LABEL: Record<string, string> = {
+  "conversion architecture": "conversion_architecture",
+  "trust signals": "trust_signals",
+  "message clarity": "message_clarity",
+  "traffic readiness": "traffic_readiness",
+  "technical foundation": "technical_foundation",
+  "objection handling": "objection_handling",
+  "offer clarity": "offer_clarity",
+};
+const API_DIM_KEYS = new Set(Object.values(API_DIM_KEY_BY_LABEL));
+
+/** Rebuild the dimension score object from stored dimensionScores; null if none recoverable. */
+function dimensionsFromStored(ap: Record<string, unknown>): Record<string, number> | null {
+  const rows = Array.isArray(ap.dimensionScores) ? ap.dimensionScores : [];
+  const out: Record<string, number> = {};
+  for (const r of rows) {
+    const row = (r ?? {}) as Record<string, unknown>;
+    if (typeof row.score !== "number") continue;
+    const idStr = String(row.id ?? "").trim().toLowerCase();
+    const labelStr = String(row.label ?? "").trim().toLowerCase();
+    let key: string | undefined;
+    if (API_DIM_KEYS.has(idStr)) key = idStr;
+    else if (API_DIM_KEYS.has(labelStr)) key = labelStr;
+    else key = API_DIM_KEY_BY_LABEL[labelStr] ?? API_DIM_KEY_BY_LABEL[idStr];
+    if (key) out[key] = row.score;
+  }
+  return Object.keys(out).length > 0 ? out : null;
+}
+
+/** Rebuild copy_rewrites from the stored heroRewrite; null if nothing usable was stored. */
+function copyRewritesFromStored(ap: Record<string, unknown>): Record<string, string> | null {
+  const hr = (ap.heroRewrite ?? {}) as Record<string, unknown>;
+  const pick = (v: unknown) => (typeof v === "string" && v.trim() ? v.trim() : undefined);
+  const headline = pick(hr.suggestedHeadline);
+  const subheadline = pick(hr.suggestedSubheadline);
+  const cta = pick(hr.suggestedCta);
+  if (!headline && !subheadline && !cta) return null;
+  const out: Record<string, string> = {};
+  if (headline) out.headline = headline;
+  if (subheadline) out.subheadline = subheadline;
+  if (cta) out.cta = cta;
+  return out;
+}
+
+/** Rebuild the flat growth_blueprint array from the stored GrowthBlueprint struct; null if empty. */
+function blueprintFromStored(ap: Record<string, unknown>): unknown[] | null {
+  const gb = ap.growthBlueprint as Record<string, unknown> | undefined;
+  if (!gb) return null;
+  const items: Array<{ priority: number; action: string; effort: string; impact: string; timeframe: string }> = [];
+  let p = 1;
+  const push = (action: unknown, effort: string, impact: string, timeframe: string) => {
+    if (typeof action === "string" && action.trim()) {
+      items.push({ priority: p++, action: action.trim(), effort, impact, timeframe });
+    }
+  };
+  for (const a of Array.isArray(gb.weekOne) ? gb.weekOne : []) push(a, "medium", "high", "Week 1");
+  for (const a of Array.isArray(gb.weekTwoToFour) ? gb.weekTwoToFour : []) push(a, "medium", "medium", "Weeks 2-4");
+  push(gb.monthTwo, "high", "medium", "Month 2");
+  return items.length > 0 ? items : null;
+}
+
 // ── Cache response builder ────────────────────────────────────────────────────
 
 function buildCacheResponse(
@@ -939,7 +1002,6 @@ function buildCacheResponse(
     verdict: scoreToVerdict(score),
     scanned_at: cr.created_at,
     pages_scanned: 1,
-    dimensions: { conversion_architecture: 0, trust_signals: 0, message_clarity: 0, traffic_readiness: 0, technical_foundation: 0 },
     metadata: { word_count: 0, cta_count: 0, tech_stack: [] as string[] },
     scan_meta: {
       cached: true,
@@ -949,6 +1011,13 @@ function buildCacheResponse(
   };
 
   const ap = cr.analysis as Record<string, unknown>;
+
+  // Reconstruct the structured fields from the stored analysis blob instead of
+  // returning zeros/empties. Each field is OMITTED when the blob doesn't carry it
+  // (honest) rather than faked. X-Cache stays HIT.
+  const storedDims = dimensionsFromStored(ap);
+  if (storedDims) response.dimensions = storedDims;
+
   if (wantsField("summary")) response.summary = String(ap.diagnosticBrief ?? ap.intelligenceBrief ?? "");
   if (wantsField("findings")) {
     const leaks = (ap.leaks as unknown[] | undefined) ?? [];
@@ -964,8 +1033,14 @@ function buildCacheResponse(
       };
     });
   }
-  if (wantsField("copy_rewrites")) response.copy_rewrites = {};
-  if (wantsField("growth_blueprint")) response.growth_blueprint = [];
+  if (wantsField("copy_rewrites")) {
+    const storedCopy = copyRewritesFromStored(ap);
+    if (storedCopy) response.copy_rewrites = storedCopy;
+  }
+  if (wantsField("growth_blueprint")) {
+    const storedBlueprint = blueprintFromStored(ap);
+    if (storedBlueprint) response.growth_blueprint = storedBlueprint;
+  }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   void effectiveFields;

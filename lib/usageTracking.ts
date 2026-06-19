@@ -92,21 +92,28 @@ export async function logScanUsage(
       cost_usd: data.costUsd ?? 0,
       cached: data.cached ?? false,
     });
-    await supabase.rpc("increment_scans_used", { key_id: apiKeyId }).then(() => {}, () => {
-      // Fallback: manual increment if RPC not available
-      return supabase
-        .from("api_keys")
-        .select("scans_used")
-        .eq("id", apiKeyId)
-        .single()
-        .then(({ data: row }) => {
-          const current = (row as { scans_used?: number } | null)?.scans_used ?? 0;
-          return supabase
-            .from("api_keys")
-            .update({ scans_used: current + 1 })
-            .eq("id", apiKeyId);
-        });
-    });
+    // Consume quota ONLY on a successful scan. A failed scan (scrape/analyze/parse/
+    // save error) must NOT decrement the user's remaining scans — they got nothing,
+    // so they pay nothing. Cached hits never reach here (the cache path skips
+    // logScanUsage) and rejected requests use logRejectedRequest, which never
+    // increments — so this is the single place scans_used grows.
+    if (data.status === "success") {
+      await supabase.rpc("increment_scans_used", { key_id: apiKeyId }).then(() => {}, () => {
+        // Fallback: manual increment if RPC not available
+        return supabase
+          .from("api_keys")
+          .select("scans_used")
+          .eq("id", apiKeyId)
+          .single()
+          .then(({ data: row }) => {
+            const current = (row as { scans_used?: number } | null)?.scans_used ?? 0;
+            return supabase
+              .from("api_keys")
+              .update({ scans_used: current + 1 })
+              .eq("id", apiKeyId);
+          });
+      });
+    }
     // Report to Stripe metered billing (fire and forget) — ONE scan unit per
     // billable scan. Included allowance + overage rate are applied by the Stripe
     // price tiers. cost_usd above is internal COGS and is intentionally NOT sent.

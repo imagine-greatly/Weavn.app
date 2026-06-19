@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import ConversionScoreGauge from "@/components/ConversionScoreGauge";
+import { RUBRIC_TOTAL_CHECKS } from "@/lib/displayScoreColor";
 
 function dimensionBarColor(score: number): string {
   const s = Math.max(0, Math.min(100, Number(score) || 0));
@@ -176,7 +177,7 @@ function DiagnosticCoverage({ pagesAnalyzed, totalChecked }: { pagesAnalyzed: st
       })}
       <div style={{ height: 1, background: "rgba(255,255,255,0.06)", marginTop: 8, marginBottom: 8 }} />
       <div style={{ fontFamily: MONO, fontSize: 8, color: "#6E7587", letterSpacing: "0.1em", opacity: showSummary ? 1 : 0, transition: "opacity 200ms ease" }}>
-        {pagesAnalyzed.length} {pagesAnalyzed.length === 1 ? "PAGE" : "PAGES"} · {totalChecked ?? 264} CHECKS ANALYZED
+        {pagesAnalyzed.length} {pagesAnalyzed.length === 1 ? "PAGE" : "PAGES"} · {totalChecked ?? RUBRIC_TOTAL_CHECKS} CHECKS ANALYZED
       </div>
     </div>
   );

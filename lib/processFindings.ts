@@ -188,7 +188,7 @@ export function curateFindings(findings: DiagnosticFinding[]): CuratedFindingsRe
     opportunityFindings: [],
     allFindings: findings,
     totalFailed: findings.length,
-    totalChecked: 264,
+    totalChecked: DIAGNOSTIC_CHECKS.length,
     hiddenCount,
   };
 }

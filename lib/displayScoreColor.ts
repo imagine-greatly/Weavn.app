@@ -1,5 +1,7 @@
-/** Rubric total — used for “of N checks” copy on dashboard. */
-export const RUBRIC_TOTAL_CHECKS = 264;
+import DIAGNOSTIC_CHECKS from "@/lib/diagnosticRubric";
+
+/** Rubric total — single source of truth (the catalog length), used for “of N checks” copy. */
+export const RUBRIC_TOTAL_CHECKS = DIAGNOSTIC_CHECKS.length;
 
 /**
  * Health score color bands (DESIGN_SYSTEM / brand guide). No cyan on score readouts.

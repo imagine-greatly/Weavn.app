@@ -1,5 +1,5 @@
 /**
- * Claude prompts — rubric evaluation (264 checks) + Conversion Intelligence output contracts.
+ * Claude prompts — rubric evaluation (full diagnostic catalog) + Conversion Intelligence output contracts.
  * Rubric definitions live in diagnosticRubric.ts (not modified here).
  */
 

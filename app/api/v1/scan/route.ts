@@ -88,6 +88,21 @@ function scoreToVerdict(score: number): string {
   return "Poor";
 }
 
+// Minimum readable body text (chars) required to analyze — matches the Haiku
+// preview "shell HTML" floor in lib/analyze.ts (body text under 150 chars → shell).
+// Below this we reject with insufficient_content rather than scoring a shell page.
+const MIN_CONTENT_CHARS = 150;
+
+/** Readable body-text length (chars) after stripping scripts, styles, and tags. */
+function readableTextLength(html: string): number {
+  return html
+    .replace(/<script[\s\S]*?<\/script>/gi, " ")
+    .replace(/<style[\s\S]*?<\/style>/gi, " ")
+    .replace(/<[^>]*>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim().length;
+}
+
 // ── scan executor (shared by sync path and async IIFE) ───────────────────────
 
 interface ScanParams {
@@ -182,6 +197,18 @@ async function executeScan(p: ScanParams): Promise<ScanResult> {
     ctaCount = pageData.ctaCount;
     techStack = pageData.structured_data ?? [];
   } catch { /* best-effort */ }
+
+  // Min-content gate — fires BEFORE any model call so we never score a shell page
+  // or burn a scan/quota on it. Uses the same 150-char body-text floor as the Haiku
+  // preview shell check. Logged via logRejectedRequest (no increment_scans_used,
+  // no Stripe meter), exactly like other rejected requests.
+  const readableChars = readableTextLength(extraction.rawHtml);
+  if (readableChars < MIN_CONTENT_CHARS) {
+    console.log(`[API v1] INSUFFICIENT CONTENT | domain=${domain} | readableChars=${readableChars} < floor=${MIN_CONTENT_CHARS}`);
+    await markFailed();
+    void logRejectedRequest(apiKeyId, { url: normalizedUrl, statusCode: 422, endpoint: "scan", errorCode: "insufficient_content", responseTimeMs: Date.now() - scanStart });
+    throw new Error("INSUFFICIENT_CONTENT");
+  }
 
   // Adaptive timeout
   const elapsed = Date.now() - scanStart;
@@ -810,6 +837,18 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({
         error: { code: "EXTRACTION_FAILED", message: "Could not extract content from this URL.", status: 422 },
         blocked: false,
+      }, { status: 422, headers: rlHeaders(apiKey) });
+    }
+    if (message === "INSUFFICIENT_CONTENT" || message.includes("INSUFFICIENT_CONTENT")) {
+      return NextResponse.json({
+        error: {
+          code: "INSUFFICIENT_CONTENT",
+          message: `This URL has too little readable content to analyze (under ${MIN_CONTENT_CHARS} characters of body text). It may be a shell page, a redirect, or a client-rendered app that returned no static text.`,
+          status: 422,
+        },
+        blocked: false,
+        insufficient_content: true,
+        min_content_chars: MIN_CONTENT_CHARS,
       }, { status: 422, headers: rlHeaders(apiKey) });
     }
     return NextResponse.json({

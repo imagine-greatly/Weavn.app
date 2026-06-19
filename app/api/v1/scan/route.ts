@@ -548,7 +548,9 @@ async function executeScan(p: ScanParams): Promise<ScanResult> {
   const benchmark = await getBenchmark(site_type, score).catch(() => null);
   const rawDimBenchmarks = await getDimensionBenchmarks(site_type).catch(() => null);
 
-  const weights = getWeightProfile(site_type, complexity);
+  // Weights depend only on site type. profile_used keeps the render-complexity label
+  // for response continuity; the weights themselves are unchanged from before.
+  const weights = getWeightProfile(site_type);
   const weighted_score = Math.min(100, Math.max(0, Math.round(
     Object.entries(dimensions).reduce((sum, [key, val]) => sum + (weights[key] ?? 0) * val, 0)
   )));

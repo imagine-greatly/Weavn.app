@@ -124,24 +124,6 @@ export const DIMENSION_WEIGHTS: Record<string, Record<string, number>> = {
     objection_handling: 0.15,
     offer_clarity: 0.15,
   },
-  saas_consultative: {
-    conversion_architecture: 0.15,
-    trust_signals: 0.20,
-    message_clarity: 0.15,
-    traffic_readiness: 0.10,
-    technical_foundation: 0.10,
-    objection_handling: 0.20,
-    offer_clarity: 0.10,
-  },
-  saas_enterprise: {
-    conversion_architecture: 0.12,
-    trust_signals: 0.22,
-    message_clarity: 0.13,
-    traffic_readiness: 0.10,
-    technical_foundation: 0.18,
-    objection_handling: 0.18,
-    offer_clarity: 0.07,
-  },
   ecommerce_transactional: {
     conversion_architecture: 0.22,
     trust_signals: 0.18,
@@ -150,15 +132,6 @@ export const DIMENSION_WEIGHTS: Record<string, Record<string, number>> = {
     technical_foundation: 0.08,
     objection_handling: 0.12,
     offer_clarity: 0.15,
-  },
-  ecommerce_consultative: {
-    conversion_architecture: 0.15,
-    trust_signals: 0.22,
-    message_clarity: 0.18,
-    traffic_readiness: 0.10,
-    technical_foundation: 0.08,
-    objection_handling: 0.15,
-    offer_clarity: 0.12,
   },
   service_consultative: {
     conversion_architecture: 0.13,
@@ -180,16 +153,20 @@ export const DIMENSION_WEIGHTS: Record<string, Record<string, number>> = {
   },
 };
 
-export function getWeightProfile(siteType: string, buyerComplexity: string): Record<string, number> {
-  if (siteType === "saas") {
-    if (buyerComplexity === "enterprise") return DIMENSION_WEIGHTS.saas_enterprise;
-    if (buyerComplexity === "consultative") return DIMENSION_WEIGHTS.saas_consultative;
-    return DIMENSION_WEIGHTS.saas_transactional;
-  }
-  if (siteType === "ecommerce") {
-    if (buyerComplexity === "consultative") return DIMENSION_WEIGHTS.ecommerce_consultative;
-    return DIMENSION_WEIGHTS.ecommerce_transactional;
-  }
+/**
+ * Dimension weight profile by site type.
+ *
+ * NOTE: the previous signature took a `buyerComplexity` arg and branched on
+ * "enterprise"/"consultative", but the only caller (/api/v1/scan) passed RENDER
+ * complexity ("simple"/"medium"/"complex"), which never matched — so the
+ * saas_consultative / saas_enterprise / ecommerce_consultative profiles were dead
+ * code and every live scan already resolved to the transactional/service/default
+ * profile below. Branching on siteType only preserves those exact weights (no change
+ * to any score returned to users) and the dead profiles have been removed.
+ */
+export function getWeightProfile(siteType: string): Record<string, number> {
+  if (siteType === "saas") return DIMENSION_WEIGHTS.saas_transactional;
+  if (siteType === "ecommerce") return DIMENSION_WEIGHTS.ecommerce_transactional;
   if (siteType === "service") return DIMENSION_WEIGHTS.service_consultative;
   return DIMENSION_WEIGHTS.default;
 }

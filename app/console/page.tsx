@@ -601,6 +601,12 @@ function ApiKeysTab({ keyPrefix, createdLabel, lastUsedLabel, rotating, rotateEr
   const [spendNotice, setSpendNotice] = useState(false)
   const [revoking, setRevoking] = useState(false)
 
+  // Same color budget as Overview/Usage: purple rationed to affordances, gray
+  // everything else, red reserved for genuine destructive/failure signal.
+  const purpleBtn: React.CSSProperties = { color: 'var(--surface-accent)', border: '0.5px solid color-mix(in srgb, var(--surface-accent) 45%, transparent)' }
+  const dim = '#5A6070'
+  const danger = '#E8635F'
+
   async function handleRevoke() {
     setRevoking(true)
     await onRevoke()
@@ -608,69 +614,80 @@ function ApiKeysTab({ keyPrefix, createdLabel, lastUsedLabel, rotating, rotateEr
   }
 
   return (
-    <div className="px-8 py-8">
+    <div className="px-8 py-8" style={{ maxWidth: 1040 }}>
+      {/* Header */}
+      <div className="flex items-center gap-3 mb-7 flex-wrap">
+        <h1 className="font-display font-bold text-ink-primary" style={{ fontSize: 21, letterSpacing: '-0.3px' }}>API Keys</h1>
+        <span className="font-mono uppercase text-ink-muted border border-background-border" style={{ fontSize: 9.5, letterSpacing: '0.18em', padding: '3px 8px' }}>Developer</span>
+      </div>
 
-      <div className="bg-background-raised border border-background-border p-6 mb-6">
-        <div className="flex justify-between items-start">
-          <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mb-2">PRODUCTION KEY</div>
+      {/* Production key panel */}
+      <div className="bg-background-raised border border-background-border p-6 mb-px">
+        <div className="flex justify-between items-start gap-3">
+          <div className="font-mono uppercase text-ink-muted mb-3" style={{ fontSize: 10, letterSpacing: '0.2em' }}>Production key</div>
+          {/* Revoke is the one place red earns its keep — restrained, no fill */}
           <button
             onClick={handleRevoke}
             disabled={revoking || !keyPrefix}
-            className="font-body text-xs text-severity-critical hover:underline cursor-pointer bg-transparent border-0 disabled:opacity-40 disabled:cursor-not-allowed"
+            className="font-mono uppercase cursor-pointer bg-transparent border-0 hover:underline disabled:opacity-40 disabled:cursor-not-allowed"
+            style={{ fontSize: 10.5, letterSpacing: '0.08em', color: danger }}
           >
-            {revoking ? 'Revoking...' : 'Revoke'}
+            {revoking ? 'Revoking…' : 'Revoke'}
           </button>
         </div>
 
-        <div className="font-mono text-sm text-text-secondary bg-background-subtle border border-background-border px-4 py-3 w-full mt-3">
+        <code className="block font-mono text-ink-primary bg-background-subtle border border-background-border truncate" style={{ fontSize: 15, padding: '12px 16px' }}>
           {keyPrefix ? `${keyPrefix}••••••••••••••••••••••` : '— no active key —'}
-        </div>
+        </code>
 
-        <div className="flex gap-6 mt-4">
-          <span className="font-mono text-xs text-text-tertiary">Created {createdLabel}</span>
-          <span className="font-mono text-xs text-text-tertiary">Last used {lastUsedLabel}</span>
-          <span className="font-mono text-xs text-text-tertiary">All permissions</span>
-        </div>
+        <div className="font-mono mt-3" style={{ fontSize: 11, color: dim }}>Created {createdLabel} · Last used {lastUsedLabel} · all permissions</div>
 
-        <div className="flex items-center gap-4 mt-4 pt-4 border-t border-background-border">
-          <span className="font-mono text-xs text-text-tertiary flex-shrink-0">MONTHLY SPENDING LIMIT</span>
+        <div className="flex items-center gap-4 mt-4 pt-4 border-t border-background-border flex-wrap">
+          <span className="font-mono uppercase text-ink-muted flex-shrink-0" style={{ fontSize: 10, letterSpacing: '0.18em' }}>Monthly spending limit</span>
           <input
             type="text"
             placeholder="$50.00"
             value={spendLimit}
             onChange={e => { setSpendLimit(e.target.value); setSpendNotice(false) }}
-            className="bg-background-subtle border border-background-border font-mono text-sm text-text-primary px-3 py-2 w-32 outline-none"
+            className="bg-background-subtle border border-background-border font-mono text-ink-primary w-32 outline-none placeholder:text-ink-muted"
+            style={{ fontSize: 13, padding: '8px 12px' }}
           />
           {/* TODO(wiring): no persistence path for spend limits yet (no column/endpoint).
               Held in form-state only — we surface an honest notice instead of faking a save. */}
           <button
             onClick={() => setSpendNotice(true)}
-            className="border border-background-border font-body text-xs text-text-secondary px-3 py-2 cursor-pointer bg-transparent hover:text-text-primary transition-colors duration-150"
+            className="font-mono uppercase cursor-pointer bg-transparent border border-background-border text-ink-secondary hover:text-ink-primary transition-colors"
+            style={{ fontSize: 11, letterSpacing: '0.08em', padding: '8px 12px' }}
           >
             Save
           </button>
         </div>
         {spendNotice ? (
-          <div className="font-mono text-xs text-purple-muted mt-3">
+          <div className="font-mono mt-3" style={{ fontSize: 11, color: dim }}>
             Spend limits aren&apos;t wired up yet — this lands in the billing wiring phase. Your input is kept here for now.
           </div>
         ) : null}
       </div>
 
-      <button
-        onClick={onRotate}
-        disabled={rotating || !keyPrefix}
-        className="bg-purple-DEFAULT text-text-inverse font-body font-semibold text-sm px-5 py-2.5 inline-block hover:opacity-90 transition-opacity duration-150 border-0 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
-      >
-        {rotating ? 'Rotating…' : 'Rotate key →'}
-      </button>
-      <p className="font-mono text-xs text-text-tertiary mt-3">
-        Rotating deactivates the current key immediately and shows the new key once.
-      </p>
-      {rotateError ? (
-        <div className="font-mono text-xs text-severity-critical mt-2">{rotateError}</div>
-      ) : null}
-
+      {/* Rotate — primary affordance (purple); destructive-on-confirm, so paired with a quiet caption */}
+      <div className="bg-background-raised border border-background-border p-6">
+        <div className="flex items-center gap-4 flex-wrap">
+          <button
+            onClick={onRotate}
+            disabled={rotating || !keyPrefix}
+            className="font-mono uppercase cursor-pointer bg-transparent disabled:opacity-40 disabled:cursor-not-allowed"
+            style={{ ...purpleBtn, fontSize: 11, letterSpacing: '0.08em', padding: '12px 16px' }}
+          >
+            {rotating ? 'Rotating…' : 'Rotate key →'}
+          </button>
+          <span className="font-mono" style={{ fontSize: 11, color: dim }}>
+            Rotating deactivates the current key immediately and shows the new key once.
+          </span>
+        </div>
+        {rotateError ? (
+          <div className="font-mono mt-3" style={{ fontSize: 11, color: danger }}>{rotateError}</div>
+        ) : null}
+      </div>
     </div>
   )
 }
@@ -743,57 +760,72 @@ function WebhooksTab({ webhookLog }: { webhookLog: WebhookLog[] }) {
     }
   }
 
+  // Same color budget as Overview/Usage: purple only on affordances, gray
+  // everything else; delivery status colored only on failure (codeColor).
+  const purpleBtn: React.CSSProperties = { color: 'var(--surface-accent)', border: '0.5px solid color-mix(in srgb, var(--surface-accent) 45%, transparent)' }
+  const dim = '#5A6070'
+  const danger = '#E8635F'
+
   return (
-    <div className="px-8 py-8">
+    <div className="px-8 py-8" style={{ maxWidth: 1040 }}>
+      {/* Header */}
+      <div className="flex items-center gap-3 mb-7 flex-wrap">
+        <h1 className="font-display font-bold text-ink-primary" style={{ fontSize: 21, letterSpacing: '-0.3px' }}>Webhooks</h1>
+        <span className="font-mono uppercase text-ink-muted border border-background-border" style={{ fontSize: 9.5, letterSpacing: '0.18em', padding: '3px 8px' }}>Developer</span>
+      </div>
 
       {/* Register form */}
-      <div className="bg-background-raised border border-background-border p-6 mb-6">
-        <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mb-4">REGISTER ENDPOINT</div>
-        <div className="flex gap-3">
+      <div className="bg-background-raised border border-background-border p-6 mb-px">
+        <div className="font-mono uppercase text-ink-muted mb-4" style={{ fontSize: 10, letterSpacing: '0.2em' }}>Register endpoint</div>
+        <div className="flex gap-3 flex-wrap">
           <input
             type="url"
             placeholder="https://your-app.com/webhook"
             value={webhookUrl}
             onChange={e => { setWebhookUrl(e.target.value); setError(null) }}
             onKeyDown={e => { if (e.key === 'Enter') void handleRegister() }}
-            className="flex-1 bg-background-subtle border border-background-border font-mono text-sm text-text-primary px-4 py-3 placeholder:text-text-tertiary outline-none"
+            className="flex-1 min-w-0 bg-background-subtle border border-background-border font-mono text-ink-primary placeholder:text-ink-muted outline-none"
+            style={{ fontSize: 13, padding: '12px 16px' }}
           />
           <button
             onClick={handleRegister}
             disabled={registering || !webhookUrl.trim()}
-            className="bg-purple-DEFAULT text-text-inverse font-body font-semibold text-sm px-5 py-2.5 cursor-pointer border-0 hover:opacity-90 transition-opacity duration-150 disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0"
+            className="font-mono uppercase cursor-pointer bg-transparent disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0"
+            style={{ ...purpleBtn, fontSize: 11, letterSpacing: '0.08em', padding: '12px 16px' }}
           >
             {registering ? 'Registering…' : 'Register'}
           </button>
         </div>
-        <div className="font-mono text-xs text-text-tertiary mt-3">
+        <div className="font-mono mt-3" style={{ fontSize: 11, color: dim }}>
           Registered endpoints receive all scan events (scan.completed, scan.failed).
         </div>
         {/* TODO(wiring): the webhooks endpoint never returns a signing secret, so we do
             NOT fake a "secret shown once" here. Secret provisioning is a later backend add. */}
-        {error ? <div className="font-mono text-xs text-severity-critical mt-2">{error}</div> : null}
+        {error ? <div className="font-mono mt-2" style={{ fontSize: 11, color: danger }}>{error}</div> : null}
       </div>
 
       {/* Registered endpoints (real list + delete) */}
-      <div className="bg-background-raised border border-background-border mb-6">
+      <div className="bg-background-raised border border-background-border mb-px">
         <div className="px-6 py-4 border-b border-background-border">
-          <span className="font-mono text-xs text-text-tertiary uppercase tracking-widest">REGISTERED ENDPOINTS</span>
+          <span className="font-mono uppercase text-ink-muted" style={{ fontSize: 10, letterSpacing: '0.2em' }}>Registered endpoints</span>
         </div>
         {listLoading ? (
-          <div className="px-6 py-8 font-mono text-sm text-text-tertiary">Loading…</div>
+          <div className="px-6 py-8 font-mono text-ink-muted" style={{ fontSize: 12 }}>Loading…</div>
         ) : endpoints.length === 0 ? (
-          <div className="px-6 py-8 font-mono text-sm text-text-tertiary">No endpoints registered.</div>
+          <div className="px-6 py-8 font-mono text-ink-muted" style={{ fontSize: 12 }}>No endpoints registered.</div>
         ) : endpoints.map(ep => (
           <div key={ep.id} className="flex items-center gap-4 px-6 py-4 border-b border-background-border last:border-0">
-            <span className={`font-mono text-xs px-2 py-0.5 flex-shrink-0 ${ep.active ? 'bg-score-high/10 text-score-high' : 'bg-background-subtle text-text-tertiary'}`}>
+            {/* Active is a quiet state, not a success signal — gray, never green */}
+            <span className="font-mono uppercase border border-background-border flex-shrink-0" style={{ fontSize: 9.5, letterSpacing: '0.08em', padding: '2px 8px', color: ep.active ? '#9398A8' : dim }}>
               {ep.active ? 'active' : 'inactive'}
             </span>
-            <span className="font-mono text-xs text-text-secondary truncate flex-1">{ep.url}</span>
-            <span className="font-mono text-xs text-text-tertiary flex-shrink-0">{relativeTime(ep.created_at)}</span>
+            <span className="font-mono text-ink-secondary truncate flex-1" style={{ fontSize: 12 }}>{ep.url}</span>
+            <span className="font-mono text-ink-muted flex-shrink-0" style={{ fontSize: 11 }}>{relativeTime(ep.created_at)}</span>
             <button
               onClick={() => handleDelete(ep.id)}
               disabled={deletingId === ep.id}
-              className="font-body text-xs text-severity-critical hover:underline cursor-pointer bg-transparent border-0 flex-shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
+              className="font-mono uppercase cursor-pointer bg-transparent border-0 hover:underline flex-shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
+              style={{ fontSize: 10.5, letterSpacing: '0.08em', color: danger }}
             >
               {deletingId === ep.id ? 'Deleting…' : 'Delete'}
             </button>
@@ -804,7 +836,7 @@ function WebhooksTab({ webhookLog }: { webhookLog: WebhookLog[] }) {
       {/* Delivery log (history from webhook_deliveries) */}
       <div className="bg-background-raised border border-background-border">
         <div className="px-6 py-4 border-b border-background-border">
-          <span className="font-mono text-xs text-text-tertiary uppercase tracking-widest">DELIVERY LOG</span>
+          <span className="font-mono uppercase text-ink-muted" style={{ fontSize: 10, letterSpacing: '0.2em' }}>Delivery log</span>
         </div>
         {webhookLog.length === 0 && (
           <EmptyState
@@ -815,19 +847,12 @@ function WebhooksTab({ webhookLog }: { webhookLog: WebhookLog[] }) {
         )}
         {webhookLog.map((log, i) => (
           <div key={i} className="flex items-center gap-4 px-6 py-4 border-b border-background-border last:border-0">
-            <span
-              className={`font-mono text-xs px-2 py-0.5 flex-shrink-0 ${
-                log.status === 200
-                  ? 'bg-score-high/10 text-score-high'
-                  : 'bg-severity-critical/10 text-severity-critical'
-              }`}
-            >
-              {log.status}
-            </span>
-            <span className="font-mono text-xs text-text-secondary flex-shrink-0">{log.event}</span>
-            <span className="font-body text-xs text-text-tertiary truncate flex-1">{log.url}</span>
-            <span className="font-mono text-xs text-text-tertiary flex-shrink-0">{log.time}</span>
-            <span className="font-mono text-xs text-text-tertiary flex-shrink-0">{log.date}</span>
+            {/* Status code colored only on failure (codeColor): 200 quiet gray, 4xx amber, 5xx red */}
+            <span className="font-mono flex-shrink-0" style={{ fontSize: 11, color: codeColor(log.status) }}>{log.status}</span>
+            <span className="font-mono text-ink-secondary flex-shrink-0" style={{ fontSize: 11 }}>{log.event}</span>
+            <span className="font-mono text-ink-muted truncate flex-1" style={{ fontSize: 11 }}>{log.url}</span>
+            <span className="font-mono flex-shrink-0" style={{ fontSize: 11, color: dim }}>{log.time}</span>
+            <span className="font-mono text-ink-muted flex-shrink-0" style={{ fontSize: 11 }}>{log.date}</span>
           </div>
         ))}
       </div>
@@ -848,7 +873,8 @@ interface BillingTabProps {
 function BillingTab({ plan, isTrialPlan, monthScans, scansUsed }: BillingTabProps) {
   const [portalBusy, setPortalBusy] = useState(false)
   const [portalError, setPortalError] = useState<string | null>(null)
-  const [upgradeNotice, setUpgradeNotice] = useState(false)
+  const [checkoutBusy, setCheckoutBusy] = useState<string | null>(null)
+  const [checkoutError, setCheckoutError] = useState<string | null>(null)
 
   // Opens the REAL Stripe billing portal via /api/settings/portal (the working settings
   // path — NOT the non-existent /api/billing/portal). Users without a Stripe customer get
@@ -871,16 +897,53 @@ function BillingTab({ plan, isTrialPlan, monthScans, scansUsed }: BillingTabProp
     }
   }
 
+  // Real Stripe Checkout for the API track — mirrors the dashboard's startCheckout
+  // (app/app/billing/page.tsx) but pins surface:'api' so the route validates against
+  // the API tier catalog. Only self-serve (cta.kind==='checkout') tiers reach here.
+  // No monthly/annual toggle exists on this tab yet → interval defaults to 'month'.
+  async function startCheckout(tierId: ApiTier) {
+    if (checkoutBusy) return
+    setCheckoutBusy(tierId); setCheckoutError(null)
+    try {
+      const supabase = getSupabaseBrowserClient()
+      const { data: session } = await supabase.auth.getSession()
+      const token = session.session?.access_token
+      if (!token) { window.location.href = '/auth?mode=signup'; return }
+      const res = await fetch('/api/stripe/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ plan: tierId, interval: 'month', surface: 'api' }),
+      })
+      const json = await res.json().catch(() => ({}))
+      if (!res.ok || !json.url) throw new Error(typeof json.error === 'string' ? json.error : 'Checkout failed.')
+      window.location.href = json.url as string
+    } catch (e) {
+      setCheckoutError(e instanceof Error ? e.message : 'Checkout failed.')
+      setCheckoutBusy(null)
+    }
+  }
+
+  // Same color budget as Overview/Usage: purple rationed to affordances + active
+  // state (Manage billing, the CURRENT tag), gray everything else, red on failure.
+  const purpleBtn: React.CSSProperties = { color: 'var(--surface-accent)', border: '0.5px solid color-mix(in srgb, var(--surface-accent) 45%, transparent)' }
+  const dim = '#5A6070'
+  const danger = '#E8635F'
+
   return (
-    <div className="px-8 py-8">
+    <div className="px-8 py-8" style={{ maxWidth: 1040 }}>
+      {/* Header */}
+      <div className="flex items-center gap-3 mb-7 flex-wrap">
+        <h1 className="font-display font-bold text-ink-primary" style={{ fontSize: 21, letterSpacing: '-0.3px' }}>Billing</h1>
+        <span className="font-mono uppercase text-ink-muted border border-background-border" style={{ fontSize: 9.5, letterSpacing: '0.18em', padding: '3px 8px' }}>Developer</span>
+      </div>
 
       {/* Current plan + manage billing */}
-      <div className="bg-background-raised border border-background-border p-6 mb-6">
-        <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mb-4">CURRENT API PLAN</div>
+      <div className="bg-background-raised border border-background-border p-6 mb-px">
+        <div className="font-mono uppercase text-ink-muted mb-4" style={{ fontSize: 10, letterSpacing: '0.2em' }}>Current API plan</div>
         <div className="flex items-end justify-between gap-4 flex-wrap">
           <div>
-            <div className="font-display font-extrabold text-3xl text-text-primary capitalize">{plan}</div>
-            <div className="font-mono text-xs text-text-tertiary mt-1">
+            <div className="font-display font-bold capitalize" style={{ fontSize: 28, color: '#E6E9EE' }}>{plan}</div>
+            <div className="font-mono mt-1" style={{ fontSize: 11, color: dim }}>
               {isTrialPlan
                 ? `${scansUsed} / ${FREE_API_TRIAL_SCANS} free trial scans used (lifetime)`
                 : 'Usage-based billing'}
@@ -890,51 +953,59 @@ function BillingTab({ plan, isTrialPlan, monthScans, scansUsed }: BillingTabProp
           <button
             onClick={openPortal}
             disabled={portalBusy}
-            className="border border-purple-DEFAULT text-purple-DEFAULT font-body text-sm px-5 py-2.5 cursor-pointer bg-transparent hover:bg-purple-dim transition-colors duration-150 disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0"
+            className="font-mono uppercase cursor-pointer bg-transparent disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0"
+            style={{ ...purpleBtn, fontSize: 11, letterSpacing: '0.08em', padding: '10px 16px' }}
           >
             {portalBusy ? 'Opening…' : 'Manage billing →'}
           </button>
         </div>
-        <div className="font-mono text-xs text-text-tertiary mt-3">
+        <div className="font-mono mt-3" style={{ fontSize: 11, color: dim }}>
           Opens the Stripe billing portal to manage payment methods and invoices.
         </div>
-        {portalError ? <div className="font-mono text-xs text-severity-critical mt-2">{portalError}</div> : null}
+        {portalError ? <div className="font-mono mt-2" style={{ fontSize: 11, color: danger }}>{portalError}</div> : null}
       </div>
 
-      {/* Paid tiers — upgrade affordance only; checkout is NOT wired */}
-      <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mb-3">API PLANS</div>
-      <div className="grid grid-cols-2 gap-px bg-background-border mb-3">
+      {/* Paid tiers — real Stripe Checkout (surface:'api'). Checkout vs contact CTA is
+          read from API_PLANS[t.id].cta.kind (dev/builder/scale = checkout; enterprise =
+          contact), never hardcoded. */}
+      <div className="font-mono uppercase text-ink-muted mt-8 mb-3" style={{ fontSize: 10, letterSpacing: '0.2em' }}>API plans</div>
+      <div className="grid grid-cols-2 gap-px bg-background-border mb-px">
         {PAID_TIERS.map(t => {
           const isCurrent = plan === t.id
+          const isContact = API_PLANS[t.id].cta.kind === 'contact'
+          const busy = checkoutBusy === t.id
           return (
             <div key={t.id} className="bg-background-raised p-5">
-              <div className="flex items-center justify-between">
-                <span className="font-display font-bold text-lg text-text-primary">{t.name}</span>
-                {isCurrent && <span className="font-mono text-xs text-purple-DEFAULT">CURRENT</span>}
+              <div className="flex items-center justify-between gap-2">
+                <span className="font-display font-bold text-ink-primary" style={{ fontSize: 17 }}>{t.name}</span>
+                {/* Active-state marker — purple is on-budget here */}
+                {isCurrent && <span className="font-mono uppercase" style={{ fontSize: 9.5, letterSpacing: '0.12em', color: 'var(--surface-accent)' }}>Current</span>}
               </div>
-              <div className="font-mono text-xs text-text-tertiary mt-1">{t.line}</div>
+              <div className="font-mono mt-1" style={{ fontSize: 11, color: dim }}>{t.line}</div>
               <button
-                onClick={() => setUpgradeNotice(true)}
-                disabled={isCurrent}
-                className="mt-4 w-full border border-background-border text-text-secondary font-body text-xs px-4 py-2 cursor-pointer bg-transparent hover:text-text-primary hover:border-text-tertiary transition-colors duration-150 disabled:opacity-40 disabled:cursor-not-allowed"
+                onClick={() => {
+                  if (isCurrent) return
+                  // Enterprise (cta.kind==='contact') books a call — NOT Stripe Checkout.
+                  if (isContact) { window.location.href = '/contact'; return }
+                  void startCheckout(t.id)
+                }}
+                disabled={isCurrent || busy}
+                className="mt-4 w-full font-mono uppercase cursor-pointer bg-transparent border border-background-border text-ink-secondary hover:text-ink-primary hover:border-ink-muted transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                style={{ fontSize: 10.5, letterSpacing: '0.08em', padding: '8px 12px' }}
               >
-                {isCurrent ? 'Current plan' : 'Upgrade'}
+                {isCurrent ? 'Current plan' : isContact ? 'Talk to us →' : busy ? 'Redirecting…' : 'Upgrade'}
               </button>
             </div>
           )
         })}
       </div>
 
-      {/* TODO(wiring): paid-tier checkout is not wired — there are no Stripe products for
-          these tiers and api_keys.plan is not set from a purchase. We surface an honest
-          notice instead of faking a charge. */}
-      {upgradeNotice ? (
-        <div className="font-mono text-xs text-purple-muted mb-3">
-          Paid-tier checkout isn&apos;t wired up yet — upgrading API plans lands in the billing wiring phase. No charge was made.
-        </div>
+      {checkoutError ? (
+        <div className="font-mono mt-3 mb-3" style={{ fontSize: 11, color: danger }}>{checkoutError}</div>
       ) : null}
 
-      <Link href="/developers" className="font-body text-sm text-purple-DEFAULT no-underline hover:opacity-80 transition-opacity duration-150">
+      {/* Inline text-link → gray (purple reserved for button affordances), matches Overview's "Docs →" */}
+      <Link href="/developers" className="font-mono uppercase text-ink-muted hover:text-ink-secondary no-underline transition-colors inline-block mt-4" style={{ fontSize: 11, letterSpacing: '0.08em' }}>
         View API pricing →
       </Link>
 
@@ -1357,20 +1428,21 @@ export default function DeveloperPortal() {
         <div
           style={{ position: 'fixed', inset: 0, background: 'rgba(5,8,16,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, zIndex: 200 }}
         >
+          {/* Monochrome chrome — no decorative purple frame; purple rationed to the Copy affordance */}
           <div
-            className="bg-background-raised"
-            style={{ maxWidth: 560, width: '100%', border: '1px solid rgba(157,140,255,0.3)', borderLeft: '3px solid #9D8CFF', padding: 28 }}
+            className="bg-background-raised border border-background-border"
+            style={{ maxWidth: 560, width: '100%', padding: 28 }}
           >
-            <p className="font-mono" style={{ fontSize: 11, color: '#9D8CFF', letterSpacing: '0.2em', marginBottom: 8, textTransform: 'uppercase' }}>
+            <p className="font-mono uppercase text-ink-muted" style={{ fontSize: 10, letterSpacing: '0.2em', marginBottom: 8 }}>
               New API key
             </p>
-            <h2 className="font-display" style={{ fontSize: 22, fontWeight: 700, color: '#F0F4FF', marginBottom: 8 }}>
+            <h2 className="font-display font-bold text-ink-primary" style={{ fontSize: 22, marginBottom: 8 }}>
               Copy your new key now.
             </h2>
-            <p className="font-body" style={{ fontSize: 13, color: 'rgba(240,244,255,0.55)', marginBottom: 20, lineHeight: 1.6 }}>
+            <p className="font-body" style={{ fontSize: 13, color: '#9398A8', marginBottom: 20, lineHeight: 1.6 }}>
               This is the only time the full key is shown — only its hash is stored. The previous key has been deactivated.
             </p>
-            <div className="font-mono" style={{ fontSize: 13, color: '#F0F4FF', background: 'rgba(157,140,255,0.06)', border: '1px solid rgba(157,140,255,0.25)', padding: '14px 16px', wordBreak: 'break-all', marginBottom: 16 }}>
+            <div className="font-mono text-ink-primary bg-background-subtle border border-background-border" style={{ fontSize: 13, padding: '14px 16px', wordBreak: 'break-all', marginBottom: 16 }}>
               {revealedKey}
             </div>
             <div style={{ display: 'flex', gap: 12 }}>
@@ -1381,13 +1453,15 @@ export default function DeveloperPortal() {
                     () => {}
                   )
                 }}
-                className="bg-purple-DEFAULT text-text-inverse font-body font-semibold text-sm px-5 py-2.5 border-0 cursor-pointer"
+                className="font-mono uppercase cursor-pointer bg-transparent"
+                style={{ color: 'var(--surface-accent)', border: '0.5px solid color-mix(in srgb, var(--surface-accent) 45%, transparent)', fontSize: 11, letterSpacing: '0.08em', padding: '12px 16px' }}
               >
                 {revealedCopied ? 'Copied ✓' : 'Copy key'}
               </button>
               <button
                 onClick={() => setRevealedKey(null)}
-                className="border border-background-border text-text-secondary font-body text-sm px-5 py-2.5 bg-transparent cursor-pointer hover:text-text-primary transition-colors duration-150"
+                className="font-mono uppercase border border-background-border text-ink-secondary bg-transparent cursor-pointer hover:text-ink-primary transition-colors"
+                style={{ fontSize: 11, letterSpacing: '0.08em', padding: '12px 16px' }}
               >
                 Done
               </button>

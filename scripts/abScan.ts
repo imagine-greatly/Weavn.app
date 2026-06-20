@@ -125,7 +125,7 @@ const SITES: Site[] = [
   { label: "Stripe",    bucket: "Healthy baseline (~52)", url: "https://stripe.com" },
   { label: "Linear",    bucket: "Healthy, JS-heavy",      url: "https://linear.app" },
   { label: "Plausible", bucket: "Mid SaaS",               url: "https://www.plausible.io" },
-  { label: "Example",   bucket: "Thin/low-content",       url: "https://example.com" },
+  { label: "JJWords",   bucket: "Thin/low-conversion-content", url: "https://justinjackson.ca/words.html" },
   { label: "WP:CRO",    bucket: "Content-heavy long page", url: "https://en.wikipedia.org/wiki/Conversion_rate_optimization" },
 ];
 
@@ -176,6 +176,9 @@ interface Row {
   cost: number; errorCode: string;
   genGen: number; genRet: number; // pass-2 narratives generated vs returned
   skipRate: number;
+  // per-pass input/output split (summary arm) — sumP1In is the clean apples-to-apples
+  // counterpart to the raw arm's rawInTok (both are the status pass-1 page-content input).
+  sumP1In: number; sumP1Out: number; sumP2In: number; sumP2Out: number;
   // A/B baseline (raw-HTML arm, pass-1 only)
   rawHtmlChars: number; summaryChars: number;
   rawInTok: number; rawTfAns: number; rawTfSkip: number; rawTotalAns: number; rawSkipRate: number;
@@ -188,6 +191,7 @@ async function runSite(site: Site): Promise<Row> {
     inTok: 0, outTok: 0, cacheRead: 0, cacheCreate: 0,
     total: 0, answered: 0, skip: 0, tfAns: 0, tfSkip: 0,
     cost: 0, errorCode: "", genGen: 0, genRet: 0, skipRate: 0,
+    sumP1In: 0, sumP1Out: 0, sumP2In: 0, sumP2Out: 0,
     rawHtmlChars: 0, summaryChars: 0, rawInTok: 0, rawTfAns: 0, rawTfSkip: 0, rawTotalAns: 0, rawSkipRate: 0,
   };
 
@@ -217,13 +221,14 @@ async function runSite(site: Site): Promise<Row> {
 
   // ── SUMMARY ARM — full two-pass (the new path) ──
   let p1: ReturnType<typeof parseStatusRows>;
-  let sumUsage: Usage = { ...ZERO_U };
+  let p1Usage: Usage = { ...ZERO_U };
+  let p2Usage: Usage = { ...ZERO_U };
   try {
     const c1 = await call(PASS1_MAX_TOKENS, buildPass1SystemBlocks(scopedChecks), summaryContent);
-    p1 = parseStatusRows(c1.text, scopedChecks); sumUsage = addU(sumUsage, c1.usage);
+    p1 = parseStatusRows(c1.text, scopedChecks); p1Usage = addU(p1Usage, c1.usage);
     if (p1.truncated || p1.backfilledIds.length > 0) {
       const c1r = await call(PASS1_RETRY_MAX_TOKENS, buildPass1SystemBlocks(scopedChecks), summaryContent);
-      p1 = parseStatusRows(c1r.text, scopedChecks); sumUsage = addU(sumUsage, c1r.usage);
+      p1 = parseStatusRows(c1r.text, scopedChecks); p1Usage = addU(p1Usage, c1r.usage);
     }
   } catch (e) { row.errorCode = `pass1_error: ${e instanceof Error ? e.message : e}`; return row; }
 
@@ -257,7 +262,7 @@ async function runSite(site: Site): Promise<Row> {
         const failLines = failIds.map((id) => `${id} | ${byId.get(id)?.title ?? ""}`).join("\n");
         const pass2User = `${summaryContent}\n\n=== FAILED CHECKS (write the narrative for EACH; do not re-evaluate or add others) ===\n${failLines}`;
         const c2 = await call(PASS2_MAX_TOKENS, buildPass2SystemBlocks(scopedChecks), pass2User);
-        const p2 = parsePass2Narrative(c2.text); sumUsage = addU(sumUsage, c2.usage);
+        const p2 = parsePass2Narrative(c2.text); p2Usage = addU(p2Usage, c2.usage);
         row.genGen = p2.returnedFailRows;
         const merged = mergeStatusAndNarrative(statusRows, p2.narratives);
         row.genRet = buildApiFindings(merged, scopedChecks, FINDING_LIMIT).length;
@@ -265,6 +270,11 @@ async function runSite(site: Site): Promise<Row> {
     }
   }
 
+  const sumUsage = addU(p1Usage, p2Usage);
+  row.sumP1In = p1Usage.input_tokens ?? 0;
+  row.sumP1Out = p1Usage.output_tokens ?? 0;
+  row.sumP2In = p2Usage.input_tokens ?? 0;
+  row.sumP2Out = p2Usage.output_tokens ?? 0;
   row.inTok = sumUsage.input_tokens ?? 0;
   row.outTok = sumUsage.output_tokens ?? 0;
   row.cacheRead = sumUsage.cache_read_input_tokens ?? 0;
@@ -299,9 +309,13 @@ async function main() {
   for (const site of batch) {
     console.log(`\n--- ${site.label} [${site.bucket}] ${site.url} ---`);
     const t0 = Date.now();
-    try { rows.push(await runSite(site)); }
-    catch (e) { console.log(`  RUN FAILED → ${e instanceof Error ? e.message : e}`); rows.push({ domain: new URL(site.url).hostname.replace(/^www\./, ""), siteType: "-", scoped: 0, score: null, inTok: 0, outTok: 0, cacheRead: 0, cacheCreate: 0, total: 0, answered: 0, skip: 0, tfAns: 0, tfSkip: 0, cost: 0, errorCode: `run_failed: ${e instanceof Error ? e.message : e}`, genGen: 0, genRet: 0, skipRate: 0, rawHtmlChars: 0, summaryChars: 0, rawInTok: 0, rawTfAns: 0, rawTfSkip: 0, rawTotalAns: 0, rawSkipRate: 0 }); }
+    let r: Row;
+    try { r = await runSite(site); }
+    catch (e) { console.log(`  RUN FAILED → ${e instanceof Error ? e.message : e}`); r = { domain: new URL(site.url).hostname.replace(/^www\./, ""), siteType: "-", scoped: 0, score: null, inTok: 0, outTok: 0, cacheRead: 0, cacheCreate: 0, total: 0, answered: 0, skip: 0, tfAns: 0, tfSkip: 0, cost: 0, errorCode: `run_failed: ${e instanceof Error ? e.message : e}`, genGen: 0, genRet: 0, skipRate: 0, sumP1In: 0, sumP1Out: 0, sumP2In: 0, sumP2Out: 0, rawHtmlChars: 0, summaryChars: 0, rawInTok: 0, rawTfAns: 0, rawTfSkip: 0, rawTotalAns: 0, rawSkipRate: 0 }; }
+    rows.push(r);
     console.log(`  (${((Date.now() - t0) / 1000).toFixed(0)}s)`);
+    // Incremental, crash-resilient per-site record — full metrics on one parseable line.
+    console.log("ROWJSON " + JSON.stringify(r));
   }
 
   // ── PRIMARY TABLE (summary arm) ──
@@ -319,17 +333,17 @@ async function main() {
     ].join("| "));
   }
 
-  // ── A/B BASELINE TABLE (raw-HTML arm, pass-1 only) ──
-  console.log("\n================ A/B BASELINE — RAW-HTML ARM (pass-1 only) ================");
-  const H2 = ["domain", "rawChars", "sumChars", "raw_in_tok", "sum_in_tok", "in_ratio(raw/sum)", "raw tf a/s", "sum tf a/s", "raw skip%", "sum skip%"];
-  const W2 = [20, 9, 9, 11, 11, 18, 11, 11, 10, 10];
+  // ── A/B BASELINE TABLE — both are the STATUS pass-1 (apples-to-apples page-content input) ──
+  console.log("\n================ A/B BASELINE — pass-1 page-content input: RAW-HTML vs SUMMARY ================");
+  const H2 = ["domain", "rawChars", "sumChars", "raw_p1_in", "sum_p1_in", "ratio(raw/sum)", "raw tf a/s", "sum tf a/s", "raw skip%", "sum skip%"];
+  const W2 = [20, 9, 9, 10, 10, 15, 11, 11, 10, 10];
   console.log(H2.map((h, i) => pad(h, W2[i])).join("| "));
   console.log(W2.map((w) => "-".repeat(w)).join("+-"));
   for (const r of rows) {
-    const ratio = r.inTok > 0 && r.rawInTok > 0 ? (r.rawInTok / r.inTok).toFixed(1) + "x" : "-";
+    const ratio = r.sumP1In > 0 && r.rawInTok > 0 ? (r.rawInTok / r.sumP1In).toFixed(1) + "x" : "-";
     console.log([
       pad(r.domain, W2[0]), padL(r.rawHtmlChars, W2[1]), padL(r.summaryChars, W2[2]),
-      padL(r.rawInTok, W2[3]), padL(r.inTok, W2[4]), padL(ratio, W2[5]),
+      padL(r.rawInTok, W2[3]), padL(r.sumP1In, W2[4]), padL(ratio, W2[5]),
       pad(`${r.rawTfAns}/${r.rawTfSkip}`, W2[6]), pad(`${r.tfAns}/${r.tfSkip}`, W2[7]),
       padL((r.rawSkipRate * 100).toFixed(0) + "%", W2[8]), padL((r.skipRate * 100).toFixed(0) + "%", W2[9]),
     ].join("| "));
@@ -341,7 +355,13 @@ async function main() {
   const avg = (xs: number[]) => xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : 0;
   const avgCost = avg(withModel.map((r) => r.cost));
   const avgIn = avg(withModel.map((r) => r.inTok));
-  const avgRawIn = avg(rows.filter((r) => r.rawInTok > 0).map((r) => r.rawInTok));
+  const avgOut = avg(withModel.map((r) => r.outTok));
+  // Per-pass page-content input ratio, content-rich sites only (raw HTML actually
+  // hit the 70KB cap); excludes tiny pages where raw < summary.
+  const big = withModel.filter((r) => r.rawHtmlChars > 40_000 && r.sumP1In > 0);
+  const avgRatioBig = avg(big.map((r) => r.rawInTok / r.sumP1In));
+  const avgSumP1 = avg(big.map((r) => r.sumP1In));
+  const avgRawP1 = avg(big.map((r) => r.rawInTok));
   const avgGlobalSkip = avg(withModel.map((r) => r.skipRate));
   const tfTotals = withModel.reduce((acc, r) => ({ ans: acc.ans + r.tfAns, skip: acc.skip + r.tfSkip }), { ans: 0, skip: 0 });
   const tfSkipRate = (tfTotals.ans + tfTotals.skip) > 0 ? tfTotals.skip / (tfTotals.ans + tfTotals.skip) : 0;
@@ -352,8 +372,8 @@ async function main() {
   console.log("\n================ SUMMARY ================");
   console.log(`sites run: ${rows.length} | scored: ${scored.length} | with model calls: ${withModel.length}`);
   console.log(`avg cost / scan (summary arm, both passes): $${avgCost.toFixed(4)}`);
-  console.log(`avg input tokens (summary arm, p1+p2): ${avgIn.toFixed(0)}`);
-  console.log(`avg input tokens (raw-HTML arm, p1 only): ${avgRawIn.toFixed(0)}  → input ratio raw/summary ≈ ${avgIn > 0 ? (avgRawIn / avgIn).toFixed(1) : "-"}x`);
+  console.log(`avg input tokens (summary arm, p1+p2): ${avgIn.toFixed(0)} | avg OUTPUT tokens (p1+p2): ${avgOut.toFixed(0)}  ← output dominates cost`);
+  console.log(`per-pass page-content input (content-rich sites, raw hit 70KB cap): raw p1 ${avgRawP1.toFixed(0)} → summary p1 ${avgSumP1.toFixed(0)} = ${avgRatioBig.toFixed(1)}x reduction`);
   console.log(`avg GLOBAL skip rate — summary: ${(avgGlobalSkip * 100).toFixed(1)}% | raw: ${(avg(rows.filter((r) => r.rawInTok > 0).map((r) => r.rawSkipRate)) * 100).toFixed(1)}%`);
   console.log(`technical_foundation skip rate — summary: ${(tfSkipRate * 100).toFixed(1)}% (ans=${tfTotals.ans} skip=${tfTotals.skip}) | raw: ${(rawTfSkipRate * 100).toFixed(1)}% (ans=${rawTfTotals.ans} skip=${rawTfTotals.skip})`);
   console.log(`avg pass-2 narratives generated: ${avg(p2rows.map((r) => r.genGen)).toFixed(1)} | returned (≤finding_limit=${FINDING_LIMIT}): ${avg(p2rows.map((r) => r.genRet)).toFixed(1)}`);

@@ -510,6 +510,24 @@ export function buildApiFindings(
   return sorted.slice(0, findingLimit).map((f, i) => toApiFinding(f, i + 1));
 }
 
+/**
+ * The top `limit` FAIL ids in the SAME revenue-priority order buildApiFindings keeps.
+ * Pass 2 should narrate ONLY these — narrating every FAIL then discarding all but
+ * `limit` (buildApiFindings caps at findingLimit) burns output tokens for rows the
+ * response never returns. This is a pure read over pass-1 status rows + the catalog;
+ * it does NOT touch status/scoring/skip, so the denominator is unaffected.
+ */
+export function topFailIdsByPriority(
+  rows: RubricResultRow[],
+  scopedChecks: DiagnosticCheck[],
+  limit: number
+): string[] {
+  const byId = new Map(scopedChecks.map((c) => [c.id, c]));
+  const enriched = enrichRubricFailures(rows, byId);
+  const sorted = sortByRevenuePriority(enriched);
+  return sorted.slice(0, limit).map((f) => f.id);
+}
+
 export interface ApiStrength {
   check_id: string;
   label: string;

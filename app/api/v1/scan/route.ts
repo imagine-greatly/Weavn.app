@@ -40,6 +40,7 @@ import {
   API_DIMENSION_KEYS,
   CATEGORY_TO_DIMENSION,
   buildApiFindings,
+  topFailIdsByPriority,
   buildStrengths,
   buildLeaks,
   buildGrowthBlueprintStruct,
@@ -445,16 +446,22 @@ async function executeScan(p: ScanParams): Promise<ScanResult> {
     const { growthScore: legacyGrowthScore } = computeGrowthScoreFromRubric(statusRows, scopedChecks, null);
 
     // ── PASS 2 — narrative for FAIL ids only (non-fatal; the score is already final). ──
+    // Rank fails by revenue priority and narrate ONLY the top `findingLimit` — exactly the
+    // set buildApiFindings keeps below. Narrating every FAIL then discarding all but
+    // findingLimit (the old behavior) burned pass-2 output tokens — the dominant cost — on
+    // rows the response never returns. This selects which ids to NARRATE only; pass-1
+    // status/score/skip and the denominator are already final and untouched.
     const failIds = statusRows.filter((r) => String(r.status).toUpperCase() === "FAIL").map((r) => r.id);
+    const narrateIds = topFailIdsByPriority(statusRows, scopedChecks, findingLimit);
     let narratives: Map<string, Partial<RubricResultRow>> = new Map();
     let pass2Summary = "";
     let pass2Copy: ApiCopyRewrites = {};
     let pass2Blueprint: ApiBlueprintItem[] = [];
     let pass2Truncated = false;
     let pass2ReturnedFails = 0;
-    if (failIds.length > 0) {
+    if (narrateIds.length > 0) {
       try {
-        const failLines = failIds.map((id) => `${id} | ${scopedById.get(id)?.title ?? ""}`).join("\n");
+        const failLines = narrateIds.map((id) => `${id} | ${scopedById.get(id)?.title ?? ""}`).join("\n");
         const pass2User = `${summaryContent}\n\n=== FAILED CHECKS (write the narrative for EACH; do not re-evaluate or add others) ===\n${failLines}`;
         const streamRun2 = client.messages.stream({
           model: "claude-sonnet-4-6",
@@ -471,7 +478,7 @@ async function executeScan(p: ScanParams): Promise<ScanResult> {
         pass2InputTokens = u2?.input_tokens ?? 0;
         pass2OutputTokens = u2?.output_tokens ?? 0;
         pass2CacheRead = u2?.cache_read_input_tokens ?? 0;
-        console.log(`[API v1] RUBRIC pass2 INSTRUMENT | domain=${domain} contentChars=${pass2User.length} failIds=${failIds.length} inputTokens=${pass2InputTokens} outputTokens=${pass2OutputTokens} cacheRead=${pass2CacheRead}`);
+        console.log(`[API v1] RUBRIC pass2 INSTRUMENT | domain=${domain} contentChars=${pass2User.length} narratedFails=${narrateIds.length}/${failIds.length} inputTokens=${pass2InputTokens} outputTokens=${pass2OutputTokens} cacheRead=${pass2CacheRead}`);
         const block2 = message2.content.find(c => c.type === "text");
         const p2 = parsePass2Narrative(block2 && block2.type === "text" ? block2.text : "");
         narratives = p2.narratives;

@@ -38,6 +38,7 @@ import {
   computeApiDimensions,
   computeApiDimensionRows,
   API_DIMENSION_KEYS,
+  CATEGORY_TO_DIMENSION,
   buildApiFindings,
   buildStrengths,
   buildLeaks,
@@ -360,8 +361,9 @@ async function executeScan(p: ScanParams): Promise<ScanResult> {
 
     // Per-pass instrumentation (server logs only; not user-facing). Proves the token
     // drop vs the raw-HTML baseline AND that the cached catalog is reused across passes.
-    let pass1InputTokens = 0, pass1CacheRead = 0, pass1CacheCreate = 0;
-    let pass2InputTokens = 0, pass2CacheRead = 0;
+    // Output tokens are tracked per pass too — once input is cut, output dominates cost.
+    let pass1InputTokens = 0, pass1OutputTokens = 0, pass1CacheRead = 0, pass1CacheCreate = 0;
+    let pass2InputTokens = 0, pass2OutputTokens = 0, pass2CacheRead = 0;
 
     const runStatusPass = async (maxTokens: number): Promise<string> => {
       const streamRun = client.messages.stream({
@@ -376,6 +378,7 @@ async function executeScan(p: ScanParams): Promise<ScanResult> {
       tokensUsed = (tokensUsed ?? 0) + (u?.input_tokens ?? 0) + (u?.output_tokens ?? 0);
       realCostUsd = (realCostUsd ?? 0) + (realScanCostUsd(u) ?? 0);
       pass1InputTokens = u?.input_tokens ?? 0;            // last call wins (post-retry)
+      pass1OutputTokens = u?.output_tokens ?? 0;
       pass1CacheRead = u?.cache_read_input_tokens ?? 0;
       pass1CacheCreate = u?.cache_creation_input_tokens ?? 0;
       const block = message.content.find(c => c.type === "text");
@@ -406,9 +409,20 @@ async function executeScan(p: ScanParams): Promise<ScanResult> {
     const skipRate = scopedChecks.length > 0 ? counts.skips / scopedChecks.length : 1;
     const backfillSkipShare = counts.skips > 0 ? backfillSkips / counts.skips : 0;
 
-    // Instrumentation: page-content size (chars proxy) + input/cache tokens + denominator.
+    // Instrumentation: page-content size (chars proxy) + input/output/cache tokens + denominator.
+    // Per-dimension answered/skip lets technical_foundation be read alone (it clusters the
+    // observable Mobile/Page-Speed/Accessibility/Universal checks the summary must carry).
     // Logged before the guard so the denominator is visible even on the 422 path.
-    console.log(`[API v1] RUBRIC pass1 INSTRUMENT | domain=${domain} contentChars=${summaryContent.length} inputTokens=${pass1InputTokens} cacheRead=${pass1CacheRead} cacheCreate=${pass1CacheCreate} | denom: total=${scopedChecks.length} answered=${counts.passes + counts.fails} skip=${counts.skips} (genuine=${genuineSkips} backfill=${backfillSkips}) skipRate=${(skipRate * 100).toFixed(1)}%`);
+    const perDim: Record<string, { ans: number; skip: number }> = {};
+    for (const k of API_DIMENSION_KEYS) perDim[k] = { ans: 0, skip: 0 };
+    for (const r of statusRows) {
+      const dim = CATEGORY_TO_DIMENSION[scopedById.get(r.id)?.category ?? ""];
+      if (!dim || !perDim[dim]) continue;
+      const st = String(r.status).toUpperCase();
+      if (st === "PASS" || st === "FAIL") perDim[dim].ans++; else perDim[dim].skip++;
+    }
+    const perDimStr = API_DIMENSION_KEYS.map((k) => `${k}=${perDim[k].ans}/${perDim[k].skip}`).join(" ");
+    console.log(`[API v1] RUBRIC pass1 INSTRUMENT | domain=${domain} contentChars=${summaryContent.length} inputTokens=${pass1InputTokens} outputTokens=${pass1OutputTokens} cacheRead=${pass1CacheRead} cacheCreate=${pass1CacheCreate} | denom: total=${scopedChecks.length} answered=${counts.passes + counts.fails} skip=${counts.skips} (genuine=${genuineSkips} backfill=${backfillSkips}) skipRate=${(skipRate * 100).toFixed(1)}% | perDim(ans/skip): ${perDimStr}`);
 
     // ── GUARDS: blank/over-skipped (Part 1) OR denominator contaminated by truncation-backfill ──
     if (skipRate > SKIP_RATE_CEILING || backfillSkipShare > BACKFILL_SKIP_CEILING) {
@@ -455,8 +469,9 @@ async function executeScan(p: ScanParams): Promise<ScanResult> {
         tokensUsed = (tokensUsed ?? 0) + (u2?.input_tokens ?? 0) + (u2?.output_tokens ?? 0);
         realCostUsd = (realCostUsd ?? 0) + (realScanCostUsd(u2) ?? 0);
         pass2InputTokens = u2?.input_tokens ?? 0;
+        pass2OutputTokens = u2?.output_tokens ?? 0;
         pass2CacheRead = u2?.cache_read_input_tokens ?? 0;
-        console.log(`[API v1] RUBRIC pass2 INSTRUMENT | domain=${domain} contentChars=${pass2User.length} failIds=${failIds.length} inputTokens=${pass2InputTokens} cacheRead=${pass2CacheRead}`);
+        console.log(`[API v1] RUBRIC pass2 INSTRUMENT | domain=${domain} contentChars=${pass2User.length} failIds=${failIds.length} inputTokens=${pass2InputTokens} outputTokens=${pass2OutputTokens} cacheRead=${pass2CacheRead}`);
         const block2 = message2.content.find(c => c.type === "text");
         const p2 = parsePass2Narrative(block2 && block2.type === "text" ? block2.text : "");
         narratives = p2.narratives;

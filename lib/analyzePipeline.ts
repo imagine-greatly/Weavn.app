@@ -198,6 +198,31 @@ export interface ExtractedPage {
   hasAddress: boolean;
   structured_data: string[];
   faq?: Array<{ question: string; answer: string }>;
+  /**
+   * Observable HTML/technical signals — the literal tag/attribute facts the model
+   * could read off raw HTML (viewport meta, image alt coverage, script defer/async,
+   * mobile-nav patterns, video, chat, …). The structured page summary carries these
+   * so Mobile / Page-Speed / Accessibility / Universal checks stay ANSWERABLE and do
+   * not false-SKIP (which would collapse the technical_foundation denominator).
+   */
+  htmlSignals: {
+    hasViewportMeta: boolean;
+    lang: string;
+    hasResourceHints: boolean;
+    scriptCount: number;
+    blockingScriptCount: number;
+    imageCount: number;
+    imagesWithAlt: number;
+    imagesWithDimensions: number;
+    imagesWithSrcset: number;
+    lazyImageCount: number;
+    hasTelLink: boolean;
+    hasMobileNav: boolean;
+    hasVideo: boolean;
+    hasLiveChat: boolean;
+    formsHaveVisibleLabels: boolean;
+    linkCount: number;
+  };
 }
 
 export function extractPageData(
@@ -207,6 +232,27 @@ export function extractPageData(
 ): ExtractedPage {
   console.log('[PIPELINE] extractPageData called', url)
   const $ = cheerio.load(html);
+
+  // ── HTML/technical signals captured BEFORE stripping <script> ──
+  // Scripts (defer/async, chat widgets) and head hints are removed below, so read
+  // them first. These map to observable Mobile/Page-Speed/Universal checks.
+  const hasViewportMeta = $('meta[name="viewport"]').length > 0;
+  const htmlLang = $("html").attr("lang")?.trim() ?? "";
+  const hasResourceHints =
+    $('link[rel="preload"], link[rel="prefetch"], link[rel="preconnect"], link[rel="dns-prefetch"]').length > 0;
+  const externalScripts = $("script[src]");
+  const scriptCount = externalScripts.length;
+  let blockingScriptCount = 0;
+  const LIVE_CHAT_RE = /intercom|drift|crisp|tawk|zendesk|zdassets|hs-scripts|hubspot|livechat|gorgias|freshchat|tidio|olark/i;
+  let hasLiveChatScript = false;
+  externalScripts.each((_, el) => {
+    const $el = $(el);
+    if ($el.attr("defer") === undefined && $el.attr("async") === undefined) blockingScriptCount++;
+    if (LIVE_CHAT_RE.test($el.attr("src") ?? "")) hasLiveChatScript = true;
+  });
+  const hasVideo =
+    $("video, iframe[src*='youtube'], iframe[src*='youtu.be'], iframe[src*='vimeo'], iframe[src*='wistia']").length > 0;
+
   $("script, style, noscript, svg").remove();
 
   // ── HEADLINES ──
@@ -830,6 +876,51 @@ export function extractPageData(
     } catch (err) { process.stderr.write('[PIPELINE] JSON-LD parse ERROR | ' + err + '\n') }
   });
 
+  // ── ELEMENT-BASED HTML SIGNALS (post-strip; <img>/<a>/<form> survive removal) ──
+  // Aggregate image counts over EVERY <img> (the `images` array above caps at 15).
+  let imageCount = 0,
+    imagesWithAlt = 0,
+    imagesWithDimensions = 0,
+    imagesWithSrcset = 0,
+    lazyImageCount = 0;
+  $("img").each((_, el) => {
+    imageCount++;
+    const $img = $(el);
+    if (($img.attr("alt")?.trim().length ?? 0) > 0) imagesWithAlt++;
+    if ($img.attr("width") !== undefined && $img.attr("height") !== undefined) imagesWithDimensions++;
+    if ($img.attr("srcset") !== undefined || $img.attr("sizes") !== undefined) imagesWithSrcset++;
+    if (($img.attr("loading") ?? "").toLowerCase() === "lazy") lazyImageCount++;
+  });
+  const hasTelLink = $('a[href^="tel:"]').length > 0;
+  const hasMobileNav =
+    $(
+      "[class*='hamburger'], [class*='mobile-menu'], [class*='mobile-nav'], [class*='nav-toggle'], [class*='menu-toggle'], [class*='menu-icon'], button[aria-controls]"
+    ).length > 0;
+  const hasLiveChat =
+    hasLiveChatScript ||
+    $("[class*='intercom'], [class*='drift'], [class*='crisp'], [class*='livechat'], [class*='chat-widget'], [id*='chat-widget']").length > 0;
+  const formsHaveVisibleLabels = $("form label").length > 0;
+  const linkCount = $("a[href]").length;
+
+  const htmlSignals = {
+    hasViewportMeta,
+    lang: htmlLang,
+    hasResourceHints,
+    scriptCount,
+    blockingScriptCount,
+    imageCount,
+    imagesWithAlt,
+    imagesWithDimensions,
+    imagesWithSrcset,
+    lazyImageCount,
+    hasTelLink,
+    hasMobileNav,
+    hasVideo,
+    hasLiveChat,
+    formsHaveVisibleLabels,
+    linkCount,
+  };
+
   return {
     url, pageType, headlines, sections, paragraphs,
     buttons, hero, pricing, testimonials, socialProof,
@@ -841,6 +932,7 @@ export function extractPageData(
     },
     trust, images, forms, wordCount, h1Count, ctaCount,
     hasPhoneNumber, hasEmailAddress, hasAddress, structured_data,
+    htmlSignals,
     ...(faq.length > 0 ? { faq } : {}),
   };
 }

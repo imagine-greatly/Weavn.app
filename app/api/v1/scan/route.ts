@@ -14,6 +14,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { scrapeSite } from "@/lib/scraper";
 import { detectSiteType } from "@/lib/siteType";
 import { extractPageData } from "@/lib/analyzePipeline";
+import { buildPageSummary } from "@/lib/analyze";
 import { saveReport } from "@/lib/supabase";
 import { validateApiKey, extractKeyPrefix } from "@/lib/apiAuth";
 import { logScanUsage, logRejectedRequest, checkScanAllowed, deductCredits, InsufficientCreditsError } from "@/lib/usageTracking";
@@ -285,10 +286,11 @@ async function executeScan(p: ScanParams): Promise<ScanResult> {
     : (complexity === "complex" ? 150_000 : complexity === "medium" ? 95_000 : 72_000);
   const analyzeTimeoutMs = Math.min(ceiling, Math.max(floor, baseTimeout - elapsed));
 
-  // ── Shared setup (same for both scoring paths) ──────────────────────────────
+  // ── Shared setup ─────────────────────────────────────────────────────────────
   const pageCount = 1 + (extraction.additionalPages?.length ?? 0);
 
-  // Build user content (raw HTML, same approach as lib/analyze.ts)
+  // Raw-HTML user content for the SELF-REPORTED path (default/live). The rubric path
+  // builds a structured summary instead (see summaryContent below) to cut input tokens.
   const hardCap = complexity === "simple" ? 40_000 : complexity === "medium" ? 55_000 : 70_000;
   const safeHtml = extraction.rawHtml.slice(0, hardCap);
   const homepageSection = `=== HOMEPAGE: ${normalizedUrl} ===\n${safeHtml}`;
@@ -327,6 +329,16 @@ async function executeScan(p: ScanParams): Promise<ScanResult> {
     const scopedChecks = scopeChecksForScan(site_type);
     const scopedById = new Map(scopedChecks.map((c) => [c.id, c]));
 
+    // ── PAGE CONTENT = structured summary (NOT raw HTML) ─────────────────────────
+    // Both passes consume buildPageSummary()'s dense (~3–5KB) observable summary in
+    // place of the 40–70KB raw HTML — a 5–10× input-token cut. The summary carries
+    // every observable signal across all 27 categories (incl. the TECHNICAL / HTML
+    // SIGNALS block) so the honest denominator holds and checks don't false-SKIP.
+    // This is the UNCACHED user-message suffix; the cached check-list system block
+    // (buildPass1/2SystemBlocks) is byte-for-byte unchanged, so cache reuse is intact.
+    const pageSummary = buildPageSummary(extraction);
+    const summaryContent = `Below is a STRUCTURED OBSERVABLE SUMMARY of the fully-rendered page(s), extracted directly from the HTML. Treat every listed signal as an authoritative observation of what is actually on the page — copy, structure, CTAs, trust/social proof, pricing, forms, and the TECHNICAL / HTML SIGNALS block (viewport, image alt coverage, scripts, mobile nav, video, chat, …). A signal explicitly reported as ABSENT is an OBSERVATION: FAIL the matching check rather than SKIP it. Only SKIP when the signal is genuinely not represented here and cannot be derived from it (true runtime/rendering behavior such as load speed or Core Web Vitals).\n\n${pageSummary}`;
+
     // ── TWO-PASS SCORING ────────────────────────────────────────────────────────
     // PASS 1 (status only) returns {id,status} for EVERY scoped check (~3–4K tokens) → a
     // COMPLETE, unbiased denominator; this pass alone determines the score. PASS 2 writes
@@ -346,17 +358,26 @@ async function executeScan(p: ScanParams): Promise<ScanResult> {
     const PASS1_RETRY_MAX_TOKENS = 12000;
     const PASS2_MAX_TOKENS = 16000;
 
+    // Per-pass instrumentation (server logs only; not user-facing). Proves the token
+    // drop vs the raw-HTML baseline AND that the cached catalog is reused across passes.
+    let pass1InputTokens = 0, pass1CacheRead = 0, pass1CacheCreate = 0;
+    let pass2InputTokens = 0, pass2CacheRead = 0;
+
     const runStatusPass = async (maxTokens: number): Promise<string> => {
       const streamRun = client.messages.stream({
         model: "claude-sonnet-4-6",
         max_tokens: maxTokens,
         temperature: 0,
         system: buildPass1SystemBlocks(scopedChecks),
-        messages: [{ role: "user", content: userContent }],
+        messages: [{ role: "user", content: summaryContent }],
       });
       const message = await Promise.race([streamRun.finalMessage(), analyzeDeadline]);
-      tokensUsed = (tokensUsed ?? 0) + (message.usage?.input_tokens ?? 0) + (message.usage?.output_tokens ?? 0);
-      realCostUsd = (realCostUsd ?? 0) + (realScanCostUsd(message.usage) ?? 0);
+      const u = message.usage;
+      tokensUsed = (tokensUsed ?? 0) + (u?.input_tokens ?? 0) + (u?.output_tokens ?? 0);
+      realCostUsd = (realCostUsd ?? 0) + (realScanCostUsd(u) ?? 0);
+      pass1InputTokens = u?.input_tokens ?? 0;            // last call wins (post-retry)
+      pass1CacheRead = u?.cache_read_input_tokens ?? 0;
+      pass1CacheCreate = u?.cache_creation_input_tokens ?? 0;
       const block = message.content.find(c => c.type === "text");
       if (!block || block.type !== "text") throw new Error("No text content from model.");
       return block.text;
@@ -384,6 +405,10 @@ async function executeScan(p: ScanParams): Promise<ScanResult> {
     const genuineSkips = counts.skips - backfillSkips;       // model-emitted SKIP (legitimately out of denominator)
     const skipRate = scopedChecks.length > 0 ? counts.skips / scopedChecks.length : 1;
     const backfillSkipShare = counts.skips > 0 ? backfillSkips / counts.skips : 0;
+
+    // Instrumentation: page-content size (chars proxy) + input/cache tokens + denominator.
+    // Logged before the guard so the denominator is visible even on the 422 path.
+    console.log(`[API v1] RUBRIC pass1 INSTRUMENT | domain=${domain} contentChars=${summaryContent.length} inputTokens=${pass1InputTokens} cacheRead=${pass1CacheRead} cacheCreate=${pass1CacheCreate} | denom: total=${scopedChecks.length} answered=${counts.passes + counts.fails} skip=${counts.skips} (genuine=${genuineSkips} backfill=${backfillSkips}) skipRate=${(skipRate * 100).toFixed(1)}%`);
 
     // ── GUARDS: blank/over-skipped (Part 1) OR denominator contaminated by truncation-backfill ──
     if (skipRate > SKIP_RATE_CEILING || backfillSkipShare > BACKFILL_SKIP_CEILING) {
@@ -416,7 +441,7 @@ async function executeScan(p: ScanParams): Promise<ScanResult> {
     if (failIds.length > 0) {
       try {
         const failLines = failIds.map((id) => `${id} | ${scopedById.get(id)?.title ?? ""}`).join("\n");
-        const pass2User = `${userContent}\n\n=== FAILED CHECKS (write the narrative for EACH; do not re-evaluate or add others) ===\n${failLines}`;
+        const pass2User = `${summaryContent}\n\n=== FAILED CHECKS (write the narrative for EACH; do not re-evaluate or add others) ===\n${failLines}`;
         const streamRun2 = client.messages.stream({
           model: "claude-sonnet-4-6",
           max_tokens: PASS2_MAX_TOKENS,
@@ -426,8 +451,12 @@ async function executeScan(p: ScanParams): Promise<ScanResult> {
         });
         const pass2Deadline = new Promise<never>((_, reject) => setTimeout(() => reject(new Error("[TIMEOUT] pass2 narrative")), 110_000));
         const message2 = await Promise.race([streamRun2.finalMessage(), pass2Deadline]);
-        tokensUsed = (tokensUsed ?? 0) + (message2.usage?.input_tokens ?? 0) + (message2.usage?.output_tokens ?? 0);
-        realCostUsd = (realCostUsd ?? 0) + (realScanCostUsd(message2.usage) ?? 0);
+        const u2 = message2.usage;
+        tokensUsed = (tokensUsed ?? 0) + (u2?.input_tokens ?? 0) + (u2?.output_tokens ?? 0);
+        realCostUsd = (realCostUsd ?? 0) + (realScanCostUsd(u2) ?? 0);
+        pass2InputTokens = u2?.input_tokens ?? 0;
+        pass2CacheRead = u2?.cache_read_input_tokens ?? 0;
+        console.log(`[API v1] RUBRIC pass2 INSTRUMENT | domain=${domain} contentChars=${pass2User.length} failIds=${failIds.length} inputTokens=${pass2InputTokens} cacheRead=${pass2CacheRead}`);
         const block2 = message2.content.find(c => c.type === "text");
         const p2 = parsePass2Narrative(block2 && block2.type === "text" ? block2.text : "");
         narratives = p2.narratives;

@@ -1085,6 +1085,7 @@ function buildSinglePageSummary(rawHtml: string, url: string, compact = false): 
     page.meta.ogDescription &&
       page.meta.ogDescription !== page.meta.description &&
       `OG Description: ${page.meta.ogDescription}`,
+    `Canonical: ${page.meta.canonical || "ABSENT"}`,
   ].filter(Boolean);
   if (metaLines.length) parts.push(`META\n${metaLines.join("\n")}`);
 
@@ -1192,6 +1193,38 @@ function buildSinglePageSummary(rawHtml: string, url: string, compact = false): 
       .map(({ question, answer }) => `Q: ${question}\nA: ${answer.slice(0, compact ? 200 : 350)}`)
       .join("\n\n");
     parts.push(`FAQ\n${faqText}`);
+  }
+
+  // ── TECHNICAL / HTML SIGNALS ──
+  // Always emitted (even when absent) so observable Mobile / Page-Speed / Accessibility /
+  // Universal checks stay answerable on the summary instead of false-SKIPping. A signal
+  // marked ABSENT is an OBSERVATION — the model should FAIL that check, not SKIP it.
+  const sig = page.htmlSignals;
+  const altCoverage =
+    sig.imageCount > 0 ? `${sig.imagesWithAlt}/${sig.imageCount} with alt text` : "no images";
+  if (compact) {
+    parts.push(
+      `TECHNICAL: viewport ${sig.hasViewportMeta ? "present" : "ABSENT"} | lang ${sig.lang || "ABSENT"} | ` +
+        `images ${sig.imageCount} (${altCoverage}) | scripts ${sig.scriptCount} (${sig.blockingScriptCount} render-blocking) | ` +
+        `mobileNav ${sig.hasMobileNav ? "y" : "n"} | tel ${sig.hasTelLink ? "y" : "n"} | video ${sig.hasVideo ? "y" : "n"} | chat ${sig.hasLiveChat ? "y" : "n"}`
+    );
+  } else {
+    const techLines = [
+      `Viewport meta tag: ${sig.hasViewportMeta ? "present" : "ABSENT"}`,
+      `HTML lang attribute: ${sig.lang || "ABSENT"}`,
+      `Images: ${sig.imageCount} total (${altCoverage}; ${sig.imagesWithDimensions} with width+height; ${sig.imagesWithSrcset} with srcset/sizes; ${sig.lazyImageCount} lazy-loaded)`,
+      `External scripts: ${sig.scriptCount} (${sig.blockingScriptCount} render-blocking — no defer/async)`,
+      `Resource hints (preload/prefetch/preconnect): ${sig.hasResourceHints ? "present" : "ABSENT"}`,
+      `Mobile nav toggle (hamburger/menu): ${sig.hasMobileNav ? "present" : "ABSENT"}`,
+      `Click-to-call tel: link: ${sig.hasTelLink ? "present" : "ABSENT"}`,
+      `Video content: ${sig.hasVideo ? "present" : "ABSENT"}`,
+      `Live chat / real-time support widget: ${sig.hasLiveChat ? "present" : "ABSENT"}`,
+      `Form visible <label>s: ${page.forms.length === 0 ? "no forms" : sig.formsHaveVisibleLabels ? "present" : "ABSENT (placeholder-only labels)"}`,
+      `Total links: ${sig.linkCount}`,
+    ];
+    parts.push(
+      `TECHNICAL / HTML SIGNALS (observed in the rendered HTML — authoritative; a signal marked ABSENT means the matching check should FAIL, not SKIP)\n${techLines.join("\n")}`
+    );
   }
 
   parts.push(`PAGE STATS: ${page.wordCount} words | ${page.h1Count} H1s | ${page.ctaCount} CTAs`);

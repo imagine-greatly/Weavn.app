@@ -29,3 +29,12 @@ supabase/.temp/
 
 # Local database backups — never commit dumps
 backups/
+
+# Scrape fixtures + diagnostic/measurement run output — never commit (may contain
+# third-party page HTML; large; regenerated on demand by scripts/captureFixtures.ts etc.)
+fixtures/
+abscan*.log
+diag_*.log
+diag_run_*.json
+calib*.log
+*.log

@@ -131,12 +131,35 @@ function isBlockPage(html: string): boolean {
   return false
 }
 
+// -- RENDER COMPLETENESS GATE -------------------------------------------
+//
+// A degraded scrape (pre-hydration SPA shell, anti-bot stub, partial render) must NEVER
+// be silently scored — a wrong-because-degraded diagnosis is worse than none. This gate
+// runs AFTER scrape, BEFORE any model call. It distinguishes a real page (readable body
+// text + rendered headings + links) from an incomplete render (a <title> but ~nothing
+// else). The old 150-readable-char floor let a 1,418-byte React shell through and scored
+// it 4/100; this checks structural landmarks, not just byte count.
+export interface CompletenessResult { complete: boolean; reason: string; readableChars: number }
+export function assessRenderCompleteness(
+  html: string,
+  signals: { wordCount: number; headlineCount: number; linkCount: number }
+): CompletenessResult {
+  const readableChars = readableTextLength(html)
+  const { wordCount, headlineCount, linkCount } = signals
+  if (readableChars < 500) return { complete: false, reason: `readable_text_too_short (${readableChars}<500)`, readableChars }
+  if (headlineCount === 0 && wordCount < 80) return { complete: false, reason: `no_rendered_headings_and_thin_body (headings=${headlineCount}, words=${wordCount})`, readableChars }
+  if (linkCount < 3) return { complete: false, reason: `too_few_links (${linkCount}<3 — likely a shell/stub)`, readableChars }
+  return { complete: true, reason: 'ok', readableChars }
+}
+
 // -- BROWSERLESS /unblock ------------------------------------------------
 //
-// Attempt 1 (fast):   residential proxy, domcontentloaded + 5 s settle     ≈ 25 s max
-// Attempt 2 (deep):   residential proxy, networkidle2 + 3 s settle         ≈ 25 s max
-// Attempt 3 (no-proxy fallback): bare bestAttempt                          ≈ 15 s max
-// Total worst case:   65 s — leaves ≥ 20 s for Claude + Supabase under 85 s budget
+// Attempt 1:          residential proxy, networkidle2 + 2.5 s settle        ≈ 24 s max
+// Attempt 2 (deep):   residential proxy, networkidle2 + adaptive settle     ≈ 20 s max
+// Attempt 3 (fallback): bare bestAttempt when both returned nothing         ≈ 35 s max
+// Retry-on-thin:      up to 2 re-rolls (networkidle0) when best is a shell  ≈ +64 s max
+// All bounded well under the route's 240 s scrape deadline; a still-thin render is
+// gated (degraded_scrape) before any model call rather than scored.
 //
 // ignoreHTTPSErrors is a CDPLaunchOption — it goes in the `launch` query
 // param as URL-encoded JSON, NOT in the request body. Putting it in the body
@@ -182,18 +205,50 @@ async function fetchWithBrowserless(url: string): Promise<{ html: string; comple
 
   let _attempts = 0, _proxyRequests = 0, _estUnits = 0
 
-  // Attempt 1 — fast path: domcontentloaded + 5 s settle, residential proxy
+  // A non-blocked render with less readable text than this is treated as THIN (a
+  // pre-hydration SPA shell or anti-bot stub) and triggers a bounded retry. Real
+  // homepages clear this comfortably; the route-level completeness gate is the
+  // backstop that refuses to score anything still thin after retries.
+  const COMPLETE_READABLE_FLOOR = 1500
+  const MAX_THIN_RETRIES = 2
+
+  // One stealth render with a strong settle condition — used to re-roll a thin/anti-bot
+  // result (anti-bot serving is probabilistic, so a retry frequently returns the full page).
+  const stealthFetch = async (settleMs: number, timeoutMs: number): Promise<string | null> => {
+    const ctrl = new AbortController()
+    const t = setTimeout(() => ctrl.abort(), timeoutMs)
+    try {
+      const res = await fetch(makeEndpoint(true), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url, bestAttempt: true, gotoOptions: { waitUntil: 'networkidle0', timeout: Math.max(8000, timeoutMs - 5000) }, waitForTimeout: settleMs }),
+        signal: ctrl.signal,
+      })
+      _attempts++; _proxyRequests++; _estUnits += 45
+      if (!res.ok) { process.stderr.write(`[SCRAPER] retry-on-thin fetch HTTP ${res.status}\n`); return null }
+      return extractHtml(await res.text())
+    } catch (err) {
+      process.stderr.write(`[SCRAPER] retry-on-thin fetch error: ${err instanceof Error ? err.message : err}\n`)
+      return null
+    } finally { clearTimeout(t) }
+  }
+
+  // Attempt 1 — wait for the page to SETTLE (networkidle2), not just domcontentloaded.
+  // domcontentloaded fires before SPA hydration / XHR content render, so a fast capture
+  // can return a pre-hydration shell; networkidle2 (≤2 in-flight connections) waits for
+  // the DOM a real Chrome user actually sees. bestAttempt:true still returns best-effort
+  // if the page never fully idles (analytics/long-poll sites).
   const body1 = {
     url,
     bestAttempt: true,
-    gotoOptions: { waitUntil: 'domcontentloaded', timeout: 15000 },
-    waitForTimeout: 1500,
+    gotoOptions: { waitUntil: 'networkidle2', timeout: 18000 },
+    waitForTimeout: 2500,
   }
   process.stderr.write(`[SCRAPER] attempt1 START | url=${url}\n`)
   process.stderr.write(`[SCRAPER] attempt1 request | body=${JSON.stringify(body1)}\n`)
 
   const ctrl1 = new AbortController()
-  const t1 = setTimeout(() => ctrl1.abort(), 18_000)
+  const t1 = setTimeout(() => ctrl1.abort(), 24_000)
   let html1: string | null = null
   let rawText1Size = 0
   const a1Start = Date.now()
@@ -429,10 +484,27 @@ async function fetchWithBrowserless(url: string): Promise<{ html: string; comple
 
   // Prefer non-blocked content regardless of which attempt it came from.
   // Only fall back to a block page if both attempts returned one.
-  const best: string | null =
+  let best: string | null =
     (!blocked2 && html2 && len2 > 0) && (!blocked1 || len2 >= len1) ? html2 :
     (!blocked1 && html1 && len1 > 0) ? html1 :
     (len2 > len1 ? html2 : html1)  // both blocked — take the longer one as last resort
+
+  // RETRY-ON-THIN: a non-blocked but THIN render (SPA shell / anti-bot stub) is the
+  // dominant cause of unstable scores — the same URL yields a shell on one scan and the
+  // full page on the next. Re-roll with a stronger settle + backoff (bounded), keeping
+  // the most complete render seen. Generalizes across sites (not stripe-specific).
+  let thinRetry = 0
+  while (best && !isBlockPage(best) && readableTextLength(best) < COMPLETE_READABLE_FLOOR && thinRetry < MAX_THIN_RETRIES) {
+    thinRetry++
+    const beforeLen = readableTextLength(best)
+    await new Promise(r => setTimeout(r, 2000 * thinRetry))
+    process.stderr.write(`[SCRAPER] retry-on-thin #${thinRetry}/${MAX_THIN_RETRIES} | best readable=${beforeLen} < floor=${COMPLETE_READABLE_FLOOR} — re-rolling\n`)
+    const retried = await stealthFetch(4000, 30_000)
+    if (retried && !isBlockPage(retried) && readableTextLength(retried) > readableTextLength(best)) {
+      best = retried
+      process.stderr.write(`[SCRAPER] retry-on-thin #${thinRetry} improved readable ${beforeLen} → ${readableTextLength(best)}\n`)
+    }
+  }
 
   if (best && best !== html1 && best.length > 0) {
     const newRatio = readableTextLength(best) / best.length

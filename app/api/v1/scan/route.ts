@@ -11,7 +11,7 @@ import { randomUUID } from "crypto";
 import Anthropic from "@anthropic-ai/sdk";
 import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
-import { scrapeSite } from "@/lib/scraper";
+import { scrapeSite, assessRenderCompleteness } from "@/lib/scraper";
 import { detectSiteType } from "@/lib/siteType";
 import { extractPageData } from "@/lib/analyzePipeline";
 import { buildPageSummary } from "@/lib/analyze";
@@ -256,23 +256,28 @@ async function executeScan(p: ScanParams): Promise<ScanResult> {
   // Detect site type and extract metadata
   const site_type = detectSiteType(extraction);
   let wordCount = 0, ctaCount = 0, techStack: string[] = [];
+  let headlineCount = 0, linkCount = 0;
   try {
     const pageData = extractPageData(extraction.rawHtml, normalizedUrl, "homepage");
     wordCount = pageData.wordCount;
     ctaCount = pageData.ctaCount;
     techStack = pageData.structured_data ?? [];
+    headlineCount = pageData.headlines.length;
+    linkCount = pageData.htmlSignals.linkCount;
   } catch { /* best-effort */ }
 
-  // Min-content gate — fires BEFORE any model call so we never score a shell page
-  // or burn a scan/quota on it. Uses the same 150-char body-text floor as the Haiku
-  // preview shell check. Logged via logRejectedRequest (no increment_scans_used,
-  // no Stripe meter), exactly like other rejected requests.
-  const readableChars = readableTextLength(extraction.rawHtml);
-  if (readableChars < MIN_CONTENT_CHARS) {
-    console.log(`[API v1] INSUFFICIENT CONTENT | domain=${domain} | readableChars=${readableChars} < floor=${MIN_CONTENT_CHARS}`);
+  // Render-completeness gate — fires BEFORE any model call (no scan/quota/Stripe meter,
+  // no model tokens burned) so a DEGRADED render is NEVER silently scored. A
+  // wrong-because-degraded diagnosis is worse than no diagnosis. Checks structural
+  // landmarks (readable body text + rendered headings + links), not just a byte floor —
+  // the old 150-char floor let a 1,418-byte pre-hydration React shell through and scored
+  // it 4/100. The scraper retries thin renders first (retry-on-thin); this is the backstop.
+  const completeness = assessRenderCompleteness(extraction.rawHtml, { wordCount, headlineCount, linkCount });
+  if (!completeness.complete) {
+    console.log(`[API v1] DEGRADED_SCRAPE | domain=${domain} | ${completeness.reason} | readable=${completeness.readableChars} words=${wordCount} headings=${headlineCount} links=${linkCount}`);
     await markFailed();
-    void logRejectedRequest(apiKeyId, { url: normalizedUrl, statusCode: 422, endpoint: "scan", errorCode: "insufficient_content", responseTimeMs: Date.now() - scanStart });
-    throw new Error("INSUFFICIENT_CONTENT");
+    void logRejectedRequest(apiKeyId, { url: normalizedUrl, statusCode: 422, endpoint: "scan", errorCode: "degraded_scrape", responseTimeMs: Date.now() - scanStart });
+    throw new Error("DEGRADED_SCRAPE");
   }
 
   // Adaptive timeout
@@ -1064,6 +1069,18 @@ export async function POST(req: NextRequest) {
         blocked: false,
         insufficient_content: true,
         min_content_chars: MIN_CONTENT_CHARS,
+      }, { status: 422, headers: rlHeaders(apiKey) });
+    }
+    if (message === "DEGRADED_SCRAPE" || message.includes("DEGRADED_SCRAPE")) {
+      return NextResponse.json({
+        error: {
+          code: "DEGRADED_SCRAPE",
+          message: "The page did not render completely enough to analyze (likely a pre-hydration shell, bot-protection stub, or partial render — missing rendered headings/body/links). No score was emitted rather than a misleading one. Retry shortly; transient render failures usually clear.",
+          status: 422,
+        },
+        blocked: false,
+        low_confidence: true,
+        degraded_scrape: true,
       }, { status: 422, headers: rlHeaders(apiKey) });
     }
     if (message === "INSUFFICIENT_EVALUATION" || message.includes("INSUFFICIENT_EVALUATION")) {

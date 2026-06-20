@@ -605,3 +605,206 @@ export function rubricCounts(rows: RubricResultRow[], scopedChecks: DiagnosticCh
   }
   return { totalChecks: scopedChecks.length, fails, passes, skips, criticalCount, highCount };
 }
+
+// ── Two-pass scoring ─────────────────────────────────────────────────────────
+//
+// Calibration showed the single 16K-token call truncates content-rich sites to
+// 49–66% of checks, and the dropped TAIL (Page Speed / Accessibility / Universal)
+// backfills to SKIP — which, because SKIP is excluded from the dimension denominator,
+// silently shrinks the denominator and inflates the score on exactly the sites that
+// matter. Two-pass decouples scoring completeness from narrative verbosity:
+//
+//   PASS 1 (status only): {id,status} for EVERY scoped check (~3–4K tokens) → a
+//   COMPLETE, unbiased denominator. This pass alone determines the score.
+//   PASS 2 (narrative): the 6–7 narrative fields for the FAIL ids only (bounded by
+//   fail count). Truncation here only thins findings prose — the score is unaffected.
+//
+// Both passes put the SAME serialized catalog as the FIRST, cache_control'd system
+// block, so the (large) catalog prefix is written once in pass 1 and read in pass 2.
+
+/** PASS 1 — status-only scoring instructions. Tiny output; must cover every id. */
+const RUBRIC_PASS1_INSTRUCTIONS = `You are SCORING a website against the fixed diagnostic catalog above. This is a status-only scoring pass — no narratives.
+
+For EVERY check id in the catalog, return exactly one status:
+- PASS — the page satisfies the check (its fail condition is NOT met).
+- FAIL — the fail condition IS met, with concrete evidence you can see in the static HTML provided.
+- SKIP — the check's signal is NOT observable in static HTML. You have no browser, no rendering, no runtime, no network trace: you CANNOT measure page-load speed, Core Web Vitals, real performance, animation, or anything that only exists when the page runs. When the signal is unobservable, or genuinely ambiguous, SKIP — never guess FAIL.
+
+OBSERVABILITY RULE (CRITICAL): only FAIL on concrete, quotable on-page evidence. Never penalize what static HTML cannot reveal.
+COVERAGE RULE (CRITICAL): return exactly ONE row for EVERY catalog id — no more, no fewer — in catalog order. Do not invent ids. Do not omit ids.
+
+OUTPUT — return ONE JSON object only. No markdown, no preamble, start with {:
+{
+  "page_type": "homepage" | "pricing" | "product" | "about" | "landing",
+  "results": [
+    // one row per catalog id, in order. STATUS ONLY:
+    //   { "id": "<id>", "status": "PASS" }
+    //   { "id": "<id>", "status": "FAIL" }
+    //   { "id": "<id>", "status": "SKIP", "skipReason": "<one short clause>" }
+  ]
+}
+Keep every row minimal — do NOT write titles, evidence, fixes, or any prose beyond the one-clause skipReason. Covering every id is the only goal.`;
+
+/** PASS 2 — narrative for the already-determined FAIL ids + the brief/copy/blueprint. */
+const RUBRIC_PASS2_INSTRUCTIONS = `---
+
+A prior scoring pass already decided PASS/FAIL/SKIP for every check. The user message lists the check ids that FAILED. Do NOT re-evaluate or re-score anything. For EACH failed id, write its Conversion Intelligence narrative, and also write the opening Intelligence Brief, the hero copy rewrite, and the growth blueprint.
+
+OUTPUT — return ONE JSON object only. No markdown, no preamble, start with {:
+{
+  "summary": "<Intelligence Brief — 3 sentences: the opening verdict, the structural problem, the stakes>",
+  "copy_rewrites": { "headline": "<max 12 words>", "subheadline": "<max 20 words>", "cta": "<max 5 words>" },
+  "growth_blueprint": [ { "priority": <int>, "action": "<max 15 words>", "effort": "low"|"medium"|"high", "impact": "low"|"medium"|"high", "timeframe": "Week 1"|"Weeks 2-4"|"Month 2" } ],
+  "results": [
+    // one row per FAILED id from the user message:
+    { "id": "<id>", "status": "FAIL", "title": "<short>", "exitTrigger": "<what makes the visitor leave>", "evidence": "<quoted on-page evidence>", "conversionCost": "<the revenue mechanism lost>", "implementation": "<the fix>", "effort": "Today"|"This Week"|"This Month" }
+  ]
+}
+Write a row only for the failed ids provided. Do not add rows for other ids. Do not change any status.`;
+
+/** Reason stamped on rows that the model never returned (distinguishes truncation-backfill from genuine model SKIP). */
+export const PASS1_BACKFILL_REASON = "No row returned in scoring pass — backfilled as skip (truncation).";
+
+/** Pass-1 system blocks: CACHED catalog FIRST (shared byte-for-byte with pass 2), then status-only instructions. */
+export function buildPass1SystemBlocks(scopedChecks: DiagnosticCheck[]): RubricSystemBlock[] {
+  return [
+    { type: "text", text: serializeChecksForPrompt(scopedChecks), cache_control: { type: "ephemeral" } },
+    { type: "text", text: RUBRIC_PASS1_INSTRUCTIONS },
+  ];
+}
+
+/** Pass-2 system blocks: SAME cached catalog block (cache shared with pass 1), then voice core + narrative contract. */
+export function buildPass2SystemBlocks(scopedChecks: DiagnosticCheck[]): RubricSystemBlock[] {
+  return [
+    { type: "text", text: serializeChecksForPrompt(scopedChecks), cache_control: { type: "ephemeral" } },
+    { type: "text", text: `${RUBRIC_EVALUATION_SYSTEM_PROMPT}\n\n${RUBRIC_PASS2_INSTRUCTIONS}` },
+  ];
+}
+
+export interface ParsedStatusPass {
+  /** One row per scoped id (complete) — backfilled rows carry PASS1_BACKFILL_REASON. */
+  rows: RubricResultRow[];
+  pageType: string;
+  /** True when strict JSON.parse failed (pass 1 should never truncate; this guards it). */
+  truncated: boolean;
+  /** Ids the model actually returned a row for. */
+  returnedIds: Set<string>;
+  /** Scoped ids the model did NOT return — backfilled as SKIP, tracked separately from genuine SKIPs. */
+  backfilledIds: string[];
+}
+
+/**
+ * Parse the status-only pass. Guarantees one row per scoped id and, critically, records
+ * which ids were backfilled (never returned) so the caller can tell truncation-backfill
+ * SKIPs apart from genuine model SKIPs and refuse to score on a contaminated denominator.
+ */
+export function parseStatusRows(rawText: string, scopedChecks: DiagnosticCheck[]): ParsedStatusPass {
+  const cleaned = (rawText ?? "").replace(/^```(?:json)?\s*\n?/m, "").replace(/\n?```\s*$/m, "").trim();
+  let obj: Record<string, unknown> | null = null;
+  let truncated = false;
+  try {
+    const parsed = JSON.parse(cleaned);
+    obj = parsed && typeof parsed === "object" ? (parsed as Record<string, unknown>) : null;
+  } catch {
+    truncated = true;
+  }
+
+  let rawRows: Record<string, unknown>[] = [];
+  let pageType = "homepage";
+  if (obj) {
+    const resultsField = Array.isArray(obj.results) ? obj.results : Array.isArray(obj) ? obj : [];
+    rawRows = (resultsField as unknown[]).filter((r): r is Record<string, unknown> => !!r && typeof r === "object");
+    pageType = typeof obj.page_type === "string" ? obj.page_type : "homepage";
+  } else {
+    rawRows = salvageRows(cleaned);
+    pageType = salvageString(cleaned, "page_type") || "homepage";
+  }
+
+  const byId = new Map<string, RubricResultRow>();
+  const returnedIds = new Set<string>();
+  for (const raw of rawRows) {
+    const row = normalizeRow(raw);
+    if (!row.id) continue;
+    byId.set(row.id, row);
+    byId.set(row.id.toUpperCase(), row);
+    returnedIds.add(row.id);
+  }
+
+  const backfilledIds: string[] = [];
+  const rows: RubricResultRow[] = scopedChecks.map((c) => {
+    const found = byId.get(c.id) ?? byId.get(c.id.toUpperCase());
+    if (found) return found;
+    backfilledIds.push(c.id);
+    return { id: c.id, status: "SKIP", skipReason: PASS1_BACKFILL_REASON };
+  });
+
+  return { rows, pageType, truncated, returnedIds, backfilledIds };
+}
+
+export interface ParsedNarrativePass {
+  /** Narrative fields keyed by FAIL id (title/exitTrigger/evidence/conversionCost/implementation/effort). */
+  narratives: Map<string, Partial<RubricResultRow>>;
+  summary: string;
+  copyRewrites: ApiCopyRewrites;
+  growthBlueprint: ApiBlueprintItem[];
+  /** True when strict parse failed — non-fatal; only thins findings prose, never the score. */
+  truncated: boolean;
+  returnedFailRows: number;
+}
+
+/** Parse the narrative pass — narrative fields per FAIL id + brief/copy/blueprint; salvages partial output. */
+export function parsePass2Narrative(rawText: string): ParsedNarrativePass {
+  const cleaned = (rawText ?? "").replace(/^```(?:json)?\s*\n?/m, "").replace(/\n?```\s*$/m, "").trim();
+  let obj: Record<string, unknown> | null = null;
+  let truncated = false;
+  try {
+    const parsed = JSON.parse(cleaned);
+    obj = parsed && typeof parsed === "object" ? (parsed as Record<string, unknown>) : null;
+  } catch {
+    truncated = true;
+  }
+
+  let rawRows: Record<string, unknown>[] = [];
+  let summary = "";
+  let copyRewrites: ApiCopyRewrites = {};
+  let growthBlueprint: ApiBlueprintItem[] = [];
+  if (obj) {
+    const resultsField = Array.isArray(obj.results) ? obj.results : [];
+    rawRows = (resultsField as unknown[]).filter((r): r is Record<string, unknown> => !!r && typeof r === "object");
+    summary = typeof obj.summary === "string" ? obj.summary : "";
+    copyRewrites = obj.copy_rewrites && typeof obj.copy_rewrites === "object" ? (obj.copy_rewrites as ApiCopyRewrites) : {};
+    growthBlueprint = coerceBlueprint(obj.growth_blueprint);
+  } else {
+    rawRows = salvageRows(cleaned);
+    summary = salvageString(cleaned, "summary");
+    copyRewrites = salvageCopyRewrites(cleaned);
+    growthBlueprint = [];
+  }
+
+  const narratives = new Map<string, Partial<RubricResultRow>>();
+  for (const raw of rawRows) {
+    const r = normalizeRow(raw);
+    if (!r.id || normStatus(r.status) !== "FAIL") continue;
+    narratives.set(r.id, {
+      title: r.title,
+      exitTrigger: r.exitTrigger,
+      evidence: r.evidence,
+      conversionCost: r.conversionCost,
+      implementation: r.implementation,
+      effort: r.effort,
+    });
+  }
+  return { narratives, summary, copyRewrites, growthBlueprint, truncated, returnedFailRows: narratives.size };
+}
+
+/** Merge pass-2 narratives into pass-1 FAIL rows. Statuses are unchanged; only FAIL rows gain narrative fields. */
+export function mergeStatusAndNarrative(
+  statusRows: RubricResultRow[],
+  narratives: Map<string, Partial<RubricResultRow>>
+): RubricResultRow[] {
+  return statusRows.map((r) => {
+    if (normStatus(r.status) !== "FAIL") return r;
+    const n = narratives.get(r.id);
+    return n ? { ...r, ...n } : r;
+  });
+}

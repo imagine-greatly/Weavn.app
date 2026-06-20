@@ -29,8 +29,11 @@ import { API_RATE_LIMIT_PER_MIN } from "@/lib/constants";
 import type { ApiKeyRecord } from "@/lib/apiAuth";
 import {
   scopeChecksForScan,
-  buildRubricSystemBlocks,
-  parseRubricResponse,
+  buildPass1SystemBlocks,
+  buildPass2SystemBlocks,
+  parseStatusRows,
+  parsePass2Narrative,
+  mergeStatusAndNarrative,
   computeApiDimensions,
   computeApiDimensionRows,
   API_DIMENSION_KEYS,
@@ -40,8 +43,10 @@ import {
   buildGrowthBlueprintStruct,
   categoryScoresFromDimensions,
   rubricCounts,
+  type ApiCopyRewrites,
+  type ApiBlueprintItem,
 } from "@/lib/rubricScan";
-import { computeGrowthScoreFromRubric } from "@/lib/processFindings";
+import { computeGrowthScoreFromRubric, type RubricResultRow } from "@/lib/processFindings";
 
 // Gated experimental rubric scoring. DEFAULTS OFF — when WEAVN_RUBRIC_SCORING is
 // unset or not exactly "true", /api/v1/scan runs the original self-reported scoring
@@ -320,89 +325,144 @@ async function executeScan(p: ScanParams): Promise<ScanResult> {
     // never self-reported by the model. The scoped catalog is injected as a cached
     // system block BEFORE the HTML (carried in the user message).
     const scopedChecks = scopeChecksForScan(site_type);
-    const systemBlocks = buildRubricSystemBlocks(scopedChecks);
+    const scopedById = new Map(scopedChecks.map((c) => [c.id, c]));
 
-    let rawText: string;
-    try {
-      // Stream to ride out long (16K-token) outputs without socket idle timeouts.
+    // ── TWO-PASS SCORING ────────────────────────────────────────────────────────
+    // PASS 1 (status only) returns {id,status} for EVERY scoped check (~3–4K tokens) → a
+    // COMPLETE, unbiased denominator; this pass alone determines the score. PASS 2 writes
+    // narratives for the FAIL ids only (bounded by fail count). The catalog prefix is cached
+    // and shared across both passes. Single-call truncation gutted the catalog tail and
+    // inflated dimension scores by shrinking the denominator — two-pass removes that.
+    //
+    // Guards (thresholds printed in logs):
+    //   SKIP_RATE_CEILING = 0.80 — total SKIP rate (Part 1 blank/over-skip guard).
+    //   BACKFILL_SKIP_CEILING = 0.10 — share of SKIPs that are truncation-backfill (rows the
+    //   model never returned). Approach: PASS 1 should never truncate; if it leaves ANY check
+    //   unreturned we retry once with a bigger budget; if backfill SKIPs still exceed 10% of all
+    //   SKIPs, the denominator is contaminated by truncation → refuse to emit a confident score.
+    const SKIP_RATE_CEILING = 0.80;
+    const BACKFILL_SKIP_CEILING = 0.10;
+    const PASS1_MAX_TOKENS = 8000;
+    const PASS1_RETRY_MAX_TOKENS = 12000;
+    const PASS2_MAX_TOKENS = 16000;
+
+    const runStatusPass = async (maxTokens: number): Promise<string> => {
       const streamRun = client.messages.stream({
         model: "claude-sonnet-4-6",
-        max_tokens: 16000,
+        max_tokens: maxTokens,
         temperature: 0,
-        system: systemBlocks,
+        system: buildPass1SystemBlocks(scopedChecks),
         messages: [{ role: "user", content: userContent }],
       });
       const message = await Promise.race([streamRun.finalMessage(), analyzeDeadline]);
-      tokensUsed = (message.usage?.input_tokens ?? 0) + (message.usage?.output_tokens ?? 0);
-      realCostUsd = realScanCostUsd(message.usage);
+      tokensUsed = (tokensUsed ?? 0) + (message.usage?.input_tokens ?? 0) + (message.usage?.output_tokens ?? 0);
+      realCostUsd = (realCostUsd ?? 0) + (realScanCostUsd(message.usage) ?? 0);
       const block = message.content.find(c => c.type === "text");
       if (!block || block.type !== "text") throw new Error("No text content from model.");
-      rawText = block.text;
+      return block.text;
+    };
+
+    // ── PASS 1 — status only (scoring). Retry once if anything failed to return. ──
+    let pass1: ReturnType<typeof parseStatusRows>;
+    try {
+      pass1 = parseStatusRows(await runStatusPass(PASS1_MAX_TOKENS), scopedChecks);
+      if (pass1.truncated || pass1.backfilledIds.length > 0) {
+        console.log(`[API v1] RUBRIC pass1 incomplete | domain=${domain} truncated=${pass1.truncated} backfilled=${pass1.backfilledIds.length}/${scopedChecks.length} — retrying with ${PASS1_RETRY_MAX_TOKENS} tokens`);
+        pass1 = parseStatusRows(await runStatusPass(PASS1_RETRY_MAX_TOKENS), scopedChecks);
+      }
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Analysis failed.";
-      console.error(`[API v1] RUBRIC ANALYZE ERROR | domain=${domain} | ${msg}`);
+      console.error(`[API v1] RUBRIC PASS1 ERROR | domain=${domain} | ${msg}`);
       await markFailed();
       void logScanUsage(apiKeyId, { url: normalizedUrl, score: null, responseTimeMs: Date.now() - scanStart, status: "error", statusCode: 500, endpoint: "scan", errorCode: "analyze_error" });
       throw new Error(`Scan failed: ${msg}`);
     }
 
-    // Tolerant parse — guarantees one row per scoped check (missing → SKIP), never throws.
-    const parsedRubric = parseRubricResponse(rawText, scopedChecks);
-    const counts = rubricCounts(parsedRubric.rows, scopedChecks);
-
-    // ── INSUFFICIENT-EVALUATION GUARD (blank-page / catastrophic-truncation) ────
-    // If too few scoped checks actually returned PASS or FAIL, the page had almost no
-    // observable content OR the response truncated catastrophically — either way we
-    // CANNOT emit a confident score. Without this guard the deduction-free path scores a
-    // blank scrape 100 (0 fails → no deductions; 0 PASS/FAIL → every dimension 0).
-    // Threshold: > 80% of scoped checks SKIPped (i.e. < 20% actually scored). That
-    // decisively catches the all-SKIP blank-page mode (100% skip) with margin, while
-    // merely-truncated-but-substantive scans (~50–70% skip) are intentionally NOT
-    // flagged here — that is the separate truncation problem, tracked elsewhere.
-    const SKIP_RATE_CEILING = 0.80;
+    const statusRows = pass1.rows;
+    const counts = rubricCounts(statusRows, scopedChecks);
+    const backfillSkips = pass1.backfilledIds.length;       // never-returned → truncation-backfill
+    const genuineSkips = counts.skips - backfillSkips;       // model-emitted SKIP (legitimately out of denominator)
     const skipRate = scopedChecks.length > 0 ? counts.skips / scopedChecks.length : 1;
-    if (skipRate > SKIP_RATE_CEILING) {
-      console.log(`[API v1] RUBRIC INSUFFICIENT_EVALUATION | domain=${domain} skipRate=${(skipRate * 100).toFixed(1)}% > ceiling=${SKIP_RATE_CEILING * 100}% scored=${counts.passes + counts.fails}/${scopedChecks.length} — refusing to emit a confident score`);
+    const backfillSkipShare = counts.skips > 0 ? backfillSkips / counts.skips : 0;
+
+    // ── GUARDS: blank/over-skipped (Part 1) OR denominator contaminated by truncation-backfill ──
+    if (skipRate > SKIP_RATE_CEILING || backfillSkipShare > BACKFILL_SKIP_CEILING) {
+      const reason = skipRate > SKIP_RATE_CEILING
+        ? `skipRate=${(skipRate * 100).toFixed(1)}% > ${SKIP_RATE_CEILING * 100}%`
+        : `backfillSkipShare=${(backfillSkipShare * 100).toFixed(1)}% > ${BACKFILL_SKIP_CEILING * 100}% (backfill=${backfillSkips}/${counts.skips} skips, after retry)`;
+      console.log(`[API v1] RUBRIC INSUFFICIENT_EVALUATION | domain=${domain} ${reason} scored=${counts.passes + counts.fails}/${scopedChecks.length} — refusing to emit a confident score`);
       await markFailed();
       void logScanUsage(apiKeyId, { url: normalizedUrl, score: null, responseTimeMs: Date.now() - scanStart, status: "error", statusCode: 422, endpoint: "scan", errorCode: "insufficient_evaluation" });
       throw new Error("INSUFFICIENT_EVALUATION");
     }
 
-    // ── HEADLINE SCORE = weighted dimension aggregate ───────────────────────────
-    // Calibration (2026-06) showed the deduction-based growth score floors a 307-check
-    // rubric at 8 for nearly every real site (clean and weak alike), whereas the weighted
-    // dimension aggregate tracks ~100−fail_rate and discriminates cleanly. The headline now
-    // derives from computeApiDimensions + getWeightProfile(siteType) — the same weighted mean
-    // already reported as score_profile.weighted_score. computeGrowthScoreFromRubric is
-    // retained (defined in lib/processFindings.ts; this route is its only production caller)
-    // and is computed below for comparison only — it is no longer the headline.
-    const apiDims = computeApiDimensions(parsedRubric.rows);
+    // ── HEADLINE SCORE = weighted dimension aggregate on the COMPLETE pass-1 denominator ──
+    const apiDims = computeApiDimensions(statusRows);
     const dimWeights = getWeightProfile(site_type);
     const dimWeightedScore = Math.min(100, Math.max(0, Math.round(
       API_DIMENSION_KEYS.reduce((sum, k) => sum + (dimWeights[k] ?? 0) * (apiDims[k] ?? 0), 0)
     )));
-
     // Legacy deduction score — observability / comparison only, NOT the headline.
-    const { growthScore: legacyGrowthScore } = computeGrowthScoreFromRubric(parsedRubric.rows, scopedChecks, null);
-    console.log(`[API v1] RUBRIC | domain=${domain} score=${dimWeightedScore} legacy_growth=${legacyGrowthScore} fails=${counts.fails} passes=${counts.passes} skips=${counts.skips} skipRate=${(skipRate * 100).toFixed(1)}% returned=${parsedRubric.returnedRows}/${scopedChecks.length} truncated=${parsedRubric.truncated}`);
+    const { growthScore: legacyGrowthScore } = computeGrowthScoreFromRubric(statusRows, scopedChecks, null);
 
-    const apiFindings = buildApiFindings(parsedRubric.rows, scopedChecks, findingLimit);
-    const builtLeaks = buildLeaks(parsedRubric.rows, scopedChecks);
-    const dimRows = computeApiDimensionRows(parsedRubric.rows);
-    const blueprintStruct = buildGrowthBlueprintStruct(parsedRubric.growthBlueprint);
+    // ── PASS 2 — narrative for FAIL ids only (non-fatal; the score is already final). ──
+    const failIds = statusRows.filter((r) => String(r.status).toUpperCase() === "FAIL").map((r) => r.id);
+    let narratives: Map<string, Partial<RubricResultRow>> = new Map();
+    let pass2Summary = "";
+    let pass2Copy: ApiCopyRewrites = {};
+    let pass2Blueprint: ApiBlueprintItem[] = [];
+    let pass2Truncated = false;
+    let pass2ReturnedFails = 0;
+    if (failIds.length > 0) {
+      try {
+        const failLines = failIds.map((id) => `${id} | ${scopedById.get(id)?.title ?? ""}`).join("\n");
+        const pass2User = `${userContent}\n\n=== FAILED CHECKS (write the narrative for EACH; do not re-evaluate or add others) ===\n${failLines}`;
+        const streamRun2 = client.messages.stream({
+          model: "claude-sonnet-4-6",
+          max_tokens: PASS2_MAX_TOKENS,
+          temperature: 0,
+          system: buildPass2SystemBlocks(scopedChecks),
+          messages: [{ role: "user", content: pass2User }],
+        });
+        const pass2Deadline = new Promise<never>((_, reject) => setTimeout(() => reject(new Error("[TIMEOUT] pass2 narrative")), 110_000));
+        const message2 = await Promise.race([streamRun2.finalMessage(), pass2Deadline]);
+        tokensUsed = (tokensUsed ?? 0) + (message2.usage?.input_tokens ?? 0) + (message2.usage?.output_tokens ?? 0);
+        realCostUsd = (realCostUsd ?? 0) + (realScanCostUsd(message2.usage) ?? 0);
+        const block2 = message2.content.find(c => c.type === "text");
+        const p2 = parsePass2Narrative(block2 && block2.type === "text" ? block2.text : "");
+        narratives = p2.narratives;
+        pass2Summary = p2.summary;
+        pass2Copy = p2.copyRewrites;
+        pass2Blueprint = p2.growthBlueprint;
+        pass2Truncated = p2.truncated;
+        pass2ReturnedFails = p2.returnedFailRows;
+      } catch (err) {
+        // Non-fatal: the score is final from pass 1; degrade findings narratives only.
+        console.error(`[API v1] RUBRIC PASS2 ERROR (non-fatal) | domain=${domain} | ${err instanceof Error ? err.message : err}`);
+      }
+    }
+
+    console.log(`[API v1] RUBRIC | domain=${domain} score=${dimWeightedScore} legacy_growth=${legacyGrowthScore} fails=${counts.fails} passes=${counts.passes} skips=${counts.skips}(genuine=${genuineSkips},backfill=${backfillSkips}) skipRate=${(skipRate * 100).toFixed(1)}% pass1Returned=${pass1.returnedIds.size}/${scopedChecks.length} pass2Fails=${pass2ReturnedFails}/${failIds.length} pass2Truncated=${pass2Truncated}`);
+
+    // ── Merge: pass-1 statuses drive score/dimensions; pass-2 narratives populate findings. ──
+    const mergedRows = mergeStatusAndNarrative(statusRows, narratives);
+    const apiFindings = buildApiFindings(mergedRows, scopedChecks, findingLimit);
+    const builtLeaks = buildLeaks(mergedRows, scopedChecks);
+    const dimRows = computeApiDimensionRows(statusRows);
+    const blueprintStruct = buildGrowthBlueprintStruct(pass2Blueprint);
 
     score = dimWeightedScore;
-    page_type = parsedRubric.pageType || "homepage";
-    strengths = buildStrengths(parsedRubric.rows, scopedChecks);
-    summary = parsedRubric.summary || undefined;
+    page_type = pass1.pageType || "homepage";
+    strengths = buildStrengths(statusRows, scopedChecks);
+    summary = pass2Summary || undefined;
     findingsReturn = apiFindings;
     findingsArr = apiFindings;
     copyRewritesVal = {
-      headline: parsedRubric.copyRewrites.headline,
-      subheadline: parsedRubric.copyRewrites.subheadline,
-      cta: parsedRubric.copyRewrites.cta,
+      headline: pass2Copy.headline,
+      subheadline: pass2Copy.subheadline,
+      cta: pass2Copy.cta,
     };
-    growthBlueprintVal = parsedRubric.growthBlueprint;
+    growthBlueprintVal = pass2Blueprint;
     dimensions = apiDims;
 
     reportPayload = {

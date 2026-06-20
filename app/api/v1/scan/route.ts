@@ -33,6 +33,7 @@ import {
   parseRubricResponse,
   computeApiDimensions,
   computeApiDimensionRows,
+  API_DIMENSION_KEYS,
   buildApiFindings,
   buildStrengths,
   buildLeaks,
@@ -347,17 +348,50 @@ async function executeScan(p: ScanParams): Promise<ScanResult> {
 
     // Tolerant parse — guarantees one row per scoped check (missing → SKIP), never throws.
     const parsedRubric = parseRubricResponse(rawText, scopedChecks);
-    const { growthScore } = computeGrowthScoreFromRubric(parsedRubric.rows, scopedChecks, null);
     const counts = rubricCounts(parsedRubric.rows, scopedChecks);
-    console.log(`[API v1] RUBRIC | domain=${domain} score=${growthScore} fails=${counts.fails} passes=${counts.passes} skips=${counts.skips} returned=${parsedRubric.returnedRows}/${scopedChecks.length} truncated=${parsedRubric.truncated}`);
 
+    // ── INSUFFICIENT-EVALUATION GUARD (blank-page / catastrophic-truncation) ────
+    // If too few scoped checks actually returned PASS or FAIL, the page had almost no
+    // observable content OR the response truncated catastrophically — either way we
+    // CANNOT emit a confident score. Without this guard the deduction-free path scores a
+    // blank scrape 100 (0 fails → no deductions; 0 PASS/FAIL → every dimension 0).
+    // Threshold: > 80% of scoped checks SKIPped (i.e. < 20% actually scored). That
+    // decisively catches the all-SKIP blank-page mode (100% skip) with margin, while
+    // merely-truncated-but-substantive scans (~50–70% skip) are intentionally NOT
+    // flagged here — that is the separate truncation problem, tracked elsewhere.
+    const SKIP_RATE_CEILING = 0.80;
+    const skipRate = scopedChecks.length > 0 ? counts.skips / scopedChecks.length : 1;
+    if (skipRate > SKIP_RATE_CEILING) {
+      console.log(`[API v1] RUBRIC INSUFFICIENT_EVALUATION | domain=${domain} skipRate=${(skipRate * 100).toFixed(1)}% > ceiling=${SKIP_RATE_CEILING * 100}% scored=${counts.passes + counts.fails}/${scopedChecks.length} — refusing to emit a confident score`);
+      await markFailed();
+      void logScanUsage(apiKeyId, { url: normalizedUrl, score: null, responseTimeMs: Date.now() - scanStart, status: "error", statusCode: 422, endpoint: "scan", errorCode: "insufficient_evaluation" });
+      throw new Error("INSUFFICIENT_EVALUATION");
+    }
+
+    // ── HEADLINE SCORE = weighted dimension aggregate ───────────────────────────
+    // Calibration (2026-06) showed the deduction-based growth score floors a 307-check
+    // rubric at 8 for nearly every real site (clean and weak alike), whereas the weighted
+    // dimension aggregate tracks ~100−fail_rate and discriminates cleanly. The headline now
+    // derives from computeApiDimensions + getWeightProfile(siteType) — the same weighted mean
+    // already reported as score_profile.weighted_score. computeGrowthScoreFromRubric is
+    // retained (defined in lib/processFindings.ts; this route is its only production caller)
+    // and is computed below for comparison only — it is no longer the headline.
     const apiDims = computeApiDimensions(parsedRubric.rows);
+    const dimWeights = getWeightProfile(site_type);
+    const dimWeightedScore = Math.min(100, Math.max(0, Math.round(
+      API_DIMENSION_KEYS.reduce((sum, k) => sum + (dimWeights[k] ?? 0) * (apiDims[k] ?? 0), 0)
+    )));
+
+    // Legacy deduction score — observability / comparison only, NOT the headline.
+    const { growthScore: legacyGrowthScore } = computeGrowthScoreFromRubric(parsedRubric.rows, scopedChecks, null);
+    console.log(`[API v1] RUBRIC | domain=${domain} score=${dimWeightedScore} legacy_growth=${legacyGrowthScore} fails=${counts.fails} passes=${counts.passes} skips=${counts.skips} skipRate=${(skipRate * 100).toFixed(1)}% returned=${parsedRubric.returnedRows}/${scopedChecks.length} truncated=${parsedRubric.truncated}`);
+
     const apiFindings = buildApiFindings(parsedRubric.rows, scopedChecks, findingLimit);
     const builtLeaks = buildLeaks(parsedRubric.rows, scopedChecks);
     const dimRows = computeApiDimensionRows(parsedRubric.rows);
     const blueprintStruct = buildGrowthBlueprintStruct(parsedRubric.growthBlueprint);
 
-    score = Math.min(100, Math.max(0, Math.round(growthScore)));
+    score = dimWeightedScore;
     page_type = parsedRubric.pageType || "homepage";
     strengths = buildStrengths(parsedRubric.rows, scopedChecks);
     summary = parsedRubric.summary || undefined;
@@ -376,6 +410,10 @@ async function executeScan(p: ScanParams): Promise<ScanResult> {
       healthScore: score,
       conversionScore: score,
       growthScore: score,
+      // Diagnostics for the gated calibration phase — headline is the dimension-weighted
+      // score above; legacyGrowthScore is the old deduction score, kept for comparison only.
+      scoreMethod: "dimension_weighted",
+      legacyGrowthScore,
       pagesAnalyzed: extraction.pagesAnalyzed,
       diagnosticBrief: summary ?? "",
       intelligenceBrief: summary ?? "",
@@ -915,6 +953,18 @@ export async function POST(req: NextRequest) {
         blocked: false,
         insufficient_content: true,
         min_content_chars: MIN_CONTENT_CHARS,
+      }, { status: 422, headers: rlHeaders(apiKey) });
+    }
+    if (message === "INSUFFICIENT_EVALUATION" || message.includes("INSUFFICIENT_EVALUATION")) {
+      return NextResponse.json({
+        error: {
+          code: "INSUFFICIENT_EVALUATION",
+          message: "The page returned too few observable checks to score confidently — most checks SKIPped (likely a near-empty or bot-blocked page, or a catastrophically truncated analysis). No score was emitted rather than a misleading one.",
+          status: 422,
+        },
+        blocked: false,
+        low_confidence: true,
+        insufficient_evaluation: true,
       }, { status: 422, headers: rlHeaders(apiKey) });
     }
     return NextResponse.json({

@@ -240,6 +240,7 @@ export interface ExtractedPage {
     hasWinBack: boolean; hasMembership: boolean;
     brandPronouns: number; customerPronouns: number;
     hasFooterCta: boolean; hasAnnouncementBar: boolean;
+    hasPlaceholderContent: boolean;
   };
   /**
    * Keyword/markup presence signals for the remaining categories audited in the final pass
@@ -998,6 +999,14 @@ export function extractPageData(
     customerPronouns: (bodyLower.match(/\b(you|your|yours|you're)\b/g) ?? []).length,
     hasFooterCta: $("footer, [class*='footer'], [role='contentinfo']").find("a, button").toArray().some((el) => CTA_WORDS.test($(el).text())),
     hasAnnouncementBar: trust.some((t) => t.type === "announcement-bar"),
+    // Unfinished/template content shipped to production — a broken-trust catastrophe the
+    // rubric otherwise misses. Scoped to near-zero-false-positive tokens (no bare "coming
+    // soon" — it is legitimate on roadmaps/badges). Scans the FULL body text (not the
+    // truncated BODY TEXT summary block) so detection never depends on where the cap fell.
+    hasPlaceholderContent: hit(
+      /lorem ipsum|dolor sit amet|consectetur adipiscing|under construction|your (text|headline|content|title|tagline|logo|image|name) here|edit this (text|headline|content)|add your (content|text|details)|dummy (text|content)|placeholder (text|content|image)|sample (heading|paragraph)|\[(insert|your|add)[^\]]{0,30}\]/,
+      bodyLower
+    ),
   };
 
   // ── KEYWORD SIGNALS (Checkout / SaaS / Email / Conversion / Persuasion / Discovery) ──

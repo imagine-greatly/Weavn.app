@@ -1208,7 +1208,7 @@ function buildSinglePageSummary(rawHtml: string, url: string, compact = false): 
     parts.push(
       `PAGES/SIGNALS: reviews ${yn(cs.reviewsPage)} | faq ${yn(cs.faqPage)} | about ${yn(cs.aboutPage)} | blog ${yn(cs.blogPage)} | ` +
         `pricing ${yn(cs.pricingPage)} | community ${yn(cs.communityPage)} | press ${yn(cs.pressPage)} | team ${yn(cs.teamPage)} | ` +
-        `process ${yn(cs.hasProcess)} | consultCTA ${yn(cs.hasConsultationCta)} | footerCTA ${yn(cs.hasFooterCta)} | copy we${cs.brandPronouns}/you${cs.customerPronouns}`
+        `process ${yn(cs.hasProcess)} | consultCTA ${yn(cs.hasConsultationCta)} | footerCTA ${yn(cs.hasFooterCta)} | placeholder ${cs.hasPlaceholderContent ? "DETECTED" : "none"} | copy we${cs.brandPronouns}/you${cs.customerPronouns}`
     );
   } else {
     parts.push(
@@ -1246,7 +1246,7 @@ function buildSinglePageSummary(rawHtml: string, url: string, compact = false): 
         ].join("\n")
     );
     parts.push(`COPY FRAMING: brand-voice ("we/our/us") ×${cs.brandPronouns} vs customer-voice ("you/your") ×${cs.customerPronouns}`);
-    parts.push(`PAGE STRUCTURE: final CTA at page end (footer): ${yn(cs.hasFooterCta)} | announcement/promo bar above content: ${yn(cs.hasAnnouncementBar)}`);
+    parts.push(`PAGE STRUCTURE: final CTA at page end (footer): ${yn(cs.hasFooterCta)} | announcement/promo bar above content: ${yn(cs.hasAnnouncementBar)} | placeholder/unfinished content: ${cs.hasPlaceholderContent ? "DETECTED" : "none"}`);
   }
 
   // ── KEYWORD SIGNALS (Checkout / SaaS / Email / Conversion / Persuasion / Discovery) ──

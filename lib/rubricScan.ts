@@ -646,9 +646,11 @@ const RUBRIC_PASS1_INSTRUCTIONS = `You are SCORING a website against the fixed d
 For EVERY check id in the catalog, return exactly one status:
 - PASS — the page satisfies the check (its fail condition is NOT met).
 - FAIL — the fail condition IS met, with concrete evidence you can see in the static HTML provided.
-- SKIP — the check's signal is NOT observable in static HTML. You have no browser, no rendering, no runtime, no network trace: you CANNOT measure page-load speed, Core Web Vitals, real performance, animation, or anything that only exists when the page runs. When the signal is unobservable, or genuinely ambiguous, SKIP — never guess FAIL.
+- SKIP — the check's signal is NOT observable in static HTML. You have no browser, no rendering, no runtime, no network trace: you CANNOT measure page-load speed, Core Web Vitals, real performance, animation, or anything that only exists when the page runs — this INCLUDES returning-visitor personalization, "recently viewed" items, and content that only renders for returning or logged-in users. SKIP those EVERY time (do not FAIL). When the signal is genuinely unobservable, SKIP — never guess FAIL.
 
-OBSERVABILITY RULE (CRITICAL): only FAIL on concrete, quotable on-page evidence. Never penalize what static HTML cannot reveal.
+RESOLVED-SIGNAL RULE (CRITICAL): when the summary explicitly reports a signal as "ABSENT" — e.g. a PAGES & SITE LINKS, SERVICE-BUSINESS SIGNALS, RETENTION SIGNALS, COPY FRAMING, PAGE STRUCTURE, or TECHNICAL / HTML SIGNALS line — that absence IS an observation. Answer PASS or FAIL from it; do NOT SKIP a check whose signal the summary has already resolved (present or ABSENT). Whether a dedicated page or site feature exists is resolved by these markers (derived from the nav + footer link set), so the "is there a reviews / FAQ / about / blog / pricing / community / press / team page" checks are answerable, not SKIP.
+
+OBSERVABILITY RULE (CRITICAL): only FAIL on concrete, quotable on-page evidence (an explicit ABSENT marker counts as evidence of absence). Never penalize what static HTML cannot reveal.
 COVERAGE RULE (CRITICAL): return exactly ONE row for EVERY catalog id — no more, no fewer — in catalog order. Do not invent ids. Do not omit ids.
 
 OUTPUT — return ONE JSON object only. No markdown, no preamble, start with {:

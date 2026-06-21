@@ -223,6 +223,24 @@ export interface ExtractedPage {
     formsHaveVisibleLabels: boolean;
     linkCount: number;
   };
+  /**
+   * Content/page-presence signals for the checks that were FAIL↔SKIP flipping because the
+   * homepage summary didn't reveal whether a dedicated page/feature exists (Page & Content
+   * Gaps, Agency & Service, Return/Retention, plus copy-framing and final-CTA stragglers).
+   * Detected from the FULL link set (nav + footer + body href + anchor text) and page-text
+   * keywords. Emitted with explicit ABSENT markers so the model answers (PASS/FAIL) instead
+   * of guessing SKIP. Returning-visitor personalization is intentionally NOT here — it is
+   * genuinely unobservable from a single first-visit render and SKIPs by rule.
+   */
+  contentSignals: {
+    reviewsPage: boolean; comparisonPage: boolean; faqPage: boolean; howItWorksPage: boolean;
+    aboutPage: boolean; blogPage: boolean; pricingPage: boolean; loyaltyPage: boolean;
+    communityPage: boolean; pressPage: boolean; teamPage: boolean; contactPage: boolean;
+    hasProcess: boolean; hasCaseStudies: boolean; hasResponseTime: boolean; hasConsultationCta: boolean;
+    hasWinBack: boolean; hasMembership: boolean;
+    brandPronouns: number; customerPronouns: number;
+    hasFooterCta: boolean; hasAnnouncementBar: boolean;
+  };
 }
 
 export function extractPageData(
@@ -921,6 +939,48 @@ export function extractPageData(
     linkCount,
   };
 
+  // ── CONTENT / PAGE-PRESENCE SIGNALS ──
+  // Whether a dedicated page or site feature EXISTS is answerable from the homepage's full
+  // link set (nav + FOOTER — the old summary carried nav text only) plus page-text keywords.
+  // These resolve the Page&Content-Gaps / Agency&Service / Return-Retention checks that
+  // otherwise FAIL↔SKIP flip. (Returning-visitor personalization is deliberately excluded —
+  // it is runtime/returning-visitor only and SKIPs by the observability rule.)
+  const linkParts: string[] = [];
+  $("a[href]").each((_, el) => {
+    linkParts.push($(el).text().replace(/\s+/g, " ").trim());
+    linkParts.push($(el).attr("href") ?? "");
+  });
+  const linkHay = linkParts.join(" ").toLowerCase();
+  const bodyLower = bodyTextFull.toLowerCase();
+  const ctaHay = buttons.map((b) => `${b.text} ${b.href ?? ""}`).join(" ").toLowerCase();
+  const hit = (re: RegExp, hay: string) => re.test(hay);
+
+  const communityPage = hit(/community|forum|\bgroup\b|discord|\bslack\b|user group|peer network/, linkHay + " " + bodyLower);
+  const contentSignals = {
+    reviewsPage: hit(/reviews?|testimonials?|customer stories|wall of love/, linkHay),
+    comparisonPage: hit(/why[- ]?us|why[- ]?choose|compare|comparison|\bvs\b|alternatives?/, linkHay),
+    faqPage: hit(/faqs?|frequently asked|\/help|help cent|support cent|knowledge base|\/support|\/docs/, linkHay),
+    howItWorksPage: hit(/how[- ]it[- ]works|how[- ]we[- ]work|our process|how[- ]to\b/, linkHay),
+    aboutPage: hit(/\babout\b|our story|\bstory\b|founders?|\bmission\b|who we are|\bcompany\b/, linkHay),
+    blogPage: hit(/\bblog\b|journal|articles?|\/resources|guides?|insights?|\/learn\b|newsroom/, linkHay),
+    pricingPage: pricing.length > 0 || hit(/pricing|\/plans|\bplans\b/, linkHay),
+    loyaltyPage: hit(/rewards?|loyalty|referrals?|\bperks\b|\bpoints\b/, linkHay + " " + bodyLower),
+    communityPage,
+    pressPage: hit(/\bpress\b|\/media\b|newsroom|as seen in|in the news/, linkHay + " " + bodyLower),
+    teamPage: hit(/\bteam\b|our people|leadership|meet the|\bstaff\b/, linkHay + " " + bodyLower),
+    contactPage: hit(/contact|get in touch/, linkHay),
+    hasProcess: hit(/how[- ]it[- ]works|how[- ]we[- ]work|our process|how we work|step (1|one)\b|what to expect|the process|getting started/, linkHay + " " + bodyLower),
+    hasCaseStudies: hit(/case stud|success stor|portfolio|client results|our work|customer stories/, linkHay + " " + bodyLower),
+    hasResponseTime: hit(/within \d+\s*(hours?|hrs|days?|business)|same[- ]day|24[- ]?hour|respond (within|in)|fast response|quick turnaround|response time|reply within/, bodyLower),
+    hasConsultationCta: hit(/book a (call|demo|consult|meeting)|schedule a (call|demo|consult|meeting)|get a quote|free consult|discovery call|talk to (sales|us|an expert)|contact sales|request a (demo|quote)/, ctaHay + " " + bodyLower),
+    hasWinBack: hit(/welcome back|returning customer|come back|we missed you|win[- ]?back|re[- ]?engage|haven'?t seen you/, bodyLower),
+    hasMembership: hit(/membership|members?[- ]only|\bvip\b|\btier\b|\belite\b|premium member|subscriber benefit/, bodyLower),
+    brandPronouns: (bodyLower.match(/\b(we|our|ours|us)\b/g) ?? []).length,
+    customerPronouns: (bodyLower.match(/\b(you|your|yours|you're)\b/g) ?? []).length,
+    hasFooterCta: $("footer, [class*='footer'], [role='contentinfo']").find("a, button").toArray().some((el) => CTA_WORDS.test($(el).text())),
+    hasAnnouncementBar: trust.some((t) => t.type === "announcement-bar"),
+  };
+
   return {
     url, pageType, headlines, sections, paragraphs,
     buttons, hero, pricing, testimonials, socialProof,
@@ -932,7 +992,7 @@ export function extractPageData(
     },
     trust, images, forms, wordCount, h1Count, ctaCount,
     hasPhoneNumber, hasEmailAddress, hasAddress, structured_data,
-    htmlSignals,
+    htmlSignals, contentSignals,
     ...(faq.length > 0 ? { faq } : {}),
   };
 }

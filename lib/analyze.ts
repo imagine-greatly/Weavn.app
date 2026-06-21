@@ -1195,6 +1195,57 @@ function buildSinglePageSummary(rawHtml: string, url: string, compact = false): 
     parts.push(`FAQ\n${faqText}`);
   }
 
+  // ── PAGES / SERVICE / RETENTION SIGNALS ──
+  // Dedicated-page presence (from nav + footer links) + service/retention cues + copy framing.
+  // ABSENT here is an OBSERVATION — FAIL the matching gap check, do not SKIP. These resolve the
+  // Page&Content-Gaps / Agency&Service / Return-Retention checks that were FAIL↔SKIP flipping.
+  const cs = page.contentSignals;
+  const yn = (b: boolean) => (b ? "present" : "ABSENT");
+  if (compact) {
+    parts.push(
+      `PAGES/SIGNALS: reviews ${yn(cs.reviewsPage)} | faq ${yn(cs.faqPage)} | about ${yn(cs.aboutPage)} | blog ${yn(cs.blogPage)} | ` +
+        `pricing ${yn(cs.pricingPage)} | community ${yn(cs.communityPage)} | press ${yn(cs.pressPage)} | team ${yn(cs.teamPage)} | ` +
+        `process ${yn(cs.hasProcess)} | consultCTA ${yn(cs.hasConsultationCta)} | footerCTA ${yn(cs.hasFooterCta)} | copy we${cs.brandPronouns}/you${cs.customerPronouns}`
+    );
+  } else {
+    parts.push(
+      `PAGES & SITE LINKS (from nav + footer; ABSENT = no link/section found — FAIL the matching gap check, do not SKIP)\n` +
+        [
+          `Reviews / testimonials page: ${yn(cs.reviewsPage)}`,
+          `Comparison / "why us" page: ${yn(cs.comparisonPage)}`,
+          `FAQ / help page: ${yn(cs.faqPage)}`,
+          `How-it-works / process page: ${yn(cs.howItWorksPage)}`,
+          `About / founder-story page: ${yn(cs.aboutPage)}`,
+          `Blog / educational content: ${yn(cs.blogPage)}`,
+          `Pricing page or visible pricing: ${yn(cs.pricingPage)}`,
+          `Loyalty / rewards program: ${yn(cs.loyaltyPage)}`,
+          `Community / forum / user group: ${yn(cs.communityPage)}`,
+          `Press / media page: ${yn(cs.pressPage)}`,
+          `Team / people page: ${yn(cs.teamPage)}`,
+          `Contact page: ${yn(cs.contactPage)}`,
+        ].join("\n")
+    );
+    parts.push(
+      `SERVICE-BUSINESS SIGNALS\n` +
+        [
+          `Process / how-we-work explanation: ${yn(cs.hasProcess)}`,
+          `Case studies / portfolio: ${yn(cs.hasCaseStudies)}`,
+          `Response-time / turnaround commitment: ${yn(cs.hasResponseTime)}`,
+          `Discovery-call / consultation / demo CTA: ${yn(cs.hasConsultationCta)}`,
+        ].join("\n")
+    );
+    parts.push(
+      `RETENTION SIGNALS\n` +
+        [
+          `Win-back / returning-visitor language: ${yn(cs.hasWinBack)}`,
+          `Membership / VIP / loyalty tier: ${yn(cs.hasMembership)}`,
+          `Community / peer network: ${yn(cs.communityPage)}`,
+        ].join("\n")
+    );
+    parts.push(`COPY FRAMING: brand-voice ("we/our/us") ×${cs.brandPronouns} vs customer-voice ("you/your") ×${cs.customerPronouns}`);
+    parts.push(`PAGE STRUCTURE: final CTA at page end (footer): ${yn(cs.hasFooterCta)} | announcement/promo bar above content: ${yn(cs.hasAnnouncementBar)}`);
+  }
+
   // ── TECHNICAL / HTML SIGNALS ──
   // Always emitted (even when absent) so observable Mobile / Page-Speed / Accessibility /
   // Universal checks stay answerable on the summary instead of false-SKIPping. A signal

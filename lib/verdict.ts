@@ -59,6 +59,21 @@ export function scoreToVerdict(score: number): string {
 }
 
 /**
+ * OPPORTUNITY framing (NOT a grade). The headline number is the % of catalogued conversion
+ * best-practices a page captures; this maps it to upside language keyed to the SAME canonical color
+ * band (thresholds unchanged) so the ring color and the words always agree. Low coverage = high
+ * upside; mid = solid foundation; high = highly optimized. Use this in UI in place of the grade verdict.
+ */
+export function opportunityFraming(score: number): { band: VerdictBand; label: string; blurb: string } {
+  const band = scoreBand(score);
+  if (band === "green")
+    return { band, label: "Highly optimized", blurb: "Most conversion best-practices are already captured — tighten the few remaining gaps below." };
+  if (band === "amber")
+    return { band, label: "Solid foundation", blurb: "A solid base with clear gaps — the ranked findings below are your upside." };
+  return { band, label: "High upside", blurb: "Most best-practices aren't captured yet — the ranked findings below are the path to close the gap." };
+}
+
+/**
  * Percentile estimate vs. a static industry baseline (p10/p50/p90 ≈ 32/55/80).
  * Deterministic function of the real score — labeled as an estimate in the UI.
  * Mirrors the piecewise shape of lib/benchmarks.ts calculatePercentile without

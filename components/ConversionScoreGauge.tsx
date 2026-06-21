@@ -55,10 +55,10 @@ function getConversionScoreBand(score: number): {
   const s = Number.isFinite(n) ? Math.max(0, Math.min(100, n)) : 0;
   const color = displayScoreColor(s);
   const rgb = displayScoreRgb(s);
-  if (s <= 39) return { color, label: "CRITICAL RISK", rgb };
-  if (s <= 59) return { color, label: "AT RISK", rgb };
-  if (s <= 79) return { color, label: "SUBOPTIMAL", rgb };
-  return { color, label: "OPTIMIZED", rgb };
+  if (s <= 39) return { color, label: "HIGH UPSIDE", rgb };
+  if (s <= 59) return { color, label: "BUILDING", rgb };
+  if (s <= 79) return { color, label: "SOLID FOUNDATION", rgb };
+  return { color, label: "HIGHLY OPTIMIZED", rgb };
 }
 
 export default function ConversionScoreGauge({
@@ -272,7 +272,7 @@ export default function ConversionScoreGauge({
                     letterSpacing: "0.08em",
                   }}
                 >
-                  / 100
+                  % COVERAGE
                 </div>
               </div>
             </div>

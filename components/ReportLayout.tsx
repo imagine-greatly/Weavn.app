@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { ReportPayload } from "@/lib/reportSchema";
-import { estimatePercentile, ordinal, scoreToVerdict, scoreBand } from "@/lib/verdict";
+import { estimatePercentile, ordinal, scoreToVerdict, scoreBand, opportunityFraming } from "@/lib/verdict";
 import VerdictRing from "@/components/ui/VerdictRing";
 import { stripMarkdownForDisplay } from "@/lib/stripMarkdownForDisplay";
 import {
@@ -269,7 +269,15 @@ export default function ReportLayout({ domain, payload, scanDate, branding, fill
     const percentile = ordinal(estimatePercentile(score));
     const critical = findings.filter((f) => f.severity === "critical").length;
     const high = findings.filter((f) => f.severity === "high").length;
-    return { score, verdict, dimensions, findings, rewrites, blueprint, brief, siteLabel, percentile, critical, high };
+    const opportunity = opportunityFraming(score);
+    const stLc = siteType ? String(siteType).toLowerCase() : "";
+    const pageTypeNote =
+      stLc === "content"
+        ? "This reads as a content / informational page — for the sharpest conversion read, point Weavn at your signup or landing page."
+        : stLc === "unknown"
+          ? "This reads as a non-conversion or informational page — for the sharpest conversion read, point Weavn at your signup or landing page."
+          : null;
+    return { score, verdict, dimensions, findings, rewrites, blueprint, brief, siteLabel, percentile, critical, high, opportunity, pageTypeNote };
   }, [p]);
 
   const sectionRefs = useRef<Record<string, HTMLElement | null>>({});
@@ -324,14 +332,26 @@ export default function ReportLayout({ domain, payload, scanDate, branding, fill
           <div style={{ display: "flex", justifyContent: "center" }}>
             <VerdictRing score={view.score} size={166} stroke={3.5} fontSize={52} color={ringColor} track={t.track} />
           </div>
-          <div style={{ marginTop: 22 }}>
+          {/* The ring number IS the % of conversion best-practices captured — name it, never grade it. */}
+          <p style={{ fontFamily: MONO, fontSize: 10.5, letterSpacing: "0.2em", textTransform: "uppercase", color: t.inkMuted, margin: "14px 0 0" }}>
+            % Conversion best-practice coverage
+          </p>
+          <div style={{ marginTop: 14 }}>
             <span style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase", color: ringColor, border: `0.5px solid ${ringColor}66`, padding: "5px 12px" }}>
-              {view.verdict}
+              {view.opportunity.label}
             </span>
           </div>
-          <p style={{ fontFamily: DISP, fontWeight: 700, fontSize: 26, color: t.inkPrimary, margin: "20px 0 0", letterSpacing: "-0.4px" }}>
-            {view.percentile} percentile{view.siteLabel ? <span style={{ color: t.inkSecondary }}> · {view.siteLabel}</span> : null}
+          <p style={{ fontFamily: DISP, fontWeight: 700, fontSize: 19, color: t.inkPrimary, margin: "18px auto 0", maxWidth: 460, letterSpacing: "-0.2px", lineHeight: 1.4 }}>
+            {view.opportunity.blurb}
           </p>
+          <p style={{ fontFamily: MONO, fontSize: 12, color: t.inkSecondary, margin: "12px 0 0", letterSpacing: "0.04em" }}>
+            {view.score}% captured · {view.percentile} percentile{view.siteLabel ? ` in ${view.siteLabel}` : ""}
+          </p>
+          {view.pageTypeNote ? (
+            <p style={{ fontFamily: MONO, fontSize: 11, fontStyle: "italic", color: t.inkMuted, margin: "10px auto 0", maxWidth: 480, letterSpacing: "0.02em", lineHeight: 1.5 }}>
+              {view.pageTypeNote}
+            </p>
+          ) : null}
           {view.findings.length > 0 ? (
             <p style={{ fontFamily: MONO, fontSize: 12, color: t.inkMuted, margin: "12px 0 0", letterSpacing: "0.04em" }}>{findingsCountLine}</p>
           ) : null}

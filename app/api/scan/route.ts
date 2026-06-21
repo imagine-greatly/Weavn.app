@@ -596,9 +596,9 @@ export async function POST(req: NextRequest) {
             <p style="color:#F0F4FF;font-size:14px;margin:0;">${domain}</p>
           </td>
           <td style="vertical-align:top;text-align:right;">
-            <p style="color:rgba(136,153,170,0.6);font-size:10px;letter-spacing:0.15em;margin:0 0 4px;">WEAVN SCORE</p>
-            <p style="color:#FF2D2D;font-size:32px;font-weight:700;margin:0;line-height:1;">${payload.healthScore ?? 0}<span style="font-size:14px;color:rgba(136,153,170,0.5);">/100</span></p>
-            <p style="color:#FF2D2D;font-size:9px;letter-spacing:0.15em;margin:4px 0 0;">${(payload.healthScore ?? 0) >= 70 ? 'NEEDS WORK' : (payload.healthScore ?? 0) >= 50 ? 'AT RISK' : 'CRITICAL RISK'}</p>
+            <p style="color:rgba(136,153,170,0.6);font-size:10px;letter-spacing:0.15em;margin:0 0 4px;">BEST-PRACTICE COVERAGE</p>
+            <p style="color:${(payload.healthScore ?? 0) >= 70 ? '#00C48C' : (payload.healthScore ?? 0) >= 50 ? '#EFB23E' : '#E8635F'};font-size:32px;font-weight:700;margin:0;line-height:1;">${payload.healthScore ?? 0}<span style="font-size:14px;color:rgba(136,153,170,0.5);">% captured</span></p>
+            <p style="color:${(payload.healthScore ?? 0) >= 70 ? '#00C48C' : (payload.healthScore ?? 0) >= 50 ? '#EFB23E' : '#E8635F'};font-size:9px;letter-spacing:0.15em;margin:4px 0 0;">${(payload.healthScore ?? 0) >= 70 ? 'HIGHLY OPTIMIZED' : (payload.healthScore ?? 0) >= 50 ? 'SOLID FOUNDATION' : 'HIGH UPSIDE'}</p>
           </td>
         </tr>
       </table>

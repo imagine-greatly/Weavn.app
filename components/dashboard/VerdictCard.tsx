@@ -1,7 +1,7 @@
 'use client'
 
 import VerdictRing from '@/components/ui/VerdictRing'
-import { scoreColor, scoreToVerdict, estimatePercentile, ordinal } from '@/lib/verdict'
+import { scoreColor, estimatePercentile, ordinal } from '@/lib/verdict'
 
 /**
  * Self-contained verdict card (founder steel surface) — near-monochrome.
@@ -50,7 +50,7 @@ export interface VerdictCardProps {
   findings: VerdictCardFinding[]
   /** Footer text (sample, no link). Ignored when `href` is set. */
   footer?: string
-  /** Full report link; when set the footer is "27 categories · 308 checks · FULL REPORT →". */
+  /** Full report link; when set the footer is "27 categories · 311 checks · FULL REPORT →". */
   href?: string
   /** Ghosted "what you'll get" sample treatment (dashed hairline border, reduced opacity). */
   sample?: boolean
@@ -58,7 +58,7 @@ export interface VerdictCardProps {
 
 export default function VerdictCard({ domain, score, verdictLabel, summary, findings, footer, href, sample }: VerdictCardProps) {
   const color = scoreColor(score) // the verdict band color — carried by ring + label only
-  const label = verdictLabel ?? `${scoreToVerdict(score)} · ${ordinal(estimatePercentile(score))} percentile`
+  const label = verdictLabel ?? `${score}% coverage · ${ordinal(estimatePercentile(score))} percentile`
 
   return (
     <div
@@ -120,7 +120,7 @@ export default function VerdictCard({ domain, score, verdictLabel, summary, find
       {/* Footer */}
       {href ? (
         <div style={{ borderTop: `0.5px solid ${C.border}`, paddingTop: 12 }}>
-          <span style={{ fontFamily: MONO, fontSize: 10.5, color: C.inkMuted, letterSpacing: '0.02em' }}>27 categories · 308 checks · </span>
+          <span style={{ fontFamily: MONO, fontSize: 10.5, color: C.inkMuted, letterSpacing: '0.02em' }}>27 categories · 311 checks · </span>
           <a href={href} style={{ fontFamily: MONO, fontSize: 10.5, letterSpacing: '0.04em', color: STEEL, textDecoration: 'none' }}>FULL REPORT →</a>
         </div>
       ) : footer ? (

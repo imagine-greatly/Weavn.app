@@ -4,8 +4,9 @@ import DIAGNOSTIC_CHECKS from "@/lib/diagnosticRubric";
 export const RUBRIC_TOTAL_CHECKS = DIAGNOSTIC_CHECKS.length;
 
 /**
- * Health score color bands (DESIGN_SYSTEM / brand guide). No cyan on score readouts.
- * 0–44 critical risk, 45–64 needs work, 65–100 good foundation.
+ * Coverage color bands (DESIGN_SYSTEM / brand guide). No cyan on coverage readouts.
+ * Same thresholds + colors; the LABELS are opportunity, not grades:
+ * 0–44 high upside, 45–64 solid foundation, 65–100 highly optimized.
  */
 export function displayScoreColor(score: number): string {
   const s = Math.max(0, Math.min(100, Number(score) || 0));
@@ -22,18 +23,18 @@ export function displayScoreRgb(score: number): string {
   return "0,230,118";
 }
 
-/** Severity band under the dashboard gauge (all caps). */
+/** Opportunity band under the dashboard gauge (all caps) — coverage upside, not a grade. */
 export function weavnScoreBandUpper(score: number): string {
   const s = Math.max(0, Math.min(100, Number(score) || 0));
-  if (s <= 44) return "CRITICAL RISK";
-  if (s <= 64) return "NEEDS WORK";
-  return "GOOD FOUNDATION";
+  if (s <= 44) return "HIGH UPSIDE";
+  if (s <= 64) return "SOLID FOUNDATION";
+  return "HIGHLY OPTIMIZED";
 }
 
-/** Advisor / narrative copy: score with band, e.g. "68/100 — Good Foundation band". */
+/** Advisor / narrative copy: coverage with opportunity band, e.g. "68% best-practice coverage — Solid Foundation". */
 export function formatWeavnScoreWithBand(score: number): string {
   const s = Math.max(0, Math.min(100, Math.round(Number(score) || 0)));
   const band =
-    s <= 44 ? "Critical Risk" : s <= 64 ? "Needs Work" : "Good Foundation";
-  return `${s}/100 — ${band} band`;
+    s <= 44 ? "High Upside" : s <= 64 ? "Solid Foundation" : "Highly Optimized";
+  return `${s}% best-practice coverage — ${band}`;
 }

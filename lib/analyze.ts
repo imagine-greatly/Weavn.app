@@ -1106,15 +1106,18 @@ function buildSinglePageSummary(rawHtml: string, url: string, compact = false): 
   if (h3s.length) parts.push(`H3: ${h3s.join(" | ")}`);
 
   if (page.sections.length) {
+    // Trimmed (was 6×250 / 4×200): the structured signal blocks below now carry the
+    // higher-density facts, so verbose section prose is reclaimed to stay under the 6 KB ceiling.
     const sectionText = page.sections
-      .slice(0, compact ? 4 : 6)
-      .map((s) => `[${s.label}] ${s.text.slice(0, compact ? 200 : 250)}`)
+      .slice(0, compact ? 3 : 4)
+      .map((s) => `[${s.label}] ${s.text.slice(0, compact ? 160 : 200)}`)
       .join("\n");
     parts.push(`SECTIONS\n${sectionText}`);
   }
 
   if (page.paragraphs) {
-    parts.push(`BODY TEXT\n${page.paragraphs.slice(0, compact ? 1800 : 2000)}`);
+    // Trimmed (was 1800/2000) — reclaim space for dense signal markers (signal > prose).
+    parts.push(`BODY TEXT\n${page.paragraphs.slice(0, compact ? 900 : 1100)}`);
   }
 
   if (page.pricing.length) {
@@ -1189,8 +1192,8 @@ function buildSinglePageSummary(rawHtml: string, url: string, compact = false): 
 
   if (page.faq && page.faq.length > 0) {
     const faqText = page.faq
-      .slice(0, compact ? 3 : 6)
-      .map(({ question, answer }) => `Q: ${question}\nA: ${answer.slice(0, compact ? 200 : 350)}`)
+      .slice(0, compact ? 3 : 4)
+      .map(({ question, answer }) => `Q: ${question}\nA: ${answer.slice(0, compact ? 160 : 240)}`)
       .join("\n\n");
     parts.push(`FAQ\n${faqText}`);
   }
@@ -1246,6 +1249,29 @@ function buildSinglePageSummary(rawHtml: string, url: string, compact = false): 
     parts.push(`PAGE STRUCTURE: final CTA at page end (footer): ${yn(cs.hasFooterCta)} | announcement/promo bar above content: ${yn(cs.hasAnnouncementBar)}`);
   }
 
+  // ── KEYWORD SIGNALS (Checkout / SaaS / Email / Conversion / Persuasion / Discovery) ──
+  // Packed present/ABSENT markers — ABSENT is an OBSERVATION (FAIL the gap check, do not SKIP).
+  // Final coverage pass: every check observable from one static page now has its signal here.
+  const ks = page.keywordSignals;
+  const m = (b: boolean) => (b ? "y" : "ABSENT");
+  parts.push(
+    `COMMERCE SIGNALS: payment-marks ${m(ks.paymentMarks)} | free-shipping ${m(ks.freeShipping)} | returns/refund ${m(ks.returnsPolicy)} | ` +
+      `secure-checkout ${m(ks.secureCheckout)} | currency-shown ${m(ks.currencyShown)} | guest-checkout ${m(ks.guestCheckout)} | BNPL/installments ${m(ks.bnpl)}`
+  );
+  parts.push(
+    `SAAS/OFFER SIGNALS: free-trial ${m(ks.freeTrial)} | no-credit-card ${m(ks.noCreditCard)} | freemium/free-plan ${m(ks.freemium)} | integrations/API ${m(ks.integrations)} | ` +
+      `security/compliance-badge ${m(ks.securityCompliance)} | most-popular-plan ${m(ks.mostPopularPlan)} | annual-billing ${m(ks.annualBilling)} | cancel-anytime ${m(ks.cancelAnytime)} | ` +
+      `ROI/value-framing ${m(ks.roiValue)} | time-to-value/setup ${m(ks.timeToValue)} | demo-without-signup ${m(ks.demoNoSignup)}`
+  );
+  parts.push(
+    `LEAD CAPTURE: email-capture ${m(ks.emailCapture)} | sms-capture ${m(ks.smsCapture)} | lead-magnet/incentive ${m(ks.leadMagnet)}`
+  );
+  parts.push(
+    `PERSUASION/PROOF: authority/credentials ${m(ks.authorityCredential)} | scarcity/urgency ${m(ks.scarcityUrgency)} | quiz/assessment ${m(ks.quizAssessment)} | ` +
+      `3rd-party-reviews(G2/Trustpilot) ${m(ks.thirdPartyReviews)} | origin/sourcing-story ${m(ks.originSourcing)}`
+  );
+  parts.push(`DISCOVERY: site-search ${m(ks.siteSearch)} | currency/international ${m(ks.internationalCurrency)} | nav-items ${ks.navItems}`);
+
   // ── TECHNICAL / HTML SIGNALS ──
   // Always emitted (even when absent) so observable Mobile / Page-Speed / Accessibility /
   // Universal checks stay answerable on the summary instead of false-SKIPping. A signal
@@ -1280,7 +1306,21 @@ function buildSinglePageSummary(rawHtml: string, url: string, compact = false): 
 
   parts.push(`PAGE STATS: ${page.wordCount} words | ${page.h1Count} H1s | ${page.ctaCount} CTAs`);
 
-  return parts.join("\n\n");
+  // ── HARD 6 KB CEILING (signal-safe) ──
+  // If the assembled summary exceeds 6 KB, reclaim from the most expendable block (BODY TEXT
+  // prose) first so every present/ABSENT signal marker survives; only as a last resort do a
+  // blunt tail slice. Keeps the model input bounded for arbitrary content-heavy pages.
+  const CEIL = 6000;
+  let out = parts.join("\n\n");
+  if (out.length > CEIL) {
+    const over = out.length - CEIL;
+    out = out.replace(/BODY TEXT\n([\s\S]*?)(\n\n|$)/, (full, body: string, sep: string) => {
+      const keep = body.length - over - 1;
+      return keep > 0 && keep < body.length ? `BODY TEXT\n${body.slice(0, keep)}…${sep}` : full;
+    });
+    if (out.length > CEIL) out = out.slice(0, CEIL - 12) + "\n…[capped]";
+  }
+  return out;
 }
 
 export function buildPageSummary(extraction: CombinedExtraction): string {

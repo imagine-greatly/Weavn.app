@@ -241,6 +241,25 @@ export interface ExtractedPage {
     brandPronouns: number; customerPronouns: number;
     hasFooterCta: boolean; hasAnnouncementBar: boolean;
   };
+  /**
+   * Keyword/markup presence signals for the remaining categories audited in the final pass
+   * (Checkout, SaaS-Specific, Email/Retention, Conversion-Path, Psychology, Differentiation,
+   * Universal/Nav). All derived from page text + link/CTA/alt haystacks; emitted as packed
+   * present/ABSENT lines so checks observable from a single static page answer instead of
+   * SKIPping. Visual-only / checkout-flow / returning-visitor checks are NOT here — they SKIP
+   * deterministically by the observability rule.
+   */
+  keywordSignals: {
+    paymentMarks: boolean; freeShipping: boolean; returnsPolicy: boolean; secureCheckout: boolean;
+    currencyShown: boolean; guestCheckout: boolean; bnpl: boolean;
+    freeTrial: boolean; noCreditCard: boolean; freemium: boolean; integrations: boolean;
+    securityCompliance: boolean; mostPopularPlan: boolean; annualBilling: boolean;
+    cancelAnytime: boolean; roiValue: boolean; timeToValue: boolean; demoNoSignup: boolean;
+    emailCapture: boolean; smsCapture: boolean; leadMagnet: boolean;
+    authorityCredential: boolean; scarcityUrgency: boolean; quizAssessment: boolean;
+    thirdPartyReviews: boolean; originSourcing: boolean;
+    siteSearch: boolean; internationalCurrency: boolean; navItems: number;
+  };
 }
 
 export function extractPageData(
@@ -981,6 +1000,46 @@ export function extractPageData(
     hasAnnouncementBar: trust.some((t) => t.type === "announcement-bar"),
   };
 
+  // ── KEYWORD SIGNALS (Checkout / SaaS / Email / Conversion / Persuasion / Discovery) ──
+  // Final-pass coverage for categories not yet given a signal. Text/markup keyword detection
+  // over body + alt + trust + link + CTA haystacks. Packed into compact present/ABSENT lines.
+  const altHay = images.map((i) => i.alt).join(" ").toLowerCase();
+  const trustHay = trust.map((t) => t.text).join(" ").toLowerCase();
+  const kwHay = `${bodyLower} ${altHay} ${trustHay}`;          // visible-text haystack
+  const allHay = `${kwHay} ${linkHay} ${ctaHay}`;              // + links + cta text/hrefs
+  const emailField = forms.some((f) => f.fields.some((x) => /e-?mail/i.test(x)));
+  const keywordSignals = {
+    paymentMarks: hit(/\b(visa|mastercard|amex|american express|paypal|apple ?pay|google ?pay|shop ?pay|discover|klarna|afterpay|affirm)\b/, allHay),
+    freeShipping: hit(/free shipping|free delivery|free returns|ships free|free worldwide/, kwHay),
+    returnsPolicy: hit(/return polic|returns? polic|refund|exchange|money[- ]back|30[- ]day return|satisfaction guarantee/, kwHay + " " + linkHay),
+    secureCheckout: hit(/secure checkout|secure payment|\bssl\b|encrypted|256[- ]bit|safe checkout|\bpci\b|secure (ordering|transaction)/, kwHay),
+    currencyShown: pricing.length > 0 || /[$£€¥₹]/.test(bodyTextFull) || hit(/\b(usd|eur|gbp|aud|cad)\b/, bodyLower),
+    guestCheckout: hit(/guest checkout|no account (required|needed)|without an account|checkout as guest|no signup (required|needed)/, kwHay),
+    bnpl: hit(/klarna|afterpay|affirm|sezzle|installments?|pay (in|over) \d|buy now,? pay later|\bbnpl\b|interest[- ]free/, allHay),
+    freeTrial: hit(/free trial|start (free|for free)|try (it )?(for )?free|\d+[- ]day (free )?trial|start your trial/, allHay),
+    noCreditCard: hit(/no credit card|no card required|without a credit card|no cc required|credit card not required/, kwHay),
+    freemium: hit(/free plan|free forever|free tier|forever free|always free|free version|\$0(\b|\/)/, allHay),
+    integrations: hit(/integrat|works with|connect (with|your|to)|\bapis?\b|webhooks?|\bsdk\b|plugins?|app (store|marketplace|directory)|native integration/, allHay),
+    securityCompliance: hit(/soc ?2|\bgdpr\b|\bhipaa\b|iso ?27001|pci[- ]?dss|\bccpa\b|\bsso\b|\bsaml\b|encryption at rest|security compliance|enterprise[- ]grade security/, allHay),
+    mostPopularPlan: hit(/most popular|recommended( plan)?|best value|popular choice|most loved/, kwHay),
+    annualBilling: hit(/billed (annually|yearly)|\/yr\b|per year|annual (plan|billing|discount)|save \d+%( with annual)?|yearly (plan|billing)/, allHay),
+    cancelAnytime: hit(/cancel anytime|cancel any time|no contract|no commitment|month[- ]to[- ]month|no long[- ]term/, kwHay),
+    roiValue: hit(/\broi\b|return on investment|pays for itself|save (you )?(\$|\d+ ?(hours|hrs|days|%))|cost of (inaction|doing nothing|not)|worth (it|every)/, kwHay),
+    timeToValue: hit(/live in \d|set ?up in (\d|minutes|seconds|under)|get started in|ready in (\d|minutes)|in (minutes|seconds|under an hour)|\d+[- ]minute setup|no (technical|coding) (skills|knowledge|experience)|up and running/, kwHay),
+    demoNoSignup: hit(/live demo|interactive demo|see it in action|watch (the |a )?demo|product tour|try it (free|now|live)|\bsandbox\b|playground|request a demo/, allHay),
+    emailCapture: emailField || hit(/subscribe|newsletter|sign up for|join (our )?(list|newsletter|\d)|get (the )?updates|join the waitlist/, kwHay),
+    smsCapture: hit(/\bsms\b|text (me|us|alerts|to)|text message|sign up by text|mobile alerts/, kwHay),
+    leadMagnet: hit(/free (guide|ebook|e-book|checklist|template|download|report|whitepaper|white paper|toolkit|cheat ?sheet|course|trial)|download (the |our |your )?(free )?(guide|ebook|template|report|checklist)/, allHay),
+    authorityCredential: hit(/certified|board[- ]certified|\bphd\b|\bm\.?d\.?\b|licensed|accredited|award[- ]winning|patented|peer[- ]reviewed|clinically (proven|tested)|backed by science|years of experience|trusted by|as featured in|founded in \d{4}/, kwHay),
+    scarcityUrgency: hit(/only \d+ (left|remaining|spots?|seats?)|limited (time|stock|spots|edition|availability)|selling fast|almost (gone|sold out)|ends (today|tonight|soon|in)|while supplies last|low stock|\d+ left in stock/, kwHay),
+    quizAssessment: hit(/\b(quiz|assessment|find your|take the (quiz|assessment|test)|product finder|build your|configurator|calculator|get matched)\b/, allHay),
+    thirdPartyReviews: hit(/trustpilot|\bg2\b|capterra|yotpo|judge\.?me|google reviews|trust ?pilot|reviews\.io|\bfeefo\b|product hunt/, allHay),
+    originSourcing: hit(/made in |sourced (from|in)|ethically sourced|country of origin|hand[- ](made|crafted)|manufactured in|grown in|sustainably (sourced|made)|locally (made|sourced)/, kwHay),
+    siteSearch: $("input[type=search], [role=search], [class*='search'] input, [class*='search-box'], form[action*='search'], input[name*='search' i], input[name='q']").length > 0,
+    internationalCurrency: hit(/currency (selector|switcher|picker)|ships? (worldwide|internationally|to \d+ countries)|international (shipping|delivery|orders)|(country|region) (selector|picker)|worldwide (shipping|delivery)|multi[- ]currency/, allHay),
+    navItems: navigation.length,
+  };
+
   return {
     url, pageType, headlines, sections, paragraphs,
     buttons, hero, pricing, testimonials, socialProof,
@@ -992,7 +1051,7 @@ export function extractPageData(
     },
     trust, images, forms, wordCount, h1Count, ctaCount,
     hasPhoneNumber, hasEmailAddress, hasAddress, structured_data,
-    htmlSignals, contentSignals,
+    htmlSignals, contentSignals, keywordSignals,
     ...(faq.length > 0 ? { faq } : {}),
   };
 }

@@ -356,7 +356,7 @@ export default function ReportLayout({ domain, payload, scanDate, branding, fill
           })}
         </div>
         <p style={{ fontFamily: MONO, fontSize: 9.5, letterSpacing: "0.14em", textTransform: "uppercase", color: t.inkMuted, margin: "12px 0 0" }}>
-          27 categories · 307 checks
+          27 categories · 308 checks
         </p>
       </section>
     ),
@@ -539,7 +539,7 @@ export default function ReportLayout({ domain, payload, scanDate, branding, fill
               {[branding.footerText || branding.agencyName, "Confidential"].filter(Boolean).join(" · ")}
             </span>
             <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase", color: t.inkMuted }}>
-              307 checks · verified findings
+              308 checks · verified findings
             </span>
           </footer>
         ) : null}

@@ -1,9 +1,9 @@
 /**
- * Rubric scan engine — the glue that makes the 307-check rubric actually RUN
+ * Rubric scan engine — the glue that makes the 308-check rubric actually RUN
  * in the live /api/v1/scan path.
  *
  * Responsibilities (all pure functions — the model call itself lives in the route):
- *  - scope the 307 checks per scan (siteType vocab map)
+ *  - scope the 308 checks per scan (siteType vocab map)
  *  - serialize the scoped check list into a cacheable prompt block
  *  - tolerantly parse the model's PASS/FAIL/SKIP rows, salvaging truncated output
  *  - compute the 0–100 score (via processFindings) and the 7 API dimensions
@@ -63,12 +63,12 @@ const API_DIMENSION_META: Record<ApiDimensionKey, { label: string; description: 
 
 /**
  * APPROVED 27 → 7 map (Stage 2). Every category maps to exactly one dimension;
- * all 307 checks are covered. The phantom "Emotional Sequence & Page Flow"
+ * all 308 checks are covered. The phantom "Emotional Sequence & Page Flow"
  * category from the old REVENUE_DIMENSIONS is intentionally absent.
  * Page & Content Gaps → message_clarity (per reviewer amendment).
  */
 export const CATEGORY_TO_DIMENSION: Record<string, ApiDimensionKey> = {
-  // conversion_architecture (51)
+  // conversion_architecture (52)
   "Hero Section": "conversion_architecture",
   "CTA & Conversion": "conversion_architecture",
   "Checkout & Purchase Friction": "conversion_architecture",
@@ -670,14 +670,23 @@ const RUBRIC_PASS2_INSTRUCTIONS = `---
 
 A prior scoring pass already decided PASS/FAIL/SKIP for every check. The user message lists the check ids that FAILED. Do NOT re-evaluate or re-score anything. For EACH failed id, write its Conversion Intelligence narrative, and also write the opening Intelligence Brief, the hero copy rewrite, and the growth blueprint.
 
+EVIDENCE DISCIPLINE — every finding must be drop-in specific to THIS page. A peak finding names the exact on-page element, quotes the evidence, states the cost with direction, gives a plain-English fix, and (when the fix is copy) a ready-to-paste rewrite:
+- evidence: QUOTE the exact element from the STRUCTURED OBSERVABLE SUMMARY verbatim — the actual Headline / Subheadline / CTA text, a testimonial line, a pricing tier — OR cite the literal signal marker for an absence (e.g. "TECHNICAL: viewport ABSENT", "COPY FRAMING: we×14 vs you×1", "SAAS/OFFER SIGNALS: free-trial ABSENT"). Never paraphrase and never invent copy that is not in the summary. If you cannot ground the finding in a quoted string or a named ABSENT marker, do not write it.
+- title: name the exact element AND the problem ("Hero headline names the feature, not the outcome"), never a bare category label.
+- exitTrigger: the specific visitor thought that triggers exit, tied to the quoted element.
+- conversionCost: the revenue mechanism lost AND its direction/magnitude ("cold visitors who can't self-qualify bounce before the CTA — the dominant cold-traffic drop-off").
+- implementation: a concrete fix that references this page's actual content — what to change and to what. When the fix IS copy, make implementation a ready-to-paste replacement string, not advice about writing one.
+- effort: "Today" (under ~4h), "This Week" (1–3 days), "This Month" (more).
+The Intelligence Brief and copy_rewrites must be built from the summary's REAL headline/sub/CTA — rewrite the actual copy, never a generic placeholder.
+
 OUTPUT — return ONE JSON object only. No markdown, no preamble, start with {:
 {
-  "summary": "<Intelligence Brief — 3 sentences: the opening verdict, the structural problem, the stakes>",
-  "copy_rewrites": { "headline": "<max 12 words>", "subheadline": "<max 20 words>", "cta": "<max 5 words>" },
-  "growth_blueprint": [ { "priority": <int>, "action": "<max 15 words>", "effort": "low"|"medium"|"high", "impact": "low"|"medium"|"high", "timeframe": "Week 1"|"Weeks 2-4"|"Month 2" } ],
+  "summary": "<Intelligence Brief — 3 sentences: opening verdict citing the actual page, the structural problem, the stakes>",
+  "copy_rewrites": { "headline": "<max 12 words — a real drop-in replacement for THIS page's headline>", "subheadline": "<max 20 words>", "cta": "<max 5 words>" },
+  "growth_blueprint": [ { "priority": <int>, "action": "<max 15 words, specific to this page>", "effort": "low"|"medium"|"high", "impact": "low"|"medium"|"high", "timeframe": "Week 1"|"Weeks 2-4"|"Month 2" } ],
   "results": [
     // one row per FAILED id from the user message:
-    { "id": "<id>", "status": "FAIL", "title": "<short>", "exitTrigger": "<what makes the visitor leave>", "evidence": "<quoted on-page evidence>", "conversionCost": "<the revenue mechanism lost>", "implementation": "<the fix>", "effort": "Today"|"This Week"|"This Month" }
+    { "id": "<id>", "status": "FAIL", "title": "<exact element + problem>", "exitTrigger": "<visitor thought that triggers exit>", "evidence": "<verbatim quote or literal ABSENT marker from the summary>", "conversionCost": "<mechanism lost + direction>", "implementation": "<drop-in fix; ready-to-paste copy when the fix is copy>", "effort": "Today"|"This Week"|"This Month" }
   ]
 }
 Write a row only for the failed ids provided. Do not add rows for other ids. Do not change any status.`;

@@ -16,9 +16,9 @@ const FULL_FINDING = `{
   "dimension": "Conversion Architecture" | "Trust Signals" | "Message Clarity" | "Traffic Readiness" | "Technical Foundation" | "Objection Handling" | "Offer Clarity",
   "impact": "high" | "medium" | "low",
   "impact_estimate": "string (max 10 words, e.g. 8-15% conversion lift)",
-  "explanation": "string (max 30 words, grounded in specific page content)",
-  "fix_steps": ["string (max 20 words)", "string (max 20 words)", "string (max 20 words)"],
-  "rewritten_copy": "string (max 25 words, ready to paste)",
+  "explanation": "string (max 30 words; QUOTE the exact element — headline/CTA/testimonial/price — or cite the literal signal confirmed absent; never paraphrase or invent)",
+  "fix_steps": ["string (max 20 words, specific to this page's content)", "string (max 20 words)", "string (max 20 words)"],
+  "rewritten_copy": "string (max 25 words; a ready-to-paste replacement for the exact element named in explanation — drop-in copy only, no labels or advice)",
   "confidence": "high" | "medium" | "low",
   "fix_effort": "hours" | "days" | "weeks",
   "priority": number
@@ -118,7 +118,12 @@ export function buildApiPrompt(params: {
     `- Return ONLY valid JSON. No markdown. No preamble. Start with {.`,
     `- Every string field has a hard word limit — stay under it.`,
     `- Never fabricate. Only reference content literally visible in the HTML.`,
-    `- Every finding must name a specific visible element (quote actual copy or confirm absence).`,
+    ``,
+    `EVIDENCE DISCIPLINE (a peak finding is drop-in specific — it names the exact element, quotes the evidence, gives an impact estimate, a plain-English fix, and a ready-to-paste rewrite):`,
+    `- Every finding must QUOTE the exact on-page element it is about — the actual headline, CTA text, testimonial, or price — verbatim, OR cite the specific element confirmed absent. No paraphrase, no generic restatement of the check.`,
+    `- explanation cites that quoted evidence. impact_estimate gives a concrete directional number (e.g. "8-15% conversion lift"), not "varies".`,
+    `- fix_steps reference this page's real content and say what to change and to what. rewritten_copy is a literal drop-in replacement for the cited element — paste-ready, no "Option A", no commentary.`,
+    `- If a finding cannot be grounded in a quoted string or a named absence, drop it rather than pad.`,
   ];
 
   if (wantsFindings) {

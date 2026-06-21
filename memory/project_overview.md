@@ -5,7 +5,7 @@ metadata:
   type: project
 ---
 
-weavn.app is a SaaS website conversion intelligence platform. Core product: paste a URL, get 307 automated checks, ranked findings, rewritten copy, dimension scores — results in ~90 seconds.
+weavn.app is a SaaS website conversion intelligence platform. Core product: paste a URL, get 308 automated checks, ranked findings, rewritten copy, dimension scores — results in ~90 seconds.
 
 **Why:** Building a public REST API on top of the existing scanning engine to unlock agency and developer plans.
 

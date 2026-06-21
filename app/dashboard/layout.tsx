@@ -2,10 +2,10 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Weavn — Conversion Audit for Founders & Teams",
-  description: "Paste any URL. Get a 0–100 conversion score, 307 ranked findings, AI-rewritten copy, and corpus benchmarks against real sites in your vertical — in about 90 seconds. No account required.",
+  description: "Paste any URL. Get a 0–100 conversion score, 308 ranked findings, AI-rewritten copy, and corpus benchmarks against real sites in your vertical — in about 90 seconds. No account required.",
   openGraph: {
     title: "Weavn — Find out exactly what's stopping visitors from converting.",
-    description: "307 checks. Ranked fixes. AI-rewritten copy. Benchmarked against real sites in your vertical. Free to start.",
+    description: "308 checks. Ranked fixes. AI-rewritten copy. Benchmarked against real sites in your vertical. Free to start.",
     url: "https://weavn.app/dashboard",
     siteName: "Weavn",
     type: "website",
@@ -21,7 +21,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Weavn — Conversion Audit for Founders",
-    description: "307 checks. Ranked fixes. AI-rewritten copy. Free to start — no account required.",
+    description: "308 checks. Ranked fixes. AI-rewritten copy. Free to start — no account required.",
     images: ["https://weavn.app/og/dashboard.png"],
     creator: "@weavnapp",
   },

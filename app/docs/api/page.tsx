@@ -517,7 +517,7 @@ strengths.forEach(s => {
     "subheadline": "See exactly which elements are losing you revenue.",
     "cta_primary": "Run free audit",
     "cta_secondary": "See sample report",
-    "value_prop": "307 checks. Benchmarks. Rewritten copy."
+    "value_prop": "308 checks. Benchmarks. Rewritten copy."
   }
 }`,
     node: `const { copy_rewrites } = await res.json()

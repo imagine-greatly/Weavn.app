@@ -594,7 +594,7 @@ function WhatWeCheckSection() {
         </div>
 
         <p style={{ ...MONO,fontSize:11,color:'rgba(111, 155, 198, 0.6)',margin:'0 0 12px',textShadow:'0 0 8px rgba(111, 155, 198, 0.2)' }}>
-          307 checks across 27 categories — every scan, every plan.
+          308 checks across 27 categories — every scan, every plan.
         </p>
         <p style={{ ...SANS,fontSize:13,color:INK_MUT,margin:0,lineHeight:1.65,maxWidth:640 }}>
           Each category runs multiple checks — a single visit to &apos;social proof&apos; might fire 12 individual checks across testimonial placement, specificity, recency, and logo strip visibility.
@@ -617,7 +617,7 @@ const PIPELINE_STEPS = [
   {
     num: '02',
     title: 'We render your live page and run every check',
-    desc: 'Your actual live page loads in a real browser — the same DOM your visitors see — and 307 checks fire across 27 categories, evaluating every conversion surface from headline to mobile layout.',
+    desc: 'Your actual live page loads in a real browser — the same DOM your visitors see — and 308 checks fire across 27 categories, evaluating every conversion surface from headline to mobile layout.',
     tag: 'citation required or the finding is dropped',
     bright: true,
   },
@@ -866,14 +866,14 @@ const LIGHTHOUSE_ITEMS = [
 
 const WEAVN_ROWS = [
   { title: 'Renders your live DOM in headless Chrome', sub: 'not text you paste — your actual live page' },
-  { title: '307 structured checks across 27 categories', sub: 'parallel execution · citation required per finding' },
+  { title: '308 structured checks across 27 categories', sub: 'parallel execution · citation required per finding' },
   { title: 'Ranked by estimated conversion impact', sub: 'P1 matters most · work down the list' },
   { title: 'Evidence cited per finding', sub: 'what was present, absent, or misplaced on your page' },
   { title: 'Plain-English fix included', sub: 'no interpretation required · hand it to anyone' },
   { title: 'AI-rewritten copy for every critical finding', sub: 'drop-in headline, CTA, value prop · ready to paste' },
 ]
 
-const STAT_CHIPS = ['307 CHECKS', '~90s MEDIAN', '4,812 SITES SCANNED']
+const STAT_CHIPS = ['308 CHECKS', '~90s MEDIAN', '4,812 SITES SCANNED']
 
 function ComparisonSection() {
   return (
@@ -964,7 +964,7 @@ const OBJECTIONS: ObjectionCard[] = [
   },
   {
     q: "How is the score calculated? What does 37 actually mean?",
-    a: "Every check returns a pass, fail, or partial result. Fails are weighted by their estimated conversion impact — a broken value proposition costs more points than a missing favicon. The final score is a weighted composite across all 307 checks. A 37 means the page is failing a majority of its high-weight checks — the conversion fundamentals, not edge cases — which is why it's flagged critical. Scores below 70 are flagged as critical — the data shows a strong correlation between sub-70 scores and above-average bounce rates in the corpus.",
+    a: "Every check returns a pass, fail, or partial result. Fails are weighted by their estimated conversion impact — a broken value proposition costs more points than a missing favicon. The final score is a weighted composite across all 308 checks. A 37 means the page is failing a majority of its high-weight checks — the conversion fundamentals, not edge cases — which is why it's flagged critical. Scores below 70 are flagged as critical — the data shows a strong correlation between sub-70 scores and above-average bounce rates in the corpus.",
     tag: 'weighted by conversion impact · not a vanity metric · corpus-calibrated',
   },
   {
@@ -1266,7 +1266,7 @@ function MultiSiteSection() {
           {/* Report footer */}
           <div style={{ display:'flex', justifyContent:'space-between', padding:'16px 32px', borderTop:'1px solid rgba(111,155,198,0.08)', background:'rgba(111,155,198,0.02)', flexWrap:'wrap', gap:8 }}>
             <p style={{ ...MONO, fontSize:9, color:INK_MUT, margin:0 }}>ACME AGENCY · Conversion Intelligence</p>
-            <p style={{ ...MONO, fontSize:9, color:INK_MUT, margin:0 }}>307 checks · verified findings</p>
+            <p style={{ ...MONO, fontSize:9, color:INK_MUT, margin:0 }}>308 checks · verified findings</p>
             <p style={{ ...MONO, fontSize:9, color:INK_MUT, margin:0 }}>CONFIDENTIAL · acme-client.com</p>
           </div>
         </div>
@@ -1443,7 +1443,7 @@ function PricingSection() {
           Start free. Upgrade when you need more.
         </h2>
         <p style={{ ...SANS,fontSize:15,color:INK_SEC,margin:'0 0 48px' }}>
-          Every plan runs the same 307-check engine. No feature-gated diagnostics.
+          Every plan runs the same 308-check engine. No feature-gated diagnostics.
         </p>
         <div className="d-price-grid" style={{ display:'grid',gridTemplateColumns:'repeat(5,1fr)',gap:16 }}>
           {PRICING_CARDS.map((card, i) => (

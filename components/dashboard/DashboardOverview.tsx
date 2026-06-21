@@ -99,7 +99,7 @@ export default function DashboardOverview({ sites, scans, url, onUrlChange, onSc
         {error ? <p style={{ fontFamily: MONO, fontSize: 12, color: C.crit, margin: '0 0 10px' }}>{error}</p> : null}
         <ScansRemaining />
         <p style={{ fontFamily: MONO, fontSize: 10.5, color: C.inkMuted, letterSpacing: '0.04em', margin: '10px 0 0', lineHeight: 1.6 }}>
-          THE ENGINE · 307 checks · 27 categories · benchmarked against real sites in your vertical
+          THE ENGINE · 308 checks · 27 categories · benchmarked against real sites in your vertical
         </p>
       </div>
 
@@ -183,7 +183,7 @@ function SampleSection() {
           verdictLabel="NEEDS WORK · 19TH PERCENTILE"
           summary="Scores below 81% of sites in its vertical. 14 conversion issues found, ranked by revenue impact."
           findings={SAMPLE_FINDINGS}
-          footer="27 categories scored · 307 checks run · full report exportable →"
+          footer="27 categories scored · 308 checks run · full report exportable →"
           sample
         />
         <p style={{ fontFamily: MONO, fontSize: 11, color: C.inkMuted, margin: '12px 0 0', letterSpacing: '0.02em' }}>

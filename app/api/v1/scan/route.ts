@@ -331,7 +331,7 @@ async function executeScan(p: ScanParams): Promise<ScanResult> {
 
   if (RUBRIC_SCORING_ENABLED) {
     // ── RUBRIC SCORING PATH (gated by WEAVN_RUBRIC_SCORING; experimental) ──────
-    // Score + dimensions + findings are COMPUTED from the 308-check rubric results,
+    // Score + dimensions + findings are COMPUTED from the 310-check rubric results,
     // never self-reported by the model. The scoped catalog is injected as a cached
     // system block BEFORE the HTML (carried in the user message).
     const scopedChecks = scopeChecksForScan(site_type);

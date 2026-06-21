@@ -33,6 +33,7 @@ import {
   buildPass1SystemBlocks,
   buildPass2SystemBlocks,
   parseStatusRows,
+  reconcileStatuses,
   parsePass2Narrative,
   mergeStatusAndNarrative,
   computeApiDimensions,
@@ -364,6 +365,10 @@ async function executeScan(p: ScanParams): Promise<ScanResult> {
     const PASS1_MAX_TOKENS = 8000;
     const PASS1_RETRY_MAX_TOKENS = 12000;
     const PASS2_MAX_TOKENS = 16000;
+    // N-pass status reconciliation (majority vote per check) — fixes status-pass nondeterminism
+    // at temp 0. DEFAULT 1 = exactly current behavior (one pass, reconcile is a passthrough), so
+    // production is unchanged until WEAVN_STATUS_PASSES is set >1. Double-gated behind the rubric flag.
+    const STATUS_PASSES = Math.max(1, Math.min(7, Number(process.env.WEAVN_STATUS_PASSES ?? 1) || 1));
 
     // Per-pass instrumentation (server logs only; not user-facing). Proves the token
     // drop vs the raw-HTML baseline AND that the cached catalog is reused across passes.
@@ -408,9 +413,28 @@ async function executeScan(p: ScanParams): Promise<ScanResult> {
       throw new Error(`Scan failed: ${msg}`);
     }
 
-    const statusRows = pass1.rows;
+    // ── N-PASS RECONCILE (default N=1 → passthrough; statusRows === pass1.rows) ──
+    // When STATUS_PASSES > 1, run extra status passes and reconcile per-check by majority vote
+    // so a single flaky vote can't move the headline. Scoring math below consumes statusRows
+    // unchanged — reconciliation only produces the status set, it does not alter scoring.
+    let statusRows: RubricResultRow[] = pass1.rows;
+    if (STATUS_PASSES > 1) {
+      const runsForReconcile: Array<{ id: string; status: string }[]> = [pass1.rows.map(r => ({ id: r.id, status: r.status }))];
+      for (let i = 1; i < STATUS_PASSES; i++) {
+        try {
+          const extra = parseStatusRows(await runStatusPass(PASS1_MAX_TOKENS), scopedChecks);
+          runsForReconcile.push(extra.rows.map(r => ({ id: r.id, status: r.status })));
+        } catch (e) {
+          console.error(`[API v1] RUBRIC status pass ${i + 1}/${STATUS_PASSES} failed (non-fatal): ${e instanceof Error ? e.message : e}`);
+        }
+      }
+      const reconciled = reconcileStatuses(runsForReconcile);
+      statusRows = reconciled.rows.map(r => ({ id: r.id, status: r.status }));
+      console.log(`[API v1] RUBRIC reconcile | domain=${domain} passes=${runsForReconcile.length} flaky=${reconciled.flakyCount}/${scopedChecks.length} meanAgreement=${(reconciled.meanAgreement * 100).toFixed(1)}%`);
+    }
+
     const counts = rubricCounts(statusRows, scopedChecks);
-    const backfillSkips = pass1.backfilledIds.length;       // never-returned → truncation-backfill
+    const backfillSkips = pass1.backfilledIds.length;       // never-returned → truncation-backfill (first pass)
     const genuineSkips = counts.skips - backfillSkips;       // model-emitted SKIP (legitimately out of denominator)
     const skipRate = scopedChecks.length > 0 ? counts.skips / scopedChecks.length : 1;
     const backfillSkipShare = counts.skips > 0 ? backfillSkips / counts.skips : 0;

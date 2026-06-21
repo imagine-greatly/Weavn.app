@@ -759,6 +759,82 @@ export function parseStatusRows(rawText: string, scopedChecks: DiagnosticCheck[]
   return { rows, pageType, truncated, returnedIds, backfilledIds };
 }
 
+// ── Status reconciliation (N-pass majority vote — fixes status-pass nondeterminism) ──
+//
+// The status pass is not deterministic at temperature 0: byte-identical input can return a
+// different PASS/FAIL on a minority of borderline checks, swinging the headline a few points
+// (Stripe 26 vs 34 on identical input). Running the status pass N times and reconciling each
+// check by MAJORITY VOTE makes a single flaky vote unable to move the score.
+//
+// Vocabulary = the rubric's REAL statuses: PASS / FAIL / SKIP (there is no PARTIAL here).
+// Per check id, across the N runs:
+//   1. SKIP is "couldn't tell", NOT a vote. If ANY run returned a real status (PASS/FAIL),
+//      reconcile among the real votes only; reconcile to SKIP only when EVERY run SKIPped.
+//   2. MAJORITY of the real votes wins — a lone FAIL can't sink a mostly-PASS check, and a
+//      lone PASS can't rescue a mostly-FAIL check.
+//   3. TIE (equal PASS and FAIL) → PASS, the LESS-PUNITIVE of the tied options: never
+//      penalize a check on a coin-flip.
+// Carries a per-check agreement metric so flaky checks are visible. N=1 is an exact
+// passthrough (one vote per check), so default behavior is unchanged.
+
+export interface StatusVote { id: string; status: string }
+export interface ReconciledCheck {
+  id: string;
+  status: "PASS" | "FAIL" | "SKIP";
+  votes: { PASS: number; FAIL: number; SKIP: number };
+  agree: number;   // how many of n runs returned the reconciled status
+  n: number;
+  flaky: boolean;  // true when the runs did not unanimously agree
+}
+export interface ReconcileResult {
+  rows: Array<{ id: string; status: "PASS" | "FAIL" | "SKIP" }>;
+  perCheck: ReconciledCheck[];
+  flakyCount: number;     // checks where the runs disagreed
+  meanAgreement: number;  // mean agree/n across checks (1 = perfectly stable)
+}
+
+export function reconcileStatuses(runs: StatusVote[][]): ReconcileResult {
+  const n = runs.length;
+
+  // Stable id order: first run, then any id seen only in later runs.
+  const order: string[] = [];
+  const seen = new Set<string>();
+  for (const run of runs) for (const r of run) {
+    const id = String(r.id ?? "").trim();
+    if (id && !seen.has(id)) { seen.add(id); order.push(id); }
+  }
+
+  // Per-id vote tally across runs. A run missing an id counts that id as SKIP ("didn't tell").
+  const tally = new Map<string, { PASS: number; FAIL: number; SKIP: number }>();
+  for (const id of order) tally.set(id, { PASS: 0, FAIL: 0, SKIP: 0 });
+  for (const run of runs) {
+    const present = new Set<string>();
+    for (const r of run) {
+      const id = String(r.id ?? "").trim();
+      const t = id ? tally.get(id) : undefined;
+      if (!t) continue;
+      t[normStatus(r.status)]++;
+      present.add(id);
+    }
+    for (const id of order) if (!present.has(id)) tally.get(id)!.SKIP++;
+  }
+
+  const perCheck: ReconciledCheck[] = order.map((id) => {
+    const v = tally.get(id)!;
+    let status: "PASS" | "FAIL" | "SKIP";
+    if (v.PASS === 0 && v.FAIL === 0) status = "SKIP";        // every run SKIPped
+    else if (v.PASS > v.FAIL) status = "PASS";
+    else if (v.FAIL > v.PASS) status = "FAIL";
+    else status = "PASS";                                     // tie → less-punitive
+    const agree = v[status];
+    return { id, status, votes: v, agree, n, flaky: agree < n };
+  });
+
+  const flakyCount = perCheck.filter((c) => c.flaky).length;
+  const meanAgreement = perCheck.length ? perCheck.reduce((s, c) => s + c.agree / c.n, 0) / perCheck.length : 1;
+  return { rows: perCheck.map((c) => ({ id: c.id, status: c.status })), perCheck, flakyCount, meanAgreement };
+}
+
 export interface ParsedNarrativePass {
   /** Narrative fields keyed by FAIL id (title/exitTrigger/evidence/conversionCost/implementation/effort). */
   narratives: Map<string, Partial<RubricResultRow>>;

@@ -124,7 +124,9 @@ export function buildApiPrompt(params: {
     `- explanation cites that quoted evidence. impact_estimate gives a concrete directional number (e.g. "8-15% conversion lift"), not "varies".`,
     `- fix_steps reference this page's real content and say what to change and to what. rewritten_copy is a literal drop-in replacement for the cited element — paste-ready, no "Option A", no commentary.`,
     `- If a finding cannot be grounded in a quoted string or a named absence, drop it rather than pad.`,
-    `- NO INVENTED NUMBERS OR OFFERS: rewritten_copy and fix_steps must not add a statistic (%, $, count, "Nx", "N-day", "N+ customers") or an offer (free trial, money-back guarantee, discount, "no credit card required", "cancel anytime") that is not literally present in the HTML. Restate only numbers/offers the page actually shows; when none exists, use qualitative language ("trusted by leading teams", not "10,000+ teams"). impact_estimate is your analytical projection and may stay numeric — the page-facing rewritten_copy may not invent page claims.`,
+    `- NO INVENTED NUMBERS OR OFFERS: rewritten_copy and fix_steps must never add a statistic (%, $, count, "Nx", "N-day", "N+ customers", a star rating like "4.8/5") or an offer (free trial, money-back guarantee, discount, "no credit card required", "cancel anytime") that is not literally in the HTML. Restate only numbers/offers the page actually shows.`,
+    `- For fix_steps specifically: when a fix involves a number or offer NOT on the page, use CONDITIONAL framing ("IF the page offers a guarantee, surface it near the CTA") or QUALITATIVE framing ("add risk-reversal microcopy below the CTA") — never assert it as drop-in text. This binds "e.g." and "Example:" snippets too: an invented stat inside an example ("e.g. '4.8/5 from 1,200+ reviews'") is still fabrication. Use qualitative language when the page has no such value ("trusted by leading teams", not "10,000+ teams").`,
+    `- impact_estimate is your analytical projection and may stay numeric — the page-facing rewritten_copy and fix_steps may not invent page claims.`,
   ];
 
   if (wantsFindings) {

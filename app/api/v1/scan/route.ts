@@ -481,7 +481,7 @@ async function executeScan(p: ScanParams): Promise<ScanResult> {
     // rows the response never returns. This selects which ids to NARRATE only; pass-1
     // status/score/skip and the denominator are already final and untouched.
     const failIds = statusRows.filter((r) => String(r.status).toUpperCase() === "FAIL").map((r) => r.id);
-    const narrateIds = topFailIdsByPriority(statusRows, scopedChecks, findingLimit);
+    const narrateIds = topFailIdsByPriority(statusRows, scopedChecks, findingLimit, site_type);
     let narratives: Map<string, Partial<RubricResultRow>> = new Map();
     let pass2Summary = "";
     let pass2Copy: ApiCopyRewrites = {};

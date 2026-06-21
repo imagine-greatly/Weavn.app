@@ -24,6 +24,7 @@ import {
   curateFindings,
   enrichedFindingToLeak,
   sortByRevenuePriority,
+  isOwnedChannelGrowthCategory,
   type RubricResultRow,
   type EnrichedRubricFinding,
 } from "@/lib/processFindings";
@@ -517,15 +518,47 @@ export function buildApiFindings(
  * response never returns. This is a pure read over pass-1 status rows + the catalog;
  * it does NOT touch status/scoring/skip, so the denominator is unaffected.
  */
+/**
+ * Select which FAIL ids to narrate in pass 2, in headline order. Page-grounded findings lead and are
+ * SPREAD across categories (round-robin) so the headline set reflects the page's distinct failure modes
+ * instead of flooding with the single top category; generic owned-channel growth GAPs (email / referral /
+ * loyalty / retention) are appended only after every page-grounded finding. Deterministic.
+ */
 export function topFailIdsByPriority(
   rows: RubricResultRow[],
   scopedChecks: DiagnosticCheck[],
-  limit: number
+  limit: number,
+  siteType?: string
 ): string[] {
   const byId = new Map(scopedChecks.map((c) => [c.id, c]));
   const enriched = enrichRubricFailures(rows, byId);
-  const sorted = sortByRevenuePriority(enriched);
-  return sorted.slice(0, limit).map((f) => f.id);
+  const sorted = sortByRevenuePriority(enriched, siteType);
+  const pageGrounded = sorted.filter((f) => !isOwnedChannelGrowthCategory(f.category));
+  const ownedChannel = sorted.filter((f) => isOwnedChannelGrowthCategory(f.category));
+  const ordered = [...diversifyByCategory(pageGrounded), ...ownedChannel];
+  return ordered.slice(0, limit).map((f) => f.id);
+}
+
+/** Interleave findings across categories (round-robin) while preserving category-priority order and
+ *  within-category priority — so the headline set spans the page's distinct failure modes. Deterministic. */
+function diversifyByCategory(findings: EnrichedRubricFinding[]): EnrichedRubricFinding[] {
+  const byCat = new Map<string, EnrichedRubricFinding[]>();
+  const catOrder: string[] = [];
+  for (const f of findings) {
+    let bucket = byCat.get(f.category);
+    if (!bucket) { bucket = []; byCat.set(f.category, bucket); catOrder.push(f.category); }
+    bucket.push(f);
+  }
+  const out: EnrichedRubricFinding[] = [];
+  let pulled = true;
+  while (pulled) {
+    pulled = false;
+    for (const cat of catOrder) {
+      const next = byCat.get(cat)!.shift();
+      if (next) { out.push(next); pulled = true; }
+    }
+  }
+  return out;
 }
 
 export interface ApiStrength {
@@ -677,6 +710,7 @@ EVIDENCE DISCIPLINE — every finding must be drop-in specific to THIS page. A p
 - conversionCost: the revenue mechanism lost AND its direction/magnitude ("cold visitors who can't self-qualify bounce before the CTA — the dominant cold-traffic drop-off").
 - implementation: a concrete fix that references this page's actual content — what to change and to what. When the fix IS copy, make implementation a ready-to-paste replacement string, not advice about writing one.
 - effort: "Today" (under ~4h), "This Week" (1–3 days), "This Month" (more).
+NO INVENTED NUMBERS OR OFFERS — copy_rewrites and implementation must NOT introduce any quantitative claim (a %, a $ figure, a count, "Nx", "N-day", "N+ businesses/customers") or any offer (free trial, money-back guarantee, discount, "no credit card required", "cancel anytime") that is not already present in the STRUCTURED OBSERVABLE SUMMARY. You may RESTATE a number or offer the summary actually shows (name the block it came from); you may never invent one. When the page carries no such number or offer, use qualitative language only — "trusted by leading businesses" not "3M+ businesses"; "start in minutes" not "30-day free trial"; "results-backed" not "increases conversion 40%". A rewrite or fix that adds an unverifiable statistic or a non-existent offer is a defect, not a peak finding.
 The Intelligence Brief and copy_rewrites must be built from the summary's REAL headline/sub/CTA — rewrite the actual copy, never a generic placeholder.
 
 OUTPUT — return ONE JSON object only. No markdown, no preamble, start with {:

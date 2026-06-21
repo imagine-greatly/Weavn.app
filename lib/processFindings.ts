@@ -117,11 +117,47 @@ function withinCategoryRank(f: EnrichedRubricFinding): number {
   return 10 + SEVERITY_ORDER[s];
 }
 
-/** Sort failures by revenue category order, then Critical FLAW → Critical GAP → High FLAW → High GAP, etc. */
+/**
+ * Generic owned-channel growth categories — email capture / newsletter / referral / loyalty and
+ * return-visitor retention. These are real GAPs but are NOT grounded in what is actually on the page;
+ * they apply to almost any site, so they read as interchangeable boilerplate when they lead. They are
+ * demoted to a tier BELOW every page-grounded finding (hero / trust / CTA / social proof / offer /
+ * messaging / conversion-path) so they can never dominate the headline set.
+ */
+const OWNED_CHANNEL_GROWTH_CATEGORIES: ReadonlySet<string> = new Set([
+  "Email & Retention",
+  "Return Visitor & Retention",
+]);
+/** Site types with no conversion / owned-channel goal — owned-channel growth GAPs are pushed to the bottom. */
+const NON_CONVERSION_SITE_TYPES: ReadonlySet<string> = new Set(["content", "unknown"]);
+
+/** True when a category is generic owned-channel growth (email/referral/loyalty/retention). The headline
+ *  narrated set keeps these out until every page-grounded finding is placed. */
+export function isOwnedChannelGrowthCategory(category: string): boolean {
+  return OWNED_CHANNEL_GROWTH_CATEGORIES.has(category);
+}
+
+/** Ranking tier (lower leads): 0 = page-grounded, 1 = generic owned-channel growth, 2 = same on a non-conversion site. */
+function findingTier(category: string, siteType?: string): number {
+  if (!OWNED_CHANNEL_GROWTH_CATEGORIES.has(category)) return 0;
+  if (siteType && NON_CONVERSION_SITE_TYPES.has(siteType.toLowerCase())) return 2;
+  return 1;
+}
+
+/**
+ * Sort failures so PAGE-GROUNDED findings always lead, then by revenue category order, then
+ * Critical FLAW → Critical GAP → High FLAW → High GAP, etc. Generic owned-channel growth GAPs
+ * (email/referral/loyalty/retention) are tiered below every page-grounded finding — and to the
+ * bottom on non-conversion site types — so they never dominate the headline set.
+ */
 export function sortByRevenuePriority(
-  findings: DiagnosticFinding[]
+  findings: DiagnosticFinding[],
+  siteType?: string
 ): EnrichedRubricFinding[] {
   return [...findings].sort((a, b) => {
+    const ta = findingTier(a.category, siteType);
+    const tb = findingTier(b.category, siteType);
+    if (ta !== tb) return ta - tb;
     const ra = categoryPriorityRank(a.category);
     const rb = categoryPriorityRank(b.category);
     if (ra !== rb) return ra - rb;

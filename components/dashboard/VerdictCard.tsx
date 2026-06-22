@@ -1,7 +1,7 @@
 'use client'
 
 import VerdictRing from '@/components/ui/VerdictRing'
-import { scoreColor, estimatePercentile, ordinal } from '@/lib/verdict'
+import { scoreColor, estimatePercentile, ordinal, COVERAGE_TOLERANCE } from '@/lib/verdict'
 
 /**
  * Self-contained verdict card (founder steel surface) — near-monochrome.
@@ -58,7 +58,7 @@ export interface VerdictCardProps {
 
 export default function VerdictCard({ domain, score, verdictLabel, summary, findings, footer, href, sample }: VerdictCardProps) {
   const color = scoreColor(score) // the verdict band color — carried by ring + label only
-  const label = verdictLabel ?? `${score}% coverage · ${ordinal(estimatePercentile(score))} percentile`
+  const label = verdictLabel ?? `${score}% ±${COVERAGE_TOLERANCE} coverage · ${ordinal(estimatePercentile(score))} percentile`
 
   return (
     <div

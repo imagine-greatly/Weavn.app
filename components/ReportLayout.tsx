@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { ReportPayload } from "@/lib/reportSchema";
-import { estimatePercentile, ordinal, scoreToVerdict, scoreBand, opportunityFraming } from "@/lib/verdict";
+import { estimatePercentile, ordinal, scoreToVerdict, scoreBand, opportunityFraming, COVERAGE_TOLERANCE } from "@/lib/verdict";
 import VerdictRing from "@/components/ui/VerdictRing";
 import { stripMarkdownForDisplay } from "@/lib/stripMarkdownForDisplay";
 import {
@@ -345,7 +345,7 @@ export default function ReportLayout({ domain, payload, scanDate, branding, fill
             {view.opportunity.blurb}
           </p>
           <p style={{ fontFamily: MONO, fontSize: 12, color: t.inkSecondary, margin: "12px 0 0", letterSpacing: "0.04em" }}>
-            {view.score}% captured · {view.percentile} percentile{view.siteLabel ? ` in ${view.siteLabel}` : ""}
+            {view.score}% ±{COVERAGE_TOLERANCE} captured · {view.percentile} percentile{view.siteLabel ? ` in ${view.siteLabel}` : ""}
           </p>
           {view.pageTypeNote ? (
             <p style={{ fontFamily: MONO, fontSize: 11, fontStyle: "italic", color: t.inkMuted, margin: "10px auto 0", maxWidth: 480, letterSpacing: "0.02em", lineHeight: 1.5 }}>

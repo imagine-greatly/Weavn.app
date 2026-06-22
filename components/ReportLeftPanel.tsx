@@ -3,13 +3,11 @@
 import { useEffect, useState } from "react";
 import ConversionScoreGauge from "@/components/ConversionScoreGauge";
 import { RUBRIC_TOTAL_CHECKS } from "@/lib/displayScoreColor";
+import { scoreColor, scoreBand } from "@/lib/verdict";
 
-function dimensionBarColor(score: number): string {
-  const s = Math.max(0, Math.min(100, Number(score) || 0));
-  if (s <= 44) return "#E8635F";
-  if (s <= 64) return "#EFB23E";
-  return "#00C48C";
-}
+// Dimension bars band through the CANONICAL color helper (scoreBand 50/70, locked tokens) —
+// matches the report health strip; no local thresholds here.
+const dimensionBarColor = scoreColor;
 
 /**
  * Report left panel — mission control: site identity, score ring, issue counts, categories, tabs.
@@ -212,10 +210,12 @@ export default function ReportLeftPanel({
   scoreProfile,
   dimensionBenchmarks,
 }: ReportLeftPanelProps) {
+  // Pulse glow keyed to the canonical band (green→Cyan / amber→Amber / red→Red); no local thresholds.
+  const pulseBand = scoreBand(score);
   const scorePulseKeyframe =
-    score >= 65
+    pulseBand === 'green'
       ? 'scorePulseCyan'
-      : score >= 40
+      : pulseBand === 'amber'
         ? 'scorePulseAmber'
         : 'scorePulseRed';
   return (

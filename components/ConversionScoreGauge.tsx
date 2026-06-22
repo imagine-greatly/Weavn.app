@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { displayScoreColor, displayScoreRgb } from "@/lib/displayScoreColor";
+import { scoreColor, scoreRgb, opportunityFraming, COVERAGE_TOLERANCE } from "@/lib/verdict";
 
 const RING_RADIUS = 80;
 const CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
@@ -46,6 +46,8 @@ function cubicBezierY(x: number, x1 = 0.34, y1 = 1.1, x2 = 0.64, y2 = 1): number
   return samples[100].y;
 }
 
+// Color, glow-rgb and label all resolve through the CANONICAL band in lib/verdict
+// (scoreBand 50/70, locked tokens, opportunity labels) — no local thresholds/palette here.
 function getConversionScoreBand(score: number): {
   color: string;
   label: string;
@@ -53,12 +55,11 @@ function getConversionScoreBand(score: number): {
 } {
   const n = Number(score);
   const s = Number.isFinite(n) ? Math.max(0, Math.min(100, n)) : 0;
-  const color = displayScoreColor(s);
-  const rgb = displayScoreRgb(s);
-  if (s <= 39) return { color, label: "HIGH UPSIDE", rgb };
-  if (s <= 59) return { color, label: "BUILDING", rgb };
-  if (s <= 79) return { color, label: "SOLID FOUNDATION", rgb };
-  return { color, label: "HIGHLY OPTIMIZED", rgb };
+  return {
+    color: scoreColor(s),
+    rgb: scoreRgb(s),
+    label: opportunityFraming(s).label.toUpperCase(),
+  };
 }
 
 export default function ConversionScoreGauge({
@@ -272,7 +273,7 @@ export default function ConversionScoreGauge({
                     letterSpacing: "0.08em",
                   }}
                 >
-                  % COVERAGE
+                  % COVERAGE ±{COVERAGE_TOLERANCE}
                 </div>
               </div>
             </div>

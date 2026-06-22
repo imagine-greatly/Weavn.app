@@ -41,9 +41,21 @@ export const BAND_VAR: Record<VerdictBand, string> = {
   green: "var(--json-string)",
 };
 
+/** Band → RGB triple of BAND_HEX, for glows/shadows that must track the canonical color. */
+export const BAND_RGB: Record<VerdictBand, string> = {
+  red: "232,99,95", // #E8635F
+  amber: "239,178,62", // #EFB23E
+  green: "0,196,140", // #00C48C
+};
+
 /** Score → verdict color (fixed hex). Drop-in for the old verdictColor/bandColor. */
 export function scoreColor(score: number): string {
   return BAND_HEX[scoreBand(score)];
+}
+
+/** Score → RGB triple for the canonical band (glow/shadow). Drop-in for the old displayScoreRgb. */
+export function scoreRgb(score: number): string {
+  return BAND_RGB[scoreBand(score)];
 }
 
 /**
@@ -71,6 +83,21 @@ export function opportunityFraming(score: number): { band: VerdictBand; label: s
   if (band === "amber")
     return { band, label: "Solid foundation", blurb: "A solid base with clear gaps — the ranked findings below are your upside." };
   return { band, label: "High upside", blurb: "Most best-practices aren't captured yet — the ranked findings below are the path to close the gap." };
+}
+
+/**
+ * Honest-precision tolerance for the HEADLINE coverage number. Per-pass model variance is ~±3
+ * (reconciled), so the headline figure is published as a small range "{score}% ±{tol}" rather than a
+ * false-precision point. SINGLE tunable source. The BAND/color still key off the CENTRAL score
+ * (scoreBand thresholds, unchanged) — this is presentation on the headline number only and does NOT
+ * touch scoring or banding math.
+ */
+export const COVERAGE_TOLERANCE = 3;
+
+/** Headline coverage as an honest tight band, e.g. "61% ±3". Central score still drives band/color. */
+export function formatCoverageBand(score: number, tol: number = COVERAGE_TOLERANCE): string {
+  const s = Math.max(0, Math.min(100, Math.round(Number(score) || 0)));
+  return `${s}% ±${tol}`;
 }
 
 /**

@@ -12,6 +12,7 @@ import { scrapeSite, extractInternalLinks, selectSubpageUrls, scrapeSubpageSafe 
 import { detectSiteType } from "@/lib/siteType";
 import { runAnalysis, buildPageSummary } from "@/lib/analyze";
 import DIAGNOSTIC_CHECKS from "@/lib/diagnosticRubric";
+import { scoreColor, opportunityFraming, COVERAGE_TOLERANCE } from "@/lib/verdict";
 import { saveReport } from "@/lib/supabase";
 import { generateAndPersistAllFindingBriefs } from "@/lib/findingExtendedAnalysis";
 import { checkDashboardScanAllowed } from "@/lib/usageTracking";
@@ -597,8 +598,8 @@ export async function POST(req: NextRequest) {
           </td>
           <td style="vertical-align:top;text-align:right;">
             <p style="color:rgba(136,153,170,0.6);font-size:10px;letter-spacing:0.15em;margin:0 0 4px;">BEST-PRACTICE COVERAGE</p>
-            <p style="color:${(payload.healthScore ?? 0) >= 70 ? '#00C48C' : (payload.healthScore ?? 0) >= 50 ? '#EFB23E' : '#E8635F'};font-size:32px;font-weight:700;margin:0;line-height:1;">${payload.healthScore ?? 0}<span style="font-size:14px;color:rgba(136,153,170,0.5);">% captured</span></p>
-            <p style="color:${(payload.healthScore ?? 0) >= 70 ? '#00C48C' : (payload.healthScore ?? 0) >= 50 ? '#EFB23E' : '#E8635F'};font-size:9px;letter-spacing:0.15em;margin:4px 0 0;">${(payload.healthScore ?? 0) >= 70 ? 'HIGHLY OPTIMIZED' : (payload.healthScore ?? 0) >= 50 ? 'SOLID FOUNDATION' : 'HIGH UPSIDE'}</p>
+            <p style="color:${scoreColor(payload.healthScore ?? 0)};font-size:32px;font-weight:700;margin:0;line-height:1;">${payload.healthScore ?? 0}<span style="font-size:14px;color:rgba(136,153,170,0.5);">% ±${COVERAGE_TOLERANCE} captured</span></p>
+            <p style="color:${scoreColor(payload.healthScore ?? 0)};font-size:9px;letter-spacing:0.15em;margin:4px 0 0;">${opportunityFraming(payload.healthScore ?? 0).label.toUpperCase()}</p>
           </td>
         </tr>
       </table>

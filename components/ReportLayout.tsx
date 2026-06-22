@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { ReportPayload } from "@/lib/reportSchema";
 import { estimatePercentile, ordinal, scoreToVerdict, scoreBand, opportunityFraming, COVERAGE_TOLERANCE } from "@/lib/verdict";
+import { RUBRIC_TOTAL_CHECKS } from "@/lib/displayScoreColor";
 import VerdictRing from "@/components/ui/VerdictRing";
 import { stripMarkdownForDisplay } from "@/lib/stripMarkdownForDisplay";
 import {
@@ -376,7 +377,7 @@ export default function ReportLayout({ domain, payload, scanDate, branding, fill
           })}
         </div>
         <p style={{ fontFamily: MONO, fontSize: 9.5, letterSpacing: "0.14em", textTransform: "uppercase", color: t.inkMuted, margin: "12px 0 0" }}>
-          27 categories · 308 checks
+          27 categories · {RUBRIC_TOTAL_CHECKS} checks
         </p>
       </section>
     ),
@@ -559,7 +560,7 @@ export default function ReportLayout({ domain, payload, scanDate, branding, fill
               {[branding.footerText || branding.agencyName, "Confidential"].filter(Boolean).join(" · ")}
             </span>
             <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase", color: t.inkMuted }}>
-              308 checks · verified findings
+              {RUBRIC_TOTAL_CHECKS} checks · verified findings
             </span>
           </footer>
         ) : null}

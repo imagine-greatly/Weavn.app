@@ -3,10 +3,10 @@ import Link from 'next/link'
 
 export const metadata: Metadata = {
   title: "Weavn — Website Intelligence, Delivered as an API",
-  description: "308 checks. One endpoint. Your site scored in 90 seconds. Paste any URL for a full conversion audit — ranked findings, AI-rewritten copy, and vertical benchmarks. Free to start.",
+  description: "311 checks. One endpoint. Your site scored in 90 seconds. Paste any URL for a full conversion audit — ranked findings, AI-rewritten copy, and vertical benchmarks. Free to start.",
   openGraph: {
     title: "Weavn — Website Intelligence, Delivered as an API",
-    description: "308 checks. One endpoint. 90 seconds. Conversion audit API for founders and developers.",
+    description: "311 checks. One endpoint. 90 seconds. Conversion audit API for founders and developers.",
     url: "https://weavn.app",
     siteName: "Weavn",
     type: "website",
@@ -22,7 +22,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Weavn — Website Intelligence, Delivered as an API",
-    description: "308 checks. One endpoint. 90 seconds. Free to start.",
+    description: "311 checks. One endpoint. 90 seconds. Free to start.",
     images: ["https://weavn.app/og/home.png"],
     creator: "@weavnapp",
   },
@@ -162,7 +162,7 @@ function HeroForkSection() {
           Website intelligence, delivered as an API.
         </h1>
         <h2 className="font-display font-bold text-center text-[clamp(18px,3.0vw,36px)] leading-[1.1] tracking-[-0.035em] text-text-primary/70 m-0">
-          308 checks. One endpoint. 90 seconds.
+          311 checks. One endpoint. 90 seconds.
         </h2>
 
         {/* Subhead */}
@@ -287,8 +287,8 @@ const OBJECTION_PAIR = [
   },
   {
     q: 'Why not just paste my URL into ChatGPT?',
-    a: 'A language model sees text you paste, not your live page. Weavn renders the full DOM in headless Chrome, reads above-the-fold layout, runs 308 structured checks, and returns ranked JSON — not a chat response.',
-    data: '308 checks · rendered DOM · not a chat response',
+    a: 'A language model sees text you paste, not your live page. Weavn renders the full DOM in headless Chrome, reads above-the-fold layout, runs 311 structured checks, and returns ranked JSON — not a chat response.',
+    data: '311 checks · rendered DOM · not a chat response',
   },
 ]
 
@@ -319,7 +319,7 @@ function FooterSection() {
             Weavn<span className="text-[#6F9BC6]"></span>
           </Link>
           <p className="font-body text-sm text-text-secondary mt-3 max-w-xs leading-relaxed">
-            The conversion audit API. 308 checks, ranked fixes, AI-rewritten copy. One endpoint.
+            The conversion audit API. 311 checks, ranked fixes, AI-rewritten copy. One endpoint.
           </p>
         </div>
         <div>

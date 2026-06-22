@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Weavn — Conversion Audit for Founders & Teams",
-  description: "Paste any URL. Get a 0–100 conversion score, 311 ranked findings, AI-rewritten copy, and corpus benchmarks against real sites in your vertical — in about 90 seconds. No account required.",
+  description: "Paste any URL. Get a 0–100 conversion score, 311-check conversion analysis, AI-rewritten copy, and corpus benchmarks against real sites in your vertical — in about 90 seconds. No account required.",
   openGraph: {
     title: "Weavn — Find out exactly what's stopping visitors from converting.",
     description: "311 checks. Ranked fixes. AI-rewritten copy. Benchmarked against real sites in your vertical. Free to start.",

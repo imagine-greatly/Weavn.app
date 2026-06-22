@@ -60,9 +60,9 @@ const ALL_NAV_ITEMS: NavItem[] = NAV.flatMap((g) => g.items.map((i) => ({ ...i, 
 // score → band → color). Thresholds: red < 50, amber 50–69, green ≥ 70. Colors come
 // from BAND_HEX, never a hardcoded 4th definition.
 const SCORE_RANGES = [
-  { range: "0–49", label: "CRITICAL", color: BAND_HEX.red, text: "Multiple high-impact findings. Conversion architecture is actively suppressing revenue; resolve in priority order." },
-  { range: "50–69", label: "AT RISK", color: BAND_HEX.amber, text: "Measurable revenue suppression detected. Address the top findings first, then rescan." },
-  { range: "70–100", label: "OPTIMIZED", color: BAND_HEX.green, text: "Minor suppression only. Resolve residual findings after higher-priority work elsewhere." },
+  { range: "0–49", label: "HIGH UPSIDE", color: BAND_HEX.red, text: "Multiple high-impact findings. Conversion architecture is actively suppressing revenue; resolve in priority order." },
+  { range: "50–69", label: "SOLID FOUNDATION", color: BAND_HEX.amber, text: "Measurable revenue suppression detected. Address the top findings first, then rescan." },
+  { range: "70–100", label: "HIGHLY OPTIMIZED", color: BAND_HEX.green, text: "Minor suppression only. Resolve residual findings after higher-priority work elsewhere." },
 ];
 
 const PRINCIPLES = [

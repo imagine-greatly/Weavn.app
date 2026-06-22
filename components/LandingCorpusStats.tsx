@@ -42,7 +42,7 @@ export default function LandingCorpusStats() {
 
   const statDisplay = [
     { raw: count4800, label: 'SITES SCANNED',      color: '#E6E9EE',              format: (n: number) => n >= 4800 ? '4,800+' : n.toLocaleString() },
-    { raw: count58,   label: 'AVERAGE SCORE',       color: 'rgba(111,155,198,0.32)', format: (n: number) => String(n) },
+    { raw: count58,   label: 'AVERAGE COVERAGE',    color: 'rgba(111,155,198,0.32)', format: (n: number) => String(n) },
     { raw: count23,   label: 'AVG FINDINGS',        color: 'rgba(111,155,198,0.32)', format: (n: number) => String(n) },
     { raw: count76,   label: 'NO ABOVE-FOLD PROOF', color: '#E8635F',              format: (n: number) => n + '%' },
   ]

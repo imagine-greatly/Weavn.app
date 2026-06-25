@@ -698,6 +698,49 @@ OUTPUT — return ONE JSON object only. No markdown, no preamble, start with {:
 }
 Keep every row minimal — do NOT write titles, evidence, fixes, or any prose beyond the one-clause skipReason. Covering every id is the only goal.`;
 
+/**
+ * PASS 1 (TERSE) — gated by WEAVN_TERSE_STATUS. SAME judgment as RUBRIC_PASS1_INSTRUCTIONS
+ * (the PASS/FAIL/SKIP bullets + RESOLVED-SIGNAL / OBSERVABILITY / COVERAGE rules are copied
+ * BYTE-FOR-BYTE so accuracy guidance is unchanged) — only the EMITTED format is compacted.
+ *
+ * Cost lever: verbose pass-1 emits a full JSON object per check ({"id":…,"status":…}) for all
+ * ~240–310 ids, plus a skipReason clause on every SKIP — ~5–6K output tokens/pass, multiplied by
+ * N status passes (the dominant scan cost). Terse emits ONE short string per id ("<id> P|F|S"),
+ * drops the SKIP clause entirely (skipReason is diagnostic only — never enters the denominator),
+ * and keeps a SHORT clause ONLY on FAIL (the consequential verdict + pass-2's evidence hook).
+ *
+ * Judgment is NOT cut: the model is told to reason internally over every check exactly as before
+ * and emit only the verdict — fewer OUTPUT tokens, not less thinking. Forcing a brief reason on
+ * FAIL (where the verdict costs the site) preserves accuracy exactly where it matters.
+ */
+const RUBRIC_PASS1_TERSE_INSTRUCTIONS = `You are SCORING a website against the fixed diagnostic catalog above. This is a status-only scoring pass — no narratives.
+
+For EVERY check id in the catalog, return exactly one status:
+- PASS — the page satisfies the check (its fail condition is NOT met).
+- FAIL — the fail condition IS met, with concrete evidence you can see in the static HTML provided.
+- SKIP — the check's signal is NOT observable in static HTML. You have no browser, no rendering, no runtime, no network trace: you CANNOT measure page-load speed, Core Web Vitals, real performance, animation, or anything that only exists when the page runs — this INCLUDES returning-visitor personalization, "recently viewed" items, and content that only renders for returning or logged-in users. SKIP those EVERY time (do not FAIL). The following also SKIP every time, never FAIL: (1) checks that say "based on visual analysis" — color contrast, element/tap-target sizing, visual alignment — these need pixel rendering you do not have; (2) checkout-FLOW internals (order summary near payment, multi-step progress indicator, promo-code field on the checkout page, abandoned-cart recovery) when you are looking at a homepage or landing page rather than the live checkout. When the signal is genuinely unobservable, SKIP — never guess FAIL.
+
+RESOLVED-SIGNAL RULE (CRITICAL): when the summary explicitly reports a signal as "ABSENT" — e.g. a PAGES & SITE LINKS, SERVICE-BUSINESS SIGNALS, RETENTION SIGNALS, COPY FRAMING, PAGE STRUCTURE, or TECHNICAL / HTML SIGNALS line — that absence IS an observation. Answer PASS or FAIL from it; do NOT SKIP a check whose signal the summary has already resolved (present or ABSENT). Whether a dedicated page or site feature exists is resolved by these markers (derived from the nav + footer link set), so the "is there a reviews / FAQ / about / blog / pricing / community / press / team page" checks are answerable, not SKIP.
+
+OBSERVABILITY RULE (CRITICAL): only FAIL on concrete, quotable on-page evidence (an explicit ABSENT marker counts as evidence of absence). Never penalize what static HTML cannot reveal.
+COVERAGE RULE (CRITICAL): return exactly ONE row for EVERY catalog id — no more, no fewer — in catalog order. Do not invent ids. Do not omit ids.
+
+THINK, THEN COMPACT (CRITICAL): reason through each check internally — weigh the evidence exactly as carefully as if you were writing the analysis out — but do NOT emit that reasoning. Emit ONLY the compact verdict tokens below. Fewer OUTPUT tokens must NOT mean less analysis: do the full judgment in your head, write down only the result.
+
+OUTPUT — return ONE JSON object only. No markdown, no preamble, start with {:
+{
+  "page_type": "homepage" | "pricing" | "product" | "about" | "landing",
+  "results": [
+    // ONE compact string per catalog id, in catalog order. Format: "<id> <STATUS>"
+    //   PASS → "HERO_001 P"   (id, one space, the letter P — nothing else)
+    //   SKIP → "HERO_001 S"   (id, one space, the letter S — NO reason, nothing else)
+    //   FAIL → "HERO_001 F <short clause naming the concrete on-page evidence>"
+    // Use the single letters P / F / S. Only FAIL carries a trailing clause, and it MUST be
+    // short (a handful of words) — the quotable evidence hook, never a sentence of prose.
+  ]
+}
+Emit one string for EVERY id — covering every id is the only goal. Keep PASS and SKIP to "<id> P" / "<id> S" with NO extra text; spend output ONLY on the short FAIL clause.`;
+
 /** PASS 2 — narrative for the already-determined FAIL ids + the brief/copy/blueprint. */
 const RUBRIC_PASS2_INSTRUCTIONS = `---
 
@@ -738,6 +781,19 @@ export function buildPass1SystemBlocks(scopedChecks: DiagnosticCheck[]): RubricS
   return [
     { type: "text", text: serializeChecksForPrompt(scopedChecks), cache_control: { type: "ephemeral" } },
     { type: "text", text: RUBRIC_PASS1_INSTRUCTIONS },
+  ];
+}
+
+/**
+ * Pass-1 TERSE system blocks (gated by WEAVN_TERSE_STATUS). IDENTICAL first block to
+ * buildPass1SystemBlocks — the cached, cache_control'd catalog — so the catalog prefix
+ * stays byte-for-byte shared with pass 2 and the verbose path; only the SECOND (uncached)
+ * instructions block swaps to the compact-output variant. Prompt caching is unaffected.
+ */
+export function buildPass1TerseSystemBlocks(scopedChecks: DiagnosticCheck[]): RubricSystemBlock[] {
+  return [
+    { type: "text", text: serializeChecksForPrompt(scopedChecks), cache_control: { type: "ephemeral" } },
+    { type: "text", text: RUBRIC_PASS1_TERSE_INSTRUCTIONS },
   ];
 }
 
@@ -797,6 +853,115 @@ export function parseStatusRows(rawText: string, scopedChecks: DiagnosticCheck[]
     byId.set(row.id.toUpperCase(), row);
     returnedIds.add(row.id);
   }
+
+  const backfilledIds: string[] = [];
+  const rows: RubricResultRow[] = scopedChecks.map((c) => {
+    const found = byId.get(c.id) ?? byId.get(c.id.toUpperCase());
+    if (found) return found;
+    backfilledIds.push(c.id);
+    return { id: c.id, status: "SKIP", skipReason: PASS1_BACKFILL_REASON };
+  });
+
+  return { rows, pageType, truncated, returnedIds, backfilledIds };
+}
+
+// ── Terse status parsing (WEAVN_TERSE_STATUS) ────────────────────────────────
+//
+// Mirrors parseStatusRows but consumes the COMPACT format: results is an array of
+// strings "<id> <STATUS>[ <reason>]" instead of one JSON object per check. Produces the
+// EXACT SAME ParsedStatusPass shape (rows backfilled to one-per-scoped-id, returnedIds,
+// backfilledIds), so every downstream consumer — scoring, dimensions, guards, reconcile —
+// is byte-for-byte unaffected. Status is all that scoring reads; the FAIL clause is carried
+// on the row as `evidence` (pass-2's grounding hook, and a fallback if pass-2 truncates).
+
+/** Map a terse status token (P/F/S or the full word) to the canonical status. */
+function terseStatus(raw: string): "PASS" | "FAIL" | "SKIP" {
+  const u = String(raw ?? "").trim().toUpperCase();
+  if (u === "P" || u === "PASS") return "PASS";
+  if (u === "F" || u === "FAIL") return "FAIL";
+  if (u === "S" || u === "SKIP") return "SKIP";
+  const c = u.charAt(0);
+  if (c === "P") return "PASS";
+  if (c === "F") return "FAIL";
+  return "SKIP"; // "couldn't tell" is the safe default for anything unrecognized
+}
+
+/** Parse one terse row "<id> <STATUS>[ <reason>]" → {id, status, reason?}; null if no id+status. */
+function parseTerseRow(s: string): { id: string; status: "PASS" | "FAIL" | "SKIP"; reason?: string } | null {
+  const str = String(s ?? "").trim();
+  if (!str) return null;
+  const m = str.match(/^(\S+)\s+(\S+)\s*([\s\S]*)$/);
+  if (!m) return null;
+  const id = m[1].replace(/^["']+|["']+$/g, "").trim();
+  if (!id) return null;
+  const status = terseStatus(m[2]);
+  const reason = m[3]?.trim() || undefined;
+  return { id, status, reason };
+}
+
+/** Recover terse result strings from possibly-truncated text (the array element strings only). */
+function salvageTerseRows(text: string): string[] {
+  const out: string[] = [];
+  const re = /"((?:[^"\\]|\\.)*)"/g;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(text)) !== null) {
+    let s = m[1];
+    // shape of a result row: "<ID> <P|F|S|word>" — excludes the bare "page_type" value
+    if (!/^[A-Za-z][A-Za-z0-9_]*\s+(P|F|S|PASS|FAIL|SKIP)\b/i.test(s)) continue;
+    try { s = JSON.parse(`"${m[1]}"`) as string; } catch { /* keep raw on unescape failure */ }
+    out.push(s);
+  }
+  return out;
+}
+
+/**
+ * Parse the TERSE status pass. Same guarantees and return shape as parseStatusRows:
+ * one row per scoped id (missing → SKIP via PASS1_BACKFILL_REASON, tracked in backfilledIds),
+ * tolerant of truncation (salvages the array strings), never throws. FAIL clauses land on
+ * `evidence`. Falls back to object-row parsing if the model ignored the terse contract and
+ * emitted verbose objects — so an off-format response degrades gracefully, never to nothing.
+ */
+export function parseStatusRowsTerse(rawText: string, scopedChecks: DiagnosticCheck[]): ParsedStatusPass {
+  const cleaned = (rawText ?? "").replace(/^```(?:json)?\s*\n?/m, "").replace(/\n?```\s*$/m, "").trim();
+  let obj: Record<string, unknown> | null = null;
+  let truncated = false;
+  try {
+    const parsed = JSON.parse(cleaned);
+    obj = parsed && typeof parsed === "object" ? (parsed as Record<string, unknown>) : null;
+  } catch {
+    truncated = true;
+  }
+
+  let rawStrings: string[] = [];
+  let objectRows: Record<string, unknown>[] = []; // fallback: model emitted verbose objects
+  let pageType = "homepage";
+  if (obj) {
+    const resultsField = Array.isArray(obj.results) ? obj.results : Array.isArray(obj) ? obj : [];
+    for (const r of resultsField as unknown[]) {
+      if (typeof r === "string") rawStrings.push(r);
+      else if (r && typeof r === "object") objectRows.push(r as Record<string, unknown>);
+    }
+    pageType = typeof obj.page_type === "string" ? obj.page_type : "homepage";
+  } else {
+    rawStrings = salvageTerseRows(cleaned);
+    pageType = salvageString(cleaned, "page_type") || "homepage";
+  }
+
+  const byId = new Map<string, RubricResultRow>();
+  const returnedIds = new Set<string>();
+  const register = (row: RubricResultRow) => {
+    if (!row.id) return;
+    byId.set(row.id, row);
+    byId.set(row.id.toUpperCase(), row);
+    returnedIds.add(row.id);
+  };
+  for (const s of rawStrings) {
+    const r = parseTerseRow(s);
+    if (!r) continue;
+    register({ id: r.id, status: r.status, ...(r.status === "FAIL" && r.reason ? { evidence: r.reason } : {}) });
+  }
+  // Off-contract fallback: a model that emitted {id,status} objects still parses correctly.
+  for (const raw of objectRows) register(normalizeRow(raw));
 
   const backfilledIds: string[] = [];
   const rows: RubricResultRow[] = scopedChecks.map((c) => {

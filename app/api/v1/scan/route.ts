@@ -31,8 +31,10 @@ import type { ApiKeyRecord } from "@/lib/apiAuth";
 import {
   scopeChecksForScan,
   buildPass1SystemBlocks,
+  buildPass1TerseSystemBlocks,
   buildPass2SystemBlocks,
   parseStatusRows,
+  parseStatusRowsTerse,
   reconcileStatuses,
   parsePass2Narrative,
   mergeStatusAndNarrative,
@@ -56,6 +58,12 @@ import { computeGrowthScoreFromRubric, type RubricResultRow } from "@/lib/proces
 // unset or not exactly "true", /api/v1/scan runs the original self-reported scoring
 // path byte-for-byte. Flipping it true is a deliberate, calibrate-then-enable step.
 const RUBRIC_SCORING_ENABLED = process.env.WEAVN_RUBRIC_SCORING === "true";
+
+// Gated terse status-pass output. DEFAULTS OFF — when WEAVN_TERSE_STATUS is unset or not
+// exactly "true", pass 1 emits the verbose one-JSON-object-per-check format byte-for-byte as
+// today. When "true" (and only under the rubric path), pass 1 emits the compact "<id> P|F|S"
+// format, cutting the dominant N×pass-1 OUTPUT-token cost without changing the scored statuses.
+const TERSE_STATUS_ENABLED = process.env.WEAVN_TERSE_STATUS === "true";
 
 export const maxDuration = 300;
 
@@ -337,6 +345,13 @@ async function executeScan(p: ScanParams): Promise<ScanResult> {
     const scopedChecks = scopeChecksForScan(site_type);
     const scopedById = new Map(scopedChecks.map((c) => [c.id, c]));
 
+    // Verbose (default) vs terse pass-1, selected ONCE behind the flag. The catalog system
+    // block is byte-identical either way, so prompt caching (incl. cross-pass reuse) is intact;
+    // only the instructions block + the parser differ. parseStatus returns the same shape, so
+    // all scoring/guard/reconcile math below consumes it unchanged.
+    const buildStatusBlocks = TERSE_STATUS_ENABLED ? buildPass1TerseSystemBlocks : buildPass1SystemBlocks;
+    const parseStatus = TERSE_STATUS_ENABLED ? parseStatusRowsTerse : parseStatusRows;
+
     // ── PAGE CONTENT = structured summary (NOT raw HTML) ─────────────────────────
     // Both passes consume buildPageSummary()'s dense (~3–5KB) observable summary in
     // place of the 40–70KB raw HTML — a 5–10× input-token cut. The summary carries
@@ -381,7 +396,7 @@ async function executeScan(p: ScanParams): Promise<ScanResult> {
         model: "claude-sonnet-4-6",
         max_tokens: maxTokens,
         temperature: 0,
-        system: buildPass1SystemBlocks(scopedChecks),
+        system: buildStatusBlocks(scopedChecks),
         messages: [{ role: "user", content: summaryContent }],
       });
       const message = await Promise.race([streamRun.finalMessage(), analyzeDeadline]);
@@ -400,10 +415,10 @@ async function executeScan(p: ScanParams): Promise<ScanResult> {
     // ── PASS 1 — status only (scoring). Retry once if anything failed to return. ──
     let pass1: ReturnType<typeof parseStatusRows>;
     try {
-      pass1 = parseStatusRows(await runStatusPass(PASS1_MAX_TOKENS), scopedChecks);
+      pass1 = parseStatus(await runStatusPass(PASS1_MAX_TOKENS), scopedChecks);
       if (pass1.truncated || pass1.backfilledIds.length > 0) {
         console.log(`[API v1] RUBRIC pass1 incomplete | domain=${domain} truncated=${pass1.truncated} backfilled=${pass1.backfilledIds.length}/${scopedChecks.length} — retrying with ${PASS1_RETRY_MAX_TOKENS} tokens`);
-        pass1 = parseStatusRows(await runStatusPass(PASS1_RETRY_MAX_TOKENS), scopedChecks);
+        pass1 = parseStatus(await runStatusPass(PASS1_RETRY_MAX_TOKENS), scopedChecks);
       }
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Analysis failed.";
@@ -422,7 +437,7 @@ async function executeScan(p: ScanParams): Promise<ScanResult> {
       const runsForReconcile: Array<{ id: string; status: string }[]> = [pass1.rows.map(r => ({ id: r.id, status: r.status }))];
       for (let i = 1; i < STATUS_PASSES; i++) {
         try {
-          const extra = parseStatusRows(await runStatusPass(PASS1_MAX_TOKENS), scopedChecks);
+          const extra = parseStatus(await runStatusPass(PASS1_MAX_TOKENS), scopedChecks);
           runsForReconcile.push(extra.rows.map(r => ({ id: r.id, status: r.status })));
         } catch (e) {
           console.error(`[API v1] RUBRIC status pass ${i + 1}/${STATUS_PASSES} failed (non-fatal): ${e instanceof Error ? e.message : e}`);
@@ -490,7 +505,16 @@ async function executeScan(p: ScanParams): Promise<ScanResult> {
     let pass2ReturnedFails = 0;
     if (narrateIds.length > 0) {
       try {
-        const failLines = narrateIds.map((id) => `${id} | ${scopedById.get(id)?.title ?? ""}`).join("\n");
+        // Terse pass-1 attaches a one-clause evidence hook to each FAIL (carried on the row as
+        // `evidence`); hand it to pass-2 so the narrative is grounded in what pass-1 actually saw.
+        // Verbose pass-1 carries no such hook → byte-identical fail lines as before when flag OFF.
+        const failHooks = TERSE_STATUS_ENABLED
+          ? new Map(pass1.rows.filter((r) => r.evidence).map((r) => [r.id, r.evidence as string]))
+          : null;
+        const failLines = narrateIds.map((id) => {
+          const hook = failHooks?.get(id);
+          return `${id} | ${scopedById.get(id)?.title ?? ""}${hook ? ` | observed: ${hook}` : ""}`;
+        }).join("\n");
         const pass2User = `${summaryContent}\n\n=== FAILED CHECKS (write the narrative for EACH; do not re-evaluate or add others) ===\n${failLines}`;
         const streamRun2 = client.messages.stream({
           model: "claude-sonnet-4-6",

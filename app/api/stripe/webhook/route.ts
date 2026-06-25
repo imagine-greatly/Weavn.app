@@ -1,9 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
-import { planFromPriceId } from '@/lib/pricing';
+import { planFromPriceId, DASHBOARD_PLANS, API_PLANS } from '@/lib/pricing';
 
-export const config = { api: { bodyParser: false } };
+// Node runtime: Stripe signature verification needs Node crypto, and we read the RAW
+// request body below via req.text() (App Router gives the unparsed body — the old Pages
+// Router `config.api.bodyParser=false` was a no-op here and has been removed).
+export const runtime = 'nodejs';
+
+/**
+ * True when `plan` is a known tier for the surface — guards against ever writing a
+ * malformed metadata value into profiles.plan / api_keys.plan.
+ */
+function isKnownTier(plan: unknown, surface: string): plan is string {
+  if (typeof plan !== 'string') return false;
+  return surface === 'api' ? plan in API_PLANS : plan in DASHBOARD_PLANS;
+}
 
 export async function POST(req: NextRequest) {
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
@@ -53,31 +65,55 @@ export async function POST(req: NextRequest) {
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
 
+  // IDEMPOTENT BY CONSTRUCTION: every branch below is a pure set-to-value update
+  // (plan := <tier>), never an increment/append, keyed by a stable id/customer. Stripe may
+  // deliver the same event more than once; re-processing simply re-asserts the same plan, so
+  // state cannot be corrupted by a duplicate. event.id is logged for traceability.
   try {
     switch (event.type) {
       case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session;
         const userId = session.metadata?.user_id;
-        const plan = session.metadata?.plan;
         const surface = session.metadata?.surface ?? 'dashboard';
         const customerId =
           typeof session.customer === 'string' ? session.customer : session.customer?.id ?? null;
 
-        if (!userId || !plan) break;
-
-        if (surface === 'api') {
-          // API track: the plan lives on api_keys, keyed by user_id.
-          const update: Record<string, unknown> = { plan };
-          if (customerId) update.stripe_customer_id = customerId;
-          await supabase.from('api_keys').update(update).eq('user_id', userId);
-          console.log(`[webhook] User ${userId} API plan → ${plan}`);
-        } else {
-          // Dashboard track (default): the plan lives on profiles, keyed by id.
-          const update: Record<string, unknown> = { plan };
-          if (customerId) update.stripe_customer_id = customerId;
-          await supabase.from('profiles').update(update).eq('id', userId);
-          console.log(`[webhook] User ${userId} upgraded to ${plan}`);
+        if (!userId) {
+          console.warn(`[webhook] checkout.session.completed missing metadata.user_id — cannot map to a profile; skipping (event ${event.id})`);
+          break;
         }
+
+        // Resolve the purchased tier. metadata.plan IS the requested tier (it determined the
+        // price at checkout creation); when absent, fall back to mapping the subscription's
+        // active price id → tier. Validate against the catalog so a malformed metadata value
+        // can never be written into the plan column.
+        let plan = session.metadata?.plan;
+        if (!isKnownTier(plan, surface) && session.subscription) {
+          try {
+            const subId =
+              typeof session.subscription === 'string' ? session.subscription : session.subscription.id;
+            const sub = await stripe.subscriptions.retrieve(subId);
+            const mapped = planFromPriceId(sub.items.data[0]?.price.id);
+            if (mapped) plan = mapped;
+          } catch (e) {
+            console.error('[webhook] price-id fallback failed:', e);
+          }
+        }
+        if (!isKnownTier(plan, surface)) {
+          console.warn(`[webhook] checkout.session.completed: could not resolve a valid ${surface} plan for user ${userId} (metadata.plan=${session.metadata?.plan ?? 'none'}); skipping (event ${event.id})`);
+          break;
+        }
+
+        // Dashboard track → profiles keyed by id (the PK). API track → api_keys keyed by
+        // user_id. CRITICAL: profiles is keyed by `id`, NOT `user_id`.
+        const update: Record<string, unknown> = { plan };
+        if (customerId) update.stripe_customer_id = customerId;
+        if (surface === 'api') {
+          await supabase.from('api_keys').update(update).eq('user_id', userId);
+        } else {
+          await supabase.from('profiles').update(update).eq('id', userId);
+        }
+        console.log(`[webhook] ${surface} plan → ${plan} for user ${userId} (event ${event.id})`);
         break;
       }
 
@@ -111,7 +147,7 @@ export async function POST(req: NextRequest) {
         }
 
         console.log(
-          `[webhook] subscription ${subscription.status} → ${newPlan} for customer ${customerId} (${apiRow ? 'api' : 'dashboard'})`
+          `[webhook] subscription ${subscription.status} → ${newPlan} for customer ${customerId} (${apiRow ? 'api' : 'dashboard'}) (event ${event.id})`
         );
         break;
       }
@@ -128,30 +164,23 @@ export async function POST(req: NextRequest) {
         await supabase.from('profiles').update({ plan: 'free' }).eq('stripe_customer_id', customerId);
         await supabase.from('api_keys').update({ plan: 'free' }).eq('stripe_customer_id', customerId);
 
-        console.log(`[webhook] subscription deleted → free for customer ${customerId}`);
+        console.log(`[webhook] subscription deleted → free for customer ${customerId} (event ${event.id})`);
         break;
       }
 
       case 'invoice.payment_failed': {
+        // DUNNING — do NOT strip the paid plan on a single failed charge. Stripe retries on
+        // its dunning schedule; only when retries are exhausted does the subscription move to
+        // past_due → unpaid/canceled (customer.subscription.updated → revert) or get deleted
+        // (customer.subscription.deleted → revert). Downgrading here would cut off a customer
+        // whose card merely needs updating. Log for visibility; let the lifecycle events do
+        // the actual downgrade so paid access ends exactly when the subscription does.
         const invoice = event.data.object as Stripe.Invoice;
-        const customerId = invoice.customer as string;
-
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('id')
-          .eq('stripe_customer_id', customerId)
-          .single();
-
-        if (profile?.id) {
-          await supabase
-            .from('profiles')
-            .update({ plan: 'free' })
-            .eq('id', profile.id);
-
-          console.log(
-            `[webhook] Payment failed for customer ${customerId}, downgraded to free`
-          );
-        }
+        const customerId =
+          typeof invoice.customer === 'string' ? invoice.customer : invoice.customer?.id ?? null;
+        console.warn(
+          `[webhook] invoice.payment_failed for customer ${customerId} — dunning in progress, plan left unchanged (event ${event.id})`
+        );
         break;
       }
 

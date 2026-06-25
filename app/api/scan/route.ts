@@ -11,6 +11,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { scrapeSite, extractInternalLinks, selectSubpageUrls, scrapeSubpageSafe } from "@/lib/scraper";
 import { detectSiteType } from "@/lib/siteType";
 import { runAnalysis, buildPageSummary } from "@/lib/analyze";
+import { runRubricScan, wrapSummary } from "@/lib/rubricEngine";
+import Anthropic from "@anthropic-ai/sdk";
+import type { ReportPayload } from "@/lib/reportSchema";
 import DIAGNOSTIC_CHECKS from "@/lib/diagnosticRubric";
 import { scoreColor, opportunityFraming, COVERAGE_TOLERANCE } from "@/lib/verdict";
 import { saveReport } from "@/lib/supabase";
@@ -19,6 +22,13 @@ import { checkDashboardScanAllowed } from "@/lib/usageTracking";
 import { checkRateLimit } from "@/lib/rateLimit";
 import { Resend } from "resend";
 import { DASHBOARD_RATE_LIMIT_PER_MIN } from "@/lib/constants";
+
+// SAME gate as /api/v1/scan: when WEAVN_RUBRIC_SCORING="true", the dashboard runs the unified
+// rubric engine (311-check two-pass coverage score) — identical engine to the API. When unset,
+// BOTH surfaces fall back to the self-reported runAnalysis path, so they never diverge.
+const RUBRIC_SCORING_ENABLED = process.env.WEAVN_RUBRIC_SCORING === "true";
+// Dashboard rubric scans narrate the top findings (interactive/full mode — never score-only).
+const DASHBOARD_FINDING_LIMIT = 12;
 
 
 function mergeCookies(from: NextResponse, to: NextResponse) {
@@ -492,7 +502,25 @@ export async function POST(req: NextRequest) {
   process.stderr.write(`[ROUTE] runAnalysis START | domain=${domain} site_type=${site_type} plan=${userPlan} pagesAnalyzed=${extraction.pagesAnalyzed.length} analyzeTimeoutMs=${analyzeTimeoutMs} elapsed_since_scan_start=${Date.now() - scanStart}ms\n`)
   console.log(`[scan] ANALYZE START | domain=${domain} site_type=${site_type} userPlan=${userPlan} pages=${extraction.pagesAnalyzed.length}`)
   try {
-    payload = await Promise.race([runAnalysis(extraction, site_type, userPlan, undefined), analyzeDeadline]);
+    if (RUBRIC_SCORING_ENABLED) {
+      // Unified engine: the SAME runRubricScan that powers /api/v1/scan. The dashboard now runs the
+      // validated 311-check two-pass coverage score (full mode = findings), not a self-reported call.
+      const rubricClient = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY, timeout: analyzeTimeoutMs });
+      const summaryContent = wrapSummary(buildPageSummary(extraction));
+      const r = await runRubricScan({
+        client: rubricClient,
+        analyzeDeadline,
+        summaryContent,
+        siteType: site_type,
+        findingLimit: DASHBOARD_FINDING_LIMIT,
+        scoreOnly: false,
+        pagesAnalyzed: extraction.pagesAnalyzed,
+        logLabel: domain,
+      });
+      payload = { ...r.reportPayload, scanCostUsd: r.costUsd } as ReportPayload & { scanCostUsd: number };
+    } else {
+      payload = await Promise.race([runAnalysis(extraction, site_type, userPlan, undefined), analyzeDeadline]);
+    }
     process.stderr.write(`[ROUTE] runAnalysis DONE | elapsed=${Date.now() - analyzeStart}ms\n`)
     console.log(`[scan] ANALYZE DONE | domain=${domain} elapsed=${Date.now() - analyzeStart}ms`)
     // Analysis succeeded — cancel the global deadline so saveReport can't be interrupted.
@@ -502,6 +530,15 @@ export async function POST(req: NextRequest) {
     console.error(`[scan] ANALYZE ERROR | domain=${domain} elapsed=${Date.now() - analyzeStart}ms | ${err instanceof Error ? (err.stack ?? err.message) : err}`)
     const message = err instanceof Error ? err.message : "Analysis failed.";
     await markFailed();
+    // Rubric denominator guard: refuse to emit a misleading score on a degraded/near-empty render.
+    if (message.includes("INSUFFICIENT_EVALUATION")) {
+      return withCookies(
+        NextResponse.json(
+          { error: "We couldn't evaluate enough of this page to score it confidently — it likely didn't fully render or is mostly blank. Please retry in a moment.", reason: "insufficient_evaluation" },
+          { status: 422 }
+        )
+      );
+    }
     return withCookies(NextResponse.json({ error: message }, { status: 500 }));
   }
 

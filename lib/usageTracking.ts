@@ -70,7 +70,12 @@ export async function logScanUsage(
     responseTimeMs: number;
     status: "success" | "error";
     statusCode: number;
-    endpoint?: "scan" | "scan_batch";
+    // "scan"/"scan_batch" = full scans (status + findings). "scan_score"/"scan_batch_score"
+    // = score-only scans (status + score + dimension coverages, pass-2 skipped). The label is
+    // the distinct billing/COGS flag for score mode — quota + the Stripe scan-meter unit below
+    // are UNCHANGED (one billable scan either way); only the endpoint tag and the real cost_usd
+    // (materially lower with no pass-2 output) differ. Plain text column, no CHECK — additive.
+    endpoint?: "scan" | "scan_batch" | "scan_score" | "scan_batch_score";
     errorCode?: string | null;
     pageCount?: number;
     costUsd?: number;

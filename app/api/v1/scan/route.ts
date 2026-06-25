@@ -53,6 +53,7 @@ import {
   type ApiBlueprintItem,
 } from "@/lib/rubricScan";
 import { computeGrowthScoreFromRubric, type RubricResultRow } from "@/lib/processFindings";
+import { formatCoverageBand } from "@/lib/verdict";
 
 // Gated experimental rubric scoring. DEFAULTS OFF — when WEAVN_RUBRIC_SCORING is
 // unset or not exactly "true", /api/v1/scan runs the original self-reported scoring
@@ -187,6 +188,11 @@ interface ScanParams {
   effectiveFields: string[];
   findingLimit: number;
   findingDepth: "brief" | "full";
+  // "full" (default) = status + findings, byte-identical to today. "score" = the cheap
+  // volume primitive: status + reconcile + headline score + 7 dimension coverages, with
+  // pass-2 (findings narration) SKIPPED ENTIRELY. The number is unchanged — score mode only
+  // omits the narrative path (see the rubric branch: pass-1 status alone sets the score).
+  scanMode: "full" | "score";
   previousScore: number | null;
   cachedFingerprint: string | null;
   scanStart: number;
@@ -226,9 +232,16 @@ interface ScanResult {
 async function executeScan(p: ScanParams): Promise<ScanResult> {
   const {
     normalizedUrl, domain, apiKeyId, pendingReportId,
-    effectiveFields, findingLimit, findingDepth,
+    effectiveFields, findingLimit, findingDepth, scanMode,
     previousScore, cachedFingerprint, scanStart, supabaseAdmin,
   } = p;
+
+  // Score-only mode: skip pass-2 (findings narration). The headline score + 7 dimension
+  // coverages come from the pass-1 status set alone, so the number is identical either way.
+  const SCORE_ONLY = scanMode === "score";
+  // Distinct usage tag for billing/COGS (quota + Stripe meter unit are unchanged — one
+  // billable scan either way; the real cost_usd is materially lower with no pass-2 output).
+  const usageEndpoint = SCORE_ONLY ? "scan_score" : "scan";
 
   const markFailed = async () => {
     if (!pendingReportId) return;
@@ -258,7 +271,7 @@ async function executeScan(p: ScanParams): Promise<ScanResult> {
   }
   if (scrapeError || !extraction?.rawHtml) {
     await markFailed();
-    void logScanUsage(apiKeyId, { url: normalizedUrl, score: null, responseTimeMs: Date.now() - scanStart, status: "error", statusCode: 500, endpoint: "scan", errorCode: "scrape_failed" });
+    void logScanUsage(apiKeyId, { url: normalizedUrl, score: null, responseTimeMs: Date.now() - scanStart, status: "error", statusCode: 500, endpoint: usageEndpoint, errorCode: "scrape_failed" });
     throw new Error("Could not extract content from this URL");
   }
 
@@ -424,7 +437,7 @@ async function executeScan(p: ScanParams): Promise<ScanResult> {
       const msg = err instanceof Error ? err.message : "Analysis failed.";
       console.error(`[API v1] RUBRIC PASS1 ERROR | domain=${domain} | ${msg}`);
       await markFailed();
-      void logScanUsage(apiKeyId, { url: normalizedUrl, score: null, responseTimeMs: Date.now() - scanStart, status: "error", statusCode: 500, endpoint: "scan", errorCode: "analyze_error" });
+      void logScanUsage(apiKeyId, { url: normalizedUrl, score: null, responseTimeMs: Date.now() - scanStart, status: "error", statusCode: 500, endpoint: usageEndpoint, errorCode: "analyze_error" });
       throw new Error(`Scan failed: ${msg}`);
     }
 
@@ -476,7 +489,7 @@ async function executeScan(p: ScanParams): Promise<ScanResult> {
         : `backfillSkipShare=${(backfillSkipShare * 100).toFixed(1)}% > ${BACKFILL_SKIP_CEILING * 100}% (backfill=${backfillSkips}/${counts.skips} skips, after retry)`;
       console.log(`[API v1] RUBRIC INSUFFICIENT_EVALUATION | domain=${domain} ${reason} scored=${counts.passes + counts.fails}/${scopedChecks.length} — refusing to emit a confident score`);
       await markFailed();
-      void logScanUsage(apiKeyId, { url: normalizedUrl, score: null, responseTimeMs: Date.now() - scanStart, status: "error", statusCode: 422, endpoint: "scan", errorCode: "insufficient_evaluation" });
+      void logScanUsage(apiKeyId, { url: normalizedUrl, score: null, responseTimeMs: Date.now() - scanStart, status: "error", statusCode: 422, endpoint: usageEndpoint, errorCode: "insufficient_evaluation" });
       throw new Error("INSUFFICIENT_EVALUATION");
     }
 
@@ -503,7 +516,12 @@ async function executeScan(p: ScanParams): Promise<ScanResult> {
     let pass2Blueprint: ApiBlueprintItem[] = [];
     let pass2Truncated = false;
     let pass2ReturnedFails = 0;
-    if (narrateIds.length > 0) {
+    // SCORE-ONLY: never invoke pass-2 (the findings narration call). The score and all 7
+    // dimension coverages are already final from the pass-1 status set above; pass-2 only
+    // writes prose for FAIL ids. Skipping it removes the dominant output-token cost.
+    if (SCORE_ONLY) {
+      console.log(`[API v1] RUBRIC score-only | domain=${domain} — pass-2 SKIPPED (score=${dimWeightedScore}, no findings narration)`);
+    } else if (narrateIds.length > 0) {
       try {
         // Terse pass-1 attaches a one-clause evidence hook to each FAIL (carried on the row as
         // `evidence`); hand it to pass-2 so the narrative is grounded in what pass-1 actually saw.
@@ -549,8 +567,10 @@ async function executeScan(p: ScanParams): Promise<ScanResult> {
     console.log(`[API v1] RUBRIC | domain=${domain} score=${dimWeightedScore} legacy_growth=${legacyGrowthScore} fails=${counts.fails} passes=${counts.passes} skips=${counts.skips}(genuine=${genuineSkips},backfill=${backfillSkips}) skipRate=${(skipRate * 100).toFixed(1)}% pass1Returned=${pass1.returnedIds.size}/${scopedChecks.length} pass2Fails=${pass2ReturnedFails}/${failIds.length} pass2Truncated=${pass2Truncated}`);
 
     // ── Merge: pass-1 statuses drive score/dimensions; pass-2 narratives populate findings. ──
+    // Score-only emits NO findings (pass-2 was skipped) — keep the array empty rather than
+    // building narration-less FAIL rows.
     const mergedRows = mergeStatusAndNarrative(statusRows, narratives);
-    const apiFindings = buildApiFindings(mergedRows, scopedChecks, findingLimit);
+    const apiFindings = SCORE_ONLY ? [] : buildApiFindings(mergedRows, scopedChecks, findingLimit);
     const builtLeaks = buildLeaks(mergedRows, scopedChecks);
     const dimRows = computeApiDimensionRows(statusRows);
     const blueprintStruct = buildGrowthBlueprintStruct(pass2Blueprint);
@@ -635,7 +655,7 @@ async function executeScan(p: ScanParams): Promise<ScanResult> {
       const msg = err instanceof Error ? err.message : "Analysis failed.";
       console.error(`[API v1] ANALYZE ERROR | domain=${domain} | ${msg}`);
       await markFailed();
-      void logScanUsage(apiKeyId, { url: normalizedUrl, score: null, responseTimeMs: Date.now() - scanStart, status: "error", statusCode: 500, endpoint: "scan", errorCode: "analyze_error" });
+      void logScanUsage(apiKeyId, { url: normalizedUrl, score: null, responseTimeMs: Date.now() - scanStart, status: "error", statusCode: 500, endpoint: usageEndpoint, errorCode: "analyze_error" });
       throw new Error(`Scan failed: ${msg}`);
     }
 
@@ -664,7 +684,7 @@ async function executeScan(p: ScanParams): Promise<ScanResult> {
     }
     if (!parsed) {
       await markFailed();
-      void logScanUsage(apiKeyId, { url: normalizedUrl, score: null, responseTimeMs: Date.now() - scanStart, status: "error", statusCode: 500, endpoint: "scan", errorCode: "json_parse" });
+      void logScanUsage(apiKeyId, { url: normalizedUrl, score: null, responseTimeMs: Date.now() - scanStart, status: "error", statusCode: 500, endpoint: usageEndpoint, errorCode: "json_parse" });
       throw new Error("Scan failed: invalid JSON response from model.");
     }
 
@@ -726,7 +746,7 @@ async function executeScan(p: ScanParams): Promise<ScanResult> {
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Failed to save report.";
     await markFailed();
-    void logScanUsage(apiKeyId, { url: normalizedUrl, score: null, responseTimeMs: Date.now() - scanStart, status: "error", statusCode: 500, endpoint: "scan", errorCode: "save_failed" });
+    void logScanUsage(apiKeyId, { url: normalizedUrl, score: null, responseTimeMs: Date.now() - scanStart, status: "error", statusCode: 500, endpoint: usageEndpoint, errorCode: "save_failed" });
     throw new Error(`Scan failed: ${msg}`);
   }
 
@@ -743,7 +763,7 @@ async function executeScan(p: ScanParams): Promise<ScanResult> {
   const durationMs = Date.now() - scanStart;
   // Real model cost from token usage; fall back to the synthetic constant only if usage was unavailable.
   const costUsd = realCostUsd ?? calculateScanCost({ pageCount, cached: false });
-  void logScanUsage(apiKeyId, { url: normalizedUrl, score, responseTimeMs: durationMs, status: "success", statusCode: 200, endpoint: "scan", pageCount, costUsd, cached: false });
+  void logScanUsage(apiKeyId, { url: normalizedUrl, score, responseTimeMs: durationMs, status: "success", statusCode: 200, endpoint: usageEndpoint, pageCount, costUsd, cached: false });
   updateBenchmark(site_type, score);
 
   // Benchmark
@@ -870,6 +890,7 @@ export async function POST(req: NextRequest) {
   let fields: string[];
   let findingLimit: number;
   let findingDepth: "brief" | "full";
+  let scanMode: "full" | "score";
   let asyncMode: boolean;
   let callbackUrl: string | null;
   let multiPagePaths: string[] | null = null;
@@ -884,6 +905,11 @@ export async function POST(req: NextRequest) {
     findingLimit = Math.min(20, Math.max(1, typeof body?.finding_limit === "number" ? body.finding_limit : 10));
     const rawDepth = typeof body?.finding_depth === "string" ? body.finding_depth : "full";
     findingDepth = rawDepth === "brief" ? "brief" : "full";
+    // mode: "full" (default, unchanged — status + findings) | "score" (the cheap volume
+    // primitive — status + score + dimension coverages, pass-2 findings narration skipped).
+    // Any value other than "score" (incl. absent) resolves to "full" → byte-identical to today.
+    const rawMode = typeof body?.mode === "string" ? body.mode.toLowerCase() : "full";
+    scanMode = rawMode === "score" ? "score" : "full";
     asyncMode = body?.async === true;
     callbackUrl = typeof body?.webhook_url === "string" ? body.webhook_url : null;
     const rawPagesList = Array.isArray(body?.pages)
@@ -995,13 +1021,13 @@ export async function POST(req: NextRequest) {
     // Branch A: fetch failed → return cache
     if (liveFingerprint === null) {
       console.log(`[API v1] CACHE HIT origin-unavailable | domain=${domain}`);
-      return buildCacheResponse(cr, cacheUrl, apiKey, "HIT", "origin-unavailable", wantsField, effectiveFields, findingLimit);
+      return buildCacheResponse(cr, cacheUrl, apiKey, "HIT", "origin-unavailable", wantsField, effectiveFields, findingLimit, scanMode);
     }
 
     // Branch B: fingerprint matches → return cache
     if (fingerprintsMatch(liveFingerprint, cr.content_fingerprint)) {
       console.log(`[API v1] CACHE HIT content-unchanged | domain=${domain}`);
-      return buildCacheResponse(cr, cacheUrl, apiKey, "HIT", "content-unchanged", wantsField, effectiveFields, findingLimit);
+      return buildCacheResponse(cr, cacheUrl, apiKey, "HIT", "content-unchanged", wantsField, effectiveFields, findingLimit, scanMode);
     }
 
     // Branch C: fingerprint changed → full scan, capture previous score
@@ -1038,7 +1064,7 @@ export async function POST(req: NextRequest) {
       try {
         const result = await executeScan({
           normalizedUrl, domain, apiKeyId: apiKey.id, pendingReportId: scanId,
-          effectiveFields, findingLimit, findingDepth,
+          effectiveFields, findingLimit, findingDepth, scanMode,
           previousScore, cachedFingerprint: cachedFingerprintForScan,
           scanStart, supabaseAdmin,
         });
@@ -1089,7 +1115,7 @@ export async function POST(req: NextRequest) {
   try {
     result = await executeScan({
       normalizedUrl, domain, apiKeyId: apiKey.id, pendingReportId,
-      effectiveFields, findingLimit, findingDepth,
+      effectiveFields, findingLimit, findingDepth, scanMode,
       previousScore, cachedFingerprint: cachedFingerprintForScan,
       scanStart, supabaseAdmin,
     });
@@ -1158,6 +1184,24 @@ export async function POST(req: NextRequest) {
   });
 
   console.log(`[API v1] COMPLETE | domain=${domain} reportId=${result.reportId} elapsed=${result.durationMs}ms`);
+
+  // ── Score-only response ─────────────────────────────────────────────────────
+  // The cheap volume primitive: score + 7 dimension coverages, NO findings array.
+  // Contract naming: scan_id (the report id), score_band via formatCoverageBand (±tol).
+  if (scanMode === "score") {
+    const scoreResponse: Record<string, unknown> = {
+      scan_id: result.reportId,
+      url: cacheUrl,
+      score: result.score,
+      score_band: formatCoverageBand(result.score),
+      dimensions: API_DIMENSION_KEYS.map((k) => ({ name: k, coverage: result.dimensions[k] ?? 0 })),
+      site_type: result.siteType,
+      status: "complete",
+    };
+    return NextResponse.json(scoreResponse, {
+      headers: { ...rlHeaders(apiKey), "X-Cache": "MISS", "X-Cache-Reason": cachedRow ? "content-changed" : "no-cache" },
+    });
+  }
 
   const scanMeta: Record<string, unknown> = {
     complexity: result.complexity,
@@ -1285,8 +1329,29 @@ function buildCacheResponse(
   wantsField: (f: string) => boolean,
   effectiveFields: string[],
   findingLimit: number,
+  scanMode: "full" | "score" = "full",
 ): NextResponse {
   const score = cr.health_score ?? 0;
+
+  // Score-only cache hit → same lean shape as a fresh score scan, reconstructed from the
+  // stored analysis blob. Keeps the contract consistent across hit/miss.
+  if (scanMode === "score") {
+    const ap = cr.analysis as Record<string, unknown>;
+    const storedDims = dimensionsFromStored(ap);
+    const scoreResponse: Record<string, unknown> = {
+      scan_id: cr.id,
+      url: cacheUrl,
+      score,
+      score_band: formatCoverageBand(score),
+      dimensions: API_DIMENSION_KEYS.map((k) => ({ name: k, coverage: storedDims?.[k] ?? 0 })),
+      site_type: String(ap.site_type ?? ""),
+      status: "complete",
+    };
+    return NextResponse.json(scoreResponse, {
+      headers: { ...rlHeaders(apiKey), "X-Cache": cacheStatus, "X-Cache-Reason": cacheReason },
+    });
+  }
+
   const response: Record<string, unknown> = {
     id: cr.id,
     url: cacheUrl,

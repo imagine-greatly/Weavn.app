@@ -23,6 +23,8 @@ import { updateBenchmark } from "@/lib/benchmarks";
 import { calculateScanCost, realScanCostUsd } from "@/lib/scanCost";
 import { checkRateLimit } from "@/lib/rateLimit";
 import { API_RATE_LIMIT_PER_MIN } from "@/lib/constants";
+import { API_DIMENSION_KEYS } from "@/lib/rubricScan";
+import { formatCoverageBand } from "@/lib/verdict";
 import type { ApiKeyRecord } from "@/lib/apiAuth";
 
 export const maxDuration = 300;
@@ -64,12 +66,41 @@ function scoreToVerdict(score: number): string {
   return "Poor";
 }
 
+// Score-only dimensions array [{name, coverage}] from a self-reported dimensions record
+// (normalized to the canonical 7 keys; unknown keys dropped, missing keys → 0).
+function dimsArrayFromRecord(d: Record<string, number> | undefined): Array<{ name: string; coverage: number }> {
+  const keys = API_DIMENSION_KEYS as readonly string[];
+  const byKey: Record<string, number> = {};
+  for (const [k, v] of Object.entries(d ?? {})) if (keys.includes(k) && typeof v === "number") byKey[k] = v;
+  return API_DIMENSION_KEYS.map((k) => ({ name: k, coverage: byKey[k] ?? 0 }));
+}
+
+// Same array, reconstructed from a stored analysis blob's dimensionScores (cache hits).
+// Rows may carry the API key as id or a human label; both are matched, else 0.
+function dimsArrayFromAnalysis(ap: Record<string, unknown>): Array<{ name: string; coverage: number }> {
+  const keys = API_DIMENSION_KEYS as readonly string[];
+  const byKey: Record<string, number> = {};
+  for (const r of Array.isArray(ap.dimensionScores) ? ap.dimensionScores : []) {
+    const row = (r ?? {}) as Record<string, unknown>;
+    if (typeof row.score !== "number") continue;
+    const id = String(row.id ?? "").trim().toLowerCase();
+    const label = String(row.label ?? "").trim().toLowerCase().replace(/\s+/g, "_");
+    const key = keys.includes(id) ? id : keys.includes(label) ? label : null;
+    if (key) byKey[key] = row.score as number;
+  }
+  return API_DIMENSION_KEYS.map((k) => ({ name: k, coverage: byKey[k] ?? 0 }));
+}
+
 interface BatchScanOptions {
   url: string;
   apiKey: ApiKeyRecord;
   effectiveFields: string[];
   findingLimit: number;
   findingDepth: "brief" | "full";
+  // "full" (default) = byte-identical per-item result. "score" = lean score-only item
+  // (scan_id, score, dimension coverages, no findings). Batch is self-reported (single call),
+  // so there is no pass-2 to skip here — score mode is the shape + distinct metering only.
+  scanMode?: "full" | "score";
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   supabaseAdmin: any;
   pendingId?: string;
@@ -77,6 +108,8 @@ interface BatchScanOptions {
 
 async function runOneScan(opts: BatchScanOptions): Promise<Record<string, unknown>> {
   const { url, apiKey, effectiveFields, findingLimit, findingDepth, supabaseAdmin } = opts;
+  const SCORE_ONLY = opts.scanMode === "score";
+  const usageEndpoint = SCORE_ONLY ? "scan_batch_score" : "scan_batch";
   const scanStart = Date.now();
   const normalizedUrl = normalizeUrl(url);
   const domain = getDomain(normalizedUrl);
@@ -106,6 +139,14 @@ async function runOneScan(opts: BatchScanOptions): Promise<Record<string, unknow
     if (live === null || fingerprintsMatch(live, cr.content_fingerprint)) {
       // Return cached
       const score = cr.health_score ?? 0;
+      if (SCORE_ONLY) {
+        const ap = (cr.analysis ?? {}) as Record<string, unknown>;
+        return {
+          scan_id: cr.id, url: normalizedUrl, score, score_band: formatCoverageBand(score),
+          dimensions: dimsArrayFromAnalysis(ap), site_type: String(ap.site_type ?? ""),
+          status: "complete", cached: true,
+        };
+      }
       return { id: cr.id, url: normalizedUrl, score, verdict: scoreToVerdict(score), scanned_at: cr.created_at, cached: true };
     }
     previousScore = cr.health_score ?? null;
@@ -215,8 +256,17 @@ async function runOneScan(opts: BatchScanOptions): Promise<Record<string, unknow
   const durationMs = Date.now() - scanStart;
   // Real model cost from token usage; fall back to the synthetic constant only if usage was unavailable.
   const costUsd = realCostUsd ?? calculateScanCost({ pageCount, cached: false });
-  void logScanUsage(apiKey.id, { url: normalizedUrl, score, responseTimeMs: durationMs, status: "success", statusCode: 200, endpoint: "scan_batch", pageCount, costUsd, cached: false });
+  void logScanUsage(apiKey.id, { url: normalizedUrl, score, responseTimeMs: durationMs, status: "success", statusCode: 200, endpoint: usageEndpoint, pageCount, costUsd, cached: false });
   updateBenchmark(site_type, score);
+
+  // Score-only item: lean shape, no findings. (Self-reported single call, so dimensions are
+  // the model's reported set; batch has no pass-2 to skip — the saving is the rubric path on /scan.)
+  if (SCORE_ONLY) {
+    return {
+      scan_id: reportId, url: normalizedUrl, score, score_band: formatCoverageBand(score),
+      dimensions: dimsArrayFromRecord(parsed.dimensions), site_type, status: "complete", cached: false,
+    };
+  }
 
   const result: Record<string, unknown> = {
     id: reportId, url: normalizedUrl, score, verdict: scoreToVerdict(score),
@@ -253,7 +303,7 @@ export async function POST(req: NextRequest) {
     return apiError("TRIAL_EXHAUSTED", "Scan limit reached. Upgrade your plan to continue.", 402, rlHeaders(apiKey));
   }
 
-  let urls: string[], fields: string[], findingLimit: number, findingDepth: "brief" | "full", asyncMode: boolean;
+  let urls: string[], fields: string[], findingLimit: number, findingDepth: "brief" | "full", asyncMode: boolean, scanMode: "full" | "score";
   try {
     const body = await req.json();
     urls = Array.isArray(body?.urls) ? body.urls.filter((u: unknown) => typeof u === "string" && u.trim()) : [];
@@ -263,6 +313,9 @@ export async function POST(req: NextRequest) {
     findingLimit = Math.min(20, Math.max(1, typeof body?.finding_limit === "number" ? body.finding_limit : 10));
     const rawDepth = typeof body?.finding_depth === "string" ? body.finding_depth : "full";
     findingDepth = rawDepth === "brief" ? "brief" : "full";
+    // mode: "full" (default, unchanged) | "score" (lean score-only items). Non-"score" → "full".
+    const rawMode = typeof body?.mode === "string" ? body.mode.toLowerCase() : "full";
+    scanMode = rawMode === "score" ? "score" : "full";
     asyncMode = body?.async === true;
   } catch {
     void logRejectedRequest(apiKey.id, { url: "", statusCode: 400, endpoint: "scan_batch", errorCode: "validation", responseTimeMs: Date.now() - batchStart });
@@ -296,9 +349,11 @@ export async function POST(req: NextRequest) {
     // Detached background batch (runs within Vercel Pro 300s timeout)
     void (async () => {
       await Promise.allSettled(urls.map((url, i) =>
-        runOneScan({ url, apiKey, effectiveFields, findingLimit, findingDepth, supabaseAdmin, pendingId: scanIds[i] })
+        runOneScan({ url, apiKey, effectiveFields, findingLimit, findingDepth, scanMode, supabaseAdmin, pendingId: scanIds[i] })
           .then(result => {
-            dispatchWebhook(apiKey.id, { event: "scan.completed", scan_id: result.id as string, url, score: result.score as number, data: { domain: getDomain(url), verdict: result.verdict as string } });
+            const sid = (result.id ?? result.scan_id) as string;
+            const verdict = (result.verdict as string) ?? scoreToVerdict(result.score as number);
+            dispatchWebhook(apiKey.id, { event: "scan.completed", scan_id: sid, url, score: result.score as number, data: { domain: getDomain(url), verdict } });
           })
           .catch(err => {
             console.error("[API v1 batch] async scan failed:", url, err instanceof Error ? err.message : err);
@@ -313,7 +368,7 @@ export async function POST(req: NextRequest) {
 
   // ── Sync batch mode ───────────────────────────────────────────────────────
   const settled = await Promise.allSettled(
-    urls.map(url => runOneScan({ url, apiKey, effectiveFields, findingLimit, findingDepth, supabaseAdmin }))
+    urls.map(url => runOneScan({ url, apiKey, effectiveFields, findingLimit, findingDepth, scanMode, supabaseAdmin }))
   );
 
   const results = settled.map((r, i) => {
@@ -330,7 +385,9 @@ export async function POST(req: NextRequest) {
   // Dispatch webhooks for completed scans
   for (const r of results) {
     if (r.status === "success" && r.data) {
-      dispatchWebhook(apiKey.id, { event: "scan.completed", scan_id: r.data.id as string, url: r.url, score: r.data.score as number, data: { domain: getDomain(r.url), verdict: r.data.verdict as string } });
+      const sid = (r.data.id ?? r.data.scan_id) as string;
+      const verdict = (r.data.verdict as string) ?? scoreToVerdict(r.data.score as number);
+      dispatchWebhook(apiKey.id, { event: "scan.completed", scan_id: sid, url: r.url, score: r.data.score as number, data: { domain: getDomain(r.url), verdict } });
     }
   }
 

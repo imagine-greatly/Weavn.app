@@ -232,11 +232,45 @@ interface OverviewTabProps {
   monthScans: number
   monthSpend: number
   monthSeries: number[]
+  successPct: number
+  name: string | null
   onViewUsage: () => void
   onViewDocs: () => void
 }
 
-function OverviewTab({ keyPrefix, createdLabel, lastUsedLabel, rotating, rotateError, onRotate, scansUsed, isTrialPlan, plan, monthScans, monthSpend, monthSeries, onViewUsage, onViewDocs }: OverviewTabProps) {
+const OVERVIEW_ACCENT = '#9D8CFF'
+const SPEND_CAP_USD = 50
+
+// Small inline viz — quiet card accents, not standalone primitives. Pure SVG / flex,
+// zero radius (the ring is circular geometry, exempt by the locked rule).
+function SpendRing({ value, cap, accent = OVERVIEW_ACCENT }: { value: number; cap: number; accent?: string }) {
+  const pct = Math.max(0, Math.min(1, cap > 0 ? value / cap : 0))
+  const size = 46, sw = 5, r = (size - sw) / 2, circ = 2 * Math.PI * r
+  const color = value > cap ? '#FF5C5C' : accent
+  return (
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} aria-hidden>
+      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth={sw} />
+      <circle
+        cx={size / 2} cy={size / 2} r={r} fill="none" stroke={color} strokeWidth={sw}
+        strokeDasharray={circ} strokeDashoffset={circ * (1 - pct)} strokeLinecap="butt"
+        transform={`rotate(-90 ${size / 2} ${size / 2})`}
+      />
+    </svg>
+  )
+}
+
+function MiniBars({ data, accent = OVERVIEW_ACCENT, height = 56 }: { data: number[]; accent?: string; height?: number }) {
+  const max = Math.max(1, ...data)
+  return (
+    <div style={{ display: 'flex', alignItems: 'flex-end', gap: 3, height, flex: 1, minWidth: 0 }} aria-hidden>
+      {data.map((v, i) => (
+        <div key={i} style={{ flex: 1, height: `${Math.max(2, (v / max) * 100)}%`, background: v > 0 ? accent : 'rgba(255,255,255,0.06)', opacity: v > 0 ? 0.85 : 1 }} />
+      ))}
+    </div>
+  )
+}
+
+function OverviewTab({ name, keyPrefix, createdLabel, lastUsedLabel, rotating, rotateError, onRotate, scansUsed, isTrialPlan, plan, monthScans, monthSpend, monthSeries, successPct, onViewUsage, onViewDocs }: OverviewTabProps) {
   const [keyCopied, setKeyCopied] = useState(false)
   const [curlCopied, setCurlCopied] = useState(false)
 
@@ -261,30 +295,92 @@ function OverviewTab({ keyPrefix, createdLabel, lastUsedLabel, rotating, rotateE
   // Access readout — trial remaining (Playground) vs included-this-period (paid tiers).
   // Read straight from API_PLANS + the live api_keys.plan. No invented numbers.
   const apiPlan = API_PLANS[plan as ApiTier]
-  const overageUsd = apiPlan?.overageUsd ?? API_PLANS.dev.overageUsd
   const included = apiPlan?.includedScans ?? null
   const meter = isTrialPlan
     ? { label: 'Trial remaining', value: `${Math.max(0, FREE_API_TRIAL_SCANS - scansUsed)} / ${FREE_API_TRIAL_SCANS}`, used: scansUsed as number, total: FREE_API_TRIAL_SCANS as number | null, sub: 'lifetime free trial' }
     : included != null
       ? { label: 'Included this period', value: `${monthScans} / ${included}`, used: monthScans as number, total: included as number | null, sub: 'resets on the 1st' }
       : { label: 'Usage', value: `${monthScans}`, used: monthScans as number, total: null as number | null, sub: 'this month · custom volume' }
-  const planName = apiPlan?.name ?? (plan.charAt(0).toUpperCase() + plan.slice(1))
 
-  const dim = '#5A6070'
-  const labelStyle: React.CSSProperties = { fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, letterSpacing: '0.16em', textTransform: 'uppercase', color: '#8E8EA0' }
+  const dim = 'rgba(240,244,255,0.42)'
+
+  // Greeting (Claude-Console home rhythm) — time-of-day + first name when known.
+  const hr = new Date().getHours()
+  const partOfDay = hr < 12 ? 'morning' : hr < 18 ? 'afternoon' : 'evening'
+  const greeting = name ? `Good ${partOfDay}, ${name}` : `Good ${partOfDay}`
+
+  // 3-up metric badges + scan-volume trend, all from real data.
+  const meterPct = meter.total != null ? Math.min(100, Math.round((meter.used / meter.total) * 100)) : null
+  const meterBadge = meterPct != null ? { label: `${meterPct}% used`, tone: 'neutral' as const } : undefined
+  const recent7 = monthSeries.slice(-7).reduce((a, b) => a + b, 0)
+  const prev7 = monthSeries.slice(-14, -7).reduce((a, b) => a + b, 0)
+  const volDelta = prev7 === 0 ? null : Math.round(((recent7 - prev7) / prev7) * 100)
+  const volBadge = volDelta == null
+    ? undefined
+    : { label: `${volDelta >= 0 ? '▲' : '▼'} ${Math.abs(volDelta)}% vs previous 7d`, tone: (volDelta >= 0 ? 'green' : 'neutral') as 'green' | 'neutral' }
+
+  const primaryLink: React.CSSProperties = {
+    fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, letterSpacing: '0.08em', textTransform: 'uppercase',
+    color: '#9D8CFF', background: 'var(--btn-primary-fill)', border: 'var(--btn-primary-border)',
+    padding: '9px 14px', textDecoration: 'none', whiteSpace: 'nowrap',
+  }
 
   return (
-    <div className="px-8 py-8" style={{ maxWidth: 1040, display: 'flex', flexDirection: 'column', gap: 12 }}>
-      {/* 1 — Header */}
-      <div className="flex items-center justify-between flex-wrap gap-3" style={{ marginBottom: 8 }}>
-        <div className="flex items-center gap-3">
-          <h1 className="font-display font-bold text-ink-primary" style={{ fontSize: 21, letterSpacing: '-0.3px' }}>Overview</h1>
-          <span className="font-mono uppercase text-ink-muted" style={{ fontSize: 9.5, letterSpacing: '0.18em', padding: '3px 8px', border: 'var(--panel-border)' }}>Developer</span>
+    <div className="px-8 py-8" style={{ maxWidth: 1080, display: 'flex', flexDirection: 'column', gap: 12 }}>
+      {/* 1 — Greeting row (home rhythm) */}
+      <div className="flex items-center justify-between flex-wrap gap-3" style={{ marginBottom: 6 }}>
+        <h1 className="font-display font-bold" style={{ fontSize: 24, letterSpacing: '-0.4px', color: '#F0F4FF' }}>{greeting}</h1>
+        <div className="flex items-center gap-2 flex-wrap">
+          <Button variant="ghost" onClick={onViewDocs} style={{ border: 'none', padding: '8px 8px', color: '#6E7587' }}>Docs</Button>
+          <Button variant="ghost" onClick={copyKey} disabled={!keyPrefix} className="disabled:opacity-40 disabled:cursor-not-allowed" style={{ padding: '9px 14px' }}>{keyCopied ? 'Key copied' : 'API key'}</Button>
+          <Link href="/playground" style={primaryLink}>Run a scan →</Link>
         </div>
-        <Button variant="ghost" onClick={onViewDocs} style={{ border: 'none', padding: '4px 2px', color: '#6E7587' }}>Docs →</Button>
       </div>
 
-      {/* 2 — YOUR API KEY (the hero) */}
+      {/* 2 — 3-up metric row (Trial/Included · Spend vs cap · Success rate) */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 12 }}>
+        <MetricCard
+          accent={OVERVIEW_ACCENT}
+          title={meter.label}
+          info={isTrialPlan ? 'Lifetime free-trial scans remaining before billing starts.' : 'Included scans this billing period.'}
+          badge={meterBadge}
+          value={meter.value}
+          sub={meter.sub}
+        >
+          {meter.total != null ? <SegmentedMeter used={meter.used} total={meter.total} accent={OVERVIEW_ACCENT} /> : null}
+        </MetricCard>
+        <MetricCard
+          accent={OVERVIEW_ACCENT}
+          title="Spend this month"
+          info={`Real model COGS this month against the $${SPEND_CAP_USD} reference cap.`}
+          value={`$${monthSpend.toFixed(2)}`}
+          sub={`of $${SPEND_CAP_USD.toFixed(2)} cap`}
+          side={<SpendRing value={monthSpend} cap={SPEND_CAP_USD} accent={OVERVIEW_ACCENT} />}
+        />
+        <MetricCard
+          accent={OVERVIEW_ACCENT}
+          title="Success rate"
+          info="Share of recent requests that completed successfully."
+          value={`${successPct}%`}
+          sub="of recent requests"
+          sparkline={monthSeries}
+        />
+      </div>
+
+      {/* 3 — Scan volume (wide: number left, bars right, trend badge) */}
+      <Panel header="Scan volume" action={volBadge ? (
+        <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, letterSpacing: '0.06em', padding: '2px 7px', whiteSpace: 'nowrap', ...(volBadge.tone === 'green' ? { color: '#00C48C', background: 'rgba(0,196,140,0.10)', border: '1px solid rgba(0,196,140,0.22)' } : { color: 'rgba(240,244,255,0.50)', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.09)' }) }}>{volBadge.label}</span>
+      ) : undefined}>
+        <div className="flex items-center gap-8" style={{ minHeight: 56 }}>
+          <div style={{ flexShrink: 0 }}>
+            <div className="font-display font-bold" style={{ fontSize: 32, lineHeight: 1, color: '#F0F4FF' }}>{monthScans}</div>
+            <div className="font-mono" style={{ fontSize: 11, color: dim, marginTop: 7 }}>scans this month</div>
+          </div>
+          <MiniBars data={monthSeries} accent={OVERVIEW_ACCENT} />
+        </div>
+      </Panel>
+
+      {/* 4 — Your API key */}
       <Panel header="Your API key">
         <div className="flex items-center gap-3 flex-wrap">
           <Field as="code" className="flex-1 min-w-0 truncate" style={{ color: '#E6E9EE', fontSize: 15 }}>{keyPrefix ? keyMasked : '— no active key —'}</Field>
@@ -295,16 +391,12 @@ function OverviewTab({ keyPrefix, createdLabel, lastUsedLabel, rotating, rotateE
         {rotateError ? <div className="font-mono text-severity-critical mt-2" style={{ fontSize: 11 }}>{rotateError}</div> : null}
       </Panel>
 
-      {/* 3 — FIRE YOUR FIRST SCAN */}
+      {/* 5 — Fire your first scan */}
       <Panel
-        header={
-          <div className="flex items-baseline gap-3 flex-wrap">
-            <span className="font-mono uppercase" style={{ fontSize: 11, letterSpacing: '0.16em', color: 'var(--surface-accent)' }}>Fire your first scan</span>
-            <span className="font-mono text-ink-muted" style={{ fontSize: 10.5 }}>~90s · returns structured JSON</span>
-          </div>
-        }
+        header="Fire your first scan"
         action={<Button variant="primary" onClick={copyCurl} style={{ padding: '6px 10px' }}>{curlCopied ? 'Copied ✓' : 'Copy'}</Button>}
       >
+        <div className="font-mono" style={{ fontSize: 10.5, color: dim, marginBottom: 10 }}>~90s · returns structured JSON</div>
         <Field as="pre" className="leading-relaxed m-0 whitespace-pre-wrap" style={{ fontSize: 12, padding: 16 }}>
           <span className="text-purple-DEFAULT">curl</span>
           <span className="text-ink-muted">{' -X POST '}</span>
@@ -318,36 +410,9 @@ function OverviewTab({ keyPrefix, createdLabel, lastUsedLabel, rotating, rotateE
         <div className="font-mono mt-3" style={{ fontSize: 11, color: dim }}>Paste your full key — it&apos;s shown once at creation. Lost it? Regenerate above.</div>
       </Panel>
 
-      {/* 4 — ACCESS READOUT (3-up panel grid, 12px gutters) */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 12 }}>
-        <Panel>
-          <div style={{ ...labelStyle, marginBottom: 8 }}>{meter.label}</div>
-          <div className="font-display font-bold" style={{ fontSize: 22, color: '#E6E9EE' }}>{meter.value}</div>
-          {meter.total != null ? (
-            <div className="mt-3">
-              <SegmentedMeter used={meter.used} total={meter.total} accent="#9D8CFF" />
-            </div>
-          ) : null}
-          <div className="font-mono mt-2" style={{ fontSize: 10.5, color: dim }}>{meter.sub}</div>
-        </Panel>
-        <Panel>
-          <div style={{ ...labelStyle, marginBottom: 8 }}>Plan</div>
-          <div className="font-display font-bold" style={{ fontSize: 22, color: '#E6E9EE' }}>{planName}</div>
-          <div className="font-mono mt-2" style={{ fontSize: 10.5, color: dim }}>then ${overageUsd.toFixed(2)}/scan</div>
-        </Panel>
-        <Panel>
-          <div style={{ ...labelStyle, marginBottom: 8 }}>Scans this month</div>
-          <div className="font-display font-bold" style={{ fontSize: 22, color: '#E6E9EE' }}>{monthScans}</div>
-          {monthSeries.some(v => v > 0) ? (
-            <div className="mt-3"><Sparkline data={monthSeries} accent="#9D8CFF" height={30} /></div>
-          ) : null}
-          <div className="font-mono mt-2" style={{ fontSize: 10.5, color: dim }}>${monthSpend.toFixed(2)} COGS</div>
-        </Panel>
-      </div>
-
-      {/* 5 — Usage link */}
+      {/* 6 — Usage link */}
       <div className="flex items-center justify-between gap-4 flex-wrap" style={{ marginTop: 8, paddingTop: 16, borderTop: 'var(--divider)' }}>
-        <span className="font-body text-ink-muted" style={{ fontSize: 13 }}>View request logs, throughput, and latency</span>
+        <span className="font-body" style={{ fontSize: 13, color: dim }}>View request logs, throughput, and latency</span>
         <Button variant="ghost" onClick={onViewUsage} style={{ padding: '8px 14px' }}>Usage →</Button>
       </div>
     </div>
@@ -507,38 +572,56 @@ function UsageTab({ keyId, keyPrefix, accent = USAGE_ACCENT }: { keyId: string |
   // curl one-liner used as the request-log empty-state CTA (prefix only — full key shown once).
   const curlOneLiner = `curl -X POST https://api.weavn.app/v1/scan -H "Authorization: Bearer ${keyPrefix ?? 'YOUR_API_KEY'}" -d '{"url":"https://yoursite.com"}'`
   const fmtTime = (iso: string) => { try { return new Date(iso).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) } catch { return iso } }
-  const cols = '120px 92px 56px 64px 70px 1fr 56px'
+  const cols = '128px 96px 64px 72px 74px 1fr 60px 28px'
   const activeChip: React.CSSProperties = { background: 'color-mix(in srgb, var(--surface-accent) 14%, transparent)', color: 'var(--surface-accent)' }
   const idleChip: React.CSSProperties = { background: 'transparent', color: '#6E7587' }
 
+  const dataAsOf = new Date().toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })
+  const groupBy = range === '24h' ? 'hour' : 'day'
+  const chipLabel: React.CSSProperties = { fontFamily: "'IBM Plex Mono', monospace", fontSize: 9.5, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(240,244,255,0.40)' }
+  const scansBadge = scansDelta == null
+    ? undefined
+    : { label: `${scansDelta >= 0 ? '▲' : '▼'} ${Math.abs(scansDelta)}% vs previous ${range}`, tone: (scansDelta >= 0 ? 'green' : 'neutral') as 'green' | 'neutral' }
+
   return (
-    <div className="px-8 py-8" style={{ maxWidth: 1100 }}>
-      {/* 1 — Header + range toggle */}
-      <div className="flex items-center justify-between mb-7 flex-wrap gap-3">
-        <div className="flex items-center gap-3">
-          <h1 className="font-display font-bold text-ink-primary" style={{ fontSize: 21, letterSpacing: '-0.3px' }}>Usage</h1>
-          <span className="font-mono uppercase text-ink-muted" style={{ fontSize: 9.5, letterSpacing: '0.18em', padding: '3px 8px', border: 'var(--panel-border)' }}>Developer</span>
+    <div className="px-8 py-8" style={{ maxWidth: 1100, display: 'flex', flexDirection: 'column', gap: 12 }}>
+      {/* 1 — Title */}
+      <h1 className="font-display font-bold" style={{ fontSize: 24, letterSpacing: '-0.4px', color: '#F0F4FF', marginBottom: 2 }}>Usage</h1>
+
+      {/* 1b — Filter-chip row + data-as-of note */}
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <div className="flex items-center gap-4 flex-wrap">
+          <div className="flex items-center gap-2">
+            <span style={chipLabel}>Range</span>
+            <div className="inline-flex" style={{ border: 'var(--panel-border)' }}>
+              {(['24h', '7d', '30d'] as UsageRange[]).map(r => (
+                <button key={r} onClick={() => setRange(r)} className="font-mono uppercase cursor-pointer" style={{ fontSize: 10, letterSpacing: '0.08em', padding: '7px 14px', ...(range === r ? activeChip : idleChip) }}>{r}</button>
+              ))}
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <span style={chipLabel}>Group by</span>
+            <span className="font-mono" style={{ fontSize: 10, letterSpacing: '0.04em', padding: '6px 12px', border: 'var(--panel-border)', color: 'rgba(240,244,255,0.62)' }}>{groupBy}</span>
+          </div>
         </div>
-        <div className="inline-flex" style={{ border: 'var(--panel-border)' }}>
-          {(['24h', '7d', '30d'] as UsageRange[]).map(r => (
-            <button key={r} onClick={() => setRange(r)} className="font-mono uppercase cursor-pointer" style={{ fontSize: 10, letterSpacing: '0.08em', padding: '7px 14px', ...(range === r ? activeChip : idleChip) }}>{r}</button>
-          ))}
-        </div>
+        <span className="font-mono" style={{ fontSize: 10.5, color: 'rgba(240,244,255,0.40)' }}>Data as of {dataAsOf} · live</span>
       </div>
 
-      {/* 2 — Metric cards (real trend + comparison, no fake underlines) */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 12 }} className="mb-3">
+      {/* 2 — Metric cards (calm anatomy: info dot · title · badge) */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 12 }}>
         <MetricCard
           accent={accent}
-          label="Scans"
+          title="Scans"
+          info="Total scans in the selected range."
           value={total}
-          delta={scansDelta}
+          badge={scansBadge}
           sub={`${range.toUpperCase()} window`}
           sparkline={throughput}
         />
         <MetricCard
           accent={accent}
-          label="Duration"
+          title="Duration"
+          info="Median (p50) and p95 response time."
           value={durs.length ? fmtDur(p50) : '—'}
           valueSuffix={durs.length ? 'p50' : undefined}
           sub={durs.length ? `p95 ${fmtDur(p95)}` : 'no timing yet'}
@@ -546,7 +629,8 @@ function UsageTab({ keyId, keyPrefix, accent = USAGE_ACCENT }: { keyId: string |
         />
         <MetricCard
           accent={accent}
-          label="Success"
+          title="Success rate"
+          info="Share of requests that completed successfully."
           value={`${successPct}%`}
           sub={`${successCount} ok · ${errorCount} err`}
         >
@@ -557,8 +641,10 @@ function UsageTab({ keyId, keyPrefix, accent = USAGE_ACCENT }: { keyId: string |
         </MetricCard>
         <MetricCard
           accent={accent}
-          label="Spend · COGS"
+          title="Spend"
+          info="Real model COGS for the selected range."
           value={`$${spend.toFixed(2)}`}
+          badge={{ label: 'COGS', tone: 'neutral' }}
           sub={`cached ${cachedPct}% · ${avgPages.toFixed(1)} pg avg`}
           sparkline={spendCumulative}
         />
@@ -566,7 +652,6 @@ function UsageTab({ keyId, keyPrefix, accent = USAGE_ACCENT }: { keyId: string |
 
       {/* 2b — Scans over time (primary area chart) */}
       <Panel
-        className="mt-3"
         header="Scans over time"
         action={<span className="font-mono uppercase" style={{ fontSize: 9.5, letterSpacing: '0.12em', color: '#5A6070' }}>{range.toUpperCase()}</span>}
       >
@@ -574,10 +659,10 @@ function UsageTab({ keyId, keyPrefix, accent = USAGE_ACCENT }: { keyId: string |
       </Panel>
 
       {/* 3 — Request log */}
-      <div className="flex items-center gap-2 mt-8 mb-3 flex-wrap">
-        <span className="font-mono uppercase text-ink-muted" style={{ fontSize: 10, letterSpacing: '0.2em' }}>Request log</span>
-        <span className="font-mono" style={{ fontSize: 10, color: '#5A6070' }}>· last 50</span>
-        <div className="inline-flex ml-2" style={{ border: 'var(--panel-border)' }}>
+      <div className="flex items-center gap-3 flex-wrap" style={{ marginTop: 12 }}>
+        <span className="font-body" style={{ fontSize: 15, letterSpacing: '-0.1px', color: 'rgba(240,244,255,0.82)' }}>Request log</span>
+        <span className="font-mono" style={{ fontSize: 10.5, color: 'rgba(240,244,255,0.40)' }}>last 50</span>
+        <div className="inline-flex ml-1" style={{ border: 'var(--panel-border)' }}>
           {(['all', 'success', 'errors'] as const).map(f => (
             <button key={f} onClick={() => setFilter(f)} className="font-mono uppercase cursor-pointer" style={{ fontSize: 9.5, letterSpacing: '0.08em', padding: '5px 10px', ...(filter === f ? activeChip : idleChip) }}>{f}</button>
           ))}
@@ -585,9 +670,9 @@ function UsageTab({ keyId, keyPrefix, accent = USAGE_ACCENT }: { keyId: string |
       </div>
 
       <Panel flushBody>
-        <div className="grid items-center px-6 py-3" style={{ gridTemplateColumns: cols, borderBottom: 'var(--divider)' }}>
-          {['TIME', 'ENDPOINT', 'CODE', 'DUR', 'COGS', 'TARGET', 'SCORE'].map(h => (
-            <div key={h} className="font-mono uppercase text-ink-muted" style={{ fontSize: 9.5, letterSpacing: '0.12em' }}>{h}</div>
+        <div className="grid items-center px-6" style={{ gridTemplateColumns: cols, minHeight: 44, borderBottom: 'var(--divider)' }}>
+          {['Time', 'Endpoint', 'Code', 'Duration', 'COGS', 'Target', 'Score', ''].map((h, i) => (
+            <div key={i} className="font-body" style={{ fontSize: 12, color: 'rgba(240,244,255,0.40)' }}>{h}</div>
           ))}
         </div>
         {loading ? (
@@ -604,8 +689,8 @@ function UsageTab({ keyId, keyPrefix, accent = USAGE_ACCENT }: { keyId: string |
           <button
             key={r.id}
             onClick={() => setSelected(r)}
-            className="grid items-center px-6 py-3 last:border-0 w-full text-left cursor-pointer hover:bg-background-interactive transition-colors"
-            style={{ gridTemplateColumns: cols, borderBottom: 'var(--divider)', background: selected?.id === r.id ? 'rgba(255,255,255,0.03)' : 'transparent' }}
+            className="grid items-center px-6 last:border-0 w-full text-left cursor-pointer hover:bg-background-interactive transition-colors"
+            style={{ gridTemplateColumns: cols, minHeight: 56, borderBottom: 'var(--divider)', background: selected?.id === r.id ? 'rgba(255,255,255,0.03)' : 'transparent' }}
           >
             <span className="font-mono text-ink-muted truncate" style={{ fontSize: 11 }}>{fmtTime(r.created_at)}</span>
             <span className="font-mono text-ink-secondary truncate" style={{ fontSize: 11 }}>{r.endpoint ?? 'scan'}</span>
@@ -614,6 +699,7 @@ function UsageTab({ keyId, keyPrefix, accent = USAGE_ACCENT }: { keyId: string |
             <span className="font-mono text-ink-muted" style={{ fontSize: 11 }}>${(r.cost_usd ?? 0).toFixed(2)}</span>
             <span className="font-mono truncate" style={{ fontSize: 11, color: r.url ? '#9398A8' : '#EFB23E' }}>{r.url || r.error_code || '—'}</span>
             <span><ScoreChip score={r.score} /></span>
+            <span aria-hidden style={{ fontSize: 14, lineHeight: 1, color: 'rgba(240,244,255,0.28)', textAlign: 'right' }}>⋮</span>
           </button>
         ))}
       </Panel>
@@ -1173,6 +1259,7 @@ export default function DeveloperPortal() {
   const [rawUsage, setRawUsage]       = useState<UsageRow[]>([])
   const [rawWebhooks, setRawWebhooks] = useState<WebhookRow[]>([])
   const [keyId, setKeyId]             = useState<string | null>(null)
+  const [userName, setUserName]       = useState<string | null>(null)
 
   // Key rotation (real, via DELETE /api/developer/generate-key — the new key is
   // returned once and revealed here; only its hash is ever stored).
@@ -1185,6 +1272,12 @@ export default function DeveloperPortal() {
     const supabase = getSupabaseBrowserClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { router.push('/auth'); return }
+
+    // First name for the greeting — full_name metadata if present, else the email local-part.
+    const meta = (user.user_metadata ?? {}) as { full_name?: string; name?: string }
+    const rawName = meta.full_name ?? meta.name ?? (user.email ? user.email.split('@')[0] : '')
+    const firstName = rawName ? rawName.split(/[ .]/)[0] : ''
+    setUserName(firstName ? firstName.charAt(0).toUpperCase() + firstName.slice(1) : null)
 
     const { data: keyRow } = await supabase
       .from('api_keys')
@@ -1300,6 +1393,11 @@ export default function DeveloperPortal() {
     }
     return out
   })()
+
+  // Success rate over the loaded usage rows (real data). 100 when there's nothing yet.
+  const successPct: number = rawUsage.length
+    ? Math.round((rawUsage.filter(r => r.status === 'success').length / rawUsage.length) * 100)
+    : 100
 
   const scanRows: ScanRow[] = rawUsage.map(r => ({
     domain:   domainFromUrl(r.url ?? ''),
@@ -1441,6 +1539,7 @@ export default function DeveloperPortal() {
         <div className="flex-1 overflow-y-auto bg-background-base">
           {activeTab === 'overview' && (
             <OverviewTab
+              name={userName}
               keyPrefix={keyPrefix}
               createdLabel={createdLabel}
               lastUsedLabel={lastUsedLabel}
@@ -1453,6 +1552,7 @@ export default function DeveloperPortal() {
               monthScans={monthScans}
               monthSpend={monthSpend}
               monthSeries={monthSeries}
+              successPct={successPct}
               onViewUsage={() => setActiveTab('usage')}
               onViewDocs={() => setActiveTab('docs')}
             />

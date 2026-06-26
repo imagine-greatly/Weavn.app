@@ -2,92 +2,128 @@ import type { CSSProperties, ReactNode } from 'react'
 import Sparkline from './Sparkline'
 
 /**
- * MetricCard — a single API-dashboard stat tile (Stripe/Vercel/Resend reference).
+ * MetricCard — one calm, composed stat tile (Claude-Console card anatomy in Weavn skin).
  *
- * Locked tokens: card bg rgba(255,255,255,.022) + 1px rgba(255,255,255,.06) border,
- * zero radius. Label = IBM Plex Mono 11px/.14em/uppercase. Value = Space Grotesk.
- * Optional delta badge: ▲/▼ % vs prior window — green up / red down, mono pill border.
+ * Anatomy (one template, every card):
+ *   top row   — muted info dot + sentence-case title (Plex Sans, ~82% white) on the LEFT,
+ *               an optional small badge on the RIGHT.
+ *   value     — Space Grotesk 700, ~32px (+ optional mono suffix).
+ *   sub       — one muted mono line.
+ *   viz       — `side` (right of the number, e.g. a ring) and/or `children`/`sparkline`
+ *               below — small and quiet, never dominating.
  *
- * Footer renders `children` (e.g. a stacked ok/err bar) if given, else a <Sparkline/>.
+ * Badges (mono 10px / .06em / zero radius): neutral for status ("38% used" / "lifetime"),
+ * green for a good trend ("▲ 18% vs previous 7d"), red ONLY for genuinely-bad deltas.
  * `accent` defaults to console purple; pass steel (#6F9BC6) when reused on /app.
  */
 
 const MONO = "'IBM Plex Mono', monospace"
 const DISP = "'Space Grotesk', sans-serif"
+const BODY = "'IBM Plex Sans', sans-serif"
 
 const ACCENT_DEFAULT = '#9D8CFF'
-const CARD_BG = 'var(--panel-bg)'
-const CARD_BORDER = 'var(--panel-border)'
-const INK = '#E6E9EE'
-const INK_LABEL = '#6E7587'
-const INK_DIM = '#5A6070'
+const TITLE = 'rgba(240,244,255,0.82)'
+const SUB = 'rgba(240,244,255,0.42)'
+const INFO = 'rgba(240,244,255,0.28)'
+const VALUE = '#F0F4FF'
 const GREEN = '#00C48C'
 const RED = '#FF5C5C'
 
-export interface MetricCardProps {
+export type BadgeTone = 'neutral' | 'green' | 'red'
+export interface MetricBadge {
   label: string
+  tone?: BadgeTone
+}
+
+export interface MetricCardProps {
+  title: string
+  /** muted info-dot tooltip (native title attr). */
+  info?: string
+  badge?: MetricBadge
   value: ReactNode
-  /** small mono suffix beside the big number, e.g. "p50". */
   valueSuffix?: ReactNode
   sub?: ReactNode
-  /** % change vs prior window. positive → green ▲, negative → red ▼. null/undefined → no badge. */
-  delta?: number | null
   sparkline?: number[]
   accent?: string
-  /** custom footer (rendered in place of the sparkline), e.g. a stacked ok/err bar. */
+  /** quiet inline viz to the right of the number (e.g. a ring). */
+  side?: ReactNode
+  /** quiet viz below (in place of the sparkline), e.g. a stacked bar. */
   children?: ReactNode
   style?: CSSProperties
 }
 
+function badgeStyle(tone: BadgeTone): CSSProperties {
+  if (tone === 'green') return { color: GREEN, background: 'rgba(0,196,140,0.10)', border: '1px solid rgba(0,196,140,0.22)' }
+  if (tone === 'red') return { color: RED, background: 'rgba(255,92,92,0.10)', border: '1px solid rgba(255,92,92,0.24)' }
+  return { color: 'rgba(240,244,255,0.50)', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.09)' }
+}
+
+function InfoDot({ tip }: { tip?: string }) {
+  return (
+    <span title={tip} style={{ display: 'inline-flex', cursor: tip ? 'help' : 'default', lineHeight: 0 }}>
+      <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden>
+        <circle cx="7" cy="7" r="5.5" stroke={INFO} strokeWidth="1" />
+        <circle cx="7" cy="4.4" r="0.7" fill={INFO} />
+        <path d="M7 6.4v3.4" stroke={INFO} strokeWidth="1" strokeLinecap="round" />
+      </svg>
+    </span>
+  )
+}
+
 export default function MetricCard({
-  label,
+  title,
+  info,
+  badge,
   value,
   valueSuffix,
   sub,
-  delta,
   sparkline,
   accent = ACCENT_DEFAULT,
+  side,
   children,
   style,
 }: MetricCardProps) {
-  const showDelta = typeof delta === 'number' && Number.isFinite(delta)
-  const up = (delta ?? 0) >= 0
-  const deltaColor = up ? GREEN : RED
-
   return (
-    <div style={{ background: CARD_BG, border: CARD_BORDER, padding: '18px 18px 16px', minWidth: 0, ...style }}>
+    <div style={{ background: 'var(--panel-bg)', border: 'var(--panel-border)', padding: 20, minWidth: 0, ...style }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-        <span style={{ fontFamily: MONO, fontSize: 11, letterSpacing: '0.14em', textTransform: 'uppercase', color: INK_LABEL }}>
-          {label}
-        </span>
-        {showDelta ? (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
+          <InfoDot tip={info} />
+          <span style={{ fontFamily: BODY, fontSize: 15, color: TITLE, letterSpacing: '-0.1px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            {title}
+          </span>
+        </div>
+        {badge ? (
           <span
             style={{
               fontFamily: MONO,
-              fontSize: 10.5,
-              letterSpacing: '0.04em',
-              color: deltaColor,
-              border: `1px solid color-mix(in srgb, ${deltaColor} 45%, transparent)`,
-              padding: '1px 6px',
+              fontSize: 10,
+              letterSpacing: '0.06em',
+              padding: '2px 7px',
               whiteSpace: 'nowrap',
+              flexShrink: 0,
+              ...badgeStyle(badge.tone ?? 'neutral'),
             }}
           >
-            {up ? '▲' : '▼'} {Math.abs(delta as number)}%
+            {badge.label}
           </span>
         ) : null}
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'baseline', gap: 7, marginTop: 10 }}>
-        <span style={{ fontFamily: DISP, fontWeight: 700, fontSize: 26, lineHeight: 1, color: INK }}>{value}</span>
-        {valueSuffix ? <span style={{ fontFamily: MONO, fontSize: 12, color: INK_LABEL }}>{valueSuffix}</span> : null}
+      <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 12, marginTop: 14 }}>
+        <div style={{ minWidth: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 7 }}>
+            <span style={{ fontFamily: DISP, fontWeight: 700, fontSize: 32, lineHeight: 1, color: VALUE }}>{value}</span>
+            {valueSuffix ? <span style={{ fontFamily: MONO, fontSize: 12, color: SUB }}>{valueSuffix}</span> : null}
+          </div>
+          {sub ? <div style={{ fontFamily: MONO, fontSize: 11, color: SUB, marginTop: 7 }}>{sub}</div> : null}
+        </div>
+        {side ? <div style={{ flexShrink: 0 }}>{side}</div> : null}
       </div>
 
-      {sub ? <div style={{ fontFamily: MONO, fontSize: 10.5, color: INK_DIM, marginTop: 6 }}>{sub}</div> : null}
-
       {children ? (
-        <div style={{ marginTop: 12 }}>{children}</div>
+        <div style={{ marginTop: 14 }}>{children}</div>
       ) : sparkline ? (
-        <div style={{ marginTop: 12 }}>
+        <div style={{ marginTop: 14 }}>
           <Sparkline data={sparkline} accent={accent} height={34} />
         </div>
       ) : null}

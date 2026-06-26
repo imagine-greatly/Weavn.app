@@ -12,9 +12,11 @@ import type { CSSProperties, ReactNode } from 'react'
  * custom (e.g. a sentence-case title in a later pass).
  */
 
-const MONO = "'IBM Plex Mono', monospace"
-const LABEL = '#8E8EA0'
-const PAD = 18
+const BODY = "'IBM Plex Sans', sans-serif"
+// Section/panel TITLES are sentence-case Plex Sans (~82% white), NOT mono-uppercase —
+// mono is reserved for data, code, key fragments, sub-meta, badges, and table cells.
+const TITLE = 'rgba(240,244,255,0.82)'
+const PAD = 20
 
 export interface PanelProps {
   header?: ReactNode
@@ -46,7 +48,7 @@ export default function Panel({ header, action, children, flushBody = false, pad
           }}
         >
           {typeof header === 'string' ? (
-            <span style={{ fontFamily: MONO, fontSize: 11, letterSpacing: '0.16em', textTransform: 'uppercase', color: LABEL }}>
+            <span style={{ fontFamily: BODY, fontSize: 15, letterSpacing: '-0.1px', color: TITLE }}>
               {header}
             </span>
           ) : (

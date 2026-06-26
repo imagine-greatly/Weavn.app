@@ -29,7 +29,7 @@ export default function StatusPill({ code }: { code: number | null | undefined }
         fontFamily: MONO,
         fontSize: 11,
         color,
-        border: `0.5px solid color-mix(in srgb, ${color} 38%, transparent)`,
+        border: `1px solid color-mix(in srgb, ${color} 38%, transparent)`,
         padding: '1px 6px',
         letterSpacing: '0.02em',
         whiteSpace: 'nowrap',

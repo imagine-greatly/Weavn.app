@@ -21,6 +21,9 @@ import StatusPill from '@/components/console/StatusPill'
 import ScoreChip from '@/components/console/ScoreChip'
 import SegmentedMeter from '@/components/console/SegmentedMeter'
 import QuotaBar from '@/components/console/QuotaBar'
+import Panel from '@/components/console/Panel'
+import Field from '@/components/console/Field'
+import Button from '@/components/console/Button'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -199,7 +202,7 @@ function SeverityBadge({ score }: { score: number }) {
   return (
     <span
       className="font-mono text-xs px-2 py-0.5 flex-shrink-0"
-      style={{ color, border: `0.5px solid ${color}66`, textTransform: 'uppercase', letterSpacing: '0.06em' }}
+      style={{ color, border: `1px solid ${color}66`, textTransform: 'uppercase', letterSpacing: '0.06em' }}
     >
       {scoreToVerdict(score)}
     </span>
@@ -267,43 +270,42 @@ function OverviewTab({ keyPrefix, createdLabel, lastUsedLabel, rotating, rotateE
       : { label: 'Usage', value: `${monthScans}`, used: monthScans as number, total: null as number | null, sub: 'this month · custom volume' }
   const planName = apiPlan?.name ?? (plan.charAt(0).toUpperCase() + plan.slice(1))
 
-  // Purple is rationed to affordances; gray everything else. No bloom/brackets/glow.
-  const purpleBtn: React.CSSProperties = { color: 'var(--surface-accent)', border: '0.5px solid color-mix(in srgb, var(--surface-accent) 45%, transparent)' }
   const dim = '#5A6070'
+  const labelStyle: React.CSSProperties = { fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, letterSpacing: '0.16em', textTransform: 'uppercase', color: '#8E8EA0' }
 
   return (
-    <div className="px-8 py-8" style={{ maxWidth: 1040 }}>
+    <div className="px-8 py-8" style={{ maxWidth: 1040, display: 'flex', flexDirection: 'column', gap: 12 }}>
       {/* 1 — Header */}
-      <div className="flex items-center justify-between mb-7 flex-wrap gap-3">
+      <div className="flex items-center justify-between flex-wrap gap-3" style={{ marginBottom: 8 }}>
         <div className="flex items-center gap-3">
           <h1 className="font-display font-bold text-ink-primary" style={{ fontSize: 21, letterSpacing: '-0.3px' }}>Overview</h1>
-          <span className="font-mono uppercase text-ink-muted border border-background-border" style={{ fontSize: 9.5, letterSpacing: '0.18em', padding: '3px 8px' }}>Developer</span>
+          <span className="font-mono uppercase text-ink-muted" style={{ fontSize: 9.5, letterSpacing: '0.18em', padding: '3px 8px', border: 'var(--panel-border)' }}>Developer</span>
         </div>
-        <button onClick={onViewDocs} className="font-mono uppercase cursor-pointer bg-transparent text-ink-muted hover:text-ink-secondary transition-colors" style={{ fontSize: 11, letterSpacing: '0.08em' }}>Docs →</button>
+        <Button variant="ghost" onClick={onViewDocs} style={{ border: 'none', padding: '4px 2px', color: '#6E7587' }}>Docs →</Button>
       </div>
 
       {/* 2 — YOUR API KEY (the hero) */}
-      <div className="bg-background-raised border border-background-border p-6 mb-px">
-        <div className="font-mono uppercase text-ink-muted mb-3" style={{ fontSize: 10, letterSpacing: '0.2em' }}>Your API key</div>
+      <Panel header="Your API key">
         <div className="flex items-center gap-3 flex-wrap">
-          <code className="font-mono text-ink-primary bg-background-subtle border border-background-border flex-1 min-w-0 truncate" style={{ fontSize: 15, padding: '12px 16px' }}>{keyPrefix ? keyMasked : '— no active key —'}</code>
-          <button onClick={copyKey} disabled={!keyPrefix} className="font-mono uppercase cursor-pointer bg-transparent disabled:opacity-40 disabled:cursor-not-allowed" style={{ ...purpleBtn, fontSize: 11, letterSpacing: '0.08em', padding: '12px 14px' }}>{keyCopied ? 'Copied' : 'Copy'}</button>
-          <button onClick={onRotate} disabled={rotating || !keyPrefix} className="font-mono uppercase cursor-pointer bg-transparent border border-background-border text-ink-secondary hover:text-ink-primary disabled:opacity-40 disabled:cursor-not-allowed" style={{ fontSize: 11, letterSpacing: '0.08em', padding: '12px 14px' }}>{rotating ? 'Rotating…' : 'Regenerate'}</button>
+          <Field as="code" className="flex-1 min-w-0 truncate" style={{ color: '#E6E9EE', fontSize: 15 }}>{keyPrefix ? keyMasked : '— no active key —'}</Field>
+          <Button variant="primary" onClick={copyKey} disabled={!keyPrefix} className="disabled:opacity-40 disabled:cursor-not-allowed" style={{ padding: '12px 14px' }}>{keyCopied ? 'Copied' : 'Copy'}</Button>
+          <Button variant="ghost" onClick={onRotate} disabled={rotating || !keyPrefix} className="disabled:opacity-40 disabled:cursor-not-allowed" style={{ padding: '12px 14px' }}>{rotating ? 'Rotating…' : 'Regenerate'}</Button>
         </div>
         <div className="font-mono mt-3" style={{ fontSize: 11, color: dim }}>Created {createdLabel} · Last used {lastUsedLabel} · all permissions</div>
         {rotateError ? <div className="font-mono text-severity-critical mt-2" style={{ fontSize: 11 }}>{rotateError}</div> : null}
-      </div>
+      </Panel>
 
       {/* 3 — FIRE YOUR FIRST SCAN */}
-      <div className="bg-background-raised border border-background-border p-6 mb-px">
-        <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+      <Panel
+        header={
           <div className="flex items-baseline gap-3 flex-wrap">
-            <span className="font-mono uppercase" style={{ fontSize: 10, letterSpacing: '0.2em', color: 'var(--surface-accent)' }}>Fire your first scan</span>
+            <span className="font-mono uppercase" style={{ fontSize: 11, letterSpacing: '0.16em', color: 'var(--surface-accent)' }}>Fire your first scan</span>
             <span className="font-mono text-ink-muted" style={{ fontSize: 10.5 }}>~90s · returns structured JSON</span>
           </div>
-          <button onClick={copyCurl} className="font-mono uppercase cursor-pointer bg-transparent" style={{ ...purpleBtn, fontSize: 11, letterSpacing: '0.08em', padding: '4px 8px' }}>{curlCopied ? 'Copied ✓' : 'Copy'}</button>
-        </div>
-        <pre className="bg-background-subtle border border-background-border p-4 font-mono leading-relaxed m-0 whitespace-pre-wrap" style={{ fontSize: 12 }}>
+        }
+        action={<Button variant="primary" onClick={copyCurl} style={{ padding: '6px 10px' }}>{curlCopied ? 'Copied ✓' : 'Copy'}</Button>}
+      >
+        <Field as="pre" className="leading-relaxed m-0 whitespace-pre-wrap" style={{ fontSize: 12, padding: 16 }}>
           <span className="text-purple-DEFAULT">curl</span>
           <span className="text-ink-muted">{' -X POST '}</span>
           <span style={{ color: '#6F9BC6' }}>https://api.weavn.app/v1/scan</span>
@@ -312,14 +314,14 @@ function OverviewTab({ keyPrefix, createdLabel, lastUsedLabel, rotating, rotateE
           <span className="text-ink-muted">{'" \\\n  -H "Content-Type: application/json" \\\n  -d \'{"url": "'}</span>
           <span className="text-ink-secondary">https://yoursite.com</span>
           <span className="text-ink-muted">{'"}\''}</span>
-        </pre>
+        </Field>
         <div className="font-mono mt-3" style={{ fontSize: 11, color: dim }}>Paste your full key — it&apos;s shown once at creation. Lost it? Regenerate above.</div>
-      </div>
+      </Panel>
 
-      {/* 4 — ACCESS READOUT */}
-      <div className="grid grid-cols-3 gap-px bg-background-border mb-px">
-        <div className="bg-background-raised p-6">
-          <div className="font-mono uppercase text-ink-muted mb-2" style={{ fontSize: 10, letterSpacing: '0.18em' }}>{meter.label}</div>
+      {/* 4 — ACCESS READOUT (3-up panel grid, 12px gutters) */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 12 }}>
+        <Panel>
+          <div style={{ ...labelStyle, marginBottom: 8 }}>{meter.label}</div>
           <div className="font-display font-bold" style={{ fontSize: 22, color: '#E6E9EE' }}>{meter.value}</div>
           {meter.total != null ? (
             <div className="mt-3">
@@ -327,26 +329,26 @@ function OverviewTab({ keyPrefix, createdLabel, lastUsedLabel, rotating, rotateE
             </div>
           ) : null}
           <div className="font-mono mt-2" style={{ fontSize: 10.5, color: dim }}>{meter.sub}</div>
-        </div>
-        <div className="bg-background-raised p-6">
-          <div className="font-mono uppercase text-ink-muted mb-2" style={{ fontSize: 10, letterSpacing: '0.18em' }}>Plan</div>
+        </Panel>
+        <Panel>
+          <div style={{ ...labelStyle, marginBottom: 8 }}>Plan</div>
           <div className="font-display font-bold" style={{ fontSize: 22, color: '#E6E9EE' }}>{planName}</div>
           <div className="font-mono mt-2" style={{ fontSize: 10.5, color: dim }}>then ${overageUsd.toFixed(2)}/scan</div>
-        </div>
-        <div className="bg-background-raised p-6">
-          <div className="font-mono uppercase text-ink-muted mb-2" style={{ fontSize: 10, letterSpacing: '0.18em' }}>Scans this month</div>
+        </Panel>
+        <Panel>
+          <div style={{ ...labelStyle, marginBottom: 8 }}>Scans this month</div>
           <div className="font-display font-bold" style={{ fontSize: 22, color: '#E6E9EE' }}>{monthScans}</div>
           {monthSeries.some(v => v > 0) ? (
             <div className="mt-3"><Sparkline data={monthSeries} accent="#9D8CFF" height={30} /></div>
           ) : null}
           <div className="font-mono mt-2" style={{ fontSize: 10.5, color: dim }}>${monthSpend.toFixed(2)} COGS</div>
-        </div>
+        </Panel>
       </div>
 
       {/* 5 — Usage link */}
-      <div className="flex items-center justify-between gap-4 mt-6 pt-4 border-t border-background-border flex-wrap">
+      <div className="flex items-center justify-between gap-4 flex-wrap" style={{ marginTop: 8, paddingTop: 16, borderTop: 'var(--divider)' }}>
         <span className="font-body text-ink-muted" style={{ fontSize: 13 }}>View request logs, throughput, and latency</span>
-        <button onClick={onViewUsage} className="font-mono uppercase cursor-pointer bg-transparent" style={{ ...purpleBtn, fontSize: 11, letterSpacing: '0.08em', padding: '8px 14px' }}>Usage →</button>
+        <Button variant="ghost" onClick={onViewUsage} style={{ padding: '8px 14px' }}>Usage →</Button>
       </div>
     </div>
   )
@@ -515,9 +517,9 @@ function UsageTab({ keyId, keyPrefix, accent = USAGE_ACCENT }: { keyId: string |
       <div className="flex items-center justify-between mb-7 flex-wrap gap-3">
         <div className="flex items-center gap-3">
           <h1 className="font-display font-bold text-ink-primary" style={{ fontSize: 21, letterSpacing: '-0.3px' }}>Usage</h1>
-          <span className="font-mono uppercase text-ink-muted border border-background-border" style={{ fontSize: 9.5, letterSpacing: '0.18em', padding: '3px 8px' }}>Developer</span>
+          <span className="font-mono uppercase text-ink-muted" style={{ fontSize: 9.5, letterSpacing: '0.18em', padding: '3px 8px', border: 'var(--panel-border)' }}>Developer</span>
         </div>
-        <div className="inline-flex border border-background-border">
+        <div className="inline-flex" style={{ border: 'var(--panel-border)' }}>
           {(['24h', '7d', '30d'] as UsageRange[]).map(r => (
             <button key={r} onClick={() => setRange(r)} className="font-mono uppercase cursor-pointer" style={{ fontSize: 10, letterSpacing: '0.08em', padding: '7px 14px', ...(range === r ? activeChip : idleChip) }}>{r}</button>
           ))}
@@ -563,27 +565,27 @@ function UsageTab({ keyId, keyPrefix, accent = USAGE_ACCENT }: { keyId: string |
       </div>
 
       {/* 2b — Scans over time (primary area chart) */}
-      <div style={{ background: 'rgba(255,255,255,0.022)', border: '1px solid rgba(255,255,255,0.06)', padding: 18 }}>
-        <div className="flex items-center justify-between mb-4">
-          <span className="font-mono uppercase text-ink-muted" style={{ fontSize: 10, letterSpacing: '0.2em' }}>Scans over time</span>
-          <span className="font-mono uppercase" style={{ fontSize: 9.5, letterSpacing: '0.12em', color: '#5A6070' }}>{range.toUpperCase()}</span>
-        </div>
+      <Panel
+        className="mt-3"
+        header="Scans over time"
+        action={<span className="font-mono uppercase" style={{ fontSize: 9.5, letterSpacing: '0.12em', color: '#5A6070' }}>{range.toUpperCase()}</span>}
+      >
         <UsageChart data={throughput} period={range} accent={accent} unitLabel="scans" />
-      </div>
+      </Panel>
 
       {/* 3 — Request log */}
       <div className="flex items-center gap-2 mt-8 mb-3 flex-wrap">
         <span className="font-mono uppercase text-ink-muted" style={{ fontSize: 10, letterSpacing: '0.2em' }}>Request log</span>
         <span className="font-mono" style={{ fontSize: 10, color: '#5A6070' }}>· last 50</span>
-        <div className="inline-flex border border-background-border ml-2">
+        <div className="inline-flex ml-2" style={{ border: 'var(--panel-border)' }}>
           {(['all', 'success', 'errors'] as const).map(f => (
             <button key={f} onClick={() => setFilter(f)} className="font-mono uppercase cursor-pointer" style={{ fontSize: 9.5, letterSpacing: '0.08em', padding: '5px 10px', ...(filter === f ? activeChip : idleChip) }}>{f}</button>
           ))}
         </div>
       </div>
 
-      <div className="bg-background-raised border border-background-border">
-        <div className="grid items-center px-6 py-3 border-b border-background-border" style={{ gridTemplateColumns: cols }}>
+      <Panel flushBody>
+        <div className="grid items-center px-6 py-3" style={{ gridTemplateColumns: cols, borderBottom: 'var(--divider)' }}>
           {['TIME', 'ENDPOINT', 'CODE', 'DUR', 'COGS', 'TARGET', 'SCORE'].map(h => (
             <div key={h} className="font-mono uppercase text-ink-muted" style={{ fontSize: 9.5, letterSpacing: '0.12em' }}>{h}</div>
           ))}
@@ -593,7 +595,7 @@ function UsageTab({ keyId, keyPrefix, accent = USAGE_ACCENT }: { keyId: string |
         ) : logRows.length === 0 ? (
           total === 0 ? (
             <EmptyState dense headline="No requests yet" sub="Fire your first scan and it lands here in real time — structured JSON in ~90s.">
-              <code className="block font-mono text-left" style={{ fontSize: 11, lineHeight: 1.6, color: '#9398A8', background: '#0A0F1A', border: '0.5px solid rgba(255,255,255,0.06)', padding: '12px 14px', maxWidth: 540, wordBreak: 'break-all', whiteSpace: 'pre-wrap' }}>{curlOneLiner}</code>
+              <Field as="code" className="block text-left" style={{ fontSize: 11, lineHeight: 1.6, color: '#9398A8', maxWidth: 540, wordBreak: 'break-all', whiteSpace: 'pre-wrap' }}>{curlOneLiner}</Field>
             </EmptyState>
           ) : (
             <div className="px-6 py-8 font-mono text-ink-muted" style={{ fontSize: 12 }}>No matching requests.</div>
@@ -602,8 +604,8 @@ function UsageTab({ keyId, keyPrefix, accent = USAGE_ACCENT }: { keyId: string |
           <button
             key={r.id}
             onClick={() => setSelected(r)}
-            className="grid items-center px-6 py-3 border-b border-background-border last:border-0 w-full text-left cursor-pointer hover:bg-background-interactive transition-colors"
-            style={{ gridTemplateColumns: cols, background: selected?.id === r.id ? 'rgba(255,255,255,0.03)' : 'transparent' }}
+            className="grid items-center px-6 py-3 last:border-0 w-full text-left cursor-pointer hover:bg-background-interactive transition-colors"
+            style={{ gridTemplateColumns: cols, borderBottom: 'var(--divider)', background: selected?.id === r.id ? 'rgba(255,255,255,0.03)' : 'transparent' }}
           >
             <span className="font-mono text-ink-muted truncate" style={{ fontSize: 11 }}>{fmtTime(r.created_at)}</span>
             <span className="font-mono text-ink-secondary truncate" style={{ fontSize: 11 }}>{r.endpoint ?? 'scan'}</span>
@@ -614,15 +616,15 @@ function UsageTab({ keyId, keyPrefix, accent = USAGE_ACCENT }: { keyId: string |
             <span><ScoreChip score={r.score} /></span>
           </button>
         ))}
-      </div>
+      </Panel>
 
       {/* 4 — Request detail (inspector) — logged metadata only */}
       {selected ? (
-        <div className="bg-background-raised border border-background-border mt-px p-6">
-          <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
-            <span className="font-mono uppercase text-ink-muted" style={{ fontSize: 10, letterSpacing: '0.2em' }}>Request detail</span>
-            <button onClick={() => setSelected(null)} className="font-mono uppercase cursor-pointer bg-transparent text-ink-muted hover:text-ink-secondary" style={{ fontSize: 10, letterSpacing: '0.08em' }}>Close ✕</button>
-          </div>
+        <Panel
+          className="mt-3"
+          header="Request detail"
+          action={<button onClick={() => setSelected(null)} className="font-mono uppercase cursor-pointer bg-transparent text-ink-muted hover:text-ink-secondary" style={{ fontSize: 10, letterSpacing: '0.08em' }}>Close ✕</button>}
+        >
           <div className="grid grid-cols-2 gap-x-8 gap-y-3" style={{ maxWidth: 640 }}>
             <DetailRow k="endpoint" v={selected.endpoint ?? 'scan'} />
             <DetailRow k="status" v={`${selected.status_code ?? '—'} · ${selected.status}`} vColor={codeColor(selected.status_code)} />
@@ -632,7 +634,7 @@ function UsageTab({ keyId, keyPrefix, accent = USAGE_ACCENT }: { keyId: string |
             <DetailRow k={selected.error_code ? 'error' : 'score'} v={selected.error_code ? selected.error_code : (selected.score != null ? `${selected.score} · ${ordinal(estimatePercentile(selected.score))} pct` : '—')} vColor={selected.error_code ? codeColor(selected.status_code) : scoreDisplayColor(selected.score)} />
           </div>
           <div className="font-mono mt-5" style={{ fontSize: 10.5, color: '#5A6070' }}>Detail reflects logged request metadata. Full request/response payloads aren&apos;t stored.</div>
-        </div>
+        </Panel>
       ) : null}
     </div>
   )
@@ -657,7 +659,6 @@ function ApiKeysTab({ keyPrefix, createdLabel, lastUsedLabel, rotating, rotateEr
 
   // Same color budget as Overview/Usage: purple rationed to affordances, gray
   // everything else, red reserved for genuine destructive/failure signal.
-  const purpleBtn: React.CSSProperties = { color: 'var(--surface-accent)', border: '0.5px solid color-mix(in srgb, var(--surface-accent) 45%, transparent)' }
   const dim = '#5A6070'
   const danger = '#E8635F'
 
@@ -668,18 +669,17 @@ function ApiKeysTab({ keyPrefix, createdLabel, lastUsedLabel, rotating, rotateEr
   }
 
   return (
-    <div className="px-8 py-8" style={{ maxWidth: 1040 }}>
+    <div className="px-8 py-8" style={{ maxWidth: 1040, display: 'flex', flexDirection: 'column', gap: 12 }}>
       {/* Header */}
-      <div className="flex items-center gap-3 mb-7 flex-wrap">
+      <div className="flex items-center gap-3 flex-wrap" style={{ marginBottom: 8 }}>
         <h1 className="font-display font-bold text-ink-primary" style={{ fontSize: 21, letterSpacing: '-0.3px' }}>API Keys</h1>
-        <span className="font-mono uppercase text-ink-muted border border-background-border" style={{ fontSize: 9.5, letterSpacing: '0.18em', padding: '3px 8px' }}>Developer</span>
+        <span className="font-mono uppercase text-ink-muted" style={{ fontSize: 9.5, letterSpacing: '0.18em', padding: '3px 8px', border: 'var(--panel-border)' }}>Developer</span>
       </div>
 
       {/* Production key panel */}
-      <div className="bg-background-raised border border-background-border p-6 mb-px">
-        <div className="flex justify-between items-start gap-3">
-          <div className="font-mono uppercase text-ink-muted mb-3" style={{ fontSize: 10, letterSpacing: '0.2em' }}>Production key</div>
-          {/* Revoke is the one place red earns its keep — restrained, no fill */}
+      <Panel
+        header="Production key"
+        action={
           <button
             onClick={handleRevoke}
             disabled={revoking || !keyPrefix}
@@ -688,52 +688,47 @@ function ApiKeysTab({ keyPrefix, createdLabel, lastUsedLabel, rotating, rotateEr
           >
             {revoking ? 'Revoking…' : 'Revoke'}
           </button>
-        </div>
-
-        <code className="block font-mono text-ink-primary bg-background-subtle border border-background-border truncate" style={{ fontSize: 15, padding: '12px 16px' }}>
+        }
+      >
+        <Field as="code" className="block truncate" style={{ color: '#E6E9EE', fontSize: 15 }}>
           {keyPrefix ? `${keyPrefix}••••••••••••••••••••••` : '— no active key —'}
-        </code>
+        </Field>
 
         <div className="font-mono mt-3" style={{ fontSize: 11, color: dim }}>Created {createdLabel} · Last used {lastUsedLabel} · all permissions</div>
 
-        <div className="flex items-center gap-4 mt-4 pt-4 border-t border-background-border flex-wrap">
+        <div className="flex items-center gap-4 mt-4 pt-4 flex-wrap" style={{ borderTop: 'var(--divider)' }}>
           <span className="font-mono uppercase text-ink-muted flex-shrink-0" style={{ fontSize: 10, letterSpacing: '0.18em' }}>Monthly spending limit</span>
           <input
             type="text"
             placeholder="$50.00"
             value={spendLimit}
             onChange={e => { setSpendLimit(e.target.value); setSpendNotice(false) }}
-            className="bg-background-subtle border border-background-border font-mono text-ink-primary w-32 outline-none placeholder:text-ink-muted"
-            style={{ fontSize: 13, padding: '8px 12px' }}
+            className="font-mono text-ink-primary w-32 outline-none placeholder:text-ink-muted"
+            style={{ fontSize: 13, padding: '8px 12px', background: 'var(--field-bg)', border: 'var(--field-border)' }}
           />
           {/* TODO(wiring): no persistence path for spend limits yet (no column/endpoint).
               Held in form-state only — we surface an honest notice instead of faking a save. */}
-          <button
-            onClick={() => setSpendNotice(true)}
-            className="font-mono uppercase cursor-pointer bg-transparent border border-background-border text-ink-secondary hover:text-ink-primary transition-colors"
-            style={{ fontSize: 11, letterSpacing: '0.08em', padding: '8px 12px' }}
-          >
-            Save
-          </button>
+          <Button variant="ghost" onClick={() => setSpendNotice(true)} style={{ padding: '8px 12px' }}>Save</Button>
         </div>
         {spendNotice ? (
           <div className="font-mono mt-3" style={{ fontSize: 11, color: dim }}>
             Spend limits aren&apos;t wired up yet — this lands in the billing wiring phase. Your input is kept here for now.
           </div>
         ) : null}
-      </div>
+      </Panel>
 
       {/* Rotate — primary affordance (purple); destructive-on-confirm, so paired with a quiet caption */}
-      <div className="bg-background-raised border border-background-border p-6">
+      <Panel>
         <div className="flex items-center gap-4 flex-wrap">
-          <button
+          <Button
+            variant="primary"
             onClick={onRotate}
             disabled={rotating || !keyPrefix}
-            className="font-mono uppercase cursor-pointer bg-transparent disabled:opacity-40 disabled:cursor-not-allowed"
-            style={{ ...purpleBtn, fontSize: 11, letterSpacing: '0.08em', padding: '12px 16px' }}
+            className="disabled:opacity-40 disabled:cursor-not-allowed"
+            style={{ padding: '12px 16px' }}
           >
             {rotating ? 'Rotating…' : 'Rotate key →'}
-          </button>
+          </Button>
           <span className="font-mono" style={{ fontSize: 11, color: dim }}>
             Rotating deactivates the current key immediately and shows the new key once.
           </span>
@@ -741,7 +736,7 @@ function ApiKeysTab({ keyPrefix, createdLabel, lastUsedLabel, rotating, rotateEr
         {rotateError ? (
           <div className="font-mono mt-3" style={{ fontSize: 11, color: danger }}>{rotateError}</div>
         ) : null}
-      </div>
+      </Panel>
     </div>
   )
 }
@@ -816,21 +811,19 @@ function WebhooksTab({ webhookLog }: { webhookLog: WebhookLog[] }) {
 
   // Same color budget as Overview/Usage: purple only on affordances, gray
   // everything else; delivery status colored only on failure (codeColor).
-  const purpleBtn: React.CSSProperties = { color: 'var(--surface-accent)', border: '0.5px solid color-mix(in srgb, var(--surface-accent) 45%, transparent)' }
   const dim = '#5A6070'
   const danger = '#E8635F'
 
   return (
-    <div className="px-8 py-8" style={{ maxWidth: 1040 }}>
+    <div className="px-8 py-8" style={{ maxWidth: 1040, display: 'flex', flexDirection: 'column', gap: 12 }}>
       {/* Header */}
-      <div className="flex items-center gap-3 mb-7 flex-wrap">
+      <div className="flex items-center gap-3 flex-wrap" style={{ marginBottom: 8 }}>
         <h1 className="font-display font-bold text-ink-primary" style={{ fontSize: 21, letterSpacing: '-0.3px' }}>Webhooks</h1>
-        <span className="font-mono uppercase text-ink-muted border border-background-border" style={{ fontSize: 9.5, letterSpacing: '0.18em', padding: '3px 8px' }}>Developer</span>
+        <span className="font-mono uppercase text-ink-muted" style={{ fontSize: 9.5, letterSpacing: '0.18em', padding: '3px 8px', border: 'var(--panel-border)' }}>Developer</span>
       </div>
 
       {/* Register form */}
-      <div className="bg-background-raised border border-background-border p-6 mb-px">
-        <div className="font-mono uppercase text-ink-muted mb-4" style={{ fontSize: 10, letterSpacing: '0.2em' }}>Register endpoint</div>
+      <Panel header="Register endpoint">
         <div className="flex gap-3 flex-wrap">
           <input
             type="url"
@@ -838,17 +831,18 @@ function WebhooksTab({ webhookLog }: { webhookLog: WebhookLog[] }) {
             value={webhookUrl}
             onChange={e => { setWebhookUrl(e.target.value); setError(null) }}
             onKeyDown={e => { if (e.key === 'Enter') void handleRegister() }}
-            className="flex-1 min-w-0 bg-background-subtle border border-background-border font-mono text-ink-primary placeholder:text-ink-muted outline-none"
-            style={{ fontSize: 13, padding: '12px 16px' }}
+            className="flex-1 min-w-0 font-mono text-ink-primary placeholder:text-ink-muted outline-none"
+            style={{ fontSize: 13, padding: '12px 16px', background: 'var(--field-bg)', border: 'var(--field-border)' }}
           />
-          <button
+          <Button
+            variant="primary"
             onClick={handleRegister}
             disabled={registering || !webhookUrl.trim()}
-            className="font-mono uppercase cursor-pointer bg-transparent disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0"
-            style={{ ...purpleBtn, fontSize: 11, letterSpacing: '0.08em', padding: '12px 16px' }}
+            className="disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0"
+            style={{ padding: '12px 16px' }}
           >
             {registering ? 'Registering…' : 'Register'}
-          </button>
+          </Button>
         </div>
         <div className="font-mono mt-3" style={{ fontSize: 11, color: dim }}>
           Registered endpoints receive all scan events (scan.completed, scan.failed).
@@ -856,21 +850,18 @@ function WebhooksTab({ webhookLog }: { webhookLog: WebhookLog[] }) {
         {/* TODO(wiring): the webhooks endpoint never returns a signing secret, so we do
             NOT fake a "secret shown once" here. Secret provisioning is a later backend add. */}
         {error ? <div className="font-mono mt-2" style={{ fontSize: 11, color: danger }}>{error}</div> : null}
-      </div>
+      </Panel>
 
       {/* Registered endpoints (real list + delete) */}
-      <div className="bg-background-raised border border-background-border mb-px">
-        <div className="px-6 py-4 border-b border-background-border">
-          <span className="font-mono uppercase text-ink-muted" style={{ fontSize: 10, letterSpacing: '0.2em' }}>Registered endpoints</span>
-        </div>
+      <Panel header="Registered endpoints" flushBody>
         {listLoading ? (
           <div className="px-6 py-8 font-mono text-ink-muted" style={{ fontSize: 12 }}>Loading…</div>
         ) : endpoints.length === 0 ? (
           <div className="px-6 py-8 font-mono text-ink-muted" style={{ fontSize: 12 }}>No endpoints registered.</div>
         ) : endpoints.map(ep => (
-          <div key={ep.id} className="flex items-center gap-4 px-6 py-4 border-b border-background-border last:border-0">
+          <div key={ep.id} className="flex items-center gap-4 px-6 py-4 last:border-0" style={{ borderBottom: 'var(--divider)' }}>
             {/* Active is a quiet state, not a success signal — gray, never green */}
-            <span className="font-mono uppercase border border-background-border flex-shrink-0" style={{ fontSize: 9.5, letterSpacing: '0.08em', padding: '2px 8px', color: ep.active ? '#9398A8' : dim }}>
+            <span className="font-mono uppercase flex-shrink-0" style={{ fontSize: 9.5, letterSpacing: '0.08em', padding: '2px 8px', border: 'var(--panel-border)', color: ep.active ? '#9398A8' : dim }}>
               {ep.active ? 'active' : 'inactive'}
             </span>
             <span className="font-mono text-ink-secondary truncate flex-1" style={{ fontSize: 12 }}>{ep.url}</span>
@@ -885,13 +876,10 @@ function WebhooksTab({ webhookLog }: { webhookLog: WebhookLog[] }) {
             </button>
           </div>
         ))}
-      </div>
+      </Panel>
 
       {/* Delivery log (history from webhook_deliveries) */}
-      <div className="bg-background-raised border border-background-border">
-        <div className="px-6 py-4 border-b border-background-border">
-          <span className="font-mono uppercase text-ink-muted" style={{ fontSize: 10, letterSpacing: '0.2em' }}>Delivery log</span>
-        </div>
+      <Panel header="Delivery log" flushBody>
         {webhookLog.length === 0 && (
           <EmptyState
             dense
@@ -900,7 +888,7 @@ function WebhooksTab({ webhookLog }: { webhookLog: WebhookLog[] }) {
           />
         )}
         {webhookLog.map((log, i) => (
-          <div key={i} className="flex items-center gap-4 px-6 py-4 border-b border-background-border last:border-0">
+          <div key={i} className="flex items-center gap-4 px-6 py-4 last:border-0" style={{ borderBottom: 'var(--divider)' }}>
             {/* Status code colored only on failure (codeColor): 200 quiet gray, 4xx amber, 5xx red */}
             <span className="font-mono flex-shrink-0" style={{ fontSize: 11, color: codeColor(log.status) }}>{log.status}</span>
             <span className="font-mono text-ink-secondary flex-shrink-0" style={{ fontSize: 11 }}>{log.event}</span>
@@ -909,7 +897,7 @@ function WebhooksTab({ webhookLog }: { webhookLog: WebhookLog[] }) {
             <span className="font-mono text-ink-muted flex-shrink-0" style={{ fontSize: 11 }}>{log.date}</span>
           </div>
         ))}
-      </div>
+      </Panel>
 
     </div>
   )
@@ -979,21 +967,19 @@ function BillingTab({ plan, isTrialPlan, monthScans, scansUsed }: BillingTabProp
 
   // Same color budget as Overview/Usage: purple rationed to affordances + active
   // state (Manage billing, the CURRENT tag), gray everything else, red on failure.
-  const purpleBtn: React.CSSProperties = { color: 'var(--surface-accent)', border: '0.5px solid color-mix(in srgb, var(--surface-accent) 45%, transparent)' }
   const dim = '#5A6070'
   const danger = '#E8635F'
 
   return (
-    <div className="px-8 py-8" style={{ maxWidth: 1040 }}>
+    <div className="px-8 py-8" style={{ maxWidth: 1040, display: 'flex', flexDirection: 'column', gap: 12 }}>
       {/* Header */}
-      <div className="flex items-center gap-3 mb-7 flex-wrap">
+      <div className="flex items-center gap-3 flex-wrap" style={{ marginBottom: 8 }}>
         <h1 className="font-display font-bold text-ink-primary" style={{ fontSize: 21, letterSpacing: '-0.3px' }}>Billing</h1>
-        <span className="font-mono uppercase text-ink-muted border border-background-border" style={{ fontSize: 9.5, letterSpacing: '0.18em', padding: '3px 8px' }}>Developer</span>
+        <span className="font-mono uppercase text-ink-muted" style={{ fontSize: 9.5, letterSpacing: '0.18em', padding: '3px 8px', border: 'var(--panel-border)' }}>Developer</span>
       </div>
 
       {/* Current plan + manage billing */}
-      <div className="bg-background-raised border border-background-border p-6 mb-px">
-        <div className="font-mono uppercase text-ink-muted mb-4" style={{ fontSize: 10, letterSpacing: '0.2em' }}>Current API plan</div>
+      <Panel header="Current API plan">
         <div className="flex items-end justify-between gap-4 flex-wrap">
           <div>
             <div className="font-display font-bold capitalize" style={{ fontSize: 28, color: '#E6E9EE' }}>{plan}</div>
@@ -1004,39 +990,41 @@ function BillingTab({ plan, isTrialPlan, monthScans, scansUsed }: BillingTabProp
               {` · ${monthScans} this month`}
             </div>
           </div>
-          <button
+          <Button
+            variant="primary"
             onClick={openPortal}
             disabled={portalBusy}
-            className="font-mono uppercase cursor-pointer bg-transparent disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0"
-            style={{ ...purpleBtn, fontSize: 11, letterSpacing: '0.08em', padding: '10px 16px' }}
+            className="disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0"
+            style={{ padding: '10px 16px' }}
           >
             {portalBusy ? 'Opening…' : 'Manage billing →'}
-          </button>
+          </Button>
         </div>
         <div className="font-mono mt-3" style={{ fontSize: 11, color: dim }}>
           Opens the Stripe billing portal to manage payment methods and invoices.
         </div>
         {portalError ? <div className="font-mono mt-2" style={{ fontSize: 11, color: danger }}>{portalError}</div> : null}
-      </div>
+      </Panel>
 
       {/* Paid tiers — real Stripe Checkout (surface:'api'). Checkout vs contact CTA is
           read from API_PLANS[t.id].cta.kind (dev/builder/scale = checkout; enterprise =
           contact), never hardcoded. */}
-      <div className="font-mono uppercase text-ink-muted mt-8 mb-3" style={{ fontSize: 10, letterSpacing: '0.2em' }}>API plans</div>
-      <div className="grid grid-cols-2 gap-px bg-background-border mb-px">
+      <div className="font-mono uppercase text-ink-muted" style={{ fontSize: 10, letterSpacing: '0.2em', marginTop: 8 }}>API plans</div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 12 }}>
         {PAID_TIERS.map(t => {
           const isCurrent = plan === t.id
           const isContact = API_PLANS[t.id].cta.kind === 'contact'
           const busy = checkoutBusy === t.id
           return (
-            <div key={t.id} className="bg-background-raised p-5">
+            <Panel key={t.id}>
               <div className="flex items-center justify-between gap-2">
                 <span className="font-display font-bold text-ink-primary" style={{ fontSize: 17 }}>{t.name}</span>
                 {/* Active-state marker — purple is on-budget here */}
                 {isCurrent && <span className="font-mono uppercase" style={{ fontSize: 9.5, letterSpacing: '0.12em', color: 'var(--surface-accent)' }}>Current</span>}
               </div>
               <div className="font-mono mt-1" style={{ fontSize: 11, color: dim }}>{t.line}</div>
-              <button
+              <Button
+                variant="ghost"
                 onClick={() => {
                   if (isCurrent) return
                   // Enterprise (cta.kind==='contact') books a call — NOT Stripe Checkout.
@@ -1044,12 +1032,12 @@ function BillingTab({ plan, isTrialPlan, monthScans, scansUsed }: BillingTabProp
                   void startCheckout(t.id)
                 }}
                 disabled={isCurrent || busy}
-                className="mt-4 w-full font-mono uppercase cursor-pointer bg-transparent border border-background-border text-ink-secondary hover:text-ink-primary hover:border-ink-muted transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-                style={{ fontSize: 10.5, letterSpacing: '0.08em', padding: '8px 12px' }}
+                className="mt-4 w-full disabled:opacity-40 disabled:cursor-not-allowed"
+                style={{ fontSize: 10.5, padding: '8px 12px', textAlign: 'center', display: 'block' }}
               >
                 {isCurrent ? 'Current plan' : isContact ? 'Talk to us →' : busy ? 'Redirecting…' : 'Upgrade'}
-              </button>
-            </div>
+              </Button>
+            </Panel>
           )
         })}
       </div>
@@ -1132,20 +1120,20 @@ function DocsTab() {
         Everything you need.
       </h2>
 
-      {endpoints.map(ep => (
-        <div key={ep.path} className="bg-background-raised border border-background-border p-6 mb-px">
-          <div className="flex items-center gap-3 mb-4">
-            <MethodBadge method={ep.method} />
-            <span className="font-mono text-base text-ink-primary">{ep.path}</span>
-          </div>
-          <p className="font-body text-sm text-ink-secondary mb-4">{ep.desc}</p>
-          <div className="bg-background-subtle border border-background-border p-4">
-            <pre className="font-mono text-xs text-ink-muted leading-relaxed m-0 whitespace-pre-wrap">
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        {endpoints.map(ep => (
+          <Panel key={ep.path}>
+            <div className="flex items-center gap-3 mb-4">
+              <MethodBadge method={ep.method} />
+              <span className="font-mono text-base text-ink-primary">{ep.path}</span>
+            </div>
+            <p className="font-body text-sm text-ink-secondary mb-4">{ep.desc}</p>
+            <Field as="pre" className="text-xs text-ink-muted leading-relaxed m-0 whitespace-pre-wrap" style={{ padding: 16 }}>
               {ep.curl}
-            </pre>
-          </div>
-        </div>
-      ))}
+            </Field>
+          </Panel>
+        ))}
+      </div>
 
       <Link
         href="/docs"
@@ -1347,7 +1335,7 @@ export default function DeveloperPortal() {
     <div ref={rootRef} data-surface="console" className="flex h-screen overflow-hidden bg-background-base">
 
       {/* ── Left Sidebar ─────────────────────────────────────────────────── */}
-      <aside className="w-[220px] flex-shrink-0 bg-background-raised border-r border-background-border flex flex-col h-full">
+      <aside className="w-[220px] flex-shrink-0 bg-background-raised flex flex-col h-full" style={{ borderRight: 'var(--divider)' }}>
 
         {/* Identity — WeavnMark + "Weavn" wordmark, constant across both surfaces */}
         <div className="px-6 py-4 border-b border-background-border">
@@ -1437,7 +1425,7 @@ export default function DeveloperPortal() {
       <div className="surface-scrim-target surface-content-in flex-1 flex flex-col overflow-hidden">
 
         {/* Top bar */}
-        <div className="flex-shrink-0 bg-background-base border-b border-background-border px-8 py-4 flex justify-between items-center z-10">
+        <div className="flex-shrink-0 bg-background-base px-8 py-4 flex justify-between items-center z-10" style={{ borderBottom: 'var(--divider)' }}>
           <span className="font-display font-extrabold text-lg text-text-primary">
             {TAB_TITLES[activeTab]}
           </span>
@@ -1497,8 +1485,7 @@ export default function DeveloperPortal() {
         >
           {/* Monochrome chrome — no decorative purple frame; purple rationed to the Copy affordance */}
           <div
-            className="bg-background-raised border border-background-border"
-            style={{ maxWidth: 560, width: '100%', padding: 28 }}
+            style={{ maxWidth: 560, width: '100%', padding: 28, background: 'var(--panel-bg)', border: 'var(--panel-border)' }}
           >
             <p className="font-mono uppercase text-ink-muted" style={{ fontSize: 10, letterSpacing: '0.2em', marginBottom: 8 }}>
               New API key
@@ -1509,29 +1496,25 @@ export default function DeveloperPortal() {
             <p className="font-body" style={{ fontSize: 13, color: '#9398A8', marginBottom: 20, lineHeight: 1.6 }}>
               This is the only time the full key is shown — only its hash is stored. The previous key has been deactivated.
             </p>
-            <div className="font-mono text-ink-primary bg-background-subtle border border-background-border" style={{ fontSize: 13, padding: '14px 16px', wordBreak: 'break-all', marginBottom: 16 }}>
+            <Field className="text-ink-primary" style={{ fontSize: 13, padding: '14px 16px', wordBreak: 'break-all', marginBottom: 16 }}>
               {revealedKey}
-            </div>
+            </Field>
             <div style={{ display: 'flex', gap: 12 }}>
-              <button
+              <Button
+                variant="primary"
                 onClick={() => {
                   navigator.clipboard?.writeText(revealedKey).then(
                     () => { setRevealedCopied(true); setTimeout(() => setRevealedCopied(false), 2000) },
                     () => {}
                   )
                 }}
-                className="font-mono uppercase cursor-pointer bg-transparent"
-                style={{ color: 'var(--surface-accent)', border: '0.5px solid color-mix(in srgb, var(--surface-accent) 45%, transparent)', fontSize: 11, letterSpacing: '0.08em', padding: '12px 16px' }}
+                style={{ padding: '12px 16px' }}
               >
                 {revealedCopied ? 'Copied ✓' : 'Copy key'}
-              </button>
-              <button
-                onClick={() => setRevealedKey(null)}
-                className="font-mono uppercase border border-background-border text-ink-secondary bg-transparent cursor-pointer hover:text-ink-primary transition-colors"
-                style={{ fontSize: 11, letterSpacing: '0.08em', padding: '12px 16px' }}
-              >
+              </Button>
+              <Button variant="ghost" onClick={() => setRevealedKey(null)} style={{ padding: '12px 16px' }}>
                 Done
-              </button>
+              </Button>
             </div>
           </div>
         </div>

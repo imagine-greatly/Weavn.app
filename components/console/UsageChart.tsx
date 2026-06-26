@@ -127,12 +127,13 @@ export default function UsageChart({
             <line
               key={i}
               x1="0"
-              y1={gy}
+              y1={Math.round(gy)}
               x2={VW}
-              y2={gy}
+              y2={Math.round(gy)}
               stroke={i === gridYs.length - 1 ? BASELINE : GRID}
               strokeWidth={1}
               vectorEffect="non-scaling-stroke"
+              shapeRendering="crispEdges"
             />
           ))}
 
@@ -224,7 +225,7 @@ export default function UsageChart({
               transform: `translate(${hover === 0 ? '0' : hover === lastIdx ? '-100%' : '-50%'}, -100%)`,
               pointerEvents: 'none',
               background: '#0A0E18',
-              border: '0.5px solid rgba(255,255,255,0.12)',
+              border: '1px solid rgba(255,255,255,0.12)',
               padding: '5px 8px',
               whiteSpace: 'nowrap',
               zIndex: 5,

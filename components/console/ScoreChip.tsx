@@ -20,7 +20,7 @@ export default function ScoreChip({ score }: { score: number | null | undefined 
         fontFamily: MONO,
         fontSize: 11,
         color,
-        border: `0.5px solid color-mix(in srgb, ${color} 32%, transparent)`,
+        border: `1px solid color-mix(in srgb, ${color} 32%, transparent)`,
         padding: '1px 6px',
         whiteSpace: 'nowrap',
       }}

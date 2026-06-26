@@ -16,8 +16,8 @@ const MONO = "'IBM Plex Mono', monospace"
 const DISP = "'Space Grotesk', sans-serif"
 
 const ACCENT_DEFAULT = '#9D8CFF'
-const CARD_BG = 'rgba(255,255,255,0.022)'
-const CARD_BORDER = '1px solid rgba(255,255,255,0.06)'
+const CARD_BG = 'var(--panel-bg)'
+const CARD_BORDER = 'var(--panel-border)'
 const INK = '#E6E9EE'
 const INK_LABEL = '#6E7587'
 const INK_DIM = '#5A6070'
@@ -67,7 +67,7 @@ export default function MetricCard({
               fontSize: 10.5,
               letterSpacing: '0.04em',
               color: deltaColor,
-              border: `0.5px solid color-mix(in srgb, ${deltaColor} 45%, transparent)`,
+              border: `1px solid color-mix(in srgb, ${deltaColor} 45%, transparent)`,
               padding: '1px 6px',
               whiteSpace: 'nowrap',
             }}

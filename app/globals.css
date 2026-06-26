@@ -19,6 +19,25 @@ html, body {
   --bg-elevated: #111428;
   --border-default: #1C1C2E;
   --border-active: rgba(111, 155, 198, 0.35);
+  /* ---------------------------------------------------------------------------
+     CONSOLE "PRESENCE" TOKEN SET (developer surface chrome).
+     ONE panel bg, ONE border weight, ONE divider weight, ONE field treatment —
+     used by components/console/{Panel,Field,Button} and every /console section.
+     Crisp + visible (rgba .10, NOT .06) so 1px lines render straight, never fuzzy.
+     Consumed only by the console surface; /app is unaffected.
+     --------------------------------------------------------------------------- */
+  --panel-bg: #0A0E1A;
+  --panel-border-color: rgba(255, 255, 255, 0.10);
+  --panel-border: 1px solid rgba(255, 255, 255, 0.10);
+  --divider-color: rgba(255, 255, 255, 0.10);
+  --divider: 1px solid rgba(255, 255, 255, 0.10);
+  --field-bg: #070B14;
+  --field-border-color: rgba(255, 255, 255, 0.10);
+  --field-border: 1px solid rgba(255, 255, 255, 0.10);
+  /* Button edges (flat, no shadow): ghost = neutral hairline, primary = accent. */
+  --btn-ghost-border: 1px solid rgba(255, 255, 255, 0.16);
+  --btn-primary-border: 1px solid rgba(157, 140, 255, 0.45);
+  --btn-primary-fill: rgba(157, 140, 255, 0.08);
   /* Semantic engine aliases */
   --engine-founders:   #00C8FF;
   --engine-agencies:   #9D8CFF;

@@ -14,6 +14,13 @@ import { scoreColor, scoreToVerdict, estimatePercentile, ordinal } from '@/lib/v
 import VerdictRing from '@/components/ui/VerdictRing'
 import Bloom from '@/components/ui/Bloom'
 import CornerBrackets from '@/components/ui/CornerBrackets'
+import Sparkline from '@/components/console/Sparkline'
+import MetricCard from '@/components/console/MetricCard'
+import UsageChart from '@/components/console/UsageChart'
+import StatusPill from '@/components/console/StatusPill'
+import ScoreChip from '@/components/console/ScoreChip'
+import SegmentedMeter from '@/components/console/SegmentedMeter'
+import QuotaBar from '@/components/console/QuotaBar'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -221,11 +228,12 @@ interface OverviewTabProps {
   plan: string
   monthScans: number
   monthSpend: number
+  monthSeries: number[]
   onViewUsage: () => void
   onViewDocs: () => void
 }
 
-function OverviewTab({ keyPrefix, createdLabel, lastUsedLabel, rotating, rotateError, onRotate, scansUsed, isTrialPlan, plan, monthScans, monthSpend, onViewUsage, onViewDocs }: OverviewTabProps) {
+function OverviewTab({ keyPrefix, createdLabel, lastUsedLabel, rotating, rotateError, onRotate, scansUsed, isTrialPlan, plan, monthScans, monthSpend, monthSeries, onViewUsage, onViewDocs }: OverviewTabProps) {
   const [keyCopied, setKeyCopied] = useState(false)
   const [curlCopied, setCurlCopied] = useState(false)
 
@@ -253,10 +261,10 @@ function OverviewTab({ keyPrefix, createdLabel, lastUsedLabel, rotating, rotateE
   const overageUsd = apiPlan?.overageUsd ?? API_PLANS.dev.overageUsd
   const included = apiPlan?.includedScans ?? null
   const meter = isTrialPlan
-    ? { label: 'Trial remaining', value: `${Math.max(0, FREE_API_TRIAL_SCANS - scansUsed)} / ${FREE_API_TRIAL_SCANS}`, pct: Math.min(100, Math.round((scansUsed / FREE_API_TRIAL_SCANS) * 100)) as number | null, sub: 'lifetime free trial' }
+    ? { label: 'Trial remaining', value: `${Math.max(0, FREE_API_TRIAL_SCANS - scansUsed)} / ${FREE_API_TRIAL_SCANS}`, used: scansUsed as number, total: FREE_API_TRIAL_SCANS as number | null, sub: 'lifetime free trial' }
     : included != null
-      ? { label: 'Included this period', value: `${monthScans} / ${included}`, pct: Math.min(100, Math.round((monthScans / included) * 100)) as number | null, sub: 'resets on the 1st' }
-      : { label: 'Usage', value: `${monthScans}`, pct: null as number | null, sub: 'this month · custom volume' }
+      ? { label: 'Included this period', value: `${monthScans} / ${included}`, used: monthScans as number, total: included as number | null, sub: 'resets on the 1st' }
+      : { label: 'Usage', value: `${monthScans}`, used: monthScans as number, total: null as number | null, sub: 'this month · custom volume' }
   const planName = apiPlan?.name ?? (plan.charAt(0).toUpperCase() + plan.slice(1))
 
   // Purple is rationed to affordances; gray everything else. No bloom/brackets/glow.
@@ -313,9 +321,9 @@ function OverviewTab({ keyPrefix, createdLabel, lastUsedLabel, rotating, rotateE
         <div className="bg-background-raised p-6">
           <div className="font-mono uppercase text-ink-muted mb-2" style={{ fontSize: 10, letterSpacing: '0.18em' }}>{meter.label}</div>
           <div className="font-display font-bold" style={{ fontSize: 22, color: '#E6E9EE' }}>{meter.value}</div>
-          {meter.pct != null ? (
-            <div className="relative w-full mt-3" style={{ height: 2, background: 'rgba(255,255,255,0.07)' }}>
-              <div className="absolute top-0 left-0 h-full" style={{ width: `${meter.pct}%`, background: '#6E7587' }} />
+          {meter.total != null ? (
+            <div className="mt-3">
+              <SegmentedMeter used={meter.used} total={meter.total} accent="#9D8CFF" />
             </div>
           ) : null}
           <div className="font-mono mt-2" style={{ fontSize: 10.5, color: dim }}>{meter.sub}</div>
@@ -328,6 +336,9 @@ function OverviewTab({ keyPrefix, createdLabel, lastUsedLabel, rotating, rotateE
         <div className="bg-background-raised p-6">
           <div className="font-mono uppercase text-ink-muted mb-2" style={{ fontSize: 10, letterSpacing: '0.18em' }}>Scans this month</div>
           <div className="font-display font-bold" style={{ fontSize: 22, color: '#E6E9EE' }}>{monthScans}</div>
+          {monthSeries.some(v => v > 0) ? (
+            <div className="mt-3"><Sparkline data={monthSeries} accent="#9D8CFF" height={30} /></div>
+          ) : null}
           <div className="font-mono mt-2" style={{ fontSize: 10.5, color: dim }}>${monthSpend.toFixed(2)} COGS</div>
         </div>
       </div>
@@ -370,14 +381,16 @@ function percentile(sortedAsc: number[], p: number): number {
   return sortedAsc[idx]
 }
 
-// Bucket rows over the range into N slots (oldest→newest) for a sparkline.
-function bucketSeries(rows: UsageLogRow[], range: UsageRange, agg: 'count' | 'avgDur'): number[] {
+// Bucket rows over the range into N slots (oldest→newest) for a sparkline / chart.
+//   count  = scans per bucket · avgDur = mean response_time_ms · spend = summed cost_usd
+function bucketSeries(rows: UsageLogRow[], range: UsageRange, agg: 'count' | 'avgDur' | 'spend'): number[] {
   const N = 24
   const now = Date.now()
   const span = RANGE_MS[range]
   const start = now - span
   const counts = new Array(N).fill(0)
-  const sums = new Array(N).fill(0)
+  const durSums = new Array(N).fill(0)
+  const costSums = new Array(N).fill(0)
   for (const r of rows) {
     const t = new Date(r.created_at).getTime()
     if (t < start || t > now) continue
@@ -385,9 +398,12 @@ function bucketSeries(rows: UsageLogRow[], range: UsageRange, agg: 'count' | 'av
     if (i < 0) i = 0
     if (i >= N) i = N - 1
     counts[i] += 1
-    sums[i] += r.response_time_ms ?? 0
+    durSums[i] += r.response_time_ms ?? 0
+    costSums[i] += r.cost_usd ?? 0
   }
-  return agg === 'count' ? counts : counts.map((c, i) => (c > 0 ? Math.round(sums[i] / c) : 0))
+  if (agg === 'count') return counts
+  if (agg === 'spend') return costSums
+  return counts.map((c, i) => (c > 0 ? Math.round(durSums[i] / c) : 0))
 }
 
 // status_code → color: 200 quiet gray, 4xx amber, 5xx red.
@@ -404,17 +420,6 @@ function scoreDisplayColor(score: number | null): string {
   return score >= 70 ? '#9398A8' : scoreColor(score)
 }
 
-function GraySpark({ series }: { series: number[] }) {
-  const max = Math.max(1, ...series)
-  const n = series.length
-  const pts = series.map((v, i) => `${n > 1 ? (i / (n - 1)) * 100 : 0},${(18 - (v / max) * 16).toFixed(1)}`).join(' ')
-  return (
-    <svg width="100%" height={20} viewBox="0 0 100 20" preserveAspectRatio="none" style={{ display: 'block', marginTop: 10 }} aria-hidden>
-      <polyline points={pts} fill="none" stroke="#6E7587" strokeWidth={1} strokeOpacity={0.5} />
-    </svg>
-  )
-}
-
 function DetailRow({ k, v, vColor }: { k: string; v: string; vColor?: string }) {
   return (
     <div>
@@ -424,9 +429,13 @@ function DetailRow({ k, v, vColor }: { k: string; v: string; vColor?: string }) 
   )
 }
 
-function UsageTab({ keyId }: { keyId: string | null }) {
+const USAGE_ACCENT = '#9D8CFF'
+
+function UsageTab({ keyId, keyPrefix, accent = USAGE_ACCENT }: { keyId: string | null; keyPrefix: string | null; accent?: string }) {
   const [range, setRange] = useState<UsageRange>('7d')
-  const [rows, setRows] = useState<UsageLogRow[]>([])
+  // Fetch TWO windows back in one query (same table, wider `since` — no new endpoint) so we
+  // can split current vs prior client-side and show a true prior-window delta.
+  const [allRows, setAllRows] = useState<UsageLogRow[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<'all' | 'success' | 'errors'>('all')
   const [selected, setSelected] = useState<UsageLogRow | null>(null)
@@ -435,10 +444,10 @@ function UsageTab({ keyId }: { keyId: string | null }) {
     let cancelled = false
     ;(async () => {
       setLoading(true)
-      if (!keyId) { if (!cancelled) { setRows([]); setLoading(false) } return }
+      if (!keyId) { if (!cancelled) { setAllRows([]); setLoading(false) } return }
       try {
         const supabase = getSupabaseBrowserClient()
-        const since = new Date(Date.now() - RANGE_MS[range]).toISOString()
+        const since = new Date(Date.now() - 2 * RANGE_MS[range]).toISOString()
         // Scoped to the user's api_key_id; RLS "Users view own usage" enforces ownership.
         const { data } = await supabase
           .from('api_usage')
@@ -446,15 +455,26 @@ function UsageTab({ keyId }: { keyId: string | null }) {
           .eq('api_key_id', keyId)
           .gte('created_at', since)
           .order('created_at', { ascending: false })
-          .limit(2000)
+          .limit(4000)
         if (cancelled) return
-        setRows((data ?? []) as UsageLogRow[])
+        setAllRows((data ?? []) as UsageLogRow[])
       } finally {
         if (!cancelled) setLoading(false)
       }
     })()
     return () => { cancelled = true }
   }, [keyId, range])
+
+  // Split the 2× window into the current window (drives every metric + the log) and the
+  // immediately-prior window of equal length (drives the delta badges only).
+  const span = RANGE_MS[range]
+  const nowMs = Date.now()
+  const curStart = nowMs - span
+  const rows = allRows.filter(r => new Date(r.created_at).getTime() >= curStart)
+  const priorRows = allRows.filter(r => {
+    const t = new Date(r.created_at).getTime()
+    return t < curStart && t >= nowMs - 2 * span
+  })
 
   const total = rows.length
   const successCount = rows.filter(r => r.status === 'success').length
@@ -468,12 +488,22 @@ function UsageTab({ keyId }: { keyId: string | null }) {
   const avgPages = total ? rows.reduce((s, r) => s + (r.page_count ?? 1), 0) / total : 0
   const throughput = bucketSeries(rows, range, 'count')
   const durSeries = bucketSeries(rows, range, 'avgDur')
+  // Spend sparkline is the cumulative running COGS across the window (a rising curve).
+  let spendRun = 0
+  const spendCumulative = bucketSeries(rows, range, 'spend').map(v => (spendRun += v))
+
+  // Scans delta vs the prior window. Null when there's no prior data (no fake precision).
+  const scansDelta = priorRows.length === 0 ? null : Math.round(((total - priorRows.length) / priorRows.length) * 100)
 
   const logRows = rows
     .filter(r => filter === 'all' ? true : filter === 'success' ? r.status === 'success' : r.status !== 'success')
     .slice(0, 50)
 
-  const fmtDur = (ms: number) => (ms >= 1000 ? `${(ms / 1000).toFixed(1)}s` : `${ms}ms`)
+  // Scans here run ~90s, so raw ms reads wrong ("0ms"); show seconds for anything ≥1s.
+  const fmtDur = (ms: number) => (ms >= 10000 ? `${Math.round(ms / 1000)}s` : ms >= 1000 ? `${(ms / 1000).toFixed(1)}s` : `${Math.round(ms)}ms`)
+
+  // curl one-liner used as the request-log empty-state CTA (prefix only — full key shown once).
+  const curlOneLiner = `curl -X POST https://api.weavn.app/v1/scan -H "Authorization: Bearer ${keyPrefix ?? 'YOUR_API_KEY'}" -d '{"url":"https://yoursite.com"}'`
   const fmtTime = (iso: string) => { try { return new Date(iso).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) } catch { return iso } }
   const cols = '120px 92px 56px 64px 70px 1fr 56px'
   const activeChip: React.CSSProperties = { background: 'color-mix(in srgb, var(--surface-accent) 14%, transparent)', color: 'var(--surface-accent)' }
@@ -494,33 +524,51 @@ function UsageTab({ keyId }: { keyId: string | null }) {
         </div>
       </div>
 
-      {/* 2 — Metric strip */}
-      <div className="grid grid-cols-4 gap-px bg-background-border mb-px">
-        <div className="bg-background-raised p-6">
-          <div className="font-mono uppercase text-ink-muted" style={{ fontSize: 10, letterSpacing: '0.18em' }}>Scans</div>
-          <div className="font-display font-bold" style={{ fontSize: 26, color: '#E6E9EE' }}>{total}</div>
-          <GraySpark series={throughput} />
-        </div>
-        <div className="bg-background-raised p-6">
-          <div className="font-mono uppercase text-ink-muted" style={{ fontSize: 10, letterSpacing: '0.18em' }}>Duration</div>
-          <div className="font-display font-bold" style={{ fontSize: 26, color: '#E6E9EE' }}>{fmtDur(p50)} <span className="font-mono" style={{ fontSize: 12, color: '#6E7587' }}>p50</span></div>
-          <div className="font-mono mt-1" style={{ fontSize: 11, color: '#6E7587' }}>p95 {fmtDur(p95)}</div>
-          <GraySpark series={durSeries} />
-        </div>
-        <div className="bg-background-raised p-6">
-          <div className="font-mono uppercase text-ink-muted" style={{ fontSize: 10, letterSpacing: '0.18em' }}>Success</div>
-          <div className="font-display font-bold" style={{ fontSize: 26, color: '#E6E9EE' }}>{successPct}%</div>
-          <div className="flex w-full mt-3" style={{ height: 2 }}>
+      {/* 2 — Metric cards (real trend + comparison, no fake underlines) */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 12 }} className="mb-3">
+        <MetricCard
+          accent={accent}
+          label="Scans"
+          value={total}
+          delta={scansDelta}
+          sub={`${range.toUpperCase()} window`}
+          sparkline={throughput}
+        />
+        <MetricCard
+          accent={accent}
+          label="Duration"
+          value={durs.length ? fmtDur(p50) : '—'}
+          valueSuffix={durs.length ? 'p50' : undefined}
+          sub={durs.length ? `p95 ${fmtDur(p95)}` : 'no timing yet'}
+          sparkline={durSeries}
+        />
+        <MetricCard
+          accent={accent}
+          label="Success"
+          value={`${successPct}%`}
+          sub={`${successCount} ok · ${errorCount} err`}
+        >
+          <div style={{ display: 'flex', width: '100%', height: 4 }}>
             <div style={{ width: `${successPct}%`, background: '#00C48C' }} />
-            <div style={{ width: `${100 - successPct}%`, background: errorCount > 0 ? '#E8635F' : 'rgba(255,255,255,0.07)' }} />
+            <div style={{ width: `${100 - successPct}%`, background: errorCount > 0 ? '#FF5C5C' : 'rgba(255,255,255,0.07)' }} />
           </div>
-          <div className="font-mono mt-2" style={{ fontSize: 10.5, color: '#5A6070' }}>{successCount} ok · {errorCount} err</div>
+        </MetricCard>
+        <MetricCard
+          accent={accent}
+          label="Spend · COGS"
+          value={`$${spend.toFixed(2)}`}
+          sub={`cached ${cachedPct}% · ${avgPages.toFixed(1)} pg avg`}
+          sparkline={spendCumulative}
+        />
+      </div>
+
+      {/* 2b — Scans over time (primary area chart) */}
+      <div style={{ background: 'rgba(255,255,255,0.022)', border: '1px solid rgba(255,255,255,0.06)', padding: 18 }}>
+        <div className="flex items-center justify-between mb-4">
+          <span className="font-mono uppercase text-ink-muted" style={{ fontSize: 10, letterSpacing: '0.2em' }}>Scans over time</span>
+          <span className="font-mono uppercase" style={{ fontSize: 9.5, letterSpacing: '0.12em', color: '#5A6070' }}>{range.toUpperCase()}</span>
         </div>
-        <div className="bg-background-raised p-6">
-          <div className="font-mono uppercase text-ink-muted" style={{ fontSize: 10, letterSpacing: '0.18em' }}>Spend · COGS</div>
-          <div className="font-display font-bold" style={{ fontSize: 26, color: '#E6E9EE' }}>${spend.toFixed(2)}</div>
-          <div className="font-mono mt-2" style={{ fontSize: 10.5, color: '#5A6070' }}>cached {cachedPct}% · {avgPages.toFixed(1)} pg avg</div>
-        </div>
+        <UsageChart data={throughput} period={range} accent={accent} unitLabel="scans" />
       </div>
 
       {/* 3 — Request log */}
@@ -543,7 +591,13 @@ function UsageTab({ keyId }: { keyId: string | null }) {
         {loading ? (
           <div className="px-6 py-8 font-mono text-ink-muted" style={{ fontSize: 12 }}>Loading…</div>
         ) : logRows.length === 0 ? (
-          <div className="px-6 py-8 font-mono text-ink-muted" style={{ fontSize: 12 }}>{total === 0 ? 'No requests in this range yet.' : 'No matching requests.'}</div>
+          total === 0 ? (
+            <EmptyState dense headline="No requests yet" sub="Fire your first scan and it lands here in real time — structured JSON in ~90s.">
+              <code className="block font-mono text-left" style={{ fontSize: 11, lineHeight: 1.6, color: '#9398A8', background: '#0A0F1A', border: '0.5px solid rgba(255,255,255,0.06)', padding: '12px 14px', maxWidth: 540, wordBreak: 'break-all', whiteSpace: 'pre-wrap' }}>{curlOneLiner}</code>
+            </EmptyState>
+          ) : (
+            <div className="px-6 py-8 font-mono text-ink-muted" style={{ fontSize: 12 }}>No matching requests.</div>
+          )
         ) : logRows.map(r => (
           <button
             key={r.id}
@@ -553,11 +607,11 @@ function UsageTab({ keyId }: { keyId: string | null }) {
           >
             <span className="font-mono text-ink-muted truncate" style={{ fontSize: 11 }}>{fmtTime(r.created_at)}</span>
             <span className="font-mono text-ink-secondary truncate" style={{ fontSize: 11 }}>{r.endpoint ?? 'scan'}</span>
-            <span className="font-mono" style={{ fontSize: 11, color: codeColor(r.status_code) }}>{r.status_code ?? '—'}</span>
+            <span><StatusPill code={r.status_code} /></span>
             <span className="font-mono text-ink-muted" style={{ fontSize: 11 }}>{r.response_time_ms != null ? fmtDur(r.response_time_ms) : '—'}</span>
             <span className="font-mono text-ink-muted" style={{ fontSize: 11 }}>${(r.cost_usd ?? 0).toFixed(2)}</span>
             <span className="font-mono truncate" style={{ fontSize: 11, color: r.url ? '#9398A8' : '#EFB23E' }}>{r.url || r.error_code || '—'}</span>
-            <span className="font-mono" style={{ fontSize: 11, color: scoreDisplayColor(r.score) }}>{r.score ?? '—'}</span>
+            <span><ScoreChip score={r.score} /></span>
           </button>
         ))}
       </div>
@@ -1245,6 +1299,20 @@ export default function DeveloperPortal() {
   const createdLabel = formatAbsDate(keyCreatedAt)
   const lastUsedLabel = keyLastUsedAt ? relativeTime(keyLastUsedAt) : 'never'
 
+  // Recent-activity shape for the "Scans this month" sparkline — the loaded usage rows
+  // bucketed by day over the last 14 days (oldest→newest). Real data, no fabrication.
+  const monthSeries: number[] = (() => {
+    const days = 14
+    const out = new Array(days).fill(0)
+    const dayMs = 86_400_000
+    const now = Date.now()
+    for (const r of rawUsage) {
+      const ageDays = Math.floor((now - new Date(r.created_at).getTime()) / dayMs)
+      if (ageDays >= 0 && ageDays < days) out[days - 1 - ageDays] += 1
+    }
+    return out
+  })()
+
   const scanRows: ScanRow[] = rawUsage.map(r => ({
     domain:   domainFromUrl(r.url ?? ''),
     score:    r.score ?? 0,
@@ -1345,9 +1413,7 @@ export default function DeveloperPortal() {
           {isTrialPlan ? (
             <>
               <div className="font-mono text-xs text-text-tertiary">{scansUsed} / {FREE_API_TRIAL_SCANS} free trial · lifetime</div>
-              <div className="relative w-full h-px bg-background-border mt-3">
-                <div className="absolute top-0 left-0 h-full" style={{ width: `${trialPct}%`, background: 'var(--surface-accent)' }} />
-              </div>
+              <div className="mt-3"><QuotaBar pct={trialPct} accent="var(--surface-accent)" warnAtFull /></div>
             </>
           ) : (
             <div className="font-mono text-xs text-text-tertiary">{plan} · usage-based</div>
@@ -1398,11 +1464,12 @@ export default function DeveloperPortal() {
               plan={plan}
               monthScans={monthScans}
               monthSpend={monthSpend}
+              monthSeries={monthSeries}
               onViewUsage={() => setActiveTab('usage')}
               onViewDocs={() => setActiveTab('docs')}
             />
           )}
-          {activeTab === 'usage'    && <UsageTab keyId={keyId} />}
+          {activeTab === 'usage'    && <UsageTab keyId={keyId} keyPrefix={keyPrefix} />}
           {activeTab === 'apikeys'  && (
             <ApiKeysTab
               keyPrefix={keyPrefix}

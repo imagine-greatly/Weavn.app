@@ -24,7 +24,7 @@ import { Resend } from "resend";
 import { DASHBOARD_RATE_LIMIT_PER_MIN } from "@/lib/constants";
 
 // SAME gate as /api/v1/scan: when WEAVN_RUBRIC_SCORING="true", the dashboard runs the unified
-// rubric engine (311-check two-pass coverage score) — identical engine to the API. When unset,
+// rubric engine (307-check two-pass coverage score) — identical engine to the API. When unset,
 // BOTH surfaces fall back to the self-reported runAnalysis path, so they never diverge.
 const RUBRIC_SCORING_ENABLED = process.env.WEAVN_RUBRIC_SCORING === "true";
 // Dashboard rubric scans narrate the top findings (interactive/full mode — never score-only).
@@ -504,7 +504,7 @@ export async function POST(req: NextRequest) {
   try {
     if (RUBRIC_SCORING_ENABLED) {
       // Unified engine: the SAME runRubricScan that powers /api/v1/scan. The dashboard now runs the
-      // validated 311-check two-pass coverage score (full mode = findings), not a self-reported call.
+      // validated 307-check two-pass coverage score (full mode = findings), not a self-reported call.
       const rubricClient = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY, timeout: analyzeTimeoutMs });
       const summaryContent = wrapSummary(buildPageSummary(extraction));
       const r = await runRubricScan({

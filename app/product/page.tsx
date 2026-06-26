@@ -83,7 +83,7 @@ const PIPELINE_STEPS: PipelineStep[] = [
   {
     num: '04',
     label: 'CHECK EXECUTION',
-    title: '311 checks, correctly applied',
+    title: '307 checks, correctly applied',
     description:
       "Universal checks run on every site. Vertical checks run only when relevant — ecommerce checks never fire on a SaaS scan, SaaS checks never fire on a service site. Page-type checks apply only to the matching page. This means every finding is relevant to what's actually being scanned.",
     code: null,
@@ -188,7 +188,7 @@ function HowItWorksSection() {
           Three steps. One structured response.
         </h2>
         <p style={{ ...MONO, fontSize: 12, color: '#6E7587', margin: '0 0 48px', letterSpacing: '0.04em' }}>
-          One POST request. 311 checks fire in sequence. Structured JSON returns.
+          One POST request. 307 checks fire in sequence. Structured JSON returns.
         </p>
 
         {/* Step connector row with traveling highlight */}
@@ -253,7 +253,7 @@ function HowItWorksSection() {
               </pre>
             </div>
             <div style={{ padding: '0 14px 14px', display: 'flex', gap: 6, flexWrap: 'wrap', position: 'relative', zIndex: 2 }}>
-              {[{ l: '311 checks', c: '#00C48C' }, { l: '27 categories', c: '#6F9BC6' }, { l: '~90s median', c: '#6E7587' }].map(x => (
+              {[{ l: '307 checks', c: '#00C48C' }, { l: '27 categories', c: '#6F9BC6' }, { l: '~90s median', c: '#6E7587' }].map(x => (
                 <span key={x.l} style={{ ...MONO, fontSize: 10, color: x.c, background: 'rgba(255,255,255,0.03)', border: '0.5px solid rgba(255,255,255,0.07)', padding: '4px 8px' }}>{x.l}</span>
               ))}
             </div>
@@ -273,7 +273,7 @@ function HowItWorksSection() {
             <div style={{ padding: '10px 14px', borderBottom: '0.5px solid rgba(157,140,255,0.1)', display: 'flex', alignItems: 'center', gap: 8 }}>
               <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#00C48C', display: 'inline-block', flexShrink: 0 }} />
               <span style={{ ...MONO, fontSize: 10, color: '#6E7587', textTransform: 'uppercase', letterSpacing: '0.15em' }}>SCANNING</span>
-              <span style={{ ...MONO, fontSize: 10, color: '#9D8CFF', marginLeft: 'auto' }}>ai · 311 checks</span>
+              <span style={{ ...MONO, fontSize: 10, color: '#9D8CFF', marginLeft: 'auto' }}>ai · 307 checks</span>
             </div>
             <div style={{ padding: '14px', flexGrow: 1, display: 'flex', flexDirection: 'column', gap: 9 }}>
               {HIW_SCAN_CATS.map((name, i) => {
@@ -287,7 +287,7 @@ function HowItWorksSection() {
               })}
             </div>
             <div style={{ padding: '10px 14px 14px' }}>
-              <span style={{ ...MONO, fontSize: 11, color: '#404860' }}>running 311 checks · 27 categories</span>
+              <span style={{ ...MONO, fontSize: 11, color: '#404860' }}>running 307 checks · 27 categories</span>
               <span style={{ ...MONO, fontSize: 11, color: '#9D8CFF' }}> ···</span>
             </div>
           </div>
@@ -354,7 +354,7 @@ export default function ProductPage() {
             className="section-headline mb-6 mx-auto"
             style={{ fontSize: 'clamp(36px, 5vw, 56px)', letterSpacing: '-1.5px', maxWidth: 900 }}
           >
-            311 checks. 90 seconds. One structured response.
+            307 checks. 90 seconds. One structured response.
           </h1>
           <p className="section-subhead max-w-2xl mx-auto">
             Everything that happens between POST and 200 OK — and why it produces a score you can trust.

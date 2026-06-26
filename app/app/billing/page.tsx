@@ -13,7 +13,7 @@ const C = {
   success:      '#00C48C',
   worse:        '#E8635F',
   surface:      '#0A0E18',
-  border:       'rgba(255,255,255,0.06)',
+  border:       'rgba(255,255,255,0.10)',
 } as const
 
 const MONO = "'IBM Plex Mono', monospace"
@@ -200,9 +200,9 @@ export default function DashboardBillingPage() {
         <p style={{ fontFamily: MONO, fontSize: 12, color: C.inkMuted, margin: 0 }}>Loading…</p>
       ) : (
         <>
-          {/* Current plan card — flat hairline frame (monochrome). */}
+          {/* Current plan card — flat crisp frame (monochrome). */}
           <div style={{ marginBottom: 36 }}>
-            <div style={{ position: 'relative', border: `0.5px solid ${C.border}`, background: C.surface, padding: '24px 26px' }}>
+            <div style={{ position: 'relative', border: `1px solid ${C.border}`, background: C.surface, padding: '24px 26px' }}>
 
               <div style={{ fontFamily: MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.16em', color: C.inkMuted, marginBottom: 14 }}>
                 Current plan
@@ -281,7 +281,7 @@ export default function DashboardBillingPage() {
               ))}
             </div>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 1, background: C.border }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12 }}>
             {DASHBOARD_TIERS.map(t => {
               const isCurrent = t.id === normalized
               const idxCurrent = DASHBOARD_TIERS.findIndex(x => x.id === normalized)
@@ -289,7 +289,8 @@ export default function DashboardBillingPage() {
               const direction = idxThis > idxCurrent ? 'Upgrade' : 'Downgrade'
               const pp = priceFor(t.id, interval)
               return (
-                <div key={t.id} style={{ position: 'relative', background: C.surface, padding: '22px 20px', display: 'flex', flexDirection: 'column' }}>
+                // Current tier: 2px steel border. Others: single crisp hairline.
+                <div key={t.id} style={{ position: 'relative', background: C.surface, padding: '22px 20px', display: 'flex', flexDirection: 'column', border: isCurrent ? `2px solid ${C.steel}` : `1px solid ${C.border}` }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
                     <span style={{ fontFamily: DISP, fontWeight: 700, fontSize: 17, color: C.inkPrimary }}>{t.name}</span>
                     {isCurrent && <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '0.1em', color: 'var(--surface-accent)' }}>CURRENT</span>}

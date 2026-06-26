@@ -1,13 +1,14 @@
 'use client'
 
-import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
-import WeavnMark from '@/components/ui/WeavnMark'
 import WeavingScan from '@/components/WeavingScan'
 import { getSupabaseBrowserClient } from '@/lib/supabaseBrowser'
 import { DASHBOARD_PLAN_MONTHLY_CAPS } from '@/lib/constants'
-import SurfaceToggle, { SURFACE_NAV, useSurfaceCrossing } from '@/components/SurfaceToggle'
+import Sidebar, { type SidebarNavItem } from '@/components/shell/Sidebar'
+
+const STEEL = '#6F9BC6'
+const PURPLE = '#9D8CFF'
 
 function domainOf(raw: string): string {
   const t = raw.trim()
@@ -49,22 +50,42 @@ function sectionTitle(pathname: string): string {
 
 export default function DashboardShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname() ?? '/app'
-  const { rootRef, surface, navSurface, phase, crossing, flipTo } = useSurfaceCrossing('app')
   const [scanOpen, setScanOpen] = useState(false)
 
   // Tier drives the nav — no locked items, no padlocks. Default to the minimal founder
   // nav while the plan loads so locked items never flash. Agency/Enterprise add Clients
   // + Branding. "Reports" is folded into the Overview and never appears.
   const [plan, setPlan] = useState<string | null>(null)
+  const [name, setName] = useState<string>('Workspace')
+  const [used, setUsed] = useState<number | null>(null)
+
   useEffect(() => {
     let cancelled = false
-    fetch('/api/profile').then(r => r.json()).then(d => {
-      if (!cancelled && typeof d?.plan === 'string') setPlan(d.plan)
-    }).catch(() => {})
+    ;(async () => {
+      try {
+        const supabase = getSupabaseBrowserClient()
+        const { data: { user } } = await supabase.auth.getUser()
+        if (user && !cancelled) {
+          const meta = (user.user_metadata ?? {}) as { full_name?: string; name?: string }
+          const raw = meta.full_name ?? meta.name ?? (user.email ? user.email.split('@')[0] : '')
+          if (raw) setName(raw.charAt(0).toUpperCase() + raw.slice(1))
+        }
+        const profile = await fetch('/api/profile').then(r => r.json()).catch(() => ({}))
+        if (!cancelled && typeof profile?.plan === 'string') setPlan(profile.plan)
+        if (user) {
+          const monthStart = new Date(); monthStart.setDate(1); monthStart.setHours(0, 0, 0, 0)
+          const { count } = await supabase.from('reports').select('id', { count: 'exact', head: true })
+            .eq('user_id', user.id).gte('created_at', monthStart.toISOString())
+          if (!cancelled) setUsed(count ?? 0)
+        } else if (!cancelled) setUsed(0)
+      } catch { if (!cancelled) setUsed(0) }
+    })()
     return () => { cancelled = true }
   }, [])
+
+  const planName = plan ?? 'free'
   const isAgency = plan === 'agency' || plan === 'enterprise'
-  const APP_NAV: { label: string; href?: string }[] = isAgency
+  const APP_NAV: { label: string; href: string }[] = isAgency
     ? [
         { label: 'Overview', href: '/app' },
         { label: 'Clients', href: '/app/clients' },
@@ -75,118 +96,46 @@ export default function DashboardShell({ children }: { children: React.ReactNode
         { label: 'Overview', href: '/app' },
         { label: 'Billing', href: '/app/billing' },
       ]
+  const nav: SidebarNavItem[] = APP_NAV.map(it => ({ label: it.label, href: it.href, active: isActive(pathname, it.href) }))
 
-  const navClass = `surface-nav${phase === 'leaving' ? ' is-leaving' : phase === 'entering' ? ' is-entering' : ''}`
+  const limit = DASHBOARD_PLAN_MONTHLY_CAPS[planName] ?? null
+  const pct = limit ? Math.min(100, Math.round(((used ?? 0) / limit) * 100)) : 100
+  const quota = {
+    label: 'Usage',
+    primary: `${used == null ? '—' : used}${limit ? ` / ${limit}` : ''} scans`,
+    pct,
+    sub: limit ? 'this month · resets on the 1st' : 'custom plan · no monthly cap',
+    warn: !!(limit && (used ?? 0) >= limit),
+  }
 
   return (
-    <div ref={rootRef} data-surface="app" style={{ minHeight: 'calc(100vh - 4rem)', display: 'flex', background: C.bg }}>
+    <div data-surface="app" style={{ minHeight: 'calc(100vh - 4rem)', display: 'flex', background: C.bg }}>
 
-      {/* ── Identity rail ───────────────────────────────────────────────────── */}
-      <aside
-        style={{
-          position: 'fixed',
-          left: 0,
-          top: '4rem',
-          height: 'calc(100vh - 4rem)',
-          width: SIDEBAR_W,
-          background: C.sidebarBg,
-          borderRight: `0.5px solid ${C.border}`,
-          zIndex: 40,
-          display: 'flex',
-          flexDirection: 'column',
-        }}
-      >
-        {/* Identity — WeavnMark + "Weavn" wordmark, constant across both surfaces */}
-        <div style={{ padding: '16px 18px', borderBottom: `0.5px solid ${C.border}`, flexShrink: 0 }}>
-          <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 9, textDecoration: 'none' }}>
-            <WeavnMark size={26} />
-            <span style={{ fontFamily: DISP, fontWeight: 800, fontSize: 15, letterSpacing: '-0.01em', color: C.inkPrimary }}>
-              Weavn
-            </span>
-          </Link>
-        </div>
-
-        {/* Surface-specific nav (middle) — reconfigures on crossing */}
-        <nav key={navSurface} className={navClass} style={{ flex: 1, padding: '12px 0', overflowY: 'auto' }}>
-          {(navSurface === 'app' ? APP_NAV : SURFACE_NAV[navSurface]).map((item, i) => {
-            const cssVars = { '--nav-i': i } as React.CSSProperties
-            if (navSurface === 'app' && item.href) {
-              const active = isActive(pathname, item.href)
-              return (
-                <Link
-                  key={item.label}
-                  href={item.href}
-                  className="surface-nav-item"
-                  style={{
-                    ...cssVars,
-                    display: 'block',
-                    padding: '11px 18px',
-                    fontFamily: MONO,
-                    fontSize: 12,
-                    letterSpacing: '0.04em',
-                    textDecoration: 'none',
-                    color: active ? C.inkPrimary : C.inkSecondary,
-                    background: active ? 'color-mix(in srgb, var(--surface-accent) 7%, transparent)' : 'transparent',
-                    borderLeft: `2px solid ${active ? 'var(--surface-accent)' : 'transparent'}`,
-                    transition: 'color 0.12s, background 0.12s',
-                  }}
-                  onMouseEnter={e => { if (!active) (e.currentTarget as HTMLAnchorElement).style.color = C.inkPrimary }}
-                  onMouseLeave={e => { if (!active) (e.currentTarget as HTMLAnchorElement).style.color = C.inkSecondary }}
-                >
-                  {item.label}
-                </Link>
-              )
-            }
-            // Incoming-surface preview during the crossing — display only
-            return (
-              <div
-                key={item.label}
-                aria-hidden
-                className="surface-nav-item"
-                style={{ ...cssVars, padding: '11px 18px', fontFamily: MONO, fontSize: 12, letterSpacing: '0.04em', color: C.inkSecondary, borderLeft: '2px solid transparent' }}
-              >
-                {item.label}
-              </div>
-            )
-          })}
-        </nav>
-
-        {/* Surface toggle (bottom) */}
-        <div style={{ borderTop: `0.5px solid ${C.border}`, flexShrink: 0 }}>
-          <SurfaceToggle current={surface} crossing={crossing} onFlip={flipTo} />
-        </div>
-
-        {/* Usage / quota block (very bottom) */}
-        <QuotaBlock />
-
-        {/* Account (very bottom) */}
-        <div style={{ padding: '14px 18px', borderTop: `0.5px solid ${C.border}`, flexShrink: 0 }}>
-          <Link
-            href="/app/account"
-            style={{
-              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-              fontFamily: MONO, fontSize: 12, letterSpacing: '0.04em',
-              color: isActive(pathname, '/app/account') ? C.inkPrimary : C.inkMuted, textDecoration: 'none',
-            }}
-            onMouseEnter={e => { (e.currentTarget as HTMLAnchorElement).style.color = C.inkPrimary }}
-            onMouseLeave={e => { (e.currentTarget as HTMLAnchorElement).style.color = isActive(pathname, '/app/account') ? C.inkPrimary : C.inkMuted }}
-          >
-            <span>Account</span>
-            <span style={{ color: 'var(--surface-accent)' }}>→</span>
-          </Link>
-        </div>
-      </aside>
+      {/* ── Identity rail (shared component, steel) — doorway to the purple console ─ */}
+      <Sidebar
+        accent={STEEL}
+        modeLabel="Dashboard"
+        workspaceName={name}
+        workspacePlan={planName}
+        nav={nav}
+        quota={quota}
+        doorway={{ label: 'Developer console →', href: '/console', accent: PURPLE }}
+        account={{ label: 'Account', href: '/app/account', active: isActive(pathname, '/app/account') }}
+        width={SIDEBAR_W}
+      />
 
       {/* ── Page content ────────────────────────────────────────────────────── */}
-      <main className="surface-scrim-target surface-content-in" style={{ marginLeft: SIDEBAR_W, flex: 1, minHeight: 'calc(100vh - 4rem)', position: 'relative' }}>
+      <main style={{ marginLeft: SIDEBAR_W, flex: 1, minHeight: 'calc(100vh - 4rem)', position: 'relative' }}>
         {/* Top chrome — "New scan →" on every page (parity with the Developers surface) */}
         <div
           style={{
+            // Opaque (no translucency / backdrop blur): a see-through bar let the page's
+            // heading + scan input bleed through it as a ghost layer when scrolled under.
             position: 'sticky', top: '4rem', zIndex: 30,
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
             padding: '12px 24px', minHeight: 52,
-            background: 'rgba(5,8,16,0.82)', backdropFilter: 'blur(10px)',
-            borderBottom: `0.5px solid ${C.border}`,
+            background: C.sidebarBg,
+            borderBottom: '1px solid var(--divider-color)',
           }}
         >
           <span style={{ fontFamily: MONO, fontSize: 11, letterSpacing: '0.16em', textTransform: 'uppercase', color: C.inkMuted }}>
@@ -211,73 +160,6 @@ export default function DashboardShell({ children }: { children: React.ReactNode
       </main>
 
       {scanOpen && <NewScanModal onClose={() => setScanOpen(false)} />}
-    </div>
-  )
-}
-
-// ── Usage / quota block ─────────────────────────────────────────────────────────
-// Real dashboard usage: fresh report scans this calendar month vs the plan ceiling.
-// (lib/usageTracking governs the API-KEY surface and is server-only / service-role;
-// the dashboard's unit is the `reports` table, read here via the browser client.)
-function QuotaBlock() {
-  const [used, setUsed] = useState<number | null>(null)
-  const [plan, setPlan] = useState<string>('free')
-
-  useEffect(() => {
-    let cancelled = false
-    ;(async () => {
-      try {
-        const supabase = getSupabaseBrowserClient()
-        const { data: { user } } = await supabase.auth.getUser()
-        if (!user) { if (!cancelled) setUsed(0); return }
-
-        const monthStart = new Date()
-        monthStart.setDate(1)
-        monthStart.setHours(0, 0, 0, 0)
-
-        const [{ count }, profileRes] = await Promise.all([
-          supabase.from('reports').select('id', { count: 'exact', head: true })
-            .eq('user_id', user.id).gte('created_at', monthStart.toISOString()),
-          fetch('/api/profile').then(r => r.json()).catch(() => ({})),
-        ])
-        if (cancelled) return
-        setUsed(count ?? 0)
-        if (typeof profileRes?.plan === 'string') setPlan(profileRes.plan)
-      } catch {
-        if (!cancelled) setUsed(0)
-      }
-    })()
-    return () => { cancelled = true }
-  }, [])
-
-  // Hard monthly cap for this plan from the catalog (null = enterprise/custom — no cap).
-  const limit = DASHBOARD_PLAN_MONTHLY_CAPS[plan] ?? null
-  const pct = limit ? Math.min(100, Math.round(((used ?? 0) / limit) * 100)) : 100
-
-  return (
-    <div style={{ padding: '14px 18px', borderTop: `0.5px solid ${C.border}`, flexShrink: 0 }}>
-      <div style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '0.2em', textTransform: 'uppercase', color: C.inkMuted, marginBottom: 8 }}>
-        Usage
-      </div>
-      <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 7 }}>
-        <span style={{ fontFamily: MONO, fontSize: 11, color: C.inkSecondary }}>
-          {used == null ? '—' : used} {limit ? `/ ${limit}` : ''} scans
-        </span>
-        <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '0.06em', textTransform: 'capitalize', color: C.inkMuted }}>
-          {plan}
-        </span>
-      </div>
-      <div style={{ position: 'relative', width: '100%', height: 2, background: 'rgba(255,255,255,0.07)' }}>
-        <div style={{
-          position: 'absolute', top: 0, left: 0, height: '100%',
-          width: `${pct}%`,
-          background: limit && (used ?? 0) >= limit ? C.worse : 'var(--surface-accent)',
-          transition: 'width 0.3s ease',
-        }} />
-      </div>
-      <div style={{ fontFamily: MONO, fontSize: 9.5, color: C.inkMuted, marginTop: 7, letterSpacing: '0.04em' }}>
-        {limit ? 'this month · resets on the 1st' : 'custom plan · no monthly cap'}
-      </div>
     </div>
   )
 }

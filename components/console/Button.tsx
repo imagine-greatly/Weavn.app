@@ -1,22 +1,25 @@
 import type { ButtonHTMLAttributes, CSSProperties, ReactNode } from 'react'
 
 /**
- * Button — flat console affordance, NO shadow / glow. Two variants:
+ * Button — flat affordance, NO shadow / glow. Two variants:
  *   ghost   — neutral hairline (--btn-ghost-border), muted text → brightens on hover
- *   primary — purple accent edge (--btn-primary-border) + faint .08 accent fill
- * Mono uppercase label, zero radius, integer-pixel borders. Purple is punctuation:
+ *   primary — accent edge (.45 border) + faint .08 accent fill
+ * Mono uppercase label, zero radius, integer-pixel borders. The accent is punctuation:
  * primary is the one accented action per view; everything else is ghost.
+ *
+ * `accent` defaults to console purple; pass steel (#6F9BC6) to reuse on /app.
  */
 
 const MONO = "'IBM Plex Mono', monospace"
-const ACCENT = '#9D8CFF'
+const ACCENT_DEFAULT = '#9D8CFF'
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'ghost' | 'primary'
+  accent?: string
   children?: ReactNode
 }
 
-export default function Button({ variant = 'ghost', children, style, className, ...rest }: ButtonProps) {
+export default function Button({ variant = 'ghost', accent = ACCENT_DEFAULT, children, style, className, ...rest }: ButtonProps) {
   const base: CSSProperties = {
     fontFamily: MONO,
     fontSize: 11,
@@ -32,7 +35,11 @@ export default function Button({ variant = 'ghost', children, style, className, 
 
   const variantStyle: CSSProperties =
     variant === 'primary'
-      ? { color: ACCENT, border: 'var(--btn-primary-border)', background: 'var(--btn-primary-fill)' }
+      ? {
+          color: accent,
+          border: `1px solid color-mix(in srgb, ${accent} 45%, transparent)`,
+          background: `color-mix(in srgb, ${accent} 8%, transparent)`,
+        }
       : { color: '#9398A8', border: 'var(--btn-ghost-border)' }
 
   return (

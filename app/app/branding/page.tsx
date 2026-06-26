@@ -331,7 +331,7 @@ function BrandPreview({ branding }: { branding: BrandingConfig }) {
       {/* footer */}
       <div style={{ padding: '12px 18px', borderTop: `0.5px solid ${t.border}`, display: 'flex', justifyContent: 'space-between', gap: 10 }}>
         <span style={{ fontFamily: MONO, fontSize: 9, color: t.inkSecondary }}>{[branding.footerText || branding.agencyName || 'Your agency', 'Confidential'].join(' · ')}</span>
-        <span style={{ fontFamily: MONO, fontSize: 9, textTransform: 'uppercase', color: t.inkMuted }}>311 checks</span>
+        <span style={{ fontFamily: MONO, fontSize: 9, textTransform: 'uppercase', color: t.inkMuted }}>307 checks</span>
       </div>
     </div>
   )

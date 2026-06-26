@@ -331,7 +331,7 @@ async function executeScan(p: ScanParams): Promise<ScanResult> {
 
   if (RUBRIC_SCORING_ENABLED) {
     // ── RUBRIC SCORING PATH (gated by WEAVN_RUBRIC_SCORING) — shared engine, lib/rubricEngine.ts ──
-    // Score + dimensions + findings are COMPUTED from the 311-check rubric (never self-reported).
+    // Score + dimensions + findings are COMPUTED from the 307-check rubric (never self-reported).
     // The SAME runRubricScan powers the dashboard (/api/scan), so both surfaces score identically.
     const summaryContent = wrapSummary(buildPageSummary(extraction));
     let r: Awaited<ReturnType<typeof runRubricScan>>;

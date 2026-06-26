@@ -50,7 +50,7 @@ export interface VerdictCardProps {
   findings: VerdictCardFinding[]
   /** Footer text (sample, no link). Ignored when `href` is set. */
   footer?: string
-  /** Full report link; when set the footer is "27 categories · 311 checks · FULL REPORT →". */
+  /** Full report link; when set the footer is "27 categories · 307 checks · FULL REPORT →". */
   href?: string
   /** Ghosted "what you'll get" sample treatment (dashed hairline border, reduced opacity). */
   sample?: boolean
@@ -120,7 +120,7 @@ export default function VerdictCard({ domain, score, verdictLabel, summary, find
       {/* Footer */}
       {href ? (
         <div style={{ borderTop: `0.5px solid ${C.border}`, paddingTop: 12 }}>
-          <span style={{ fontFamily: MONO, fontSize: 10.5, color: C.inkMuted, letterSpacing: '0.02em' }}>27 categories · 311 checks · </span>
+          <span style={{ fontFamily: MONO, fontSize: 10.5, color: C.inkMuted, letterSpacing: '0.02em' }}>27 categories · 307 checks · </span>
           <a href={href} style={{ fontFamily: MONO, fontSize: 10.5, letterSpacing: '0.04em', color: STEEL, textDecoration: 'none' }}>FULL REPORT →</a>
         </div>
       ) : footer ? (

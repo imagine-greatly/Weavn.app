@@ -463,7 +463,7 @@ function HowItWorksSection() {
 
         {/* Lead-in caption — header removed so this reads as part of Quickstart */}
         <p style={{ ...MONO, fontSize: 12, color: '#6E7587', margin: '0 0 48px', letterSpacing: '0.04em' }}>
-          One POST request. 311 checks fire in sequence across 27 categories. Structured JSON returns.
+          One POST request. 307 checks fire in sequence across 27 categories. Structured JSON returns.
         </p>
 
         {/* Step connector row with traveling highlight */}
@@ -522,7 +522,7 @@ function HowItWorksSection() {
               <TabbedCode compact />
             </div>
             <div style={{ padding: '0 14px 14px', display: 'flex', gap: 6, flexWrap: 'wrap', position: 'relative', zIndex: 2 }}>
-              {[{ l: '311 checks', c: '#00C48C' }, { l: '27 categories', c: '#6F9BC6' }, { l: '~90s median', c: '#6E7587' }].map(x => (
+              {[{ l: '307 checks', c: '#00C48C' }, { l: '27 categories', c: '#6F9BC6' }, { l: '~90s median', c: '#6E7587' }].map(x => (
                 <span key={x.l} style={{ ...MONO, fontSize: 10, color: x.c, background: 'rgba(255,255,255,0.03)', border: '0.5px solid rgba(255,255,255,0.07)', padding: '4px 8px' }}>{x.l}</span>
               ))}
             </div>
@@ -542,7 +542,7 @@ function HowItWorksSection() {
             <div style={{ padding: '10px 14px', borderBottom: '0.5px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', gap: 8 }}>
               <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#00C48C', display: 'inline-block', flexShrink: 0 }} />
               <span style={{ ...MONO, fontSize: 10, color: '#6E7587', textTransform: 'uppercase', letterSpacing: '0.15em' }}>SCANNING</span>
-              <span style={{ ...MONO, fontSize: 10, color: '#6E7587', marginLeft: 'auto' }}>ai · 311 checks</span>
+              <span style={{ ...MONO, fontSize: 10, color: '#6E7587', marginLeft: 'auto' }}>ai · 307 checks</span>
             </div>
             <div style={{ padding: '14px', flexGrow: 1, display: 'flex', flexDirection: 'column', gap: 9 }}>
               {HIW_SCAN_CATS.map((name, i) => {
@@ -556,7 +556,7 @@ function HowItWorksSection() {
               })}
             </div>
             <div style={{ padding: '10px 14px 14px' }}>
-              <span style={{ ...MONO, fontSize: 11, color: '#404860' }}>running 311 checks · 27 categories</span>
+              <span style={{ ...MONO, fontSize: 11, color: '#404860' }}>running 307 checks · 27 categories</span>
               <span style={{ ...MONO, fontSize: 11, color: '#6E7587' }}> ···</span>
             </div>
           </div>
@@ -694,7 +694,7 @@ export default function DevelopersPage() {
 
                 {/* Stat chips — neutral hairline borders */}
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                  {['311 checks', '~90s median', 'cache hits free'].map(label => (
+                  {['307 checks', '~90s median', 'cache hits free'].map(label => (
                     <span key={label} style={{ ...MONO, fontSize: 11, letterSpacing: '0.04em', color: '#9398A8', background: 'rgba(255,255,255,0.03)', border: '0.5px solid rgba(255,255,255,0.12)', padding: '5px 12px' }}>
                       {label}
                     </span>
@@ -753,7 +753,7 @@ export default function DevelopersPage() {
             <Brackets />
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               {[
-                { t: 'What it checks', lead: null, body: "311 checks across 27 conversion categories — hero, trust, CTA, social proof, and more — run against the exact page you submit." },
+                { t: 'What it checks', lead: null, body: "307 checks across 27 conversion categories — hero, trust, CTA, social proof, and more — run against the exact page you submit." },
                 { t: 'What a finding is', lead: null, body: "Each issue comes back as a structured finding: what's wrong, the on-page evidence behind it, a ranked priority, and a rewritten fix you can paste in." },
                 { t: 'Why percentile, not a raw score', lead: 'Not an average. A percentile.', body: "Your score is positioned against a live corpus of real scans in the same vertical — so '63rd percentile' says something a generic audit number can't." },
               ].map((c, i) => (
@@ -1168,7 +1168,7 @@ export default function DevelopersPage() {
                   label: 'ASYNC PROCESSING',
                   route: 'status: pending',
                   body: 'Each URL scanned independently. Structured JSON produced per URL. No polling required.',
-                  detail: 'The engine runs 311 checks per URL. Parallel execution — a 10-URL batch completes in roughly the same wall time as one.',
+                  detail: 'The engine runs 307 checks per URL. Parallel execution — a 10-URL batch completes in roughly the same wall time as one.',
                   accent: 'rgba(157,140,255,0.3)',
                   accentRgba: '157,140,255',
                 },

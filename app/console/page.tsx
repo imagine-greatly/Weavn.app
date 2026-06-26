@@ -5,9 +5,11 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { getSupabaseBrowserClient } from '@/lib/supabaseBrowser'
 import ScoreRing from '@/components/ui/ScoreRing'
-import WeavnMark from '@/components/ui/WeavnMark'
 import EmptyState from '@/components/ui/EmptyState'
-import SurfaceToggle, { SURFACE_NAV, useSurfaceCrossing } from '@/components/SurfaceToggle'
+import Sidebar, { type SidebarNavItem } from '@/components/shell/Sidebar'
+
+const STEEL = '#6F9BC6'
+const PURPLE = '#9D8CFF'
 import { FREE_API_TRIAL_SCANS } from '@/lib/constants'
 import { API_PLANS, type ApiTier } from '@/lib/pricing'
 import { scoreColor, scoreToVerdict, estimatePercentile, ordinal } from '@/lib/verdict'
@@ -20,7 +22,6 @@ import UsageChart from '@/components/console/UsageChart'
 import StatusPill from '@/components/console/StatusPill'
 import ScoreChip from '@/components/console/ScoreChip'
 import SegmentedMeter from '@/components/console/SegmentedMeter'
-import QuotaBar from '@/components/console/QuotaBar'
 import Panel from '@/components/console/Panel'
 import Field from '@/components/console/Field'
 import Button from '@/components/console/Button'
@@ -1245,7 +1246,6 @@ const NAV_ITEMS: Array<{ id: TabId; label: string; icon: React.ReactNode }> = [
 export default function DeveloperPortal() {
   const router = useRouter()
   const [activeTab, setActiveTab] = useState<TabId>('overview')
-  const { rootRef, surface, navSurface, phase, crossing, flipTo } = useSurfaceCrossing('console')
 
   // Live data
   const [loading, setLoading]         = useState(true)
@@ -1421,6 +1421,19 @@ export default function DeveloperPortal() {
     await loadData()
   }
 
+  // Shared Sidebar inputs (developer = purple; doorway points back to the steel dashboard).
+  const consoleNav: SidebarNavItem[] = NAV_ITEMS.map(item => ({
+    label: item.label,
+    active: activeTab === item.id,
+    onClick: () => setActiveTab(item.id),
+  }))
+  const consoleIncluded = API_PLANS[plan as ApiTier]?.includedScans ?? null
+  const consoleQuota = isTrialPlan
+    ? { label: 'Trial', primary: `${scansUsed} / ${FREE_API_TRIAL_SCANS} scans`, pct: trialPct, sub: 'lifetime free trial', warn: trialPct >= 100 }
+    : consoleIncluded != null
+      ? { label: 'This month', primary: `${monthScans} / ${consoleIncluded} scans`, pct: Math.min(100, Math.round((monthScans / consoleIncluded) * 100)), sub: 'included this period', warn: monthScans >= consoleIncluded }
+      : { label: 'This month', primary: `${monthScans} scans · $${monthSpend.toFixed(2)}`, pct: 0, sub: `${plan} · usage-based`, warn: false }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen bg-background-base">
@@ -1430,97 +1443,23 @@ export default function DeveloperPortal() {
   }
 
   return (
-    <div ref={rootRef} data-surface="console" className="flex h-screen overflow-hidden bg-background-base">
+    <div data-surface="console" className="flex h-screen overflow-hidden bg-background-base">
 
-      {/* ── Left Sidebar ─────────────────────────────────────────────────── */}
-      <aside className="w-[220px] flex-shrink-0 bg-background-raised flex flex-col h-full" style={{ borderRight: 'var(--divider)' }}>
-
-        {/* Identity — WeavnMark + "Weavn" wordmark, constant across both surfaces */}
-        <div className="px-6 py-4 border-b border-background-border">
-          <Link href="/" className="flex items-center gap-2.5 no-underline">
-            <WeavnMark size={26} />
-            <span className="font-display font-extrabold text-sm text-text-primary">Weavn</span>
-          </Link>
-        </div>
-
-        {/* Surface-specific nav (middle) — reconfigures on crossing */}
-        <nav
-          key={navSurface}
-          className={`surface-nav flex-1 py-4${phase === 'leaving' ? ' is-leaving' : phase === 'entering' ? ' is-entering' : ''}`}
-        >
-          {navSurface === 'console'
-            ? NAV_ITEMS.map((item, i) => {
-                const active = activeTab === item.id
-                const style: React.CSSProperties = { '--nav-i': i } as React.CSSProperties
-                if (active) {
-                  style.background = 'color-mix(in srgb, var(--surface-accent) 8%, transparent)'
-                  style.borderLeftColor = 'var(--surface-accent)'
-                }
-                return (
-                  <button
-                    key={item.id}
-                    onClick={() => setActiveTab(item.id)}
-                    style={style}
-                    className={`surface-nav-item w-full flex items-center gap-3 px-6 py-2.5 font-body text-sm cursor-pointer transition-colors duration-150 bg-transparent text-left border-0 border-l-2 ${
-                      active
-                        ? 'text-text-primary'
-                        : 'text-text-secondary hover:text-text-primary hover:bg-background-interactive border-transparent'
-                    }`}
-                  >
-                    {item.icon}
-                    {item.label}
-                  </button>
-                )
-              })
-            : SURFACE_NAV.app.map((item, i) => (
-                <div
-                  key={item.label}
-                  aria-hidden
-                  style={{ '--nav-i': i } as React.CSSProperties}
-                  className="surface-nav-item w-full flex items-center gap-3 px-6 py-2.5 font-body text-sm text-left border-0 border-l-2 border-transparent text-text-secondary"
-                >
-                  {item.label}
-                </div>
-              ))}
-        </nav>
-
-        {/* Surface toggle (bottom) */}
-        <div className="border-t border-background-border flex-shrink-0">
-          <SurfaceToggle current={surface} crossing={crossing} onFlip={flipTo} />
-        </div>
-
-        {/* Usage block — month-to-date activity + display-only trial quota */}
-        <div className="px-6 py-5 border-t border-background-border">
-          <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mb-3">THIS MONTH</div>
-          <div className="font-display font-extrabold text-2xl text-text-primary">{monthScans}</div>
-          <div className="font-mono text-xs text-text-tertiary">{monthScans === 1 ? 'scan' : 'scans'} · ${monthSpend.toFixed(2)} spent</div>
-
-          <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mt-5 mb-2">Quota</div>
-          {isTrialPlan ? (
-            <>
-              <div className="font-mono text-xs text-text-tertiary">{scansUsed} / {FREE_API_TRIAL_SCANS} free trial · lifetime</div>
-              <div className="mt-3"><QuotaBar pct={trialPct} accent="var(--surface-accent)" warnAtFull /></div>
-            </>
-          ) : (
-            <div className="font-mono text-xs text-text-tertiary">{plan} · usage-based</div>
-          )}
-        </div>
-
-        {/* Account (very bottom) — shared across both surfaces */}
-        <div className="px-6 py-4 border-t border-background-border">
-          <Link
-            href="/app/account"
-            className="flex items-center justify-between font-mono text-xs text-text-tertiary hover:text-text-primary transition-colors duration-150 no-underline"
-          >
-            <span>Account</span>
-            <span style={{ color: 'var(--surface-accent)' }}>→</span>
-          </Link>
-        </div>
-
-      </aside>
+      {/* ── Left Sidebar (shared component, purple) — doorway to the steel dashboard ─ */}
+      <Sidebar
+        fixed={false}
+        accent={PURPLE}
+        modeLabel="Developer"
+        workspaceName={userName ?? 'Workspace'}
+        workspacePlan={plan}
+        nav={consoleNav}
+        quota={consoleQuota}
+        doorway={{ label: '← Dashboard', href: '/app', accent: STEEL }}
+        account={{ label: 'Account', href: '/app/account' }}
+      />
 
       {/* ── Right Panel ──────────────────────────────────────────────────── */}
-      <div className="surface-scrim-target surface-content-in flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-hidden">
 
         {/* Top bar */}
         <div className="flex-shrink-0 bg-background-base px-8 py-4 flex justify-between items-center z-10" style={{ borderBottom: 'var(--divider)' }}>

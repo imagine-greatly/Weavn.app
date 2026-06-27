@@ -44,8 +44,8 @@ function bandColor(score: number, t: ThemeTokens): string {
 const DIMENSIONS: { key: string; label: string; ciLabel: string | null }[] = [
   { key: "conversion_architecture", label: "Conversion Architecture", ciLabel: "Conversion Architecture" },
   { key: "message_clarity", label: "Message Clarity", ciLabel: "Message Clarity" },
-  { key: "objection_handling", label: "Objection Handling", ciLabel: null },
-  { key: "offer_clarity", label: "Offer Clarity", ciLabel: null },
+  { key: "objection_handling", label: "Objection Handling", ciLabel: "Objection Handling" },
+  { key: "offer_clarity", label: "Offer Clarity", ciLabel: "Offer Clarity" },
   { key: "trust_signals", label: "Trust Signals", ciLabel: "Trust Signals" },
   { key: "traffic_readiness", label: "Traffic Readiness", ciLabel: "Traffic Readiness" },
   { key: "technical_foundation", label: "Technical Foundation", ciLabel: "Technical Foundation" },

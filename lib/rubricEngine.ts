@@ -268,15 +268,28 @@ export async function runRubricScan(params: {
   // ── N-PASS RECONCILE (default N=1 → passthrough; statusRows === pass1.rows) ──
   let statusRows: RubricResultRow[] = pass1.rows;
   if (STATUS_PASSES > 1) {
-    const runsForReconcile: Array<{ id: string; status: string }[]> = [pass1.rows.map(r => ({ id: r.id, status: r.status }))];
-    for (let i = 1; i < STATUS_PASSES; i++) {
-      try {
-        const extra = parseStatus(await runStatusPass(PASS1_MAX_TOKENS), scopedChecks);
-        runsForReconcile.push(extra.rows.map(r => ({ id: r.id, status: r.status })));
-      } catch (e) {
-        console.error(`[rubricEngine] status pass ${i + 1}/${STATUS_PASSES} failed (non-fatal): ${e instanceof Error ? e.message : e}`);
-      }
-    }
+    // The additional status passes are INDEPENDENT re-rolls of the SAME scoped input — they feed a
+    // per-id MAJORITY VOTE (reconcileStatuses), which is order-independent — so they run CONCURRENTLY
+    // instead of serially. pass-1 stays the FIRST run: reconcileStatuses pins id ORDER to the first
+    // run, and Promise.all preserves array order regardless of completion timing, so runsForReconcile
+    // (and therefore the reconciled output) is byte-identical to the old serial loop for the same
+    // sampled statuses — ONLY wall-time changes. A non-fatal pass failure resolves to null and is
+    // dropped exactly as the old loop's catch skipped it; one bad sample never sinks the batch.
+    const extraRuns = await Promise.all(
+      Array.from({ length: STATUS_PASSES - 1 }, async (_, i) => {
+        try {
+          const extra = parseStatus(await runStatusPass(PASS1_MAX_TOKENS), scopedChecks);
+          return extra.rows.map(r => ({ id: r.id, status: r.status }));
+        } catch (e) {
+          console.error(`[rubricEngine] status pass ${i + 2}/${STATUS_PASSES} failed (non-fatal): ${e instanceof Error ? e.message : e}`);
+          return null;
+        }
+      })
+    );
+    const runsForReconcile: Array<{ id: string; status: string }[]> = [
+      pass1.rows.map(r => ({ id: r.id, status: r.status })),
+      ...extraRuns.filter((r): r is { id: string; status: string }[] => r !== null),
+    ];
     const reconciled = reconcileStatuses(runsForReconcile);
     statusRows = reconciled.rows.map(r => ({ id: r.id, status: r.status }));
     console.log(`[rubricEngine] reconcile | domain=${domain} passes=${runsForReconcile.length} flaky=${reconciled.flakyCount}/${scopedChecks.length} meanAgreement=${(reconciled.meanAgreement * 100).toFixed(1)}%`);

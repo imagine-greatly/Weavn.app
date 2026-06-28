@@ -96,7 +96,7 @@ export async function POST(req: NextRequest) {
       if (!resendKey || !email) return;
       const resend = new Resend(resendKey);
       await resend.emails.send({
-        from: "insights@weavn.app",
+        from: "Weavn <insights@weavn.app>",
         to: email,
         subject: "Your Weavn API key is ready",
         text: buildWelcomeText(name),

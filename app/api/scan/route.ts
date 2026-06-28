@@ -598,45 +598,67 @@ export async function POST(req: NextRequest) {
       const userEmail = userData?.user?.email;
       if (userEmail) {
         const criticalCount = typeof payload.criticalCount === 'number' ? payload.criticalCount : 0;
+        const highCount = typeof payload.highCount === 'number' ? payload.highCount : 0;
         const reportUrl = shareToken
           ? `https://weavn.app/reports/${shareToken}`
           : 'https://weavn.app/dashboard';
+
+        // Email-safe font stacks — clients can't reliably load web fonts, so IBM Plex leads a fallback chain.
+        const MONO = "'IBM Plex Mono','SFMono-Regular',Consolas,'Courier New',monospace";
+        const SANS = "'IBM Plex Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif";
+        const escHtml = (s: string) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+        // Top-finding teaser — read the rubric payload's REAL findings, same precedence as
+        // ReportLayout (moneyLeaks → api_findings → leaks). Render only if one exists; never fabricate.
+        type TeaserFinding = { title?: string; revenueTitle?: string; severity?: string };
+        const firstFinding = (...arrs: Array<TeaserFinding[] | undefined>): TeaserFinding | undefined => {
+          for (const a of arrs) if (a && a.length > 0) return a[0];
+          return undefined;
+        };
+        const topFinding = firstFinding(
+          payload.moneyLeaks as TeaserFinding[] | undefined,
+          (payload as { api_findings?: TeaserFinding[] }).api_findings,
+          payload.leaks as TeaserFinding[] | undefined,
+        );
+        const tfTitle = topFinding ? escHtml(String(topFinding.revenueTitle || topFinding.title || '').trim()) : '';
+        const tfSev = topFinding ? String(topFinding.severity ?? '').toLowerCase() : '';
+        const tfColor = tfSev === 'critical' ? '#E8635F' : (tfSev === 'high' || tfSev === 'warning') ? '#EFB23E' : '#6F9BC6';
+        const tfSuffix = tfSev === 'critical' ? ' · CRITICAL' : (tfSev === 'high' || tfSev === 'warning') ? ' · HIGH' : '';
+
         const resend = new Resend(process.env.RESEND_API_KEY);
         await resend.emails.send({
-          from: 'devon@weavn.app',
+          from: 'Weavn <reports@weavn.app>',
           to: userEmail,
           subject: `Your Weavn diagnostic is ready — ${domain}`,
           html: `
-<div style="background:#080C14;padding:32px 0;margin:0;font-family:'Space Mono','Courier New',monospace;">
-<div style="max-width:600px;margin:0 auto;background:#080C14;">
+<div style="background:#050810;padding:32px 0;margin:0;font-family:${SANS};">
+<div style="max-width:600px;margin:0 auto;background:#050810;">
 
   <!-- Header -->
-  <div style="padding:32px 40px 24px;border-bottom:1px solid rgba(0,200,255,0.15);">
-    <div style="display:flex;align-items:center;gap:10px;">
-      <div style="width:18px;height:18px;border:2px solid #00C8FF;position:relative;flex-shrink:0;"></div>
-      <span style="color:#00C8FF;font-size:13px;letter-spacing:0.18em;font-weight:600;">Weavn</span>
-    </div>
+  <div style="padding:32px 40px 24px;border-bottom:1px solid rgba(157,140,255,0.15);">
+    <span style="display:inline-block;width:16px;height:16px;border:2px solid #9D8CFF;vertical-align:middle;"></span>
+    <span style="color:#9D8CFF;font-size:13px;letter-spacing:0.18em;font-weight:600;font-family:${MONO};vertical-align:middle;margin-left:10px;">Weavn</span>
   </div>
 
   <!-- Body -->
   <div style="padding:40px;">
 
-    <p style="color:rgba(136,153,170,0.7);font-size:10px;letter-spacing:0.2em;text-transform:uppercase;margin:0 0 20px;">DIAGNOSTIC REPORT · COMPLETE</p>
+    <p style="color:#6E7587;font-size:10px;letter-spacing:0.2em;text-transform:uppercase;margin:0 0 20px;font-family:${MONO};">DIAGNOSTIC REPORT · COMPLETE</p>
 
-    <h1 style="color:#F0F4FF;font-size:22px;font-weight:600;margin:0 0 8px;line-height:1.3;font-family:'Space Mono','Courier New',monospace;">Your diagnostic report<br>is ready.</h1>
+    <h1 style="color:#E6E9EE;font-size:22px;font-weight:600;margin:0 0 8px;line-height:1.3;font-family:${SANS};">Your diagnostic report<br>is ready.</h1>
 
     <!-- Domain + Score block -->
-    <div style="margin:24px 0;padding:20px;border:1px solid rgba(0,200,255,0.15);border-left:3px solid #00C8FF;border-radius:0 4px 4px 0;">
+    <div style="margin:24px 0;padding:20px;background:#0A0E18;border:1px solid rgba(157,140,255,0.18);border-left:3px solid #9D8CFF;border-radius:0 4px 4px 0;">
       <table style="width:100%;border-collapse:collapse;">
         <tr>
           <td style="vertical-align:top;">
-            <p style="color:rgba(136,153,170,0.6);font-size:10px;letter-spacing:0.15em;margin:0 0 6px;">DOMAIN SCANNED</p>
-            <p style="color:#F0F4FF;font-size:14px;margin:0;">${domain}</p>
+            <p style="color:#6E7587;font-size:10px;letter-spacing:0.15em;margin:0 0 6px;font-family:${MONO};">DOMAIN SCANNED</p>
+            <p style="color:#E6E9EE;font-size:14px;margin:0;font-family:${MONO};">${domain}</p>
           </td>
           <td style="vertical-align:top;text-align:right;">
-            <p style="color:rgba(136,153,170,0.6);font-size:10px;letter-spacing:0.15em;margin:0 0 4px;">BEST-PRACTICE COVERAGE</p>
-            <p style="color:${scoreColor(payload.healthScore ?? 0)};font-size:32px;font-weight:700;margin:0;line-height:1;">${payload.healthScore ?? 0}<span style="font-size:14px;color:rgba(136,153,170,0.5);">% ±${COVERAGE_TOLERANCE} captured</span></p>
-            <p style="color:${scoreColor(payload.healthScore ?? 0)};font-size:9px;letter-spacing:0.15em;margin:4px 0 0;">${opportunityFraming(payload.healthScore ?? 0).label.toUpperCase()}</p>
+            <p style="color:#6E7587;font-size:10px;letter-spacing:0.15em;margin:0 0 4px;font-family:${MONO};">BEST-PRACTICE COVERAGE</p>
+            <p style="color:${scoreColor(payload.healthScore ?? 0)};font-size:32px;font-weight:700;margin:0;line-height:1;font-family:${SANS};">${payload.healthScore ?? 0}<span style="font-size:14px;color:#6E7587;">% ±${COVERAGE_TOLERANCE} captured</span></p>
+            <p style="color:${scoreColor(payload.healthScore ?? 0)};font-size:9px;letter-spacing:0.15em;margin:4px 0 0;font-family:${MONO};">${opportunityFraming(payload.healthScore ?? 0).label.toUpperCase()}</p>
           </td>
         </tr>
       </table>
@@ -645,48 +667,48 @@ export async function POST(req: NextRequest) {
     <!-- Stats grid -->
     <table style="width:100%;border-collapse:collapse;margin:0 0 24px;">
       <tr>
-        <td style="width:33%;padding-right:8px;">
-          <div style="padding:14px;border:1px solid rgba(255,45,45,0.3);border-radius:4px;text-align:center;">
-            <p style="color:#FF2D2D;font-size:22px;font-weight:700;margin:0;">${criticalCount}</p>
-            <p style="color:rgba(136,153,170,0.5);font-size:9px;letter-spacing:0.12em;margin:4px 0 0;">CRITICAL</p>
+        <td style="width:33%;padding-right:8px;vertical-align:top;">
+          <div style="padding:14px;background:#0A0E18;border:1px solid rgba(232,99,95,0.3);border-radius:4px;text-align:center;">
+            <p style="color:#E8635F;font-size:22px;font-weight:700;margin:0;font-family:${SANS};">${criticalCount}</p>
+            <p style="color:#6E7587;font-size:9px;letter-spacing:0.12em;margin:4px 0 0;font-family:${MONO};">CRITICAL</p>
           </div>
         </td>
-        <td style="width:33%;padding:0 4px;">
-          <div style="padding:14px;border:1px solid rgba(255,140,0,0.3);border-radius:4px;text-align:center;">
-            <p style="color:#FF8C00;font-size:22px;font-weight:700;margin:0;">${typeof payload.highCount === 'number' ? payload.highCount : 0}</p>
-            <p style="color:rgba(136,153,170,0.5);font-size:9px;letter-spacing:0.12em;margin:4px 0 0;">HIGH</p>
+        <td style="width:33%;padding:0 4px;vertical-align:top;">
+          <div style="padding:14px;background:#0A0E18;border:1px solid rgba(239,178,62,0.3);border-radius:4px;text-align:center;">
+            <p style="color:#EFB23E;font-size:22px;font-weight:700;margin:0;font-family:${SANS};">${highCount}</p>
+            <p style="color:#6E7587;font-size:9px;letter-spacing:0.12em;margin:4px 0 0;font-family:${MONO};">HIGH</p>
           </div>
         </td>
-        <td style="width:33%;padding-left:8px;">
-          <div style="padding:14px;border:1px solid rgba(0,200,255,0.2);border-radius:4px;text-align:center;">
-            <p style="color:#00C8FF;font-size:22px;font-weight:700;margin:0;">${DIAGNOSTIC_CHECKS.length}</p>
-            <p style="color:rgba(136,153,170,0.5);font-size:9px;letter-spacing:0.12em;margin:4px 0 0;">CHECKS RUN</p>
+        <td style="width:33%;padding-left:8px;vertical-align:top;">
+          <div style="padding:14px;background:#0A0E18;border:1px solid rgba(111,155,198,0.28);border-radius:4px;text-align:center;">
+            <p style="color:#6F9BC6;font-size:22px;font-weight:700;margin:0;font-family:${SANS};">${DIAGNOSTIC_CHECKS.length}</p>
+            <p style="color:#6E7587;font-size:9px;letter-spacing:0.12em;margin:4px 0 0;font-family:${MONO};">CHECKS RUN</p>
           </div>
         </td>
       </tr>
     </table>
 
-    <!-- Top finding teaser -->
-    ${payload.primaryFindings?.[0] ? `
-    <div style="margin:0 0 24px;padding:16px;border:1px solid rgba(255,45,45,0.2);border-left:3px solid #FF2D2D;border-radius:0 4px 4px 0;">
-      <p style="color:rgba(136,153,170,0.5);font-size:9px;letter-spacing:0.15em;margin:0 0 8px;">TOP FINDING · CRITICAL</p>
-      <p style="color:#F0F4FF;font-size:13px;margin:0;line-height:1.6;">${payload.primaryFindings[0].title ?? ''}</p>
+    <!-- Top finding teaser — real rubric finding (moneyLeaks → api_findings → leaks); omitted if none -->
+    ${tfTitle ? `
+    <div style="margin:0 0 24px;padding:16px;background:#0A0E18;border:1px solid ${tfColor}33;border-left:3px solid ${tfColor};border-radius:0 4px 4px 0;">
+      <p style="color:#6E7587;font-size:9px;letter-spacing:0.15em;margin:0 0 8px;font-family:${MONO};">TOP FINDING${tfSuffix}</p>
+      <p style="color:#E6E9EE;font-size:13px;margin:0;line-height:1.6;font-family:${SANS};">${tfTitle}</p>
     </div>
     ` : ''}
 
-    <p style="color:rgba(136,153,170,0.55);font-size:12px;line-height:1.8;margin:0 0 28px;">Weavn ran ${DIAGNOSTIC_CHECKS.length} diagnostic checks across 27 categories on <strong style="color:#F0F4FF;">${domain}</strong>. Full findings ranked by revenue impact, exact resolutions, and your growth blueprint are ready to view.</p>
+    <p style="color:#9398A8;font-size:12px;line-height:1.8;margin:0 0 28px;font-family:${SANS};">Weavn ran ${DIAGNOSTIC_CHECKS.length} diagnostic checks across 27 categories on <strong style="color:#E6E9EE;">${domain}</strong>. Full findings ranked by revenue impact, exact resolutions, and your growth blueprint are ready to view.</p>
 
     <!-- CTA -->
-    <a href="${reportUrl}" style="display:inline-block;border:1px solid #00C8FF;color:#00C8FF;font-family:'Space Mono','Courier New',monospace;font-size:11px;letter-spacing:0.2em;text-transform:uppercase;padding:14px 32px;text-decoration:none;">VIEW YOUR REPORT →</a>
+    <a href="${reportUrl}" style="display:inline-block;border:1px solid #9D8CFF;color:#9D8CFF;font-family:${MONO};font-size:11px;letter-spacing:0.2em;text-transform:uppercase;padding:14px 32px;text-decoration:none;">VIEW YOUR REPORT →</a>
 
   </div>
 
   <!-- Footer -->
-  <div style="padding:20px 40px;border-top:1px solid rgba(0,200,255,0.1);">
+  <div style="padding:20px 40px;border-top:1px solid rgba(157,140,255,0.12);">
     <table style="width:100%;border-collapse:collapse;">
       <tr>
-        <td style="color:rgba(136,153,170,0.35);font-size:10px;letter-spacing:0.1em;">Weavn · Conversion Intelligence</td>
-        <td style="text-align:right;color:rgba(136,153,170,0.35);font-size:10px;">devon@weavn.app</td>
+        <td style="color:#6E7587;font-size:10px;letter-spacing:0.1em;font-family:${MONO};">Weavn · Conversion Intelligence</td>
+        <td style="text-align:right;color:#6E7587;font-size:10px;font-family:${MONO};">reports@weavn.app</td>
       </tr>
     </table>
   </div>

@@ -96,7 +96,7 @@ export async function POST(req: NextRequest) {
       const name = userData?.user?.user_metadata?.full_name as string | undefined;
       const resend = new Resend(resendKey);
       await resend.emails.send({
-        from: "insights@weavn.app",
+        from: "Weavn <insights@weavn.app>",
         to: email,
         subject: "Your Weavn API key is ready",
         text: buildWelcomeText(name),

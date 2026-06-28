@@ -26,17 +26,29 @@ const svg = readFileSync(SRC)
 const raw = await sharp(svg, { density: 300 }).png().toBuffer()
 const trimmed = await sharp(raw).trim({ threshold: 8 }).png().toBuffer()
 
-/** Mark centered on a dark square tile of `px`, occupying `innerRatio` of it. */
-async function tile(px, innerRatio) {
+/**
+ * Mark centered on a dark tile of `px`, occupying `innerRatio` of it. When `round` is set the
+ * tile corners are rounded (~18% radius) via a rounded-rect alpha mask — the mark is white-core /
+ * light-on-dark and needs the dark backing to stay legible on light browser tabs, so we round the
+ * tile rather than drop it. Apple-touch icons stay SQUARE (iOS applies its own superellipse mask).
+ */
+async function tile(px, innerRatio, round = false) {
   const inner = Math.round(px * innerRatio)
   const mark = await sharp(trimmed)
     .resize(inner, inner, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } })
     .png()
     .toBuffer()
-  return sharp({ create: { width: px, height: px, channels: 4, background: DARK } })
+  const base = await sharp({ create: { width: px, height: px, channels: 4, background: DARK } })
     .composite([{ input: mark, gravity: 'center' }])
     .png()
     .toBuffer()
+  if (!round) return base
+  const r = Math.round(px * 0.18)
+  const mask = Buffer.from(
+    `<svg width="${px}" height="${px}"><rect width="${px}" height="${px}" rx="${r}" ry="${r}" fill="#fff"/></svg>`
+  )
+  // dest-in: keep the tile only where the rounded-rect mask is opaque → transparent corners.
+  return sharp(base).composite([{ input: mask, blend: 'dest-in' }]).png().toBuffer()
 }
 
 /** Assemble PNG buffers into a PNG-in-ICO container (valid for all modern browsers). */
@@ -65,14 +77,15 @@ function buildIco(images) {
 // 2. apple-icon.png — 180x180, dark tile (extra margin: iOS rounds the corners).
 writeFileSync(resolve(root, 'app/apple-icon.png'), await tile(180, 0.72))
 
-// 3. favicon.ico — 16/32/48 on dark tiles (slightly fuller for small-size legibility).
+// 3. favicon.ico — 16/32/48 on ROUNDED dark tiles (slightly fuller for small-size legibility).
 const ico = []
-for (const s of [16, 32, 48]) ico.push({ size: s, buf: await tile(s, 0.82) })
+for (const s of [16, 32, 48]) ico.push({ size: s, buf: await tile(s, 0.82, true) })
 writeFileSync(resolve(root, 'app/favicon.ico'), buildIco(ico))
 
-// 4. app/icon.svg — the favicon SVG with a dark background rect behind the mark so it
-//    reads against light browser chrome. viewBox is "62 168 76 68".
-const darkRect = '<rect x="62" y="168" width="76" height="68" fill="#050810"/>'
+// 4. app/icon.svg — the favicon SVG with a ROUNDED dark background rect behind the mark so it
+//    reads against light browser chrome with softened corners. viewBox is "62 168 76 68"
+//    (rx≈12 ≈ 18% of the 68px tile height, matching the rounded raster tiles above).
+const darkRect = '<rect x="62" y="168" width="76" height="68" rx="12" ry="12" fill="#050810"/>'
 const iconSvg = svg.toString().replace('</defs>', `</defs>\n  ${darkRect}`)
 writeFileSync(resolve(root, 'app/icon.svg'), iconSvg)
 

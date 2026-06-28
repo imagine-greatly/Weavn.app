@@ -9,7 +9,7 @@
       <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
     </filter>
   </defs>
-  <rect x="62" y="168" width="76" height="68" fill="#050810"/>
+  <rect x="62" y="168" width="76" height="68" rx="12" ry="12" fill="#050810"/>
 
   <!-- ring 3 — blue, outermost -->
   <polygon points="100,180 120.8,192 120.8,216 100,228 79.2,216 79.2,192" fill="none" stroke="#6F9BC6" stroke-width="0.8" opacity="0.38" filter="url(#rg)" style="fill:none;stroke:rgb(111, 155, 198);color:rgb(255, 255, 255);stroke-width:0.8px;stroke-linecap:butt;stroke-linejoin:miter;opacity:0.38;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>

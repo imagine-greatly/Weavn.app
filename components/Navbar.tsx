@@ -96,10 +96,12 @@ export default function Navbar() {
   const ctaButtonClass =
     `group/cta flex items-center ${navCtaTypography} transition-[background-color,border-color,box-shadow,opacity] duration-150 ease-out hover:duration-150 md:duration-300`;
 
-  const ctaOutlineStyle = {
-    color: "#6F9BC6" as const,
+  // One strong primary CTA — purple (#9D8CFF, the --data-impact brand primary), distinct from the
+  // low-emphasis "Sign in" text link so they read as primary + secondary, never two competing buttons.
+  const ctaPrimaryStyle = {
+    color: "#9D8CFF" as const,
     background: "transparent" as const,
-    border: "1px solid rgba(111,155,198,0.35)",
+    border: "1px solid rgba(157,140,255,0.5)",
     padding: "10px 20px",
     borderRadius: 0,
     boxShadow: "none" as const,
@@ -244,20 +246,20 @@ export default function Navbar() {
             <a
               href="/auth?surface=dashboard"
               className={`${ctaButtonClass} shrink-0`}
-              style={{ ...ctaOutlineStyle, textDecoration: "none" }}
+              style={{ ...ctaPrimaryStyle, textDecoration: "none" }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.background = "rgba(111,155,198,0.08)";
-                e.currentTarget.style.borderColor = "rgba(111,155,198,0.6)";
+                e.currentTarget.style.background = "rgba(157,140,255,0.10)";
+                e.currentTarget.style.borderColor = "rgba(157,140,255,0.7)";
                 e.currentTarget.style.boxShadow = "var(--interactive-glow-active)";
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.background = "transparent";
-                e.currentTarget.style.borderColor = "rgba(111,155,198,0.35)";
+                e.currentTarget.style.borderColor = "rgba(157,140,255,0.5)";
                 e.currentTarget.style.boxShadow = "none";
                 e.currentTarget.style.transitionDuration = "300ms";
               }}
             >
-              DASHBOARD
+              Get started
               <span className="ml-1 inline-block transition-transform duration-150 group-hover/cta:translate-x-[3px]">
                 →
               </span>
@@ -456,10 +458,10 @@ export default function Navbar() {
               <a
                 href="/auth?surface=dashboard"
                 className={`${navCtaTypography} flex min-h-[48px] items-center justify-center px-4 py-3`}
-                style={{ ...ctaOutlineStyle, textDecoration: "none", width: "100%" }}
+                style={{ ...ctaPrimaryStyle, textDecoration: "none", width: "100%" }}
                 onClick={() => setMobileMenuOpen(false)}
               >
-                DASHBOARD →
+                Get started →
               </a>
             ) : (
               /* Logged-in: both workspaces. The menu closes on the resulting route change. */

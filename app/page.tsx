@@ -231,7 +231,7 @@ function HeroForkSection() {
             </div>
             <Link
               href="/developers"
-              className="door-cta-developer font-mono text-xs font-semibold text-background-base bg-data-impact px-6 py-3.5 block text-center no-underline mt-6 transition-shadow duration-300"
+              className="door-cta-developer font-mono text-xs text-data-impact border border-data-impact/30 px-5 py-2.5 block text-center no-underline mt-6 transition-colors duration-200 hover:border-data-impact/60"
             >
               Explore the API →
             </Link>

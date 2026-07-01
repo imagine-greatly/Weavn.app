@@ -52,6 +52,12 @@ export interface SidebarDoorway {
   accent: string
 }
 
+export interface SidebarNavGroup {
+  /** mono caption above the group (e.g. "Agency"). */
+  label: string
+  items: SidebarNavItem[]
+}
+
 export interface SidebarProps {
   accent: string
   /** mode chip text — "Dashboard" (steel) / "Developer" (purple). */
@@ -59,6 +65,9 @@ export interface SidebarProps {
   workspaceName: string
   workspacePlan: string
   nav: SidebarNavItem[]
+  /** Optional secondary nav groups, rendered below the primary nav under a mono caption
+   *  (keeps the primary rail to its canonical 3 tabs while surfacing tier-only routes). */
+  navSecondary?: SidebarNavGroup[]
   quota?: SidebarQuota
   doorway: SidebarDoorway
   account: { label: string; href: string; active?: boolean }
@@ -105,7 +114,7 @@ function NavRow({ item, accent }: { item: SidebarNavItem; accent: string }) {
   )
 }
 
-export default function Sidebar({ accent, modeLabel, workspaceName, workspacePlan, nav, quota, doorway, account, width = 248, fixed = true }: SidebarProps) {
+export default function Sidebar({ accent, modeLabel, workspaceName, workspacePlan, nav, navSecondary, quota, doorway, account, width = 248, fixed = true }: SidebarProps) {
   const initial = (workspaceName.trim()[0] ?? 'W').toUpperCase()
   const frame: React.CSSProperties = fixed
     ? { position: 'fixed', left: 0, top: '4rem', height: 'calc(100vh - 4rem)', width, zIndex: 40 }
@@ -155,9 +164,17 @@ export default function Sidebar({ accent, modeLabel, workspaceName, workspacePla
         </div>
       </div>
 
-      {/* Nav */}
+      {/* Nav — primary rail, then any tier-only groups under a mono caption */}
       <nav style={{ flex: 1, padding: '12px 0', overflowY: 'auto' }}>
         {nav.map(item => <NavRow key={item.label} item={item} accent={accent} />)}
+        {navSecondary?.map(group => (
+          <div key={group.label} style={{ marginTop: 14 }}>
+            <div style={{ padding: '0 18px 8px', fontFamily: MONO, fontSize: 9, letterSpacing: '0.2em', textTransform: 'uppercase', color: INK_MUTED }}>
+              {group.label}
+            </div>
+            {group.items.map(item => <NavRow key={item.label} item={item} accent={accent} />)}
+          </div>
+        ))}
       </nav>
 
       {/* Quota */}

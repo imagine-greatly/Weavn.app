@@ -3,22 +3,10 @@
 import { useEffect, useState } from 'react'
 import { getSupabaseBrowserClient } from '@/lib/supabaseBrowser'
 import { DASHBOARD_PLANS, annualUsd, isCheckoutableDashboardTier, type BillingInterval, type DashboardTier } from '@/lib/pricing'
-
-// ── Steel-blue Dashboard surface tokens ────────────────────────────────────────
-const C = {
-  steel:        '#6F9BC6',
-  inkPrimary:   '#E6E9EE',
-  inkSecondary: '#9398A8',
-  inkMuted:     '#6E7587',
-  success:      '#00C48C',
-  worse:        '#E8635F',
-  surface:      '#0A0E18',
-  border:       'rgba(255,255,255,0.10)',
-} as const
-
-const MONO = "'IBM Plex Mono', monospace"
-const BODY = "'IBM Plex Sans', sans-serif"
-const DISP = "'Space Grotesk', sans-serif"
+import {
+  DASH, MONO, BODY, DISP, STEEL, steelLine,
+  PageHeader, Panel,
+} from '@/components/dashboard/ui'
 
 // Canonical DASHBOARD tiers (mirrors the /dashboard marketing pricing). These are the
 // dashboard plan set ONLY — API/console tiers never render here. Upgrades run self-serve
@@ -34,9 +22,9 @@ interface Tier {
 }
 // Qualitative feature copy ONLY — every name, price, and scan count is read from
 // DASHBOARD_PLANS (lib/pricing.ts, the single source of truth). The dashboard track is
-// hard-capped per tier, so there is no "Unlimited".
+// hard-capped per tier, so there is no "Unlimited". Coverage framing — no corpus/rank claims.
 const TIER_FEATURES: Record<DashboardTier, string[]> = {
-  free:       ['Score + top 3 findings', 'Benchmarked against corpus'],
+  free:       ['Coverage score', 'Top 3 findings, ranked'],
   starter:    ['Full report — all findings ranked', 'AI-rewritten copy', 'Cancel anytime'],
   pro:        ['Everything in Starter', 'Higher volume for an in-house team'],
   agency:     ['Everything in Pro', 'White-label PDF reports', 'Client management dashboard'],
@@ -183,86 +171,94 @@ export default function DashboardBillingPage() {
     ? `${monthScans} scans this period`
     : `${monthScans} of ${cap} scans this period`
   const scanPct = cap == null ? 100 : Math.min(100, Math.round((monthScans / cap) * 100))
+  const capReached = cap != null && monthScans >= cap
 
   return (
-    <div className="dashboard-root-shell" style={{ padding: '32px 32px 56px', maxWidth: 1040, margin: '0 auto' }}>
-      <p style={{ fontFamily: MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.2em', color: C.inkMuted, margin: '0 0 8px' }}>
-        Billing
-      </p>
-      <h1 style={{ fontFamily: DISP, fontWeight: 700, fontSize: 28, color: C.inkPrimary, margin: '0 0 6px', letterSpacing: '-0.5px' }}>
-        Plan &amp; billing
-      </h1>
-      <p style={{ fontFamily: BODY, fontSize: 15, color: C.inkSecondary, margin: '0 0 28px', maxWidth: 560, lineHeight: 1.6 }}>
-        Your dashboard subscription, usage this period, and plan options — managed in-app.
-      </p>
+    <div className="dashboard-root-shell" style={{ padding: '40px 32px 72px', maxWidth: 1040, margin: '0 auto' }}>
+      <PageHeader
+        kicker="Billing"
+        title="Plan & billing"
+        sub="Your dashboard subscription, usage this period, and plan options — managed in-app."
+      />
 
       {loading ? (
-        <p style={{ fontFamily: MONO, fontSize: 12, color: C.inkMuted, margin: 0 }}>Loading…</p>
+        <>
+          <Panel style={{ padding: '26px', marginBottom: 36 }}>
+            <div className="dash-shimmer" style={{ width: '40%', height: 22, marginBottom: 16 }} />
+            <div className="dash-shimmer" style={{ width: '100%', height: 3 }} />
+          </Panel>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12 }}>
+            {[0, 1, 2, 3].map(i => (
+              <Panel key={i} style={{ padding: '22px 20px', height: 220 }}><div className="dash-shimmer" style={{ width: '60%', height: 16 }} /></Panel>
+            ))}
+          </div>
+        </>
       ) : (
         <>
-          {/* Current plan card — flat crisp frame (monochrome). */}
-          <div style={{ marginBottom: 36 }}>
-            <div style={{ position: 'relative', border: `1px solid ${C.border}`, background: C.surface, padding: '24px 26px' }}>
-
-              <div style={{ fontFamily: MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.16em', color: C.inkMuted, marginBottom: 14 }}>
-                Current plan
-              </div>
-              <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 20, flexWrap: 'wrap' }}>
-                <div>
-                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
-                    <span style={{ fontFamily: DISP, fontWeight: 700, fontSize: 30, color: C.inkPrimary }}>{currentTier.name}</span>
-                    <span style={{ fontFamily: MONO, fontSize: 13, color: C.inkSecondary }}>
-                      {currentMonthly == null ? 'Custom' : fmtUsd(currentMonthly)}
-                      {currentMonthly != null && currentMonthly > 0 && <span style={{ color: C.inkMuted }}>/mo</span>}
-                    </span>
-                  </div>
-                  <div style={{ fontFamily: MONO, fontSize: 12, color: C.inkMuted, marginTop: 8 }}>
-                    {scanLine}
-                  </div>
-                  <div style={{ fontFamily: MONO, fontSize: 12, color: C.inkMuted, marginTop: 4 }}>
-                    {isFree
-                      ? 'Free plan — no renewal'
-                      : subscription
-                        ? `${fmtAmount(subscription.amount, subscription.currency)} · renews ${fmtDate(subscription.current_period_end)}`
-                        : 'Renewal details available in the billing portal'}
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={openPortal}
-                  disabled={portalBusy}
-                  style={{
-                    fontFamily: MONO, fontSize: 12, letterSpacing: '0.06em',
-                    color: 'var(--surface-accent)', background: 'transparent',
-                    border: '0.5px solid color-mix(in srgb, var(--surface-accent) 55%, transparent)',
-                    padding: '11px 20px', borderRadius: 0, cursor: portalBusy ? 'default' : 'pointer',
-                    opacity: portalBusy ? 0.5 : 1, whiteSpace: 'nowrap', flexShrink: 0,
-                  }}
-                >
-                  {portalBusy ? 'Opening…' : 'Manage billing →'}
-                </button>
-              </div>
-
-              {/* Usage bar */}
-              <div style={{ position: 'relative', width: '100%', height: 3, background: 'rgba(255,255,255,0.06)', marginTop: 18 }}>
-                <div style={{
-                  position: 'absolute', top: 0, left: 0, height: '100%', width: `${scanPct}%`,
-                  background: cap != null && monthScans >= cap ? C.worse : 'var(--surface-accent)',
-                }} />
-              </div>
-              <div style={{ fontFamily: MONO, fontSize: 11, color: C.inkMuted, marginTop: 9 }}>
-                Opens the Stripe billing portal to manage payment methods and invoices.
-              </div>
-              {portalError ? <div style={{ fontFamily: MONO, fontSize: 12, color: C.worse, marginTop: 8 }}>{portalError}</div> : null}
+          {/* Current plan — the elevated hero card */}
+          <Panel accent style={{ padding: '26px 28px', marginBottom: 40 }}>
+            <div style={{ fontFamily: MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.18em', color: DASH.ink3, marginBottom: 16 }}>
+              Current plan
             </div>
-          </div>
+            <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 20, flexWrap: 'wrap' }}>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: 12 }}>
+                  <span style={{ fontFamily: DISP, fontWeight: 700, fontSize: 32, color: DASH.ink, letterSpacing: '-0.5px' }}>{currentTier.name}</span>
+                  <span style={{ fontFamily: MONO, fontSize: 13, color: DASH.ink2 }}>
+                    {currentMonthly == null ? 'Custom' : fmtUsd(currentMonthly)}
+                    {currentMonthly != null && currentMonthly > 0 && <span style={{ color: DASH.ink3 }}>/mo</span>}
+                  </span>
+                </div>
+                <div style={{ fontFamily: MONO, fontSize: 12, color: DASH.ink3, marginTop: 10 }}>
+                  {scanLine}
+                </div>
+                <div style={{ fontFamily: MONO, fontSize: 12, color: DASH.ink3, marginTop: 4 }}>
+                  {isFree
+                    ? 'Free plan — no renewal'
+                    : subscription
+                      ? `${fmtAmount(subscription.amount, subscription.currency)} · renews ${fmtDate(subscription.current_period_end)}`
+                      : 'Renewal details available in the billing portal'}
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={openPortal}
+                disabled={portalBusy}
+                className="dash-btn"
+                style={{
+                  fontFamily: MONO, fontSize: 12, letterSpacing: '0.06em', textTransform: 'uppercase',
+                  color: STEEL, background: 'transparent',
+                  border: `1px solid ${steelLine(55)}`,
+                  padding: '11px 20px', borderRadius: 0, cursor: portalBusy ? 'default' : 'pointer',
+                  opacity: portalBusy ? 0.5 : 1, whiteSpace: 'nowrap', flexShrink: 0,
+                  transition: 'background 0.14s, border-color 0.14s',
+                }}
+              >
+                {portalBusy ? 'Opening…' : 'Manage billing →'}
+              </button>
+            </div>
+
+            {/* Usage bar */}
+            <div style={{ position: 'relative', width: '100%', height: 4, background: DASH.well, marginTop: 20, overflow: 'hidden' }}>
+              <div style={{
+                position: 'absolute', top: 0, left: 0, height: '100%', width: `${scanPct}%`,
+                background: capReached ? DASH.crit : STEEL,
+                boxShadow: capReached ? 'none' : `0 0 12px ${steelLine(60)}`,
+                transition: 'width 0.5s ease',
+              }} />
+            </div>
+            <div style={{ fontFamily: MONO, fontSize: 11, color: DASH.ink4, marginTop: 10 }}>
+              Opens the Stripe billing portal to manage payment methods and invoices.
+            </div>
+            {portalError ? <div style={{ fontFamily: MONO, fontSize: 12, color: DASH.crit, marginTop: 8 }}>{portalError}</div> : null}
+          </Panel>
 
           {/* Plan options — DASHBOARD tiers only */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 14 }}>
-            <div style={{ fontFamily: MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.16em', color: C.inkMuted }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 16 }}>
+            <div style={{ fontFamily: MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.18em', color: DASH.ink3 }}>
               Dashboard plans
             </div>
-            <div role="group" aria-label="Billing interval" style={{ display: 'inline-flex', border: `0.5px solid ${C.border}` }}>
+            <div role="group" aria-label="Billing interval" style={{ display: 'inline-flex', border: `1px solid ${DASH.line}` }}>
               {(['month', 'year'] as BillingInterval[]).map((iv) => (
                 <button
                   key={iv}
@@ -271,9 +267,10 @@ export default function DashboardBillingPage() {
                   aria-pressed={interval === iv}
                   style={{
                     fontFamily: MONO, fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase',
-                    padding: '7px 14px', border: 'none', cursor: 'pointer',
-                    background: interval === iv ? 'color-mix(in srgb, var(--surface-accent) 18%, transparent)' : 'transparent',
-                    color: interval === iv ? 'var(--surface-accent)' : C.inkMuted,
+                    padding: '8px 15px', border: 'none', cursor: 'pointer',
+                    background: interval === iv ? steelLine(16) : 'transparent',
+                    color: interval === iv ? STEEL : DASH.ink3,
+                    transition: 'background 0.14s, color 0.14s',
                   }}
                 >
                   {iv === 'month' ? 'Monthly' : 'Annual'}
@@ -289,20 +286,30 @@ export default function DashboardBillingPage() {
               const direction = idxThis > idxCurrent ? 'Upgrade' : 'Downgrade'
               const pp = priceFor(t.id, interval)
               return (
-                // Current tier: 2px steel border. Others: single crisp hairline.
-                <div key={t.id} style={{ position: 'relative', background: C.surface, padding: '22px 20px', display: 'flex', flexDirection: 'column', border: isCurrent ? `2px solid ${C.steel}` : `1px solid ${C.border}` }}>
+                // Current tier: accent border + subtle steel tint. Others: raised panel that lifts on hover.
+                <div
+                  key={t.id}
+                  className={isCurrent ? 'dash-panel' : 'dash-panel dash-panel--interactive'}
+                  style={{
+                    position: 'relative', background: isCurrent ? steelLine(7) : DASH.panel,
+                    padding: '22px 20px', display: 'flex', flexDirection: 'column',
+                    border: isCurrent ? `1px solid ${steelLine(55)}` : `1px solid ${DASH.line}`,
+                    boxShadow: isCurrent ? `inset 0 1px 0 0 rgba(255,255,255,0.06), 0 0 0 1px ${steelLine(20)}, 0 8px 28px rgba(0,0,0,0.28)` : undefined,
+                  }}
+                >
+                  {isCurrent && <span aria-hidden style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: STEEL }} />}
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-                    <span style={{ fontFamily: DISP, fontWeight: 700, fontSize: 17, color: C.inkPrimary }}>{t.name}</span>
-                    {isCurrent && <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '0.1em', color: 'var(--surface-accent)' }}>CURRENT</span>}
+                    <span style={{ fontFamily: DISP, fontWeight: 700, fontSize: 17, color: DASH.ink }}>{t.name}</span>
+                    {isCurrent && <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '0.12em', color: STEEL }}>CURRENT</span>}
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 5, marginBottom: 14 }}>
-                    <span style={{ fontFamily: DISP, fontWeight: 700, fontSize: 22, color: C.inkPrimary }}>{pp.price}</span>
-                    <span style={{ fontFamily: MONO, fontSize: 10, color: C.inkMuted }}>{pp.sub}</span>
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 5, marginBottom: 16 }}>
+                    <span style={{ fontFamily: DISP, fontWeight: 700, fontSize: 24, color: DASH.ink, letterSpacing: '-0.5px' }}>{pp.price}</span>
+                    <span style={{ fontFamily: MONO, fontSize: 10, color: DASH.ink3 }}>{pp.sub}</span>
                   </div>
                   <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 18px', flex: 1 }}>
                     {t.features.map(f => (
-                      <li key={f} style={{ fontFamily: BODY, fontSize: 12.5, color: C.inkSecondary, lineHeight: 1.5, marginBottom: 7, display: 'flex', gap: 8 }}>
-                        <span style={{ color: 'var(--surface-accent)', flexShrink: 0 }}>·</span>{f}
+                      <li key={f} style={{ fontFamily: BODY, fontSize: 12.5, color: DASH.ink2, lineHeight: 1.5, marginBottom: 8, display: 'flex', gap: 9 }}>
+                        <span style={{ color: STEEL, flexShrink: 0 }}>·</span>{f}
                       </li>
                     ))}
                   </ul>
@@ -319,13 +326,15 @@ export default function DashboardBillingPage() {
                       }
                     }}
                     disabled={isCurrent || checkoutBusy === t.id || portalBusy}
+                    className={isCurrent ? undefined : 'dash-btn'}
                     style={{
-                      fontFamily: MONO, fontSize: 11, letterSpacing: '0.06em',
-                      color: isCurrent ? C.inkMuted : 'var(--surface-accent)',
+                      fontFamily: MONO, fontSize: 11, letterSpacing: '0.06em', textTransform: 'uppercase',
+                      color: isCurrent ? DASH.ink3 : STEEL,
                       background: 'transparent',
-                      border: `0.5px solid ${isCurrent ? C.border : 'color-mix(in srgb, var(--surface-accent) 45%, transparent)'}`,
-                      padding: '9px 14px', borderRadius: 0, cursor: isCurrent ? 'default' : 'pointer',
+                      border: `1px solid ${isCurrent ? DASH.line : steelLine(45)}`,
+                      padding: '10px 14px', borderRadius: 0, cursor: isCurrent ? 'default' : 'pointer',
                       opacity: isCurrent ? 0.6 : 1, width: '100%',
+                      transition: 'background 0.14s, border-color 0.14s',
                     }}
                   >
                     {isCurrent ? 'Current plan' : checkoutBusy === t.id ? 'Redirecting…' : `${direction} →`}
@@ -335,7 +344,7 @@ export default function DashboardBillingPage() {
             })}
           </div>
           {checkoutError ? (
-            <p style={{ fontFamily: MONO, fontSize: 12, color: C.worse, margin: '14px 0 0', lineHeight: 1.6 }}>{checkoutError}</p>
+            <p style={{ fontFamily: MONO, fontSize: 12, color: DASH.crit, margin: '14px 0 0', lineHeight: 1.6 }}>{checkoutError}</p>
           ) : null}
         </>
       )}

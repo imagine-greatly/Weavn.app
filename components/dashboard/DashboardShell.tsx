@@ -52,9 +52,9 @@ export default function DashboardShell({ children }: { children: React.ReactNode
   const pathname = usePathname() ?? '/app'
   const [scanOpen, setScanOpen] = useState(false)
 
-  // Tier drives the nav — no locked items, no padlocks. Default to the minimal founder
-  // nav while the plan loads so locked items never flash. Agency/Enterprise add Clients
-  // + Branding. "Reports" is folded into the Overview and never appears.
+  // Tier drives the nav — no locked items, no padlocks. The primary rail is a fixed three
+  // tabs (Overview · Reports · Billing) for every plan; Agency/Enterprise surface Clients +
+  // Branding in a labelled secondary group. Default to the plan loading before extras show.
   const [plan, setPlan] = useState<string | null>(null)
   const [name, setName] = useState<string>('Workspace')
   const [used, setUsed] = useState<number | null>(null)
@@ -85,18 +85,26 @@ export default function DashboardShell({ children }: { children: React.ReactNode
 
   const planName = plan ?? 'free'
   const isAgency = plan === 'agency' || plan === 'enterprise'
-  const APP_NAV: { label: string; href: string }[] = isAgency
-    ? [
-        { label: 'Overview', href: '/app' },
-        { label: 'Clients', href: '/app/clients' },
-        { label: 'Branding', href: '/app/branding' },
-        { label: 'Billing', href: '/app/billing' },
-      ]
-    : [
-        { label: 'Overview', href: '/app' },
-        { label: 'Billing', href: '/app/billing' },
-      ]
+
+  // Canonical primary rail — exactly three tabs for every plan: Overview · Reports · Billing.
+  const APP_NAV: { label: string; href: string }[] = [
+    { label: 'Overview', href: '/app' },
+    { label: 'Reports', href: '/app/reports' },
+    { label: 'Billing', href: '/app/billing' },
+  ]
   const nav: SidebarNavItem[] = APP_NAV.map(it => ({ label: it.label, href: it.href, active: isActive(pathname, it.href) }))
+
+  // Agency/Enterprise-only capabilities live in a labelled secondary group so the primary
+  // rail stays at its three tabs while these tier routes remain reachable (no stranded pages).
+  const navSecondary = isAgency
+    ? [{
+        label: 'Agency',
+        items: [
+          { label: 'Clients', href: '/app/clients', active: isActive(pathname, '/app/clients') },
+          { label: 'Branding', href: '/app/branding', active: isActive(pathname, '/app/branding') },
+        ] as SidebarNavItem[],
+      }]
+    : undefined
 
   const limit = DASHBOARD_PLAN_MONTHLY_CAPS[planName] ?? null
   const pct = limit ? Math.min(100, Math.round(((used ?? 0) / limit) * 100)) : 100
@@ -118,6 +126,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
         workspaceName={name}
         workspacePlan={planName}
         nav={nav}
+        navSecondary={navSecondary}
         quota={quota}
         doorway={{ label: 'Developer console →', href: '/console', accent: PURPLE }}
         account={{ label: 'Account', href: '/app/account', active: isActive(pathname, '/app/account') }}
@@ -144,12 +153,14 @@ export default function DashboardShell({ children }: { children: React.ReactNode
           <button
             type="button"
             onClick={() => setScanOpen(true)}
+            className="dash-btn"
             style={{
               fontFamily: MONO, fontSize: 11, letterSpacing: '0.08em', textTransform: 'uppercase',
               color: 'var(--surface-accent)',
               background: 'color-mix(in srgb, var(--surface-accent) 9%, transparent)',
-              border: '0.5px solid color-mix(in srgb, var(--surface-accent) 50%, transparent)',
+              border: '1px solid color-mix(in srgb, var(--surface-accent) 50%, transparent)',
               padding: '8px 16px', borderRadius: 0, cursor: 'pointer', whiteSpace: 'nowrap',
+              transition: 'background 0.14s, border-color 0.14s',
             }}
           >
             New scan →

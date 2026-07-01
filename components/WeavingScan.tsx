@@ -104,11 +104,11 @@ export default function WeavingScan({ domain, status, error, onReset }: WeavingS
             Weaving through {domain}…
           </h2>
           <p style={{ fontFamily: MONO, fontSize: 11, letterSpacing: '0.16em', textTransform: 'uppercase', color: INK_MUTED, margin: '14px 0 0' }}>
-            Running 307 checks · 27 categories
+            Running 311 checks · 27 categories
           </p>
           <PulseDots reduced={reduced} />
           <p style={{ fontFamily: MONO, fontSize: 11, color: INK_MUTED, margin: '16px 0 0' }}>
-            this can take up to ~90 seconds · weaving until complete
+            this typically takes 60–120s, scaling with site depth · weaving until complete
           </p>
         </>
       )}

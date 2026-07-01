@@ -280,7 +280,7 @@ function OverviewTab({ name, keyPrefix, createdLabel, lastUsedLabel, rotating, r
   const keyForCurl = keyPrefix ?? 'YOUR_API_KEY'
   const keyMasked = keyPrefix ? `${keyPrefix}••••••••••••••••` : 'YOUR_API_KEY'
   const curlText =
-    `curl -X POST https://api.weavn.app/v1/scan \\\n` +
+    `curl -X POST https://weavn.app/api/v1/scan \\\n` +
     `  -H "Authorization: Bearer ${keyForCurl}" \\\n` +
     `  -H "Content-Type: application/json" \\\n` +
     `  -d '{"url": "https://yoursite.com"}'`
@@ -353,7 +353,7 @@ function OverviewTab({ name, keyPrefix, createdLabel, lastUsedLabel, rotating, r
         <MetricCard
           accent={OVERVIEW_ACCENT}
           title="Spend this month"
-          info={`Real model COGS this month against the $${SPEND_CAP_USD} reference cap.`}
+          info={`Real model spend this month against the $${SPEND_CAP_USD} reference cap.`}
           value={`$${monthSpend.toFixed(2)}`}
           sub={`of $${SPEND_CAP_USD.toFixed(2)} cap`}
           side={<SpendRing value={monthSpend} cap={SPEND_CAP_USD} accent={OVERVIEW_ACCENT} />}
@@ -397,11 +397,11 @@ function OverviewTab({ name, keyPrefix, createdLabel, lastUsedLabel, rotating, r
         header="Fire your first scan"
         action={<Button variant="primary" onClick={copyCurl} style={{ padding: '6px 10px' }}>{curlCopied ? 'Copied ✓' : 'Copy'}</Button>}
       >
-        <div className="font-mono" style={{ fontSize: 10.5, color: dim, marginBottom: 10 }}>~90s · returns structured JSON</div>
+        <div className="font-mono" style={{ fontSize: 10.5, color: dim, marginBottom: 10 }}>60–120s · returns structured JSON</div>
         <Field as="pre" className="leading-relaxed m-0 whitespace-pre-wrap" style={{ fontSize: 12, padding: 16 }}>
           <span className="text-purple-DEFAULT">curl</span>
           <span className="text-ink-muted">{' -X POST '}</span>
-          <span style={{ color: '#6F9BC6' }}>https://api.weavn.app/v1/scan</span>
+          <span style={{ color: '#6F9BC6' }}>https://weavn.app/api/v1/scan</span>
           <span className="text-ink-muted">{' \\\n  -H "Authorization: Bearer '}</span>
           <span style={{ color: '#6F9BC6' }}>{keyMasked}</span>
           <span className="text-ink-muted">{'" \\\n  -H "Content-Type: application/json" \\\n  -d \'{"url": "'}</span>
@@ -571,7 +571,7 @@ function UsageTab({ keyId, keyPrefix, accent = USAGE_ACCENT }: { keyId: string |
   const fmtDur = (ms: number) => (ms >= 10000 ? `${Math.round(ms / 1000)}s` : ms >= 1000 ? `${(ms / 1000).toFixed(1)}s` : `${Math.round(ms)}ms`)
 
   // curl one-liner used as the request-log empty-state CTA (prefix only — full key shown once).
-  const curlOneLiner = `curl -X POST https://api.weavn.app/v1/scan -H "Authorization: Bearer ${keyPrefix ?? 'YOUR_API_KEY'}" -d '{"url":"https://yoursite.com"}'`
+  const curlOneLiner = `curl -X POST https://weavn.app/api/v1/scan -H "Authorization: Bearer ${keyPrefix ?? 'YOUR_API_KEY'}" -d '{"url":"https://yoursite.com"}'`
   const fmtTime = (iso: string) => { try { return new Date(iso).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) } catch { return iso } }
   const cols = '128px 96px 64px 72px 74px 1fr 60px 28px'
   const activeChip: React.CSSProperties = { background: 'color-mix(in srgb, var(--surface-accent) 14%, transparent)', color: 'var(--surface-accent)' }
@@ -643,9 +643,9 @@ function UsageTab({ keyId, keyPrefix, accent = USAGE_ACCENT }: { keyId: string |
         <MetricCard
           accent={accent}
           title="Spend"
-          info="Real model COGS for the selected range."
+          info="Real model spend for the selected range."
           value={`$${spend.toFixed(2)}`}
-          badge={{ label: 'COGS', tone: 'neutral' }}
+          badge={{ label: 'Spend', tone: 'neutral' }}
           sub={`cached ${cachedPct}% · ${avgPages.toFixed(1)} pg avg`}
           sparkline={spendCumulative}
         />
@@ -672,7 +672,7 @@ function UsageTab({ keyId, keyPrefix, accent = USAGE_ACCENT }: { keyId: string |
 
       <Panel flushBody>
         <div className="grid items-center px-6" style={{ gridTemplateColumns: cols, minHeight: 44, borderBottom: 'var(--divider)' }}>
-          {['Time', 'Endpoint', 'Code', 'Duration', 'COGS', 'Target', 'Score', ''].map((h, i) => (
+          {['Time', 'Endpoint', 'Code', 'Duration', 'Spend', 'Target', 'Score', ''].map((h, i) => (
             <div key={i} className="font-body" style={{ fontSize: 12, color: 'rgba(240,244,255,0.40)' }}>{h}</div>
           ))}
         </div>
@@ -680,7 +680,7 @@ function UsageTab({ keyId, keyPrefix, accent = USAGE_ACCENT }: { keyId: string |
           <div className="px-6 py-8 font-mono text-ink-muted" style={{ fontSize: 12 }}>Loading…</div>
         ) : logRows.length === 0 ? (
           total === 0 ? (
-            <EmptyState dense headline="No requests yet" sub="Fire your first scan and it lands here in real time — structured JSON in ~90s.">
+            <EmptyState dense headline="No requests yet" sub="Fire your first scan and it lands here in real time — structured JSON in 60–120s.">
               <Field as="code" className="block text-left" style={{ fontSize: 11, lineHeight: 1.6, color: '#9398A8', maxWidth: 540, wordBreak: 'break-all', whiteSpace: 'pre-wrap' }}>{curlOneLiner}</Field>
             </EmptyState>
           ) : (
@@ -1158,7 +1158,7 @@ function DocsTab() {
       curl: (
         <>
           <span className="text-purple-DEFAULT">curl</span>
-          <span className="text-ink-muted">{' -X POST https://api.weavn.app/v1/scan \\\n  -H "Authorization: Bearer '}</span>
+          <span className="text-ink-muted">{' -X POST https://weavn.app/api/v1/scan \\\n  -H "Authorization: Bearer '}</span>
           <span style={{ color: '#6F9BC6' }}>weavn_live_••••</span>
           <span className="text-ink-muted">{'" \\\n  -d \'{"url": "'}</span>
           <span style={{ color: '#6F9BC6' }}>https://your-site.com</span>
@@ -1173,7 +1173,7 @@ function DocsTab() {
       curl: (
         <>
           <span className="text-purple-DEFAULT">curl</span>
-          <span className="text-ink-muted">{' -X POST https://api.weavn.app/v1/scan/batch \\\n  -H "Authorization: Bearer '}</span>
+          <span className="text-ink-muted">{' -X POST https://weavn.app/api/v1/scan/batch \\\n  -H "Authorization: Bearer '}</span>
           <span style={{ color: '#6F9BC6' }}>weavn_live_••••</span>
           <span className="text-ink-muted">{'" \\\n  -d \'{"urls": ["'}</span>
           <span style={{ color: '#6F9BC6' }}>https://site-a.com</span>
@@ -1190,8 +1190,8 @@ function DocsTab() {
       curl: (
         <>
           <span className="text-purple-DEFAULT">curl</span>
-          <span className="text-ink-muted">{' https://api.weavn.app/v1/scans/'}</span>
-          <span style={{ color: '#6F9BC6' }}>scan_01HXYZ7K2M9N3P4Q</span>
+          <span className="text-ink-muted">{' https://weavn.app/api/v1/scans/'}</span>
+          <span style={{ color: '#6F9BC6' }}>sc_3f9a2c7e8b1d4f60</span>
           <span className="text-ink-muted">{' \\\n  -H "Authorization: Bearer '}</span>
           <span style={{ color: '#6F9BC6' }}>weavn_live_••••</span>
           <span className="text-ink-muted">{'"'}</span>

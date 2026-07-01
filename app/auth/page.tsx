@@ -365,8 +365,8 @@ function AuthPageContent() {
             {/* Terminal request panel */}
             <div style={{ border: "0.5px solid rgba(157,140,255,0.25)", background: "rgba(157,140,255,0.04)" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 16px", borderBottom: "0.5px solid rgba(157,140,255,0.18)" }}>
-                <span style={{ fontFamily: MONO, fontSize: 12, color: C.purple, letterSpacing: "0.04em" }}>POST /v1/scan</span>
-                <span style={{ fontFamily: MONO, fontSize: 11, color: C.labelMuted }}>~90s</span>
+                <span style={{ fontFamily: MONO, fontSize: 12, color: C.purple, letterSpacing: "0.04em" }}>POST /api/v1/scan</span>
+                <span style={{ fontFamily: MONO, fontSize: 11, color: C.labelMuted }}>60–120s</span>
               </div>
               <div style={{ padding: "16px 18px", fontFamily: MONO, fontSize: 12.5, lineHeight: 1.7 }}>
                 <div style={{ color: C.labelMuted }}>{"{"}</div>
@@ -418,7 +418,7 @@ function AuthPageContent() {
                 <p style={{ fontFamily: BODY, fontSize: 12.5, lineHeight: 1.55, color: C.inkDim, margin: "0 0 14px" }}>
                   Build directly on the engine. POST a URL, get structured JSON back.
                 </p>
-                {["Structured JSON response", "Webhooks + batch scans", "307 checks · 27 categories", "Your key, your stack"].map(f => (
+                {["Structured JSON response", "Webhooks + batch scans", "311 checks · 27 categories", "Your key, your stack"].map(f => (
                   <div key={f} style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 9 }}>
                     <span aria-hidden style={{ width: 10, height: 1, background: C.purple, flexShrink: 0, opacity: 0.7 }} />
                     <span style={{ fontFamily: MONO, fontSize: 11.5, color: C.ink, letterSpacing: "0.02em" }}>{f}</span>

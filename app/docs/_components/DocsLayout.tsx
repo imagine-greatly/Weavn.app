@@ -16,9 +16,9 @@ const NAV = [
     { label: "Authentication", id: "authentication", href: "/docs/authentication" },
   ]},
   { section: "API REFERENCE", items: [
-    { label: "POST /v1/scan", id: "scan", href: "/docs/scan" },
-    { label: "GET /v1/scans", id: "scans", href: "/docs/scans" },
-    { label: "GET /v1/scans/:id", id: "scans-id", href: "/docs/scans" },
+    { label: "POST /api/v1/scan", id: "scan", href: "/docs/scan" },
+    { label: "GET /api/v1/scans", id: "scans", href: "/docs/scans" },
+    { label: "GET /api/v1/scans/:id", id: "scans-id", href: "/docs/scans" },
     { label: "Webhooks", id: "webhooks", href: "/docs/webhooks" },
   ]},
   { section: "CODE EXAMPLES", items: [

@@ -52,7 +52,7 @@ export default function WebhooksDocsPage() {
       <div style={{ marginBottom: 32 }}>
         <CodeBlock language="json" code={`{
   "event": "scan.completed",
-  "scan_id": "c4f1a2b3-...",
+  "scan_id": "sc_3f9a2c7e8b1d4f60",
   "url": "https://example.com",
   "score": 54,
   "data": {

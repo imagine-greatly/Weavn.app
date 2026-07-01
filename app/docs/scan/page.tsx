@@ -42,11 +42,11 @@ export default function ScanDocsPage() {
   return (
     <DocsLayout activeId="scan">
       <p style={{ fontFamily: MONO, fontSize: 11, color: T3, letterSpacing: "0.2em", marginBottom: 12 }}>API REFERENCE</p>
-      <h1 style={{ fontFamily: DISP, fontSize: "clamp(28px, 4vw, 44px)", fontWeight: 800, color: T1, letterSpacing: "-1.2px", marginBottom: 8 }}>POST /v1/scan</h1>
+      <h1 style={{ fontFamily: DISP, fontSize: "clamp(28px, 4vw, 44px)", fontWeight: 800, color: T1, letterSpacing: "-1.2px", marginBottom: 8 }}>POST /api/v1/scan</h1>
       <p style={{ fontFamily: BODY, fontSize: 16, color: T2, marginBottom: 40 }}>Run a full conversion audit on any URL. Returns structured findings, copy rewrites, and growth blueprint.</p>
 
       <div style={{ border: `1px solid ${BORDER}`, padding: "16px 24px", marginBottom: 40, fontFamily: MONO, fontSize: 13, color: T2 }}>
-        <span style={{ color: POST }}>POST</span> https://api.weavn.app/v1/scan
+        <span style={{ color: POST }}>POST</span> https://weavn.app/api/v1/scan
       </div>
 
       <h2 style={{ fontFamily: DISP, fontSize: 20, fontWeight: 700, color: T1, marginBottom: 16 }}>Request parameters</h2>
@@ -62,10 +62,10 @@ export default function ScanDocsPage() {
       <Table
         cols={["Field", "Type", "Description"]}
         rows={[
-          ["id", "string (UUID)", "Unique scan identifier. Use with GET /v1/scans/:id"],
+          ["scan_id", "string", "Unique scan identifier (sc_…). Use with GET /api/v1/scans/:id"],
           ["url", "string", "The URL that was scanned"],
           ["score", "number (0-100)", "Composite conversion health score"],
-          ["verdict", "string", "Excellent / Good / Needs Work / Critical"],
+          ["verdict", "string", "Poor / Needs Work / Fair / Good / Excellent"],
           ["scanned_at", "ISO 8601", "Timestamp when scan completed"],
           ["pages_scanned", "number", "Number of pages analyzed"],
           ["dimensions", "object", "Per-dimension scores (0-100 each)"],

@@ -35,7 +35,7 @@ export const metadata: Metadata = {
     default: "Weavn — Website Intelligence API",
     template: "%s | Weavn",
   },
-  description: "The conversion audit API. 307 checks, ranked findings, AI-rewritten copy, and corpus benchmarks. One endpoint. ~90 seconds.",
+  description: "The conversion audit API. 311 checks, ranked findings, AI-rewritten copy, and corpus benchmarks. One endpoint. 60–120 seconds.",
   metadataBase: new URL("https://weavn.app"),
   openGraph: {
     siteName: "Weavn",

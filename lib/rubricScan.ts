@@ -1,9 +1,9 @@
 /**
- * Rubric scan engine — the glue that makes the 307-check rubric actually RUN
+ * Rubric scan engine — the glue that makes the 311-check rubric actually RUN
  * in the live /api/v1/scan path.
  *
  * Responsibilities (all pure functions — the model call itself lives in the route):
- *  - scope the 307 checks per scan (siteType vocab map)
+ *  - scope the 311 checks per scan (siteType vocab map)
  *  - serialize the scoped check list into a cacheable prompt block
  *  - tolerantly parse the model's PASS/FAIL/SKIP rows, salvaging truncated output
  *  - compute the 0–100 score (via processFindings) and the 7 API dimensions
@@ -64,7 +64,7 @@ const API_DIMENSION_META: Record<ApiDimensionKey, { label: string; description: 
 
 /**
  * APPROVED 27 → 7 map (Stage 2). Every category maps to exactly one dimension;
- * all 307 checks are covered. The phantom "Emotional Sequence & Page Flow"
+ * all 311 checks are covered. The phantom "Emotional Sequence & Page Flow"
  * category from the old REVENUE_DIMENSIONS is intentionally absent.
  * Page & Content Gaps → message_clarity (per reviewer amendment).
  */

@@ -3,10 +3,10 @@ import Link from 'next/link'
 
 export const metadata: Metadata = {
   title: "Weavn — Website Intelligence, Delivered as an API",
-  description: "307 checks. One endpoint. Your site scored in 90 seconds. Paste any URL for a full conversion audit — ranked findings, AI-rewritten copy, and vertical benchmarks. Free to start.",
+  description: "311 checks. One endpoint. Your site scored in 60–120 seconds. Paste any URL for a full conversion audit — ranked findings, AI-rewritten copy, and vertical benchmarks. Free to start.",
   openGraph: {
     title: "Weavn — Website Intelligence, Delivered as an API",
-    description: "307 checks. One endpoint. 90 seconds. Conversion audit API for founders and developers.",
+    description: "311 checks. One endpoint. 60–120 seconds. Conversion audit API for founders and developers.",
     url: "https://weavn.app",
     siteName: "Weavn",
     type: "website",
@@ -22,7 +22,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Weavn — Website Intelligence, Delivered as an API",
-    description: "307 checks. One endpoint. 90 seconds. Free to start.",
+    description: "311 checks. One endpoint. 60–120 seconds. Free to start.",
     images: ["https://weavn.app/og/home.png"],
     creator: "@weavnapp",
   },
@@ -98,7 +98,7 @@ const FOUNDER_LINES = [
 
 // API/developer door — primary, carries more detail than the dashboard door.
 const DEVELOPER_LINES = [
-  'POST any URL → structured JSON in ~90s',
+  'POST any URL → structured JSON in 60–120s',
   'Batch endpoint, async mode, webhooks',
   'Typed SDKs and copy-paste examples',
   '25 free scans, no subscription',
@@ -162,12 +162,12 @@ function HeroForkSection() {
           Website intelligence, delivered as an API.
         </h1>
         <h2 className="font-display font-bold text-center text-[clamp(18px,3.0vw,36px)] leading-[1.1] tracking-[-0.035em] text-text-primary/70 m-0">
-          307 checks. One endpoint. 90 seconds.
+          311 checks. One endpoint. 60–120 seconds.
         </h2>
 
         {/* Subhead */}
         <p className="font-body text-lg text-text-secondary leading-relaxed text-center max-w-[600px] mx-auto mt-5 mb-0">
-          POST any URL. Get a report back in 90 seconds — a 0–100 score, ranked fixes, AI-rewritten copy, and percentile benchmarks.
+          POST any URL. Get a report back in 60–120 seconds — a 0–100 score, ranked fixes, AI-rewritten copy, and percentile benchmarks.
         </p>
 
         {/* Scan-engine glyph */}
@@ -219,7 +219,7 @@ function HeroForkSection() {
 
             {/* Endpoint snippet — detail the dashboard door doesn't carry */}
             <div className="font-mono text-[11px] leading-relaxed border border-data-impact/20 bg-data-impact/5 p-3 mb-5">
-              <span className="text-data-impact">POST</span> <span className="text-text-secondary">/v1/scan</span><br />
+              <span className="text-data-impact">POST</span> <span className="text-text-secondary">/api/v1/scan</span><br />
               <span className="text-text-tertiary">{`{ "url": "https://yoursite.com" }`}</span><br />
               <span className="text-text-tertiary">→ 0–100 score · ranked findings · JSON</span>
             </div>
@@ -288,7 +288,7 @@ const OBJECTION_PAIR = [
   {
     q: 'Why not just paste my URL into ChatGPT?',
     a: 'A language model sees text you paste, not your live page. Weavn renders the full DOM in headless Chrome, reads above-the-fold layout, runs 311 structured checks, and returns ranked JSON — not a chat response.',
-    data: '307 checks · rendered DOM · not a chat response',
+    data: '311 checks · rendered DOM · not a chat response',
   },
 ]
 
@@ -319,7 +319,7 @@ function FooterSection() {
             Weavn<span className="text-[#6F9BC6]"></span>
           </Link>
           <p className="font-body text-sm text-text-secondary mt-3 max-w-xs leading-relaxed">
-            The conversion audit API. 307 checks, ranked fixes, AI-rewritten copy. One endpoint.
+            The conversion audit API. 311 checks, ranked fixes, AI-rewritten copy. One endpoint.
           </p>
         </div>
         <div>

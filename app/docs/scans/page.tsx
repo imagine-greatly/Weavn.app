@@ -23,7 +23,7 @@ export default function ScansDocsPage() {
 
       {/* List */}
       <div style={{ border: `1px solid ${BORDER}`, padding: "16px 24px", marginBottom: 32, fontFamily: MONO, fontSize: 13, color: T2 }}>
-        <span style={{ color: CODE }}>GET</span> https://api.weavn.app/v1/scans
+        <span style={{ color: CODE }}>GET</span> https://weavn.app/api/v1/scans
       </div>
       <p style={{ fontFamily: BODY, fontSize: 15, color: T2, lineHeight: 1.7, marginBottom: 24 }}>List all scans made with your API key. Supports pagination.</p>
 
@@ -67,10 +67,10 @@ export default function ScansDocsPage() {
       {/* Single */}
       <div style={{ borderTop: `1px solid ${BORDER}`, paddingTop: 48, marginTop: 16 }}>
         <div style={{ border: `1px solid ${BORDER}`, padding: "16px 24px", marginBottom: 32, fontFamily: MONO, fontSize: 13, color: T2 }}>
-          <span style={{ color: CODE }}>GET</span> https://api.weavn.app/v1/scans/:id
+          <span style={{ color: CODE }}>GET</span> https://weavn.app/api/v1/scans/:id
         </div>
         <p style={{ fontFamily: BODY, fontSize: 15, color: T2, lineHeight: 1.7, marginBottom: 24 }}>
-          Retrieve a single scan by ID. Returns the same shape as POST /v1/scan. Returns 404 if the scan does not exist or belongs to a different API key.
+          Retrieve a single scan by ID. Returns the same shape as POST /api/v1/scan. Returns 404 if the scan does not exist or belongs to a different API key.
         </p>
         <h2 style={{ fontFamily: DISP, fontSize: 18, fontWeight: 700, color: T1, marginBottom: 12 }}>Path parameters</h2>
         <div style={{ border: `1px solid ${BORDER}`, overflow: "hidden", marginBottom: 32 }}>
@@ -84,7 +84,7 @@ export default function ScansDocsPage() {
               <tr>
                 <td style={{ padding: "12px 20px", color: CODE }}>id</td>
                 <td style={{ padding: "12px 20px", color: T2 }}>UUID string</td>
-                <td style={{ padding: "12px 20px", color: T2 }}>The scan ID returned by POST /v1/scan</td>
+                <td style={{ padding: "12px 20px", color: T2 }}>The scan ID returned by POST /api/v1/scan</td>
               </tr>
             </tbody>
           </table>

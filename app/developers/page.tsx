@@ -5,7 +5,7 @@ import Link from 'next/link'
 
 // ── Data ──────────────────────────────────────────────────────────────────────
 
-const CURL_CODE = `curl -X POST https://api.weavn.app/v1/scan \\
+const CURL_CODE = `curl -X POST https://weavn.app/api/v1/scan \\
   -H "Authorization: Bearer weavn_live_••••" \\
   -H "Content-Type: application/json" \\
   -d '{"url": "https://your-site.com"}'`
@@ -99,7 +99,7 @@ const KEY_FACTS = [
     name: 'ASYNC MODE',
     value: 'Async mode',
     detail: 'POST with async: true. Result delivered to your endpoint when ready.',
-    why: "Don't block your process waiting 90 seconds — fire and forget.",
+    why: "Don't block your process waiting on a synchronous scan — fire and forget.",
     artifact: (
       <p style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, margin: 0 }}>
         <span style={{ color: '#8080C0' }}>async</span>
@@ -151,7 +151,7 @@ const FAQ_CARDS = [
   },
   {
     q: 'Sync or async — which should I use?',
-    a: 'Sync holds the connection and returns the full response when the scan completes (~90s). Use it for single scans where you can wait. Async returns immediately with a scan_id and POSTs the result to your webhook_url when ready — use it for batch processing or to avoid timeouts.',
+    a: 'Sync holds the connection and returns the full response when the scan completes (typically 60–120s). Use it for single scans where you can wait. Async returns immediately with a scan_id and POSTs the result to your webhook_url when ready — use it for batch processing or to avoid timeouts.',
     dataLine: 'async: false (sync) · async: true + webhook_url',
     dataColor: '#00C48C',
   },
@@ -270,7 +270,7 @@ type FeatValApi = string | boolean
 function FValApi({ v }: { v: FeatValApi }) {
   if (v === true)        return <span style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, color: '#00C48C' }}>✓</span>
   if (v === false)       return <span style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, color: 'rgba(255,255,255,0.2)' }}>—</span>
-  if (v === 'unlimited') return <span style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, color: '#00C48C' }}>{v}</span>
+  if (v === 'unlimited') return <span style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, color: '#00C48C' }}>uncapped</span>
   if (v === 'dedicated') return <span style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, color: '#6F9BC6' }}>{v}</span>
   if (v === 'custom')    return <span style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, color: '#6F9BC6' }}>{v}</span>
   return <span style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, color: '#E6E9EE' }}>{v}</span>
@@ -370,7 +370,7 @@ function TabbedCode({ compact }: { compact?: boolean }) {
         {lang === 'curl' && (
           <pre style={preStyle}>
             <span style={{ color: '#9D8CFF' }}>curl</span>{' -X POST \\\n'}
-            {'  https://api.weavn.app/v1/scan \\\n'}
+            {'  https://weavn.app/api/v1/scan \\\n'}
             {'  -H '}<span style={{ color: '#8080c0' }}>&quot;Authorization: Bearer </span><span style={{ color: '#9D8CFF' }}>weavn_live_••••</span><span style={{ color: '#8080c0' }}>&quot;</span>{' \\\n'}
             {'  -H '}<span style={{ color: '#8080c0' }}>&quot;Content-Type: application/json&quot;</span>{' \\\n'}
             {'  -d '}<span style={{ color: '#8080c0' }}>&apos;&#123;&quot;url&quot;: &quot;</span><span style={{ color: '#00C48C' }}>https://your-site.com</span><span style={{ color: '#8080c0' }}>&quot;&#125;&apos;</span>
@@ -379,7 +379,7 @@ function TabbedCode({ compact }: { compact?: boolean }) {
         {lang === 'node' && (
           <pre style={preStyle}>
             <span style={{ color: '#8080c0' }}>const</span>{' res = '}<span style={{ color: '#8080c0' }}>await</span>{' fetch(\n'}
-            {'  '}<span style={{ color: '#00C48C' }}>&apos;https://api.weavn.app/v1/scan&apos;</span>{',\n  {\n'}
+            {'  '}<span style={{ color: '#00C48C' }}>&apos;https://weavn.app/api/v1/scan&apos;</span>{',\n  {\n'}
             {'    '}<span style={{ color: '#8080c0' }}>method</span>{': '}<span style={{ color: '#00C48C' }}>&apos;POST&apos;</span>{',\n'}
             {'    '}<span style={{ color: '#8080c0' }}>headers</span>{': {\n'}
             {'      '}<span style={{ color: '#8080c0' }}>&apos;Authorization&apos;</span>{': '}<span style={{ color: '#00C48C' }}>&apos;Bearer </span><span style={{ color: '#9D8CFF' }}>weavn_live_••••</span><span style={{ color: '#00C48C' }}>&apos;</span>{',\n'}
@@ -391,7 +391,7 @@ function TabbedCode({ compact }: { compact?: boolean }) {
         {lang === 'python' && (
           <pre style={preStyle}>
             <span style={{ color: '#8080c0' }}>import</span>{' requests\n\n'}
-            {'resp = requests.post(\n  '}<span style={{ color: '#00C48C' }}>&apos;https://api.weavn.app/v1/scan&apos;</span>{',\n'}
+            {'resp = requests.post(\n  '}<span style={{ color: '#00C48C' }}>&apos;https://weavn.app/api/v1/scan&apos;</span>{',\n'}
             {'  headers={'}<span style={{ color: '#8080c0' }}>&apos;Authorization&apos;</span>{': '}<span style={{ color: '#00C48C' }}>&apos;Bearer </span><span style={{ color: '#9D8CFF' }}>weavn_live_••••</span><span style={{ color: '#00C48C' }}>&apos;</span>{'}, \n'}
             {'  json={'}<span style={{ color: '#8080c0' }}>&apos;url&apos;</span>{': '}<span style={{ color: '#00C48C' }}>&apos;https://your-site.com&apos;</span>{'}, \n)\n'}
             {'data = resp.json()'}
@@ -463,7 +463,7 @@ function HowItWorksSection() {
 
         {/* Lead-in caption — header removed so this reads as part of Quickstart */}
         <p style={{ ...MONO, fontSize: 12, color: '#6E7587', margin: '0 0 48px', letterSpacing: '0.04em' }}>
-          One POST request. 307 checks fire in sequence across 27 categories. Structured JSON returns.
+          One POST request. 311 checks fire in sequence across 27 categories. Structured JSON returns.
         </p>
 
         {/* Step connector row with traveling highlight */}
@@ -522,7 +522,7 @@ function HowItWorksSection() {
               <TabbedCode compact />
             </div>
             <div style={{ padding: '0 14px 14px', display: 'flex', gap: 6, flexWrap: 'wrap', position: 'relative', zIndex: 2 }}>
-              {[{ l: '307 checks', c: '#00C48C' }, { l: '27 categories', c: '#6F9BC6' }, { l: '~90s median', c: '#6E7587' }].map(x => (
+              {[{ l: '311 checks', c: '#00C48C' }, { l: '27 categories', c: '#6F9BC6' }, { l: '60–120s typical', c: '#6E7587' }].map(x => (
                 <span key={x.l} style={{ ...MONO, fontSize: 10, color: x.c, background: 'rgba(255,255,255,0.03)', border: '0.5px solid rgba(255,255,255,0.07)', padding: '4px 8px' }}>{x.l}</span>
               ))}
             </div>
@@ -542,7 +542,7 @@ function HowItWorksSection() {
             <div style={{ padding: '10px 14px', borderBottom: '0.5px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', gap: 8 }}>
               <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#00C48C', display: 'inline-block', flexShrink: 0 }} />
               <span style={{ ...MONO, fontSize: 10, color: '#6E7587', textTransform: 'uppercase', letterSpacing: '0.15em' }}>SCANNING</span>
-              <span style={{ ...MONO, fontSize: 10, color: '#6E7587', marginLeft: 'auto' }}>ai · 307 checks</span>
+              <span style={{ ...MONO, fontSize: 10, color: '#6E7587', marginLeft: 'auto' }}>ai · 311 checks</span>
             </div>
             <div style={{ padding: '14px', flexGrow: 1, display: 'flex', flexDirection: 'column', gap: 9 }}>
               {HIW_SCAN_CATS.map((name, i) => {
@@ -556,7 +556,7 @@ function HowItWorksSection() {
               })}
             </div>
             <div style={{ padding: '10px 14px 14px' }}>
-              <span style={{ ...MONO, fontSize: 11, color: '#404860' }}>running 307 checks · 27 categories</span>
+              <span style={{ ...MONO, fontSize: 11, color: '#404860' }}>running 311 checks · 27 categories</span>
               <span style={{ ...MONO, fontSize: 11, color: '#6E7587' }}> ···</span>
             </div>
           </div>
@@ -694,7 +694,7 @@ export default function DevelopersPage() {
 
                 {/* Stat chips — neutral hairline borders */}
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                  {['307 checks', '~90s median', 'cache hits free'].map(label => (
+                  {['311 checks', '60–120s typical', 'cache hits free'].map(label => (
                     <span key={label} style={{ ...MONO, fontSize: 11, letterSpacing: '0.04em', color: '#9398A8', background: 'rgba(255,255,255,0.03)', border: '0.5px solid rgba(255,255,255,0.12)', padding: '5px 12px' }}>
                       {label}
                     </span>
@@ -753,7 +753,7 @@ export default function DevelopersPage() {
             <Brackets />
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               {[
-                { t: 'What it checks', lead: null, body: "307 checks across 27 conversion categories — hero, trust, CTA, social proof, and more — run against the exact page you submit." },
+                { t: 'What it checks', lead: null, body: "311 checks across 27 conversion categories — hero, trust, CTA, social proof, and more — run against the exact page you submit." },
                 { t: 'What a finding is', lead: null, body: "Each issue comes back as a structured finding: what's wrong, the on-page evidence behind it, a ranked priority, and a rewritten fix you can paste in." },
                 { t: 'Why percentile, not a raw score', lead: 'Not an average. A percentile.', body: "Your score is positioned against a live corpus of real scans in the same vertical — so '63rd percentile' says something a generic audit number can't." },
               ].map((c, i) => (
@@ -1168,7 +1168,7 @@ export default function DevelopersPage() {
                   label: 'ASYNC PROCESSING',
                   route: 'status: pending',
                   body: 'Each URL scanned independently. Structured JSON produced per URL. No polling required.',
-                  detail: 'The engine runs 307 checks per URL. Parallel execution — a 10-URL batch completes in roughly the same wall time as one.',
+                  detail: 'The engine runs 311 checks per URL. Parallel execution — a 10-URL batch completes in roughly the same wall time as one.',
                   accent: 'rgba(157,140,255,0.3)',
                   accentRgba: '157,140,255',
                 },

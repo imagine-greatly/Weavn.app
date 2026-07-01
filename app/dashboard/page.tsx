@@ -174,7 +174,7 @@ function HeroSection() {
           </h1>
           {/* Subhead */}
           <p style={{ ...SANS,fontSize:17,color:INK_SEC,lineHeight:1.65,maxWidth:560,margin:'0 0 16px' }}>
-            Paste your URL. Get a 0–100 score, every conversion problem ranked by impact, AI-rewritten copy, and benchmarks against real sites in your vertical — in about 90 seconds.
+            Paste your URL. Get a 0–100 score, every conversion problem ranked by impact, AI-rewritten copy, and benchmarks against real sites in your vertical — in 60–120 seconds, scaling with site depth.
           </p>
           {/* Framing — this visual surface runs on the same engine as the API */}
           <p style={{ ...MONO,fontSize:12.5,color:STEEL,letterSpacing:'0.04em',lineHeight:1.6,maxWidth:560,margin:'0 0 36px' }}>
@@ -594,7 +594,7 @@ function WhatWeCheckSection() {
         </div>
 
         <p style={{ ...MONO,fontSize:11,color:'rgba(111, 155, 198, 0.6)',margin:'0 0 12px',textShadow:'0 0 8px rgba(111, 155, 198, 0.2)' }}>
-          307 checks across 27 categories — every scan, every plan.
+          311 checks across 27 categories — every scan, every plan.
         </p>
         <p style={{ ...SANS,fontSize:13,color:INK_MUT,margin:0,lineHeight:1.65,maxWidth:640 }}>
           Each category runs multiple checks — a single visit to &apos;social proof&apos; might fire 12 individual checks across testimonial placement, specificity, recency, and logo strip visibility.
@@ -617,7 +617,7 @@ const PIPELINE_STEPS = [
   {
     num: '02',
     title: 'We render your live page and run every check',
-    desc: 'Your actual live page loads in a real browser — the same DOM your visitors see — and 307 checks fire across 27 categories, evaluating every conversion surface from headline to mobile layout.',
+    desc: 'Your actual live page loads in a real browser — the same DOM your visitors see — and 311 checks fire across 27 categories, evaluating every conversion surface from headline to mobile layout.',
     tag: 'citation required or the finding is dropped',
     bright: true,
   },
@@ -835,7 +835,7 @@ function HowItWorksSection() {
         {/* Footer */}
         <div style={{ marginTop: 40, borderTop: '0.5px solid rgba(111,155,198,0.1)', paddingTop: 24, textAlign: 'center' }}>
           <p style={{ ...SANS, fontSize: 14, color: INK_MUT, margin: '0 0 10px', lineHeight: 1.65 }}>
-            Total time from URL to full report: approximately 90 seconds.
+            Total time from URL to full report: typically 60–120 seconds, scaling with site depth.
           </p>
           <p style={{ ...MONO, fontSize: 10, color: INK_MUT, margin: 0, opacity: 0.6 }}>
             No technical knowledge required — paste a URL, read the report, fix what matters.
@@ -873,7 +873,7 @@ const WEAVN_ROWS = [
   { title: 'AI-rewritten copy for every critical finding', sub: 'drop-in headline, CTA, value prop · ready to paste' },
 ]
 
-const STAT_CHIPS = ['311 CHECKS', '~90s MEDIAN', '4,812 SITES SCANNED']
+const STAT_CHIPS = ['311 CHECKS', '60–120s TYPICAL', '4,812 SITES SCANNED']
 
 function ComparisonSection() {
   return (
@@ -964,7 +964,7 @@ const OBJECTIONS: ObjectionCard[] = [
   },
   {
     q: "How is the score calculated? What does 37 actually mean?",
-    a: "Every check returns a pass, fail, or partial result. Fails are weighted by their estimated conversion impact — a broken value proposition costs more points than a missing favicon. The final score is a weighted composite across all 307 checks. A 37 means the page is failing a majority of its high-weight checks — the conversion fundamentals, not edge cases — which is why it's flagged critical. Scores below 70 are flagged as critical — the data shows a strong correlation between sub-70 scores and above-average bounce rates in the corpus.",
+    a: "Every check returns a pass, fail, or partial result. Fails are weighted by their estimated conversion impact — a broken value proposition costs more points than a missing favicon. The final score is a weighted composite across all 311 checks. A 37 means the page is failing a majority of its high-weight checks — the conversion fundamentals, not edge cases — which is why it's flagged critical. Scores below 70 are flagged as critical — the data shows a strong correlation between sub-70 scores and above-average bounce rates in the corpus.",
     tag: 'weighted by conversion impact · not a vanity metric · corpus-calibrated',
   },
   {
@@ -1266,7 +1266,7 @@ function MultiSiteSection() {
           {/* Report footer */}
           <div style={{ display:'flex', justifyContent:'space-between', padding:'16px 32px', borderTop:'1px solid rgba(111,155,198,0.08)', background:'rgba(111,155,198,0.02)', flexWrap:'wrap', gap:8 }}>
             <p style={{ ...MONO, fontSize:9, color:INK_MUT, margin:0 }}>ACME AGENCY · Conversion Intelligence</p>
-            <p style={{ ...MONO, fontSize:9, color:INK_MUT, margin:0 }}>307 checks · verified findings</p>
+            <p style={{ ...MONO, fontSize:9, color:INK_MUT, margin:0 }}>311 checks · verified findings</p>
             <p style={{ ...MONO, fontSize:9, color:INK_MUT, margin:0 }}>CONFIDENTIAL · acme-client.com</p>
           </div>
         </div>
@@ -1443,7 +1443,7 @@ function PricingSection() {
           Start free. Upgrade when you need more.
         </h2>
         <p style={{ ...SANS,fontSize:15,color:INK_SEC,margin:'0 0 48px' }}>
-          Every plan runs the same 307-check engine. No feature-gated diagnostics.
+          Every plan runs the same 311-check engine. No feature-gated diagnostics.
         </p>
         <div className="d-price-grid" style={{ display:'grid',gridTemplateColumns:'repeat(5,1fr)',gap:16 }}>
           {PRICING_CARDS.map((card, i) => (
@@ -1617,7 +1617,7 @@ function FinalCtaSection() {
             <p style={{ ...MONO,fontSize:11,color:CRIT,margin:'8px 0 0' }}>{scanError}</p>
           )}
           <p style={{ ...MONO,fontSize:11,color:'rgba(111, 155, 198, 0.5)',textAlign:'center',marginTop:14,marginBottom:0 }}>
-            No account required. Results in ~90 seconds.
+            No account required. Results in 60–120 seconds.
           </p>
         </div>
       </div>

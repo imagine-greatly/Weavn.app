@@ -58,11 +58,11 @@ const NAV_GROUPS: { label: string; items: { id: string; label: string }[] }[] = 
 
 const EX: Record<string, Record<Lang, string>> = {
   introduction: {
-    curl: `curl -X POST https://api.weavn.app/v1/scan \\
+    curl: `curl -X POST https://weavn.app/api/v1/scan \\
   -H "Authorization: Bearer weavn_live_••••" \\
   -H "Content-Type: application/json" \\
   -d '{"url": "https://yoursite.com"}'`,
-    node: `const res = await fetch('https://api.weavn.app/v1/scan', {
+    node: `const res = await fetch('https://weavn.app/api/v1/scan', {
   method: 'POST',
   headers: {
     'Authorization': 'Bearer weavn_live_••••',
@@ -74,7 +74,7 @@ const data = await res.json()`,
     python: `import requests
 
 res = requests.post(
-  'https://api.weavn.app/v1/scan',
+  'https://weavn.app/api/v1/scan',
   headers={'Authorization': 'Bearer weavn_live_••••'},
   json={'url': 'https://yoursite.com'}
 )
@@ -83,7 +83,7 @@ data = res.json()`,
   authentication: {
     curl: `# Include in every request
 curl -H "Authorization: Bearer weavn_live_••••" \\
-  https://api.weavn.app/v1/scans`,
+  https://weavn.app/api/v1/scans`,
     node: `const headers = {
   'Authorization': 'Bearer weavn_live_••••',
   'Content-Type': 'application/json',
@@ -134,7 +134,7 @@ X-RateLimit-Reset: 1717200000
     time.sleep(retry)`,
   },
   'post-scan': {
-    curl: `curl -X POST https://api.weavn.app/v1/scan \\
+    curl: `curl -X POST https://weavn.app/api/v1/scan \\
   -H "Authorization: Bearer weavn_live_••••" \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -146,7 +146,7 @@ X-RateLimit-Reset: 1717200000
     "pages": ["/pricing", "/about"],
     "site_type": "saas"
   }'`,
-    node: `const res = await fetch('https://api.weavn.app/v1/scan', {
+    node: `const res = await fetch('https://weavn.app/api/v1/scan', {
   method: 'POST',
   headers: {
     'Authorization': 'Bearer weavn_live_••••',
@@ -165,7 +165,7 @@ const { scan_id, score, findings } = await res.json()`,
     python: `import requests
 
 res = requests.post(
-  'https://api.weavn.app/v1/scan',
+  'https://weavn.app/api/v1/scan',
   headers={'Authorization': 'Bearer weavn_live_••••'},
   json={
     'url': 'https://yoursite.com',
@@ -179,7 +179,7 @@ res = requests.post(
 data = res.json()`,
   },
   'post-scan-batch': {
-    curl: `curl -X POST https://api.weavn.app/v1/scan/batch \\
+    curl: `curl -X POST https://weavn.app/api/v1/scan/batch \\
   -H "Authorization: Bearer weavn_live_••••" \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -189,7 +189,7 @@ data = res.json()`,
     ],
     "webhook_url": "https://yourapp.com/webhooks/weavn"
   }'`,
-    node: `const res = await fetch('https://api.weavn.app/v1/scan/batch', {
+    node: `const res = await fetch('https://weavn.app/api/v1/scan/batch', {
   method: 'POST',
   headers: {
     'Authorization': 'Bearer weavn_live_••••',
@@ -202,7 +202,7 @@ data = res.json()`,
 })
 const { batch_id, scan_ids } = await res.json()`,
     python: `res = requests.post(
-  'https://api.weavn.app/v1/scan/batch',
+  'https://weavn.app/api/v1/scan/batch',
   headers={'Authorization': 'Bearer weavn_live_••••'},
   json={
     'urls': ['https://site-a.com', 'https://site-b.com'],
@@ -214,49 +214,49 @@ print(data['batch_id'])`,
   },
   'get-scans': {
     curl: `# List recent scans (most recent first)
-curl "https://api.weavn.app/v1/scans?limit=20" \\
+curl "https://weavn.app/api/v1/scans?limit=20" \\
   -H "Authorization: Bearer weavn_live_••••"
 
 # Fetch the next page with next_cursor from the previous response
-curl "https://api.weavn.app/v1/scans?limit=20&cursor=eyJjcmVhdGVkX2F0IjoiMjAyNi0wNi0xNFQ..." \\
+curl "https://weavn.app/api/v1/scans?limit=20&cursor=eyJjcmVhdGVkX2F0IjoiMjAyNi0wNi0xNFQ..." \\
   -H "Authorization: Bearer weavn_live_••••"`,
     node: `const res = await fetch(
-  'https://api.weavn.app/v1/scans?limit=20',
+  'https://weavn.app/api/v1/scans?limit=20',
   { headers: { 'Authorization': 'Bearer weavn_live_••••' } }
 )
 const { scans, next_cursor, has_more } = await res.json()`,
     python: `res = requests.get(
-  'https://api.weavn.app/v1/scans',
+  'https://weavn.app/api/v1/scans',
   headers={'Authorization': 'Bearer weavn_live_••••'},
   params={'limit': 20}
 )
 data = res.json()`,
   },
   'get-scans-id': {
-    curl: `curl "https://api.weavn.app/v1/scans/wdsc_abc123" \\
+    curl: `curl "https://weavn.app/api/v1/scans/sc_3f9a2c7e8b1d4f60" \\
   -H "Authorization: Bearer weavn_live_••••"`,
-    node: `const scanId = 'wdsc_abc123'
+    node: `const scanId = 'sc_3f9a2c7e8b1d4f60'
 const res = await fetch(
-  \`https://api.weavn.app/v1/scans/\${scanId}\`,
+  \`https://weavn.app/api/v1/scans/\${scanId}\`,
   { headers: { 'Authorization': 'Bearer weavn_live_••••' } }
 )
 const scan = await res.json()`,
-    python: `scan_id = 'wdsc_abc123'
+    python: `scan_id = 'sc_3f9a2c7e8b1d4f60'
 res = requests.get(
-  f'https://api.weavn.app/v1/scans/{scan_id}',
+  f'https://weavn.app/api/v1/scans/{scan_id}',
   headers={'Authorization': 'Bearer weavn_live_••••'}
 )
 scan = res.json()`,
   },
   'post-webhooks': {
-    curl: `curl -X POST https://api.weavn.app/v1/webhooks \\
+    curl: `curl -X POST https://weavn.app/api/v1/webhooks \\
   -H "Authorization: Bearer weavn_live_••••" \\
   -H "Content-Type: application/json" \\
   -d '{
     "url": "https://yourapp.com/webhooks/weavn",
     "events": ["scan.completed", "scan.failed"]
   }'`,
-    node: `const res = await fetch('https://api.weavn.app/v1/webhooks', {
+    node: `const res = await fetch('https://weavn.app/api/v1/webhooks', {
   method: 'POST',
   headers: {
     'Authorization': 'Bearer weavn_live_••••',
@@ -269,7 +269,7 @@ scan = res.json()`,
 })
 const { webhook_id } = await res.json()`,
     python: `res = requests.post(
-  'https://api.weavn.app/v1/webhooks',
+  'https://weavn.app/api/v1/webhooks',
   headers={'Authorization': 'Bearer weavn_live_••••'},
   json={
     'url': 'https://yourapp.com/webhooks/weavn',
@@ -280,32 +280,32 @@ data = res.json()
 print(data['webhook_id'])`,
   },
   'get-webhooks': {
-    curl: `curl "https://api.weavn.app/v1/webhooks" \\
+    curl: `curl "https://weavn.app/api/v1/webhooks" \\
   -H "Authorization: Bearer weavn_live_••••"`,
     node: `const res = await fetch(
-  'https://api.weavn.app/v1/webhooks',
+  'https://weavn.app/api/v1/webhooks',
   { headers: { 'Authorization': 'Bearer weavn_live_••••' } }
 )
 const { webhooks } = await res.json()`,
     python: `res = requests.get(
-  'https://api.weavn.app/v1/webhooks',
+  'https://weavn.app/api/v1/webhooks',
   headers={'Authorization': 'Bearer weavn_live_••••'}
 )
 data = res.json()`,
   },
   'delete-webhooks-id': {
     curl: `curl -X DELETE \\
-  "https://api.weavn.app/v1/webhooks/wh_abc123" \\
+  "https://weavn.app/api/v1/webhooks/wh_abc123" \\
   -H "Authorization: Bearer weavn_live_••••"`,
     node: `await fetch(
-  'https://api.weavn.app/v1/webhooks/wh_abc123',
+  'https://weavn.app/api/v1/webhooks/wh_abc123',
   {
     method: 'DELETE',
     headers: { 'Authorization': 'Bearer weavn_live_••••' },
   }
 )`,
     python: `requests.delete(
-  'https://api.weavn.app/v1/webhooks/wh_abc123',
+  'https://weavn.app/api/v1/webhooks/wh_abc123',
   headers={'Authorization': 'Bearer weavn_live_••••'}
 )`,
   },
@@ -313,7 +313,7 @@ data = res.json()`,
     curl: `# Webhook payload posted to your webhook_url
 {
   "event": "scan.completed",
-  "scan_id": "scan_01abc123",
+  "scan_id": "sc_3f9a2c7e8b1d4f60",
   "url": "https://yoursite.com",
   "score": 61,
   "findings_count": 23,
@@ -337,7 +337,7 @@ def handle_webhook():
     curl: `# scan.completed
 {
   "event": "scan.completed",
-  "scan_id": "scan_01abc123",
+  "scan_id": "sc_3f9a2c7e8b1d4f60",
   "url": "https://yoursite.com",
   "score": 61,
   "findings_count": 23,
@@ -347,7 +347,7 @@ def handle_webhook():
 # scan.failed
 {
   "event": "scan.failed",
-  "scan_id": "scan_01abc124",
+  "scan_id": "sc_5b1d4f60a7c3e9f2",
   "url": "https://yoursite.com",
   "error": "Page failed to load after 3 attempts",
   "timestamp": "2026-06-07T00:01:00Z"
@@ -411,7 +411,7 @@ def handle_webhook():
   },
   'score-schema': {
     curl: `{
-  "scan_id": "wdsc_abc123",
+  "scan_id": "sc_3f9a2c7e8b1d4f60",
   "score": 62,
   "benchmark": {
     "industry_avg": 48,
@@ -513,11 +513,11 @@ strengths.forEach(s => {
   'copy-schema': {
     curl: `{
   "copy_rewrites": {
-    "headline": "Get a ranked conversion audit in 90 seconds",
+    "headline": "Get a ranked conversion audit in under two minutes",
     "subheadline": "See exactly which elements are losing you revenue.",
     "cta_primary": "Run free audit",
     "cta_secondary": "See sample report",
-    "value_prop": "307 checks. Benchmarks. Rewritten copy."
+    "value_prop": "311 checks. Benchmarks. Rewritten copy."
   }
 }`,
     node: `const { copy_rewrites } = await res.json()
@@ -569,7 +569,7 @@ Object.entries(dimension_benchmarks).forEach(([dim, val]) => {
   'metadata-schema': {
     curl: `{
   "metadata": {
-    "scan_id":      "wdsc_abc123",
+    "scan_id":      "sc_3f9a2c7e8b1d4f60",
     "url":          "https://yoursite.com",
     "status":       "completed",
     "industry":     "saas",
@@ -580,7 +580,7 @@ Object.entries(dimension_benchmarks).forEach(([dim, val]) => {
   }
 }`,
     node: `const { metadata } = await res.json()
-console.log(metadata.scan_id)     // wdsc_abc123
+console.log(metadata.scan_id)     // sc_3f9a2c7e8b1d4f60
 console.log(metadata.duration_ms) // 8420`,
     python: `m = data['metadata']
 print(m['scan_id'], m['status'])
@@ -813,7 +813,7 @@ export default function ApiDocsPage() {
               The Weavn API returns a structured conversion audit for any URL. POST a URL, get back a JSON object with a score, ranked findings, AI-rewritten copy, and industry benchmarks.
             </Body>
             <p style={{ fontFamily: MONO, fontSize: 11, color: T3, marginBottom: 8 }}>Base URL</p>
-            <Mono>https://api.weavn.app/v1</Mono>
+            <Mono>https://weavn.app/api/v1</Mono>
           </section>
 
           <section id="authentication" style={SB}>
@@ -873,7 +873,7 @@ export default function ApiDocsPage() {
               RESPONSE · 200 OK
             </p>
             <CodeBlock language="json" code={`{
-  "scan_id": "scan_01HXYZ7K2M9N3P4Q",
+  "scan_id": "sc_3f9a2c7e8b1d4f60",
   "url": "https://acme-saas.com",
   "score": 61,
   "verdict": "Fair",
@@ -1140,7 +1140,7 @@ export default function ApiDocsPage() {
             <Eyebrow>RESPONSE SCHEMA</Eyebrow>
             <H2>Metadata</H2>
             <FieldTable rows={[
-              { name: 'scan_id',      type: 'string',  description: 'Unique scan identifier (wdsc_...).' },
+              { name: 'scan_id',      type: 'string',  description: 'Unique scan identifier (sc_...).' },
               { name: 'url',          type: 'string',  description: 'The URL that was scanned.' },
               { name: 'status',       type: 'string',  description: "'completed' | 'failed' | 'pending'" },
               { name: 'industry',     type: 'string',  description: 'Auto-detected or overridden industry.' },

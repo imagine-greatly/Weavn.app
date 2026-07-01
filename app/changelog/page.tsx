@@ -36,9 +36,9 @@ const ENTRIES: Entry[] = [
     date: 'JUN 7, 2026',
     tags: ['NEW', 'IMPROVED'],
     title: 'Scanning pipeline — complete state',
-    body: '307 checks across 27 categories fully deployed. Site-type gating, weighted scoring, strengths output, dimension benchmarking, finding priority scores, and page-type enforcement all live.',
+    body: '311 checks across 27 categories fully deployed. Site-type gating, weighted scoring, strengths output, dimension benchmarking, finding priority scores, and page-type enforcement all live.',
     bullets: [
-      '307 checks across 27 categories — commit 05d90af',
+      '311 checks across 27 categories — commit 05d90af',
       'Site-type gating: universal, saas, ecommerce, service, b2b, creator, local',
       'Weighted scoring by site type and buyer complexity — 7 named profiles',
       'Strengths output — top passing checks with specific visible evidence',
@@ -61,8 +61,8 @@ const ENTRIES: Entry[] = [
   {
     date: 'JUN 5, 2026',
     tags: ['IMPROVED'],
-    title: '307 diagnostic checks across 27 categories',
-    body: 'Rubric expanded to 307 checks across 27 categories. Cleaned duplicate checks, merged Emotional Sequence into Narrative Flow, rebuilt thin categories (Return Visitor, Conversion Path, Offer Clarity), and expanded Page Speed, Accessibility, Mobile, SaaS, Checkout, and Email to 12 checks each.',
+    title: '311 diagnostic checks across 27 categories',
+    body: 'Rubric expanded to 311 checks across 27 categories. Cleaned duplicate checks, merged Emotional Sequence into Narrative Flow, rebuilt thin categories (Return Visitor, Conversion Path, Offer Clarity), and expanded Page Speed, Accessibility, Mobile, SaaS, Checkout, and Email to 12 checks each.',
   },
   {
     date: 'JUN 3, 2026',
@@ -82,7 +82,7 @@ const ENTRIES: Entry[] = [
     date: 'MAY 28, 2026',
     tags: ['NEW'],
     title: 'Agency dashboard — client workspaces and white-label reports',
-    body: 'Agencies can now manage unlimited client workspaces, generate white-label report links, and track score trends per client.',
+    body: 'Agencies can now manage client workspaces at scale, generate white-label report links, and track score trends per client.',
   },
   {
     date: 'MAY 20, 2026',

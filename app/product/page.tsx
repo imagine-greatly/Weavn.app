@@ -107,9 +107,9 @@ const PIPELINE_STEPS: PipelineStep[] = [
   {
     num: '07',
     label: 'BENCHMARKING',
-    title: 'Positioned against real sites',
+    title: 'Positioned against your vertical',
     description:
-      'Each dimension score is compared against accumulated corpus data from sites in the same vertical. A trust score of 37 on a SaaS site returns "Bottom 15% of SaaS sites" — not a generic percentile. Benchmarks improve as corpus volume grows.',
+      'Each dimension score is positioned against the benchmark for sites in the same vertical, returned as a percentile_label rather than a bare number. Benchmarks sharpen as corpus volume grows.',
     code: '{\n  "dimension_benchmarks": {\n    "trust_signals": {\n      "score": 37,\n      "average": 61,\n      "percentile_label": "Bottom 15% of SaaS sites"\n    }\n  }\n}',
   },
   {
@@ -655,7 +655,7 @@ export default function ProductPage() {
             <div style={{ background: '#050810', padding: '32px 36px' }}>
               <div style={{ fontFamily: '"Space Grotesk", sans-serif', fontWeight: 700, fontSize: 64, color: '#E8635F', lineHeight: 1 }}>61</div>
               <div style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#6E7587', marginTop: 8 }}>WEIGHTED OVERALL SCORE</div>
-              <div style={{ fontFamily: '"IBM Plex Sans", sans-serif', fontSize: 14, color: '#9398A8', lineHeight: 1.6, marginTop: 12 }}>0–100. Calibrated to site type and buyer complexity. Benchmarked against 4,812 real sites in your vertical.</div>
+              <div style={{ fontFamily: '"IBM Plex Sans", sans-serif', fontSize: 14, color: '#9398A8', lineHeight: 1.6, marginTop: 12 }}>A 0–100 coverage score, calibrated to site type and buyer complexity — not a generic average.</div>
               <div style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, color: '#E8635F', marginTop: 12 }}>FAIR · 5-band verdict</div>
             </div>
 

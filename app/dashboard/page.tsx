@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { motion, useInView } from 'framer-motion'
 import ScoreRing from '@/components/ui/ScoreRing'
-import LandingCorpusStats from '@/components/LandingCorpusStats'
 
 // ── Style constants — all hex values sourced from existing tokens
 // in tailwind.config.ts and globals.css. No new hex values introduced.
@@ -94,21 +93,9 @@ function HeroSection() {
   const [scanError, setScanError] = useState('')
   const [inputFocused, setInputFocused] = useState(false)
   const [scanBtnHovered, setScanBtnHovered] = useState(false)
-  const [siteCount, setSiteCount] = useState(4812)
-  const [lastScanSec, setLastScanSec] = useState(240)
   const router = useRouter()
   const ringRef = useRef<HTMLDivElement>(null)
   const ringInView = useInView(ringRef, { once: true, margin: '-80px' })
-
-  useEffect(() => {
-    let tick = 0
-    const id = window.setInterval(() => {
-      tick += 1
-      setLastScanSec(s => s > 540 ? 30 + Math.floor(Math.random() * 90) : s + 10)
-      if (tick % 5 === 0) setSiteCount(c => c + 1)
-    }, 10000)
-    return () => window.clearInterval(id)
-  }, [])
 
   // Inbound links (auth redirect, rescan) arrive as /dashboard?url=…
   useEffect(() => {
@@ -174,7 +161,7 @@ function HeroSection() {
           </h1>
           {/* Subhead */}
           <p style={{ ...SANS,fontSize:17,color:INK_SEC,lineHeight:1.65,maxWidth:560,margin:'0 0 16px' }}>
-            Paste your URL. Get a 0–100 score, every conversion problem ranked by impact, AI-rewritten copy, and benchmarks against real sites in your vertical — in 60–120 seconds, scaling with site depth.
+            Paste your URL. Get a coverage score, every conversion problem ranked by impact, AI-rewritten copy, and evidence-cited fixes — in 60–120 seconds, scaling with site depth.
           </p>
           {/* Framing — this visual surface runs on the same engine as the API */}
           <p style={{ ...MONO,fontSize:12.5,color:STEEL,letterSpacing:'0.04em',lineHeight:1.6,maxWidth:560,margin:'0 0 36px' }}>
@@ -235,7 +222,7 @@ function HeroSection() {
             <p style={{ ...MONO,fontSize:11,color:CRIT,margin:'8px 0 0' }}>{scanError}</p>
           )}
           <p style={{ ...MONO,fontSize:11,color:INK_MUT,margin:'14px 0 0',opacity:0.55 }}>
-            no account required · {siteCount.toLocaleString()} sites scanned · last scan {lastScanSec < 60 ? `${lastScanSec} seconds` : `${Math.floor(lastScanSec / 60)} minutes`} ago
+            no account required · free to start
           </p>
           </div>
         </div>
@@ -249,7 +236,7 @@ function HeroSection() {
               <ScoreRing score={37} size="lg" band="sev-critical" showBadge={false} animate={ringInView} />
             </div>
             <p style={{ ...MONO,fontSize:13,color:INK_MUT,margin:'10px 0 0' }}>/ 100</p>
-            <p style={{ ...MONO,fontSize:11,letterSpacing:'0.12em',textTransform:'uppercase',color:STEEL,margin:'12px 0 0' }}>21ST PERCENTILE · B2B SAAS</p>
+            <p style={{ ...MONO,fontSize:11,letterSpacing:'0.12em',textTransform:'uppercase',color:STEEL,margin:'12px 0 0' }}>HIGH UPSIDE · B2B SAAS</p>
 
             {/* Top 3 findings — illustrative, mirrors real report output */}
             <div style={{ width:'100%',maxWidth:400,margin:'26px 0 0',display:'flex',flexDirection:'column',gap:8 }}>
@@ -367,9 +354,9 @@ function OutputSection() {
               </div>
             </div>
             <div>
-              <p style={{ ...MONO,fontSize:11,color:'rgba(111, 155, 198, 0.8)',margin:'0 0 6px' }}>21st percentile · B2B SaaS</p>
+              <p style={{ ...MONO,fontSize:11,color:'rgba(111, 155, 198, 0.8)',margin:'0 0 6px' }}>high upside · B2B SaaS</p>
               <p style={{ ...SANS,fontSize:13,color:INK_SEC,margin:0,lineHeight:1.5,maxWidth:480 }}>
-                79% of sites in your category score higher. Your top 3 fixes could move you to the 48th percentile.
+                Most conversion best-practices aren&apos;t captured yet. Your top 3 fixes target the highest-impact gaps first — evidence and rewrite included for each.
               </p>
             </div>
           </div>
@@ -630,9 +617,9 @@ const PIPELINE_STEPS = [
   },
   {
     num: '04',
-    title: 'Your report assembles with vertical benchmarks',
-    desc: 'Your score is positioned against real sites in your exact vertical. You see where you stand and what to fix first.',
-    tag: 'percentile ranking · vertical-specific',
+    title: 'Your report assembles',
+    desc: 'Your coverage score, ranked findings, and drop-in rewrites come together in one report. You see what to fix first.',
+    tag: 'coverage score · ranked findings · rewrites',
     bright: false,
   },
 ]
@@ -703,7 +690,7 @@ function StepAnim({ idx }: { idx: number }) {
         <line x1="0" y1="103" x2="260" y2="103" stroke="rgba(111,155,198,0.1)" strokeWidth="0.5" />
         <path d="M 0 103 C 46 103 84 88 108 66 C 126 50 136 28 149 18 C 162 9 169 17 178 33 C 197 66 227 99 260 103" fill="none" stroke="rgba(111,155,198,0.4)" strokeWidth="1.5" strokeLinecap="round" />
         <line x1="108" y1="4" x2="108" y2="103" stroke="rgba(111,155,198,0.2)" strokeWidth="0.75" strokeDasharray="4 3" />
-        <text x="108" y="14" textAnchor="middle" fontFamily='"IBM Plex Mono",monospace' fontSize="9" fill="rgba(111,155,198,0.5)">21st pct</text>
+        <text x="108" y="14" textAnchor="middle" fontFamily='"IBM Plex Mono",monospace' fontSize="9" fill="rgba(111,155,198,0.5)">coverage</text>
         <circle className="pl-pulse" cx="108" cy="66" r="7" fill="rgba(111,155,198,0.7)" />
       </svg>
     </div>
@@ -873,7 +860,7 @@ const WEAVN_ROWS = [
   { title: 'AI-rewritten copy for every critical finding', sub: 'drop-in headline, CTA, value prop · ready to paste' },
 ]
 
-const STAT_CHIPS = ['311 CHECKS', '60–120s TYPICAL', '4,812 SITES SCANNED']
+const STAT_CHIPS = ['311 CHECKS', '60–120s TYPICAL', 'EVIDENCE-CITED FINDINGS']
 
 function ComparisonSection() {
   return (
@@ -964,12 +951,12 @@ const OBJECTIONS: ObjectionCard[] = [
   },
   {
     q: "How is the score calculated? What does 37 actually mean?",
-    a: "Every check returns a pass, fail, or partial result. Fails are weighted by their estimated conversion impact — a broken value proposition costs more points than a missing favicon. The final score is a weighted composite across all 311 checks. A 37 means the page is failing a majority of its high-weight checks — the conversion fundamentals, not edge cases — which is why it's flagged critical. Scores below 70 are flagged as critical — the data shows a strong correlation between sub-70 scores and above-average bounce rates in the corpus.",
-    tag: 'weighted by conversion impact · not a vanity metric · corpus-calibrated',
+    a: "Every check returns a pass, fail, or partial result. Fails are weighted by their estimated conversion impact — a broken value proposition costs more points than a missing favicon. The final score is a weighted composite across all 311 checks. A 37 means the page is failing a majority of its high-weight checks — the conversion fundamentals, not edge cases — which is why it's flagged critical. Scores below 70 are flagged as critical — a signal that the conversion fundamentals, not edge cases, are failing.",
+    tag: 'weighted by conversion impact · not a vanity metric · grounded in evidence',
   },
   {
     q: "Is this just for SaaS? I run an e-commerce store.",
-    a: "The engine classifies your site type automatically across 14 site-type verticals — SaaS, e-commerce, agency, creator, marketplace — and applies the relevant check subset for your category with no configuration required. A Shopify product page gets different diagnostics than a B2B SaaS pricing page. The corpus benchmarks are also segmented by vertical so your percentile is always against comparable sites, not a mixed average. E-commerce, SaaS, agencies, and creator sites are all actively represented in the corpus.",
+    a: "The engine classifies your site type automatically across 14 site-type verticals — SaaS, e-commerce, agency, creator, marketplace — and applies the relevant check subset for your category with no configuration required. A Shopify product page gets different diagnostics than a B2B SaaS pricing page — the checks that apply to your category, not a generic mixed average.",
     tag: '14 verticals · auto-classified · e-comm and SaaS both supported',
   },
   {
@@ -1139,9 +1126,6 @@ function WhyDifferentSection() {
   )
 }
 
-// ── Section 10 — Benchmarks ───────────────────────────────────────────────────
-// Renders the existing LandingCorpusStats component (bell curve, percentile, corpus stats).
-
 // ── Section 11 — Multi-Site / Scale ──────────────────────────────────────────
 
 const AGENCY_CAPS = [
@@ -1224,7 +1208,7 @@ function MultiSiteSection() {
               <div style={{ marginTop:4 }}>
                 <span style={{ ...MONO, fontSize:8, color:CRIT, border:`0.5px solid ${CRIT}`, padding:'1px 5px', textTransform:'uppercase', letterSpacing:'0.08em' }}>CRITICAL</span>
               </div>
-              <p style={{ ...MONO, fontSize:9, color:INK_MUT, margin:'4px 0 0' }}>21st percentile · B2B SaaS</p>
+              <p style={{ ...MONO, fontSize:9, color:INK_MUT, margin:'4px 0 0' }}>high upside · B2B SaaS</p>
             </div>
           </div>
 
@@ -1336,7 +1320,7 @@ const PRICING_CARDS: PricingCard[] = [
     features: [
       '3 scans per month',
       "Score + top 3 findings — enough to see what's broken, not enough to fix everything",
-      'Benchmarked against corpus',
+      'Coverage across 27 categories',
     ],
     cta: 'Start free →',
     ctaHref: '/auth?surface=dashboard',
@@ -1628,7 +1612,6 @@ function FinalCtaSection() {
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function DashboardPage() {
-  const [upgradeLinkHovered, setUpgradeLinkHovered] = useState(false)
   return (
     <main style={{ minHeight:'100vh' }}>
       <HeroSection />
@@ -1639,26 +1622,6 @@ export default function DashboardPage() {
         </a>
       </div>
       <OutputSection />
-
-      {/* Showcase — corpus percentile bell curve, promoted high as a proof moment (full-bleed) */}
-      <LandingCorpusStats />
-      {/* Benchmarks CTA — smooth-scroll hook from corpus section into pricing */}
-      <div style={{ textAlign:'center',padding:'0 48px 56px',background:BG_BASE }}>
-        <a
-          href="#pricing"
-          onMouseEnter={() => setUpgradeLinkHovered(true)}
-          onMouseLeave={() => setUpgradeLinkHovered(false)}
-          style={{
-            ...MONO,fontSize:11,
-            color: upgradeLinkHovered ? 'rgba(111, 155, 198, 1)' : 'rgba(111, 155, 198, 0.7)',
-            textDecoration:'none',letterSpacing:'0.08em',
-            transition: 'color 0.2s ease',
-            textShadow: upgradeLinkHovered ? '0 0 8px rgba(111, 155, 198, 0.3)' : undefined,
-          }}
-        >
-          Upgrade to see what separates the top quartile in your vertical from everyone else.
-        </a>
-      </div>
 
       <GroundingProofSection />
       <WhatWeCheckSection />

@@ -679,7 +679,7 @@ export default function DevelopersPage() {
                   One endpoint.<br />Any URL.<br />Conversion intelligence.
                 </h1>
                 <p style={{ ...SANS, fontSize: 16, lineHeight: 1.65, color: '#9398A8', maxWidth: 460, margin: '0 0 28px' }}>
-                  POST a URL, get structured JSON back — percentile benchmarks and ranked fixes.
+                  POST a URL, get structured JSON back — a coverage score, ranked findings, and drop-in fixes.
                 </p>
 
                 {/* CTA row */}
@@ -734,7 +734,7 @@ export default function DevelopersPage() {
 
           {/* Plain-language lede — kept directly beneath the hero */}
           <p style={{ ...SANS, fontSize: 15, lineHeight: 1.7, color: '#9398A8', maxWidth: 760, margin: '28px auto 0', textAlign: 'center' }}>
-            POST any web page and get conversion intelligence back as JSON &mdash; a 0&ndash;100 score, ranked findings with on-page evidence, fixes with rewritten copy, and percentile benchmarks for the vertical. Drop it into an e-commerce app, a CRM feature, a site builder, or an AI agent &mdash; the same shape on every call, so you build against it once.
+            POST any web page and get conversion intelligence back as JSON &mdash; a coverage score, ranked findings with on-page evidence, and fixes with rewritten copy. Drop it into an e-commerce app, a CRM feature, a site builder, or an AI agent &mdash; the same shape on every call, so you build against it once.
           </p>
         </div>
       </section>
@@ -755,7 +755,7 @@ export default function DevelopersPage() {
               {[
                 { t: 'What it checks', lead: null, body: "311 checks across 27 conversion categories — hero, trust, CTA, social proof, and more — run against the exact page you submit." },
                 { t: 'What a finding is', lead: null, body: "Each issue comes back as a structured finding: what's wrong, the on-page evidence behind it, a ranked priority, and a rewritten fix you can paste in." },
-                { t: 'Why percentile, not a raw score', lead: 'Not an average. A percentile.', body: "Your score is positioned against a live corpus of real scans in the same vertical — so '63rd percentile' says something a generic audit number can't." },
+                { t: 'Weighted, not averaged', lead: 'Impact-weighted scoring.', body: "Each finding is weighted by its estimated conversion impact and by your site type — so the score reflects what actually moves conversion for your vertical, not a flat average." },
               ].map((c, i) => (
                 <div key={c.t} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                   <span style={{ ...MONO, fontSize: 10, color: '#6E7587', letterSpacing: '0.12em' }}>{String(i + 1).padStart(2, '0')}</span>
@@ -869,12 +869,6 @@ export default function DevelopersPage() {
                 { delay: '0.45s', content: <>&nbsp;&nbsp;<K c="summary" /><Muted c=": " /><S c="…" /><Muted c="," /></> },
                 { delay: '0.5s',  content: <>&nbsp;&nbsp;<K c="copy_rewrites" /><Muted c=": { … }," /></> },
                 { delay: '0.55s', content: <>&nbsp;&nbsp;<K c="growth_blueprint" /><Muted c=": [ … ]," /></> },
-                { delay: '0.6s',  content: <>&nbsp;&nbsp;<K c="benchmark" /><Muted c=": {" /></> },
-                { delay: '0.65s', content: <>&nbsp;&nbsp;&nbsp;&nbsp;<K c="industry_average" /><Muted c=": " /><N c="58" /><Muted c="," /></> },
-                { delay: '0.7s',  content: <>&nbsp;&nbsp;&nbsp;&nbsp;<K c="industry_percentile" /><Muted c=": " /><N c="63" /><Muted c="," /></> },
-                { delay: '0.75s', content: <>&nbsp;&nbsp;&nbsp;&nbsp;<K c="top_10_percent_score" /><Muted c=": " /><N c="82" /><Muted c="," /></> },
-                { delay: '0.8s',  content: <>&nbsp;&nbsp;&nbsp;&nbsp;<K c="sample_size" /><Muted c=": " /><N c="4812" /></> },
-                { delay: '0.85s', content: <>&nbsp;&nbsp;<Muted c="}," /></> },
                 { delay: '0.9s',  content: <>&nbsp;&nbsp;<K c="scan_meta" /><Muted c=": { " /><K c="cost_usd" /><Muted c=": " /><N c="0.15" /><Muted c=", " /><K c="duration_ms" /><Muted c=": " /><N c="87432" /><Muted c=" }" /></> },
                 { delay: '0.95s', content: <><Muted c="}" /></> },
               ].map((line, i) => (

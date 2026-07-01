@@ -35,9 +35,9 @@ export const metadata: Metadata = {
   },
 }
 
-// Removed sections (curl/JSON hero, two-surface cards, corpus stats + bell curve,
-// objections FAQ) live in components/LandingCurlHero.tsx, LandingTwoSurface.tsx,
-// LandingCorpusStats.tsx, LandingObjectionsFaq.tsx for the founder/developer deep pages.
+// Removed sections (curl/JSON hero, two-surface cards, objections FAQ) live in
+// components/LandingCurlHero.tsx, LandingTwoSurface.tsx, LandingObjectionsFaq.tsx
+// for the founder/developer deep pages.
 
 // ── Nav ─────────────────────────────────────────────────────────────────────
 
@@ -167,7 +167,7 @@ function HeroForkSection() {
 
         {/* Subhead */}
         <p className="font-body text-lg text-text-secondary leading-relaxed text-center max-w-[600px] mx-auto mt-5 mb-0">
-          POST any URL. Get a report back in 60–120 seconds — a 0–100 score, ranked fixes, AI-rewritten copy, and percentile benchmarks.
+          POST any URL. Get a report back in 60–120 seconds — a coverage score, ranked fixes with on-page evidence, and AI-rewritten copy.
         </p>
 
         {/* Scan-engine glyph */}
@@ -221,7 +221,7 @@ function HeroForkSection() {
             <div className="font-mono text-[11px] leading-relaxed border border-data-impact/20 bg-data-impact/5 p-3 mb-5">
               <span className="text-data-impact">POST</span> <span className="text-text-secondary">/api/v1/scan</span><br />
               <span className="text-text-tertiary">{`{ "url": "https://yoursite.com" }`}</span><br />
-              <span className="text-text-tertiary">→ 0–100 score · ranked findings · JSON</span>
+              <span className="text-text-tertiary">→ coverage score · ranked findings · JSON</span>
             </div>
 
             <div className="flex-1">
@@ -259,19 +259,6 @@ function HeroForkSection() {
 
         </div>
       </div>
-    </section>
-  )
-}
-
-// ── Trust strip ──────────────────────────────────────────────────────────────
-
-// TODO: make corpus stats dynamic from a DB/API call (corpus_size: 4812, avg_score: 58, pct_missing_above_fold_proof: 76)
-function TrustStrip() {
-  return (
-    <section className="border-y border-background-border py-4 px-8">
-      <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-interactive text-center m-0">
-        4,812 SITES SCANNED · AVG SCORE 58 · 76% MISSING ABOVE-FOLD PROOF · CORPUS UPDATED WEEKLY
-      </p>
     </section>
   )
 }
@@ -376,7 +363,6 @@ export default function HomePage() {
     <main className="bg-background-base min-h-screen">
       <NavBar />
       <HeroForkSection />
-      <TrustStrip />
       <ObjectionPairSection />
       <FooterSection />
     </main>

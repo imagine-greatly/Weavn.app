@@ -14,6 +14,7 @@ import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 import { validateApiKey } from "@/lib/apiAuth";
 import { apiError } from "@/lib/apiErrors";
+import { toPublicScanId } from "@/lib/scanId";
 
 function getServiceClient() {
   return createClient(
@@ -107,7 +108,7 @@ export async function GET(req: NextRequest) {
   const pageRows = hasMore ? rows.slice(0, limit) : rows;
 
   const scans = pageRows.map((row) => ({
-    id: row.id,
+    scan_id: toPublicScanId(row.id),
     url: `https://${row.domain}`,
     score: row.health_score ?? 0,
     verdict: scoreToVerdict(row.health_score ?? 0),

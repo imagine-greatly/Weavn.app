@@ -16,6 +16,7 @@ import type {
   HeroRewrite,
   GrowthBlueprint,
 } from "@/lib/reportSchema";
+import { toPublicScanId, toDbScanId } from "@/lib/scanId";
 
 function getServiceClient() {
   return createClient(
@@ -114,12 +115,15 @@ export async function GET(
     return apiError("INVALID_REQUEST", "id is required", 400);
   }
 
+  // Accept BOTH a bare UUID and an sc_-prefixed scan_id (back-compat for older links/tokens).
+  const dbId = toDbScanId(id);
+
   const supabase = getServiceClient();
 
   const { data, error } = await supabase
     .from("reports")
     .select("id, domain, health_score, created_at, analysis, status")
-    .eq("id", id)
+    .eq("id", dbId)
     .eq("api_key_id", apiKey.id)  // enforces ownership — wrong key → no row → 404
     .single();
 
@@ -139,10 +143,10 @@ export async function GET(
   const row = data as ReportRow;
 
   if (row.status === "pending") {
-    return NextResponse.json({ scan_id: row.id, status: "pending", message: "Scan in progress" }, { status: 202 });
+    return NextResponse.json({ scan_id: toPublicScanId(row.id), status: "pending", message: "Scan in progress" }, { status: 202 });
   }
   if (row.status === "failed") {
-    return NextResponse.json({ scan_id: row.id, status: "failed", error: "Scan failed" }, { status: 200 });
+    return NextResponse.json({ scan_id: toPublicScanId(row.id), status: "failed", error: "Scan failed" }, { status: 200 });
   }
 
   const payload = row.analysis;
@@ -152,7 +156,7 @@ export async function GET(
   );
 
   return NextResponse.json({
-    id: row.id,
+    scan_id: toPublicScanId(row.id),
     url: payload.pagesAnalyzed?.[0] ?? `https://${row.domain}`,
     score: row.health_score ?? 0,
     verdict: scoreToVerdict(row.health_score ?? 0),

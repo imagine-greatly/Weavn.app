@@ -6,6 +6,7 @@
  */
 
 import { randomUUID } from "crypto";
+import { toPublicScanId } from "@/lib/scanId";
 import Anthropic from "@anthropic-ai/sdk";
 import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
@@ -142,12 +143,12 @@ async function runOneScan(opts: BatchScanOptions): Promise<Record<string, unknow
       if (SCORE_ONLY) {
         const ap = (cr.analysis ?? {}) as Record<string, unknown>;
         return {
-          scan_id: cr.id, url: normalizedUrl, score, score_band: formatCoverageBand(score),
+          scan_id: toPublicScanId(cr.id), url: normalizedUrl, score, score_band: formatCoverageBand(score),
           dimensions: dimsArrayFromAnalysis(ap), site_type: String(ap.site_type ?? ""),
           status: "complete", cached: true,
         };
       }
-      return { id: cr.id, url: normalizedUrl, score, verdict: scoreToVerdict(score), scanned_at: cr.created_at, cached: true };
+      return { scan_id: toPublicScanId(cr.id), url: normalizedUrl, score, verdict: scoreToVerdict(score), scanned_at: cr.created_at, cached: true };
     }
     previousScore = cr.health_score ?? null;
     reusedFingerprint = live;
@@ -263,13 +264,13 @@ async function runOneScan(opts: BatchScanOptions): Promise<Record<string, unknow
   // the model's reported set; batch has no pass-2 to skip — the saving is the rubric path on /scan.)
   if (SCORE_ONLY) {
     return {
-      scan_id: reportId, url: normalizedUrl, score, score_band: formatCoverageBand(score),
+      scan_id: toPublicScanId(reportId), url: normalizedUrl, score, score_band: formatCoverageBand(score),
       dimensions: dimsArrayFromRecord(parsed.dimensions), site_type, status: "complete", cached: false,
     };
   }
 
   const result: Record<string, unknown> = {
-    id: reportId, url: normalizedUrl, score, verdict: scoreToVerdict(score),
+    scan_id: toPublicScanId(reportId), url: normalizedUrl, score, verdict: scoreToVerdict(score),
     scanned_at: new Date().toISOString(), pages_scanned: pageCount, cached: false,
     metadata: { word_count: wordCount, cta_count: ctaCount, tech_stack: techStack },
   };
@@ -343,7 +344,7 @@ export async function POST(req: NextRequest) {
         scanId = (data as { id?: string } | null)?.id ?? scanId;
       } catch { /* use generated UUID */ }
       scanIds.push(scanId);
-      pollUrls.push(`${BASE_URL}/api/v1/scans/${scanId}`);
+      pollUrls.push(`${BASE_URL}/api/v1/scans/${toPublicScanId(scanId)}`);
     }
 
     // Detached background batch (runs within Vercel Pro 300s timeout)
@@ -351,19 +352,19 @@ export async function POST(req: NextRequest) {
       await Promise.allSettled(urls.map((url, i) =>
         runOneScan({ url, apiKey, effectiveFields, findingLimit, findingDepth, scanMode, supabaseAdmin, pendingId: scanIds[i] })
           .then(result => {
-            const sid = (result.id ?? result.scan_id) as string;
+            const sid = result.scan_id as string;
             const verdict = (result.verdict as string) ?? scoreToVerdict(result.score as number);
             dispatchWebhook(apiKey.id, { event: "scan.completed", scan_id: sid, url, score: result.score as number, data: { domain: getDomain(url), verdict } });
           })
           .catch(err => {
             console.error("[API v1 batch] async scan failed:", url, err instanceof Error ? err.message : err);
             void logScanUsage(apiKey.id, { url, score: null, responseTimeMs: Date.now() - batchStart, status: "error", statusCode: 500, endpoint: "scan_batch", errorCode: "scan_failed" });
-            dispatchWebhook(apiKey.id, { event: "scan.failed", scan_id: scanIds[i], url, score: null, data: { error: err instanceof Error ? err.message : "Scan failed" } });
+            dispatchWebhook(apiKey.id, { event: "scan.failed", scan_id: toPublicScanId(scanIds[i]), url, score: null, data: { error: err instanceof Error ? err.message : "Scan failed" } });
           })
       ));
     })();
 
-    return NextResponse.json({ batch_id: batchId, scan_ids: scanIds, status: "pending", poll_urls: pollUrls }, { status: 202, headers: rlHeaders(apiKey) });
+    return NextResponse.json({ batch_id: batchId, scan_ids: scanIds.map(toPublicScanId), status: "pending", poll_urls: pollUrls }, { status: 202, headers: rlHeaders(apiKey) });
   }
 
   // ── Sync batch mode ───────────────────────────────────────────────────────
@@ -385,7 +386,7 @@ export async function POST(req: NextRequest) {
   // Dispatch webhooks for completed scans
   for (const r of results) {
     if (r.status === "success" && r.data) {
-      const sid = (r.data.id ?? r.data.scan_id) as string;
+      const sid = r.data.scan_id as string;
       const verdict = (r.data.verdict as string) ?? scoreToVerdict(r.data.score as number);
       dispatchWebhook(apiKey.id, { event: "scan.completed", scan_id: sid, url: r.url, score: r.data.score as number, data: { domain: getDomain(r.url), verdict } });
     }

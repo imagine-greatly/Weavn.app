@@ -8,6 +8,7 @@
  */
 
 import { randomUUID } from "crypto";
+import { toPublicScanId } from "@/lib/scanId";
 import Anthropic from "@anthropic-ai/sdk";
 import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
@@ -331,7 +332,7 @@ async function executeScan(p: ScanParams): Promise<ScanResult> {
 
   if (RUBRIC_SCORING_ENABLED) {
     // ── RUBRIC SCORING PATH (gated by WEAVN_RUBRIC_SCORING) — shared engine, lib/rubricEngine.ts ──
-    // Score + dimensions + findings are COMPUTED from the 307-check rubric (never self-reported).
+    // Score + dimensions + findings are COMPUTED from the 311-check rubric (never self-reported).
     // The SAME runRubricScan powers the dashboard (/api/scan), so both surfaces score identically.
     const summaryContent = wrapSummary(buildPageSummary(extraction));
     let r: Awaited<ReturnType<typeof runRubricScan>>;
@@ -702,7 +703,7 @@ export async function POST(req: NextRequest) {
     }
 
     const scanId = randomUUID();
-    const pollUrl = `${BASE_URL}/api/v1/scans/${scanId}`;
+    const pollUrl = `${BASE_URL}/api/v1/scans/${toPublicScanId(scanId)}`;
     const capturedPaths = multiPagePaths;
 
     void (async () => {
@@ -720,7 +721,7 @@ export async function POST(req: NextRequest) {
     })();
 
     return NextResponse.json({
-      scan_id: scanId,
+      scan_id: toPublicScanId(scanId),
       status: "pending",
       poll_url: pollUrl,
       type: "multi",
@@ -796,7 +797,7 @@ export async function POST(req: NextRequest) {
 
   if (asyncMode) {
     const scanId = pendingReportId ?? randomUUID();
-    const pollUrl = `${BASE_URL}/api/v1/scans/${scanId}`;
+    const pollUrl = `${BASE_URL}/api/v1/scans/${toPublicScanId(scanId)}`;
 
     // Detached background scan — runs within Vercel function timeout (300s Pro)
     void (async () => {
@@ -809,13 +810,13 @@ export async function POST(req: NextRequest) {
         });
         dispatchWebhook(apiKey.id, {
           event: "scan.completed",
-          scan_id: result.reportId,
+          scan_id: toPublicScanId(result.reportId),
           url: normalizedUrl,
           score: result.score,
           data: { domain, verdict: result.verdict, score: result.score },
         });
         if (callbackUrl) {
-          void fetch(callbackUrl, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ scan_id: result.reportId, status: "complete", score: result.score }) }).catch(() => {});
+          void fetch(callbackUrl, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ scan_id: toPublicScanId(result.reportId), status: "complete", score: result.score }) }).catch(() => {});
         }
       } catch (err) {
         const errMsg = err instanceof Error ? err.message : "Scan failed";
@@ -823,7 +824,7 @@ export async function POST(req: NextRequest) {
         console.error("[API v1] async scan failed:", errMsg);
         dispatchWebhook(apiKey.id, {
           event: "scan.failed",
-          scan_id: scanId,
+          scan_id: toPublicScanId(scanId),
           url: normalizedUrl,
           score: null,
           data: isBlocked
@@ -834,14 +835,14 @@ export async function POST(req: NextRequest) {
           void fetch(callbackUrl, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ scan_id: scanId, status: "failed", blocked: isBlocked }),
+            body: JSON.stringify({ scan_id: toPublicScanId(scanId), status: "failed", blocked: isBlocked }),
           }).catch(() => {});
         }
       }
     })();
 
     return NextResponse.json({
-      scan_id: scanId,
+      scan_id: toPublicScanId(scanId),
       status: "pending",
       poll_url: pollUrl,
       webhook_url: callbackUrl,
@@ -916,7 +917,7 @@ export async function POST(req: NextRequest) {
 
   dispatchWebhook(apiKey.id, {
     event: "scan.completed",
-    scan_id: result.reportId,
+    scan_id: toPublicScanId(result.reportId),
     url: normalizedUrl,
     score: result.score,
     data: { domain, verdict: result.verdict },
@@ -929,7 +930,7 @@ export async function POST(req: NextRequest) {
   // Contract naming: scan_id (the report id), score_band via formatCoverageBand (±tol).
   if (scanMode === "score") {
     const scoreResponse: Record<string, unknown> = {
-      scan_id: result.reportId,
+      scan_id: toPublicScanId(result.reportId),
       url: cacheUrl,
       score: result.score,
       score_band: formatCoverageBand(result.score),
@@ -958,7 +959,7 @@ export async function POST(req: NextRequest) {
   };
 
   const response: Record<string, unknown> = {
-    id: result.reportId,
+    scan_id: toPublicScanId(result.reportId),
     url: cacheUrl,
     score: result.score,
     verdict: result.verdict,
@@ -1078,7 +1079,7 @@ function buildCacheResponse(
     const ap = cr.analysis as Record<string, unknown>;
     const storedDims = dimensionsFromStored(ap);
     const scoreResponse: Record<string, unknown> = {
-      scan_id: cr.id,
+      scan_id: toPublicScanId(cr.id),
       url: cacheUrl,
       score,
       score_band: formatCoverageBand(score),
@@ -1092,7 +1093,7 @@ function buildCacheResponse(
   }
 
   const response: Record<string, unknown> = {
-    id: cr.id,
+    scan_id: toPublicScanId(cr.id),
     url: cacheUrl,
     score,
     verdict: scoreToVerdict(score),

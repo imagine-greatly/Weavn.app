@@ -1,16 +1,10 @@
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { createClient } from '@supabase/supabase-js'
-import type {
-  ReportPayload,
-  Leak,
-  HeroRewrite,
-  GrowthStrategy,
-  CategoryScores,
-} from '@/lib/reportSchema'
 import ReportClient from './ReportClient'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { type BrandingConfig, sanitizeBranding } from '@/lib/branding'
+import { supabaseReportToPayload } from '@/lib/supabaseReportToPayload'
 
 function getServiceClient() {
   return createClient(
@@ -27,57 +21,6 @@ async function loadOwnerBranding(supabase: SupabaseClient, ownerId: string | nul
   const row = res.data as { plan?: string; branding?: unknown } | null
   if (!row || row.plan !== 'agency' || !row.branding) return null
   return sanitizeBranding(row.branding)
-}
-
-// ── Adapter ───────────────────────────────────────────────────────────────────
-
-function supabaseReportToPayload(
-  healthScore: number,
-  analysis: Record<string, unknown>
-): ReportPayload {
-  const leaks = ((analysis.api_findings ?? analysis.leaks) as Leak[] | undefined) ?? []
-
-  const defaultCategoryScores: CategoryScores = {
-    psychology: 50,
-    messaging: 50,
-    conversion: 50,
-    seo: 50,
-    ux: 50,
-    trust: 50,
-  }
-
-  const defaultHeroRewrite: HeroRewrite = {
-    currentHeadline: '',
-    currentSubheadline: '',
-    currentCta: '',
-    suggestedHeadline: '',
-    suggestedSubheadline: '',
-    suggestedCta: '',
-    psychologistsNote: '',
-  }
-
-  const defaultGrowthStrategy: GrowthStrategy = {
-    biggestOpportunity: '',
-    trafficOpportunity: '',
-    conversionOpportunity: '',
-    trustOpportunity: '',
-    quickWins: [],
-    thirtyDayPlan: '',
-  }
-
-  return {
-    pagesAnalyzed: [],
-    categoryScores: defaultCategoryScores,
-    heroRewrite: defaultHeroRewrite,
-    growthStrategy: defaultGrowthStrategy,
-    // Spread all analysis fields — carries through every known ReportPayload field
-    // plus new API fields (strengths, score_profile, dimension_benchmarks, page_type)
-    // that ReportLayout accesses via type assertions.
-    ...(analysis as Partial<ReportPayload>),
-    // Explicit overrides — always win over the spread.
-    healthScore,
-    leaks,
-  } as unknown as ReportPayload
 }
 
 // ── Metadata ──────────────────────────────────────────────────────────────────

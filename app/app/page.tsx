@@ -41,7 +41,7 @@ export default function DashboardHome() {
       const [{ data }, { count }] = await Promise.all([
         supabase
           .from('reports')
-          .select('domain, health_score, created_at, share_token')
+          .select('id, domain, health_score, created_at, share_token')
           .eq('user_id', user.id)
           .neq('status', 'pending')
           .neq('status', 'failed')
@@ -57,8 +57,8 @@ export default function DashboardHome() {
           .neq('status', 'error'),
       ])
       if (cancelled) return
-      const rows = (data ?? []) as { domain: string; health_score: number | null; created_at: string; share_token: string | null }[]
-      setScans(rows.map(r => ({ domain: r.domain, score: r.health_score ?? 0, date: r.created_at, shareToken: r.share_token })))
+      const rows = (data ?? []) as { id: string; domain: string; health_score: number | null; created_at: string; share_token: string | null }[]
+      setScans(rows.map(r => ({ id: r.id, domain: r.domain, score: r.health_score ?? 0, date: r.created_at, shareToken: r.share_token })))
       setTotal(count ?? rows.length)
       setLoading(false)
     })()

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { createClient } from "@supabase/supabase-js";
+import { getOrRepairStripeCustomer } from "@/lib/stripeCustomer";
 
 export async function POST(req: NextRequest) {
   try {
@@ -28,8 +29,23 @@ export async function POST(req: NextRequest) {
       .select("plan, stripe_customer_id")
       .eq("id", user.id)
       .single();
-    const customerId = profile?.stripe_customer_id as string | null | undefined;
-    if (!customerId) return NextResponse.json({ error: "No active customer." }, { status: 400 });
+    const storedId = profile?.stripe_customer_id as string | null | undefined;
+    if (!storedId) return NextResponse.json({ error: "No active customer." }, { status: 400 });
+
+    const { customerId, recreated } = await getOrRepairStripeCustomer({
+      supabase,
+      stripe,
+      userId: user.id,
+      email: user.email,
+    });
+
+    // A recreated customer (old id was invalid) has no subscriptions to cancel.
+    if (recreated) {
+      console.warn(
+        `[settings/cancel-subscription] Stored Stripe customer for user ${user.id} was invalid and recreated; nothing to cancel.`
+      );
+      return NextResponse.json({ error: "No active subscription found." }, { status: 400 });
+    }
 
     const subs = await stripe.subscriptions.list({
       customer: customerId,
@@ -56,7 +72,10 @@ export async function POST(req: NextRequest) {
       cancel_at_period_end: updated.cancel_at_period_end,
     });
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Cancellation failed.";
-    return NextResponse.json({ error: message }, { status: 500 });
+    console.error("[settings/cancel-subscription] Cancellation failed:", err);
+    return NextResponse.json(
+      { error: "We couldn't update your subscription. Please try again or contact support." },
+      { status: 500 }
+    );
   }
 }

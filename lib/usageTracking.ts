@@ -5,6 +5,7 @@ import {
   DASHBOARD_PLAN_MONTHLY_CAPS,
   API_PLAN_INCLUDED_SCANS,
 } from "@/lib/constants";
+import { isMissingStripeCustomerError } from "@/lib/stripeCustomer";
 
 function getServiceClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -57,7 +58,16 @@ export function reportUsageToStripe(apiKeyId: string, scanCount = 1): void {
         payload: { stripe_customer_id: customerId, value: String(Math.max(1, Math.round(scanCount))) },
       });
     } catch (err) {
-      console.error("[usageTracking] reportUsageToStripe failed:", err);
+      // Fire-and-forget: never block the scan. But a stale/invalid customer id
+      // (wrong Stripe account/mode) must not fail invisibly — call it out clearly.
+      // It self-heals on the user's next checkout/portal/subscription request.
+      if (isMissingStripeCustomerError(err)) {
+        console.warn(
+          "[usageTracking] Stripe customer not found (resource_missing); metered scan NOT reported. The stored stripe_customer_id is stale (wrong account/mode) and will self-heal on the user's next checkout/portal/subscription request."
+        );
+      } else {
+        console.error("[usageTracking] reportUsageToStripe failed:", err);
+      }
     }
   })();
 }

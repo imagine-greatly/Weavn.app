@@ -11,6 +11,7 @@ import {
   type ApiTier,
   type DashboardTier,
 } from '@/lib/pricing';
+import { getOrRepairStripeCustomer } from '@/lib/stripeCustomer';
 
 type Surface = 'dashboard' | 'api';
 
@@ -144,20 +145,15 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    let customerId = profile?.stripe_customer_id;
-
-    if (!customerId) {
-      const customer = await stripe.customers.create({
-        email: user.email,
-        metadata: { supabase_user_id: user.id },
-      });
-      customerId = customer.id;
-
-      await supabase
-        .from('profiles')
-        .update({ stripe_customer_id: customerId })
-        .eq('id', user.id);
-    }
+    // Resolve a Stripe customer id valid under the current key. This creates one
+    // for a first-time buyer (unchanged happy path) and additionally self-heals a
+    // stale id left over from a different Stripe account/mode.
+    const { customerId } = await getOrRepairStripeCustomer({
+      supabase,
+      stripe,
+      userId: user.id,
+      email: user.email,
+    });
 
     const metadata = { user_id: user.id, plan: requestedPlan, surface };
 

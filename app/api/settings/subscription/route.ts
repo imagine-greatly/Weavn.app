@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { createClient } from "@supabase/supabase-js";
+import { getOrRepairStripeCustomer } from "@/lib/stripeCustomer";
 
 type ProfileRow = {
   id: string;
@@ -65,9 +66,24 @@ export async function GET(req: NextRequest) {
     };
 
     if ((out.plan as string) === "pro" && p.stripe_customer_id) {
-      const customer = await stripe.customers.retrieve(p.stripe_customer_id);
+      const { customerId, recreated, customer } = await getOrRepairStripeCustomer({
+        supabase,
+        stripe,
+        userId: user.id,
+        email: user.email,
+      });
+
+      // A freshly recreated customer (old id was invalid) has no subscription or
+      // payment history — surface as "no subscription" instead of querying Stripe.
+      if (recreated) {
+        console.warn(
+          `[settings/subscription] Stored Stripe customer for user ${user.id} was invalid and recreated; returning no active subscription.`
+        );
+        return NextResponse.json(out);
+      }
+
       const subscriptions = await stripe.subscriptions.list({
-        customer: p.stripe_customer_id,
+        customer: customerId,
         status: "all",
         limit: 5,
         expand: ["data.default_payment_method", "data.items.data.price"],
@@ -116,7 +132,10 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json(out);
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Failed to load subscription.";
-    return NextResponse.json({ error: message }, { status: 500 });
+    console.error("[settings/subscription] Failed to load subscription:", err);
+    return NextResponse.json(
+      { error: "We couldn't load your billing details. Please try again or contact support." },
+      { status: 500 }
+    );
   }
 }

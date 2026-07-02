@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { createClient } from "@supabase/supabase-js";
+import { isMissingStripeCustomerError } from "@/lib/stripeCustomer";
 
 export async function POST(req: NextRequest) {
   try {
@@ -40,15 +41,26 @@ export async function POST(req: NextRequest) {
 
     const customerId = profile?.stripe_customer_id as string | null | undefined;
     if (customerId) {
-      const subs = await stripe.subscriptions.list({
-        customer: customerId,
-        status: "all",
-        limit: 10,
-      });
-      for (const sub of subs.data) {
-        if (sub.status !== "canceled") {
-          await stripe.subscriptions.cancel(sub.id);
+      try {
+        const subs = await stripe.subscriptions.list({
+          customer: customerId,
+          status: "all",
+          limit: 10,
+        });
+        for (const sub of subs.data) {
+          if (sub.status !== "canceled") {
+            await stripe.subscriptions.cancel(sub.id);
+          }
         }
+      } catch (err) {
+        // A stale/invalid stored id (wrong Stripe account/mode) has no
+        // subscriptions to cancel under the current key. Don't block deletion on
+        // it — and deliberately do NOT recreate a customer for an account that is
+        // being deleted (that would orphan an empty customer). Log and continue.
+        if (!isMissingStripeCustomerError(err)) throw err;
+        console.warn(
+          `[settings/delete-account] Stored Stripe customer ${customerId} for user ${user.id} not found (resource_missing); skipping subscription cancellation.`
+        );
       }
     }
 
@@ -63,7 +75,10 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ ok: true });
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Account deletion failed.";
-    return NextResponse.json({ error: message }, { status: 500 });
+    console.error("[settings/delete-account] Account deletion failed:", err);
+    return NextResponse.json(
+      { error: "We couldn't delete your account. Please try again or contact support." },
+      { status: 500 }
+    );
   }
 }

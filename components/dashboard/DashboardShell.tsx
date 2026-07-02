@@ -87,9 +87,12 @@ export default function DashboardShell({ children }: { children: React.ReactNode
   const isAgency = plan === 'agency' || plan === 'enterprise'
 
   // Canonical primary rail — exactly three tabs for every plan: Overview · Reports · Billing.
+  // Agency/Enterprise read the SAME personal report viewer (same route + component), just
+  // labelled "Scans" so it reads as distinct from the Clients roster. Label-only difference.
+  const reportsLabel = isAgency ? 'Scans' : 'Reports'
   const APP_NAV: { label: string; href: string }[] = [
     { label: 'Overview', href: '/app' },
-    { label: 'Reports', href: '/app/reports' },
+    { label: reportsLabel, href: '/app/reports' },
     { label: 'Billing', href: '/app/billing' },
   ]
   const nav: SidebarNavItem[] = APP_NAV.map(it => ({ label: it.label, href: it.href, active: isActive(pathname, it.href) }))
@@ -148,7 +151,8 @@ export default function DashboardShell({ children }: { children: React.ReactNode
           }}
         >
           <span style={{ fontFamily: MONO, fontSize: 11, letterSpacing: '0.16em', textTransform: 'uppercase', color: C.inkMuted }}>
-            {sectionTitle(pathname)}
+            {/* Mirror the tier-conditional nav label so the top chrome stays honest. */}
+            {pathname.startsWith('/app/reports') ? reportsLabel : sectionTitle(pathname)}
           </span>
           <button
             type="button"

@@ -6,22 +6,24 @@ import VerdictCard, { type VerdictCardFinding } from '@/components/dashboard/Ver
 import VerdictRing from '@/components/ui/VerdictRing'
 import { getSupabaseBrowserClient } from '@/lib/supabaseBrowser'
 import { DASHBOARD_PLAN_MONTHLY_CAPS } from '@/lib/constants'
-import { scoreColor } from '@/lib/verdict'
+import { scoreColor, opportunityFraming } from '@/lib/verdict'
 import { formatDate } from '@/lib/dashboard'
 import {
   DASH, MONO, BODY, DISP, STEEL, steelLine,
-  Panel, SectionLabel, StatTile,
+  Panel, SectionLabel,
 } from '@/components/dashboard/ui'
 
 /**
- * Overview — the founder cockpit: a prominent scan entry, a summary of coverage across
- * sites, and a preview of recent reports (the full history lives in the Reports tab).
- * Near-monochrome: color is rationed to the coverage ring/score and real urgency; steel
- * is affordance-only. Coverage framing throughout — no fabricated percentile/corpus claims.
+ * Overview — a glanceable STATS PULSE-CHECK, not an organizing/management surface.
+ * It shows the score trend for the most-recent scan (delta + sparkline) and a short
+ * set of recent-scan preview cards. Cards deep-link into the Reports tab with that
+ * specific scan loaded (/app/reports?scan=<id>) — the same loader the Reports switcher
+ * uses. No manage/add/remove affordances, no entity/client concept, no history table.
  */
 
-/** One scan (report) for the recent preview — every scan, not rolled up by domain. */
+/** One scan (report) for the preview + trend. */
 export interface ScanHistoryRow {
+  id: string
   domain: string
   score: number
   date: string
@@ -29,10 +31,11 @@ export interface ScanHistoryRow {
 }
 
 export interface DashboardOverviewProps {
-  /** Most-recent completed scans, newest first (bounded — drives the preview + summary). */
+  /** Most-recent completed scans, newest first (bounded). */
   scans: ScanHistoryRow[]
-  /** Exact all-time completed-report count (keeps the Reports tile honest beyond the window). */
+  /** Exact all-time completed-report count. */
   total?: number | null
+  // Scan-entry props — used only by the zero-scans empty state onboarding.
   url: string
   onUrlChange: (value: string) => void
   onScan: () => void
@@ -45,8 +48,6 @@ const RECENT_LIMIT = 5
 export default function DashboardOverview({ scans, total, url, onUrlChange, onScan, scanning = false, error }: DashboardOverviewProps) {
   const hasScans = scans.length > 0
 
-  // Plan drives the single, contextual Agency nudge (no padlocks). Default to no nudge
-  // while loading so nothing flashes; show only for confirmed founder (non-agency) plans.
   const [plan, setPlan] = useState<string | null>(null)
   useEffect(() => {
     let cancelled = false
@@ -57,95 +58,36 @@ export default function DashboardOverview({ scans, total, url, onUrlChange, onSc
   }, [])
   const isFounder = plan != null && plan !== 'agency' && plan !== 'enterprise'
 
-  // Summary — derived from the bounded columns only (no analysis blob needed here).
   const uniqueSites = new Set(scans.map(s => s.domain)).size
-  const validScores = scans.map(s => s.score).filter(n => Number.isFinite(n) && n > 0)
-  const avgScore = validScores.length ? Math.round(validScores.reduce((a, b) => a + b, 0) / validScores.length) : null
 
   return (
     <div style={{ padding: '40px 32px 72px', maxWidth: 1040, margin: '0 auto' }}>
-      {/* 1 — Header */}
+      {/* Header */}
       <div style={{ marginBottom: 28 }}>
         <p style={{ fontFamily: MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.22em', color: STEEL, margin: '0 0 12px' }}>Dashboard</p>
         <h1 style={{ fontFamily: DISP, fontWeight: 700, fontSize: 28, color: DASH.ink, margin: 0, letterSpacing: '-0.5px', lineHeight: 1.1 }}>Overview</h1>
         <p style={{ fontFamily: BODY, fontSize: 15, color: DASH.ink2, margin: '10px 0 0', maxWidth: 560, lineHeight: 1.6 }}>
-          Scan any page for a coverage score, ranked findings, and a full report — in about a minute.
+          {hasScans ? 'Where your coverage stands, at a glance.' : 'Run your first scan to see your coverage score and ranked findings.'}
         </p>
       </div>
 
-      {/* 2 — Scan entry (the hero action) */}
-      <Panel accent style={{ padding: '22px 24px', marginBottom: 36 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap' }}>
-          <div style={{ flex: '1 1 340px', minWidth: 240 }}>
-            <label style={{ display: 'block', fontFamily: MONO, fontSize: 9.5, letterSpacing: '0.18em', textTransform: 'uppercase', color: DASH.ink3, marginBottom: 10 }}>
-              New scan
-            </label>
-            <div style={{ display: 'flex' }}>
-              <input
-                type="url"
-                value={url}
-                onChange={(e) => onUrlChange(e.target.value)}
-                onKeyDown={(e) => { if (e.key === 'Enter' && !scanning) onScan() }}
-                placeholder="your-site.com"
-                autoComplete="off"
-                style={{ flex: 1, minWidth: 0, fontFamily: MONO, fontSize: 14, color: DASH.ink, background: DASH.well, border: `1px solid ${DASH.line}`, borderRight: 'none', padding: '12px 14px', outline: 'none', borderRadius: 0 }}
-              />
-              <button
-                type="button"
-                onClick={onScan}
-                disabled={scanning || !url.trim()}
-                className="dash-btn"
-                style={{ fontFamily: MONO, fontSize: 12, letterSpacing: '0.08em', textTransform: 'uppercase', color: STEEL, background: steelLine(10), border: `1px solid ${steelLine(50)}`, padding: '12px 20px', borderRadius: 0, cursor: scanning || !url.trim() ? 'not-allowed' : 'pointer', opacity: scanning || !url.trim() ? 0.5 : 1, whiteSpace: 'nowrap', flexShrink: 0, transition: 'background 0.14s, border-color 0.14s' }}
-              >
-                {scanning ? 'Scanning…' : 'Scan →'}
-              </button>
-            </div>
-            {error ? <p style={{ fontFamily: MONO, fontSize: 12, color: DASH.crit, margin: '10px 0 0' }}>{error}</p> : null}
-          </div>
-          <div style={{ flex: '1 1 200px', minWidth: 180, borderLeft: `1px solid ${DASH.hair}`, paddingLeft: 20 }}>
-            <ScansRemaining />
-            <p style={{ fontFamily: MONO, fontSize: 10, color: DASH.ink4, letterSpacing: '0.04em', margin: '8px 0 0', lineHeight: 1.6 }}>
-              311 checks · 27 categories · every scan
-            </p>
-          </div>
-        </div>
-      </Panel>
-
-      {/* 3 — Body: empty illustration, or summary + recent */}
       {!hasScans ? (
-        <EmptySection />
+        <EmptySection url={url} onUrlChange={onUrlChange} onScan={onScan} scanning={scanning} error={error} />
       ) : (
         <>
-          {/* Summary metric strip */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1, background: DASH.line, border: `1px solid ${DASH.line}`, boxShadow: 'inset 0 1px 0 0 rgba(255,255,255,0.05)', marginBottom: 40 }}>
-            <StatTile label="Sites tracked" value={String(uniqueSites)} />
-            <StatTile label="Avg coverage" value={avgScore == null ? '—' : `${avgScore}%`} valueColor={avgScore == null ? DASH.ink3 : scoreColor(avgScore)} />
-            <StatTile label="Reports" value={String(total ?? scans.length)} />
-          </div>
+          <TrendPulse scans={scans} total={total} sites={uniqueSites} />
 
-          {/* Recent — a preview; the full history is the Reports tab */}
-          <SectionLabel right={
-            <Link href="/app/reports" style={{ fontFamily: MONO, fontSize: 10.5, letterSpacing: '0.06em', textTransform: 'uppercase', color: STEEL, textDecoration: 'none' }}>
-              View all →
-            </Link>
-          }>
-            Recent
-          </SectionLabel>
-          <Panel style={{ padding: 0 }}>
-            {scans.slice(0, RECENT_LIMIT).map((s, i, arr) => (
-              <RecentRow key={`${s.domain}-${s.date}-${i}`} scan={s} last={i === arr.length - 1} />
+          <SectionLabel>Recent scans</SectionLabel>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 12 }}>
+            {scans.slice(0, RECENT_LIMIT).map((s) => (
+              <RecentCard key={s.id} scan={s} />
             ))}
-          </Panel>
-          {(total ?? scans.length) > RECENT_LIMIT && (
-            <p style={{ fontFamily: MONO, fontSize: 10.5, color: DASH.ink4, textAlign: 'center', margin: '16px 0 0', letterSpacing: '0.04em' }}>
-              Showing {Math.min(RECENT_LIMIT, scans.length)} of {total ?? scans.length} · <Link href="/app/reports" style={{ color: STEEL, textDecoration: 'none' }}>see all reports →</Link>
-            </p>
-          )}
+          </div>
         </>
       )}
 
-      {/* 4 — Contextual Agency nudge — founders only, one instance, no padlock */}
-      {isFounder && (
+      {/* Contextual Agency nudge — founders only, one instance, no padlock */}
+      {isFounder && hasScans && (
         <div style={{ marginTop: 40, paddingTop: 20, borderTop: `1px solid ${DASH.hair}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
           <span style={{ fontFamily: BODY, fontSize: 13, color: DASH.ink3, lineHeight: 1.5 }}>
             Managing multiple client sites? Agency adds white-label reports and a client dashboard.
@@ -159,8 +101,115 @@ export default function DashboardOverview({ scans, total, url, onUrlChange, onSc
   )
 }
 
-// Real monthly quota — mirrors the shell QuotaBlock query shape. Gray register; red
-// only when the quota is exhausted (a genuine "blocked" signal).
+// ── Trend pulse — the most-recent scan's score + movement vs its previous scan ─────
+function TrendPulse({ scans, total, sites }: { scans: ScanHistoryRow[]; total?: number | null; sites: number }) {
+  const latest = scans[0]
+  const sameDomain = scans.filter(s => s.domain === latest.domain) // newest first
+  const prev = sameDomain[1] ?? null
+  const delta = prev ? latest.score - prev.score : null
+  const history = [...sameDomain].reverse().map(s => s.score) // oldest → newest
+  const opp = opportunityFraming(latest.score)
+  const reportCount = total ?? scans.length
+
+  return (
+    <Panel accent style={{ padding: '22px 24px', marginBottom: 40 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 22, flexWrap: 'wrap' }}>
+        <VerdictRing score={latest.score} size="lg" animate={false} />
+        <div style={{ minWidth: 0, flex: '1 1 220px' }}>
+          <p style={{ fontFamily: MONO, fontSize: 9.5, letterSpacing: '0.18em', textTransform: 'uppercase', color: DASH.ink3, margin: '0 0 6px' }}>
+            Latest scan · {formatDate(latest.date)}
+          </p>
+          <p style={{ fontFamily: DISP, fontWeight: 700, fontSize: 20, color: DASH.ink, margin: '0 0 8px', letterSpacing: '-0.3px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{latest.domain}</p>
+          <span style={{ fontFamily: MONO, fontSize: 10.5, letterSpacing: '0.1em', textTransform: 'uppercase', color: scoreColor(latest.score), border: `0.5px solid ${scoreColor(latest.score)}66`, padding: '4px 10px' }}>
+            {opp.label}
+          </span>
+        </div>
+
+        {/* Trend — delta vs previous scan of this same site, + sparkline */}
+        <div style={{ flexShrink: 0, borderLeft: `1px solid ${DASH.hair}`, paddingLeft: 22, display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'flex-start' }}>
+          <p style={{ fontFamily: MONO, fontSize: 9.5, letterSpacing: '0.18em', textTransform: 'uppercase', color: DASH.ink3, margin: 0 }}>Trend</p>
+          <DeltaChip delta={delta} />
+          {history.length >= 2 ? (
+            <Sparkline scores={history} last={latest.score} />
+          ) : (
+            <span style={{ fontFamily: MONO, fontSize: 10, color: DASH.ink4 }}>first scan of this site</span>
+          )}
+        </div>
+      </div>
+
+      <p style={{ fontFamily: MONO, fontSize: 10.5, color: DASH.ink4, letterSpacing: '0.04em', margin: '18px 0 0', paddingTop: 14, borderTop: `1px solid ${DASH.hair}` }}>
+        {reportCount} {reportCount === 1 ? 'report' : 'reports'} · {sites} {sites === 1 ? 'site' : 'sites'} tracked · <ScansRemaining />
+      </p>
+    </Panel>
+  )
+}
+
+function DeltaChip({ delta }: { delta: number | null }) {
+  if (delta == null) {
+    return <span style={{ fontFamily: DISP, fontWeight: 700, fontSize: 18, color: DASH.ink3 }}>—</span>
+  }
+  if (delta === 0) {
+    return <span style={{ fontFamily: MONO, fontSize: 12, color: DASH.ink3 }}>no change vs last scan</span>
+  }
+  const up = delta > 0
+  const color = up ? DASH.good : DASH.crit
+  return (
+    <span style={{ display: 'inline-flex', alignItems: 'baseline', gap: 6 }}>
+      <span aria-hidden style={{ fontFamily: MONO, fontSize: 13, color }}>{up ? '▲' : '▼'}</span>
+      <span style={{ fontFamily: DISP, fontWeight: 700, fontSize: 18, color }}>{up ? `+${delta}` : delta}</span>
+      <span style={{ fontFamily: MONO, fontSize: 10, color: DASH.ink4 }}>vs last scan</span>
+    </span>
+  )
+}
+
+function Sparkline({ scores, last }: { scores: number[]; last: number }) {
+  const w = 108, h = 30, pad = 3
+  const min = Math.min(...scores), max = Math.max(...scores)
+  const range = max - min || 1
+  const coords = scores.map((s, i) => {
+    const x = pad + (i / (scores.length - 1)) * (w - pad * 2)
+    const y = h - pad - ((s - min) / range) * (h - pad * 2)
+    return { x, y }
+  })
+  const pts = coords.map(c => `${c.x.toFixed(1)},${c.y.toFixed(1)}`).join(' ')
+  const end = coords[coords.length - 1]
+  return (
+    <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} aria-hidden style={{ display: 'block' }}>
+      <polyline points={pts} fill="none" stroke={STEEL} strokeWidth={1.25} strokeLinejoin="round" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
+      <circle cx={end.x} cy={end.y} r={2.5} fill={scoreColor(last)} />
+    </svg>
+  )
+}
+
+// ── Recent preview card — deep-links into the Reports tab with this scan loaded ────
+function RecentCard({ scan }: { scan: ScanHistoryRow }) {
+  const opp = opportunityFraming(scan.score)
+  return (
+    <Link
+      href={`/app/reports?scan=${scan.id}`}
+      className="dash-panel dash-panel--interactive"
+      style={{
+        display: 'block', background: DASH.panel, border: `1px solid ${DASH.line}`,
+        boxShadow: 'inset 0 1px 0 0 rgba(255,255,255,0.05), 0 1px 2px rgba(0,0,0,0.35)',
+        padding: '16px 18px', textDecoration: 'none',
+      }}
+    >
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 14 }}>
+        <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '0.1em', textTransform: 'uppercase', color: scoreColor(scan.score), border: `0.5px solid ${scoreColor(scan.score)}66`, padding: '3px 8px', whiteSpace: 'nowrap' }}>
+          {opp.label}
+        </span>
+        <VerdictRing score={scan.score} size="sm" animate={false} />
+      </div>
+      <p style={{ fontFamily: BODY, fontSize: 14.5, color: DASH.ink, margin: '0 0 4px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{scan.domain}</p>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+        <span style={{ fontFamily: MONO, fontSize: 11, color: DASH.ink3 }}>{formatDate(scan.date)}</span>
+        <span style={{ fontFamily: MONO, fontSize: 12, color: scoreColor(scan.score) }}>{scan.score}%</span>
+      </div>
+    </Link>
+  )
+}
+
+// Real monthly quota — inline stat only (gray register; red when exhausted).
 function ScansRemaining() {
   const [used, setUsed] = useState<number | null>(null)
   const [plan, setPlan] = useState<string>('free')
@@ -193,29 +242,51 @@ function ScansRemaining() {
   const u = used ?? 0
   const remaining = limit == null ? null : Math.max(0, limit - u)
   const exhausted = remaining != null && remaining === 0
-  const text = used == null ? 'checking your monthly quota…' : limit == null ? `${u} scans this month · no cap` : `${remaining} of ${limit} scans left this month`
-
+  if (used == null) return <span>checking quota…</span>
   return (
-    <>
-      <p style={{ fontFamily: MONO, fontSize: 9.5, letterSpacing: '0.18em', textTransform: 'uppercase', color: DASH.ink3, margin: '0 0 8px' }}>Usage</p>
-      <p style={{ fontFamily: MONO, fontSize: 12, color: exhausted ? DASH.crit : DASH.ink2, margin: 0, letterSpacing: '0.02em', lineHeight: 1.5 }}>
-        {text}
-        <span style={{ color: DASH.ink4, textTransform: 'capitalize' }}> · {plan}</span>
-      </p>
-    </>
+    <span style={{ color: exhausted ? DASH.crit : DASH.ink4 }}>
+      {limit == null ? `${u} scans this month` : `${remaining} of ${limit} scans left this month`}
+    </span>
   )
 }
 
-// ── No scans → clearly-labeled illustration of what a report looks like ───────────
+// ── Zero scans → onboarding: run the first scan + a labeled illustration ──────────
 const SAMPLE_FINDINGS: VerdictCardFinding[] = [
   { title: 'No social proof above the fold', color: DASH.crit, tag: 'HIGH' },
   { title: 'Primary CTA unclear on mobile', color: DASH.crit, tag: 'HIGH' },
   { title: 'Pricing page lacks objection handling', color: DASH.ink4, tag: 'MEDIUM', muted: true },
 ]
 
-function EmptySection() {
+function EmptySection({ url, onUrlChange, onScan, scanning, error }: { url: string; onUrlChange: (v: string) => void; onScan: () => void; scanning?: boolean; error?: string | null }) {
   return (
-    <section>
+    <>
+      <Panel accent style={{ padding: '22px 24px', marginBottom: 36 }}>
+        <label style={{ display: 'block', fontFamily: MONO, fontSize: 9.5, letterSpacing: '0.18em', textTransform: 'uppercase', color: DASH.ink3, marginBottom: 10 }}>
+          Run your first scan
+        </label>
+        <div style={{ display: 'flex', maxWidth: 520 }}>
+          <input
+            type="url"
+            value={url}
+            onChange={(e) => onUrlChange(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter' && !scanning) onScan() }}
+            placeholder="your-site.com"
+            autoComplete="off"
+            style={{ flex: 1, minWidth: 0, fontFamily: MONO, fontSize: 14, color: DASH.ink, background: DASH.well, border: `1px solid ${DASH.line}`, borderRight: 'none', padding: '12px 14px', outline: 'none', borderRadius: 0 }}
+          />
+          <button
+            type="button"
+            onClick={onScan}
+            disabled={scanning || !url.trim()}
+            className="dash-btn"
+            style={{ fontFamily: MONO, fontSize: 12, letterSpacing: '0.08em', textTransform: 'uppercase', color: STEEL, background: steelLine(10), border: `1px solid ${steelLine(50)}`, padding: '12px 20px', borderRadius: 0, cursor: scanning || !url.trim() ? 'not-allowed' : 'pointer', opacity: scanning || !url.trim() ? 0.5 : 1, whiteSpace: 'nowrap', flexShrink: 0, transition: 'background 0.14s, border-color 0.14s' }}
+          >
+            {scanning ? 'Scanning…' : 'Scan →'}
+          </button>
+        </div>
+        {error ? <p style={{ fontFamily: MONO, fontSize: 12, color: DASH.crit, margin: '10px 0 0' }}>{error}</p> : null}
+      </Panel>
+
       <SectionLabel>What you’ll get</SectionLabel>
       <div style={{ maxWidth: 580 }}>
         <VerdictCard
@@ -231,29 +302,6 @@ function EmptySection() {
           ↑ an illustration — run your first scan to generate your real report
         </p>
       </div>
-    </section>
-  )
-}
-
-// ── Recent preview row — compact; opens the in-depth report ───────────────────────
-function RecentRow({ scan, last }: { scan: ScanHistoryRow; last: boolean }) {
-  const inner = (
-    <>
-      <VerdictRing score={scan.score} size="sm" animate={false} />
-      <span style={{ fontFamily: BODY, fontSize: 14.5, color: DASH.ink, flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{scan.domain}</span>
-      <span style={{ fontFamily: MONO, fontSize: 13, color: scoreColor(scan.score), minWidth: 56, textAlign: 'right', flexShrink: 0 }}>{scan.score}%</span>
-      <span style={{ fontFamily: MONO, fontSize: 11.5, color: DASH.ink3, minWidth: 96, textAlign: 'right', flexShrink: 0 }}>{formatDate(scan.date)}</span>
-      <span aria-hidden className="dash-row-arrow" style={{ fontFamily: MONO, fontSize: 13, color: STEEL, flexShrink: 0 }}>→</span>
     </>
-  )
-  const rowStyle: React.CSSProperties = {
-    display: 'flex', alignItems: 'center', gap: 16, width: '100%', textAlign: 'left',
-    padding: '15px 20px', borderBottom: last ? 'none' : `1px solid ${DASH.hair}`, textDecoration: 'none',
-  }
-  if (!scan.shareToken) return <div style={{ ...rowStyle, opacity: 0.62 }}>{inner}</div>
-  return (
-    <Link href={`/reports/${scan.shareToken}`} className="dash-row" style={rowStyle}>
-      {inner}
-    </Link>
   )
 }

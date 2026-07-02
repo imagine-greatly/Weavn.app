@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { createClient } from "@supabase/supabase-js";
+import { getOrRepairStripeCustomer } from "@/lib/stripeCustomer";
 
 export async function POST(req: NextRequest) {
   try {
@@ -29,10 +30,19 @@ export async function POST(req: NextRequest) {
       .select("stripe_customer_id")
       .eq("id", user.id)
       .single();
-    const customerId = profile?.stripe_customer_id as string | null | undefined;
-    if (!customerId) {
+    const storedId = profile?.stripe_customer_id as string | null | undefined;
+    if (!storedId) {
       return NextResponse.json({ error: "No Stripe customer found." }, { status: 400 });
     }
+
+    // Validate/repair the stored id so a stale one (wrong account/mode) opens a
+    // fresh portal instead of throwing "No such customer".
+    const { customerId } = await getOrRepairStripeCustomer({
+      supabase,
+      stripe,
+      userId: user.id,
+      email: user.email,
+    });
 
     const session = await stripe.billingPortal.sessions.create({
       customer: customerId,
@@ -40,7 +50,10 @@ export async function POST(req: NextRequest) {
     });
     return NextResponse.json({ url: session.url });
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Portal request failed.";
-    return NextResponse.json({ error: message }, { status: 500 });
+    console.error("[settings/portal] Failed to open billing portal:", err);
+    return NextResponse.json(
+      { error: "We couldn't open your billing portal. Please try again or contact support." },
+      { status: 500 }
+    );
   }
 }

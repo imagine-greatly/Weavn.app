@@ -1,19 +1,15 @@
 'use client'
 
-import { usePathname, useRouter } from 'next/navigation'
+import { usePathname } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
-import WeavingScan from '@/components/WeavingScan'
+import Link from 'next/link'
 import { getSupabaseBrowserClient } from '@/lib/supabaseBrowser'
 import { DASHBOARD_PLAN_MONTHLY_CAPS } from '@/lib/constants'
 import Sidebar, { type SidebarNavItem } from '@/components/shell/Sidebar'
+import { ScanProvider, useScan } from '@/components/dashboard/ScanContext'
 
 const STEEL = '#6F9BC6'
 const PURPLE = '#9D8CFF'
-
-function domainOf(raw: string): string {
-  const t = raw.trim()
-  try { return new URL(/^https?:\/\//i.test(t) ? t : `https://${t}`).hostname.replace(/^www\./, '') } catch { return t }
-}
 
 // ── Dashboard surface tokens (steel blue · muted cold futurism) ────────────────
 // Accent now flows from the shared --surface-accent CSS var (steel #6F9BC6 on this
@@ -48,8 +44,19 @@ function sectionTitle(pathname: string): string {
   return 'Overview'
 }
 
+// Wraps the whole dashboard in the persistent scan-tracking provider, so an in-flight
+// scan survives navigation between tabs (the state lives above the swapping page).
 export default function DashboardShell({ children }: { children: React.ReactNode }) {
+  return (
+    <ScanProvider>
+      <ShellInner>{children}</ShellInner>
+    </ScanProvider>
+  )
+}
+
+function ShellInner({ children }: { children: React.ReactNode }) {
   const pathname = usePathname() ?? '/app'
+  const scan = useScan()
   const [scanOpen, setScanOpen] = useState(false)
 
   // Tier drives the nav — no locked items, no padlocks. The primary rail is a fixed three
@@ -150,10 +157,33 @@ export default function DashboardShell({ children }: { children: React.ReactNode
             borderBottom: '1px solid var(--divider-color)',
           }}
         >
-          <span style={{ fontFamily: MONO, fontSize: 11, letterSpacing: '0.16em', textTransform: 'uppercase', color: C.inkMuted }}>
-            {/* Mirror the tier-conditional nav label so the top chrome stays honest. */}
-            {pathname.startsWith('/app/reports') ? reportsLabel : sectionTitle(pathname)}
-          </span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14, minWidth: 0 }}>
+            <span style={{ fontFamily: MONO, fontSize: 11, letterSpacing: '0.16em', textTransform: 'uppercase', color: C.inkMuted, whiteSpace: 'nowrap' }}>
+              {/* Mirror the tier-conditional nav label so the top chrome stays honest. */}
+              {pathname.startsWith('/app/reports') ? reportsLabel : sectionTitle(pathname)}
+            </span>
+            {/* Live scan pill — only off Overview (Overview shows the full weave itself).
+                A non-blocking indicator so navigating away never hides an in-flight scan. */}
+            {scan.phase === 'weaving' && pathname !== '/app' ? (
+              <>
+              <style>{`@keyframes dashScanPulse{0%,100%{opacity:1}50%{opacity:0.25}}.dash-scan-pulse{animation:dashScanPulse 1.4s ease-in-out infinite}@media (prefers-reduced-motion: reduce){.dash-scan-pulse{animation:none}}`}</style>
+              <Link
+                href="/app"
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 8, minWidth: 0,
+                  fontFamily: MONO, fontSize: 10, letterSpacing: '0.08em', textTransform: 'uppercase',
+                  color: 'var(--surface-accent)',
+                  background: 'color-mix(in srgb, var(--surface-accent) 9%, transparent)',
+                  border: '1px solid color-mix(in srgb, var(--surface-accent) 40%, transparent)',
+                  padding: '5px 10px', textDecoration: 'none', whiteSpace: 'nowrap',
+                }}
+              >
+                <span aria-hidden className="dash-scan-pulse" style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--surface-accent)', flexShrink: 0 }} />
+                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>Scanning {scan.domain} →</span>
+              </Link>
+              </>
+            ) : null}
+          </div>
           <button
             type="button"
             onClick={() => setScanOpen(true)}
@@ -183,57 +213,26 @@ export default function DashboardShell({ children }: { children: React.ReactNode
 // Mirrors /app's scan call shape (POST /api/scan → /reports/[shareToken]) so the
 // "New scan" affordance works from every page on the steel surface.
 function NewScanModal({ onClose }: { onClose: () => void }) {
-  const router = useRouter()
+  const { startScan } = useScan()
   const [url, setUrl] = useState('')
-  const [phase, setPhase] = useState<'input' | 'weaving' | 'error'>('input')
-  const [error, setError] = useState<string | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
-  useEffect(() => { if (phase === 'input') inputRef.current?.focus() }, [phase])
+  useEffect(() => { inputRef.current?.focus() }, [])
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape' && phase === 'input') onClose() }
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [onClose, phase])
+  }, [onClose])
 
-  async function runScan() {
+  // Hand off to the shell-owned tracker (same mechanism as Overview's inline trigger)
+  // and just close — leave the user where they are. Tracking lives in the persistent
+  // shell, so the pill (off Overview) and completion toast carry the feedback; starting
+  // a scan no more yanks the user than finishing one does.
+  function runScan() {
     const trimmed = url.trim()
     if (!trimmed) return
-    const target = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`
-    setError(null)
-    setPhase('weaving')
-    try {
-      const res = await fetch('/api/scan', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url: target }),
-      })
-      if (res.status === 401) { router.push('/auth?surface=dashboard'); return }
-      const data = await res.json()
-      if (data.shareToken) {
-        router.push(`/reports/${data.shareToken}`)
-      } else {
-        setError(data.error ?? 'Scan failed. Please try again.')
-        setPhase('error')
-      }
-    } catch {
-      setError('Scan failed. Please try again.')
-      setPhase('error')
-    }
-  }
-
-  // During the ~90s wait (and on failure) the weaving experience takes the full overlay.
-  if (phase === 'weaving' || phase === 'error') {
-    return (
-      <div style={{ position: 'fixed', inset: 0, background: 'rgba(5,8,16,0.92)', zIndex: 200, overflowY: 'auto' }}>
-        <WeavingScan
-          domain={domainOf(url)}
-          status={phase}
-          error={error}
-          onReset={() => { setPhase('input'); setError(null) }}
-        />
-      </div>
-    )
+    startScan(trimmed)
+    onClose()
   }
 
   return (
@@ -265,7 +264,7 @@ function NewScanModal({ onClose }: { onClose: () => void }) {
             ref={inputRef}
             type="url"
             value={url}
-            onChange={e => { setUrl(e.target.value); setError(null) }}
+            onChange={e => setUrl(e.target.value)}
             onKeyDown={e => { if (e.key === 'Enter') void runScan() }}
             placeholder="your-site.com"
             autoComplete="off"

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import { CodeBlock } from '@/components/ui/CodeBlock'
 import { ScoreRing } from '@/components/ui/ScoreRing'
@@ -89,9 +89,10 @@ export default function PlaygroundPage() {
   const [errorMsg, setErrorMsg]           = useState<string | null>(null)
   const startRef  = useRef(0)
 
-  async function handleRunScan() {
-    const target = url.trim()
+  async function handleRunScan(override?: string) {
+    const target = (override ?? url).trim()
     if (!target || scanState === 'scanning') return
+    if (override && override !== url) setUrl(override)
     setScanState('scanning')
     setScanScore(0)
     setErrorMsg(null)
@@ -124,6 +125,15 @@ export default function PlaygroundPage() {
       setScanState('error')
     }
   }
+
+  // Pre-fill + auto-run from the homepage hand-off (/playground?url=…). Client-only
+  // read (no Suspense needed); runs once on mount. Rate-limit / bot-block / quota
+  // errors surface exactly as a normal run — no special-casing, no mock.
+  useEffect(() => {
+    const u = new URLSearchParams(window.location.search).get('url')
+    if (u && u.trim()) void handleRunScan(u.trim())
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const targetUrl  = url || 'https://your-site.com'
   const curlCode   = [
@@ -555,9 +565,9 @@ export default function PlaygroundPage() {
             </Link>
           </span>
           <span style={{ fontFamily: "'IBM Plex Sans', sans-serif", fontSize: 14, color: '#9398A8' }}>
-            Need a dashboard?{' '}
-            <Link href="/dashboard" style={{ color: '#6F9BC6', textDecoration: 'none' }}>
-              See agency plans →
+            Delivering audits to clients?{' '}
+            <Link href="/agencies" style={{ color: '#6F9BC6', textDecoration: 'none' }}>
+              For agencies →
             </Link>
           </span>
         </div>

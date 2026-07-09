@@ -39,5 +39,5 @@ export default async function LegacyReportRedirect({
     if (token) redirect(`/reports/${token}`)
   }
 
-  redirect('/dashboard')
+  redirect('/')
 }

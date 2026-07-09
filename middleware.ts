@@ -53,9 +53,9 @@ export async function middleware(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname;
 
-  // Legacy scan route: the scan surface now lives at /dashboard (public marketing page).
+  // Legacy scan route: the public scan surface now lives at /playground.
   if (pathname === "/scan" || pathname.startsWith("/scan/")) {
-    const target = new URL("/dashboard", request.url);
+    const target = new URL("/playground", request.url);
     target.search = request.nextUrl.search;
     const redirect = NextResponse.redirect(target);
     mergeCookies(supabaseResponse, redirect);

@@ -60,6 +60,16 @@ function ReportsContent() {
   const [selected, setSelected] = useState<SelectedReport | null>(null)
   const [loadingReport, setLoadingReport] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [isAgency, setIsAgency] = useState(false)
+
+  // Tier drives voice only — client-report framing vs founder "your report".
+  useEffect(() => {
+    let cancelled = false
+    fetch('/api/profile').then(r => r.json()).then(d => {
+      if (!cancelled && typeof d?.plan === 'string') setIsAgency(d.plan === 'agency' || d.plan === 'enterprise')
+    }).catch(() => {})
+    return () => { cancelled = true }
+  }, [])
 
   // The scan on screen: the deep-linked one if present, else the most recent.
   const selectedId = useMemo(() => scanParam ?? rows[0]?.id ?? null, [scanParam, rows])
@@ -141,9 +151,9 @@ function ReportsContent() {
   if (!loadingList && rows.length === 0) {
     return (
       <div style={{ padding: '40px 32px 72px', maxWidth: 1040, margin: '0 auto' }}>
-        <Header />
+        <Header isAgency={isAgency} />
         {error ? <p style={{ fontFamily: MONO, fontSize: 12, color: DASH.crit, margin: '0 0 16px' }}>{error}</p> : null}
-        <EmptyState />
+        <EmptyState isAgency={isAgency} />
       </div>
     )
   }
@@ -153,7 +163,7 @@ function ReportsContent() {
   return (
     <div style={{ padding: '32px 0 72px' }}>
       <div style={{ padding: '0 32px', maxWidth: 1040, margin: '0 auto' }}>
-        <Header />
+        <Header isAgency={isAgency} />
         {error ? <p style={{ fontFamily: MONO, fontSize: 12, color: DASH.crit, margin: '0 0 16px' }}>{error}</p> : null}
       </div>
 
@@ -217,19 +227,21 @@ function SwitchTab({ row, active, onSelect }: { row: SwitchRow; active: boolean;
   )
 }
 
-function Header() {
+function Header({ isAgency }: { isAgency: boolean }) {
   return (
     <div style={{ marginBottom: 20 }}>
-      <p style={{ fontFamily: MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.22em', color: STEEL, margin: '0 0 12px' }}>Reports</p>
-      <h1 style={{ fontFamily: DISP, fontWeight: 700, fontSize: 28, color: DASH.ink, margin: 0, letterSpacing: '-0.5px', lineHeight: 1.1 }}>Your report</h1>
+      <p style={{ fontFamily: MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.22em', color: STEEL, margin: '0 0 12px' }}>{isAgency ? 'Scans' : 'Reports'}</p>
+      <h1 style={{ fontFamily: DISP, fontWeight: 700, fontSize: 28, color: DASH.ink, margin: 0, letterSpacing: '-0.5px', lineHeight: 1.1 }}>{isAgency ? 'Client report' : 'Your report'}</h1>
       <p style={{ fontFamily: BODY, fontSize: 15, color: DASH.ink2, margin: '10px 0 0', maxWidth: 560, lineHeight: 1.6 }}>
-        The full breakdown for your most recent scan — coverage, every finding, all seven dimensions, and rewrites. Switch scans above to read another.
+        {isAgency
+          ? 'The full breakdown for this client’s most recent scan — coverage, every finding, all seven dimensions, and rewrites. Switch scans above to read another.'
+          : 'The full breakdown for your most recent scan — coverage, every finding, all seven dimensions, and rewrites. Switch scans above to read another.'}
       </p>
     </div>
   )
 }
 
-function EmptyState() {
+function EmptyState({ isAgency }: { isAgency: boolean }) {
   return (
     <Panel style={{ padding: '56px 32px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
       <div style={{ position: 'relative', marginBottom: 22 }} aria-hidden>
@@ -240,9 +252,11 @@ function EmptyState() {
         No report to show yet
       </h2>
       <p style={{ fontFamily: BODY, fontSize: 14, color: DASH.ink2, margin: '0 0 24px', lineHeight: 1.6, maxWidth: 380 }}>
-        Run your first scan and its full report opens right here — coverage score, ranked findings, and rewrites.
+        {isAgency
+          ? 'Scan a client site and its full report opens right here — coverage score, ranked findings, and rewrites you can hand off.'
+          : 'Run your first scan and its full report opens right here — coverage score, ranked findings, and rewrites.'}
       </p>
-      <GhostButton href="/app">Run your first scan →</GhostButton>
+      <GhostButton href="/app">{isAgency ? 'Scan a client site →' : 'Run your first scan →'}</GhostButton>
       <p style={{ fontFamily: MONO, fontSize: 10, color: DASH.ink4, margin: '16px 0 0', letterSpacing: '0.04em' }}>
         or use “New scan” in the top bar from anywhere
       </p>

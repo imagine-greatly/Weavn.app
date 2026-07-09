@@ -51,8 +51,9 @@ export async function PUT(req: NextRequest) {
   const { row, keyCol } = await loadProfile(svc, uid);
   const plan = String((row?.plan as string | undefined) ?? "free");
 
-  // White-label is an Agency-tier capability — gate the write server-side.
-  if (plan !== "agency") {
+  // White-label is a white-label-tier capability — Agency OR Enterprise (both carry
+  // whiteLabel:true in DASHBOARD_PLANS). Gate the write server-side.
+  if (plan !== "agency" && plan !== "enterprise") {
     return NextResponse.json({ error: "White-label branding is an Agency-plan capability." }, { status: 403 });
   }
 

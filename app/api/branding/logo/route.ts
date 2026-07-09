@@ -30,7 +30,9 @@ export async function POST(req: NextRequest) {
   if (!user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const svc = createClient(url, serviceKey);
-  if ((await planFor(svc, user.id)) !== "agency") {
+  // White-label tiers: Agency OR Enterprise (both whiteLabel:true in DASHBOARD_PLANS).
+  const plan = await planFor(svc, user.id);
+  if (plan !== "agency" && plan !== "enterprise") {
     return NextResponse.json({ error: "White-label branding is an Agency-plan capability." }, { status: 403 });
   }
 

@@ -204,7 +204,7 @@ function ShellInner({ children }: { children: React.ReactNode }) {
         {children}
       </main>
 
-      {scanOpen && <NewScanModal onClose={() => setScanOpen(false)} />}
+      {scanOpen && <NewScanModal isAgency={isAgency} onClose={() => setScanOpen(false)} />}
     </div>
   )
 }
@@ -212,7 +212,7 @@ function ShellInner({ children }: { children: React.ReactNode }) {
 // ── New scan modal ──────────────────────────────────────────────────────────────
 // Mirrors /app's scan call shape (POST /api/scan → /reports/[shareToken]) so the
 // "New scan" affordance works from every page on the steel surface.
-function NewScanModal({ onClose }: { onClose: () => void }) {
+function NewScanModal({ onClose, isAgency }: { onClose: () => void; isAgency: boolean }) {
   const { startScan } = useScan()
   const [url, setUrl] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
@@ -257,7 +257,7 @@ function NewScanModal({ onClose }: { onClose: () => void }) {
           New scan
         </p>
         <h2 style={{ fontFamily: DISP, fontWeight: 700, fontSize: 22, color: C.inkPrimary, margin: '0 0 16px', letterSpacing: '-0.3px' }}>
-          Scan a site
+          {isAgency ? 'Scan a client site' : 'Scan a site'}
         </h2>
         <div style={{ display: 'flex', gap: 0 }}>
           <input
@@ -266,7 +266,7 @@ function NewScanModal({ onClose }: { onClose: () => void }) {
             value={url}
             onChange={e => setUrl(e.target.value)}
             onKeyDown={e => { if (e.key === 'Enter') void runScan() }}
-            placeholder="your-site.com"
+            placeholder={isAgency ? 'client-site.com' : 'your-site.com'}
             autoComplete="off"
             style={{
               flex: 1, minWidth: 0, fontFamily: MONO, fontSize: 14, color: C.inkPrimary,

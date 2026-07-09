@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { getSupabaseBrowserClient } from '@/lib/supabaseBrowser'
 import ScoreRing from '@/components/ui/ScoreRing'
 import { rollUpSites, formatDate, type ReportRow, type SiteSummary } from '@/lib/dashboard'
+import { scoreColor } from '@/lib/verdict'
 
 // ── Monochrome dashboard tokens — color is rationed to signal only ──────────────
 const C = {
@@ -22,7 +23,7 @@ const MONO = "'IBM Plex Mono', monospace"
 const BODY = "'IBM Plex Sans', sans-serif"
 const DISP = "'Space Grotesk', sans-serif"
 
-const GRID = '1fr 64px 90px 130px 90px 120px'
+const GRID = '1fr 64px 76px 108px 100px 208px'
 
 /**
  * Clients — Agency/Enterprise only. The tier nav hides it for founders; a direct-URL
@@ -36,6 +37,17 @@ export default function ClientsPage() {
   const [sites, setSites] = useState<SiteSummary[]>([])
   const [rescanning, setRescanning] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [copied, setCopied] = useState<string | null>(null)
+
+  // Copy the WHITE-LABEL client deliverable link (/reports/[token]), not the
+  // Weavn-branded /share/ view — this is the URL an agency hands to its client.
+  function copyReportLink(domain: string, token: string) {
+    if (typeof window === 'undefined' || !navigator.clipboard) return
+    navigator.clipboard.writeText(`${window.location.origin}/reports/${token}`).then(() => {
+      setCopied(domain)
+      setTimeout(() => setCopied(c => (c === domain ? null : c)), 1600)
+    }).catch(() => {})
+  }
 
   useEffect(() => {
     let cancelled = false
@@ -104,7 +116,7 @@ export default function ClientsPage() {
         All client sites in one view
       </h1>
       <p style={{ fontFamily: BODY, fontSize: 15, color: C.inkSecondary, margin: '0 0 24px', maxWidth: 560, lineHeight: 1.6 }}>
-        Every site you scan, rolled up by domain — latest score, scan count, last run, and trend. Open a report or run a fresh scan per client.
+        Every client site you scan, rolled up by domain — latest score, trajectory across re-scans, and a needs-attention flag. Open the report, copy a client-ready link, or run a fresh scan.
       </p>
 
       {error ? <p style={{ fontFamily: MONO, fontSize: 12, color: C.worse, margin: '0 0 16px' }}>{error}</p> : null}
@@ -112,9 +124,9 @@ export default function ClientsPage() {
       {sites.length === 0 ? (
         <div style={{ border: `0.5px solid ${C.border}`, background: C.surface, padding: '40px 24px', textAlign: 'center' }}>
           <p style={{ fontFamily: DISP, fontWeight: 700, fontSize: 17, color: C.inkPrimary, margin: '0 0 8px' }}>No client sites yet</p>
-          <p style={{ fontFamily: BODY, fontSize: 13.5, color: C.inkSecondary, margin: '0 0 16px' }}>Run a scan from the Overview and the site shows up here, rolled up by domain.</p>
+          <p style={{ fontFamily: BODY, fontSize: 13.5, color: C.inkSecondary, margin: '0 0 16px' }}>Scan a client site with &ldquo;New scan&rdquo; in the top bar and it lands here — rolled up by domain, with its latest score, trend, and a client-ready report link.</p>
           <Link href="/app" style={{ fontFamily: MONO, fontSize: 11, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--surface-accent)', border: '0.5px solid color-mix(in srgb, var(--surface-accent) 50%, transparent)', padding: '9px 16px', textDecoration: 'none' }}>
-            Run a scan →
+            Scan a client site →
           </Link>
         </div>
       ) : (
@@ -137,18 +149,44 @@ export default function ClientsPage() {
                   borderBottom: i === sites.length - 1 ? 'none' : `0.5px solid ${C.border}`,
                 }}
               >
-                <span style={{ fontFamily: BODY, fontSize: 14, color: C.inkPrimary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.domain}</span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+                  {s.needsAttention ? (
+                    <span
+                      title="Needs attention — low score, a drop since last scan, or a critical finding"
+                      aria-label="Needs attention"
+                      style={{ width: 6, height: 6, borderRadius: '50%', background: C.worse, flexShrink: 0 }}
+                    />
+                  ) : null}
+                  <span style={{ fontFamily: BODY, fontSize: 14, color: C.inkPrimary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.domain}</span>
+                </span>
                 <div style={{ display: 'flex', justifyContent: 'center' }}>
                   <ScoreRing score={s.score} size="sm" animate={false} showBadge={false} />
                 </div>
                 <span style={{ fontFamily: MONO, fontSize: 13, color: C.inkSecondary }}>{s.history.length}</span>
                 <span style={{ fontFamily: MONO, fontSize: 12, color: C.inkSecondary }}>{formatDate(s.lastScannedAt)}</span>
-                <span style={{ fontFamily: MONO, fontSize: 13, color: trendColor }}>{trendText}</span>
-                <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end', alignItems: 'center' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'flex-start', minWidth: 0 }}>
+                  <span style={{ fontFamily: MONO, fontSize: 13, color: trendColor }}>{trendText}</span>
+                  {s.history.length >= 2 ? <MiniTrend history={s.history} /> : null}
+                </div>
+                <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', alignItems: 'center' }}>
                   {s.shareToken ? (
-                    <a href={`/reports/${s.shareToken}`} style={{ fontFamily: MONO, fontSize: 11, color: 'var(--surface-accent)', textDecoration: 'none', whiteSpace: 'nowrap' }}>
-                      Report →
-                    </a>
+                    <>
+                      <a href={`/reports/${s.shareToken}`} style={{ fontFamily: MONO, fontSize: 11, color: 'var(--surface-accent)', textDecoration: 'none', whiteSpace: 'nowrap' }}>
+                        Report →
+                      </a>
+                      <button
+                        type="button"
+                        onClick={() => copyReportLink(s.domain, s.shareToken!)}
+                        title="Copy the white-label report link to send to this client"
+                        style={{
+                          fontFamily: MONO, fontSize: 11, color: copied === s.domain ? '#00C48C' : C.inkSecondary,
+                          background: 'transparent', border: `0.5px solid ${C.border}`, padding: '6px 10px',
+                          borderRadius: 0, cursor: 'pointer', whiteSpace: 'nowrap', minWidth: 76, textAlign: 'center',
+                        }}
+                      >
+                        {copied === s.domain ? 'Copied ✓' : 'Copy link'}
+                      </button>
+                    </>
                   ) : <span style={{ fontFamily: MONO, fontSize: 11, color: C.inkMuted }}>—</span>}
                   <button
                     type="button"
@@ -160,7 +198,7 @@ export default function ClientsPage() {
                       cursor: rescanning === s.domain ? 'default' : 'pointer', whiteSpace: 'nowrap',
                     }}
                   >
-                    {rescanning === s.domain ? 'Weaving…' : 'Rescan'}
+                    {rescanning === s.domain ? 'Scanning…' : 'Rescan'}
                   </button>
                 </div>
               </div>
@@ -169,5 +207,29 @@ export default function ClientsPage() {
         </div>
       )}
     </div>
+  )
+}
+
+// ── Per-client trajectory sparkline — surfaces the already-computed re-scan history ──
+function MiniTrend({ history }: { history: { score: number; date: string }[] }) {
+  const scores = history.map(h => h.score)
+  const w = 72, h = 18, pad = 2
+  const min = Math.min(...scores), max = Math.max(...scores)
+  const range = max - min || 1
+  const coords = scores.map((s, i) => {
+    const x = pad + (i / (scores.length - 1)) * (w - pad * 2)
+    const y = h - pad - ((s - min) / range) * (h - pad * 2)
+    return { x, y }
+  })
+  const end = coords[coords.length - 1]
+  const last = scores[scores.length - 1]
+  return (
+    <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} aria-hidden style={{ display: 'block' }}>
+      <polyline
+        points={coords.map(c => `${c.x.toFixed(1)},${c.y.toFixed(1)}`).join(' ')}
+        fill="none" stroke={C.inkMuted} strokeWidth={1} strokeLinejoin="round" strokeLinecap="round" vectorEffect="non-scaling-stroke"
+      />
+      <circle cx={end.x} cy={end.y} r={2} fill={scoreColor(last)} />
+    </svg>
   )
 }

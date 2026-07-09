@@ -361,7 +361,7 @@ export default function ProductPage() {
           </p>
           <div style={{ display: 'flex', gap: 24, justifyContent: 'center', marginTop: 24, flexWrap: 'wrap' }}>
             <Link href="/dashboard" style={{ ...MONO, fontSize: 11, color: '#6F9BC6', textDecoration: 'none' }}>
-              ← Back to how it works
+              ← The dashboard
             </Link>
             <Link href="/developers" style={{ ...MONO, fontSize: 11, color: '#9D8CFF', textDecoration: 'none' }}>
               See the API →
@@ -859,7 +859,7 @@ export default function ProductPage() {
             </h2>
             <p style={{ fontFamily: '"IBM Plex Sans", sans-serif', fontSize: 14, color: '#9398A8', margin: '0 0 28px' }}>Score, ranked fixes, rewritten copy — no code required.</p>
             <Link href="/dashboard" style={{ ...MONO, fontSize: 12, color: '#6F9BC6', border: '1px solid rgba(111,155,198,0.5)', padding: '11px 24px', background: 'transparent', textDecoration: 'none', display: 'inline-block' }}>
-              How it works →
+              Open the dashboard →
             </Link>
           </div>
 

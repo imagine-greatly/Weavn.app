@@ -477,6 +477,28 @@ async function executeScan(p: ScanParams): Promise<ScanResult> {
 
   const verdict = scoreToVerdict(score);
 
+  // Persist the API-shaped fields GET /api/v1/scans/:id needs to mirror this sync response
+  // exactly. Namespaced api_* (like api_findings) so they never collide with dashboard
+  // ReportPayload keys — notably the existing typed `metadata`. Additive only; readers that
+  // pick known keys are unaffected. (For the rubric path these three are already set by
+  // rubricEngine with identical values; re-setting from the route vars is harmless.)
+  Object.assign(reportPayload, {
+    api_page_type: page_type,
+    api_strengths: strengths,
+    api_growth_blueprint: growthBlueprintVal ?? [],
+    api_metadata: { word_count: wordCount, cta_count: ctaCount, tech_stack: techStack },
+    api_scan_meta: {
+      complexity,
+      duration_ms: Date.now() - scanStart,
+      cost_usd: realCostUsd ?? calculateScanCost({ pageCount, cached: false }),
+      tokens_used: tokensUsed,
+      finding_limit: findingLimit,
+      finding_depth: findingDepth,
+      site_type,
+      cached: false,
+    },
+  });
+
   let reportId = "";
   try {
     reportId = await Promise.race([

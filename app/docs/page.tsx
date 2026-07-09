@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useMemo } from "react";
+import Link from "next/link";
 import LandingFinalCTA from "@/components/landing/LandingFinalCTA";
 import { BAND_HEX } from "@/lib/verdict";
 
@@ -186,6 +187,26 @@ export default function DocsPage() {
           className="sticky top-16 h-[calc(100vh-4rem)] w-[240px] shrink-0 overflow-y-auto border-r py-8 pl-6 pr-4"
           style={{ borderColor: "rgba(255,255,255,0.08)" }}
         >
+          {/* API reference — the front door. This page is the dashboard/product docs (second door). */}
+          <Link
+            href="/docs/api"
+            className="mb-4 block no-underline"
+            style={{
+              border: "1px solid rgba(157,140,255,0.4)",
+              background: "rgba(157,140,255,0.06)",
+              padding: "10px 12px",
+            }}
+          >
+            <span className="block font-mono text-[10px] uppercase" style={{ color: "#9D8CFF", letterSpacing: "0.12em", marginBottom: 4 }}>
+              API REFERENCE →
+            </span>
+            <span className="block font-mono text-[11px] leading-[1.5]" style={{ color: "#9398A8" }}>
+              Building with the API? Full v1 endpoints + schema.
+            </span>
+          </Link>
+          <p className="mb-3 font-mono text-[10px] uppercase" style={{ color: "#6E7587", letterSpacing: "2px" }}>
+            DASHBOARD DOCS
+          </p>
           <input
             type="search"
             placeholder="Search documentation"
@@ -233,6 +254,34 @@ export default function DocsPage() {
           className="min-h-screen flex-1 overflow-y-auto py-12 pr-8 pl-10"
           style={{ maxWidth: "min(880px, calc(100vw - 280px))" }}
         >
+          {/* Front-door banner — API is the primary path; these are the dashboard/product docs. */}
+          <div
+            className="mb-12 flex flex-wrap items-center justify-between gap-4 border p-6"
+            style={{ borderColor: "rgba(157,140,255,0.3)", background: "rgba(157,140,255,0.05)" }}
+          >
+            <div>
+              <p className="font-mono text-[10px] uppercase" style={{ color: "#9D8CFF", letterSpacing: "0.18em", marginBottom: 8 }}>
+                DASHBOARD & PRODUCT DOCS
+              </p>
+              <p className="font-body text-[15px] leading-[1.6]" style={{ color: "#9398A8", margin: 0, maxWidth: 520 }}>
+                Using the Weavn dashboard? You&apos;re in the right place. Building with the API instead? The full v1 reference — endpoints, response schema, and error contract — lives in the API docs.
+              </p>
+            </div>
+            <Link
+              href="/docs/api"
+              className="shrink-0 font-mono text-[12px] uppercase no-underline"
+              style={{
+                color: "#9D8CFF",
+                border: "1px solid rgba(157,140,255,0.5)",
+                background: "rgba(157,140,255,0.1)",
+                padding: "11px 22px",
+                letterSpacing: "0.08em",
+              }}
+            >
+              Read the API reference →
+            </Link>
+          </div>
+
           <DocSection id="getting-your-first-scan" title="Running your first diagnostic" visible={visibleIds.has("getting-your-first-scan")}>
             <p className="mb-6 font-body text-[15px] leading-[1.8]" style={{ color: "#9398A8" }}>
               Enter your URL on the landing page. Select depth if prompted. Run diagnostic. No account is required for the first run.
@@ -307,7 +356,7 @@ export default function DocsPage() {
               Revenue dimension scores
             </h3>
             <p className="mb-6 font-body text-[15px] leading-[1.8]" style={{ color: "#9398A8" }}>
-              Conversion Architecture, Trust Signals, Message Clarity, Traffic Readiness, and Technical Foundation each expose a bar and sub-score. The lowest bars indicate which dimension currently drives suppression.
+              Conversion Architecture, Trust Signals, Message Clarity, Traffic Readiness, Technical Foundation, Objection Handling, and Offer Clarity each expose a bar and sub-score. The lowest bars indicate which dimension currently drives suppression.
             </p>
             <h3 className="mb-2 max-w-[min(36rem,100%)] font-display font-extrabold" style={{ color: "#E6E9EE", fontWeight: 800, fontSize: "clamp(18px, 1.5vw, 22px)", lineHeight: 0.98, letterSpacing: "-0.5px" }}>
               Finding cards

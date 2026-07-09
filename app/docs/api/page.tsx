@@ -33,7 +33,7 @@ const NAV_GROUPS: { label: string; items: { id: string; label: string }[] }[] = 
     { id: 'get-scans-id',       label: 'GET /scans/{id}'      },
     { id: 'post-webhooks',      label: 'POST /webhooks'       },
     { id: 'get-webhooks',       label: 'GET /webhooks'        },
-    { id: 'delete-webhooks-id', label: 'DELETE /webhooks/{id}'},
+    { id: 'delete-webhooks-id', label: 'DELETE /webhooks'   },
   ]},
   { label: 'WEBHOOKS', items: [
     { id: 'webhooks-overview', label: 'Overview'  },
@@ -97,15 +97,15 @@ curl -H "Authorization: Bearer weavn_live_••••" \\
     curl: `# Error response shape
 {
   "error": {
-    "code": "unauthorized",
-    "message": "Invalid or missing API key",
+    "code": "AUTH_INVALID",
+    "message": "Invalid API key",
     "status": 401
   }
 }`,
     node: `const res = await fetch(url, { headers })
 if (!res.ok) {
   const { error } = await res.json()
-  // error.code === 'unauthorized'
+  // error.code === 'AUTH_INVALID'
 }`,
     python: `res = requests.post(url, headers=headers, json=body)
 if not res.ok:
@@ -113,16 +113,20 @@ if not res.ok:
     print(err['code'], err['message'])`,
   },
   'rate-limits': {
-    curl: `# Rate limit headers on every response
-X-RateLimit-Limit: 10
-X-RateLimit-Remaining: 7
+    curl: `# Rate-limit headers on every response (monthly scan budget)
+X-RateLimit-Limit: 1000
+X-RateLimit-Remaining: 993
 X-RateLimit-Reset: 1717200000
+X-RateLimit-Plan: dev
 
-# 429 response body
+# 429 — per-minute request limit exceeded.
+# Retry-After header (seconds) + standard error envelope.
+Retry-After: 12
 {
   "error": {
     "code": "RATE_LIMITED",
-    "retry_after": 2
+    "message": "Rate limit exceeded (60 requests/min). Retry in 12s.",
+    "status": 429
   }
 }`,
     node: `if (res.status === 429) {
@@ -143,8 +147,7 @@ X-RateLimit-Reset: 1717200000
     "finding_depth": "full",
     "finding_limit": 10,
     "async": false,
-    "pages": ["/pricing", "/about"],
-    "site_type": "saas"
+    "pages": ["/pricing", "/about"]
   }'`,
     node: `const res = await fetch('https://weavn.app/api/v1/scan', {
   method: 'POST',
@@ -158,7 +161,6 @@ X-RateLimit-Reset: 1717200000
     finding_depth: 'full',
     finding_limit: 10,
     pages: ['/pricing', '/about'],
-    site_type: 'saas',
   }),
 })
 const { scan_id, score, findings } = await res.json()`,
@@ -173,13 +175,16 @@ res = requests.post(
     'finding_depth': 'full',
     'finding_limit': 10,
     'pages': ['/pricing', '/about'],
-    'site_type': 'saas',
   }
 )
 data = res.json()`,
   },
   'post-scan-batch': {
-    curl: `curl -X POST https://weavn.app/api/v1/scan/batch \\
+    curl: `# async: true → 202 with batch_id, scan_ids, poll_urls.
+# Register a webhook (POST /webhooks) to receive each result,
+# or poll the returned poll_urls. Omit async for a sync
+# response: { results, summary }.
+curl -X POST https://weavn.app/api/v1/scan/batch \\
   -H "Authorization: Bearer weavn_live_••••" \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -187,7 +192,7 @@ data = res.json()`,
       "https://site-a.com",
       "https://site-b.com"
     ],
-    "webhook_url": "https://yourapp.com/webhooks/weavn"
+    "async": true
   }'`,
     node: `const res = await fetch('https://weavn.app/api/v1/scan/batch', {
   method: 'POST',
@@ -197,20 +202,21 @@ data = res.json()`,
   },
   body: JSON.stringify({
     urls: ['https://site-a.com', 'https://site-b.com'],
-    webhook_url: 'https://yourapp.com/webhooks/weavn',
+    async: true,
   }),
 })
-const { batch_id, scan_ids } = await res.json()`,
+// async → 202 { batch_id, scan_ids, poll_urls }
+const { batch_id, scan_ids, poll_urls } = await res.json()`,
     python: `res = requests.post(
   'https://weavn.app/api/v1/scan/batch',
   headers={'Authorization': 'Bearer weavn_live_••••'},
   json={
     'urls': ['https://site-a.com', 'https://site-b.com'],
-    'webhook_url': 'https://yourapp.com/webhooks/weavn',
+    'async': True,
   }
 )
 data = res.json()
-print(data['batch_id'])`,
+print(data['batch_id'], data['scan_ids'])`,
   },
   'get-scans': {
     curl: `# List recent scans (most recent first)
@@ -267,7 +273,8 @@ scan = res.json()`,
     events: ['scan.completed', 'scan.failed'],
   }),
 })
-const { webhook_id } = await res.json()`,
+// 201 → { id, url, secret, created_at } — secret is shown only here
+const { id, secret } = await res.json()`,
     python: `res = requests.post(
   'https://weavn.app/api/v1/webhooks',
   headers={'Authorization': 'Bearer weavn_live_••••'},
@@ -276,8 +283,8 @@ const { webhook_id } = await res.json()`,
     'events': ['scan.completed', 'scan.failed'],
   }
 )
-data = res.json()
-print(data['webhook_id'])`,
+data = res.json()  # { id, url, secret, created_at }
+print(data['id'], data['secret'])`,
   },
   'get-webhooks': {
     curl: `curl "https://weavn.app/api/v1/webhooks" \\
@@ -294,30 +301,33 @@ const { webhooks } = await res.json()`,
 data = res.json()`,
   },
   'delete-webhooks-id': {
-    curl: `curl -X DELETE \\
-  "https://weavn.app/api/v1/webhooks/wh_abc123" \\
-  -H "Authorization: Bearer weavn_live_••••"`,
-    node: `await fetch(
-  'https://weavn.app/api/v1/webhooks/wh_abc123',
-  {
-    method: 'DELETE',
-    headers: { 'Authorization': 'Bearer weavn_live_••••' },
-  }
-)`,
+    curl: `curl -X DELETE https://weavn.app/api/v1/webhooks \\
+  -H "Authorization: Bearer weavn_live_••••" \\
+  -H "Content-Type: application/json" \\
+  -d '{"id": "b1e4c9a2-7f3d-4a10-9c6e-2f8b1d5a0e33"}'`,
+    node: `await fetch('https://weavn.app/api/v1/webhooks', {
+  method: 'DELETE',
+  headers: {
+    'Authorization': 'Bearer weavn_live_••••',
+    'Content-Type': 'application/json',
+  },
+  body: JSON.stringify({ id: 'b1e4c9a2-7f3d-4a10-9c6e-2f8b1d5a0e33' }),
+})
+// → { deleted: true }`,
     python: `requests.delete(
-  'https://weavn.app/api/v1/webhooks/wh_abc123',
-  headers={'Authorization': 'Bearer weavn_live_••••'}
+  'https://weavn.app/api/v1/webhooks',
+  headers={'Authorization': 'Bearer weavn_live_••••'},
+  json={'id': 'b1e4c9a2-7f3d-4a10-9c6e-2f8b1d5a0e33'}
 )`,
   },
   'webhooks-overview': {
-    curl: `# Webhook payload posted to your webhook_url
+    curl: `# Webhook payload POSTed to your registered endpoint
 {
   "event": "scan.completed",
   "scan_id": "sc_3f9a2c7e8b1d4f60",
   "url": "https://yoursite.com",
   "score": 61,
-  "findings_count": 23,
-  "timestamp": "2026-06-07T00:00:00Z"
+  "data": { "domain": "yoursite.com", "verdict": "Fair" }
 }`,
     node: `app.post('/webhooks/weavn', (req, res) => {
   const { event, scan_id, score } = req.body
@@ -340,8 +350,7 @@ def handle_webhook():
   "scan_id": "sc_3f9a2c7e8b1d4f60",
   "url": "https://yoursite.com",
   "score": 61,
-  "findings_count": 23,
-  "timestamp": "2026-06-07T00:00:00Z"
+  "data": { "domain": "yoursite.com", "verdict": "Fair" }
 }
 
 # scan.failed
@@ -349,15 +358,15 @@ def handle_webhook():
   "event": "scan.failed",
   "scan_id": "sc_5b1d4f60a7c3e9f2",
   "url": "https://yoursite.com",
-  "error": "Page failed to load after 3 attempts",
-  "timestamp": "2026-06-07T00:01:00Z"
+  "score": null,
+  "data": { "domain": "yoursite.com", "blocked": true, "code": "BOT_BLOCKED" }
 }`,
     node: `switch (event.event) {
   case 'scan.completed':
     await saveReport(event)
     break
   case 'scan.failed':
-    await notifyTeam(event.error)
+    await notifyTeam(event.data)
     break
 }`,
     python: `handlers = {
@@ -412,19 +421,21 @@ def handle_webhook():
   'score-schema': {
     curl: `{
   "scan_id": "sc_3f9a2c7e8b1d4f60",
-  "score": 62,
+  "score": 61,
+  "verdict": "Fair",
   "benchmark": {
-    "industry_avg": 48,
-    "top_quartile": 74,
-    "percentile": 68
+    "industry_average": 54,
+    "industry_percentile": 63,
+    "top_10_percent_score": 78,
+    "sample_size": 2847
   }
 }`,
     node: `const { score, benchmark } = await res.json()
-console.log(score)                    // 62
-console.log(benchmark.percentile)     // 68`,
+console.log(score)                          // 61
+console.log(benchmark.industry_percentile)  // 63`,
     python: `data = res.json()
-print(data['score'])                   # 62
-print(data['benchmark']['percentile']) # 68`,
+print(data['score'])                            # 61
+print(data['benchmark']['industry_percentile']) # 63`,
   },
   'page-type-schema': {
     curl: `{
@@ -437,38 +448,56 @@ print(data['page_type'])  # "homepage"`,
   },
   'score-profile-schema': {
     curl: `{
-  "score_profile": "saas_consultative"
+  "score_profile": {
+    "weighted_score": 61,
+    "profile_used": "saas_medium",
+    "weights": {
+      "conversion_architecture": 0.22,
+      "trust_signals": 0.15,
+      "message_clarity": 0.18,
+      "traffic_readiness": 0.10,
+      "technical_foundation": 0.08,
+      "objection_handling": 0.12,
+      "offer_clarity": 0.15
+    }
+  }
 }`,
     node: `const { score_profile } = await res.json()
-// format: [site_type]_[buyer_complexity]
-console.log(score_profile) // "saas_consultative"`,
-    python: `data = res.json()
-# format: [site_type]_[buyer_complexity]
-print(data['score_profile'])  # "saas_consultative"`,
+console.log(score_profile.weighted_score) // 61
+console.log(score_profile.profile_used)   // "saas_medium"`,
+    python: `sp = res.json()['score_profile']
+print(sp['weighted_score'])  # 61
+print(sp['profile_used'])    # "saas_medium"`,
   },
   'findings-schema': {
     curl: `{
   "findings": [{
-    "id": "fnd_001",
-    "priority": 1,
+    "id": "finding_001",
+    "title": "Hero headline is feature-led, not outcome-led",
     "severity": "critical",
-    "category": "headline",
-    "title": "Hero headline does not communicate outcome",
-    "detail": "Your headline focuses on features...",
-    "fix": "Rewrite to lead with the outcome.",
-    "estimated_lift": "+8-12 pts",
-    "confidence": 0.94,
-    "fix_effort": "hours"
+    "dimension": "Conversion Architecture",
+    "impact": "high",
+    "impact_estimate": "12-18% conversion lift",
+    "explanation": "Headline names the feature set, not the customer outcome.",
+    "fix_steps": [
+      "Lead with the outcome the visitor gets",
+      "Name the specific audience",
+      "Cut the feature list to one supporting line"
+    ],
+    "rewritten_copy": "Ship every project on time — wherever your team works.",
+    "confidence": "high",
+    "fix_effort": "hours",
+    "priority": 1
   }]
 }`,
     node: `const { findings } = await res.json()
 findings.forEach(f => {
   console.log(\`[\${f.severity}] \${f.title}\`)
-  console.log(\`P\${f.priority} | Effort: \${f.fix_effort}\`)
+  console.log(\`P\${f.priority} | \${f.impact_estimate} | \${f.fix_effort}\`)
 })`,
     python: `for f in data['findings']:
     print(f"[{f['severity']}] {f['title']}")
-    print(f"P{f['priority']} | Effort: {f['fix_effort']}")`,
+    print(f"P{f['priority']} | {f['impact_estimate']} | {f['fix_effort']}")`,
   },
   'findings-summary-schema': {
     curl: `{
@@ -481,17 +510,16 @@ console.log(\`Total findings: \${findings_summary}\`)`,
   'benchmark-schema': {
     curl: `{
   "benchmark": {
-    "industry": "saas",
-    "industry_avg": 48,
-    "top_quartile": 74,
-    "percentile": 68,
-    "sites_compared": 2847
+    "industry_average": 54,
+    "industry_percentile": 63,
+    "top_10_percent_score": 78,
+    "sample_size": 2847
   }
 }`,
     node: `const { benchmark } = await res.json()
-const { industry_avg, top_quartile, percentile } = benchmark`,
+const { industry_average, industry_percentile, top_10_percent_score } = benchmark`,
     python: `b = data['benchmark']
-print(f"Avg: {b['industry_avg']}, Top 25%: {b['top_quartile']}")`,
+print(f"Avg: {b['industry_average']}, Top 10%: {b['top_10_percent_score']}")`,
   },
   'strengths-schema': {
     curl: `{
@@ -513,44 +541,41 @@ strengths.forEach(s => {
   'copy-schema': {
     curl: `{
   "copy_rewrites": {
-    "headline": "Get a ranked conversion audit in under two minutes",
-    "subheadline": "See exactly which elements are losing you revenue.",
-    "cta_primary": "Run free audit",
-    "cta_secondary": "See sample report",
-    "value_prop": "311 checks. Benchmarks. Rewritten copy."
+    "headline": "Ship every project on time — wherever your team works",
+    "subheadline": "The project workspace built for distributed teams.",
+    "cta": "Start free"
   }
 }`,
     node: `const { copy_rewrites } = await res.json()
 h1.textContent = copy_rewrites.headline
-cta.textContent = copy_rewrites.cta_primary`,
+cta.textContent = copy_rewrites.cta`,
     python: `copy = data['copy_rewrites']
 print(copy['headline'])
-print(copy['cta_primary'])`,
+print(copy['cta'])`,
   },
   'dimensions-schema': {
     curl: `{
   "dimensions": {
-    "clarity":           { "score": 58, "weight": 0.20 },
-    "value_proposition": { "score": 71, "weight": 0.18 },
-    "social_proof":      { "score": 44, "weight": 0.15 },
-    "cta_strength":      { "score": 65, "weight": 0.14 },
-    "trust":             { "score": 79, "weight": 0.13 },
-    "visual_hierarchy":  { "score": 53, "weight": 0.10 },
-    "objection_handling":{ "score": 41, "weight": 0.06 },
-    "urgency":           { "score": 38, "weight": 0.04 }
+    "conversion_architecture": 58,
+    "trust_signals":           79,
+    "message_clarity":         71,
+    "traffic_readiness":       44,
+    "technical_foundation":    65,
+    "objection_handling":      41,
+    "offer_clarity":           53
   }
 }`,
     node: `const { dimensions } = await res.json()
-Object.entries(dimensions).forEach(([dim, val]) => {
-  console.log(\`\${dim}: \${val.score}\`)
+Object.entries(dimensions).forEach(([dim, score]) => {
+  console.log(\`\${dim}: \${score}\`)
 })`,
-    python: `for dim, val in data['dimensions'].items():
-    print(f"{dim}: {val['score']}")`,
+    python: `for dim, score in data['dimensions'].items():
+    print(f"{dim}: {score}")`,
   },
   'dimension-benchmarks-schema': {
     curl: `{
   "dimension_benchmarks": {
-    "clarity": {
+    "conversion_architecture": {
       "score": 58,
       "average": 52,
       "percentile_label": "Industry average",
@@ -569,22 +594,28 @@ Object.entries(dimension_benchmarks).forEach(([dim, val]) => {
   'metadata-schema': {
     curl: `{
   "metadata": {
-    "scan_id":      "sc_3f9a2c7e8b1d4f60",
-    "url":          "https://yoursite.com",
-    "status":       "completed",
-    "industry":     "saas",
-    "scanned_at":   "2025-06-03T12:00:00Z",
-    "duration_ms":  8420,
-    "model":        "claude-sonnet-4-6",
-    "credits_used": 1
+    "word_count": 1240,
+    "cta_count": 3,
+    "tech_stack": ["Next.js", "Vercel"]
+  },
+  "scan_meta": {
+    "complexity": "medium",
+    "duration_ms": 87340,
+    "cached": false,
+    "finding_limit": 10,
+    "finding_depth": "full",
+    "site_type": "saas",
+    "cost_usd": 0.15,
+    "tokens_used": 18240
   }
 }`,
-    node: `const { metadata } = await res.json()
-console.log(metadata.scan_id)     // sc_3f9a2c7e8b1d4f60
-console.log(metadata.duration_ms) // 8420`,
+    node: `const { metadata, scan_meta } = await res.json()
+console.log(metadata.tech_stack)   // ["Next.js", "Vercel"]
+console.log(scan_meta.duration_ms) // 87340`,
     python: `m = data['metadata']
-print(m['scan_id'], m['status'])
-print(f"Took {m['duration_ms']}ms")`,
+sm = data['scan_meta']
+print(m['word_count'], m['cta_count'])
+print(f"Took {sm['duration_ms']}ms, cost {sm['cost_usd']}")`,
   },
 }
 
@@ -849,7 +880,7 @@ export default function ApiDocsPage() {
             <Eyebrow>OVERVIEW</Eyebrow>
             <H2>Rate limits</H2>
             <Body>
-              10 concurrent requests per API key. No per-minute limit. Batch endpoint accepts up to 10 URLs per request.
+              60 requests per minute per API key — a 429 with a Retry-After header (seconds) when exceeded. Each key also has a monthly scan quota, surfaced via the X-RateLimit-* response headers. The batch endpoint accepts up to 10 URLs per request.
             </Body>
           </section>
 
@@ -866,8 +897,7 @@ export default function ApiDocsPage() {
               { param: 'finding_limit', type: 'number',   required: 'optional', description: 'Max findings to return. Default: 10.' },
               { param: 'async',         type: 'boolean',  required: 'optional', description: 'Return immediately with scan_id. Default: false.' },
               { param: 'webhook_url',   type: 'string',   required: 'optional', description: 'Required if async: true.' },
-              { param: 'pages',         type: 'string[]', required: 'optional', description: 'Additional page paths to scan beyond the base URL. Max 5 paths. Forces async mode. Each page consumes one scan credit. Example: ["/pricing", "/about"]' },
-              { param: 'site_type',     type: 'string',   required: 'optional', description: "Override automatic site type classification. One of: 'saas' | 'ecommerce' | 'service' | 'b2b' | 'creator' | 'local'. If omitted, the scanner classifies the site automatically before running checks." },
+              { param: 'pages',         type: 'number | string[]', required: 'optional', description: 'Page count (1–5), or an explicit array of paths (max 5) to scan beyond the base URL. An array returns 202 with a poll_url. Each page consumes one scan credit. Example: ["/pricing", "/about"]' },
             ]} />
             <p style={{ fontFamily: MONO, fontSize: 11, color: T3, textTransform: 'uppercase', letterSpacing: '0.12em', marginTop: 24, marginBottom: 8 }}>
               RESPONSE · 200 OK
@@ -877,28 +907,42 @@ export default function ApiDocsPage() {
   "url": "https://acme-saas.com",
   "score": 61,
   "verdict": "Fair",
-  "industry": "B2B SaaS",
-  "benchmark": {
-    "industry_avg": 54,
-    "top_quartile": 78,
-    "percentile": 63
+  "scanned_at": "2026-06-14T12:00:00.000Z",
+  "pages_scanned": 1,
+  "page_type": "homepage",
+  "findings_summary": 23,
+  "dimensions": {
+    "conversion_architecture": 58,
+    "trust_signals": 79,
+    "message_clarity": 71,
+    "traffic_readiness": 44,
+    "technical_foundation": 65,
+    "objection_handling": 41,
+    "offer_clarity": 53
   },
   "findings": [
     {
-      "priority": 1,
-      "severity": "critical",
-      "category": "value_proposition",
+      "id": "finding_001",
       "title": "Hero headline is feature-led, not outcome-led",
-      "estimated_lift": "12-18% conversion uplift",
-      "fix": "Rewrite to outcome-led, present tense."
+      "severity": "critical",
+      "dimension": "Conversion Architecture",
+      "impact": "high",
+      "impact_estimate": "12-18% conversion lift",
+      "explanation": "Headline names the feature set, not the customer outcome.",
+      "fix_steps": ["Lead with the outcome", "Name the audience", "Trim to one supporting line"],
+      "rewritten_copy": "Ship every project on time — wherever your team works.",
+      "confidence": "high",
+      "fix_effort": "hours",
+      "priority": 1
     }
   ],
-  "rewritten_copy": {
-    "headline": "Ship projects on time, every time.",
-    "cta_primary": "Start free — no credit card"
+  "copy_rewrites": {
+    "headline": "Ship every project on time — wherever your team works",
+    "subheadline": "The project workspace built for distributed teams.",
+    "cta": "Start free"
   },
-  "cost_usd": 0.15,
-  "duration_ms": 87340
+  "metadata": { "word_count": 1240, "cta_count": 3, "tech_stack": ["Next.js", "Vercel"] },
+  "scan_meta": { "site_type": "saas", "duration_ms": 87340, "cost_usd": 0.15, "tokens_used": 18240, "cached": false }
 }`} />
           </section>
 
@@ -906,14 +950,14 @@ export default function ApiDocsPage() {
             <Eyebrow>ENDPOINTS</Eyebrow>
             <H2>POST /api/v1/scan/batch</H2>
             <Body mb={24}>
-              Submit up to 10 URLs in a single request. Always async — results delivered via webhook.
+              Submit up to 10 URLs in a single request. Synchronous by default — returns a results array plus a summary object. Pass async: true for a 202 with batch_id, scan_ids, and poll_urls; each result is delivered to your registered webhook endpoints as it completes.
             </Body>
             <ParamTable rows={[
-              { param: 'urls',          type: 'array',  required: 'required', description: 'Array of URLs to scan. Max 10 per request.' },
-              { param: 'webhook_url',   type: 'string', required: 'required', description: 'URL to receive results when each scan completes.' },
-              { param: 'fields',        type: 'array',  required: 'optional', description: 'Fields to include in response. Default: all.' },
-              { param: 'finding_depth', type: 'string', required: 'optional', description: "'brief' or 'full'. Default: 'full'." },
-              { param: 'finding_limit', type: 'number', required: 'optional', description: 'Max findings per scan. Default: 10.' },
+              { param: 'urls',          type: 'array',   required: 'required', description: 'Array of URLs to scan. Max 10 per request.' },
+              { param: 'async',         type: 'boolean', required: 'optional', description: 'Return a 202 immediately with batch_id and scan_ids; results delivered to registered webhooks. Default: false (synchronous).' },
+              { param: 'fields',        type: 'array',   required: 'optional', description: 'Fields to include in response. Default: all.' },
+              { param: 'finding_depth', type: 'string',  required: 'optional', description: "'brief' or 'full'. Default: 'full'." },
+              { param: 'finding_limit', type: 'number',  required: 'optional', description: 'Max findings per scan. Default: 10.' },
             ]} />
           </section>
 
@@ -957,10 +1001,10 @@ export default function ApiDocsPage() {
 
           <section id="delete-webhooks-id" style={SB}>
             <Eyebrow>ENDPOINTS</Eyebrow>
-            <H2>{'DELETE /api/v1/webhooks/{id}'}</H2>
-            <Body mb={24}>Remove a registered webhook. No further deliveries will be attempted to this endpoint.</Body>
-            <QueryTable rows={[
-              { param: 'id', type: 'string', description: 'The webhook_id returned when the webhook was created.' },
+            <H2>DELETE /api/v1/webhooks</H2>
+            <Body mb={24}>Remove a registered webhook by id, passed in the JSON body. No further deliveries are attempted to that endpoint. Returns a deleted:true acknowledgement.</Body>
+            <ParamTable rows={[
+              { param: 'id', type: 'string', required: 'required', description: 'The id (UUID) returned when the webhook was created.' },
             ]} />
           </section>
 
@@ -976,8 +1020,8 @@ export default function ApiDocsPage() {
           <section id="webhook-events" style={SB}>
             <Eyebrow>WEBHOOKS</Eyebrow>
             <H2>Events</H2>
-            <EvBlock name="scan.completed" desc="Fires when a scan finishes successfully. Payload includes scan_id, url, score, findings_count, and timestamp." />
-            <EvBlock name="scan.failed" desc="Fires when a scan fails after retries. Payload includes scan_id, url, error message, and timestamp." />
+            <EvBlock name="scan.completed" desc="Fires when a scan finishes successfully. Payload: event, scan_id, url, score, and a data object with domain and verdict." />
+            <EvBlock name="scan.failed" desc="Fires when a scan fails. Payload: event, scan_id, url, score (null), and a data object with domain, blocked, and code." />
           </section>
 
           <section id="webhook-delivery" style={SB}>
@@ -1008,11 +1052,12 @@ export default function ApiDocsPage() {
               Integer 0–100. Benchmarked against all sites Weavn has scanned in the same industry category.
             </Body>
             <FieldTable rows={[
-              { name: 'score',                  type: 'integer', description: 'Overall conversion score, 0–100.' },
-              { name: 'verdict',                type: 'string',  description: "Quality band derived from score. One of: 'Poor' | 'Needs Work' | 'Fair' | 'Good' | 'Excellent'." },
-              { name: 'benchmark.industry_avg', type: 'integer', description: 'Mean score for the detected industry.' },
-              { name: 'benchmark.top_quartile', type: 'integer', description: 'Score at the 75th percentile.' },
-              { name: 'benchmark.percentile',   type: 'integer', description: 'Percentile rank vs. industry peers.' },
+              { name: 'score',                          type: 'integer', description: 'Overall conversion score, 0–100.' },
+              { name: 'verdict',                        type: 'string',  description: "Quality band derived from score. One of: 'Poor' | 'Needs Work' | 'Fair' | 'Good' | 'Excellent'." },
+              { name: 'benchmark.industry_average',     type: 'integer', description: "Mean score across scanned sites in this site's vertical." },
+              { name: 'benchmark.industry_percentile',  type: 'integer', description: 'Percentile rank vs. vertical peers (0–99).' },
+              { name: 'benchmark.top_10_percent_score', type: 'integer', description: '90th-percentile score for the vertical.' },
+              { name: 'benchmark.sample_size',          type: 'integer', description: 'Number of sites in the benchmark pool.' },
             ]} />
           </section>
 
@@ -1031,27 +1076,34 @@ export default function ApiDocsPage() {
             <Eyebrow>RESPONSE SCHEMA</Eyebrow>
             <H2>Score profile</H2>
             <Body mb={24}>
-              The weight profile used to compute the overall score. Reflects how dimension scores were weighted for this site's classification.
+              How the overall score was weighted for this site&apos;s classification. An object carrying the weighted score, the profile label, and the per-dimension weights applied.
             </Body>
             <FieldTable rows={[
-              { name: 'score_profile', type: 'string', description: "Weight profile applied to dimension scores. Format: [site_type]_[buyer_complexity]. Example: 'saas_consultative'" },
+              { name: 'score_profile.weighted_score', type: 'integer', description: 'The overall score, recomputed as the weighted sum of the 7 dimension scores.' },
+              { name: 'score_profile.profile_used',   type: 'string',  description: "Profile label. Format: [site_type]_[complexity]. Example: 'saas_medium'." },
+              { name: 'score_profile.weights',        type: 'object',  description: 'Per-dimension weights (keyed by dimension) used in the weighted sum; sum to 1.0.' },
             ]} />
           </section>
 
           <section id="findings-schema" style={SB}>
             <Eyebrow>RESPONSE SCHEMA</Eyebrow>
             <H2>Findings</H2>
+            <Body mb={24}>
+              Full-depth findings (the default). With finding_depth: &apos;brief&apos;, each finding is trimmed to id, title, severity, dimension, explanation, and confidence.
+            </Body>
             <FieldTable rows={[
-              { name: 'id',             type: 'string',  description: 'Unique finding identifier.' },
-              { name: 'priority',       type: 'integer', description: 'Rank order, 1-based — lower is higher priority. Display as "P" + priority (e.g. 1 → "P1").' },
-              { name: 'severity',       type: 'string',  description: "'critical' | 'high' | 'medium' | 'low'" },
-              { name: 'category',       type: 'string',  description: 'Conversion dimension this finding belongs to.' },
-              { name: 'title',          type: 'string',  description: 'Short headline for the finding.' },
-              { name: 'detail',         type: 'string',  description: 'Full explanation of the problem and impact.' },
-              { name: 'fix',            type: 'string',  description: 'Specific, actionable fix recommendation.' },
-              { name: 'estimated_lift', type: 'string',  description: 'Projected score improvement if fixed.' },
-              { name: 'confidence',     type: 'number',  description: 'Model confidence, 0.0–1.0.' },
-              { name: 'fix_effort',     type: 'string',  description: "Estimated implementation effort. 'hours' = copywriting or minor HTML change. 'days' = new section or content addition. 'weeks' = architectural or design change." },
+              { name: 'id',              type: 'string',   description: 'Finding identifier, e.g. "finding_001".' },
+              { name: 'title',           type: 'string',   description: 'Short headline for the finding (≈10 words).' },
+              { name: 'severity',        type: 'string',   description: "'critical' | 'high' | 'medium' | 'low'." },
+              { name: 'dimension',       type: 'string',   description: "The revenue dimension label, e.g. 'Conversion Architecture'." },
+              { name: 'impact',          type: 'string',   description: "'high' | 'medium' | 'low'." },
+              { name: 'impact_estimate', type: 'string',   description: 'Directional projection, e.g. "12-18% conversion lift".' },
+              { name: 'explanation',     type: 'string',   description: 'What was found — quotes the exact on-page element or cites the named absence.' },
+              { name: 'fix_steps',       type: 'string[]', description: 'Ordered, actionable steps specific to this page (3 items at full depth).' },
+              { name: 'rewritten_copy',  type: 'string',   description: 'Ready-to-paste replacement copy for the cited element.' },
+              { name: 'confidence',      type: 'string',   description: "'high' | 'medium' | 'low'." },
+              { name: 'fix_effort',      type: 'string',   description: "'hours' | 'days' | 'weeks'." },
+              { name: 'priority',        type: 'integer',  description: '1-based rank; lower is higher priority. Findings are sorted by this. Display as "P" + priority.' },
             ]} />
           </section>
 
@@ -1070,11 +1122,10 @@ export default function ApiDocsPage() {
             <Eyebrow>RESPONSE SCHEMA</Eyebrow>
             <H2>Benchmark</H2>
             <FieldTable rows={[
-              { name: 'industry',       type: 'string',  description: 'Auto-detected or overridden industry slug.' },
-              { name: 'industry_avg',   type: 'integer', description: 'Mean score across industry sites.' },
-              { name: 'top_quartile',   type: 'integer', description: 'Score at the 75th percentile.' },
-              { name: 'percentile',     type: 'integer', description: 'Where this site ranks among industry peers.' },
-              { name: 'sites_compared', type: 'integer', description: 'Number of sites in the benchmark pool.' },
+              { name: 'industry_average',     type: 'integer', description: "Mean score across scanned sites in this site's vertical." },
+              { name: 'industry_percentile',  type: 'integer', description: 'Where this site ranks among vertical peers (0–99).' },
+              { name: 'top_10_percent_score', type: 'integer', description: '90th-percentile score for the vertical.' },
+              { name: 'sample_size',          type: 'integer', description: 'Number of sites in the benchmark pool.' },
             ]} />
           </section>
 
@@ -1096,27 +1147,24 @@ export default function ApiDocsPage() {
             <H2>Rewritten copy</H2>
             <Body mb={24}>AI-rewritten alternatives for the most conversion-critical copy elements on the page.</Body>
             <FieldTable rows={[
-              { name: 'headline',      type: 'string', description: 'Rewritten hero headline.' },
-              { name: 'subheadline',   type: 'string', description: 'Rewritten subheadline or deck copy.' },
-              { name: 'cta_primary',   type: 'string', description: 'Rewritten primary call-to-action.' },
-              { name: 'cta_secondary', type: 'string', description: 'Rewritten secondary CTA if present.' },
-              { name: 'value_prop',    type: 'string', description: 'Rewritten value proposition statement.' },
+              { name: 'headline',    type: 'string', description: 'Rewritten hero headline (≈12 words).' },
+              { name: 'subheadline', type: 'string', description: 'Rewritten subheadline (≈20 words).' },
+              { name: 'cta',         type: 'string', description: 'Rewritten primary call-to-action (≈5 words).' },
             ]} />
           </section>
 
           <section id="dimensions-schema" style={SB}>
             <Eyebrow>RESPONSE SCHEMA</Eyebrow>
             <H2>Dimensions</H2>
-            <Body mb={24}>Scores across each of the 8 revenue dimensions. Each contributes a weighted portion of the overall score.</Body>
+            <Body mb={24}>Coverage scores across the 7 revenue dimensions. Each value is an integer 0–100; the weight each dimension contributes to the overall score is returned separately in score_profile.weights.</Body>
             <FieldTable rows={[
-              { name: 'clarity',            type: 'object', description: '{ score: integer, weight: number }' },
-              { name: 'value_proposition',  type: 'object', description: '{ score: integer, weight: number }' },
-              { name: 'social_proof',       type: 'object', description: '{ score: integer, weight: number }' },
-              { name: 'cta_strength',       type: 'object', description: '{ score: integer, weight: number }' },
-              { name: 'trust',              type: 'object', description: '{ score: integer, weight: number }' },
-              { name: 'visual_hierarchy',   type: 'object', description: '{ score: integer, weight: number }' },
-              { name: 'objection_handling', type: 'object', description: '{ score: integer, weight: number }' },
-              { name: 'urgency',            type: 'object', description: '{ score: integer, weight: number }' },
+              { name: 'conversion_architecture', type: 'integer', description: 'Coverage 0–100 — the structural machinery that moves a visitor to action (hero, CTA, checkout, conversion path).' },
+              { name: 'trust_signals',           type: 'integer', description: 'Coverage 0–100 — credibility and proof the offer is real (testimonials, logos, guarantees).' },
+              { name: 'message_clarity',         type: 'integer', description: 'Coverage 0–100 — how clearly the page communicates what it is and why it matters.' },
+              { name: 'traffic_readiness',       type: 'integer', description: 'Coverage 0–100 — getting found and capturing arriving traffic (SEO, metadata).' },
+              { name: 'technical_foundation',    type: 'integer', description: 'Coverage 0–100 — page speed and technical health.' },
+              { name: 'objection_handling',      type: 'integer', description: 'Coverage 0–100 — anticipating and answering buyer objections.' },
+              { name: 'offer_clarity',           type: 'integer', description: 'Coverage 0–100 — how clear and compelling the offer and pricing are.' },
             ]} />
           </section>
 
@@ -1138,16 +1186,22 @@ export default function ApiDocsPage() {
 
           <section id="metadata-schema" style={SL}>
             <Eyebrow>RESPONSE SCHEMA</Eyebrow>
-            <H2>Metadata</H2>
+            <H2>Metadata &amp; scan_meta</H2>
+            <Body mb={24}>
+              Two objects accompany every scan: metadata describes the scanned page, scan_meta describes the run and its billing. Note scan_id, url, and scanned_at are top-level response fields — not nested here.
+            </Body>
             <FieldTable rows={[
-              { name: 'scan_id',      type: 'string',  description: 'Unique scan identifier (sc_...).' },
-              { name: 'url',          type: 'string',  description: 'The URL that was scanned.' },
-              { name: 'status',       type: 'string',  description: "'completed' | 'failed' | 'pending'" },
-              { name: 'industry',     type: 'string',  description: 'Auto-detected or overridden industry.' },
-              { name: 'scanned_at',   type: 'string',  description: 'ISO 8601 timestamp of scan completion.' },
-              { name: 'duration_ms',  type: 'integer', description: 'Total scan duration in milliseconds.' },
-              { name: 'model',        type: 'string',  description: 'Claude model used for analysis.' },
-              { name: 'credits_used', type: 'integer', description: 'API credits consumed by this scan.' },
+              { name: 'metadata.word_count',     type: 'integer',  description: 'Readable words on the scanned page.' },
+              { name: 'metadata.cta_count',      type: 'integer',  description: 'Detected calls-to-action.' },
+              { name: 'metadata.tech_stack',     type: 'string[]', description: 'Structured-data / framework signals detected.' },
+              { name: 'scan_meta.complexity',    type: 'string',   description: "'simple' | 'medium' | 'complex' — render complexity." },
+              { name: 'scan_meta.duration_ms',   type: 'integer',  description: 'Total scan duration in milliseconds.' },
+              { name: 'scan_meta.cached',        type: 'boolean',  description: 'Whether the result was served from cache (billed at 0).' },
+              { name: 'scan_meta.finding_limit', type: 'integer',  description: 'The finding_limit applied to this scan.' },
+              { name: 'scan_meta.finding_depth', type: 'string',   description: "'brief' | 'full'." },
+              { name: 'scan_meta.site_type',     type: 'string',   description: 'Detected site type used to scope checks.' },
+              { name: 'scan_meta.cost_usd',      type: 'number',   description: 'Amount billed to your account for this scan.' },
+              { name: 'scan_meta.tokens_used',   type: 'integer',  description: 'Model tokens consumed (when available).' },
             ]} />
           </section>
 

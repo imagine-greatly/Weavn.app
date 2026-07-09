@@ -405,9 +405,9 @@ function TabbedCode({ compact }: { compact?: boolean }) {
 // ── Three-panel pipeline (INPUT / PROCESSING / OUTPUT) ───────────────────────
 
 const HIW_SCAN_CATS = [
-  'hero_section', 'value_proposition', 'trust_credibility',
-  'cta_conversion', 'social_proof', 'benchmark_positioning',
-  'copy_effectiveness', 'mobile_experience', 'trust_signals',
+  'hero_section', 'message_clarity', 'trust_signals',
+  'cta_conversion', 'social_proof', 'objection_handling',
+  'offer_clarity', 'mobile_experience', 'traffic_readiness',
 ]
 
 const HIW_JSON_LINES: { delay: number; indent: boolean; content: React.ReactNode }[] = [
@@ -417,7 +417,7 @@ const HIW_JSON_LINES: { delay: number; indent: boolean; content: React.ReactNode
   { delay: 0.6,  indent: true,  content: <><span style={{ color: '#8080c0' }}>&quot;verdict&quot;</span><span style={{ color: '#9398A8' }}>: </span><span style={{ color: '#6F9BC6' }}>&quot;Fair&quot;</span><span style={{ color: '#6E7587' }}>,</span></> },
   { delay: 0.8,  indent: true,  content: <><span style={{ color: '#8080c0' }}>&quot;findings_summary&quot;</span><span style={{ color: '#9398A8' }}>: </span><span style={{ color: '#6F9BC6' }}>23</span><span style={{ color: '#6E7587' }}>,</span></> },
   { delay: 1.0,  indent: true,  content: <><span style={{ color: '#8080c0' }}>&quot;findings&quot;</span><span style={{ color: '#9398A8' }}>: </span><span style={{ color: '#6E7587' }}>[ … ],</span></> },
-  { delay: 1.2,  indent: true,  content: <><span style={{ color: '#8080c0' }}>&quot;industry&quot;</span><span style={{ color: '#9398A8' }}>: </span><span style={{ color: '#00C48C' }}>&quot;B2B SaaS&quot;</span><span style={{ color: '#6E7587' }}>,</span></> },
+  { delay: 1.2,  indent: true,  content: <><span style={{ color: '#8080c0' }}>&quot;page_type&quot;</span><span style={{ color: '#9398A8' }}>: </span><span style={{ color: '#00C48C' }}>&quot;homepage&quot;</span><span style={{ color: '#6E7587' }}>,</span></> },
   { delay: 1.4,  indent: true,  content: <><span style={{ color: '#8080c0' }}>&quot;scan_meta&quot;</span><span style={{ color: '#9398A8' }}>: </span><span style={{ color: '#6E7587' }}>{'{ '}</span><span style={{ color: '#8080c0' }}>&quot;cost_usd&quot;</span><span style={{ color: '#9398A8' }}>: </span><span style={{ color: '#9398A8' }}>0.15</span><span style={{ color: '#6E7587' }}>{' }'}</span></> },
   { delay: 1.6,  indent: false, content: <span style={{ color: '#6E7587' }}>{'}'}</span> },
 ]
@@ -676,7 +676,7 @@ export default function DevelopersPage() {
                   API
                 </p>
                 <h1 style={{ ...DISP, fontSize: 'clamp(32px, 4vw, 50px)', fontWeight: 700, letterSpacing: '-1.5px', color: '#E6E9EE', margin: '0 0 18px', lineHeight: 1.08 }}>
-                  One endpoint.<br />Any URL.<br />Conversion intelligence.
+                  One endpoint.<br />Every field.<br />The full v1 contract.
                 </h1>
                 <p style={{ ...SANS, fontSize: 16, lineHeight: 1.65, color: '#9398A8', maxWidth: 460, margin: '0 0 28px' }}>
                   POST a URL, get structured JSON back — a coverage score, ranked findings, and drop-in fixes.

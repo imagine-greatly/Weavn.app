@@ -163,6 +163,12 @@ export function buildRubricReportPayload(args: {
     dimensionScores: dimRows,
     leaks: builtLeaks.leaks,
     api_findings: apiFindings,
+    // API-poll parity fields (namespaced api_* like api_findings so they never collide with
+    // the dashboard's typed ReportPayload keys — esp. the existing `metadata`). Read back by
+    // GET /api/v1/scans/:id. Additive; dashboard rendering ignores unknown keys.
+    api_page_type: pageType,
+    api_strengths: strengths,
+    api_growth_blueprint: pass2Blueprint,
     categoryScores: categoryScoresFromDimensions(apiDims),
     topLeak: builtLeaks.moneyLeaks[0],
     heroRewrite: {

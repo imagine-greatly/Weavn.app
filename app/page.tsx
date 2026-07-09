@@ -1,342 +1,468 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import HomeCurlRequest from '@/components/landing/HomeCurlRequest'
 
 export const metadata: Metadata = {
-  title: "Weavn — Website Intelligence, Delivered as an API",
-  description: "311 checks. One endpoint. Your site scored in 60–120 seconds. Paste any URL for a full conversion audit — ranked findings, AI-rewritten copy, and vertical benchmarks. Free to start.",
+  title: 'Weavn — Conversion intelligence as an API',
+  description:
+    'One POST request. 311 checks across 27 categories. Structured JSON back — a coverage score, ranked findings, and drop-in copy rewrites. 25 free scans, no sales call.',
   openGraph: {
-    title: "Weavn — Website Intelligence, Delivered as an API",
-    description: "311 checks. One endpoint. 60–120 seconds. Conversion audit API for founders and developers.",
-    url: "https://weavn.app",
-    siteName: "Weavn",
-    type: "website",
+    title: 'Weavn — Conversion intelligence as an API',
+    description: 'One POST request. 311 checks across 27 categories. Structured JSON back. 25 free scans.',
+    url: 'https://weavn.app',
+    siteName: 'Weavn',
+    type: 'website',
     images: [
       {
-        url: "https://weavn.app/og/home.png",
+        url: 'https://weavn.app/og/home.png',
         width: 1200,
         height: 630,
-        alt: "Weavn — scan engine fork showing founder and developer paths",
+        alt: 'Weavn — conversion intelligence as an API',
       },
     ],
   },
   twitter: {
-    card: "summary_large_image",
-    title: "Weavn — Website Intelligence, Delivered as an API",
-    description: "311 checks. One endpoint. 60–120 seconds. Free to start.",
-    images: ["https://weavn.app/og/home.png"],
-    creator: "@weavnapp",
+    card: 'summary_large_image',
+    title: 'Weavn — Conversion intelligence as an API',
+    description: 'One POST request. 311 checks across 27 categories. Structured JSON back. 25 free scans.',
+    images: ['https://weavn.app/og/home.png'],
+    creator: '@weavnapp',
   },
-  robots: {
-    index: true,
-    follow: true,
-  },
-  alternates: {
-    canonical: "https://weavn.app",
-  },
+  robots: { index: true, follow: true },
+  alternates: { canonical: 'https://weavn.app' },
 }
 
-// Removed sections (curl/JSON hero, two-surface cards, objections FAQ) live in
-// components/LandingCurlHero.tsx, LandingTwoSurface.tsx, LandingObjectionsFaq.tsx
-// for the founder/developer deep pages.
+// ── Design tokens (locked system — inline to match the /developers idiom) ─────
+const MONO: React.CSSProperties = { fontFamily: '"IBM Plex Mono", monospace' }
+const SANS: React.CSSProperties = { fontFamily: '"IBM Plex Sans", sans-serif' }
+const DISP: React.CSSProperties = { fontFamily: '"Space Grotesk", sans-serif' }
 
-// ── Nav ─────────────────────────────────────────────────────────────────────
+// Purple #9D8CFF is the API/developer accent and carries the page. Steel #6F9BC6
+// appears ONLY in the agency column. Green #00C48C is success semantics only.
+const PANEL: React.CSSProperties = {
+  background: '#080D18',
+  border: '1px solid rgba(157,140,255,0.18)',
+  borderRadius: 0,
+  position: 'relative',
+}
+const PANEL_INNER: React.CSSProperties = {
+  background: '#06090F',
+  border: '1px solid rgba(157,140,255,0.14)',
+  borderRadius: 0,
+  overflow: 'hidden',
+}
 
-function NavBar() {
+// Four corner-bracket marks; expects a position:relative parent.
+function Brackets({ c = 'rgba(157,140,255,0.45)' }: { c?: string }) {
+  const b = `1px solid ${c}`
+  const s = 11
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 h-[52px] bg-background-base/90 backdrop-blur-md border-b border-background-border flex items-center px-8">
-      <div className="flex items-center gap-8 flex-1">
-        <Link href="/" className="font-display font-extrabold text-base text-text-primary no-underline">
-          Weavn<span className="text-[#6F9BC6]"></span>
-        </Link>
-        <div className="flex items-center gap-6">
-          {['Pricing', 'Developers', 'Docs', 'Changelog'].map(link => (
-            <Link
-              key={link}
-              href={`/${link.toLowerCase()}`}
-              className="font-body text-sm text-text-secondary hover:text-text-primary transition-colors duration-150 no-underline"
-            >
-              {link}
-            </Link>
+    <>
+      <div aria-hidden style={{ position: 'absolute', top: 6, left: 6, width: s, height: s, borderTop: b, borderLeft: b, pointerEvents: 'none', zIndex: 2 }} />
+      <div aria-hidden style={{ position: 'absolute', top: 6, right: 6, width: s, height: s, borderTop: b, borderRight: b, pointerEvents: 'none', zIndex: 2 }} />
+      <div aria-hidden style={{ position: 'absolute', bottom: 6, left: 6, width: s, height: s, borderBottom: b, borderLeft: b, pointerEvents: 'none', zIndex: 2 }} />
+      <div aria-hidden style={{ position: 'absolute', bottom: 6, right: 6, width: s, height: s, borderBottom: b, borderRight: b, pointerEvents: 'none', zIndex: 2 }} />
+    </>
+  )
+}
+
+function Ticks({ rgba = '111,155,198' }: { rgba?: string }) {
+  const b = `0.5px solid rgba(${rgba},0.2)`
+  return (
+    <>
+      <div aria-hidden style={{ position: 'absolute', top: 20, left: 20, width: 14, height: 14, borderTop: b, borderLeft: b, pointerEvents: 'none', zIndex: 1 }} />
+      <div aria-hidden style={{ position: 'absolute', top: 20, right: 20, width: 14, height: 14, borderTop: b, borderRight: b, pointerEvents: 'none', zIndex: 1 }} />
+      <div aria-hidden style={{ position: 'absolute', bottom: 20, left: 20, width: 14, height: 14, borderBottom: b, borderLeft: b, pointerEvents: 'none', zIndex: 1 }} />
+      <div aria-hidden style={{ position: 'absolute', bottom: 20, right: 20, width: 14, height: 14, borderBottom: b, borderRight: b, pointerEvents: 'none', zIndex: 1 }} />
+    </>
+  )
+}
+
+function PanelHeader({ label, right }: { label: string; right?: React.ReactNode }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, padding: '8px 14px', borderBottom: '0.5px solid rgba(255,255,255,0.08)' }}>
+      <span style={{ ...MONO, fontSize: 11, color: '#9398A8', display: 'inline-flex', alignItems: 'center', gap: 8, letterSpacing: '0.05em' }}>
+        <span aria-hidden style={{ width: 7, height: 7, background: '#00C48C', display: 'inline-block', flexShrink: 0 }} />
+        {label}
+      </span>
+      {right}
+    </div>
+  )
+}
+
+// JSON syntax-color helpers (match /developers)
+function K({ c }: { c: string }) { return <span style={{ color: '#8080c0' }}>&quot;{c}&quot;</span> }
+function S({ c }: { c: string }) { return <span style={{ color: '#00C48C' }}>&quot;{c}&quot;</span> }
+function N({ c }: { c: string }) { return <span style={{ color: '#6F9BC6' }}>{c}</span> }
+function Muted({ c }: { c: string }) { return <span style={{ color: '#6E7587' }}>{c}</span> }
+
+// ── 1. HERO ───────────────────────────────────────────────────────────────────
+
+function HeroSection() {
+  return (
+    <section style={{ position: 'relative', overflow: 'hidden', padding: '72px 32px 56px' }}>
+      <div aria-hidden style={{
+        position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0,
+        background: [
+          'radial-gradient(ellipse 1000px 700px at 50% 30%, rgba(157,140,255,0.09) 0%, transparent 60%)',
+          'radial-gradient(ellipse 500px 300px at 50% 0%, rgba(157,140,255,0.05) 0%, transparent 55%)',
+        ].join(', '),
+      }} />
+
+      <div style={{ position: 'relative', zIndex: 1, maxWidth: 1160, margin: '0 auto' }}>
+        <div style={{ ...PANEL, padding: 'clamp(24px, 4vw, 48px)' }}>
+          <Brackets />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-12 items-center">
+
+            {/* LEFT — the pitch */}
+            <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+              <p style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.3em', color: '#9D8CFF', margin: '0 0 20px' }}>
+                WEBSITE INTELLIGENCE API
+              </p>
+              <h1 style={{ ...DISP, fontSize: 'clamp(34px, 4.6vw, 56px)', fontWeight: 700, letterSpacing: '-0.04em', color: '#E6E9EE', margin: '0 0 20px', lineHeight: 1.05 }}>
+                Conversion intelligence as an API.
+              </h1>
+              <p style={{ ...SANS, fontSize: 17, lineHeight: 1.65, color: '#9398A8', maxWidth: 480, margin: '0 0 30px' }}>
+                One POST request. 311 checks across 27 categories. Structured JSON back &mdash; a coverage score, ranked findings, and drop-in copy rewrites, in 60&ndash;120 seconds.
+              </p>
+
+              {/* CTAs — primary GET YOUR API KEY, secondary VIEW DOCS */}
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginBottom: 28 }}>
+                <Link href="/auth?surface=api" style={{ ...MONO, fontSize: 12, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#9D8CFF', background: 'rgba(157,140,255,0.1)', border: '1px solid rgba(157,140,255,0.5)', padding: '12px 24px', textDecoration: 'none', display: 'inline-block' }}>
+                  Get your API key →
+                </Link>
+                <Link href="/docs/api" style={{ ...MONO, fontSize: 12, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#9398A8', background: 'transparent', border: '1px solid rgba(255,255,255,0.14)', padding: '12px 24px', textDecoration: 'none', display: 'inline-block' }}>
+                  View docs →
+                </Link>
+              </div>
+
+              {/* Stat chips */}
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                {['311 checks', '27 categories', '60–120s typical'].map(label => (
+                  <span key={label} style={{ ...MONO, fontSize: 11, letterSpacing: '0.04em', color: '#9398A8', background: 'rgba(255,255,255,0.03)', border: '0.5px solid rgba(255,255,255,0.12)', padding: '5px 12px' }}>
+                    {label}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            {/* RIGHT — compact response teaser (locked v1 contract fields) */}
+            <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+              <div style={PANEL_INNER}>
+                <PanelHeader label="RESPONSE.JSON" right={<span style={{ ...MONO, fontSize: 11, color: '#00C48C' }}>200 OK</span>} />
+                <pre style={{ ...MONO, fontSize: 12.5, lineHeight: 1.95, margin: 0, padding: '16px 18px', whiteSpace: 'pre-wrap', wordBreak: 'break-word', color: '#9398A8' }}>
+<Muted c="{" />{'\n  '}
+<K c="scan_id" /><Muted c=": " /><S c="sc_a8d3f2c1" /><Muted c="," />{'\n  '}
+<K c="url" /><Muted c=": " /><S c="https://your-site.com" /><Muted c="," />{'\n  '}
+<K c="score" /><Muted c=": " /><span style={{ color: '#EFB23E' }}>61</span><Muted c="," />{'\n  '}
+<K c="verdict" /><Muted c=": " /><span style={{ color: '#EFB23E' }}>&quot;Fair&quot;</span><Muted c="," />{'\n  '}
+<K c="findings_summary" /><Muted c=": " /><N c="23" />{'\n'}
+<Muted c="}" />
+                </pre>
+              </div>
+              <p style={{ ...MONO, fontSize: 10.5, color: '#6E7587', margin: '10px 0 0', letterSpacing: '0.02em' }}>
+                Same shape on every call. Build against the schema once.
+              </p>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+// ── 2. LIVE PAYLOAD PROOF ──────────────────────────────────────────────────────
+
+function PayloadProofSection() {
+  return (
+    <section style={{ position: 'relative', overflow: 'hidden', borderTop: '0.5px solid rgba(255,255,255,0.08)' }}>
+      <div aria-hidden style={{
+        position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0,
+        background: 'radial-gradient(ellipse 72% 95% at 50% 105%, rgba(157,140,255,0.10) 0%, rgba(157,140,255,0.04) 40%, transparent 82%)',
+      }} />
+      <Ticks rgba="157,140,255" />
+      <div style={{ position: 'relative', zIndex: 1, maxWidth: 896, margin: '0 auto', padding: '64px 32px 72px' }}>
+        <p style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.2em', color: '#8080c0', margin: '0 0 16px' }}>
+          LIVE PAYLOAD
+        </p>
+        <h2 style={{ ...DISP, fontSize: 'clamp(26px, 3.6vw, 40px)', fontWeight: 700, letterSpacing: '-0.8px', color: '#E6E9EE', margin: '0 0 16px', lineHeight: 1.12 }}>
+          Every finding comes back scored, ranked, and rewritten.
+        </h2>
+        <p style={{ ...SANS, fontSize: 15, lineHeight: 1.65, color: '#9398A8', maxWidth: 640, margin: '0 0 36px' }}>
+          A coverage score, per-dimension coverage, and each issue as a structured finding &mdash; with an impact estimate and a drop-in <span style={{ ...MONO, fontSize: 13, color: '#8080c0' }}>rewritten_copy</span> field you can paste straight in.
+        </p>
+
+        <div style={PANEL_INNER}>
+          <PanelHeader label="response · application/json" right={<span style={{ ...MONO, fontSize: 11, color: '#00C48C' }}>200 OK</span>} />
+          <pre style={{ ...MONO, fontSize: 12.5, lineHeight: 1.85, margin: 0, padding: '18px 20px', whiteSpace: 'pre-wrap', wordBreak: 'break-word', color: '#9398A8' }}>
+<Muted c="{" />{'\n  '}
+<K c="scan_id" /><Muted c=": " /><S c="sc_a8d3f2c1" /><Muted c="," />{'\n  '}
+<K c="url" /><Muted c=": " /><S c="https://your-site.com" /><Muted c="," />{'\n  '}
+<K c="score" /><Muted c=": " /><span style={{ color: '#EFB23E' }}>61</span><Muted c="," />{'  '}<Muted c="// coverage score, 0–100" />{'\n  '}
+<K c="verdict" /><Muted c=": " /><span style={{ color: '#EFB23E' }}>&quot;Fair&quot;</span><Muted c="," />{'\n  '}
+<K c="findings_summary" /><Muted c=": " /><N c="23" /><Muted c="," />{'\n  '}
+<K c="dimensions" /><Muted c=": {" />{'\n    '}
+<K c="conversion_architecture" /><Muted c=": " /><N c="58" /><Muted c="," />{'\n    '}
+<K c="message_clarity" /><Muted c=": " /><N c="42" /><Muted c="," />{'  '}<Muted c="// …5 more" />{'\n  '}
+<Muted c="}," />{'\n  '}
+<K c="findings" /><Muted c=": [" />{'\n    '}
+<Muted c="{" />{'\n      '}
+<K c="title" /><Muted c=": " /><span style={{ color: '#E6E9EE' }}>&quot;Hero headline is feature-led, not outcome-led&quot;</span><Muted c="," />{'\n      '}
+<K c="severity" /><Muted c=": " /><span style={{ color: '#E8635F' }}>&quot;critical&quot;</span><Muted c="," />{'\n      '}
+<K c="dimension" /><Muted c=": " /><S c="Conversion Architecture" /><Muted c="," />{'\n      '}
+<K c="impact_estimate" /><Muted c=": " /><S c="+12-18% conversion lift" /><Muted c="," />{'\n      '}
+<K c="rewritten_copy" /><Muted c=": " /><span style={{ color: '#00C48C' }}>&quot;See revenue impact in one dashboard.&quot;</span><Muted c="," />{'\n      '}
+<K c="priority" /><Muted c=": " /><N c="1" />{'\n    '}
+<Muted c="}" />{'  '}<Muted c="// …22 more, ranked" />{'\n  '}
+<Muted c="]" />{'\n'}
+<Muted c="}" />
+          </pre>
+        </div>
+
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px 28px', marginTop: 18 }}>
+          {[
+            'scan_id carries an sc_ prefix',
+            'Every finding cites visible page evidence',
+            'v1 is stable — breaking changes ship as v2',
+          ].map(fact => (
+            <span key={fact} style={{ ...MONO, fontSize: 11, color: '#6E7587' }}>· {fact}</span>
           ))}
         </div>
       </div>
-      <div className="flex items-center gap-4">
-        <Link href="/dashboard" className="font-body text-sm text-text-secondary no-underline hover:text-text-primary transition-colors duration-150">
-          Scan my site
-        </Link>
-        <Link
-          href="/auth?surface=dashboard"
-          className="border border-background-border font-body text-sm text-text-secondary px-4 py-1.5 no-underline hover:text-text-primary hover:border-text-tertiary transition-colors duration-150"
-        >
-          Dashboard →
-        </Link>
-        <Link
-          href="/auth?surface=api"
-          className="font-body font-semibold text-sm px-4 py-1.5 no-underline transition-all duration-150"
-          style={{ background: 'transparent', border: '1px solid rgba(111,155,198,0.5)', color: '#6F9BC6' }}
-        >
-          Get API key →
-        </Link>
-      </div>
-    </nav>
+    </section>
   )
 }
 
-// ── Hero — the scan-engine fork ──────────────────────────────────────────────
+// ── 3. THE ONE-LINE REQUEST ────────────────────────────────────────────────────
 
-// Door cards sit in an UNEQUAL grid inside the 880px container (1.6fr / 1fr,
-// gap 24px) so the API door reads as primary. Card top-centers land at x≈263
-// (API door — wider, left) and x≈715 (dashboard door — narrower, right).
-const FORK_LEFT_PATH = 'M 440 0 C 440 40 263 80 263 110'
-const FORK_RIGHT_PATH = 'M 440 0 C 440 40 715 80 715 110'
-
-// Dashboard (non-technical) door — secondary, kept short and quiet.
-const FOUNDER_LINES = [
-  'Plain-English fixes, ranked by conversion impact',
-  'Free to start — no account, no code',
-]
-
-// API/developer door — primary, carries more detail than the dashboard door.
-const DEVELOPER_LINES = [
-  'POST any URL → structured JSON in 60–120s',
-  'Batch endpoint, async mode, webhooks',
-  'Typed SDKs and copy-paste examples',
-  '25 free scans, no subscription',
-]
-
-function HeroForkSection() {
+function RequestSection() {
   return (
-    <section className="scanline-texture pt-[110px] pb-20 px-8 relative overflow-visible">
-      <style>{`
-        .fork-pulse { display: none; }
-        @media (prefers-reduced-motion: no-preference) {
-          .fork-pulse { display: initial; }
-          .hero-bloom       { animation: bloom-breathe 8s ease-in-out infinite; }
-          .engine-glyph     { animation: engine-breathe 3s ease-in-out infinite; }
-          .branch-path      { stroke-dasharray: 1000; stroke-dashoffset: 1000;
-                              animation: branch-draw-hp 1.4s cubic-bezier(0.4,0,0.2,1) 0.4s forwards; }
-          @keyframes branch-draw-hp {
-            to { stroke-dashoffset: 0; }
-          }
-          .door-card-l      { animation: card-rise 0.6s ease-out 0.25s both; }
-          .door-card-r      { animation: card-rise 0.6s ease-out 0.45s both; }
-          .door-card-founder:hover {
-            box-shadow: 0 0 40px rgba(111,155,198,0.1), inset 0 1px 0 rgba(111,155,198,0.15);
-            transition: box-shadow 0.35s ease;
-          }
-          .door-card-developer:hover {
-            box-shadow: 0 0 40px rgba(157,140,255,0.1), inset 0 1px 0 rgba(157,140,255,0.15);
-            transition: box-shadow 0.35s ease;
-          }
-          .door-cta-founder:hover  { box-shadow: 0 0 24px rgba(111,155,198,0.25); }
-          .door-cta-developer:hover { box-shadow: 0 0 24px rgba(157,140,255,0.25); }
-        }
-      `}</style>
-
-      {/* Hero bloom — 800×600 steel-blue radial at top-center, bleeds into section below */}
-      <div
-        aria-hidden
-        className="hero-bloom"
-        style={{
-          position: 'absolute',
-          top: 0,
-          left: '50%',
-          transform: 'translateX(-50%)',
-          width: 800,
-          height: 600,
-          background: 'radial-gradient(ellipse at center, rgba(111,155,198,0.06) 0%, transparent 70%)',
-          pointerEvents: 'none',
-          zIndex: 0,
-        }}
-      />
-      {/* Corner ticks */}
-      <div aria-hidden style={{ position: 'absolute', top: 20, left: 20, width: 14, height: 14, borderTop: '0.5px solid rgba(111,155,198,0.15)', borderLeft: '0.5px solid rgba(111,155,198,0.15)', pointerEvents: 'none', zIndex: 1 }} />
-      <div aria-hidden style={{ position: 'absolute', top: 20, right: 20, width: 14, height: 14, borderTop: '0.5px solid rgba(111,155,198,0.15)', borderRight: '0.5px solid rgba(111,155,198,0.15)', pointerEvents: 'none', zIndex: 1 }} />
-      <div aria-hidden style={{ position: 'absolute', bottom: 20, left: 20, width: 14, height: 14, borderBottom: '0.5px solid rgba(111,155,198,0.15)', borderLeft: '0.5px solid rgba(111,155,198,0.15)', pointerEvents: 'none', zIndex: 1 }} />
-      <div aria-hidden style={{ position: 'absolute', bottom: 20, right: 20, width: 14, height: 14, borderBottom: '0.5px solid rgba(111,155,198,0.15)', borderRight: '0.5px solid rgba(111,155,198,0.15)', pointerEvents: 'none', zIndex: 1 }} />
-
-      <div className="relative z-10 max-w-[880px] mx-auto">
-
-        {/* Headline */}
-        <h1 className="font-display font-extrabold text-center text-[clamp(28px,4.4vw,48px)] leading-[1.06] tracking-[-0.04em] text-text-primary m-0">
-          Website intelligence, delivered as an API.
-        </h1>
-        <h2 className="font-display font-bold text-center text-[clamp(18px,3.0vw,36px)] leading-[1.1] tracking-[-0.035em] text-text-primary/70 m-0">
-          311 checks. One endpoint. 60–120 seconds.
+    <section style={{ position: 'relative', overflow: 'hidden', background: '#080D18', borderTop: '0.5px solid rgba(255,255,255,0.08)' }}>
+      <div aria-hidden style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0, background: 'radial-gradient(ellipse 800px 500px at 50% 0%, rgba(157,140,255,0.05) 0%, transparent 60%)' }} />
+      <Ticks rgba="157,140,255" />
+      <div style={{ position: 'relative', zIndex: 1, maxWidth: 896, margin: '0 auto', padding: '64px 32px 72px' }}>
+        <p style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.2em', color: '#8080c0', margin: '0 0 16px' }}>
+          THE REQUEST
+        </p>
+        <h2 style={{ ...DISP, fontSize: 'clamp(26px, 3.6vw, 40px)', fontWeight: 700, letterSpacing: '-0.8px', color: '#E6E9EE', margin: '0 0 16px', lineHeight: 1.12 }}>
+          One endpoint. One line to your first scan.
         </h2>
-
-        {/* Subhead */}
-        <p className="font-body text-lg text-text-secondary leading-relaxed text-center max-w-[600px] mx-auto mt-5 mb-0">
-          POST any URL. Get a report back in 60–120 seconds — a coverage score, ranked fixes with on-page evidence, and AI-rewritten copy.
+        <p style={{ ...SANS, fontSize: 15, lineHeight: 1.65, color: '#9398A8', maxWidth: 640, margin: '0 0 32px' }}>
+          A standard REST endpoint &mdash; any HTTP client that sends a Bearer token and a JSON body works.
         </p>
 
-        {/* Scan-engine glyph */}
-        <div className="flex flex-col items-center mt-12">
-          <div className="engine-glyph" style={{ display: 'inline-block' }}>
-            <img src="/weavn-logo.svg" alt="" width={150} height={139} style={{ display: 'block', flexShrink: 0, objectFit: 'contain' }} />
-          </div>
-          <p className="font-mono text-[10px] uppercase tracking-[0.25em] text-interactive/60 mt-3 mb-0">THE SCAN ENGINE</p>
-        </div>
+        <HomeCurlRequest />
 
-        {/* Fork connectors — wide inverted Y (md+) */}
-        <svg className="hidden md:block w-full mt-2" viewBox="0 0 880 110" height="110" aria-hidden>
-          {/* Left branch → API door (purple, primary); right branch → dashboard door (steel) */}
-          <path className="branch-path" d={FORK_LEFT_PATH} stroke="var(--data-impact)" strokeWidth="1.5" fill="none" opacity="0.5" />
-          <path className="branch-path" d={FORK_RIGHT_PATH} stroke="var(--interactive)" strokeWidth="1.5" fill="none" opacity="0.5" style={{ animationDelay: '0.55s' }} />
-          <g className="fork-pulse">
-            <rect x="-1.5" y="-1.5" width="3" height="3" fill="var(--data-impact)" opacity="0.45">
-              <animateMotion dur="2.2s" repeatCount="indefinite" path={FORK_LEFT_PATH} />
-            </rect>
-            <rect x="-1.5" y="-1.5" width="3" height="3" fill="var(--interactive)" opacity="0.45">
-              <animateMotion dur="2.2s" repeatCount="indefinite" path={FORK_RIGHT_PATH} />
-            </rect>
-          </g>
-        </svg>
-
-        {/* Below md — single short vertical connector to the first (primary API) door */}
-        <div className="flex md:hidden justify-center mt-2 mb-0">
-          <svg width="8" height="56" viewBox="0 0 8 56" aria-hidden>
-            <line x1="4" y1="0" x2="4" y2="48" stroke="var(--data-impact)" strokeWidth="1.5" opacity="0.5" />
-            <g className="fork-pulse">
-              <rect x="-1.5" y="-1.5" width="3" height="3" fill="var(--data-impact)" opacity="0.45">
-                <animateMotion dur="2.2s" repeatCount="indefinite" path="M 4 0 L 4 48" />
-              </rect>
-            </g>
-          </svg>
-        </div>
-
-        {/* Surface split — deliberately unequal: API door primary (purple, wider,
-            first), dashboard door secondary (steel, narrower, quieter). */}
-        <div className="grid grid-cols-1 md:grid-cols-[1.6fr_1fr] gap-6 items-start">
-
-          {/* Developers door — PRIMARY, pale purple, wider, the obvious path */}
-          <div className="door-card-l door-card-developer bg-surface border border-background-border border-t-data-impact/40 flex flex-col p-8">
-            <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-data-impact m-0 mb-3">FOR DEVELOPERS</p>
-            <h2 className="font-display font-bold text-[28px] leading-[1.1] text-text-primary m-0 mb-3">Build with the data</h2>
-            <p className="font-body text-sm text-text-secondary leading-relaxed m-0 mb-5">
-              The same engine behind the reports, exposed as one endpoint — wire conversion intelligence straight into your stack.
-            </p>
-
-            {/* Endpoint snippet — detail the dashboard door doesn't carry */}
-            <div className="font-mono text-[11px] leading-relaxed border border-data-impact/20 bg-data-impact/5 p-3 mb-5">
-              <span className="text-data-impact">POST</span> <span className="text-text-secondary">/api/v1/scan</span><br />
-              <span className="text-text-tertiary">{`{ "url": "https://yoursite.com" }`}</span><br />
-              <span className="text-text-tertiary">→ coverage score · ranked findings · JSON</span>
-            </div>
-
-            <div className="flex-1">
-              {DEVELOPER_LINES.map(line => (
-                <p key={line} className="font-body text-sm text-text-secondary leading-relaxed m-0 mb-2">· {line}</p>
-              ))}
-            </div>
-            <Link
-              href="/developers"
-              className="door-cta-developer font-mono text-xs text-data-impact border border-data-impact/30 px-5 py-2.5 block text-center no-underline mt-6 transition-colors duration-200 hover:border-data-impact/60"
-            >
-              Explore the API →
-            </Link>
-          </div>
-
-          {/* Founders door — SECONDARY, steel blue, narrower, quieter (still a full path) */}
-          <div className="door-card-r door-card-founder bg-surface border border-background-border border-t-interactive/40 flex flex-col p-6">
-            <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-interactive m-0 mb-3">FOR FOUNDERS &amp; TEAMS</p>
-            <h2 className="font-display font-bold text-xl leading-tight text-text-primary m-0 mb-3">See exactly what to fix</h2>
-            <p className="font-body text-sm text-text-secondary leading-relaxed m-0 mb-4">
-              The same engine, rendered visually — no code required.
-            </p>
-            <div className="flex-1">
-              {FOUNDER_LINES.map(line => (
-                <p key={line} className="font-body text-sm text-text-secondary leading-relaxed m-0 mb-2">· {line}</p>
-              ))}
-            </div>
-            <Link
-              href="/dashboard"
-              className="door-cta-founder font-mono text-xs text-interactive border border-interactive/30 px-5 py-2.5 block text-center no-underline mt-6 transition-colors duration-200 hover:border-interactive/60"
-            >
-              Scan my site →
-            </Link>
-          </div>
-
-        </div>
+        <p style={{ ...SANS, fontSize: 13.5, lineHeight: 1.6, color: '#6E7587', margin: '18px 0 0', maxWidth: 680 }}>
+          Need it async? Add <span style={{ ...MONO, fontSize: 12.5, color: '#8080c0' }}>&quot;async&quot;: true</span> and a <span style={{ ...MONO, fontSize: 12.5, color: '#8080c0' }}>webhook_url</span> &mdash; the API returns a <span style={{ ...MONO, fontSize: 12.5, color: '#8080c0' }}>scan_id</span> immediately and POSTs the completed result to your endpoint.
+        </p>
       </div>
     </section>
   )
 }
 
-// ── Objection pair ────────────────────────────────────────────────────────────
-// Copy lifted verbatim from components/LandingObjectionsFaq.tsx (cards 1–2).
+// ── 4. WHO IT'S FOR ─────────────────────────────────────────────────────────────
 
-const OBJECTION_PAIR = [
+const AUDIENCES = [
   {
-    q: "How do I know it's not hallucinating?",
-    a: "Every finding must cite specific visible content — what's present, absent, or misplaced on your actual page. The model cannot pass a check without grounding it in evidence. Findings that fail validation are dropped before they reach you.",
-    data: 'grounding rule: cite visible content or fail',
+    kicker: 'PLATFORMS & BUILDERS',
+    accent: '#9D8CFF',
+    accentBorder: 'rgba(157,140,255,0.4)',
+    title: 'Give every site on your platform a conversion score.',
+    body: 'Embed a live score in your site builder, CRM, or e-commerce app. Re-scan on publish and surface the delta.',
+    cta: 'Explore the API →',
+    href: '/developers',
   },
   {
-    q: 'Why not just paste my URL into ChatGPT?',
-    a: 'A language model sees text you paste, not your live page. Weavn renders the full DOM in headless Chrome, reads above-the-fold layout, runs 311 structured checks, and returns ranked JSON — not a chat response.',
-    data: '311 checks · rendered DOM · not a chat response',
+    kicker: 'AGENCIES',
+    accent: '#6F9BC6',
+    accentBorder: 'rgba(111,155,198,0.4)',
+    title: 'White-label scored reports your clients pay for.',
+    body: 'Deliver branded audits under your own name from the dashboard — or batch-scan client sites through the API.',
+    cta: 'See the agency dashboard →',
+    href: '/dashboard',
+  },
+  {
+    kicker: 'DEVELOPERS',
+    accent: '#9D8CFF',
+    accentBorder: 'rgba(157,140,255,0.4)',
+    title: '25 free scans. No sales call.',
+    body: 'Get a key, run a real scan in the playground, and build against a schema that never changes shape.',
+    cta: 'Open the playground →',
+    href: '/playground',
   },
 ]
 
-function ObjectionPairSection() {
+function WhoItsForSection() {
   return (
-    <section className="py-16 px-8">
-      <div className="max-w-[880px] mx-auto grid grid-cols-1 md:grid-cols-2 gap-6">
-        {OBJECTION_PAIR.map(card => (
-          <div key={card.q} className="bg-surface border border-background-border p-7">
-            <p className="font-display font-semibold text-base text-text-primary leading-snug m-0 mb-3">{card.q}</p>
-            <p className="font-body text-sm text-text-secondary leading-relaxed m-0 mb-3">{card.a}</p>
-            <p className="font-mono text-[11px] text-interactive m-0">{card.data}</p>
-          </div>
-        ))}
+    <section style={{ position: 'relative', overflow: 'hidden', borderTop: '0.5px solid rgba(255,255,255,0.08)' }}>
+      <Ticks />
+      <div style={{ position: 'relative', zIndex: 1, maxWidth: 1160, margin: '0 auto', padding: '64px 32px 72px' }}>
+        <p style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.2em', color: '#8080c0', margin: '0 0 16px' }}>
+          WHO IT&apos;S FOR
+        </p>
+        <h2 style={{ ...DISP, fontSize: 'clamp(26px, 3.6vw, 40px)', fontWeight: 700, letterSpacing: '-0.8px', color: '#E6E9EE', margin: '0 0 40px', lineHeight: 1.12 }}>
+          One engine. Three ways in.
+        </h2>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {AUDIENCES.map(a => (
+            <div
+              key={a.kicker}
+              style={{
+                background: '#0A0E18',
+                borderTop: `1px solid ${a.accentBorder}`,
+                borderLeft: '0.5px solid rgba(255,255,255,0.06)',
+                borderRight: '0.5px solid rgba(255,255,255,0.03)',
+                borderBottom: '0.5px solid rgba(255,255,255,0.03)',
+                padding: '24px 24px 22px',
+                display: 'flex', flexDirection: 'column',
+              }}
+            >
+              <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.15em', color: a.accent, margin: '0 0 14px' }}>{a.kicker}</p>
+              <p style={{ ...DISP, fontSize: 19, fontWeight: 600, color: '#E6E9EE', lineHeight: 1.25, margin: '0 0 10px' }}>{a.title}</p>
+              <p style={{ ...SANS, fontSize: 14, lineHeight: 1.6, color: '#9398A8', margin: 0, flexGrow: 1 }}>{a.body}</p>
+              <Link href={a.href} style={{ ...MONO, fontSize: 11, letterSpacing: '0.05em', color: a.accent, textDecoration: 'none', marginTop: 20, borderTop: '0.5px solid rgba(255,255,255,0.06)', paddingTop: 16 }}>
+                {a.cta}
+              </Link>
+            </div>
+          ))}
+        </div>
       </div>
     </section>
   )
 }
 
-// ── Footer ────────────────────────────────────────────────────────────────────
+// ── 5. POSITIONING STRIKE ────────────────────────────────────────────────────
+
+function PositioningSection() {
+  return (
+    <section style={{ position: 'relative', overflow: 'hidden', background: '#080D18', borderTop: '0.5px solid rgba(255,255,255,0.08)' }}>
+      <div aria-hidden style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0, background: 'radial-gradient(ellipse 80% 80% at 50% 50%, rgba(157,140,255,0.10) 0%, rgba(157,140,255,0.04) 40%, transparent 82%)' }} />
+      <Ticks rgba="157,140,255" />
+      <div style={{ position: 'relative', zIndex: 1, maxWidth: 820, margin: '0 auto', padding: '72px 32px' }}>
+        <p style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.2em', color: '#8080c0', margin: '0 0 20px' }}>
+          POSITIONING
+        </p>
+        <h2 style={{ ...DISP, fontSize: 'clamp(28px, 4vw, 44px)', fontWeight: 700, letterSpacing: '-1px', color: '#E6E9EE', margin: '0 0 24px', lineHeight: 1.1 }}>
+          Every agency gives away a free audit. We&apos;re the engine underneath.
+        </h2>
+        <p style={{ ...SANS, fontSize: 16, lineHeight: 1.7, color: '#9398A8', margin: '0 0 16px', maxWidth: 700 }}>
+          Free site-audit tools are everywhere. Most run on a static checklist and a confident tone. Weavn is the scored engine that would sit beneath one &mdash; 311 checks against your live rendered page, evidence-cited findings, and structured JSON on every call.
+        </p>
+        <p style={{ ...SANS, fontSize: 16, lineHeight: 1.7, color: '#9398A8', margin: 0, maxWidth: 700 }}>
+          So if you run a free-audit tool, you&apos;re not a competitor. You&apos;re one <span style={{ ...MONO, fontSize: 14, color: '#9D8CFF' }}>POST /api/v1/scan</span> away from being a customer.
+        </p>
+      </div>
+    </section>
+  )
+}
+
+// ── 6. TRUST / INFRA SIGNALS ────────────────────────────────────────────────
+
+const INFRA_SIGNALS = [
+  { label: 'API VERSION', value: 'v1 · stable', note: 'Breaking changes ship as v2. Build against the schema once.', href: '/docs/api', linkText: 'Read the contract →', external: false },
+  { label: 'STATUS', value: 'All systems operational', note: 'Component health. Target 99.5% uptime.', href: '/status', linkText: 'View status →', external: false },
+  { label: 'CHANGELOG', value: 'What ships, when', note: 'Every contract change is logged and dated.', href: '/changelog', linkText: 'See the changelog →', external: false },
+  { label: 'PRICING', value: 'Per-scan, transparent', note: 'Rate decreases with volume. Cache hits are free.', href: '/developers', linkText: 'See API plans →', external: false },
+]
+
+function TrustSignalsSection() {
+  return (
+    <section style={{ position: 'relative', overflow: 'hidden', borderTop: '0.5px solid rgba(255,255,255,0.08)' }}>
+      <div style={{ position: 'relative', zIndex: 1, maxWidth: 1160, margin: '0 auto', padding: '56px 32px 64px' }}>
+        <p style={{ ...MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.2em', color: '#6E7587', margin: '0 0 28px' }}>
+          INFRASTRUCTURE
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {INFRA_SIGNALS.map(sig => (
+            <div key={sig.label} style={{ background: '#0A0E18', border: '0.5px solid rgba(255,255,255,0.08)', padding: '18px 20px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#6E7587', margin: 0 }}>{sig.label}</p>
+              <p style={{ ...MONO, fontSize: 14, color: '#E6E9EE', margin: 0 }}>{sig.value}</p>
+              <p style={{ ...SANS, fontSize: 13, lineHeight: 1.55, color: '#6E7587', margin: 0, flexGrow: 1 }}>{sig.note}</p>
+              {sig.external ? (
+                <a href={sig.href} target="_blank" rel="noopener noreferrer" style={{ ...MONO, fontSize: 11, color: '#6F9BC6', textDecoration: 'none' }}>{sig.linkText}</a>
+              ) : (
+                <Link href={sig.href} style={{ ...MONO, fontSize: 11, color: '#6F9BC6', textDecoration: 'none' }}>{sig.linkText}</Link>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+// ── 7. FOOTER CTA ────────────────────────────────────────────────────────────
+
+function FooterCtaSection() {
+  return (
+    <section style={{ position: 'relative', overflow: 'hidden', background: '#080D18', borderTop: '0.5px solid rgba(255,255,255,0.08)' }}>
+      <div aria-hidden style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0, background: 'radial-gradient(ellipse 700px 400px at 50% 20%, rgba(157,140,255,0.08) 0%, transparent 70%)' }} />
+      <Ticks rgba="157,140,255" />
+      <div style={{ position: 'relative', zIndex: 1, maxWidth: 720, margin: '0 auto', padding: '80px 32px', textAlign: 'center' }}>
+        <p style={{ ...MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.18em', color: '#8080c0', margin: '0 0 14px' }}>Start building</p>
+        <h2 style={{ ...DISP, fontSize: 'clamp(28px, 4vw, 44px)', fontWeight: 700, letterSpacing: '-0.8px', color: '#E6E9EE', lineHeight: 1.15, margin: '0 0 14px' }}>
+          Conversion intelligence, one request away.
+        </h2>
+        <p style={{ ...SANS, fontSize: 15, lineHeight: 1.6, color: '#9398A8', margin: '0 0 30px' }}>
+          Same engine on every plan. Build against the schema once.
+        </p>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, justifyContent: 'center', marginBottom: 20 }}>
+          <Link href="/auth?surface=api" style={{ ...MONO, fontSize: 12, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#9D8CFF', background: 'rgba(157,140,255,0.1)', border: '1px solid rgba(157,140,255,0.5)', padding: '13px 26px', textDecoration: 'none', display: 'inline-block' }}>
+            Get your API key →
+          </Link>
+          <Link href="/docs/api" style={{ ...MONO, fontSize: 12, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#9398A8', background: 'transparent', border: '1px solid rgba(255,255,255,0.14)', padding: '13px 26px', textDecoration: 'none', display: 'inline-block' }}>
+            View docs →
+          </Link>
+        </div>
+        <p style={{ ...MONO, fontSize: 11, color: '#6E7587', margin: 0 }}>
+          Or try{' '}
+          <Link href="/playground" style={{ color: '#6F9BC6', textDecoration: 'none' }}>25 free scans in the playground →</Link>
+          {' '}— no card, no sales call.
+        </p>
+      </div>
+    </section>
+  )
+}
+
+// ── Footer ──────────────────────────────────────────────────────────────────
 
 function FooterSection() {
   return (
     <footer className="border-t border-background-border bg-background-raised">
-      <div className="max-w-[1280px] mx-auto px-8 py-12 grid grid-cols-4 gap-8">
-        <div>
+      <div className="max-w-[1280px] mx-auto px-8 py-12 grid grid-cols-2 md:grid-cols-4 gap-8">
+        <div className="col-span-2 md:col-span-1">
           <Link href="/" className="font-display font-extrabold text-base text-text-primary no-underline">
-            Weavn<span className="text-[#6F9BC6]"></span>
+            Weavn
           </Link>
           <p className="font-body text-sm text-text-secondary mt-3 max-w-xs leading-relaxed">
-            The conversion audit API. 311 checks, ranked fixes, AI-rewritten copy. One endpoint.
+            Conversion intelligence as an API. 311 checks across 27 categories, ranked findings, AI-rewritten copy. One endpoint.
           </p>
         </div>
         <div>
+          <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mb-4">DEVELOPERS</div>
+          <Link href="/developers" className="font-body text-sm text-text-secondary hover:text-text-primary transition-colors block mb-2 no-underline">API overview →</Link>
+          <Link href="/docs/api" className="font-body text-sm text-text-secondary hover:text-text-primary transition-colors block mb-2 no-underline">API reference →</Link>
+          <Link href="/playground" className="font-body text-sm text-text-secondary hover:text-text-primary transition-colors block mb-2 no-underline">Playground →</Link>
+          <Link href="/changelog" className="font-body text-sm text-text-secondary hover:text-text-primary transition-colors block mb-2 no-underline">Changelog →</Link>
+        </div>
+        <div>
           <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mb-4">PRODUCT</div>
-          {['Playground', 'Pricing', 'Docs', 'Changelog'].map(l => (
-            <Link
-              key={l}
-              href={`/${l.toLowerCase()}`}
-              className="font-body text-sm text-text-secondary hover:text-text-primary transition-colors block mb-2 no-underline"
-            >
-              {l}
-            </Link>
-          ))}
+          <Link href="/product" className="font-body text-sm text-text-secondary hover:text-text-primary transition-colors block mb-2 no-underline">The engine →</Link>
+          <Link href="/dashboard" className="font-body text-sm text-text-secondary hover:text-text-primary transition-colors block mb-2 no-underline">Dashboard →</Link>
+          <Link href="/dashboard#agencies" className="font-body text-sm text-text-secondary hover:text-text-primary transition-colors block mb-2 no-underline">Agencies →</Link>
         </div>
         <div>
           <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mb-4">GET STARTED</div>
-          <Link href="/dashboard" className="font-body text-sm text-text-secondary hover:text-text-primary block mb-3 no-underline">Scan my site free →</Link>
-          <Link href="/dashboard" className="font-body text-sm text-text-secondary hover:text-text-primary block mb-3 no-underline">Agency plans →</Link>
-          <Link href="/auth?surface=api" className="font-body text-sm text-[#6F9BC6] hover:opacity-80 block mb-3 no-underline">Get API key →</Link>
-        </div>
-        <div>
-          <div className="font-mono text-xs text-text-tertiary uppercase tracking-widest mb-4">RESOURCES</div>
-          <Link href="/playground" className="font-body text-sm text-text-secondary hover:text-text-primary block mb-2 no-underline">API Playground →</Link>
-          <Link href="/docs/api" className="font-body text-sm text-text-secondary hover:text-text-primary block mb-2 no-underline">API Reference →</Link>
-          <Link href="/changelog" className="font-body text-sm text-text-secondary hover:text-text-primary block mb-2 no-underline">Changelog →</Link>
-          <a href="https://status.weavn.app" className="font-body text-sm text-text-secondary hover:text-text-primary block mb-2 no-underline" target="_blank" rel="noopener noreferrer">Status →</a>
+          <Link href="/auth?surface=api" className="font-body text-sm text-[#9D8CFF] hover:opacity-80 block mb-2 no-underline">Get your API key →</Link>
+          <Link href="/auth?surface=dashboard" className="font-body text-sm text-text-secondary hover:text-text-primary block mb-2 no-underline">Scan my site →</Link>
+          <Link href="/status" className="font-body text-sm text-text-secondary hover:text-text-primary block mb-2 no-underline">Status →</Link>
         </div>
       </div>
       <div className="border-t border-background-border">
-        <div className="max-w-[1280px] mx-auto px-8 py-5 flex justify-between items-center">
+        <div className="max-w-[1280px] mx-auto px-8 py-5 flex flex-wrap justify-between items-center gap-3">
           <span className="font-mono text-xs text-text-tertiary">© 2026 Weavn</span>
           <span className="font-mono text-xs">
             <span className="text-ink-muted">Built in public by Devon Morrell · </span>
@@ -349,7 +475,7 @@ function FooterSection() {
               Follow the build →
             </a>
           </span>
-          <span className="font-mono text-xs text-text-tertiary">Status · Privacy · Terms</span>
+          <span className="font-mono text-xs text-text-tertiary">Privacy · Terms</span>
         </div>
       </div>
     </footer>
@@ -361,9 +487,13 @@ function FooterSection() {
 export default function HomePage() {
   return (
     <main className="bg-background-base min-h-screen">
-      <NavBar />
-      <HeroForkSection />
-      <ObjectionPairSection />
+      <HeroSection />
+      <PayloadProofSection />
+      <RequestSection />
+      <WhoItsForSection />
+      <PositioningSection />
+      <TrustSignalsSection />
+      <FooterCtaSection />
       <FooterSection />
     </main>
   )

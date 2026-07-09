@@ -14,8 +14,8 @@ import SurfaceSwitcher from "@/components/SurfaceSwitcher";
  */
 
 const CENTER_LINKS = [
-  { label: "DASHBOARD", href: "/dashboard" },
   { label: "DEVELOPERS", href: "/developers" },
+  { label: "DASHBOARD", href: "/dashboard" },
   { label: "DOCS", href: "/docs/api" },
 ];
 
@@ -244,7 +244,7 @@ export default function Navbar() {
               persistent surface-switcher so either workspace is one click away. */}
           {!isLoggedIn ? (
             <a
-              href="/auth?surface=dashboard"
+              href="/auth?surface=api"
               className={`${ctaButtonClass} shrink-0`}
               style={{ ...ctaPrimaryStyle, textDecoration: "none" }}
               onMouseEnter={(e) => {
@@ -259,7 +259,7 @@ export default function Navbar() {
                 e.currentTarget.style.transitionDuration = "300ms";
               }}
             >
-              Get started
+              Get API key
               <span className="ml-1 inline-block transition-transform duration-150 group-hover/cta:translate-x-[3px]">
                 →
               </span>
@@ -456,12 +456,12 @@ export default function Navbar() {
             )}
             {!isLoggedIn ? (
               <a
-                href="/auth?surface=dashboard"
+                href="/auth?surface=api"
                 className={`${navCtaTypography} flex min-h-[48px] items-center justify-center px-4 py-3`}
                 style={{ ...ctaPrimaryStyle, textDecoration: "none", width: "100%" }}
                 onClick={() => setMobileMenuOpen(false)}
               >
-                Get started →
+                Get API key →
               </a>
             ) : (
               /* Logged-in: both workspaces. The menu closes on the resulting route change. */

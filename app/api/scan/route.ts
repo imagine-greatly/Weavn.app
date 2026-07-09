@@ -12,6 +12,7 @@ import { scrapeSite, extractInternalLinks, selectSubpageUrls, scrapeSubpageSafe 
 import { detectSiteType } from "@/lib/siteType";
 import { runAnalysis, buildPageSummary } from "@/lib/analyze";
 import { runRubricScan, wrapSummary } from "@/lib/rubricEngine";
+import { extractPageData } from "@/lib/analyzePipeline";
 import Anthropic from "@anthropic-ai/sdk";
 import type { ReportPayload } from "@/lib/reportSchema";
 import DIAGNOSTIC_CHECKS from "@/lib/diagnosticRubric";
@@ -498,6 +499,7 @@ export async function POST(req: NextRequest) {
     )
   )
   let payload;
+  let scanTokensUsed: number | undefined;
   const analyzeStart = Date.now()
   process.stderr.write(`[ROUTE] runAnalysis START | domain=${domain} site_type=${site_type} plan=${userPlan} pagesAnalyzed=${extraction.pagesAnalyzed.length} analyzeTimeoutMs=${analyzeTimeoutMs} elapsed_since_scan_start=${Date.now() - scanStart}ms\n`)
   console.log(`[scan] ANALYZE START | domain=${domain} site_type=${site_type} userPlan=${userPlan} pages=${extraction.pagesAnalyzed.length}`)
@@ -518,6 +520,7 @@ export async function POST(req: NextRequest) {
         logLabel: domain,
       });
       payload = { ...r.reportPayload, scanCostUsd: r.costUsd } as ReportPayload & { scanCostUsd: number };
+      scanTokensUsed = r.tokensUsed;
     } else {
       payload = await Promise.race([runAnalysis(extraction, site_type, userPlan, undefined), analyzeDeadline]);
     }
@@ -541,6 +544,29 @@ export async function POST(req: NextRequest) {
     }
     return withCookies(NextResponse.json({ error: message }, { status: 500 }));
   }
+
+  // Persist API-poll parity fields (mirrors /api/v1/scan). api_* namespaced + additive — the
+  // dashboard client ignores unknown keys. On the rubric path api_page_type / api_strengths /
+  // api_growth_blueprint already come from rubricEngine; here we add route-local metadata + scan_meta.
+  try {
+    const pd = extractPageData(extraction.rawHtml, normalized, "homepage");
+    (payload as unknown as Record<string, unknown>).api_metadata = {
+      word_count: pd.wordCount,
+      cta_count: pd.ctaCount,
+      tech_stack: pd.structured_data ?? [],
+    };
+  } catch { /* best-effort metadata */ }
+  const persistedCost = (payload as { scanCostUsd?: number }).scanCostUsd;
+  (payload as unknown as Record<string, unknown>).api_scan_meta = {
+    complexity,
+    duration_ms: Date.now() - scanStart,
+    cost_usd: typeof persistedCost === "number" ? persistedCost : undefined,
+    tokens_used: scanTokensUsed,
+    finding_limit: DASHBOARD_FINDING_LIMIT,
+    finding_depth: "full",
+    site_type,
+    cached: false,
+  };
 
   // 4. Store in Supabase (keyed by domain + timestamp)
   let reportId = '';

@@ -163,9 +163,10 @@ function HeroSection() {
           <p style={{ ...SANS,fontSize:17,color:INK_SEC,lineHeight:1.65,maxWidth:560,margin:'0 0 16px' }}>
             Paste your URL. Get a coverage score, every conversion problem ranked by impact, AI-rewritten copy, and evidence-cited fixes — in 60–120 seconds, scaling with site depth.
           </p>
-          {/* Framing — this visual surface runs on the same engine as the API */}
+          {/* Framing — the no-code scored-report surface for the same engine that powers the API (the front door) */}
           <p style={{ ...MONO,fontSize:12.5,color:STEEL,letterSpacing:'0.04em',lineHeight:1.6,maxWidth:560,margin:'0 0 36px' }}>
-            Every report runs on the same engine behind the API — you just never touch the code.
+            The scored-report surface for teams and agencies — same engine as{' '}
+            <Link href="/developers" style={{ color:STEEL, textDecoration:'underline', textUnderlineOffset:'3px' }}>the API</Link>, no code to wire up.
           </p>
 
           {/* URL input + CTA */}

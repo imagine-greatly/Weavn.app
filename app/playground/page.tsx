@@ -7,51 +7,29 @@ import { ScoreRing } from '@/components/ui/ScoreRing'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
-type ScanState    = 'idle' | 'scanning' | 'complete'
+type ScanState    = 'idle' | 'scanning' | 'complete' | 'error'
 type FindingDepth = 'brief' | 'full'
 type AsyncMode    = 'false' | 'true'
 type SiteType     = 'auto' | 'saas' | 'ecommerce'
 
-// ── Mock response ──────────────────────────────────────────────────────────────
+// ── Placeholders (no mocked response — the panel is empty until a real scan runs) ─
 
-const MOCK_RESPONSE = {
-  score: 61,
-  findings: [
-    {
-      id: 'MSG_001',
-      severity: 'critical',
-      dimension: 'message_clarity',
-      title: 'Hero headline is product-focused, not outcome-focused',
-      recommendation: 'Rewrite to lead with the result the user experiences.',
-    },
-    {
-      id: 'TRS_001',
-      severity: 'high',
-      dimension: 'trust_signals',
-      title: 'No social proof visible in first viewport',
-      recommendation: 'Move at least one trust signal above the fold.',
-    },
-    {
-      id: 'CTA_002',
-      severity: 'high',
-      dimension: 'conversion_architecture',
-      title: 'Primary CTA copy is generic',
-      recommendation: 'Replace with a specific outcome CTA.',
-    },
-  ],
-  rewritten_copy: {
-    headline: 'Stop losing signups to a homepage nobody understands.',
-    cta: 'Scan my site free →',
-  },
-  metadata: {
-    scanned_at: '',
-    duration_ms: 2340,
-    site_type: 'saas',
-    cached: false,
-  },
+const IDLE_PLACEHOLDER     = `// Response will appear here\n// POST a URL to run a real scan`
+const SCANNING_PLACEHOLDER = `// running a live 311-check scan against the real engine…\n// this usually takes 60–120 seconds`
+
+// Pull a human message out of any of the real error envelopes the API can return:
+//   playground rate-limit  → { error: "rate_limited", message }
+//   v1 structured error     → { error: { code, message, status } }
+//   config / misc           → { error: "…" }
+function extractError(data: Record<string, unknown>): string {
+  if (typeof data.message === 'string') return data.message
+  const err = data.error
+  if (err && typeof err === 'object' && typeof (err as Record<string, unknown>).message === 'string') {
+    return (err as Record<string, unknown>).message as string
+  }
+  if (typeof err === 'string') return err
+  return 'Scan failed. Please try again.'
 }
-
-const IDLE_PLACEHOLDER = `// Response will appear here\n// POST a URL to run a live scan`
 
 // ── Toggle row sub-component ───────────────────────────────────────────────────
 
@@ -106,27 +84,45 @@ export default function PlaygroundPage() {
   const [scanState, setScanState]         = useState<ScanState>('idle')
   const [scanScore, setScanScore]         = useState(0)
   const [durationMs, setDurationMs]       = useState(0)
-  const [keyCopied, setKeyCopied]         = useState(false)
-  const timerRef  = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [responseData, setResponseData]   = useState<Record<string, unknown> | null>(null)
+  const [httpStatus, setHttpStatus]       = useState<number | null>(null)
+  const [errorMsg, setErrorMsg]           = useState<string | null>(null)
   const startRef  = useRef(0)
 
-  function handleRunScan() {
-    if (!url.trim() || scanState === 'scanning') return
-    if (timerRef.current) clearTimeout(timerRef.current)
+  async function handleRunScan() {
+    const target = url.trim()
+    if (!target || scanState === 'scanning') return
     setScanState('scanning')
     setScanScore(0)
+    setErrorMsg(null)
+    setResponseData(null)
+    setHttpStatus(null)
     startRef.current = Date.now()
-    timerRef.current = setTimeout(() => {
-      setScanState('complete')
-      setScanScore(61)
-      setDurationMs(Date.now() - startRef.current)
-    }, 2800)
-  }
 
-  function handleCopyKey() {
-    navigator.clipboard?.writeText('weavn_live_example_key')
-    setKeyCopied(true)
-    setTimeout(() => setKeyCopied(false), 2000)
+    try {
+      const res = await fetch('/api/playground/scan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: target }),
+      })
+      const data = (await res.json()) as Record<string, unknown>
+      setDurationMs(Date.now() - startRef.current)
+      setResponseData(data)
+      setHttpStatus(res.status)
+
+      if (res.ok && typeof data.score === 'number') {
+        setScanScore(data.score)
+        setScanState('complete')
+      } else {
+        setScanScore(0)
+        setErrorMsg(extractError(data))
+        setScanState('error')
+      }
+    } catch {
+      setDurationMs(Date.now() - startRef.current)
+      setErrorMsg('Network error — please try again.')
+      setScanState('error')
+    }
   }
 
   const targetUrl  = url || 'https://your-site.com'
@@ -142,17 +138,22 @@ export default function PlaygroundPage() {
     `  }'`,
   ].join('\n')
 
-  const responseCode = scanState === 'complete'
-    ? JSON.stringify(
-        { ...MOCK_RESPONSE, metadata: { ...MOCK_RESPONSE.metadata, scanned_at: new Date().toISOString() } },
-        null, 2,
-      )
-    : IDLE_PLACEHOLDER
+  const responseCode =
+    scanState === 'scanning'                        ? SCANNING_PLACEHOLDER :
+    (scanState === 'complete' || scanState === 'error') && responseData
+      ? JSON.stringify(responseData, null, 2)
+      : IDLE_PLACEHOLDER
 
   const statusLabel: string | null =
     scanState === 'idle'     ? null :
-    scanState === 'scanning' ? 'scanning…' :
-                               `200 OK · ${durationMs}ms`
+    scanState === 'scanning' ? 'scanning… up to 2 min' :
+    scanState === 'error'    ? `${httpStatus ?? ''} · error`.trim() :
+                               `${httpStatus ?? 200} OK · ${(durationMs / 1000).toFixed(1)}s`
+
+  const statusColor =
+    scanState === 'error' ? '#E8635F' :
+    scanState === 'complete' ? '#00C48C' :
+    scanState === 'scanning' ? '#00C48C' : '#6E7587'
 
   return (
     <main style={{ background: 'transparent', minHeight: '100vh' }}>
@@ -204,9 +205,9 @@ export default function PlaygroundPage() {
           fontSize: 15,
           color: '#9398A8',
           margin: '0 0 24px',
-          maxWidth: 560,
+          maxWidth: 580,
         }}>
-          Live API calls against the real scan engine. Your key, your requests, real responses. No mocked data.
+          A real, full 311-check scan against the live engine — the exact JSON the API returns, no mocked data. One free scan per hour; get your own key for more.
         </p>
 
         {/* Status line */}
@@ -264,7 +265,7 @@ export default function PlaygroundPage() {
               REQUEST
             </div>
 
-            {/* API key row */}
+            {/* Demo-key row — shared, rate-limited key held server-side; never exposed */}
             <div style={{ padding: '14px 16px', borderBottom: '0.5px solid rgba(255,255,255,0.06)' }}>
               <div style={{
                 fontFamily: "'IBM Plex Mono', monospace",
@@ -274,28 +275,29 @@ export default function PlaygroundPage() {
                 color: '#6E7587',
                 marginBottom: 8,
               }}>
-                API KEY
+                DEMO KEY · SHARED · 1 SCAN / HR
               </div>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
                 <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 13, color: '#00C48C' }}>
                   weavn_live_••••••••
                 </span>
-                <button
-                  onClick={handleCopyKey}
+                <Link
+                  href="/auth?surface=api"
                   style={{
                     fontFamily: "'IBM Plex Mono', monospace",
                     fontSize: 10,
-                    color: '#6F9BC6',
+                    color: '#9D8CFF',
                     background: 'none',
-                    border: '0.5px solid rgba(111,155,198,0.3)',
+                    border: '0.5px solid rgba(157,140,255,0.4)',
                     borderRadius: 0,
                     padding: '3px 8px',
-                    cursor: 'pointer',
+                    textDecoration: 'none',
                     flexShrink: 0,
+                    whiteSpace: 'nowrap',
                   }}
                 >
-                  {keyCopied ? 'Copied' : 'Copy'}
-                </button>
+                  Get your own →
+                </Link>
               </div>
             </div>
 
@@ -315,7 +317,7 @@ export default function PlaygroundPage() {
                 type="url"
                 value={url}
                 onChange={e => setUrl(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && handleRunScan()}
+                onKeyDown={e => e.key === 'Enter' && void handleRunScan()}
                 placeholder="https://your-site.com"
                 className="pg-url-input"
                 style={{
@@ -370,7 +372,7 @@ export default function PlaygroundPage() {
             {/* Scan button */}
             <div style={{ padding: 16 }}>
               <button
-                onClick={handleRunScan}
+                onClick={() => void handleRunScan()}
                 disabled={!url.trim() || scanState === 'scanning'}
                 style={{
                   width: '100%',
@@ -392,6 +394,15 @@ export default function PlaygroundPage() {
               >
                 {scanState === 'scanning' ? 'SCANNING…' : 'RUN SCAN →'}
               </button>
+              <p style={{
+                fontFamily: "'IBM Plex Mono', monospace",
+                fontSize: 10,
+                color: '#6E7587',
+                margin: '10px 0 0',
+                lineHeight: 1.5,
+              }}>
+                Live scan runs with defaults — the toggles above shape the curl you&apos;d run with your own key.
+              </p>
             </div>
 
             {/* CURL preview */}
@@ -458,7 +469,7 @@ export default function PlaygroundPage() {
                 <span style={{
                   fontFamily: "'IBM Plex Mono', monospace",
                   fontSize: 11,
-                  color: statusLabel ? '#00C48C' : '#6E7587',
+                  color: statusColor,
                   animation: scanState === 'scanning'
                     ? 'playgroundStatusPulse 1.5s ease-in-out infinite'
                     : 'none',
@@ -468,6 +479,21 @@ export default function PlaygroundPage() {
 
                 <ScoreRing score={scanScore} size="sm" animate={scanState === 'complete'} />
               </div>
+
+              {/* Error banner — honest surfacing of rate-limit / bot-block / failure */}
+              {scanState === 'error' && errorMsg && (
+                <div style={{
+                  padding: '10px 16px',
+                  borderBottom: '0.5px solid rgba(232,99,95,0.2)',
+                  background: 'rgba(232,99,95,0.06)',
+                  fontFamily: "'IBM Plex Mono', monospace",
+                  fontSize: 12,
+                  color: '#E8635F',
+                  lineHeight: 1.5,
+                }}>
+                  {errorMsg}
+                </div>
+              )}
 
               {/* Response body */}
               <div style={{ minHeight: 600 }}>
@@ -484,7 +510,7 @@ export default function PlaygroundPage() {
       </div>
 
       <section style={{ maxWidth: 1200, margin: '0 auto', padding: '48px 40px 80px' }}>
-        {/* Explainer — 3 columns */}
+        {/* Explainer — 3 columns (real top-level response fields) */}
         <div style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(3, 1fr)',
@@ -492,9 +518,9 @@ export default function PlaygroundPage() {
           marginBottom: 40,
         }}>
           {[
-            { label: 'score',          body: '0–100. Calibrated to your site type.' },
-            { label: 'findings[]',     body: 'Ranked by estimated conversion impact.' },
-            { label: 'rewritten_copy', body: 'Drop-in replacement copy, included.' },
+            { label: 'score',         body: '0–100. Calibrated to your site type.' },
+            { label: 'findings[]',    body: 'Ranked by estimated conversion impact.' },
+            { label: 'copy_rewrites', body: 'Drop-in replacement copy, included.' },
           ].map(({ label, body }) => (
             <div key={label}>
               <div style={{
@@ -523,14 +549,14 @@ export default function PlaygroundPage() {
         {/* Crosslink row */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 32, flexWrap: 'wrap' }}>
           <span style={{ fontFamily: "'IBM Plex Sans', sans-serif", fontSize: 14, color: '#9398A8' }}>
-            Need more scans?{' '}
-            <Link href="/developers" style={{ color: '#6F9BC6', textDecoration: 'none' }}>
-              See API plans →
+            Ready for more?{' '}
+            <Link href="/auth?surface=api" style={{ color: '#9D8CFF', textDecoration: 'none' }}>
+              Get your API key — 25 free scans →
             </Link>
           </span>
           <span style={{ fontFamily: "'IBM Plex Sans', sans-serif", fontSize: 14, color: '#9398A8' }}>
             Need a dashboard?{' '}
-            <Link href="/dashboard" style={{ color: '#00C48C', textDecoration: 'none' }}>
+            <Link href="/dashboard" style={{ color: '#6F9BC6', textDecoration: 'none' }}>
               See agency plans →
             </Link>
           </span>

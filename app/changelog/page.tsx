@@ -87,7 +87,7 @@ const ENTRIES: Entry[] = [
   {
     date: 'MAY 20, 2026',
     tags: ['IMPROVED'],
-    title: '260+ diagnostic checks — early rubric',
+    title: 'Expanded the diagnostic rubric — new check categories',
     body: 'Expanded the diagnostic rubric with new checks across narrative flow, emotional resonance, offer clarity, and specificity scoring.',
   },
   {

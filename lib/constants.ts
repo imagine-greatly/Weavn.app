@@ -82,3 +82,15 @@ export const API_PLAN_OVERAGE_USD: Record<string, number> = {
 export const DASHBOARD_RATE_LIMIT_PER_MIN = 10;
 export const API_RATE_LIMIT_PER_MIN = 60;
 export const SCAN_RATE_WINDOW_SECONDS = 60;
+
+// ── Chrome extension anonymous scans (A1 lead funnel) ─────────────────────────
+// Enforced at app/api/extension/scan/route.ts via the bump_extension_rate RPC
+// (migration 030). SEPARATE from the marketing-site playground limit above — the
+// extension gets its own budget so the two never contend. Scans run on the shared
+// server-held PLAYGROUND_API_KEY (Weavn's COGS), so these caps also bound cost.
+/** Per-install free scans in a rolling 24h window — the user-facing "3 free scans a day". */
+export const EXTENSION_SCANS_PER_INSTALL_PER_DAY = 3;
+/** Per-IP daily ceiling — anti token-farming, set high enough for a shared office. */
+export const EXTENSION_SCANS_PER_IP_PER_DAY = 15;
+/** Rolling window (seconds) for both extension counters. */
+export const EXTENSION_RATE_WINDOW_SECONDS = 24 * 60 * 60;

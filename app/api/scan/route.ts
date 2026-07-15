@@ -370,8 +370,9 @@ export async function POST(req: NextRequest) {
   process.stderr.write(`[ROUTE] detectSiteType DONE | site_type=${site_type} elapsed=${Date.now() - scanStart}ms\n`)
   console.log(`[scan] SITE_TYPE | domain=${domain} site_type=${site_type} elapsed=${Date.now() - scanStart}ms`)
 
-  // User plan for model selection (agency uses higher-capacity model). Reuse the
-  // plan already resolved by the monthly-cap gate above to avoid a second lookup.
+  // User plan for scan DEPTH (Pro+ gets deeper multi-page scraping below; the analysis
+  // model is Sonnet across all tiers). Reuse the plan already resolved by the
+  // monthly-cap gate above to avoid a second lookup.
   // profiles is keyed by `id` (= auth user id), so the lookup below uses .eq("id").
   let userPlan = resolvedUserPlan ?? "free";
   if (!internalBypass && resolvedUserPlan === null) {
@@ -397,10 +398,10 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  // 2.5. Pro plan: scrape 2 subpages in parallel for deeper multi-page analysis
+  // 2.5. Deeper multi-page analysis (scrape subpages) — Pro and up: Pro, Agency, Enterprise.
   const complexity = extraction.complexity ?? 'medium'
   const planLower = userPlan.toLowerCase();
-  const isProPlan = planLower === 'pro' || planLower === 'agency';
+  const isProPlan = planLower === 'pro' || planLower === 'agency' || planLower === 'enterprise';
   const homepageScrapeMs = Date.now() - scrapeStart;
 
   if (isProPlan && homepageScrapeMs < 45_000) {

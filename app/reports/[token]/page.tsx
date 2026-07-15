@@ -14,12 +14,13 @@ function getServiceClient() {
 }
 
 // The report wears the OWNER agency's white-label branding — but only while they
-// are Agency tier (gated here, so a downgrade silently reverts to the in-app look).
+// are on a white-label tier: Agency OR Enterprise (both carry whiteLabel:true in
+// DASHBOARD_PLANS). Gated here, so a downgrade silently reverts to the in-app look.
 async function loadOwnerBranding(supabase: SupabaseClient, ownerId: string | null | undefined): Promise<BrandingConfig | null> {
   if (!ownerId) return null
   const res = await supabase.from('profiles').select('plan, branding').eq('id', ownerId).maybeSingle()
   const row = res.data as { plan?: string; branding?: unknown } | null
-  if (!row || row.plan !== 'agency' || !row.branding) return null
+  if (!row || (row.plan !== 'agency' && row.plan !== 'enterprise') || !row.branding) return null
   return sanitizeBranding(row.branding)
 }
 

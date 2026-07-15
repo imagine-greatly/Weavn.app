@@ -15,7 +15,9 @@ import SurfaceSwitcher from "@/components/SurfaceSwitcher";
 
 const CENTER_LINKS = [
   { label: "DEVELOPERS", href: "/developers" },
-  { label: "DASHBOARD", href: "/dashboard" },
+  { label: "AGENCIES", href: "/agencies" },
+  { label: "ENGINE", href: "/engine" },
+  { label: "PRICING", href: "/pricing" },
   { label: "DOCS", href: "/docs/api" },
 ];
 
@@ -240,6 +242,16 @@ export default function Navbar() {
           </Link>
         )}
         <div className="hidden items-center gap-4 md:flex">
+          {/* Secondary ghost CTA — the agency door (steel), distinct from the purple API primary. */}
+          {!isLoggedIn && (
+            <Link
+              href="/agencies"
+              className={`${navCtaTypography} shrink-0 hidden lg:flex items-center`}
+              style={{ color: "#6F9BC6", background: "transparent", border: "1px solid rgba(111,155,198,0.4)", padding: "10px 18px", borderRadius: 0, textDecoration: "none" }}
+            >
+              For agencies
+            </Link>
+          )}
           {/* Logged-out: single workspace CTA. Logged-in on a marketing page: the
               persistent surface-switcher so either workspace is one click away. */}
           {!isLoggedIn ? (

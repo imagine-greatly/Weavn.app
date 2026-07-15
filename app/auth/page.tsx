@@ -68,7 +68,7 @@ function buildScanRedirect(): string {
       const raw = decodeURIComponent(match[1]);
       document.cookie = "pendingUrl=;path=/;max-age=0";
       const normalized = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
-      return `/dashboard?url=${encodeURIComponent(normalized)}`;
+      return `/playground?url=${encodeURIComponent(normalized)}`;
     }
   }
   if (typeof sessionStorage !== "undefined") {
@@ -76,7 +76,7 @@ function buildScanRedirect(): string {
     if (raw) {
       sessionStorage.removeItem("pendingUrl");
       const normalized = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
-      return `/dashboard?url=${encodeURIComponent(normalized)}`;
+      return `/playground?url=${encodeURIComponent(normalized)}`;
     }
   }
   // No pending scan → route to the workspace implied by the signup surface.

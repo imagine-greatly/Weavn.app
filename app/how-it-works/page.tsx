@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation'
 
 export default function HowItWorksPage() {
-  redirect('/dashboard')
+  redirect('/engine')
 }

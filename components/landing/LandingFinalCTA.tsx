@@ -43,7 +43,7 @@ export default function LandingFinalCTA({ url, onUrlChange, autoFocus }: Props) 
     const supabase = getSupabaseBrowserClient();
     const { data: { session } } = await supabase.auth.getSession();
     if (session) {
-      router.push(`/dashboard?url=${encodeURIComponent(result.url)}`);
+      router.push(`/playground?url=${encodeURIComponent(result.url)}`);
     } else {
       document.cookie = `pendingUrl=${encodeURIComponent(result.url)};path=/;max-age=300;SameSite=Lax`;
       router.push("/auth?tab=signup");
@@ -307,9 +307,9 @@ export default function LandingFinalCTA({ url, onUrlChange, autoFocus }: Props) 
             }}
           >
             {[
-              { label: "PRODUCT", href: "/product" },
-              { label: "DASHBOARD", href: "/dashboard" },
-              { label: "PRICING", href: "/dashboard" },
+              { label: "ENGINE", href: "/engine" },
+              { label: "AGENCIES", href: "/agencies" },
+              { label: "PRICING", href: "/pricing" },
               { label: "DOCS", href: "/docs" },
             ].map((link) => (
               <Link

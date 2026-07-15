@@ -7,7 +7,7 @@ import VerdictRing from '@/components/ui/VerdictRing'
 import { getSupabaseBrowserClient } from '@/lib/supabaseBrowser'
 import { DASHBOARD_PLAN_MONTHLY_CAPS } from '@/lib/constants'
 import { scoreColor, opportunityFraming } from '@/lib/verdict'
-import { formatDate } from '@/lib/dashboard'
+import { rollUpSites, formatDate, type ReportRow, type SiteSummary } from '@/lib/dashboard'
 import {
   DASH, MONO, BODY, DISP, STEEL, steelLine,
   Panel, SectionLabel,
@@ -57,6 +57,7 @@ export default function DashboardOverview({ scans, total, url, onUrlChange, onSc
     return () => { cancelled = true }
   }, [])
   const isFounder = plan != null && plan !== 'agency' && plan !== 'enterprise'
+  const isAgency = plan === 'agency' || plan === 'enterprise'
 
   const uniqueSites = new Set(scans.map(s => s.domain)).size
 
@@ -67,15 +68,19 @@ export default function DashboardOverview({ scans, total, url, onUrlChange, onSc
         <p style={{ fontFamily: MONO, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.22em', color: STEEL, margin: '0 0 12px' }}>Dashboard</p>
         <h1 style={{ fontFamily: DISP, fontWeight: 700, fontSize: 28, color: DASH.ink, margin: 0, letterSpacing: '-0.5px', lineHeight: 1.1 }}>Overview</h1>
         <p style={{ fontFamily: BODY, fontSize: 15, color: DASH.ink2, margin: '10px 0 0', maxWidth: 560, lineHeight: 1.6 }}>
-          {hasScans ? 'Where your coverage stands, at a glance.' : 'Run your first scan to see your coverage score and ranked findings.'}
+          {isAgency
+            ? (hasScans ? 'Your client sites at a glance — latest scores and where each one moved.' : 'Scan your first client site to start building your book of business.')
+            : (hasScans ? 'Where your coverage stands, at a glance.' : 'Run your first scan to see your coverage score and ranked findings.')}
         </p>
       </div>
 
       {!hasScans ? (
-        <EmptySection url={url} onUrlChange={onUrlChange} onScan={onScan} scanning={scanning} error={error} />
+        <EmptySection url={url} onUrlChange={onUrlChange} onScan={onScan} scanning={scanning} error={error} isAgency={isAgency} />
+      ) : isAgency ? (
+        <AgencyBook />
       ) : (
         <>
-          <TrendPulse scans={scans} total={total} sites={uniqueSites} />
+          <TrendPulse scans={scans} total={total} sites={uniqueSites} isAgency={isAgency} />
 
           <SectionLabel>Recent scans</SectionLabel>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 12 }}>
@@ -90,7 +95,7 @@ export default function DashboardOverview({ scans, total, url, onUrlChange, onSc
       {isFounder && hasScans && (
         <div style={{ marginTop: 40, paddingTop: 20, borderTop: `1px solid ${DASH.hair}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
           <span style={{ fontFamily: BODY, fontSize: 13, color: DASH.ink3, lineHeight: 1.5 }}>
-            Managing multiple client sites? Agency adds white-label reports and a client dashboard.
+            Managing multiple client sites? Agency adds white-label reports and a client roster.
           </span>
           <a href="/app/billing" className="dash-btn" style={{ fontFamily: MONO, fontSize: 11, letterSpacing: '0.06em', textTransform: 'uppercase', color: STEEL, border: `1px solid ${steelLine(45)}`, padding: '9px 15px', textDecoration: 'none', whiteSpace: 'nowrap', transition: 'background 0.14s, border-color 0.14s' }}>
             View plans →
@@ -102,7 +107,7 @@ export default function DashboardOverview({ scans, total, url, onUrlChange, onSc
 }
 
 // ── Trend pulse — the most-recent scan's score + movement vs its previous scan ─────
-function TrendPulse({ scans, total, sites }: { scans: ScanHistoryRow[]; total?: number | null; sites: number }) {
+function TrendPulse({ scans, total, sites, isAgency }: { scans: ScanHistoryRow[]; total?: number | null; sites: number; isAgency: boolean }) {
   const latest = scans[0]
   const sameDomain = scans.filter(s => s.domain === latest.domain) // newest first
   const prev = sameDomain[1] ?? null
@@ -138,7 +143,7 @@ function TrendPulse({ scans, total, sites }: { scans: ScanHistoryRow[]; total?: 
       </div>
 
       <p style={{ fontFamily: MONO, fontSize: 10.5, color: DASH.ink4, letterSpacing: '0.04em', margin: '18px 0 0', paddingTop: 14, borderTop: `1px solid ${DASH.hair}` }}>
-        {reportCount} {reportCount === 1 ? 'report' : 'reports'} · {sites} {sites === 1 ? 'site' : 'sites'} tracked · <ScansRemaining />
+        {reportCount} {reportCount === 1 ? 'report' : 'reports'} · {sites} {isAgency ? (sites === 1 ? 'client site' : 'client sites') : (sites === 1 ? 'site' : 'sites')} · <ScansRemaining />
       </p>
     </Panel>
   )
@@ -257,12 +262,12 @@ const SAMPLE_FINDINGS: VerdictCardFinding[] = [
   { title: 'Pricing page lacks objection handling', color: DASH.ink4, tag: 'MEDIUM', muted: true },
 ]
 
-function EmptySection({ url, onUrlChange, onScan, scanning, error }: { url: string; onUrlChange: (v: string) => void; onScan: () => void; scanning?: boolean; error?: string | null }) {
+function EmptySection({ url, onUrlChange, onScan, scanning, error, isAgency }: { url: string; onUrlChange: (v: string) => void; onScan: () => void; scanning?: boolean; error?: string | null; isAgency: boolean }) {
   return (
     <>
       <Panel accent style={{ padding: '22px 24px', marginBottom: 36 }}>
         <label style={{ display: 'block', fontFamily: MONO, fontSize: 9.5, letterSpacing: '0.18em', textTransform: 'uppercase', color: DASH.ink3, marginBottom: 10 }}>
-          Run your first scan
+          {isAgency ? 'Scan your first client site' : 'Run your first scan'}
         </label>
         <div style={{ display: 'flex', maxWidth: 520 }}>
           <input
@@ -270,7 +275,7 @@ function EmptySection({ url, onUrlChange, onScan, scanning, error }: { url: stri
             value={url}
             onChange={(e) => onUrlChange(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter' && !scanning) onScan() }}
-            placeholder="your-site.com"
+            placeholder={isAgency ? 'client-site.com' : 'your-site.com'}
             autoComplete="off"
             style={{ flex: 1, minWidth: 0, fontFamily: MONO, fontSize: 14, color: DASH.ink, background: DASH.well, border: `1px solid ${DASH.line}`, borderRight: 'none', padding: '12px 14px', outline: 'none', borderRadius: 0 }}
           />
@@ -295,13 +300,186 @@ function EmptySection({ url, onUrlChange, onScan, scanning, error }: { url: stri
           verdictLabel="37% ±3 coverage · high upside"
           summary="Ranked findings across the conversion surface, each with evidence and a drop-in rewrite."
           findings={SAMPLE_FINDINGS}
-          footer="27 categories scored · 311 checks run · full report exportable →"
+          footer={isAgency ? '27 categories scored · 311 checks run · white-label report, client-ready' : '27 categories scored · 311 checks run · full report, ready to act on'}
           sample
         />
         <p style={{ fontFamily: MONO, fontSize: 11, color: DASH.ink3, margin: '14px 0 0', letterSpacing: '0.02em' }}>
-          ↑ an illustration — run your first scan to generate your real report
+          ↑ an illustration — {isAgency ? 'scan a client site to generate the report you deliver' : 'run your first scan to generate your real report'}
         </p>
       </div>
     </>
+  )
+}
+
+// ── Agency book-of-business — triage over ALL client sites (isAgency only) ─────────
+// No new endpoint: mirrors the Clients tab's browser query + the shared rollUpSites
+// helper, then derives scans-left and a needs-attention surface (dropped / failed /
+// stale). Founder Overview is untouched — this renders only for agency/enterprise.
+interface AttnItem { domain: string; reasons: string[]; score: number | null; shareToken: string | null }
+
+function AgencyBook() {
+  const [loading, setLoading] = useState(true)
+  const [sites, setSites] = useState<SiteSummary[]>([])
+  const [failedDomains, setFailedDomains] = useState<Set<string>>(new Set())
+  const [used, setUsed] = useState<number | null>(null)
+  const [plan, setPlan] = useState<string>('agency')
+
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      try {
+        const supabase = getSupabaseBrowserClient()
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) { if (!cancelled) setLoading(false); return }
+        const monthStart = new Date(); monthStart.setDate(1); monthStart.setHours(0, 0, 0, 0)
+        const [rowsRes, countRes, profileRes] = await Promise.all([
+          supabase.from('reports')
+            .select('domain, health_score, created_at, share_token, status')
+            .eq('user_id', user.id)
+            .order('created_at', { ascending: false }),
+          supabase.from('reports').select('id', { count: 'exact', head: true })
+            .eq('user_id', user.id).gte('created_at', monthStart.toISOString()),
+          fetch('/api/profile').then(r => r.json()).catch(() => ({})),
+        ])
+        if (cancelled) return
+        const all = (rowsRes.data ?? []) as { domain: string; health_score: number | null; created_at: string; share_token: string | null; status: string | null }[]
+        // Completed rows → shared rollup (analysis unused for triage → null keeps it light).
+        const completed: ReportRow[] = all
+          .filter(r => r.status !== 'pending' && r.status !== 'failed' && r.status !== 'error')
+          .map(r => ({ domain: r.domain, health_score: r.health_score, created_at: r.created_at, share_token: r.share_token, status: r.status, analysis: null }))
+        setSites(rollUpSites(completed))
+        // Newest-first list → the first row seen per domain is its most recent attempt.
+        const seen = new Set<string>(); const failed = new Set<string>()
+        for (const r of all) {
+          if (!r.domain || seen.has(r.domain)) continue
+          seen.add(r.domain)
+          if (r.status === 'failed' || r.status === 'error') failed.add(r.domain)
+        }
+        setFailedDomains(failed)
+        setUsed(countRes.count ?? 0)
+        if (typeof profileRes?.plan === 'string') setPlan(profileRes.plan)
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    })()
+    return () => { cancelled = true }
+  }, [])
+
+  if (loading) return <AgencyBookSkeleton />
+
+  const limit = DASHBOARD_PLAN_MONTHLY_CAPS[plan] ?? null
+  const remaining = limit == null ? null : Math.max(0, limit - (used ?? 0))
+  const THIRTY_D = 30 * 24 * 60 * 60 * 1000
+  const now = Date.now()
+
+  const attention: AttnItem[] = []
+  for (const s of sites) {
+    const reasons: string[] = []
+    if (s.delta != null && s.delta < 0) reasons.push(`Dropped ${Math.abs(s.delta)} pts`)
+    if (failedDomains.has(s.domain)) reasons.push('Last scan failed')
+    if (now - new Date(s.lastScannedAt).getTime() > THIRTY_D) reasons.push('Not scanned in 30+ days')
+    if (reasons.length) attention.push({ domain: s.domain, reasons, score: s.score, shareToken: s.shareToken })
+  }
+  // Domains whose only attempts failed never make it into rollUpSites — surface them too.
+  const siteDomains = new Set(sites.map(s => s.domain))
+  for (const d of failedDomains) {
+    if (!siteDomains.has(d)) attention.push({ domain: d, reasons: ['Last scan failed'], score: null, shareToken: null })
+  }
+
+  const scansLeft = remaining == null ? `${used ?? 0} this month` : `${remaining} of ${limit}`
+
+  return (
+    <>
+      {/* Book-of-business stat strip */}
+      <Panel accent style={{ padding: '20px 24px', marginBottom: 32 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 0 }}>
+          <BookStat label="Clients" value={String(sites.length)} />
+          <BookStat label="Needs attention" value={String(attention.length)} tone={attention.length > 0 ? DASH.crit : undefined} divider />
+          <BookStat label="Scans left" value={scansLeft} divider />
+        </div>
+      </Panel>
+
+      {attention.length > 0 && (
+        <>
+          <SectionLabel>Needs attention</SectionLabel>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 40 }}>
+            {attention.map(a => (
+              <div key={a.domain} style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap', background: DASH.panel, border: `1px solid ${DASH.line}`, padding: '12px 16px' }}>
+                <span style={{ fontFamily: BODY, fontSize: 14, color: DASH.ink, minWidth: 0, flex: '1 1 160px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.domain}</span>
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                  {a.reasons.map(r => (
+                    <span key={r} style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '0.04em', color: reasonColor(r), border: `0.5px solid ${reasonColor(r)}55`, padding: '3px 8px', whiteSpace: 'nowrap' }}>{r}</span>
+                  ))}
+                </div>
+                {a.shareToken
+                  ? <a href={`/reports/${a.shareToken}`} style={{ fontFamily: MONO, fontSize: 11, color: STEEL, textDecoration: 'none', whiteSpace: 'nowrap' }}>Report →</a>
+                  : <span style={{ fontFamily: MONO, fontSize: 11, color: DASH.ink4, whiteSpace: 'nowrap' }}>never scanned</span>}
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+
+      <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+        <SectionLabel>Clients</SectionLabel>
+        {sites.length > 0 && (
+          <a href="/app/clients" style={{ fontFamily: MONO, fontSize: 11, letterSpacing: '0.04em', color: STEEL, textDecoration: 'none' }}>
+            View all {sites.length} →
+          </a>
+        )}
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 12 }}>
+        {sites.slice(0, 9).map(s => <ClientCard key={s.domain} site={s} />)}
+      </div>
+    </>
+  )
+}
+
+function reasonColor(reason: string): string {
+  if (reason.startsWith('Last scan failed')) return DASH.crit
+  if (reason.startsWith('Dropped')) return '#EFB23E' // amber — warning band (--sev-high)
+  return DASH.ink3 // stale — muted
+}
+
+function BookStat({ label, value, tone, divider }: { label: string; value: string; tone?: string; divider?: boolean }) {
+  return (
+    <div style={{ paddingLeft: divider ? 22 : 0, borderLeft: divider ? `1px solid ${DASH.hair}` : 'none' }}>
+      <p style={{ fontFamily: MONO, fontSize: 9.5, letterSpacing: '0.18em', textTransform: 'uppercase', color: DASH.ink3, margin: '0 0 8px' }}>{label}</p>
+      <p style={{ fontFamily: DISP, fontWeight: 700, fontSize: 22, color: tone ?? DASH.ink, margin: 0, letterSpacing: '-0.3px' }}>{value}</p>
+    </div>
+  )
+}
+
+// Client roster card — score + movement (up/flat muted, a drop in red — matches the Clients tab).
+function ClientCard({ site }: { site: SiteSummary }) {
+  const down = site.delta != null && site.delta < 0
+  const deltaColor = down ? DASH.crit : DASH.ink4
+  const deltaText = site.delta == null ? '—' : site.delta > 0 ? `+${site.delta}` : String(site.delta)
+  const href = site.shareToken ? `/reports/${site.shareToken}` : '/app/clients'
+  return (
+    <Link href={href} className="dash-panel dash-panel--interactive" style={{ display: 'block', background: DASH.panel, border: `1px solid ${DASH.line}`, boxShadow: 'inset 0 1px 0 0 rgba(255,255,255,0.05), 0 1px 2px rgba(0,0,0,0.35)', padding: '16px 18px', textDecoration: 'none' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 14 }}>
+        <span style={{ fontFamily: MONO, fontSize: 11, color: deltaColor }}>{deltaText}</span>
+        <VerdictRing score={site.score} size="sm" animate={false} />
+      </div>
+      <p style={{ fontFamily: BODY, fontSize: 14.5, color: DASH.ink, margin: '0 0 4px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{site.domain}</p>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+        <span style={{ fontFamily: MONO, fontSize: 11, color: DASH.ink3 }}>{formatDate(site.lastScannedAt)}</span>
+        <span style={{ fontFamily: MONO, fontSize: 12, color: scoreColor(site.score) }}>{site.score}%</span>
+      </div>
+    </Link>
+  )
+}
+
+function AgencyBookSkeleton() {
+  return (
+    <div>
+      <div style={{ height: 84, background: DASH.panel, border: `1px solid ${DASH.line}`, marginBottom: 32 }} />
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 12 }}>
+        {Array.from({ length: 6 }).map((_, i) => (
+          <div key={i} style={{ height: 120, background: DASH.panel, border: `1px solid ${DASH.line}` }} />
+        ))}
+      </div>
+    </div>
   )
 }

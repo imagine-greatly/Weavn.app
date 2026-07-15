@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import SiteFooter from '@/components/landing/SiteFooter'
 
 // ── Data ──────────────────────────────────────────────────────────────────────
 
@@ -270,7 +271,6 @@ type FeatValApi = string | boolean
 function FValApi({ v }: { v: FeatValApi }) {
   if (v === true)        return <span style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, color: '#00C48C' }}>✓</span>
   if (v === false)       return <span style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, color: 'rgba(255,255,255,0.2)' }}>—</span>
-  if (v === 'unlimited') return <span style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, color: '#00C48C' }}>uncapped</span>
   if (v === 'dedicated') return <span style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, color: '#6F9BC6' }}>{v}</span>
   if (v === 'custom')    return <span style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, color: '#6F9BC6' }}>{v}</span>
   return <span style={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, color: '#E6E9EE' }}>{v}</span>
@@ -415,9 +415,9 @@ const HIW_JSON_LINES: { delay: number; indent: boolean; content: React.ReactNode
   { delay: 0.25, indent: true,  content: <><span style={{ color: '#8080c0' }}>&quot;scan_id&quot;</span><span style={{ color: '#9398A8' }}>: </span><span style={{ color: '#00C48C' }}>&quot;sc_a8d3f2c1&quot;</span><span style={{ color: '#6E7587' }}>,</span></> },
   { delay: 0.4,  indent: true,  content: <><span style={{ color: '#8080c0' }}>&quot;score&quot;</span><span style={{ color: '#9398A8' }}>: </span><span style={{ color: '#E8635F' }}>61</span><span style={{ color: '#6E7587' }}>,</span></> },
   { delay: 0.6,  indent: true,  content: <><span style={{ color: '#8080c0' }}>&quot;verdict&quot;</span><span style={{ color: '#9398A8' }}>: </span><span style={{ color: '#6F9BC6' }}>&quot;Fair&quot;</span><span style={{ color: '#6E7587' }}>,</span></> },
-  { delay: 0.8,  indent: true,  content: <><span style={{ color: '#8080c0' }}>&quot;findings_summary&quot;</span><span style={{ color: '#9398A8' }}>: </span><span style={{ color: '#6F9BC6' }}>23</span><span style={{ color: '#6E7587' }}>,</span></> },
-  { delay: 1.0,  indent: true,  content: <><span style={{ color: '#8080c0' }}>&quot;findings&quot;</span><span style={{ color: '#9398A8' }}>: </span><span style={{ color: '#6E7587' }}>[ … ],</span></> },
-  { delay: 1.2,  indent: true,  content: <><span style={{ color: '#8080c0' }}>&quot;page_type&quot;</span><span style={{ color: '#9398A8' }}>: </span><span style={{ color: '#00C48C' }}>&quot;homepage&quot;</span><span style={{ color: '#6E7587' }}>,</span></> },
+  { delay: 0.75, indent: true,  content: <><span style={{ color: '#8080c0' }}>&quot;page_type&quot;</span><span style={{ color: '#9398A8' }}>: </span><span style={{ color: '#00C48C' }}>&quot;homepage&quot;</span><span style={{ color: '#6E7587' }}>,</span></> },
+  { delay: 0.9,  indent: true,  content: <><span style={{ color: '#8080c0' }}>&quot;findings_summary&quot;</span><span style={{ color: '#9398A8' }}>: </span><span style={{ color: '#6F9BC6' }}>23</span><span style={{ color: '#6E7587' }}>,</span></> },
+  { delay: 1.05, indent: true,  content: <><span style={{ color: '#8080c0' }}>&quot;findings&quot;</span><span style={{ color: '#9398A8' }}>: </span><span style={{ color: '#6E7587' }}>[ … ],</span></> },
   { delay: 1.4,  indent: true,  content: <><span style={{ color: '#8080c0' }}>&quot;scan_meta&quot;</span><span style={{ color: '#9398A8' }}>: </span><span style={{ color: '#6E7587' }}>{'{ '}</span><span style={{ color: '#8080c0' }}>&quot;cost_usd&quot;</span><span style={{ color: '#9398A8' }}>: </span><span style={{ color: '#9398A8' }}>0.15</span><span style={{ color: '#6E7587' }}>{' }'}</span></> },
   { delay: 1.6,  indent: false, content: <span style={{ color: '#6E7587' }}>{'}'}</span> },
 ]
@@ -863,7 +863,9 @@ export default function DevelopersPage() {
                 { delay: '0.15s', content: <>&nbsp;&nbsp;<K c="url" /><Muted c=": " /><S c="https://your-site.com" /><Muted c="," /></> },
                 { delay: '0.2s',  content: <>&nbsp;&nbsp;<K c="score" /><Muted c=": " /><span style={{ color: '#E8635F' }}>61</span><Muted c="," /></> },
                 { delay: '0.25s', content: <>&nbsp;&nbsp;<K c="verdict" /><Muted c=": " /><S c="Fair" /><Muted c="," /></> },
-                { delay: '0.3s',  content: <>&nbsp;&nbsp;<K c="findings_summary" /><Muted c=": " /><N c="23" /><Muted c="," /></> },
+                { delay: '0.28s', content: <>&nbsp;&nbsp;<K c="page_type" /><Muted c=": " /><S c="homepage" /><Muted c="," /></> },
+                { delay: '0.31s', content: <>&nbsp;&nbsp;<K c="dimensions" /><Muted c=": { " /><K c="conversion_architecture" /><Muted c=": " /><N c="58" /><Muted c=", … }," />&nbsp;&nbsp;<Muted c="// all 7 dimensions" /></> },
+                { delay: '0.34s', content: <>&nbsp;&nbsp;<K c="findings_summary" /><Muted c=": " /><N c="23" /><Muted c="," /></> },
                 { delay: '0.35s', content: <>&nbsp;&nbsp;<K c="findings" /><Muted c=": [ … ]," /></> },
                 { delay: '0.4s',  content: <>&nbsp;&nbsp;<K c="strengths" /><Muted c=": [ … ]," /></> },
                 { delay: '0.45s', content: <>&nbsp;&nbsp;<K c="summary" /><Muted c=": " /><S c="…" /><Muted c="," /></> },
@@ -1436,7 +1438,7 @@ export default function DevelopersPage() {
 
           <p style={{ ...MONO, fontSize: 11, color: '#6E7587', textAlign: 'center', marginTop: 40, marginBottom: 0 }}>
             Want to understand what fires under the hood?{' '}
-            <Link href="/product" style={{ color: '#6F9BC6', textDecoration: 'none' }}>
+            <Link href="/engine" style={{ color: '#6F9BC6', textDecoration: 'none' }}>
               See the engine →
             </Link>
           </p>
@@ -1470,14 +1472,15 @@ export default function DevelopersPage() {
             </Link>
           </div>
 
-          {/* Understated dashboard exit — small steel cue previewing the destination (dashboard) surface */}
+          {/* Understated agency exit — steel cue to the white-label deliverable surface */}
           <p style={{ ...MONO, fontSize: 11, color: '#6E7587', margin: 0 }}>
-            Need results without code?{' '}
-            <Link href="/dashboard" style={{ color: '#6F9BC6', textDecoration: 'none' }}>Go to the dashboard →</Link>
+            Delivering audits to clients?{' '}
+            <Link href="/agencies" style={{ color: '#6F9BC6', textDecoration: 'none' }}>White-label reports for agencies →</Link>
           </p>
         </div>
       </section>
 
+      <SiteFooter />
     </main>
   )
 }

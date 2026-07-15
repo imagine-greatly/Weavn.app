@@ -1581,7 +1581,7 @@ export default function IssuePage() {
           <div className="issue-top-back" style={{ flex: "1 1 0", minWidth: 200 }}>
             {report ? (
               <Link
-                href={report.share_token ? `/reports/${report.share_token}` : "/dashboard"}
+                href={report.share_token ? `/reports/${report.share_token}` : "/"}
                 style={{
                   fontFamily: "var(--font-space-mono), monospace",
                   fontSize: 11,

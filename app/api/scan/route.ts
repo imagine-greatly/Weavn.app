@@ -57,7 +57,69 @@ function getDomain(urlStr: string): string {
 }
 
 
+/**
+ * CSRF / origin guard for the cookie-authenticated scan path. Returns true when the request is a
+ * trusted first-party call OR the approved Chrome-extension path:
+ *   • No Origin header            → allow. A victim's browser ALWAYS attaches Origin to a cross-site
+ *                                   POST, so a missing Origin is never CSRF; also covers same-origin
+ *                                   edge cases + server-to-server callers.
+ *   • Origin host === request Host → allow. The existing web dashboard (weavn.app→weavn.app, preview
+ *                                   hosts, localhost) — behavior UNCHANGED, no header required.
+ *   • chrome-extension:// Origin   → allow ONLY with X-Weavn-Client: extension.
+ *   • any other (foreign) Origin   → reject. A malicious site's forged POST carries its own https
+ *                                   Origin, can't spoof a chrome-extension Origin, and can't add the
+ *                                   custom header cross-origin without a preflight this route never
+ *                                   grants it. The session cookie is still required downstream —
+ *                                   this is defense-in-depth.
+ */
+function isAllowedScanOrigin(req: NextRequest): boolean {
+  const origin = req.headers.get("origin");
+  if (!origin) return true;
+  if (origin.startsWith("chrome-extension://")) {
+    return req.headers.get("x-weavn-client") === "extension";
+  }
+  try {
+    return new URL(origin).host === req.headers.get("host");
+  } catch {
+    return false;
+  }
+}
+
+// Preflight for the Chrome-extension logged-in path (custom header + credentials → preflight).
+// Same-origin dashboard calls never preflight, so this handler doesn't affect them.
+export async function OPTIONS(req: NextRequest) {
+  const origin = req.headers.get("origin");
+  if (origin && origin.startsWith("chrome-extension://")) {
+    return new NextResponse(null, {
+      status: 204,
+      headers: {
+        "Access-Control-Allow-Origin": origin,
+        "Access-Control-Allow-Credentials": "true",
+        "Access-Control-Allow-Methods": "POST, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type, X-Weavn-Client",
+        "Access-Control-Max-Age": "86400",
+        Vary: "Origin",
+      },
+    });
+  }
+  return new NextResponse(null, { status: 204, headers: { Vary: "Origin" } });
+}
+
+// Thin wrapper: run the scan, then add credentialed CORS headers for the extension path ONLY.
+// Same-origin dashboard responses (Origin is https://weavn.app, not chrome-extension) get nothing
+// added → behavior identical to before this change.
 export async function POST(req: NextRequest) {
+  const res = await handleScan(req);
+  const origin = req.headers.get("origin");
+  if (origin && origin.startsWith("chrome-extension://")) {
+    res.headers.set("Access-Control-Allow-Origin", origin);
+    res.headers.set("Access-Control-Allow-Credentials", "true");
+    res.headers.append("Vary", "Origin");
+  }
+  return res;
+}
+
+async function handleScan(req: NextRequest): Promise<NextResponse> {
   console.log('[ROUTE] scan started', new Date().toISOString())
 
   // Internal API key bypass — checked before any auth/session logic
@@ -68,6 +130,16 @@ export async function POST(req: NextRequest) {
     expectedKey.length > 0 &&
     internalKey.length === expectedKey.length &&
     timingSafeEqual(Buffer.from(internalKey), Buffer.from(expectedKey));
+
+  // CSRF / origin guard — see isAllowedScanOrigin. Internal-key calls (no browser Origin) are
+  // exempt. This ADDS the Chrome-extension path (chrome-extension:// Origin + X-Weavn-Client
+  // header); the first-party web dashboard (same-origin) is unaffected.
+  if (!internalBypass && !isAllowedScanOrigin(req)) {
+    return NextResponse.json(
+      { error: "Forbidden origin.", code: "SCAN_FORBIDDEN_ORIGIN" },
+      { status: 403 }
+    );
+  }
 
   let userId: string | null;
   let withCookies: (res: NextResponse) => NextResponse;

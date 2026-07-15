@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="popup.css" />
+    <title>Weavn — Conversion Score</title>
+  </head>
+  <body>
+    <header class="hdr">
+      <div class="brand">
+        <span class="mark" aria-hidden="true"></span>
+        <span class="wordmark">WEAVN</span>
+      </div>
+      <button id="authPill" class="auth-pill" type="button" title="Sign-in status">
+        <span id="authPillText">Anonymous</span>
+      </button>
+    </header>
+
+    <main id="view" class="view"><!-- rendered by popup.js --></main>
+
+    <footer class="ftr">
+      <a id="agenciesLink" class="ftr-link" href="#" target="_blank" rel="noopener">
+        White-label Weavn for your clients →
+      </a>
+    </footer>
+
+    <script type="module" src="popup.js"></script>
+  </body>
+</html>

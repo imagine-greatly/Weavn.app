@@ -11,13 +11,15 @@ const CURL_CODE = `curl -X POST https://weavn.app/api/v1/scan \\
   -H "Content-Type: application/json" \\
   -d '{"url": "https://your-site.com"}'`
 
-// Per-scan overage rates mirror lib/pricing.ts API_PLANS.overageUsd — keep in sync.
+// SOURCE OF TRUTH: lib/pricing.ts (API_PLANS) + lib/constants.ts. This marketing rate
+// card is hand-authored and does NOT import — keep every figure below in exact sync with
+// the catalog. Per-scan overage rates mirror API_PLANS[tier].overageUsd.
 const RATE_POINTS = [
-  { label: 'PLAYGROUND', price: '$0.30', color: '#6F9BC6' },
-  { label: 'DEV',        price: '$0.30', color: '#6F9BC6' },
-  { label: 'BUILDER',    price: '$0.25', color: '#6F9BC6' },
-  { label: 'SCALE',      price: '$0.20', color: '#6F9BC6' },
-  { label: 'ENTERPRISE', price: '$0.18', color: '#6F9BC6' },
+  { label: 'PLAYGROUND', price: '$0.50', color: '#6F9BC6' },
+  { label: 'DEV',        price: '$0.74', color: '#6F9BC6' },
+  { label: 'BUILDER',    price: '$0.68', color: '#6F9BC6' },
+  { label: 'SCALE',      price: '$0.62', color: '#6F9BC6' },
+  { label: 'ENTERPRISE', price: '$0.50', color: '#6F9BC6' },
 ]
 
 type SpecEntry = { k: string; v: string }
@@ -25,31 +27,31 @@ type SpecEntry = { k: string; v: string }
 const API_SPECS: Record<string, SpecEntry[]> = {
   playground: [
     { k: 'trial_scans',     v: '25 free' },
-    { k: 'then',            v: '$0.30/scan' },
+    { k: 'then',            v: '$0.50/scan' },
     { k: 'async_mode',      v: 'false' },
     { k: 'batch_endpoint',  v: 'false' },
     { k: 'webhooks',        v: 'false' },
     { k: 'rate_limits',     v: 'standard' },
   ],
   dev: [
-    { k: 'scans_per_month', v: '250' },
-    { k: 'overage_rate',    v: '$0.30/scan' },
+    { k: 'scans_per_month', v: '120' },
+    { k: 'overage_rate',    v: '$0.74/scan' },
     { k: 'async_mode',      v: 'true' },
     { k: 'batch_endpoint',  v: 'false' },
     { k: 'webhooks',        v: 'true' },
     { k: 'rate_limits',     v: 'standard' },
   ],
   builder: [
-    { k: 'scans_per_month', v: '1,000' },
-    { k: 'overage_rate',    v: '$0.25/scan' },
+    { k: 'scans_per_month', v: '500' },
+    { k: 'overage_rate',    v: '$0.68/scan' },
     { k: 'async_mode',      v: 'true' },
     { k: 'batch_endpoint',  v: 'true' },
     { k: 'webhooks',        v: 'true' },
     { k: 'rate_limits',     v: 'standard' },
   ],
   scale: [
-    { k: 'scans_per_month', v: '3,000' },
-    { k: 'overage_rate',    v: '$0.20/scan' },
+    { k: 'scans_per_month', v: '1,500' },
+    { k: 'overage_rate',    v: '$0.62/scan' },
     { k: 'async_mode',      v: 'true' },
     { k: 'batch_endpoint',  v: 'true' },
     { k: 'webhooks',        v: 'true' },
@@ -57,7 +59,7 @@ const API_SPECS: Record<string, SpecEntry[]> = {
   ],
   enterprise: [
     { k: 'scans_per_month', v: 'custom' },
-    { k: 'overage_rate',    v: 'from $0.18/scan' },
+    { k: 'overage_rate',    v: 'from $0.50/scan' },
     { k: 'async_mode',      v: 'true' },
     { k: 'batch_endpoint',  v: 'true' },
     { k: 'webhooks',        v: 'true' },
@@ -66,8 +68,8 @@ const API_SPECS: Record<string, SpecEntry[]> = {
 }
 
 const TABLE_ROWS: { feature: string; values: string[] }[] = [
-  { feature: 'scans / month',   values: ['25 free', '250',    '1,000',   '3,000',   'custom'    ] },
-  { feature: 'overage rate',    values: ['$0.30',   '$0.30',  '$0.25',   '$0.20',   'custom'    ] },
+  { feature: 'scans / month',   values: ['25 free', '120',    '500',     '1,500',   'custom'    ] },
+  { feature: 'overage rate',    values: ['$0.50',   '$0.74',  '$0.68',   '$0.62',   'custom'    ] },
   { feature: 'async mode',      values: ['✗',       '✓',      '✓',       '✓',       '✓'         ] },
   { feature: 'batch endpoint',  values: ['✗',       '✗',      '✓',       '✓',       '✓'         ] },
   { feature: 'webhooks',        values: ['✗',       '✗',      '✓',       '✓',       '✓'         ] },
@@ -278,8 +280,8 @@ function FValApi({ v }: { v: FeatValApi }) {
 
 const API_FEATS: Array<{ key: string; values: [FeatValApi, FeatValApi, FeatValApi, FeatValApi, FeatValApi] }> = [
   { key: 'trial scans',      values: ['25',        false,        false,        false,        false]         },
-  { key: 'overage rate',     values: ['$0.30/scan','$0.30/scan', '$0.25/scan', '$0.20/scan', 'from $0.18']  },
-  { key: 'scans / month',    values: [false,        '250',        '1,000',      '3,000',      'custom']      },
+  { key: 'overage rate',     values: ['$0.50/scan','$0.74/scan', '$0.68/scan', '$0.62/scan', 'from $0.50']  },
+  { key: 'scans / month',    values: [false,        '120',        '500',        '1,500',      'custom']      },
   { key: 'async mode',       values: [false,        true,         true,         true,         true]          },
   { key: 'batch endpoint',   values: [false,        false,        true,         true,         true]          },
   { key: 'webhooks',         values: [false,        true,         true,         true,         true]          },
@@ -295,35 +297,35 @@ const API_FEATS: Array<{ key: string; values: [FeatValApi, FeatValApi, FeatValAp
 const API_CARDS_DEF = [
   {
     tier: 'PLAYGROUND', tierColor: '#8080c0',
-    price: '25 free', economy: 'then $0.30/scan', economyColor: '#6F9BC6',
+    price: '25 free', economy: 'then $0.50/scan', economyColor: '#6F9BC6',
     bestFor: 'Developers evaluating the API before building. No commitment required.',
     cta: 'GET API KEY →', ctaHref: '/auth?surface=api',
     accentColor: 'rgba(255,255,255,0.12)', ctaBorderColor: 'rgba(157,140,255,0.45)', ctaColor: '#9D8CFF',
   },
   {
     tier: 'DEV', tierColor: '#8080c0',
-    price: '$59', economy: '/mo · 250 scans', economyColor: '#6F9BC6',
+    price: '$89', economy: '/mo · 120 scans', economyColor: '#6F9BC6',
     bestFor: 'Solo developers integrating conversion intelligence into their first product.',
     cta: 'START DEV →', ctaHref: '/auth?surface=api&plan=dev',
     accentColor: 'rgba(255,255,255,0.12)', ctaBorderColor: 'rgba(157,140,255,0.45)', ctaColor: '#9D8CFF',
   },
   {
     tier: 'BUILDER', tierColor: '#8080c0',
-    price: '$179', economy: '/mo · 1,000 scans', economyColor: '#6F9BC6',
+    price: '$339', economy: '/mo · 500 scans', economyColor: '#6F9BC6',
     bestFor: 'Teams building audit pipelines or integrating Weavn into client workflows.',
     cta: 'START BUILDER →', ctaHref: '/auth?surface=api&plan=builder',
     accentColor: 'rgba(255,255,255,0.12)', ctaBorderColor: 'rgba(157,140,255,0.45)', ctaColor: '#9D8CFF',
   },
   {
     tier: 'SCALE', tierColor: '#8080c0',
-    price: '$449', economy: '/mo · 3,000 scans · best value', economyColor: '#6F9BC6',
+    price: '$929', economy: '/mo · 1,500 scans · best value', economyColor: '#6F9BC6',
     bestFor: 'High-volume integrations and teams that need dedicated infrastructure and rate limits.',
     cta: 'START SCALE →', ctaHref: '/auth?surface=api&plan=scale',
     accentColor: 'rgba(255,255,255,0.12)', ctaBorderColor: 'rgba(157,140,255,0.45)', ctaColor: '#9D8CFF',
   },
   {
     tier: 'ENTERPRISE', tierColor: '#8080c0',
-    price: 'Custom', economy: 'from $0.18/scan · SLA', economyColor: '#6F9BC6',
+    price: 'Custom', economy: 'from $0.50/scan · SLA', economyColor: '#6F9BC6',
     bestFor: 'Organizations requiring custom volume, SLA guarantees, and dedicated support.',
     cta: 'TALK TO US →', ctaHref: 'mailto:hello@weavn.app',
     accentColor: 'rgba(255,255,255,0.12)', ctaBorderColor: 'rgba(157,140,255,0.45)', ctaColor: '#9D8CFF',

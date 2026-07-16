@@ -21,6 +21,7 @@ import {
   DASHBOARD_PLAN_MONTHLY_CAPS,
   API_PLAN_INCLUDED_SCANS,
   API_PLAN_OVERAGE_USD,
+  PLAYGROUND_OVERAGE_USD,
   FREE_API_TRIAL_SCANS,
 } from "@/lib/constants";
 
@@ -29,8 +30,12 @@ import {
 /** Annual price = monthly × this (2 months free). Applies to flat recurring fees only. */
 export const ANNUAL_MULTIPLIER = 10;
 
-/** Enterprise API overage floor (indicative only — never a self-serve Stripe price). */
-export const ENTERPRISE_API_OVERAGE_FLOOR_USD = 0.18;
+/**
+ * Enterprise API overage floor (indicative only — never a self-serve Stripe price).
+ * CONTRACT FLOOR: enterprise deals never price a scan below this.
+ * COGS-linked floor ($0.37 COGS). If COGS rises, revisit this FIRST.
+ */
+export const ENTERPRISE_API_OVERAGE_FLOOR_USD = 0.5;
 
 export type BillingInterval = "month" | "year";
 
@@ -182,58 +187,61 @@ export const API_PLANS: Record<ApiTier, ApiPlan> = {
     name: "Playground",
     baseMonthlyUsd: null, // trial → pure metered
     includedScans: null,
-    overageUsd: API_PLAN_OVERAGE_USD.dev ?? 0.3, // $0.30/scan after trial (mirrors Dev rate)
+    // Playground is the acquisition funnel — priced above COGS ($0.37) but below Dev
+    // ($0.74) to stay a friendly on-ramp. Set deliberately and independently; do NOT tie
+    // to a paid tier's rate. If COGS rises, this is the second floor to revisit (after Enterprise).
+    overageUsd: PLAYGROUND_OVERAGE_USD, // $0.50/scan after trial (standalone, NOT the Dev rate)
     trialScans: FREE_API_TRIAL_SCANS, // 25 lifetime
     cta: { kind: "checkout" },
     price: {
       metered: { env: "STRIPE_PRICE_PLAYGROUND_METERED" },
     },
-    blurb: "25 free scans, then $0.30/scan. No base fee.",
+    blurb: "25 free scans, then $0.50/scan. No base fee.",
   },
   dev: {
     track: "api",
     id: "dev",
     name: "Dev",
-    baseMonthlyUsd: 59,
-    includedScans: API_PLAN_INCLUDED_SCANS.dev, // 250
-    overageUsd: API_PLAN_OVERAGE_USD.dev, // 0.30
+    baseMonthlyUsd: 89,
+    includedScans: API_PLAN_INCLUDED_SCANS.dev, // 120
+    overageUsd: API_PLAN_OVERAGE_USD.dev, // 0.74
     cta: { kind: "checkout" },
     price: {
       baseMonthly: { env: "STRIPE_PRICE_DEV_BASE_MONTHLY" },
       baseAnnual: { env: "STRIPE_PRICE_DEV_BASE_ANNUAL" },
       metered: { env: "STRIPE_PRICE_DEV_METERED" },
     },
-    blurb: "250 scans included, $0.30/scan after.",
+    blurb: "120 scans included, $0.74/scan after.",
   },
   builder: {
     track: "api",
     id: "builder",
     name: "Builder",
-    baseMonthlyUsd: 179,
-    includedScans: API_PLAN_INCLUDED_SCANS.builder, // 1000
-    overageUsd: API_PLAN_OVERAGE_USD.builder, // 0.25
+    baseMonthlyUsd: 339,
+    includedScans: API_PLAN_INCLUDED_SCANS.builder, // 500
+    overageUsd: API_PLAN_OVERAGE_USD.builder, // 0.68
     cta: { kind: "checkout" },
     price: {
       baseMonthly: { env: "STRIPE_PRICE_BUILDER_BASE_MONTHLY" },
       baseAnnual: { env: "STRIPE_PRICE_BUILDER_BASE_ANNUAL" },
       metered: { env: "STRIPE_PRICE_BUILDER_METERED" },
     },
-    blurb: "1,000 scans included, $0.25/scan after.",
+    blurb: "500 scans included, $0.68/scan after.",
   },
   scale: {
     track: "api",
     id: "scale",
     name: "Scale",
-    baseMonthlyUsd: 449,
-    includedScans: API_PLAN_INCLUDED_SCANS.scale, // 3000
-    overageUsd: API_PLAN_OVERAGE_USD.scale, // 0.20
+    baseMonthlyUsd: 929,
+    includedScans: API_PLAN_INCLUDED_SCANS.scale, // 1500
+    overageUsd: API_PLAN_OVERAGE_USD.scale, // 0.62
     cta: { kind: "checkout" },
     price: {
       baseMonthly: { env: "STRIPE_PRICE_SCALE_BASE_MONTHLY" },
       baseAnnual: { env: "STRIPE_PRICE_SCALE_BASE_ANNUAL" },
       metered: { env: "STRIPE_PRICE_SCALE_METERED" },
     },
-    blurb: "3,000 scans included, $0.20/scan after.",
+    blurb: "1,500 scans included, $0.62/scan after.",
   },
   enterprise: {
     track: "api",
@@ -241,9 +249,11 @@ export const API_PLANS: Record<ApiTier, ApiPlan> = {
     name: "Enterprise",
     baseMonthlyUsd: null, // custom — no self-serve price
     includedScans: API_PLAN_INCLUDED_SCANS.enterprise ?? null, // custom (absent from constants)
-    overageUsd: ENTERPRISE_API_OVERAGE_FLOOR_USD, // ~$0.18 floor, indicative
+    // $0.50 CONTRACT FLOOR — never priced below. COGS-linked floor ($0.37 COGS).
+    // If COGS rises, revisit this FIRST.
+    overageUsd: ENTERPRISE_API_OVERAGE_FLOOR_USD, // $0.50 floor, indicative
     cta: { kind: "contact" }, // contact CTA, NOT checkout
-    blurb: "Custom volume from a ~$0.18/scan floor — talk to us.",
+    blurb: "Custom volume from a ~$0.50/scan floor — talk to us.",
   },
 };
 

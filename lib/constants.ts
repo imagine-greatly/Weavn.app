@@ -63,18 +63,28 @@ export const DASHBOARD_PLAN_MONTHLY_CAPS: Record<string, number> = {
 // billed at the per-scan overage rate below (metered to Stripe). A plan absent
 // from this map (e.g. enterprise) is treated as unlimited/custom contract.
 export const API_PLAN_INCLUDED_SCANS: Record<string, number> = {
-  dev: 250,
-  builder: 1000,
-  scale: 3000,
+  dev: 120,
+  builder: 500,
+  scale: 1500,
   // enterprise: custom — intentionally absent
 };
 
 /** API per-scan overage rate (USD) charged for scans beyond the included quota. */
 export const API_PLAN_OVERAGE_USD: Record<string, number> = {
-  dev: 0.3,
-  builder: 0.25,
-  scale: 0.2,
+  dev: 0.74,
+  builder: 0.68,
+  scale: 0.62,
 };
+
+/**
+ * Playground post-trial per-scan overage (USD) — STANDALONE, deliberately NOT derived
+ * from any paid tier (was previously pinned to the Dev rate).
+ *
+ * Playground is the acquisition funnel — priced above COGS ($0.37) but below Dev ($0.74)
+ * to stay a friendly on-ramp. Set deliberately and independently; do NOT tie to a paid
+ * tier's rate. If COGS rises, this is the second floor to revisit (after Enterprise).
+ */
+export const PLAYGROUND_OVERAGE_USD = 0.5;
 
 // ── Per-account rate limits — bound abuse independent of the monthly cap ──────
 // Fixed-window (per minute) request ceilings, enforced via the bump_scan_rate

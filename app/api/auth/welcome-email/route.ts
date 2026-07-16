@@ -8,6 +8,7 @@ import { createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
 import { NextRequest, NextResponse } from "next/server";
+import { API_PLANS } from "@/lib/pricing";
 
 function getServiceClient() {
   return createClient(
@@ -44,7 +45,8 @@ function buildWelcomeText(name?: string | null): string {
     '',
     'Your API key has been provisioned. Visit your developer portal to copy it: https://weavn.app/console',
     '',
-    'Your first 25 scans are free. After that, scans are $0.30 each — no subscription required.',
+    // Overage rate read from the catalog (lib/pricing.ts → API_PLANS.playground.overageUsd) — source of truth.
+    `Your first ${API_PLANS.playground.trialScans ?? 25} scans are free. After that, scans are $${API_PLANS.playground.overageUsd.toFixed(2)} each — no subscription required.`,
     '',
     'Docs: https://weavn.app/docs/api',
     '',

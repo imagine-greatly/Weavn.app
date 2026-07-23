@@ -1,4 +1,4 @@
-<svg width="600" height="650" viewBox="62 168 76 68" xmlns="http://www.w3.org/2000/svg">
+<svg width="512" height="512" viewBox="73 177 54 54" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <filter id="hg" x="-80%" y="-80%" width="260%" height="260%">
       <feGaussianBlur stdDeviation="2" result="b"/>
@@ -11,17 +11,16 @@
   </defs>
 
   <!-- ring 3 — blue, outermost -->
-  <polygon points="100,180 120.8,192 120.8,216 100,228 79.2,216 79.2,192" fill="none" stroke="#6F9BC6" stroke-width="0.8" opacity="0.38" filter="url(#rg)" style="fill:none;stroke:rgb(111, 155, 198);color:rgb(255, 255, 255);stroke-width:0.8px;stroke-linecap:butt;stroke-linejoin:miter;opacity:0.38;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+  <polygon points="100,180 120.8,192 120.8,216 100,228 79.2,216 79.2,192" fill="none" stroke="#6F9BC6" stroke-width="1.3" opacity="0.55" filter="url(#rg)"/>
 
   <!-- ring 2 — green -->
-  <polygon points="100,188 117.3,198 117.3,218 100,228 82.7,218 82.7,198" fill="none" stroke="#00C48C" stroke-width="1" opacity="0.62" filter="url(#rg)" style="fill:none;stroke:rgb(0, 196, 140);color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:0.62;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+  <polygon points="100,188 117.3,198 117.3,218 100,228 82.7,218 82.7,198" fill="none" stroke="#00C48C" stroke-width="1.7" opacity="0.72" filter="url(#rg)"/>
 
   <!-- ring 1 — purple -->
-  <polygon points="100,196 113.9,204 113.9,220 100,228 86.1,220 86.1,204" fill="none" stroke="#8080c0" stroke-width="1.2" opacity="0.82" filter="url(#rg)" style="fill:none;stroke:rgb(128, 128, 192);color:rgb(255, 255, 255);stroke-width:1.2px;stroke-linecap:butt;stroke-linejoin:miter;opacity:0.82;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+  <polygon points="100,196 113.9,204 113.9,220 100,228 86.1,220 86.1,204" fill="none" stroke="#8080c0" stroke-width="2.1" opacity="0.9" filter="url(#rg)"/>
 
   <!-- core hex -->
-  <polygon points="100,204 110.4,210 110.4,222 100,228 89.6,222 89.6,210" fill="none" stroke="#FFFFFF" stroke-width="1.5" filter="url(#hg)" opacity="0.95" style="fill:none;stroke:rgb(255, 255, 255);color:rgb(255, 255, 255);stroke-width:1.5px;stroke-linecap:butt;stroke-linejoin:miter;opacity:0.95;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
-  <polygon points="100,207 107,211 107,221 100,225 93,221 93,211" fill="none" stroke="#FFFFFF" stroke-width="0.35" opacity="0.28" style="fill:none;stroke:rgb(255, 255, 255);color:rgb(255, 255, 255);stroke-width:0.35px;stroke-linecap:butt;stroke-linejoin:miter;opacity:0.28;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
-  <circle cx="100" cy="216" r="1.5" fill="#FFFFFF" opacity="0.95" style="fill:rgb(255, 255, 255);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:0.95;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
-
+  <polygon points="100,204 110.4,210 110.4,222 100,228 89.6,222 89.6,210" fill="none" stroke="#FFFFFF" stroke-width="2.6" filter="url(#hg)" opacity="0.97"/>
+  <polygon points="100,207 107,211 107,221 100,225 93,221 93,211" fill="none" stroke="#FFFFFF" stroke-width="0.55" opacity="0.32"/>
+  <circle cx="100" cy="216" r="2.4" fill="#FFFFFF" opacity="0.97"/>
 </svg>

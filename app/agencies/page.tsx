@@ -40,7 +40,7 @@ const BG_BASE = '#050810'
 
 // ── Pricing (single source of truth — never hardcode the numbers) ─────────────
 const AGENCY = DASHBOARD_PLANS.agency
-const AGENCY_PRICE = AGENCY.priceMonthlyUsd ?? 0 // 249
+const AGENCY_PRICE = AGENCY.priceMonthlyUsd ?? 0 // 349
 const AGENCY_SCANS = AGENCY.scansPerMonth ?? 0 // 500
 const COST_PER_SCAN = AGENCY_SCANS > 0 ? AGENCY_PRICE / AGENCY_SCANS : 0
 

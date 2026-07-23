@@ -495,7 +495,7 @@ export default function DocsPage() {
 
           <DocSection id="billing" title="Billing" visible={visibleIds.has("billing")}>
             <p className="font-body text-[15px] leading-[1.8]" style={{ color: "#9398A8" }}>
-              Pro is $99 per month, billed monthly. Cancel in account settings; access persists through the paid period. Refunds apply only under the five-finding guarantee documented on the pricing page.
+              Pro is $129 per month, billed monthly. Cancel in account settings; access persists through the paid period. Refunds apply only under the five-finding guarantee documented on the pricing page.
             </p>
           </DocSection>
 

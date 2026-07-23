@@ -125,7 +125,7 @@ function HeroSection() {
           <Link href="/auth?surface=api" style={{ ...MONO, fontSize: 12, letterSpacing: '0.08em', textTransform: 'uppercase', color: PURPLE, background: 'rgba(157,140,255,0.1)', border: `1px solid rgba(157,140,255,0.55)`, padding: '13px 26px', textDecoration: 'none' }}>
             Get API key →
           </Link>
-          <Link href="/agencies" style={{ ...MONO, fontSize: 12, letterSpacing: '0.08em', textTransform: 'uppercase', color: STEEL, background: 'transparent', border: `1px solid rgba(111,155,198,0.5)`, padding: '13px 26px', textDecoration: 'none' }}>
+          <Link href="/agencies" style={{ ...MONO, fontSize: 12, letterSpacing: '0.08em', textTransform: 'uppercase', color: STEEL, background: 'rgba(111,155,198,0.1)', border: `1px solid rgba(111,155,198,0.55)`, padding: '13px 26px', textDecoration: 'none' }}>
             For agencies →
           </Link>
         </div>
@@ -242,7 +242,7 @@ function LiveScanSection() {
 
 // ── 4. TWO DOORS ───────────────────────────────────────────────────────────────
 function TwoDoorsSection() {
-  const agencyPrice = DASHBOARD_PLANS.agency.priceMonthlyUsd ?? 249
+  const agencyPrice = DASHBOARD_PLANS.agency.priceMonthlyUsd ?? 349
   return (
     <section style={{ borderTop: '0.5px solid rgba(255,255,255,0.08)' }}>
       <div style={{ maxWidth: 1160, margin: '0 auto', padding: '64px 32px 72px' }}>
@@ -353,7 +353,7 @@ function ClosingCta() {
           <Link href="/auth?surface=api" style={{ ...MONO, fontSize: 12, letterSpacing: '0.08em', textTransform: 'uppercase', color: PURPLE, background: 'rgba(157,140,255,0.1)', border: `1px solid rgba(157,140,255,0.55)`, padding: '14px 28px', textDecoration: 'none' }}>
             Get API key →
           </Link>
-          <Link href="/agencies" style={{ ...MONO, fontSize: 12, letterSpacing: '0.08em', textTransform: 'uppercase', color: STEEL, background: 'transparent', border: `1px solid rgba(111,155,198,0.5)`, padding: '14px 28px', textDecoration: 'none' }}>
+          <Link href="/agencies" style={{ ...MONO, fontSize: 12, letterSpacing: '0.08em', textTransform: 'uppercase', color: STEEL, background: 'rgba(111,155,198,0.1)', border: `1px solid rgba(111,155,198,0.55)`, padding: '14px 28px', textDecoration: 'none' }}>
             For agencies →
           </Link>
         </div>

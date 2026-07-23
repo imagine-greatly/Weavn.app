@@ -98,8 +98,10 @@ export default function Navbar() {
   const ctaButtonClass =
     `group/cta flex items-center ${navCtaTypography} transition-[background-color,border-color,box-shadow,opacity] duration-150 ease-out hover:duration-150 md:duration-300`;
 
-  // One strong primary CTA — purple (#9D8CFF, the --data-impact brand primary), distinct from the
-  // low-emphasis "Sign in" text link so they read as primary + secondary, never two competing buttons.
+  // Two co-equal door CTAs — purple (#9D8CFF, the --data-impact brand primary) for the API/developer
+  // path and steel (#6F9BC6) for the agency path. Each is a bordered button that fills on hover; the
+  // two tracks are ~half the business each, so neither door outweighs the other. "Sign in" stays a
+  // low-emphasis text link so the buttons read as the two primary doors, not three competing actions.
   const ctaPrimaryStyle = {
     color: "#9D8CFF" as const,
     background: "transparent" as const,
@@ -242,12 +244,15 @@ export default function Navbar() {
           </Link>
         )}
         <div className="hidden items-center gap-4 md:flex">
-          {/* Secondary ghost CTA — the agency door (steel), distinct from the purple API primary. */}
+          {/* Co-equal agency door (steel) — same weight as the purple API primary, shown at the
+              same md breakpoint and filling on hover the same way. */}
           {!isLoggedIn && (
             <Link
               href="/agencies"
-              className={`${navCtaTypography} shrink-0 hidden lg:flex items-center`}
-              style={{ color: "#6F9BC6", background: "transparent", border: "1px solid rgba(111,155,198,0.4)", padding: "10px 18px", borderRadius: 0, textDecoration: "none" }}
+              className={`${navCtaTypography} shrink-0 hidden md:flex items-center transition-[background-color,border-color] duration-150`}
+              style={{ color: "#6F9BC6", background: "transparent", border: "1px solid rgba(111,155,198,0.5)", padding: "10px 20px", borderRadius: 0, textDecoration: "none" }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(111,155,198,0.10)"; e.currentTarget.style.borderColor = "rgba(111,155,198,0.7)"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = "rgba(111,155,198,0.5)"; }}
             >
               For agencies
             </Link>
@@ -467,14 +472,25 @@ export default function Navbar() {
               </Link>
             )}
             {!isLoggedIn ? (
-              <a
-                href="/auth?surface=api"
-                className={`${navCtaTypography} flex min-h-[48px] items-center justify-center px-4 py-3`}
-                style={{ ...ctaPrimaryStyle, textDecoration: "none", width: "100%" }}
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Get API key →
-              </a>
+              /* Two co-equal doors on mobile too — API primary + agency, both full-width. */
+              <>
+                <a
+                  href="/auth?surface=api"
+                  className={`${navCtaTypography} flex min-h-[48px] items-center justify-center px-4 py-3`}
+                  style={{ ...ctaPrimaryStyle, textDecoration: "none", width: "100%" }}
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Get API key →
+                </a>
+                <Link
+                  href="/agencies"
+                  className={`${navCtaTypography} flex min-h-[48px] items-center justify-center px-4 py-3`}
+                  style={{ color: "#6F9BC6", background: "transparent", border: "1px solid rgba(111,155,198,0.5)", padding: "10px 20px", borderRadius: 0, textDecoration: "none", width: "100%" }}
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  For agencies →
+                </Link>
+              </>
             ) : (
               /* Logged-in: both workspaces. The menu closes on the resulting route change. */
               <SurfaceSwitcher />

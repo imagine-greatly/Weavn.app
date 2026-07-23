@@ -45,7 +45,7 @@ const DASHBOARD_TIERS: Tier[] = DASHBOARD_TIER_ORDER.map((id) => ({
 interface Subscription { current_period_end: number | null; amount: number | null; currency: string }
 
 // Map the stored profiles.plan to a catalog tier. All five are real tiers now
-// (Starter $39/50, Pro $99/200), so 'pro' is no longer remapped to Starter.
+// (Starter $39/50, Pro $129/200), so 'pro' is no longer remapped to Starter.
 function normalizePlan(plan: string): DashboardTier {
   const p = plan.toLowerCase()
   return (['free', 'starter', 'pro', 'agency', 'enterprise'] as DashboardTier[]).includes(p as DashboardTier)

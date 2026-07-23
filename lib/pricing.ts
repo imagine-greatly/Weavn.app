@@ -88,7 +88,8 @@ export const DASHBOARD_PLANS: Record<DashboardTier, DashboardPlan> = {
     scansPerMonth: DASHBOARD_PLAN_MONTHLY_CAPS.free ?? FREE_DASHBOARD_SCANS_PER_MONTH, // 3
     whiteLabel: false,
     cta: { kind: "none" },
-    blurb: "Kick the tires — 3 scans a month, no card.",
+    // On-ramp, not a destination — the first look before there's a client involved.
+    blurb: "Scan your own site and see what it finds — no card, no commitment.",
   },
   starter: {
     track: "dashboard",
@@ -102,13 +103,14 @@ export const DASHBOARD_PLANS: Record<DashboardTier, DashboardPlan> = {
       monthly: { env: "STRIPE_PRICE_STARTER_MONTHLY" },
       annual: { env: "STRIPE_PRICE_STARTER_ANNUAL" },
     },
-    blurb: "For a single site under active iteration.",
+    // On-ramp — solo operators testing the waters before there's client work to bill.
+    blurb: "For solo consultants and founders testing the waters on a single site.",
   },
   pro: {
     track: "dashboard",
     id: "pro",
     name: "Pro",
-    priceMonthlyUsd: 99,
+    priceMonthlyUsd: 129,
     scansPerMonth: DASHBOARD_PLAN_MONTHLY_CAPS.pro, // 200
     whiteLabel: false,
     cta: { kind: "checkout" },
@@ -116,13 +118,14 @@ export const DASHBOARD_PLANS: Record<DashboardTier, DashboardPlan> = {
       monthly: { env: "STRIPE_PRICE_PRO_MONTHLY", legacyEnv: "STRIPE_PRO_PRICE_ID" },
       annual: { env: "STRIPE_PRICE_PRO_ANNUAL" },
     },
-    blurb: "Serious volume for an in-house team.",
+    // On-ramp — the last step before white-label. NOT the destination; Agency is.
+    blurb: "Room to grow before you white-label — heavier in-house or early client work.",
   },
   agency: {
     track: "dashboard",
     id: "agency",
     name: "Agency",
-    priceMonthlyUsd: 249,
+    priceMonthlyUsd: 349,
     scansPerMonth: DASHBOARD_PLAN_MONTHLY_CAPS.agency, // 500
     whiteLabel: true,
     cta: { kind: "checkout" },
@@ -131,7 +134,8 @@ export const DASHBOARD_PLANS: Record<DashboardTier, DashboardPlan> = {
       annual: { env: "STRIPE_PRICE_AGENCY_ANNUAL" },
     },
     // Premium = white-label + volume. NOT a better model (all tiers run Sonnet).
-    blurb: "White-label reports and 500 scans for client work.",
+    // The destination tier — outcome-led (white-label is the product; scans are the unit).
+    blurb: "White-label reports you put your own name on and bill clients for. Weavn never appears in the deliverable.",
   },
   enterprise: {
     track: "dashboard",

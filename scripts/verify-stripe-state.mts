@@ -39,10 +39,10 @@ const EXPECTED: Record<string, PriceCheck> = {
   // Dashboard track — flat monthly + annual (annual = 10× monthly).
   STRIPE_PRICE_STARTER_MONTHLY: { kind: "flat", interval: "month", unitAmount: 3900 },
   STRIPE_PRICE_STARTER_ANNUAL: { kind: "flat", interval: "year", unitAmount: 39000 },
-  STRIPE_PRICE_PRO_MONTHLY: { kind: "flat", interval: "month", unitAmount: 9900 },
-  STRIPE_PRICE_PRO_ANNUAL: { kind: "flat", interval: "year", unitAmount: 99000 },
-  STRIPE_PRICE_AGENCY_MONTHLY: { kind: "flat", interval: "month", unitAmount: 24900 },
-  STRIPE_PRICE_AGENCY_ANNUAL: { kind: "flat", interval: "year", unitAmount: 249000 },
+  STRIPE_PRICE_PRO_MONTHLY: { kind: "flat", interval: "month", unitAmount: 12900 },
+  STRIPE_PRICE_PRO_ANNUAL: { kind: "flat", interval: "year", unitAmount: 129000 },
+  STRIPE_PRICE_AGENCY_MONTHLY: { kind: "flat", interval: "month", unitAmount: 34900 },
+  STRIPE_PRICE_AGENCY_ANNUAL: { kind: "flat", interval: "year", unitAmount: 349000 },
 
   // API track — flat base fees (monthly + annual).
   STRIPE_PRICE_DEV_BASE_MONTHLY: { kind: "flat", interval: "month", unitAmount: 8900 },
